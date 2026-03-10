@@ -2,6 +2,7 @@ import { createInertiaApp } from '@inertiajs/react';
 import { StrictMode, type ComponentType } from 'react';
 import { createRoot, hydrateRoot } from 'react-dom/client';
 import '../css/app.css';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import { initializeTheme } from '@/hooks/use-appearance';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
@@ -25,7 +26,9 @@ createInertiaApp({
 
         const app = (
             <StrictMode>
-                <App {...props} />
+                <TooltipProvider>
+                    <App {...props} />
+                </TooltipProvider>
             </StrictMode>
         );
 
