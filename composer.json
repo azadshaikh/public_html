@@ -13,14 +13,15 @@
         "inertiajs/inertia-laravel": "^3.0.0-beta",
         "laravel/fortify": "^1.36.1",
         "laravel/framework": "^12.54.1",
-        "laravel/tinker": "^2.11.1",
         "laravel/wayfinder": "^0.1.14"
     },
     "require-dev": {
         "fakerphp/faker": "^1.24.1",
+        "laravel/boost": "^2.2",
         "laravel/pail": "^1.2.6",
         "laravel/pint": "^1.28.0",
         "laravel/sail": "^1.53.0",
+        "laravel/tinker": "^2.11.1",
         "mockery/mockery": "^1.6.12",
         "nunomaduro/collision": "^8.9.1",
         "phpunit/phpunit": "^12.5.14"
