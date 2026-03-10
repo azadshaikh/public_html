@@ -1,20 +1,20 @@
 import { Transition } from '@headlessui/react';
 import { Form, Head } from '@inertiajs/react';
 import { useRef } from 'react';
-import PasswordController from '@/actions/App/Http/Controllers/Settings/PasswordController';
+import PasswordController from '@/actions/App/Http/Controllers/Account/PasswordController';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
-import SettingsLayout from '@/layouts/settings/layout';
+import AccountLayout from '@/layouts/account/layout';
 import { edit } from '@/routes/user-password';
 import type { BreadcrumbItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Password settings',
+        title: 'Password',
         href: edit(),
     },
 ];
@@ -25,11 +25,11 @@ export default function Password() {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Password settings" />
+            <Head title="Password" />
 
-            <h1 className="sr-only">Password settings</h1>
+            <h1 className="sr-only">Password</h1>
 
-            <SettingsLayout>
+            <AccountLayout>
                 <div className="space-y-6">
                     <Heading
                         variant="small"
@@ -139,7 +139,7 @@ export default function Password() {
                         )}
                     </Form>
                 </div>
-            </SettingsLayout>
+            </AccountLayout>
         </AppLayout>
     );
 }

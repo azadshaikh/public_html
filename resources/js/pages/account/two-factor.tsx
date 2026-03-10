@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useTwoFactorAuth } from '@/hooks/use-two-factor-auth';
 import AppLayout from '@/layouts/app-layout';
-import SettingsLayout from '@/layouts/settings/layout';
+import AccountLayout from '@/layouts/account/layout';
 import { disable, enable, show } from '@/routes/two-factor';
 import type { BreadcrumbItem } from '@/types';
 
@@ -44,14 +44,14 @@ export default function TwoFactor({
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Two-factor authentication" />
 
-            <h1 className="sr-only">Two-factor authentication settings</h1>
+            <h1 className="sr-only">Two-factor authentication</h1>
 
-            <SettingsLayout>
+            <AccountLayout>
                 <div className="space-y-6">
                     <Heading
                         variant="small"
                         title="Two-factor authentication"
-                        description="Manage your two-factor authentication settings"
+                        description="Manage your two-factor authentication"
                     />
                     {twoFactorEnabled ? (
                         <div className="flex flex-col items-start justify-start space-y-4">
@@ -135,7 +135,7 @@ export default function TwoFactor({
                         errors={errors}
                     />
                 </div>
-            </SettingsLayout>
+            </AccountLayout>
         </AppLayout>
     );
 }

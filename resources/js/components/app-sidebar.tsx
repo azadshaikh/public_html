@@ -1,65 +1,203 @@
-import { Link } from '@inertiajs/react';
-import { BookOpen, FolderGit2, LayoutGrid } from 'lucide-react';
-import AppLogo from '@/components/app-logo';
-import { NavFooter } from '@/components/nav-footer';
-import { NavMain } from '@/components/nav-main';
-import { NavUser } from '@/components/nav-user';
+"use client"
+
+import { usePage } from '@inertiajs/react'
+import { GalleryVerticalEndIcon, AudioLinesIcon, TerminalIcon, TerminalSquareIcon, BotIcon, BookOpenIcon, BadgeCheckIcon, FrameIcon, PieChartIcon, MapIcon } from "lucide-react"
+import * as React from "react"
+
+import { NavMain } from "@/components/nav-main"
+import { NavProjects } from "@/components/nav-projects"
+import { NavUser } from "@/components/nav-user"
+import { TeamSwitcher } from "@/components/team-switcher"
 import {
-    Sidebar,
-    SidebarContent,
-    SidebarFooter,
-    SidebarHeader,
-    SidebarMenu,
-    SidebarMenuButton,
-    SidebarMenuItem,
-} from '@/components/ui/sidebar';
-import { dashboard } from '@/routes';
-import type { NavItem } from '@/types';
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarRail,
+} from "@/components/ui/sidebar"
+import { dashboard } from '@/routes'
+import type { Auth } from '@/types/auth'
 
-const mainNavItems: NavItem[] = [
+// This is sample data.
+const data = {
+  teams: [
     {
-        title: 'Dashboard',
-        href: dashboard(),
-        icon: LayoutGrid,
-    },
-];
-
-const footerNavItems: NavItem[] = [
-    {
-        title: 'Repository',
-        href: 'https://github.com/laravel/react-starter-kit',
-        icon: FolderGit2,
+      name: "Acme Inc",
+      logo: (
+        <GalleryVerticalEndIcon
+        />
+      ),
+      plan: "Enterprise",
     },
     {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#react',
-        icon: BookOpen,
+      name: "Acme Corp.",
+      logo: (
+        <AudioLinesIcon
+        />
+      ),
+      plan: "Startup",
     },
-];
+    {
+      name: "Evil Corp.",
+      logo: (
+        <TerminalIcon
+        />
+      ),
+      plan: "Free",
+    },
+  ],
+  navMain: [
+    {
+      title: "Dashboard",
+      url: dashboard().url,
+      icon: (
+        <TerminalSquareIcon
+        />
+      ),
+      isActive: true,
+    },
+    {
+      title: "Platform",
+      url: "#",
+      icon: (
+        <TerminalSquareIcon
+        />
+      ),
+      isActive: false,
+      items: [
+        {
+          title: "History",
+          url: "#",
+        },
+        {
+          title: "Starred",
+          url: "#",
+        },
+        {
+          title: "Account",
+          url: "#",
+        },
+      ],
+    },
+    {
+      title: "Models",
+      url: "#",
+      icon: (
+        <BotIcon
+        />
+      ),
+      items: [
+        {
+          title: "Genesis",
+          url: "#",
+        },
+        {
+          title: "Explorer",
+          url: "#",
+        },
+        {
+          title: "Quantum",
+          url: "#",
+        },
+      ],
+    },
+    {
+      title: "Documentation",
+      url: "#",
+      icon: (
+        <BookOpenIcon
+        />
+      ),
+      items: [
+        {
+          title: "Introduction",
+          url: "#",
+        },
+        {
+          title: "Get Started",
+          url: "#",
+        },
+        {
+          title: "Tutorials",
+          url: "#",
+        },
+        {
+          title: "Changelog",
+          url: "#",
+        },
+      ],
+    },
+    {
+      title: "Account",
+      url: "#",
+      icon: (
+        <BadgeCheckIcon
+        />
+      ),
+      items: [
+        {
+          title: "General",
+          url: "#",
+        },
+        {
+          title: "Team",
+          url: "#",
+        },
+        {
+          title: "Billing",
+          url: "#",
+        },
+        {
+          title: "Limits",
+          url: "#",
+        },
+      ],
+    },
+  ],
+  projects: [
+    {
+      name: "Design Engineering",
+      url: "#",
+      icon: (
+        <FrameIcon
+        />
+      ),
+    },
+    {
+      name: "Sales & Marketing",
+      url: "#",
+      icon: (
+        <PieChartIcon
+        />
+      ),
+    },
+    {
+      name: "Travel",
+      url: "#",
+      icon: (
+        <MapIcon
+        />
+      ),
+    },
+  ],
+}
 
-export function AppSidebar() {
-    return (
-        <Sidebar collapsible="icon" variant="inset">
-            <SidebarHeader>
-                <SidebarMenu>
-                    <SidebarMenuItem>
-                        <SidebarMenuButton size="lg" asChild>
-                            <Link href={dashboard()} prefetch>
-                                <AppLogo />
-                            </Link>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                </SidebarMenu>
-            </SidebarHeader>
+export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { auth } = usePage<{ auth: Auth }>().props
 
-            <SidebarContent>
-                <NavMain items={mainNavItems} />
-            </SidebarContent>
-
-            <SidebarFooter>
-                <NavFooter items={footerNavItems} className="mt-auto" />
-                <NavUser />
-            </SidebarFooter>
-        </Sidebar>
-    );
+  return (
+    <Sidebar collapsible="icon" {...props}>
+      <SidebarHeader>
+        <TeamSwitcher teams={data.teams} />
+      </SidebarHeader>
+      <SidebarContent>
+        <NavMain items={data.navMain} />
+        <NavProjects projects={data.projects} />
+      </SidebarContent>
+      <SidebarFooter>
+        <NavUser user={auth.user} />
+      </SidebarFooter>
+      <SidebarRail />
+    </Sidebar>
+  )
 }

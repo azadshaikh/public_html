@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature\Settings;
+namespace Tests\Feature\Account;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -12,7 +12,7 @@ class TwoFactorAuthenticationTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_two_factor_settings_page_can_be_rendered()
+    public function test_two_factor_account_page_can_be_rendered()
     {
         $this->skipUnlessFortifyFeature(Features::twoFactorAuthentication());
 
@@ -27,12 +27,12 @@ class TwoFactorAuthenticationTest extends TestCase
             ->withSession(['auth.password_confirmed_at' => time()])
             ->get(route('two-factor.show'))
             ->assertInertia(fn (Assert $page) => $page
-                ->component('settings/two-factor')
+                ->component('account/two-factor')
                 ->where('twoFactorEnabled', false),
             );
     }
 
-    public function test_two_factor_settings_page_requires_password_confirmation_when_enabled()
+    public function test_two_factor_account_page_requires_password_confirmation_when_enabled()
     {
         $this->skipUnlessFortifyFeature(Features::twoFactorAuthentication());
 
@@ -49,7 +49,7 @@ class TwoFactorAuthenticationTest extends TestCase
         $response->assertRedirect(route('password.confirm'));
     }
 
-    public function test_two_factor_settings_page_does_not_requires_password_confirmation_when_disabled()
+    public function test_two_factor_account_page_does_not_requires_password_confirmation_when_disabled()
     {
         $this->skipUnlessFortifyFeature(Features::twoFactorAuthentication());
 
@@ -64,11 +64,11 @@ class TwoFactorAuthenticationTest extends TestCase
             ->get(route('two-factor.show'))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
-                ->component('settings/two-factor'),
+                ->component('account/two-factor'),
             );
     }
 
-    public function test_two_factor_settings_page_returns_forbidden_response_when_two_factor_is_disabled()
+    public function test_two_factor_account_page_returns_forbidden_response_when_two_factor_is_disabled()
     {
         $this->skipUnlessFortifyFeature(Features::twoFactorAuthentication());
 

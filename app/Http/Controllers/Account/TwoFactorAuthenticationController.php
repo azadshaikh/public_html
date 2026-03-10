@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Http\Controllers\Settings;
+namespace App\Http\Controllers\Account;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Settings\TwoFactorAuthenticationRequest;
+use App\Http\Requests\Account\TwoFactorAuthenticationRequest;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Inertia\Inertia;
@@ -23,13 +23,13 @@ class TwoFactorAuthenticationController extends Controller implements HasMiddlew
     }
 
     /**
-     * Show the user's two-factor authentication settings page.
+     * Show the user's two-factor authentication account page.
      */
     public function show(TwoFactorAuthenticationRequest $request): Response
     {
         $request->ensureStateIsValid();
 
-        return Inertia::render('settings/two-factor', [
+        return Inertia::render('account/two-factor', [
             'twoFactorEnabled' => $request->user()->hasEnabledTwoFactorAuthentication(),
             'requiresConfirmation' => Features::optionEnabled(Features::twoFactorAuthentication(), 'confirm'),
         ]);
