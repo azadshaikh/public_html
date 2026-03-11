@@ -189,9 +189,15 @@ class ModuleManager
             return [];
         }
 
+        $manifestContents = trim($this->files->get($manifestPath));
+
+        if ($manifestContents === '') {
+            return [];
+        }
+
         try {
             /** @var mixed $decoded */
-            $decoded = json_decode($this->files->get($manifestPath), true, 512, JSON_THROW_ON_ERROR);
+            $decoded = json_decode($manifestContents, true, 512, JSON_THROW_ON_ERROR);
         } catch (JsonException $exception) {
             throw new RuntimeException("The enabled modules manifest at [{$manifestPath}] is not valid JSON.", previous: $exception);
         }

@@ -76,6 +76,41 @@ class ModuleManagerTest extends TestCase
         File::delete($manifestPath);
     }
 
+    public function test_it_treats_a_missing_modules_manifest_as_all_modules_disabled(): void
+    {
+        $manifestPath = storage_path('framework/testing/missing-modules-test.json');
+
+        File::delete($manifestPath);
+
+        config()->set('modules.manifest', $manifestPath);
+
+        $moduleManager = new ModuleManager(
+            files: app('files'),
+            config: app('config'),
+        );
+
+        $this->assertCount(0, $moduleManager->enabled());
+    }
+
+    public function test_it_treats_an_empty_modules_manifest_as_all_modules_disabled(): void
+    {
+        $manifestPath = storage_path('framework/testing/modules-empty-test.json');
+
+        File::ensureDirectoryExists(dirname($manifestPath));
+        File::put($manifestPath, '');
+
+        config()->set('modules.manifest', $manifestPath);
+
+        $moduleManager = new ModuleManager(
+            files: app('files'),
+            config: app('config'),
+        );
+
+        $this->assertCount(0, $moduleManager->enabled());
+
+        File::delete($manifestPath);
+    }
+
     public function test_module_routes_are_registered_with_the_web_middleware_group(): void
     {
         collect(['cms.index', 'chatbot.index', 'todos.index'])
