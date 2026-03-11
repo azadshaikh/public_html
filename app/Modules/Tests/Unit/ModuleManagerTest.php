@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Unit\Modules;
+namespace App\Modules\Tests\Unit;
 
 use App\Modules\ModuleManager;
 use App\Modules\Support\ModuleManifest;

@@ -7,9 +7,12 @@
     <testsuites>
         <testsuite name="Unit">
             <directory>tests/Unit</directory>
+            <directory>app/Modules/Tests/Unit</directory>
         </testsuite>
         <testsuite name="Feature">
             <directory>tests/Feature</directory>
+            <directory>app/Modules/Tests/Feature</directory>
+            <directory>modules</directory>
         </testsuite>
     </testsuites>
     <source>

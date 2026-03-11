@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature\Modules;
+namespace Modules\Cms\Tests\Feature;
 
 use App\Models\User;
 use App\Modules\ModuleManager;
