@@ -2,10 +2,10 @@
 
 use App\Providers\AppServiceProvider;
 use App\Providers\FortifyServiceProvider;
-use App\Providers\PluginRuntimeServiceProvider;
+use App\Providers\ModuleRuntimeServiceProvider;
 
 return [
     AppServiceProvider::class,
-    PluginRuntimeServiceProvider::class,
+    ModuleRuntimeServiceProvider::class,
     FortifyServiceProvider::class,
 ];

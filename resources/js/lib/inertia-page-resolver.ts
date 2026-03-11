@@ -7,21 +7,21 @@ type InertiaPageModule = {
 type InertiaPageResolver = () => Promise<InertiaPageModule>;
 
 const applicationPages = import.meta.glob<InertiaPageModule>('../pages/**/*.tsx');
-const pluginPages = import.meta.glob<InertiaPageModule>(
-    '../../../plugins/*/resources/js/pages/**/*.tsx',
+const modulePages = import.meta.glob<InertiaPageModule>(
+    '../../../modules/*/resources/js/pages/**/*.tsx',
 );
 
 function normalizeApplicationPageName(path: string): string {
     return path.replace('../pages/', '').replace(/\.tsx$/, '');
 }
 
-function normalizePluginPageName(path: string): string {
+function normalizeModulePageName(path: string): string {
     const matches = path.match(
-        /^\.\.\/\.\.\/\.\.\/plugins\/([^/]+)\/resources\/js\/pages\/(.+)\.tsx$/,
+        /^\.\.\/\.\.\/\.\.\/modules\/([^/]+)\/resources\/js\/pages\/(.+)\.tsx$/,
     );
 
     if (!matches) {
-        throw new Error(`Unable to normalize plugin page path [${path}].`);
+        throw new Error(`Unable to normalize module page path [${path}].`);
     }
 
     return matches[2];
@@ -34,8 +34,8 @@ function buildPageRegistry(): Map<string, InertiaPageResolver> {
         registry.set(normalizeApplicationPageName(path), resolver);
     });
 
-    Object.entries(pluginPages).forEach(([path, resolver]) => {
-        registry.set(normalizePluginPageName(path), resolver);
+    Object.entries(modulePages).forEach(([path, resolver]) => {
+        registry.set(normalizeModulePageName(path), resolver);
     });
 
     return registry;

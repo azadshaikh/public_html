@@ -190,18 +190,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const currentComponent = page.component
   const isDashboardPage = currentComponent === 'dashboard'
   const isMoviesDemoPage = currentComponent.startsWith('demo/movies/')
-  const isPluginsPage = currentComponent.startsWith('plugins/')
-  const pluginItems = page.props.plugins?.items ?? []
+  const isModulesPage = currentComponent.startsWith('modules/')
+  const moduleItems = page.props.modules?.items ?? []
 
-  const pluginNavItems = pluginItems.map((plugin) => ({
-    title: plugin.name,
-    url: plugin.url,
-    component: plugin.inertiaNamespace,
+  const moduleNavItems = moduleItems.map((module) => ({
+    title: module.name,
+    url: module.url,
+    component: module.inertiaNamespace,
     icon: (
       <PackageIcon
       />
     ),
-    isActive: currentComponent.startsWith(plugin.inertiaNamespace),
+    isActive: currentComponent.startsWith(module.inertiaNamespace),
   }))
 
   const navMain = [
@@ -216,16 +216,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       isActive: isDashboardPage,
     },
     {
-      title: "Plugins",
-      url: '/plugins',
-      component: 'plugins/index',
+      title: "Modules",
+      url: '/modules',
+      component: 'modules/index',
       icon: (
         <PackageIcon
         />
       ),
-      isActive: isPluginsPage,
+      isActive: isModulesPage,
     },
-    ...pluginNavItems,
+    ...moduleNavItems,
     {
       title: "Movies demo",
       url: MovieController.index().url,

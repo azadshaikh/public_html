@@ -1,7 +1,7 @@
 <?php
 
 use App\Http\Controllers\Demo\MovieController;
-use App\Http\Controllers\PluginController;
+use App\Http\Controllers\ModuleController;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 
@@ -11,8 +11,8 @@ Route::inertia('/', 'welcome', [
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::inertia('dashboard', 'dashboard')->name('dashboard');
-    Route::get('plugins', [PluginController::class, 'index'])->name('plugins.index');
-    Route::patch('plugins', [PluginController::class, 'update'])->name('plugins.update');
+    Route::get('modules', [ModuleController::class, 'index'])->name('modules.index');
+    Route::patch('modules', [ModuleController::class, 'update'])->name('modules.update');
 
     Route::prefix('demo')->name('demo.')->group(function () {
         Route::resource('movies', MovieController::class);

@@ -1,4 +1,4 @@
-import type { InstalledPlugin } from '@/types/plugin';
+import type { InstalledModule } from '@/types/module';
 
 export type User = {
     id: number;
@@ -19,8 +19,8 @@ export type Auth = {
 export type SharedData = {
     appName: string;
     auth: Auth;
-    plugins: {
-        items: InstalledPlugin[];
+    modules: {
+        items: InstalledModule[];
     };
     sidebarOpen: boolean;
 };
