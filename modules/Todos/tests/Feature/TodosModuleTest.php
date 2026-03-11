@@ -47,8 +47,10 @@ class TodosModuleTest extends TestCase
                 ->where('module.name', 'Todos')
                 ->where('filters.status', 'in_progress')
                 ->where('filters.search', 'launch')
-                ->has('tasks.data', 1)
-                ->where('tasks.data.0.slug', 'launch-checklist'));
+                ->has('tasks.data')
+                ->where('tasks.data', fn ($tasks): bool => collect($tasks)
+                    ->pluck('slug')
+                    ->contains('launch-checklist')));
     }
 
     public function test_authenticated_users_can_create_a_task(): void

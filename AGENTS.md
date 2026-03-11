@@ -9,6 +9,8 @@ The Laravel Boost guidelines are specifically curated by Laravel maintainers for
 
 This application is a Laravel application and its main Laravel ecosystems package & versions are below. You are an expert with them all. Ensure you abide by these specific packages & versions.
 
+- database - PostgreSQL
+
 - php - 8.4.18
 - inertiajs/inertia-laravel (INERTIA_LARAVEL) - v3
 - laravel/fortify (FORTIFY) - v1
@@ -46,6 +48,7 @@ This project has domain-specific skills available. You MUST activate the relevan
 - This is a greenfield application. Prefer the cleanest current design over preserving legacy patterns.
 - There are no live instances that require backward compatibility. Do not keep compatibility layers, transitional APIs, or temporary shims unless the user explicitly asks for them.
 - Remove dead code, unused branches, stale helpers, obsolete UI, and old integration paths as part of the change whenever they are no longer needed.
+- PostgreSQL is the primary and only database target for application code. Treat PostgreSQL as first-class and do not spend effort preserving behavior for SQLite, MySQL, MariaDB, or SQL Server unless the user explicitly asks for it.
 
 ## Verification Scripts
 
@@ -218,6 +221,7 @@ protected function isAccessible(User $user, ?string $path = null): bool
 - Avoid `DB::`; prefer `Model::query()`. Generate code that leverages Laravel's ORM capabilities rather than bypassing them.
 - Generate code that prevents N+1 query problems by using eager loading.
 - Use Laravel's query builder for very complex database operations.
+- Prefer PostgreSQL-native compatible approaches for schema design and queries. Do not optimize for cross-database portability unless explicitly required.
 
 ### Model Creation
 

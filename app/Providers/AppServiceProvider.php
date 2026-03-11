@@ -2,9 +2,12 @@
 
 namespace App\Providers;
 
+use App\Console\ProductionTestCommandGuard;
 use Carbon\CarbonImmutable;
+use Illuminate\Console\Events\CommandStarting;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -24,6 +27,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+        $this->configureConsoleSafety();
     }
 
     /**
@@ -46,5 +50,12 @@ class AppServiceProvider extends ServiceProvider
                 ->uncompromised()
             : null,
         );
+    }
+
+    protected function configureConsoleSafety(): void
+    {
+        Event::listen(CommandStarting::class, function (CommandStarting $event): void {
+            ProductionTestCommandGuard::ensureSafe(app()->isProduction(), $event->command);
+        });
     }
 }
