@@ -7,11 +7,6 @@ import {
   TerminalIcon,
   TerminalSquareIcon,
   BotIcon,
-  BookOpenIcon,
-  BadgeCheckIcon,
-  FrameIcon,
-  PieChartIcon,
-  MapIcon,
   ClapperboardIcon,
   PackageIcon,
   CheckSquareIcon,
@@ -22,7 +17,6 @@ import * as React from 'react';
 
 import MovieController from '@/actions/App/Http/Controllers/Demo/MovieController';
 import { NavMain } from '@/components/nav-main';
-import { NavProjects } from '@/components/nav-projects';
 import { NavUser } from '@/components/nav-user';
 import { TeamSwitcher } from '@/components/team-switcher';
 import {
@@ -56,137 +50,23 @@ const moduleIcons = {
   todos: <CheckSquareIcon />,
 } as const;
 
-// This is sample data.
-const data = {
-  teams: [
-    {
-      name: 'Acme Inc',
-      logo: <GalleryVerticalEndIcon />,
-      plan: 'Enterprise',
-    },
-    {
-      name: 'Acme Corp.',
-      logo: <AudioLinesIcon />,
-      plan: 'Startup',
-    },
-    {
-      name: 'Evil Corp.',
-      logo: <TerminalIcon />,
-      plan: 'Free',
-    },
-  ],
-  navMain: [
-    {
-      title: 'Dashboard',
-      url: dashboard().url,
-      component: 'dashboard',
-      icon: <TerminalSquareIcon />,
-      isActive: true,
-    },
-    {
-      title: 'Platform',
-      url: '#',
-      icon: <TerminalSquareIcon />,
-      isActive: false,
-      items: [
-        {
-          title: 'History',
-          url: '#',
-        },
-        {
-          title: 'Starred',
-          url: '#',
-        },
-        {
-          title: 'Account',
-          url: '#',
-        },
-      ],
-    },
-    {
-      title: 'Models',
-      url: '#',
-      icon: <BotIcon />,
-      items: [
-        {
-          title: 'Genesis',
-          url: '#',
-        },
-        {
-          title: 'Explorer',
-          url: '#',
-        },
-        {
-          title: 'Quantum',
-          url: '#',
-        },
-      ],
-    },
-    {
-      title: 'Documentation',
-      url: '#',
-      icon: <BookOpenIcon />,
-      items: [
-        {
-          title: 'Introduction',
-          url: '#',
-        },
-        {
-          title: 'Get Started',
-          url: '#',
-        },
-        {
-          title: 'Tutorials',
-          url: '#',
-        },
-        {
-          title: 'Changelog',
-          url: '#',
-        },
-      ],
-    },
-    {
-      title: 'Account',
-      url: '#',
-      icon: <BadgeCheckIcon />,
-      items: [
-        {
-          title: 'General',
-          url: '#',
-        },
-        {
-          title: 'Team',
-          url: '#',
-        },
-        {
-          title: 'Billing',
-          url: '#',
-        },
-        {
-          title: 'Limits',
-          url: '#',
-        },
-      ],
-    },
-  ],
-  projects: [
-    {
-      name: 'Design Engineering',
-      url: '#',
-      icon: <FrameIcon />,
-    },
-    {
-      name: 'Sales & Marketing',
-      url: '#',
-      icon: <PieChartIcon />,
-    },
-    {
-      name: 'Travel',
-      url: '#',
-      icon: <MapIcon />,
-    },
-  ],
-};
+const teams = [
+  {
+    name: 'Acme Inc',
+    logo: <GalleryVerticalEndIcon />,
+    plan: 'Enterprise',
+  },
+  {
+    name: 'Acme Corp.',
+    logo: <AudioLinesIcon />,
+    plan: 'Startup',
+  },
+  {
+    name: 'Evil Corp.',
+    logo: <TerminalIcon />,
+    plan: 'Free',
+  },
+];
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const page = usePage<AuthenticatedSharedData>();
@@ -254,17 +134,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         },
       ],
     },
-    ...data.navMain.slice(1),
   ];
 
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <TeamSwitcher teams={data.teams} />
+        <TeamSwitcher teams={teams} />
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={navMain} />
-        <NavProjects projects={data.projects} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={auth.user} />
