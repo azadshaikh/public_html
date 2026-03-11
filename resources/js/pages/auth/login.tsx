@@ -37,7 +37,8 @@ export default function Login({
             <Form
                 {...store.form()}
                 resetOnSuccess={['password']}
-                className="flex flex-col gap-6"
+                disableWhileProcessing
+                className="flex flex-col gap-6 inert:pointer-events-none inert:opacity-60"
             >
                 {({ processing, errors }) => (
                     <>

@@ -166,7 +166,12 @@ protected function isAccessible(User $user, ?string $path = null): bool
 - Use Inertia's `<Head>` for page titles and metadata. Prefer a small shared wrapper component for default descriptions and consistent metadata.
 - Keep root-template head elements in `resources/views/app.blade.php`; page-level `<Head>` should override or extend, not duplicate them. Use `head-key` for duplicate-prone tags like `description`.
 - Use Inertia `<Link>` for internal navigation. For non-`GET` visits, prefer button rendering over anchor links for accessibility.
+- Prefer Inertia `<Form>` for straightforward server-driven forms with uncontrolled inputs; prefer `useForm` when controlled state, imperative submission, remembered history state, or client-side mutation is needed.
+- With React `<Form>`, prefer `name` plus `defaultValue` / `defaultChecked` over controlled `value` state unless the UI truly needs control.
 - When Wayfinder is available, pass the generated object directly to `Link href`, form helpers, or router methods.
+- Use `disableWhileProcessing`, `resetOnSuccess`, `resetOnError`, and `setDefaultsOnSuccess` intentionally to simplify form UX.
+- Use keyed `useForm()` instances for drafts that should survive history navigation, and exclude sensitive fields with `dontRemember()`.
+- Built-in Inertia Precognition support is available for forms and `useForm`; prefer it over legacy client packages when real-time Laravel validation is needed.
 - Prefer `router.get/post/put/patch/delete/reload` shortcut methods over raw `router.visit()` when they clearly express intent; `router.reload()` preserves scroll and state automatically.
 - Use `router.visit()` options like `replace`, `preserveState`, `preserveScroll`, `only`, `except`, `preserveErrors`, `viewTransition`, `component`, and `pageProps` intentionally.
 - Use client-side `router.push()` / `router.replace()` only when no server request should run, and keep pushed routes renderable by the server on refresh.

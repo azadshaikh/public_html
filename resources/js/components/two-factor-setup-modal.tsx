@@ -157,9 +157,11 @@ function TwoFactorVerificationStep({
     return (
         <Form
             {...confirm.form()}
+            disableWhileProcessing
             onSuccess={() => onClose()}
             resetOnError
             resetOnSuccess
+            className="inert:pointer-events-none inert:opacity-60"
         >
             {({
                 processing,

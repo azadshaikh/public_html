@@ -46,6 +46,7 @@ export default function Password() {
                         options={{
                             preserveScroll: true,
                         }}
+                        disableWhileProcessing
                         resetOnError={[
                             'password',
                             'password_confirmation',
@@ -61,7 +62,7 @@ export default function Password() {
                                 currentPasswordInput.current?.focus();
                             }
                         }}
-                        className="space-y-6"
+                        className="space-y-6 inert:pointer-events-none inert:opacity-60"
                     >
                         {({ errors, processing, recentlySuccessful }) => (
                             <>

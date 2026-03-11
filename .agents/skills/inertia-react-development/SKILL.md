@@ -32,6 +32,10 @@ Useful topics:
 - `title and meta`
 - `links`
 - `manual visits`
+- `forms`
+- `validation`
+- `remembering state`
+- `file uploads`
 - `http client interceptors`
 - `createInertiaApp defaults config`
 - `strict mode pages shorthand`
@@ -400,6 +404,43 @@ export default function CreateUser() {
 }
 ```
 
+### Choosing `<Form>` vs `useForm`
+
+- Prefer `<Form>` for straightforward server-driven forms that can rely on `name` attributes and uncontrolled inputs.
+- Prefer `useForm` when the UI needs controlled React state, imperative submission, remembered history state, client-side mutation, or cancellation.
+- With React `<Form>`, use `defaultValue` and `defaultChecked` for initial values instead of controlled `value` state unless the UI truly requires control.
+
+### `<Form>` Patterns
+
+- Pass Wayfinder objects directly to `action`, or use generated `wayfinder.form()` helpers when available.
+- Use `transform` for lightweight payload shaping before submission.
+- Use `disableWhileProcessing` to add the `inert` attribute during submission; pair it with classes such as `inert:opacity-60` when helpful.
+- Prefer built-in reset helpers like `resetOnSuccess`, `resetOnError`, and `setDefaultsOnSuccess` over manual reset bookkeeping.
+- Put partial reload controls such as `only`, `except`, and `reset` inside the `options` prop, since they configure the follow-up visit rather than the form payload.
+
+Example:
+
+```react
+<Form
+    action={updateProfile()}
+    method="put"
+    disableWhileProcessing
+    setDefaultsOnSuccess
+    resetOnError={['password']}
+    className="space-y-6 inert:pointer-events-none inert:opacity-60"
+    options={{ preserveScroll: true }}
+>
+    {({ processing, errors, recentlySuccessful }) => (
+        <>
+            <input name="name" defaultValue={user.name} />
+            {errors.name && <p>{errors.name}</p>}
+            <button disabled={processing}>Save</button>
+            {recentlySuccessful && <p>Saved.</p>}
+        </>
+    )}
+</Form>
+```
+
 ### `<Form>` Features
 
 The `<Form>` component exposes helpers such as:
@@ -456,6 +497,43 @@ export default function CreateUser() {
     )
 }
 ```
+
+Use a keyed form when draft state should survive history navigation:
+
+```react
+const form = useForm(`EditUser:${user.id}`, {
+    name: user.name,
+    email: user.email,
+}).dontRemember('password')
+```
+
+Useful v3 `useForm` helpers include:
+
+- `setDefaults()`
+- `isDirty`
+- `resetAndClearErrors()`
+- `cancel()`
+- `progress`
+- `withPrecognition()`
+- `validate()`, `touch()`, `touched()`, `invalid()`, and `valid()` when Precognition is enabled
+
+### Form Context And Refs
+
+- Use `useFormContext()` for nested child components that need parent `<Form>` state without prop drilling.
+- In React, refs on `<Form>` expose form methods and state for programmatic access when slot props are not convenient.
+
+### Laravel + Inertia Form Notes
+
+- Let the server redirect after successful submissions instead of expecting JSON response handling.
+- Rely on Inertia's built-in server-side validation flow instead of manual `422` parsing.
+- For file uploads, let Inertia convert the payload to `FormData` automatically.
+- Prefer Wayfinder objects with both `<Form>` and `useForm.submit()` instead of hard-coded URLs.
+
+### Precognition Notes
+
+- Precognition support is built into Inertia v3 forms and `useForm`.
+- Prefer built-in Precognition support over legacy client packages when real-time Laravel validation is needed.
+- Validate a single field with `validate('field')`, or call `touch()` and then `validate()` to validate touched fields.
 
 ## Inertia v3 Features
 
@@ -704,6 +782,12 @@ Server-side `Inertia::render()`, prop types like `Inertia::optional()` and `Iner
 - Duplicating root-template `<head>` tags in page-level `<Head>` blocks
 - Forgetting `head-key` on page-specific description or Open Graph tags that can appear more than once
 - Repeating title boilerplate instead of using a small shared `AppHead` wrapper
+- Controlling `<Form>` inputs unnecessarily when `name` plus `defaultValue` / `defaultChecked` is enough
+- Forgetting `disableWhileProcessing` when duplicate submissions or clicks are possible
+- Manually resetting fields when `resetOnSuccess`, `resetOnError`, or `setDefaultsOnSuccess` already fit the workflow
+- Using `useForm` without a key when draft state should survive history navigation
+- Storing sensitive remembered form fields instead of excluding them with `dontRemember()`
+- Re-implementing validation error parsing instead of using Inertia's built-in redirect and error handling
 - Using non-`GET` links as anchors instead of buttons
 - Forgetting that Wayfinder objects can be passed directly to `Link href`
 - Forgetting that `router.reload()` already preserves scroll and state

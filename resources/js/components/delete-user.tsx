@@ -59,9 +59,10 @@ export default function DeleteUser() {
                             options={{
                                 preserveScroll: true,
                             }}
+                            disableWhileProcessing
                             onError={() => passwordInput.current?.focus()}
                             resetOnSuccess
-                            className="space-y-6"
+                            className="space-y-6 inert:pointer-events-none inert:opacity-60"
                         >
                             {({ resetAndClearErrors, processing, errors }) => (
                                 <>

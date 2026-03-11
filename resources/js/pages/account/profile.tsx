@@ -52,7 +52,9 @@ export default function Profile({
                         options={{
                             preserveScroll: true,
                         }}
-                        className="space-y-6"
+                        disableWhileProcessing
+                        setDefaultsOnSuccess
+                        className="space-y-6 inert:pointer-events-none inert:opacity-60"
                     >
                         {({ processing, recentlySuccessful, errors }) => (
                             <>
