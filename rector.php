@@ -11,6 +11,28 @@ use RectorLaravel\Rector\ArrayDimFetch\ServerVariableToRequestFacadeRector;
 use RectorLaravel\Set\LaravelSetList;
 use RectorLaravel\Set\LaravelSetProvider;
 
+/*
+ * Protect framework/runtime integration files from automated rewrites.
+ *
+ * These paths contain dynamic class-name building, namespace string composition,
+ * container bootstrapping, module runtime loading, autoloader behavior, and other
+ * framework glue. Rector is useful for ordinary application code, but these files
+ * are sensitive to seemingly-correct transformations such as converting runtime
+ * class strings into ::class references or removing defensive casts around config
+ * and manifest values.
+ *
+ * We intentionally keep these files under manual review so automated refactors do
+ * not silently change bootstrap semantics or module discovery behavior.
+ */
+$protectedInfrastructurePaths = [
+    __DIR__.'/app/Http/Middleware/*',
+    __DIR__.'/app/Modules/*',
+    __DIR__.'/app/Providers/*',
+    __DIR__.'/bootstrap/app.php',
+    __DIR__.'/database/seeders/DatabaseSeeder.php',
+    __DIR__.'/routes/console.php',
+];
+
 return RectorConfig::configure()
     ->withSetProviders(LaravelSetProvider::class)
     ->withSets([
@@ -47,6 +69,7 @@ return RectorConfig::configure()
         EnvVariableToEnvHelperRector::class,
         RequestVariablesToRequestFacadeRector::class,
         ServerVariableToRequestFacadeRector::class,
+        ...$protectedInfrastructurePaths,
     ])
     ->withPreparedSets(
         deadCode: true,
