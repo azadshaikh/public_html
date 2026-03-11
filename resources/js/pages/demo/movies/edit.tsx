@@ -1,5 +1,4 @@
 import MovieController from '@/actions/App/Http/Controllers/Demo/MovieController';
-import AppHead from '@/components/app-head';
 import MovieForm from '@/components/demo/movies/movie-form';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem, MovieFormPageProps } from '@/types';
@@ -36,13 +35,8 @@ export default function EditMovieDemo({
         <AppLayout
             breadcrumbs={breadcrumbs}
             title={movie ? `Edit ${movie.title}` : 'Edit movie'}
-            description="Use this page to test update flows, validation, and media replacement."
+            description="Update the demo movie entry, replace images, or test media removal."
         >
-            <AppHead
-                title={movie ? `Edit ${movie.title}` : 'Edit movie demo'}
-                description="Update the demo movie entry, replace images, or test media removal."
-            />
-
             <MovieForm
                 mode="edit"
                 movie={movie}

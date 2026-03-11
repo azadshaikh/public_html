@@ -2,7 +2,6 @@ import { Transition } from '@headlessui/react';
 import { Form } from '@inertiajs/react';
 import { useRef } from 'react';
 import PasswordController from '@/actions/App/Http/Controllers/Account/PasswordController';
-import AppHead from '@/components/app-head';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
@@ -30,11 +29,6 @@ export default function Password() {
             title="Password"
             description="Change your password and keep your account secure."
         >
-            <AppHead
-                title="Password"
-                description="Change your password and keep your account secure."
-            />
-
             <AccountLayout>
                 <div className="space-y-6">
                     <Heading

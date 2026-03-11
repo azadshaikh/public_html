@@ -7,8 +7,8 @@ import {
     Trash2Icon,
 } from 'lucide-react';
 import MovieController from '@/actions/App/Http/Controllers/Demo/MovieController';
-import AppHead from '@/components/app-head';
 import MovieArtwork from '@/components/demo/movies/movie-artwork';
+import Heading from '@/components/heading';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -47,11 +47,6 @@ export default function ShowMovieDemo({ movie }: MovieShowPageProps) {
             title={movie.title}
             description={movie.tagline ?? 'Inspect the full movie demo record and media attachments.'}
         >
-            <AppHead
-                title={movie.title}
-                description={movie.tagline ?? 'Inspect the full movie demo record and media attachments.'}
-            />
-
             <div className="flex flex-col gap-8">
                 <section className="grid gap-6 xl:grid-cols-[minmax(0,1.7fr)_minmax(320px,1fr)]">
                     <Card className="border-none bg-gradient-to-br from-foreground to-foreground/85 text-background shadow-none">

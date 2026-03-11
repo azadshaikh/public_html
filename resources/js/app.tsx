@@ -20,7 +20,7 @@ const inertiaDefaults = {
 };
 
 createInertiaApp({
-    title: (title) => (title ? `${title} - ${appName}` : appName),
+    title: (title) => (title ? `${title} | ${appName}` : appName),
     pages: {
         path: './pages',
         extension: '.tsx',

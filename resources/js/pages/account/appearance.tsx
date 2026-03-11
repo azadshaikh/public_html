@@ -1,4 +1,3 @@
-import AppHead from '@/components/app-head';
 import AppearanceTabs from '@/components/appearance-tabs';
 import Heading from '@/components/heading';
 import AccountLayout from '@/layouts/account/layout';
@@ -20,11 +19,6 @@ export default function Appearance() {
             title="Appearance"
             description="Choose the color theme and appearance settings for your account."
         >
-            <AppHead
-                title="Appearance"
-                description="Choose the color theme and appearance settings for your account."
-            />
-
             <AccountLayout>
                 <div className="space-y-6">
                     <Heading

@@ -10,7 +10,6 @@ import {
   UsersIcon,
   WandSparklesIcon,
 } from 'lucide-react'
-import AppHead from '@/components/app-head'
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -161,11 +160,6 @@ export default function Dashboard() {
         </>
       }
     >
-      <AppHead
-        title="Dashboard"
-        description="Monitor publishing velocity, editorial pipeline progress, and audience engagement from one CMS dashboard."
-      />
-
       <section className="grid gap-4 xl:grid-cols-[1.7fr_1fr]">
             <Card className="border-none bg-gradient-to-br from-foreground to-foreground/85 text-background shadow-none ring-0">
               <CardHeader>

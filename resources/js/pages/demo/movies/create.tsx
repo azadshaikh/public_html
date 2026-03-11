@@ -1,5 +1,4 @@
 import MovieController from '@/actions/App/Http/Controllers/Demo/MovieController';
-import AppHead from '@/components/app-head';
 import MovieForm from '@/components/demo/movies/movie-form';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem, MovieFormPageProps } from '@/types';
@@ -24,13 +23,8 @@ export default function CreateMovieDemo({
         <AppLayout
             breadcrumbs={breadcrumbs}
             title="Create movie"
-            description="This demo CRUD includes text, numeric, checkbox, toggle, URL, and image upload inputs."
+            description="Create a large demo movie record with mixed field types and media uploads."
         >
-            <AppHead
-                title="Create movie demo"
-                description="Create a large demo movie record with mixed field types and media uploads."
-            />
-
             <MovieForm
                 mode="create"
                 movie={movie}

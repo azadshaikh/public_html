@@ -8,7 +8,6 @@ import {
     Trash2Icon,
 } from 'lucide-react';
 import MovieController from '@/actions/App/Http/Controllers/Demo/MovieController';
-import AppHead from '@/components/app-head';
 import MovieArtwork from '@/components/demo/movies/movie-artwork';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -76,11 +75,6 @@ export default function MoviesDemoIndex({
             title="Movies demo"
             description="Browse, filter, and manage a large demo movie CRUD with mixed field types."
         >
-            <AppHead
-                title="Movies demo"
-                description="Browse, filter, and manage a large demo movie CRUD with mixed field types."
-            />
-
             <div className="flex flex-col gap-8">
                 <section className="grid gap-6 xl:grid-cols-[minmax(0,1.7fr)_minmax(320px,1fr)]">
                     <Card className="border-none bg-gradient-to-br from-foreground to-foreground/85 text-background shadow-none">

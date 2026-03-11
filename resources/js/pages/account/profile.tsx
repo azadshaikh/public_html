@@ -1,7 +1,6 @@
 import { Transition } from '@headlessui/react';
 import { Form, Link, usePage } from '@inertiajs/react';
 import ProfileController from '@/actions/App/Http/Controllers/Account/ProfileController';
-import AppHead from '@/components/app-head';
 import DeleteUser from '@/components/delete-user';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
@@ -36,11 +35,6 @@ export default function Profile({
             title="Profile"
             description="Update your profile details and email address."
         >
-            <AppHead
-                title="Profile"
-                description="Update your profile details and email address."
-            />
-
             <AccountLayout>
                 <div className="space-y-6">
                     <Heading

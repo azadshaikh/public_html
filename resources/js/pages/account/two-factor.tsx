@@ -1,7 +1,6 @@
 import { Form } from '@inertiajs/react';
 import { ShieldBan, ShieldCheck } from 'lucide-react';
 import { useState } from 'react';
-import AppHead from '@/components/app-head';
 import Heading from '@/components/heading';
 import TwoFactorRecoveryCodes from '@/components/two-factor-recovery-codes';
 import TwoFactorSetupModal from '@/components/two-factor-setup-modal';
@@ -47,11 +46,6 @@ export default function TwoFactor({
             title="Two-factor authentication"
             description="Manage an additional verification step for your account sign-in flow."
         >
-            <AppHead
-                title="Two-factor authentication"
-                description="Manage an additional verification step for your account sign-in flow."
-            />
-
             <AccountLayout>
                 <div className="space-y-6">
                     <Heading
