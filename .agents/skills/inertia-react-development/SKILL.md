@@ -36,6 +36,9 @@ Useful topics:
 - `validation`
 - `remembering state`
 - `file uploads`
+- `http requests`
+- `optimistic updates`
+- `typescript`
 - `http client interceptors`
 - `createInertiaApp defaults config`
 - `strict mode pages shorthand`
@@ -240,7 +243,6 @@ import { Link } from '@inertiajs/react'
 - `preserveState` preserves local page state.
 - `preserveScroll` preserves the current scroll position.
 - `only` requests a subset of props on partial reloads.
-- `viewTransition` opts a link into the browser View Transitions API.
 - Active links receive a `data-loading` attribute during in-flight requests.
 
 ### Instant Link Patterns
@@ -297,7 +299,6 @@ Important `router.visit()` options in v3 include:
 - `forceFormData`
 - `prefetch`
 - `preserveErrors`
-- `viewTransition`
 - `component`
 - `pageProps`
 - `onBefore`, `onStart`, `onProgress`, `onSuccess`, `onError`, `onHttpException`, `onNetworkError`, `onCancel`, `onFinish`
@@ -417,6 +418,10 @@ export default function CreateUser() {
 - Use `disableWhileProcessing` to add the `inert` attribute during submission; pair it with classes such as `inert:opacity-60` when helpful.
 - Prefer built-in reset helpers like `resetOnSuccess`, `resetOnError`, and `setDefaultsOnSuccess` over manual reset bookkeeping.
 - Put partial reload controls such as `only`, `except`, and `reset` inside the `options` prop, since they configure the follow-up visit rather than the form payload.
+- File uploads work automatically when the payload contains `File` objects; Inertia converts the request to `FormData` for you.
+- Use `progress` from `<Form>`, `useForm`, or `useHttp` to render upload progress.
+- With Laravel, do not send file uploads with `put` or `patch` directly. Prefer `post` plus `_method: 'put' | 'patch'` when method spoofing is needed.
+- Use `forceFormData` on manual visits when a request should always be multipart, even before a file is present.
 
 Example:
 
@@ -528,6 +533,15 @@ Useful v3 `useForm` helpers include:
 - Rely on Inertia's built-in server-side validation flow instead of manual `422` parsing.
 - For file uploads, let Inertia convert the payload to `FormData` automatically.
 - Prefer Wayfinder objects with both `<Form>` and `useForm.submit()` instead of hard-coded URLs.
+- Form helper errors are already scoped to the form instance, so error bags are usually unnecessary when using `<Form>` or `useForm`.
+
+### Validation Notes
+
+- Inertia validation for page visits is redirect-based, not `422`-driven.
+- Display validation errors from form helpers or shared `page.props.errors`.
+- For non-form-helper manual visits on pages with multiple forms, use `errorBag` to avoid field-name collisions.
+- Inertia preserves component state by default for `post`, `put`, `patch`, and `delete`, so input repopulation usually comes for free after validation failures.
+- Laravel adapters return only the first error per field by default unless all-errors behavior is enabled server-side.
 
 ### Precognition Notes
 
@@ -566,6 +580,43 @@ export default function Search() {
     )
 }
 ```
+
+Prefer `useHttp` over raw `fetch()` for app-owned JSON endpoints when you want Inertia-style request ergonomics without navigation.
+
+`useHttp` is especially useful for:
+
+- modal or sidebar data fetches
+- background refreshes of JSON endpoints
+- multi-step setup flows that read or mutate non-Inertia endpoints
+- uploads with progress indicators
+- requests that benefit from remembered state, validation errors, cancellation, or Precognition without a page visit
+
+Useful `useHttp` capabilities in v3:
+
+- `response` for the latest parsed JSON payload
+- `cancel()` for aborting in-flight requests
+- `withAllErrors()` for array-based validation messages
+- remembered state via `useHttp('Key', data)` plus `dontRemember()` for sensitive fields
+- `progress` for upload UI
+- `optimistic()` for request-local optimistic updates
+- `withPrecognition()` plus `validate()`, `touch()`, `touched()`, `valid()`, and `invalid()`
+
+Example:
+
+```react
+const search = useHttp('SearchFilters', {
+    query: '',
+}).dontRemember('token')
+
+async function runSearch() {
+    const response = await search.get('/api/search')
+    console.log(response)
+}
+```
+
+If the application needs global request behavior, prefer Inertia's built-in `http.onRequest()`, `http.onResponse()`, and `http.onError()` interceptors instead of introducing Axios patterns.
+
+For uploads through `useHttp`, file payloads are automatically sent as `multipart/form-data`, and `progress` can be used for upload indicators.
 
 ### HTTP Client Configuration
 
@@ -633,6 +684,22 @@ import { Form } from '@inertiajs/react'
 </Form>
 ```
 
+Use optimistic updates when:
+
+- the interaction is lightweight and reversible
+- the user benefits from immediate feedback
+- the optimistic value can be represented as a shallow partial update
+
+Rules of thumb:
+
+- `router.optimistic()` updates current page props
+- `<Form optimistic={...}>` receives both current props and submitted form data
+- `useForm().optimistic()` updates current page props before submit
+- `useHttp().optimistic()` updates the hook's own `data`, not page props
+- Return only the keys that should change; Inertia shallow-merges the result and snapshots touched keys for rollback
+
+Prefer optimistic updates for counters, toggles, lightweight list inserts, and similar interactions. Avoid them when the optimistic state would be difficult to roll back cleanly or when the server may return materially different structure.
+
 ### Layout Props
 
 Use layout props to share dynamic data between pages and persistent layouts.
@@ -670,6 +737,26 @@ export default function Dashboard() {
     return <h1>Dashboard</h1>
 }
 ```
+
+Only use `useLayoutProps`, `setLayoutProps()`, or `setLayoutPropsFor()` with persistent layouts. If a page simply renders a layout wrapper as a normal child component, that layout is recreated on each visit and layout-prop persistence does not apply.
+
+Persistent layout guidance:
+
+- `Page.layout = Layout` keeps the layout instance alive between visits.
+- Use arrays for nested persistent layouts.
+- Use `createInertiaApp({ layout })` or the `resolve` callback for default layouts when that improves consistency.
+- Use named layouts and `setLayoutPropsFor()` only when multiple persistent layout layers truly need separate dynamic props.
+- Use `resetLayoutProps()` to manually clear dynamic layout props when needed.
+
+Prefer layout props for dynamic layout concerns like titles, active sections, or sidebar state. Do not use them as a replacement for shared page props.
+
+### View Transitions
+
+This project does not use Inertia view transitions.
+
+- Do not add `viewTransition` to `Link` or `router.visit()` calls.
+- Do not enable global transition defaults through `defaults.visitOptions`.
+- Prefer standard Inertia navigation behavior in this codebase.
 
 ### Default Layouts
 
@@ -795,13 +882,21 @@ Server-side `Inertia::render()`, prop types like `Inertia::optional()` and `Iner
 - Passing `pageProps` to instant visits without re-merging required shared props
 - Forgetting `router.cancelAll()` when cancelling stale visits during navigation-heavy interactions
 - Using `router.push()` / `router.replace()` as a substitute for real server visits when the page still needs fresh backend data
-- Overlooking `replace`, `preserveState`, `preserveScroll`, `only`, or `viewTransition` when they improve UX
+- Overlooking `replace`, `preserveState`, `preserveScroll`, or `only` when they improve UX
 - Ignoring the `data-loading` attribute when styling loading navigation states
 - Rebuilding page resolution manually when `@inertiajs/vite` already covers the setup
 - Forgetting to keep the client `id` and server `@inertia(...)` root id in sync
 - Registering `HandleInertiaRequests` in the wrong Laravel 12 location
 - Skipping `@viteReactRefresh` in React development when touching the Blade root template
 - Reintroducing Axios patterns when the built-in XHR client already covers the use case
+- Using raw `fetch()` for app-owned standalone requests when `useHttp` would provide better cancellation, error, progress, and remember-state ergonomics
+- Using `router` visits for requests that should stay outside the Inertia page lifecycle
+- Applying optimistic updates to complex state that cannot be safely or clearly rolled back
+- Returning full objects instead of the minimal changed subset from optimistic callbacks
+- Sending file uploads through `put` or `patch` in Laravel instead of method-spoofed `post` requests when multipart limitations apply
+- Using error bags with `<Form>` or `useForm` when helper-scoped errors already solve the problem
+- Reaching for layout props in non-persistent wrapper layouts where plain props or shared data are more appropriate
+- Adding `viewTransition` in this project even though the effect is intentionally not used
 - Using `router.cancel()` instead of `router.cancelAll()`
 - Listening for `invalid` / `exception` instead of `httpException` / `networkError`
 - Forgetting loading or empty states for deferred props

@@ -54,7 +54,9 @@ This project has domain-specific skills available. You MUST activate the relevan
 
 ## Frontend Bundling
 
-- If the user doesn't see a frontend change reflected in the UI, it could mean they need to run `pnpm run build`, `pnpm run dev`, or `composer run dev`. Ask them.
+- This project uses `pnpm`, not `npm`, for frontend package management and scripts.
+- Prefer `pnpm dev` for frontend development. Do not run build commands for routine frontend validation unless the user explicitly asks for a production build.
+- If the user doesn't see a frontend change reflected in the UI, it could mean they need to run `pnpm dev` or `composer run dev`. Ask them.
 
 ## Documentation Files
 
@@ -168,17 +170,24 @@ protected function isAccessible(User $user, ?string $path = null): bool
 - Use Inertia `<Link>` for internal navigation. For non-`GET` visits, prefer button rendering over anchor links for accessibility.
 - Prefer Inertia `<Form>` for straightforward server-driven forms with uncontrolled inputs; prefer `useForm` when controlled state, imperative submission, remembered history state, or client-side mutation is needed.
 - With React `<Form>`, prefer `name` plus `defaultValue` / `defaultChecked` over controlled `value` state unless the UI truly needs control.
+- Use `useHttp` for standalone JSON or external requests that should not trigger page navigation; prefer it over raw `fetch()` for app-owned endpoints when Inertia request ergonomics are useful.
+- File uploads are converted to `FormData` automatically when `File` values are present. Use `progress` for upload UI, `forceFormData` only when needed, and prefer method-spoofed `post` uploads over direct `put` / `patch` multipart requests in Laravel.
 - When Wayfinder is available, pass the generated object directly to `Link href`, form helpers, or router methods.
 - Use `disableWhileProcessing`, `resetOnSuccess`, `resetOnError`, and `setDefaultsOnSuccess` intentionally to simplify form UX.
 - Use keyed `useForm()` instances for drafts that should survive history navigation, and exclude sensitive fields with `dontRemember()`.
+- `useHttp` also supports remembered state, `dontRemember()`, progress, cancellation, `withAllErrors()`, built-in Precognition, and optimistic updates.
 - Built-in Inertia Precognition support is available for forms and `useForm`; prefer it over legacy client packages when real-time Laravel validation is needed.
+- Validation errors for Inertia page visits come from redirects and shared props, not `422` JSON handling. Form helper errors are already scoped; use `errorBag` mainly for manual multi-form page submissions.
+- Prefer built-in Inertia optimistic updates for small reversible UI changes, and return only the minimal changed subset so rollback stays predictable.
 - Prefer `router.get/post/put/patch/delete/reload` shortcut methods over raw `router.visit()` when they clearly express intent; `router.reload()` preserves scroll and state automatically.
-- Use `router.visit()` options like `replace`, `preserveState`, `preserveScroll`, `only`, `except`, `preserveErrors`, `viewTransition`, `component`, and `pageProps` intentionally.
+- Use `router.visit()` options like `replace`, `preserveState`, `preserveScroll`, `only`, `except`, `preserveErrors`, `component`, and `pageProps` intentionally.
+- Use `useLayoutProps`, `setLayoutProps`, `setLayoutPropsFor`, and `resetLayoutProps` only with persistent Inertia layouts, not simple wrapper components that remount every visit.
+- This project does not use Inertia `viewTransition`; do not add it to links, visits, or global defaults.
 - Use client-side `router.push()` / `router.replace()` only when no server request should run, and keep pushed routes renderable by the server on refresh.
 - Use prop helpers like `router.replaceProp()`, `router.appendToProp()`, and `router.prependToProp()` for lightweight client-only page prop updates.
 - Cancel stale visits with `router.cancelAll()` when needed; use `onBefore`, `onCancelToken`, `onHttpException`, and `onNetworkError` deliberately for manual visits.
 - Instant visits are best for pages that can render with shared props only; use `component` or Wayfinder `instant` patterns only when the intermediate render is safe.
-- Use `replace`, `preserveState`, `preserveScroll`, `only`, and `viewTransition` intentionally when they improve navigation UX.
+- Use `replace`, `preserveState`, `preserveScroll`, and `only` intentionally when they improve navigation UX.
 - You may opt into the standards-compliant `data-inertia` head attribute with `defaults.future.useDataInertiaHeadAttribute`.
 - When using deferred props, add an empty state with a pulsing or animated skeleton.
 - Axios has been removed. Use the built-in XHR client with interceptors, or install Axios separately if needed.
