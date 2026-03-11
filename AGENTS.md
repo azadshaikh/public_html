@@ -36,6 +36,7 @@ This project has domain-specific skills available. You MUST activate the relevan
 - `wayfinder-development` — Activates whenever referencing backend routes in frontend components. Use when importing from @/actions or @/routes, calling Laravel routes from TypeScript, or working with Wayfinder route functions.
 - `inertia-react-development` — Develops Inertia.js v3 React client-side applications. Activates when creating React pages, forms, or navigation; using &lt;Link&gt;, &lt;Form&gt;, useForm, useHttp, useLayoutProps, or router; working with deferred props, prefetching, optimistic updates, instant visits, or polling; or when user mentions React with Inertia, React pages, React forms, or React navigation.
 - `tailwindcss-development` — Styles applications using Tailwind CSS v4 utilities. Activates when adding styles, restyling components, working with gradients, spacing, layout, flex, grid, responsive design, dark mode, colors, typography, or borders; or when the user mentions CSS, styling, classes, Tailwind, restyle, hero section, cards, buttons, or any visual/UI changes.
+- `laravel-inertia-crud-development` — Activates whenever building or expanding CRUD resources in this project. Use when creating Laravel models, migrations, factories, seeders, form requests, resource controllers, Inertia pages, Wayfinder-backed forms, filtering/sorting/pagination, media uploads, sidebar links, or PHPUnit CRUD coverage.
 
 ## Conventions
 

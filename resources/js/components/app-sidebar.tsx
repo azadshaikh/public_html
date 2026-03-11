@@ -1,7 +1,7 @@
 "use client"
 
 import { usePage } from '@inertiajs/react'
-import { GalleryVerticalEndIcon, AudioLinesIcon, TerminalIcon, TerminalSquareIcon, BotIcon, BookOpenIcon, BadgeCheckIcon, FrameIcon, PieChartIcon, MapIcon } from "lucide-react"
+import { GalleryVerticalEndIcon, AudioLinesIcon, TerminalIcon, TerminalSquareIcon, BotIcon, BookOpenIcon, BadgeCheckIcon, FrameIcon, PieChartIcon, MapIcon, ClapperboardIcon } from "lucide-react"
 import * as React from "react"
 
 import { NavMain } from "@/components/nav-main"
@@ -16,6 +16,7 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar"
 import { dashboard } from '@/routes'
+import MovieController from '@/actions/App/Http/Controllers/Demo/MovieController'
 import type { AuthenticatedSharedData } from '@/types'
 
 // This is sample data.
@@ -184,7 +185,35 @@ const data = {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { auth } = usePage<AuthenticatedSharedData>().props
+  const page = usePage<AuthenticatedSharedData>()
+  const { auth } = page.props
+  const currentComponent = page.component
+  const isDashboardPage = currentComponent === 'dashboard'
+  const isMoviesDemoPage = currentComponent.startsWith('demo/movies/')
+
+  const navMain = [
+    {
+      title: "Dashboard",
+      url: dashboard().url,
+      component: 'dashboard',
+      icon: (
+        <TerminalSquareIcon
+        />
+      ),
+      isActive: isDashboardPage,
+    },
+    {
+      title: "Movies demo",
+      url: MovieController.index().url,
+      component: 'demo/movies/index',
+      icon: (
+        <ClapperboardIcon
+        />
+      ),
+      isActive: isMoviesDemoPage,
+    },
+    ...data.navMain.slice(1),
+  ]
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -192,7 +221,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <TeamSwitcher teams={data.teams} />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <NavMain items={navMain} />
         <NavProjects projects={data.projects} />
       </SidebarContent>
       <SidebarFooter>
