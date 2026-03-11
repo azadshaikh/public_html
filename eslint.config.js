@@ -70,6 +70,7 @@ export default [
     },
     {
         ignores: [
+            'tmp/**',
             'vendor',
             'node_modules',
             'public',
