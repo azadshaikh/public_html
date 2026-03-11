@@ -1,5 +1,5 @@
 {
     "CMS": "enabled",
     "ChatBot": "enabled",
-    "Todos": "disabled"
+    "Todos": "enabled"
 }

@@ -7,43 +7,14 @@ return [
     | Server Side Rendering
     |--------------------------------------------------------------------------
     |
-    | These options configures if and how Inertia uses Server Side Rendering
-    | to pre-render the initial visits made to your application's pages.
-    |
-    | You can specify a custom SSR bundle path, or omit it to let Inertia
-    | try and automatically detect it for you.
-    |
-    | Do note that enabling these options will NOT automatically make SSR work,
-    | as a separate rendering service needs to be available. To learn more,
-    | please visit https://inertiajs.com/server-side-rendering
+    | This application does not use Inertia SSR. Keep this disabled unless the
+    | project explicitly opts back into a separate SSR runtime in the future.
     |
     */
 
     'ssr' => [
 
-        'enabled' => (bool) env('INERTIA_SSR_ENABLED', true),
-
-        'url' => env('INERTIA_SSR_URL', 'http://127.0.0.1:13714'),
-
-        'ensure_bundle_exists' => (bool) env('INERTIA_SSR_ENSURE_BUNDLE_EXISTS', true),
-
-        // 'bundle' => base_path('bootstrap/ssr/ssr.mjs'),
-
-        /*
-        |--------------------------------------------------------------------------
-        | SSR Error Handling
-        |--------------------------------------------------------------------------
-        |
-        | When SSR rendering fails, Inertia gracefully falls back to client-side
-        | rendering. Set throw_on_error to true to throw an exception instead.
-        | This is useful for E2E testing where you want SSR errors to fail loudly.
-        |
-        | You can also listen for the Inertia\Ssr\SsrRenderFailed event to handle
-        | failures in your own way (e.g., logging, error tracking service).
-        |
-        */
-
-        'throw_on_error' => (bool) env('INERTIA_SSR_THROW_ON_ERROR', false),
+        'enabled' => false,
 
     ],
 

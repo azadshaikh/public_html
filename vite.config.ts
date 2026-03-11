@@ -21,12 +21,7 @@ export default defineConfig(({ mode }) => {
                 input: ['resources/css/app.css', 'resources/js/app.tsx'],
                 refresh: true,
             }),
-            inertia({
-                ssr: {
-                    entry: 'resources/js/ssr.tsx',
-                    port: 13714,
-                },
-            }),
+            inertia(),
             ...(useHttps ? [basicSsl()] : []),
             react({
                 babel: {

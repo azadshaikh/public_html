@@ -61,6 +61,7 @@ This project has domain-specific skills available. You MUST activate the relevan
 - This project uses `pnpm`, not `npm`, for frontend package management and scripts.
 - Prefer `pnpm dev` for frontend development. Do not run build commands for routine frontend validation unless the user explicitly asks for a production build.
 - If the user doesn't see a frontend change reflected in the UI, it could mean they need to run `pnpm dev` or `composer run dev`. Ask them.
+- This project does not use Inertia SSR. Do not add, restore, or rely on SSR / hydration-specific setup unless the user explicitly asks for it.
 
 ## Documentation Files
 
