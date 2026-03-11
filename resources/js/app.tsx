@@ -1,23 +1,26 @@
 import { createInertiaApp } from '@inertiajs/react';
-import { StrictMode, type ComponentType } from 'react';
+import { StrictMode } from 'react';
 import { createRoot, hydrateRoot } from 'react-dom/client';
 import '../css/app.css';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { initializeTheme } from '@/hooks/use-appearance';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
-const pages = import.meta.glob<{ default: ComponentType }>(`./pages/**/*.tsx`);
 
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
-    resolve: (name) => {
-        const page = pages[`./pages/${name}.tsx`];
-
-        if (!page) {
-            throw new Error(`Unknown Inertia page: ${name}`);
-        }
-
-        return page().then((module) => module.default);
+    pages: {
+        path: './pages',
+        extension: '.tsx',
+    },
+    defaults: {
+        form: {
+            recentlySuccessfulDuration: 5000,
+        },
+        prefetch: {
+            cacheFor: '1m',
+            hoverDelay: 150,
+        },
     },
     setup({ el, App, props }) {
         if (!el) {

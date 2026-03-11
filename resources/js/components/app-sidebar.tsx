@@ -16,7 +16,7 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar"
 import { dashboard } from '@/routes'
-import type { Auth } from '@/types/auth'
+import type { AuthenticatedSharedData } from '@/types'
 
 // This is sample data.
 const data = {
@@ -183,7 +183,7 @@ const data = {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { auth } = usePage<{ auth: Auth }>().props
+  const { auth } = usePage<AuthenticatedSharedData>().props
 
   return (
     <Sidebar collapsible="icon" {...props}>

@@ -11,7 +11,7 @@ import AppLayout from '@/layouts/app-layout';
 import AccountLayout from '@/layouts/account/layout';
 import { edit } from '@/routes/profile';
 import { send } from '@/routes/verification';
-import type { BreadcrumbItem } from '@/types';
+import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -27,7 +27,7 @@ export default function Profile({
     mustVerifyEmail: boolean;
     status?: string;
 }) {
-    const { auth } = usePage().props;
+    const { auth } = usePage<AuthenticatedSharedData>().props;
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>

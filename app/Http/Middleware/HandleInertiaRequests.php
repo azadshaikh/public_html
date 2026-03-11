@@ -10,7 +10,7 @@ class HandleInertiaRequests extends Middleware
     /**
      * The root template that's loaded on the first page visit.
      *
-     * @see https://inertiajs.com/server-side-setup#root-template
+     * @see https://inertiajs.com/v3/installation/server-side-setup#setup-root-template
      *
      * @var string
      */
@@ -19,7 +19,7 @@ class HandleInertiaRequests extends Middleware
     /**
      * Determines the current asset version.
      *
-     * @see https://inertiajs.com/asset-versioning
+     * @see https://inertiajs.com/v3/advanced/asset-versioning
      */
     public function version(Request $request): ?string
     {
@@ -29,7 +29,7 @@ class HandleInertiaRequests extends Middleware
     /**
      * Define the props that are shared by default.
      *
-     * @see https://inertiajs.com/shared-data
+     * @see https://inertiajs.com/v3/data-props/shared-data
      *
      * @return array<string, mixed>
      */
@@ -37,9 +37,19 @@ class HandleInertiaRequests extends Middleware
     {
         return [
             ...parent::share($request),
-            'name' => config('app.name'),
+            'appName' => config('app.name'),
             'auth' => [
-                'user' => $request->user(),
+                'user' => fn () => $request->user()
+                    ? $request->user()->only(
+                        'id',
+                        'name',
+                        'email',
+                        'avatar',
+                        'email_verified_at',
+                        'created_at',
+                        'updated_at',
+                    )
+                    : null,
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
