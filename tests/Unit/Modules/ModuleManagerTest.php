@@ -30,6 +30,7 @@ class ModuleManagerTest extends TestCase
         $this->assertSame('CMS', $module->name);
         $this->assertSame('Modules\\Cms\\', $module->namespace);
         $this->assertSame('cms/', $module->inertiaNamespace());
+        $this->assertSame('/cms', $module->url());
     }
 
     public function test_it_only_enables_modules_listed_in_the_root_manifest(): void

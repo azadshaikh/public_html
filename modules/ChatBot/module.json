@@ -3,8 +3,6 @@
     "slug": "chatbot",
     "version": "1.0.0",
     "description": "Simple chatbot module for validating modular module discovery and routing.",
-    "entry_url": "/chatbot",
     "namespace": "Modules\\ChatBot\\",
-    "provider": "Modules\\ChatBot\\Providers\\ChatBotServiceProvider",
-    "enabled": true
+    "provider": "Modules\\ChatBot\\Providers\\ChatBotServiceProvider"
 }

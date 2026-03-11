@@ -1,10 +1,6 @@
 <?php
 
 return [
-    'name' => 'Todos',
-    'slug' => 'todos',
-    'version' => '1.0.0',
-    'description' => 'A small task tracking module used to test multiple independently mounted modules.',
     'items' => [
         [
             'title' => 'Finalize module manifest schema',

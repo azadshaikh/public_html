@@ -61,6 +61,27 @@ class ModuleManager
         });
     }
 
+    public function find(string $module): ?ModuleManifest
+    {
+        $normalizedModule = $this->normalizeModuleIdentifier($module);
+
+        return $this->all()->first(function (ModuleManifest $manifest) use ($normalizedModule): bool {
+            return $this->normalizeModuleIdentifier($manifest->slug) === $normalizedModule
+                || $this->normalizeModuleIdentifier($manifest->name) === $normalizedModule;
+        });
+    }
+
+    public function findOrFail(string $module): ModuleManifest
+    {
+        $manifest = $this->find($module);
+
+        if ($manifest === null) {
+            throw new InvalidArgumentException("Unable to locate module [{$module}].");
+        }
+
+        return $manifest;
+    }
+
     /**
      * @return array{items: array<int, array{name: string, slug: string, version: string, description: string, inertiaNamespace: string, url: string}>}
      */
@@ -75,7 +96,7 @@ class ModuleManager
     }
 
     /**
-     * @return Collection<int, array{name: string, slug: string, version: string, description: string, inertiaNamespace: string, url: string, status: string, enabled: bool}>
+     * @return Collection<int, array{name: string, version: string, description: string, status: string, enabled: bool}>
      */
     public function managementData(): Collection
     {
@@ -88,7 +109,7 @@ class ModuleManager
                     ?? 'disabled';
 
                 return [
-                    ...$module->toSharedArray(),
+                    ...$module->toManagementArray(),
                     'status' => $status,
                     'enabled' => $status === 'enabled',
                 ];
@@ -240,12 +261,11 @@ class ModuleManager
             slug: $slug,
             version: (string) ($decoded['version'] ?? '1.0.0'),
             description: (string) ($decoded['description'] ?? ''),
-            entryUrl: (string) ($decoded['entry_url'] ?? '/'.$slug),
             namespace: rtrim($namespace, '\\').'\\',
             provider: $provider,
             basePath: $modulePath,
             appPath: $modulePath.'/app',
-            enabled: (bool) ($decoded['enabled'] ?? true) && (
+            enabled: (
                 in_array($this->normalizeModuleIdentifier($slug), $enabledModules, true)
                 || in_array($this->normalizeModuleIdentifier($name), $enabledModules, true)
             ),

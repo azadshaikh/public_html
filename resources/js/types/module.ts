@@ -7,7 +7,10 @@ export type InstalledModule = {
     url: string;
 };
 
-export type ManagedModule = InstalledModule & {
+export type ManagedModule = {
+    name: string;
+    version: string;
+    description: string;
     status: 'enabled' | 'disabled';
     enabled: boolean;
 };

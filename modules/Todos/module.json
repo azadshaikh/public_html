@@ -3,8 +3,6 @@
     "slug": "todos",
     "version": "1.0.0",
     "description": "Simple todo workspace module for validating multiple modules.",
-    "entry_url": "/todos",
     "namespace": "Modules\\Todos\\",
-    "provider": "Modules\\Todos\\Providers\\TodosServiceProvider",
-    "enabled": true
+    "provider": "Modules\\Todos\\Providers\\TodosServiceProvider"
 }

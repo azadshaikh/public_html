@@ -9,7 +9,6 @@ final readonly class ModuleManifest
         public string $slug,
         public string $version,
         public string $description,
-        public string $entryUrl,
         public string $namespace,
         public string $provider,
         public string $basePath,
@@ -20,6 +19,11 @@ final readonly class ModuleManifest
     public function inertiaNamespace(): string
     {
         return $this->slug.'/';
+    }
+
+    public function url(): string
+    {
+        return '/'.$this->slug;
     }
 
     /**
@@ -33,7 +37,19 @@ final readonly class ModuleManifest
             'version' => $this->version,
             'description' => $this->description,
             'inertiaNamespace' => $this->inertiaNamespace(),
-            'url' => $this->entryUrl,
+            'url' => $this->url(),
+        ];
+    }
+
+    /**
+     * @return array{name: string, version: string, description: string}
+     */
+    public function toManagementArray(): array
+    {
+        return [
+            'name' => $this->name,
+            'version' => $this->version,
+            'description' => $this->description,
         ];
     }
 }

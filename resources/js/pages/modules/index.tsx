@@ -80,7 +80,7 @@ export default function ModulesIndex({ managedModules, status, error }: ModuleMa
           return true
         }
 
-        return [module.name, module.slug, module.description, module.url]
+        return [module.name, module.version, module.description]
           .join(' ')
           .toLowerCase()
           .includes(query)
@@ -250,7 +250,7 @@ export default function ModulesIndex({ managedModules, status, error }: ModuleMa
             : 'bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300'
 
           return (
-            <Card key={module.slug} className="overflow-hidden border-0 bg-background py-0 shadow-sm ring-1 ring-black/5 dark:ring-white/10">
+            <Card key={module.name} className="overflow-hidden border-0 bg-background py-0 shadow-sm ring-1 ring-black/5 dark:ring-white/10">
               <div className={`flex h-16 items-center justify-center ${module.enabled ? 'bg-linear-to-r from-emerald-500 to-green-500 text-white' : 'bg-linear-to-r from-slate-400 to-slate-500 text-white'}`}>
                 <PackageIcon className="size-7" />
               </div>
@@ -268,20 +268,11 @@ export default function ModulesIndex({ managedModules, status, error }: ModuleMa
                 </div>
               </CardHeader>
               <CardContent className="space-y-4 px-5 pb-4">
-                <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="text-sm">
                   <div>
                     <div className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Version</div>
                     <div className="mt-1 font-medium">{module.version}</div>
                   </div>
-                  <div>
-                    <div className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Slug</div>
-                    <div className="mt-1 font-medium">{module.slug}</div>
-                  </div>
-                </div>
-
-                <div className="rounded-xl border bg-muted/30 p-3 text-sm text-muted-foreground">
-                  <div><span className="font-medium text-foreground">Route:</span> {module.url}</div>
-                  <div className="mt-1 truncate"><span className="font-medium text-foreground">Namespace:</span> {module.inertiaNamespace}</div>
                 </div>
               </CardContent>
               <CardFooter className="border-t bg-background px-5 py-4">

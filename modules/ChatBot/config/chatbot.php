@@ -1,10 +1,6 @@
 <?php
 
 return [
-    'name' => 'ChatBot',
-    'slug' => 'chatbot',
-    'version' => '1.0.0',
-    'description' => 'A lightweight chatbot module used to test module routing, Inertia page resolution, and shared app resources.',
     'highlights' => [
         'Lives entirely inside the module directory.',
         'Reuses host UI components, layouts, and authentication.',
