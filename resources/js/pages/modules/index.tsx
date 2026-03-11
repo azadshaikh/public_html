@@ -18,7 +18,6 @@ import {
 } from '@/components/ui/card';
 import {
   Empty,
-  EmptyContent,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
@@ -344,15 +343,9 @@ export default function ModulesIndex({
                       No modules matched the current filters
                     </EmptyTitle>
                     <EmptyDescription>
-                      Try a different search term or clear the filters to see
-                      the full module list again.
+                      Try a different search term or change the status filter.
                     </EmptyDescription>
                   </EmptyHeader>
-                  <EmptyContent>
-                    <Button variant="outline" onClick={resetFilters}>
-                      Reset filters
-                    </Button>
-                  </EmptyContent>
                 </Empty>
               </CardContent>
             </Card>
