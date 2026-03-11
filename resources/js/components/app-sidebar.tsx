@@ -1,9 +1,10 @@
 "use client"
 
 import { usePage } from '@inertiajs/react'
-import { GalleryVerticalEndIcon, AudioLinesIcon, TerminalIcon, TerminalSquareIcon, BotIcon, BookOpenIcon, BadgeCheckIcon, FrameIcon, PieChartIcon, MapIcon, ClapperboardIcon } from "lucide-react"
+import { GalleryVerticalEndIcon, AudioLinesIcon, TerminalIcon, TerminalSquareIcon, BotIcon, BookOpenIcon, BadgeCheckIcon, FrameIcon, PieChartIcon, MapIcon, ClapperboardIcon, PackageIcon } from "lucide-react"
 import * as React from "react"
 
+import MovieController from '@/actions/App/Http/Controllers/Demo/MovieController'
 import { NavMain } from "@/components/nav-main"
 import { NavProjects } from "@/components/nav-projects"
 import { NavUser } from "@/components/nav-user"
@@ -15,8 +16,7 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar"
-import { dashboard } from '@/routes'
-import MovieController from '@/actions/App/Http/Controllers/Demo/MovieController'
+import { dashboard } from '@/routes/index'
 import type { AuthenticatedSharedData } from '@/types'
 
 // This is sample data.
@@ -190,6 +190,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const currentComponent = page.component
   const isDashboardPage = currentComponent === 'dashboard'
   const isMoviesDemoPage = currentComponent.startsWith('demo/movies/')
+  const isPluginsPage = currentComponent.startsWith('plugins/')
+  const pluginItems = page.props.plugins?.items ?? []
+
+  const pluginNavItems = pluginItems.map((plugin) => ({
+    title: plugin.name,
+    url: plugin.url,
+    component: plugin.inertiaNamespace,
+    icon: (
+      <PackageIcon
+      />
+    ),
+    isActive: currentComponent.startsWith(plugin.inertiaNamespace),
+  }))
 
   const navMain = [
     {
@@ -202,6 +215,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       ),
       isActive: isDashboardPage,
     },
+    {
+      title: "Plugins",
+      url: '/plugins',
+      component: 'plugins/index',
+      icon: (
+        <PackageIcon
+        />
+      ),
+      isActive: isPluginsPage,
+    },
+    ...pluginNavItems,
     {
       title: "Movies demo",
       url: MovieController.index().url,

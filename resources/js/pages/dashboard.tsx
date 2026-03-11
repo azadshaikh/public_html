@@ -30,7 +30,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import AppLayout from '@/layouts/app-layout'
-import { dashboard } from '@/routes'
+import { dashboard } from '@/routes/index'
 import type { BreadcrumbItem } from '@/types'
 
 const breadcrumbs: BreadcrumbItem[] = [

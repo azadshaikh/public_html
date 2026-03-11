@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Inertia\Properties\UserAvatar;
+use App\Plugins\PluginManager;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -36,6 +37,8 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $plugins = app(PluginManager::class);
+
         return [
             ...parent::share($request),
             'appName' => config('app.name'),
@@ -52,6 +55,7 @@ class HandleInertiaRequests extends Middleware
                     ]
                     : null,
             ],
+            'plugins' => $plugins->sharedData(),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
     }

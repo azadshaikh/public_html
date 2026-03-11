@@ -2,6 +2,7 @@ import { createInertiaApp } from '@inertiajs/react';
 import { StrictMode } from 'react';
 import { createRoot, hydrateRoot } from 'react-dom/client';
 import '../css/app.css';
+import { resolveInertiaPage } from './lib/inertia-page-resolver';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { initializeTheme } from '@/hooks/use-appearance';
 
@@ -21,10 +22,7 @@ const inertiaDefaults = {
 
 createInertiaApp({
     title: (title) => (title ? `${title} | ${appName}` : appName),
-    pages: {
-        path: './pages',
-        extension: '.tsx',
-    },
+    resolve: resolveInertiaPage,
     defaults: inertiaDefaults,
     setup({ el, App, props }) {
         if (!el) {

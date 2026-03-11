@@ -1,0 +1,10 @@
+{
+    "name": "ChatBot",
+    "slug": "chatbot",
+    "version": "1.0.0",
+    "description": "Simple chatbot plugin for validating modular plugin discovery and routing.",
+    "entry_url": "/chatbot",
+    "namespace": "Plugins\\ChatBot\\",
+    "provider": "Plugins\\ChatBot\\Providers\\ChatBotServiceProvider",
+    "enabled": true
+}

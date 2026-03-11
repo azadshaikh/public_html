@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/sidebar"
 import { ChevronsUpDownIcon, BadgeCheckIcon, CreditCardIcon, BellIcon, LogOutIcon } from "lucide-react"
 import { useInitials } from '@/hooks/use-initials'
-import { logout } from '@/routes'
+import { logout } from '@/routes/index'
 import { edit as editProfile } from '@/routes/profile'
 
 export function NavUser({

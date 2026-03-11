@@ -1,6 +1,7 @@
 import { createInertiaApp } from '@inertiajs/react';
 import createServer from '@inertiajs/react/server';
 import ReactDOMServer from 'react-dom/server';
+import { resolveInertiaPage } from './lib/inertia-page-resolver';
 import { TooltipProvider } from '@/components/ui/tooltip';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
@@ -10,16 +11,10 @@ createServer((page) =>
         page,
         render: ReactDOMServer.renderToString,
         title: (title) => (title ? `${title} - ${appName}` : appName),
-        pages: {
-            path: './pages',
-            extension: '.tsx',
-        },
+        resolve: resolveInertiaPage,
         defaults: {
             form: {
                 recentlySuccessfulDuration: 5000,
-            },
-            future: {
-                useDataInertiaHeadAttribute: true,
             },
             prefetch: {
                 cacheFor: '1m',

@@ -67,7 +67,10 @@ return [
 
         'paths' => [
 
-            resource_path('js/pages'),
+            ...array_filter([
+                resource_path('js/pages'),
+                ...glob(base_path('plugins/*/resources/js/pages')),
+            ]),
 
         ],
 
