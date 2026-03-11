@@ -122,6 +122,17 @@ Primary areas:
 - `Services`
 - shared model systems such as notes, addresses, settings, activity
 
+This phase also locks module navigation conventions early, because Astero modules already encode navigation structure in module config and route naming. We should inventory and normalize that before rebuilding module UX.
+
+Initial Phase 2 findings:
+
+- The Astero scaffold stack (`App\Scaffold\*`, `ScaffoldServiceInterface`, `Scaffoldable`, Blade scaffold resources) should not be ported directly. It is a refactor input for the later `Inertia` CRUD foundation.
+- Shared systems most likely to survive are addresses, notes, activity logging, metadata, revisions, and a small set of notification concepts.
+- Media-specific helpers and traits are still deferred to the dedicated media phase.
+- `Support\Unpoly` is a drop item, not a migration candidate.
+- Legacy groups CRUD remains out of scope; places where Astero uses `Group` or `GroupItem` should be redesigned unless a real shared dependency emerges.
+- The first real module (`Customers`) depends mainly on user linking, addresses, metadata/notes/activity, and optional billing/subscription integration contracts, which makes it a good template module after the shared foundation is ready.
+
 ### Phase 3 — Roles and permissions foundation
 
 Rebuild the authorization base early because most migrated application features depend on roles and permissions.
