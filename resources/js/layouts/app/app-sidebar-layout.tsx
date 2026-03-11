@@ -4,27 +4,27 @@ import { AppSidebar } from '@/components/app-sidebar';
 import type { AppLayoutProps } from '@/types';
 
 export default function AppSidebarLayout({
-  children,
-  breadcrumbs = [],
-  title,
-  description,
-  headerActions,
-  contentClassName,
+    children,
+    breadcrumbs = [],
+    title,
+    description,
+    headerActions,
+    contentClassName,
 }: AppLayoutProps) {
-  return (
-    <AppShell variant="sidebar">
-      <AppSidebar />
-      <AppContent
-        variant="sidebar"
-        className="overflow-x-hidden"
-        breadcrumbs={breadcrumbs}
-        title={title}
-        description={description}
-        headerActions={headerActions}
-        contentClassName={contentClassName}
-      >
-        {children}
-      </AppContent>
-    </AppShell>
-  );
+    return (
+        <AppShell variant="sidebar">
+            <AppSidebar />
+            <AppContent
+                variant="sidebar"
+                className="overflow-x-hidden"
+                breadcrumbs={breadcrumbs}
+                title={title}
+                description={description}
+                headerActions={headerActions}
+                contentClassName={contentClassName}
+            >
+                {children}
+            </AppContent>
+        </AppShell>
+    );
 }

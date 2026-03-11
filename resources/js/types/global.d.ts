@@ -1,9 +1,9 @@
 import type { SharedData } from '@/types/auth';
 
 declare module '@inertiajs/core' {
-  export interface InertiaConfig {
-    sharedPageProps: SharedData & {
-      [key: string]: unknown;
-    };
-  }
+    export interface InertiaConfig {
+        sharedPageProps: SharedData & {
+            [key: string]: unknown;
+        };
+    }
 }

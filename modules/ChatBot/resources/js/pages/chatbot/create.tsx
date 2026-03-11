@@ -8,46 +8,46 @@ import type { PromptTemplateFormValues } from '../../components/prompt-template-
 type Option = { value: string; label: string };
 
 type ChatBotCreatePageProps = {
-  module: {
-    name: string;
-    slug: string;
-    version: string;
-    description: string;
-  };
-  prompt: null;
-  initialValues: PromptTemplateFormValues;
-  options: {
-    statusOptions: Option[];
-    toneOptions: Option[];
-  };
+    module: {
+        name: string;
+        slug: string;
+        version: string;
+        description: string;
+    };
+    prompt: null;
+    initialValues: PromptTemplateFormValues;
+    options: {
+        statusOptions: Option[];
+        toneOptions: Option[];
+    };
 };
 
 export default function ChatBotCreate({
-  module,
-  prompt,
-  initialValues,
-  options,
+    module,
+    prompt,
+    initialValues,
+    options,
 }: ChatBotCreatePageProps) {
-  const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Dashboard', href: dashboard() },
-    { title: module.name, href: '/chatbot' },
-    { title: 'Create prompt', href: '/chatbot/create' },
-  ];
+    const breadcrumbs: BreadcrumbItem[] = [
+        { title: 'Dashboard', href: dashboard() },
+        { title: module.name, href: '/chatbot' },
+        { title: 'Create prompt', href: '/chatbot/create' },
+    ];
 
-  return (
-    <AppLayout
-      breadcrumbs={breadcrumbs}
-      title={`Create ${module.name} prompt`}
-      description={module.description}
-    >
-      <Head title={`Create ${module.name} prompt`} />
-      <PromptTemplateForm
-        mode="create"
-        module={module}
-        prompt={prompt}
-        initialValues={initialValues}
-        options={options}
-      />
-    </AppLayout>
-  );
+    return (
+        <AppLayout
+            breadcrumbs={breadcrumbs}
+            title={`Create ${module.name} prompt`}
+            description={module.description}
+        >
+            <Head title={`Create ${module.name} prompt`} />
+            <PromptTemplateForm
+                mode="create"
+                module={module}
+                prompt={prompt}
+                initialValues={initialValues}
+                options={options}
+            />
+        </AppLayout>
+    );
 }

@@ -1,61 +1,61 @@
 export type PermissionOption = {
-  id: number;
-  name: string;
-  display_name: string;
-  description: string | null;
-  module_slug: string | null;
+    id: number;
+    name: string;
+    display_name: string;
+    description: string | null;
+    module_slug: string | null;
 };
 
 export type PermissionGroup = {
-  group: string;
-  label: string;
-  permissions: PermissionOption[];
+    group: string;
+    label: string;
+    permissions: PermissionOption[];
 };
 
 export type RoleListItem = {
-  id: number;
-  name: string;
-  display_name: string;
-  description: string | null;
-  is_system: boolean;
-  permissions_count: number;
-  users_count: number;
+    id: number;
+    name: string;
+    display_name: string;
+    description: string | null;
+    is_system: boolean;
+    permissions_count: number;
+    users_count: number;
 };
 
 export type RoleFormValues = {
-  name: string;
-  display_name: string;
-  description: string;
-  permissions: number[];
+    name: string;
+    display_name: string;
+    description: string;
+    permissions: number[];
 };
 
 export type RoleEditingTarget = RoleFormValues & {
-  id: number;
-  is_system: boolean;
-  users_count: number;
-  permissions_count: number;
+    id: number;
+    is_system: boolean;
+    users_count: number;
+    permissions_count: number;
 };
 
 export type RolesIndexPageProps = {
-  roles: RoleListItem[];
-  filters: {
-    search: string;
-    scope: 'all' | 'system' | 'custom';
-  };
-  stats: {
-    total: number;
-    system: number;
-    custom: number;
-  };
-  status?: string;
-  error?: string;
+    roles: RoleListItem[];
+    filters: {
+        search: string;
+        scope: 'all' | 'system' | 'custom';
+    };
+    stats: {
+        total: number;
+        system: number;
+        custom: number;
+    };
+    status?: string;
+    error?: string;
 };
 
 export type RoleFormPageProps = {
-  initialValues: RoleFormValues;
-  permissionGroups: PermissionGroup[];
+    initialValues: RoleFormValues;
+    permissionGroups: PermissionGroup[];
 };
 
 export type RoleEditPageProps = RoleFormPageProps & {
-  role: RoleEditingTarget;
+    role: RoleEditingTarget;
 };
