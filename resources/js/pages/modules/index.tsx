@@ -206,7 +206,7 @@ export default function ModulesIndex({
             </div>
 
             <div className="flex flex-col gap-4 border-t pt-4 xl:flex-row xl:items-center xl:justify-between">
-              <InputGroup className="h-10 w-full xl:max-w-md">
+              <InputGroup className="h-9 w-full xl:max-w-md">
                 <InputGroupAddon>
                   <SearchIcon />
                 </InputGroupAddon>
@@ -235,7 +235,7 @@ export default function ModulesIndex({
                     <ToggleGroupItem
                       key={option.value}
                       value={option.value}
-                      className="h-10 px-3"
+                      className="h-9 px-2.5"
                     >
                       {option.label}
                     </ToggleGroupItem>
@@ -274,16 +274,16 @@ export default function ModulesIndex({
                 size="sm"
                 className="h-full py-0 shadow-none"
               >
-                <CardHeader className="min-h-16 items-center border-b">
-                  <div className="flex items-start gap-3">
+                <CardHeader className="min-h-12 items-center border-b px-3 py-2">
+                  <div className="flex items-center gap-2.5">
                     <div
                       className={cn(
-                        'flex size-8 shrink-0 items-center justify-center rounded-lg border text-muted-foreground',
+                        'flex size-7 shrink-0 items-center justify-center rounded-lg border text-muted-foreground',
                         module.enabled && 'bg-secondary text-foreground',
                         !module.enabled && 'bg-muted',
                       )}
                     >
-                      <PackageIcon className="size-4" />
+                      <PackageIcon className="size-3.5" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <CardTitle className="truncate text-sm">
@@ -293,8 +293,8 @@ export default function ModulesIndex({
                   </div>
                 </CardHeader>
 
-                <CardContent className="flex min-h-0 flex-1 flex-col gap-3 py-3">
-                  <div className="flex flex-wrap gap-2">
+                <CardContent className="flex min-h-0 flex-1 flex-col gap-2 px-3 py-2">
+                  <div className="flex flex-wrap gap-1.5">
                     <Badge variant="outline">v{module.version}</Badge>
                     <Badge
                       variant={module.enabled ? 'secondary' : 'outline'}
@@ -308,17 +308,16 @@ export default function ModulesIndex({
                     </Badge>
                   </div>
 
-                  <p className="line-clamp-2 min-h-10 text-xs/5 text-muted-foreground">
+                  <p className="line-clamp-2 min-h-8 text-xs/5 text-muted-foreground">
                     {module.description ||
                       'No description available for this module yet.'}
                   </p>
                 </CardContent>
 
-                <CardFooter className="min-h-16 items-end bg-transparent p-3 pt-0">
+                <CardFooter className="min-h-12 items-end bg-transparent px-3 pt-0 pb-2">
                   <Button
                     variant={actionVariant}
-                    size="sm"
-                    className="w-full"
+                    className="h-9 w-full"
                     disabled={isProcessing}
                     onClick={() =>
                       updateModuleStatus(module.name, !module.enabled)

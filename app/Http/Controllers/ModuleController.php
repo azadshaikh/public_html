@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\Modules\UpdateModulesRequest;
+use App\Modules\ModuleLifecycleManager;
 use App\Modules\ModuleManager;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
+use Throwable;
 
 class ModuleController extends Controller
 {
@@ -29,7 +31,13 @@ class ModuleController extends Controller
      */
     public function update(UpdateModulesRequest $request): RedirectResponse
     {
-        app(ModuleManager::class)->writeStatuses($request->validated('modules'));
+        try {
+            app(ModuleLifecycleManager::class)->syncStatuses($request->validated('modules'));
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return to_route('modules.index')->with('error', 'Unable to update the selected modules right now.');
+        }
 
         return to_route('modules.index')->with('status', 'Module settings updated.');
     }

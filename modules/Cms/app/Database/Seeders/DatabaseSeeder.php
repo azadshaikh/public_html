@@ -3,6 +3,7 @@
 namespace Modules\Cms\Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Schema;
 use Modules\Cms\Models\CmsPage;
 
 class DatabaseSeeder extends Seeder
@@ -12,7 +13,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        if (CmsPage::query()->exists()) {
+        if (! Schema::hasTable('cms_pages') || CmsPage::query()->exists()) {
             return;
         }
 

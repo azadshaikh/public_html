@@ -3,6 +3,7 @@
 namespace Modules\Todos\Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Schema;
 use Modules\Todos\Models\TodoTask;
 
 class DatabaseSeeder extends Seeder
@@ -12,7 +13,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        if (TodoTask::query()->exists()) {
+        if (! Schema::hasTable('todo_tasks') || TodoTask::query()->exists()) {
             return;
         }
 

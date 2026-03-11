@@ -110,7 +110,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       isActive: isDashboardPage,
     },
     {
-      title: 'Manage modules',
+      title: 'Modules',
       url: '/modules',
       icon: <PackageIcon />,
       isActive: isModulesPage,
