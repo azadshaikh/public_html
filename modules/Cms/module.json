@@ -2,7 +2,7 @@
     "name": "CMS",
     "slug": "cms",
     "version": "1.0.0",
-    "description": "Sample CMS module powered by the custom module runtime.",
+    "description": "Starter CMS module with a simple page CRUD.",
     "namespace": "Modules\\Cms\\",
     "provider": "Modules\\Cms\\Providers\\CmsServiceProvider"
 }

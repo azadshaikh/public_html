@@ -2,7 +2,7 @@
     "name": "ChatBot",
     "slug": "chatbot",
     "version": "1.0.0",
-    "description": "Simple chatbot module for validating modular module discovery and routing.",
+    "description": "Starter chatbot module with a prompt template CRUD.",
     "namespace": "Modules\\ChatBot\\",
     "provider": "Modules\\ChatBot\\Providers\\ChatBotServiceProvider"
 }

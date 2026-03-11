@@ -2,7 +2,7 @@
     "name": "Todos",
     "slug": "todos",
     "version": "1.0.0",
-    "description": "Simple todo workspace module for validating multiple modules.",
+    "description": "Starter todos module with a task CRUD.",
     "namespace": "Modules\\Todos\\",
     "provider": "Modules\\Todos\\Providers\\TodosServiceProvider"
 }
