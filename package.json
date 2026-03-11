@@ -9,6 +9,7 @@
         "format": "prettier --write resources/",
         "format:check": "prettier --check resources/",
         "lint": "eslint . --fix",
+        "lint:all": "bash ./scripts/lint-all.sh",
         "lint:check": "eslint .",
         "phpstan": "vendor/bin/phpstan analyse --memory-limit=1G",
         "rector": "vendor/bin/rector process",
