@@ -14,6 +14,13 @@ export type User = {
 
 export type Auth = {
   user: User | null;
+  abilities: {
+    manageModules: boolean;
+    viewRoles: boolean;
+    addRoles: boolean;
+    editRoles: boolean;
+    deleteRoles: boolean;
+  };
 };
 
 export type SharedData = {

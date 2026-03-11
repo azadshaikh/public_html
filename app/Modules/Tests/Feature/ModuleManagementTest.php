@@ -2,14 +2,19 @@
 
 namespace App\Modules\Tests\Feature;
 
+use App\Models\Role;
 use App\Models\User;
 use App\Modules\ModuleManager;
+use Database\Seeders\RolesAndPermissionsSeeder;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\File;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class ModuleManagementTest extends TestCase
 {
+    use RefreshDatabase;
+
     protected string $manifestPath;
 
     protected function setUp(): void
@@ -31,6 +36,8 @@ class ModuleManagementTest extends TestCase
             files: $app['files'],
             config: $app['config'],
         ));
+
+        $this->seed(RolesAndPermissionsSeeder::class);
     }
 
     protected function tearDown(): void
@@ -48,9 +55,10 @@ class ModuleManagementTest extends TestCase
 
     public function test_authenticated_users_can_view_the_module_management_page(): void
     {
-        $user = User::factory()->make([
+        $user = User::factory()->create([
             'email_verified_at' => now(),
         ]);
+        $user->assignRole(Role::findByName('administrator', 'web'));
 
         $this->actingAs($user)
             ->get(route('modules.index'))
@@ -73,9 +81,10 @@ class ModuleManagementTest extends TestCase
 
     public function test_authenticated_users_can_update_module_statuses(): void
     {
-        $user = User::factory()->make([
+        $user = User::factory()->create([
             'email_verified_at' => now(),
         ]);
+        $user->assignRole(Role::findByName('administrator', 'web'));
 
         $this->actingAs($user)
             ->patch(route('modules.update'), [
@@ -93,5 +102,16 @@ class ModuleManagementTest extends TestCase
             'ChatBot' => 'enabled',
             'Todos' => 'enabled',
         ], json_decode((string) File::get($this->manifestPath), true, 512, JSON_THROW_ON_ERROR));
+    }
+
+    public function test_authenticated_users_without_permission_cannot_view_the_module_management_page(): void
+    {
+        $user = User::factory()->create([
+            'email_verified_at' => now(),
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('modules.index'))
+            ->assertForbidden();
     }
 }

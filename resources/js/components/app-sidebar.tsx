@@ -12,10 +12,11 @@ import {
   CheckSquareIcon,
   FileTextIcon,
   PlusIcon,
+  ShieldCheckIcon,
 } from 'lucide-react';
 import * as React from 'react';
-
 import MovieController from '@/actions/App/Http/Controllers/Demo/MovieController';
+import RoleController from '@/actions/App/Http/Controllers/RoleController';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import { TeamSwitcher } from '@/components/team-switcher';
@@ -73,11 +74,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { auth } = page.props;
   const currentComponent = page.component;
   const currentUrl = page.url;
+  const canManageModules = auth.abilities.manageModules;
+  const canViewRoles = auth.abilities.viewRoles;
+  const canAddRoles = auth.abilities.addRoles;
   const isDashboardPage = currentComponent === 'dashboard';
   const isMoviesDemoPage = currentComponent.startsWith('demo/movies/');
   const isModulesPage =
     currentComponent.startsWith('modules/') ||
     currentUrl.startsWith('/modules');
+  const isRolesPage =
+    currentComponent.startsWith('roles/') || currentUrl.startsWith('/roles');
   const moduleItems = page.props.modules?.items ?? [];
 
   const moduleNavItems = moduleItems.map((module) => {
@@ -109,12 +115,42 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       icon: <TerminalSquareIcon />,
       isActive: isDashboardPage,
     },
-    {
-      title: 'Modules',
-      url: '/modules',
-      icon: <PackageIcon />,
-      isActive: isModulesPage,
-    },
+    ...(canManageModules
+      ? [
+          {
+            title: 'Modules',
+            url: '/modules',
+            icon: <PackageIcon />,
+            isActive: isModulesPage,
+          },
+        ]
+      : []),
+    ...(canViewRoles
+      ? [
+          {
+            title: 'Access control',
+            icon: <ShieldCheckIcon />,
+            isActive: isRolesPage,
+            items: [
+              {
+                title: 'Roles',
+                url: RoleController.index().url,
+                isActive: currentUrl === RoleController.index().url,
+              },
+              ...(canAddRoles
+                ? [
+                    {
+                      title: 'New role',
+                      url: RoleController.create().url,
+                      icon: <PlusIcon />,
+                      isActive: currentUrl === RoleController.create().url,
+                    },
+                  ]
+                : []),
+            ],
+          },
+        ]
+      : []),
     ...moduleNavItems,
     {
       title: 'Movies demo',

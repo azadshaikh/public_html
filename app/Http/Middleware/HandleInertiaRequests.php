@@ -54,6 +54,21 @@ class HandleInertiaRequests extends Middleware
                         'updated_at' => $request->user()->updated_at,
                     ]
                     : null,
+                'abilities' => fn (): array => $request->user()
+                    ? [
+                        'manageModules' => $request->user()->can('manage_modules'),
+                        'viewRoles' => $request->user()->can('view_roles'),
+                        'addRoles' => $request->user()->can('add_roles'),
+                        'editRoles' => $request->user()->can('edit_roles'),
+                        'deleteRoles' => $request->user()->can('delete_roles'),
+                    ]
+                    : [
+                        'manageModules' => false,
+                        'viewRoles' => false,
+                        'addRoles' => false,
+                        'editRoles' => false,
+                        'deleteRoles' => false,
+                    ],
             ],
             'modules' => $modules,
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',

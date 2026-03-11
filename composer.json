@@ -13,7 +13,8 @@
         "inertiajs/inertia-laravel": "^3.0.0-beta",
         "laravel/fortify": "^1.36.1",
         "laravel/framework": "^12.54.1",
-        "laravel/wayfinder": "^0.1.14"
+        "laravel/wayfinder": "^0.1.14",
+        "spatie/laravel-permission": "^6.0"
     },
     "require-dev": {
         "driftingly/rector-laravel": "^2.1.9",

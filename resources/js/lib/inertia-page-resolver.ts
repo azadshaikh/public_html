@@ -1,7 +1,7 @@
-import type { ReactComponent } from '@inertiajs/react';
+import type { ComponentType } from 'react';
 
 type InertiaPageModule = {
-  default: ReactComponent;
+  default: ComponentType;
 };
 
 type InertiaPageResolver = () => Promise<InertiaPageModule>;
@@ -47,7 +47,7 @@ const pageRegistry = buildPageRegistry();
 
 export async function resolveInertiaPage(
   name: string,
-): Promise<ReactComponent> {
+): Promise<ComponentType> {
   const resolver = pageRegistry.get(name);
 
   if (!resolver) {

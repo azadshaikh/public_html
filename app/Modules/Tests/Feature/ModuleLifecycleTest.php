@@ -2,8 +2,10 @@
 
 namespace App\Modules\Tests\Feature;
 
+use App\Models\Role;
 use App\Models\User;
 use App\Modules\ModuleManager;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
@@ -36,6 +38,8 @@ class ModuleLifecycleTest extends TestCase
             files: $app['files'],
             config: $app['config'],
         ));
+
+        $this->seed(RolesAndPermissionsSeeder::class);
     }
 
     protected function tearDown(): void
@@ -55,6 +59,7 @@ class ModuleLifecycleTest extends TestCase
         $user = User::factory()->create([
             'email_verified_at' => now(),
         ]);
+        $user->assignRole(Role::findByName('administrator', 'web'));
 
         $this->actingAs($user)
             ->patch(route('modules.update'), [
@@ -102,6 +107,7 @@ class ModuleLifecycleTest extends TestCase
         $user = User::factory()->create([
             'email_verified_at' => now(),
         ]);
+        $user->assignRole(Role::findByName('administrator', 'web'));
 
         $this->actingAs($user)
             ->patch(route('modules.update'), [
