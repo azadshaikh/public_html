@@ -50,6 +50,7 @@ const data = {
     {
       title: "Dashboard",
       url: dashboard().url,
+      component: 'dashboard',
       icon: (
         <TerminalSquareIcon
         />

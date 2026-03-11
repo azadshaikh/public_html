@@ -31,6 +31,7 @@ Useful topics:
 - `server-side setup`
 - `title and meta`
 - `links`
+- `manual visits`
 - `http client interceptors`
 - `createInertiaApp defaults config`
 - `strict mode pages shorthand`
@@ -238,6 +239,14 @@ import { Link } from '@inertiajs/react'
 - `viewTransition` opts a link into the browser View Transitions API.
 - Active links receive a `data-loading` attribute during in-flight requests.
 
+### Instant Link Patterns
+
+Use instant visits only when the target page can render with shared props and missing page-specific props.
+
+- Explicit `component="Dashboard"` works on `Link` and `router.visit()`.
+- When using `pageProps`, shared props are no longer carried automatically unless you merge them yourself.
+- Prefer defensive rendering or placeholder content when intermediate props may be `undefined`.
+
 ### Programmatic Visits
 
 ```react
@@ -255,11 +264,72 @@ router.visit('/users', {
 })
 ```
 
+Prefer the shortcut methods when they express intent more clearly:
+
+```react
+router.get('/users', { search: 'John' }, { replace: true })
+router.post('/users', data)
+router.put('/users/1', data)
+router.patch('/users/1', data)
+router.delete('/users/1')
+router.reload({ only: ['users'] })
+```
+
 For `router.get()`, explicitly set `preserveState` when a same-page visit should keep local state:
 
 ```react
 router.get('/users', { search: 'John' }, { preserveState: true })
 ```
+
+### Manual Visit Options
+
+Important `router.visit()` options in v3 include:
+
+- `replace`
+- `preserveState`
+- `preserveScroll`
+- `only` / `except`
+- `headers`
+- `forceFormData`
+- `prefetch`
+- `preserveErrors`
+- `viewTransition`
+- `component`
+- `pageProps`
+- `onBefore`, `onStart`, `onProgress`, `onSuccess`, `onError`, `onHttpException`, `onNetworkError`, `onCancel`, `onFinish`
+
+Prefer `router.reload()` when reloading the current page, since it preserves state and scroll automatically.
+
+When uploading files with Laravel, avoid `put`/`patch` uploads directly. Use `post` with `_method` spoofing if needed.
+
+### Global Visit Options
+
+You can configure global visit behavior through `defaults.visitOptions` in `createInertiaApp()`.
+
+```react
+createInertiaApp({
+    defaults: {
+        visitOptions: (href, options) => ({
+            headers: {
+                ...options.headers,
+                'X-Custom-Header': 'value',
+            },
+        }),
+    },
+})
+```
+
+### Client-Side Visits And Prop Helpers
+
+Use `router.push()` and `router.replace()` only for true client-side page updates where no server request should run. Ensure the route still exists server-side for refreshes.
+
+For lightweight client-only prop updates, prefer:
+
+- `router.replaceProp()`
+- `router.appendToProp()`
+- `router.prependToProp()`
+
+These preserve state and scroll automatically.
 
 ### Instant Visits
 
@@ -272,6 +342,33 @@ import { Link } from '@inertiajs/react'
     Dashboard
 </Link>
 ```
+
+When Wayfinder route definitions include component metadata, `instant` can be used directly with Wayfinder links and forms.
+
+```react
+<Link href={show(1)} instant>
+    View post
+</Link>
+```
+
+This requires Wayfinder to generate Inertia component metadata.
+
+### Visit Cancellation
+
+Cancel in-flight requests with `router.cancelAll()`.
+
+```react
+router.cancelAll()
+router.cancelAll({ prefetch: false })
+```
+
+For single-request cancellation, capture the cancel token from `onCancelToken()`.
+
+### Per-Visit Callbacks
+
+- Return `false` from `onBefore()` to cancel a visit.
+- Return `false` from `onHttpException()` or `onNetworkError()` to suppress the matching global event.
+- `onSuccess()` and `onError()` may return promises; `onFinish()` waits for them.
 
 ## Form Handling
 
@@ -609,6 +706,11 @@ Server-side `Inertia::render()`, prop types like `Inertia::optional()` and `Iner
 - Repeating title boilerplate instead of using a small shared `AppHead` wrapper
 - Using non-`GET` links as anchors instead of buttons
 - Forgetting that Wayfinder objects can be passed directly to `Link href`
+- Forgetting that `router.reload()` already preserves scroll and state
+- Using instant visits for pages that cannot render safely without page-specific props
+- Passing `pageProps` to instant visits without re-merging required shared props
+- Forgetting `router.cancelAll()` when cancelling stale visits during navigation-heavy interactions
+- Using `router.push()` / `router.replace()` as a substitute for real server visits when the page still needs fresh backend data
 - Overlooking `replace`, `preserveState`, `preserveScroll`, `only`, or `viewTransition` when they improve UX
 - Ignoring the `data-loading` attribute when styling loading navigation states
 - Rebuilding page resolution manually when `@inertiajs/vite` already covers the setup

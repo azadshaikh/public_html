@@ -167,6 +167,12 @@ protected function isAccessible(User $user, ?string $path = null): bool
 - Keep root-template head elements in `resources/views/app.blade.php`; page-level `<Head>` should override or extend, not duplicate them. Use `head-key` for duplicate-prone tags like `description`.
 - Use Inertia `<Link>` for internal navigation. For non-`GET` visits, prefer button rendering over anchor links for accessibility.
 - When Wayfinder is available, pass the generated object directly to `Link href`, form helpers, or router methods.
+- Prefer `router.get/post/put/patch/delete/reload` shortcut methods over raw `router.visit()` when they clearly express intent; `router.reload()` preserves scroll and state automatically.
+- Use `router.visit()` options like `replace`, `preserveState`, `preserveScroll`, `only`, `except`, `preserveErrors`, `viewTransition`, `component`, and `pageProps` intentionally.
+- Use client-side `router.push()` / `router.replace()` only when no server request should run, and keep pushed routes renderable by the server on refresh.
+- Use prop helpers like `router.replaceProp()`, `router.appendToProp()`, and `router.prependToProp()` for lightweight client-only page prop updates.
+- Cancel stale visits with `router.cancelAll()` when needed; use `onBefore`, `onCancelToken`, `onHttpException`, and `onNetworkError` deliberately for manual visits.
+- Instant visits are best for pages that can render with shared props only; use `component` or Wayfinder `instant` patterns only when the intermediate render is safe.
 - Use `replace`, `preserveState`, `preserveScroll`, `only`, and `viewTransition` intentionally when they improve navigation UX.
 - You may opt into the standards-compliant `data-inertia` head attribute with `defaults.future.useDataInertiaHeadAttribute`.
 - When using deferred props, add an empty state with a pulsing or animated skeleton.

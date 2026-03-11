@@ -44,6 +44,7 @@ const mainNavItems: NavItem[] = [
     {
         title: 'Dashboard',
         href: dashboard(),
+        component: 'dashboard',
         icon: LayoutGrid,
     },
 ];
@@ -102,6 +103,7 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
                                                 <Link
                                                     key={item.title}
                                                     href={item.href}
+                                                    component={item.component}
                                                     className="flex items-center space-x-2 font-medium"
                                                 >
                                                     {item.icon && (
@@ -136,6 +138,7 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
 
                     <Link
                         href={dashboard()}
+                        component="dashboard"
                         prefetch
                         className="flex items-center space-x-2"
                     >
@@ -153,6 +156,7 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
                                     >
                                         <Link
                                             href={item.href}
+                                            component={item.component}
                                             className={cn(
                                                 navigationMenuTriggerStyle(),
                                                 whenCurrentUrl(

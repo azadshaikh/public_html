@@ -22,6 +22,7 @@ export function NavMain({
   items: {
     title: string
     url: string
+    component?: string
     icon?: React.ReactNode
     isActive?: boolean
     items?: {
@@ -68,7 +69,7 @@ export function NavMain({
           ) : (
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton asChild tooltip={item.title} isActive={item.isActive}>
-                <Link href={item.url}>
+                <Link href={item.url} component={item.component}>
                   {item.icon}
                   <span>{item.title}</span>
                 </Link>
