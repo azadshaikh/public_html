@@ -2,14 +2,14 @@
 
 namespace App\Http\Requests;
 
+use App\Concerns\PasswordValidationRules;
 use App\Concerns\ProfileValidationRules;
-use App\Models\User;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rules\Password;
 
-class UpdateManagedUserRequest extends FormRequest
+class StoreManagedUserRequest extends FormRequest
 {
+    use PasswordValidationRules;
     use ProfileValidationRules;
 
     /**
@@ -17,7 +17,7 @@ class UpdateManagedUserRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user()?->can('edit_users') ?? false;
+        return $this->user()?->can('add_users') ?? false;
     }
 
     /**
@@ -27,15 +27,12 @@ class UpdateManagedUserRequest extends FormRequest
      */
     public function rules(): array
     {
-        /** @var User $managedUser */
-        $managedUser = $this->route('user');
-
         return [
-            ...$this->profileRules($managedUser->id),
+            ...$this->profileRules(),
             'active' => ['required', 'boolean'],
             'roles' => ['required', 'array', 'min:1'],
             'roles.*' => ['integer', 'exists:roles,id'],
-            'password' => ['nullable', 'string', Password::default(), 'confirmed'],
+            'password' => $this->passwordRules(),
         ];
     }
 
@@ -46,7 +43,6 @@ class UpdateManagedUserRequest extends FormRequest
             'email' => is_string($this->input('email')) ? trim($this->input('email')) : $this->input('email'),
             'active' => filter_var($this->input('active'), FILTER_VALIDATE_BOOL, FILTER_NULL_ON_FAILURE) ?? false,
             'roles' => array_map('intval', (array) $this->input('roles', [])),
-            'password' => $this->filled('password') ? $this->input('password') : null,
         ]);
     }
 }

@@ -78,6 +78,46 @@ class UserRoleManagementTest extends TestCase
                 ->has('availableRoles'));
     }
 
+    public function test_administrators_can_view_the_user_create_screen(): void
+    {
+        $administrator = $this->administrator();
+
+        $this->actingAs($administrator)
+            ->get(route('users.create'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->component('users/create')
+                ->where('initialValues.active', true)
+                ->has('availableRoles'));
+    }
+
+    public function test_administrators_can_create_a_user_with_roles(): void
+    {
+        $administrator = $this->administrator();
+
+        $this->actingAs($administrator)
+            ->post(route('users.store'), [
+                'name' => 'Created User',
+                'email' => 'created@example.com',
+                'active' => true,
+                'roles' => [
+                    Role::query()->where('name', 'manager')->value('id'),
+                    Role::query()->where('name', 'staff')->value('id'),
+                ],
+                'password' => 'Password123!',
+                'password_confirmation' => 'Password123!',
+            ])
+            ->assertRedirect(route('users.index'));
+
+        $createdUser = User::query()->where('email', 'created@example.com')->firstOrFail();
+
+        $this->assertSame('Created User', $createdUser->name);
+        $this->assertTrue($createdUser->active);
+        $this->assertTrue($createdUser->hasRole('manager'));
+        $this->assertTrue($createdUser->hasRole('staff'));
+        $this->assertNotSame('Password123!', $createdUser->password);
+    }
+
     public function test_administrators_can_update_a_user_role_assignment_and_active_status(): void
     {
         $administrator = $this->administrator();
@@ -95,6 +135,8 @@ class UserRoleManagementTest extends TestCase
                     Role::query()->where('name', 'manager')->value('id'),
                     Role::query()->where('name', 'staff')->value('id'),
                 ],
+                'password' => '',
+                'password_confirmation' => '',
             ])
             ->assertRedirect(route('users.index'));
 
@@ -121,10 +163,55 @@ class UserRoleManagementTest extends TestCase
                 'roles' => [
                     Role::query()->where('name', 'administrator')->value('id'),
                 ],
+                'password' => '',
+                'password_confirmation' => '',
             ])
             ->assertRedirect();
 
         $this->assertTrue($superUser->fresh()->hasRole(Role::SUPER_USER));
+    }
+
+    public function test_administrators_can_delete_a_managed_user(): void
+    {
+        $administrator = $this->administrator();
+        $managedUser = User::factory()->create();
+        $managedUser->assignRole(Role::query()->where('name', 'user')->firstOrFail());
+
+        $this->actingAs($administrator)
+            ->delete(route('users.destroy', $managedUser))
+            ->assertRedirect(route('users.index'));
+
+        $this->assertDatabaseMissing('users', [
+            'id' => $managedUser->id,
+        ]);
+    }
+
+    public function test_the_last_super_user_account_cannot_be_deleted(): void
+    {
+        $administrator = $this->administrator();
+        $superUser = User::factory()->create();
+        $superUser->assignRole(Role::query()->where('name', Role::SUPER_USER)->firstOrFail());
+
+        $this->actingAs($administrator)
+            ->delete(route('users.destroy', $superUser))
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('users', [
+            'id' => $superUser->id,
+        ]);
+    }
+
+    public function test_administrators_cannot_delete_their_own_account_from_the_user_registry(): void
+    {
+        $administrator = $this->administrator();
+
+        $this->actingAs($administrator)
+            ->delete(route('users.destroy', $administrator))
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('users', [
+            'id' => $administrator->id,
+        ]);
     }
 
     protected function administrator(): User

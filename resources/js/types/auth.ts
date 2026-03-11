@@ -21,7 +21,9 @@ export type Auth = {
         editRoles: boolean;
         deleteRoles: boolean;
         viewUsers: boolean;
+        addUsers: boolean;
         editUsers: boolean;
+        deleteUsers: boolean;
     };
 };
 

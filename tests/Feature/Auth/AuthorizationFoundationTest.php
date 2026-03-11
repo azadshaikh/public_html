@@ -48,6 +48,8 @@ class AuthorizationFoundationTest extends TestCase
 
         $this->assertTrue($administrator->hasPermissionTo('manage_modules', 'web'));
         $this->assertTrue($administrator->hasPermissionTo('edit_roles', 'web'));
+        $this->assertTrue($administrator->hasPermissionTo('add_users', 'web'));
+        $this->assertTrue($administrator->hasPermissionTo('delete_users', 'web'));
     }
 
     public function test_super_user_role_bypasses_permission_checks(): void

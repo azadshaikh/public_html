@@ -1,5 +1,10 @@
 import { Link, useForm } from '@inertiajs/react';
-import { ArrowLeftIcon, SaveIcon, UserCogIcon } from 'lucide-react';
+import {
+    ArrowLeftIcon,
+    LockKeyholeIcon,
+    SaveIcon,
+    UserCogIcon,
+} from 'lucide-react';
 import type { FormEvent } from 'react';
 import ManagedUserController from '@/actions/App/Http/Controllers/ManagedUserController';
 import { Badge } from '@/components/ui/badge';
@@ -28,22 +33,29 @@ import type {
 } from '@/types/user-management';
 
 type ManagedUserFormProps = {
-    user: ManagedUserEditingTarget;
+    mode: 'create' | 'edit';
+    user?: ManagedUserEditingTarget;
     initialValues: ManagedUserFormValues;
     availableRoles: ManagedUserRoleOption[];
 };
 
 export default function ManagedUserForm({
+    mode,
     user,
     initialValues,
     availableRoles,
 }: ManagedUserFormProps) {
     const form = useForm<ManagedUserFormValues>(initialValues);
+    const submitAction =
+        mode === 'create'
+            ? ManagedUserController.store()
+            : ManagedUserController.update(user!.id);
+    const submitLabel = mode === 'create' ? 'Create user' : 'Save user';
 
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
-        form.put(ManagedUserController.update(user.id).url, {
+        form.submit(submitAction, {
             preserveScroll: true,
         });
     };
@@ -73,16 +85,25 @@ export default function ManagedUserForm({
                 <Card>
                     <CardHeader>
                         <div className="flex items-center gap-2">
-                            <CardTitle>Edit user</CardTitle>
-                            <Badge
-                                variant={user.active ? 'secondary' : 'outline'}
-                            >
-                                {user.active ? 'Active' : 'Inactive'}
-                            </Badge>
+                            <CardTitle>
+                                {mode === 'create'
+                                    ? 'Create user'
+                                    : 'Edit user'}
+                            </CardTitle>
+                            {user ? (
+                                <Badge
+                                    variant={
+                                        user.active ? 'secondary' : 'outline'
+                                    }
+                                >
+                                    {user.active ? 'Active' : 'Inactive'}
+                                </Badge>
+                            ) : null}
                         </div>
                         <CardDescription>
-                            Update core account details and the role bundle used
-                            for access control.
+                            {mode === 'create'
+                                ? 'Add a managed account with its initial roles and sign-in credentials.'
+                                : 'Update core account details and the role bundle used for access control.'}
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="grid gap-6">
@@ -151,30 +172,119 @@ export default function ManagedUserForm({
                             <FieldError>{form.errors.active}</FieldError>
                         </Field>
 
-                        <div className="rounded-xl border border-dashed bg-muted/20 p-4 text-sm text-muted-foreground">
-                            <div className="flex items-center gap-2 font-medium text-foreground">
-                                <UserCogIcon className="size-4" />
-                                Account summary
-                            </div>
-                            <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                                <div>
-                                    <span className="text-xs tracking-[0.14em] uppercase">
-                                        Verified email
-                                    </span>
-                                    <div className="mt-1 text-sm font-medium text-foreground">
-                                        {user.email_verified_at ? 'Yes' : 'No'}
+                        <FieldGroup>
+                            <Field data-invalid={Boolean(form.errors.password)}>
+                                <FieldLabel htmlFor="password">
+                                    {mode === 'create'
+                                        ? 'Password'
+                                        : 'New password'}
+                                </FieldLabel>
+                                <Input
+                                    id="password"
+                                    type="password"
+                                    value={form.data.password}
+                                    onChange={(event) =>
+                                        form.setData(
+                                            'password',
+                                            event.target.value,
+                                        )
+                                    }
+                                    aria-invalid={
+                                        Boolean(form.errors.password) ||
+                                        undefined
+                                    }
+                                    autoComplete="new-password"
+                                    placeholder={
+                                        mode === 'create'
+                                            ? 'Create a secure password'
+                                            : 'Leave blank to keep the current password'
+                                    }
+                                />
+                                <FieldDescription>
+                                    {mode === 'create'
+                                        ? 'Set the initial sign-in password for this account.'
+                                        : 'Leave this empty if the current password should stay unchanged.'}
+                                </FieldDescription>
+                                <FieldError>{form.errors.password}</FieldError>
+                            </Field>
+
+                            <Field
+                                data-invalid={Boolean(
+                                    form.errors.password_confirmation,
+                                )}
+                            >
+                                <FieldLabel htmlFor="password_confirmation">
+                                    Confirm password
+                                </FieldLabel>
+                                <Input
+                                    id="password_confirmation"
+                                    type="password"
+                                    value={form.data.password_confirmation}
+                                    onChange={(event) =>
+                                        form.setData(
+                                            'password_confirmation',
+                                            event.target.value,
+                                        )
+                                    }
+                                    aria-invalid={
+                                        Boolean(
+                                            form.errors.password_confirmation,
+                                        ) || undefined
+                                    }
+                                    autoComplete="new-password"
+                                    placeholder="Repeat the password"
+                                />
+                                <FieldDescription>
+                                    Required whenever a new password is being
+                                    set.
+                                </FieldDescription>
+                                <FieldError>
+                                    {form.errors.password_confirmation}
+                                </FieldError>
+                            </Field>
+                        </FieldGroup>
+
+                        {user ? (
+                            <div className="rounded-xl border border-dashed bg-muted/20 p-4 text-sm text-muted-foreground">
+                                <div className="flex items-center gap-2 font-medium text-foreground">
+                                    <UserCogIcon className="size-4" />
+                                    Account summary
+                                </div>
+                                <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                                    <div>
+                                        <span className="text-xs tracking-[0.14em] uppercase">
+                                            Verified email
+                                        </span>
+                                        <div className="mt-1 text-sm font-medium text-foreground">
+                                            {user.email_verified_at
+                                                ? 'Yes'
+                                                : 'No'}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <span className="text-xs tracking-[0.14em] uppercase">
+                                            Assigned roles
+                                        </span>
+                                        <div className="mt-1 text-sm font-medium text-foreground">
+                                            {form.data.roles.length}
+                                        </div>
                                     </div>
                                 </div>
-                                <div>
-                                    <span className="text-xs tracking-[0.14em] uppercase">
-                                        Assigned roles
-                                    </span>
-                                    <div className="mt-1 text-sm font-medium text-foreground">
-                                        {form.data.roles.length}
-                                    </div>
-                                </div>
                             </div>
-                        </div>
+                        ) : (
+                            <div className="rounded-xl border border-dashed bg-muted/20 p-4 text-sm text-muted-foreground">
+                                <div className="flex items-center gap-2 font-medium text-foreground">
+                                    <LockKeyholeIcon className="size-4" />
+                                    Provisioning note
+                                </div>
+                                <p className="mt-3">
+                                    New accounts start with an unverified email.
+                                    Verification is triggered again
+                                    automatically if the address is changed
+                                    later.
+                                </p>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
 
@@ -250,7 +360,7 @@ export default function ManagedUserForm({
 
                 <Button type="submit" disabled={form.processing}>
                     <SaveIcon data-icon="inline-start" />
-                    Save user
+                    {submitLabel}
                 </Button>
             </div>
         </form>

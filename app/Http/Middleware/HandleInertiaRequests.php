@@ -62,7 +62,9 @@ class HandleInertiaRequests extends Middleware
                         'editRoles' => $request->user()->can('edit_roles'),
                         'deleteRoles' => $request->user()->can('delete_roles'),
                         'viewUsers' => $request->user()->can('view_users'),
+                        'addUsers' => $request->user()->can('add_users'),
                         'editUsers' => $request->user()->can('edit_users'),
+                        'deleteUsers' => $request->user()->can('delete_users'),
                     ]
                     : [
                         'manageModules' => false,
@@ -71,7 +73,9 @@ class HandleInertiaRequests extends Middleware
                         'editRoles' => false,
                         'deleteRoles' => false,
                         'viewUsers' => false,
+                        'addUsers' => false,
                         'editUsers' => false,
+                        'deleteUsers' => false,
                     ],
             ],
             'modules' => $modules,

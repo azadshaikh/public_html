@@ -1,8 +1,10 @@
-import { Form, Head, Link } from '@inertiajs/react';
+import { Form, Head, Link, router, usePage } from '@inertiajs/react';
 import {
+    PlusIcon,
     PencilIcon,
     SearchIcon,
     ShieldCheckIcon,
+    Trash2Icon,
     UserCogIcon,
     UsersIcon,
 } from 'lucide-react';
@@ -43,7 +45,7 @@ import {
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes/index';
-import type { BreadcrumbItem } from '@/types';
+import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
 import type {
     ManagedUserListItem,
     UsersIndexPageProps,
@@ -68,11 +70,39 @@ export default function UsersIndex({
     status,
     error,
 }: UsersIndexPageProps) {
+    const page = usePage<AuthenticatedSharedData>();
+    const canAddUsers = page.props.auth.abilities.addUsers;
+    const canDeleteUsers = page.props.auth.abilities.deleteUsers;
+
+    const handleDelete = (user: ManagedUserListItem) => {
+        if (!canDeleteUsers) {
+            return;
+        }
+
+        if (!window.confirm(`Delete ${user.name}?`)) {
+            return;
+        }
+
+        router.delete(ManagedUserController.destroy(user.id).url, {
+            preserveScroll: true,
+        });
+    };
+
     return (
         <AppLayout
             breadcrumbs={breadcrumbs}
             title="Users"
             description="Manage account status and role assignments so migrated features can rely on stable access control."
+            headerActions={
+                canAddUsers ? (
+                    <Button asChild>
+                        <Link href={ManagedUserController.create()}>
+                            <PlusIcon data-icon="inline-start" />
+                            New user
+                        </Link>
+                    </Button>
+                ) : undefined
+            }
         >
             <Head title="Users" />
 
@@ -265,7 +295,7 @@ export default function UsersIndex({
                                                 </div>
                                             </TableCell>
                                             <TableCell>
-                                                <div className="flex justify-end">
+                                                <div className="flex justify-end gap-2">
                                                     <Button
                                                         asChild
                                                         variant="outline"
@@ -280,6 +310,22 @@ export default function UsersIndex({
                                                             Edit
                                                         </Link>
                                                     </Button>
+
+                                                    {canDeleteUsers ? (
+                                                        <Button
+                                                            type="button"
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() =>
+                                                                handleDelete(
+                                                                    user,
+                                                                )
+                                                            }
+                                                        >
+                                                            <Trash2Icon data-icon="inline-start" />
+                                                            Delete
+                                                        </Button>
+                                                    ) : null}
                                                 </div>
                                             </TableCell>
                                         </TableRow>

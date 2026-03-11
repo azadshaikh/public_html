@@ -60,11 +60,25 @@ class RolesAndPermissionsSeeder extends Seeder
                 'description' => 'View users and their assigned roles.',
             ],
             [
+                'name' => 'add_users',
+                'display_name' => 'Add Users',
+                'group' => 'users',
+                'module_slug' => 'application',
+                'description' => 'Create new users and assign their initial roles.',
+            ],
+            [
                 'name' => 'edit_users',
                 'display_name' => 'Edit Users',
                 'group' => 'users',
                 'module_slug' => 'application',
                 'description' => 'Edit users and manage role assignments.',
+            ],
+            [
+                'name' => 'delete_users',
+                'display_name' => 'Delete Users',
+                'group' => 'users',
+                'module_slug' => 'application',
+                'description' => 'Delete users that are no longer needed.',
             ],
             [
                 'name' => 'manage_modules',

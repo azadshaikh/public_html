@@ -16,6 +16,7 @@
 - [x] Exclude legacy groups CRUD/features from current migration scope
 - [x] Split media into a dedicated migration track
 - [x] Prioritize roles/permissions before broader shared migration
+- [x] Freeze feature work on current local demo/testing modules except for migration-platform support
 - [ ] Finalize module migration order
 
 ## Phase 1 — Engineering quality baseline
@@ -50,16 +51,16 @@
 
 ## Phase 3 — Roles and permissions foundation
 
-- [ ] Inventory Astero role/permission architecture, seeders, guards, and UI flows
-- [ ] Decide target authorization package/pattern for the new app
-- [ ] Define role model scope and initial seed data for the target app
-- [ ] Define permission naming convention for application and module features
-- [ ] Build roles CRUD in the current app
-- [ ] Build permission assignment/editing flow for roles
-- [ ] Add user-to-role assignment flow where needed
-- [ ] Wire middleware/policy usage into the current app
-- [ ] Add tests for roles/permissions CRUD and enforcement
-- [ ] Run Pint, PHPUnit, and static analysis
+- [x] Inventory Astero role/permission architecture, seeders, guards, and UI flows
+- [x] Decide target authorization package/pattern for the new app
+- [x] Define role model scope and initial seed data for the target app
+- [x] Define permission naming convention for application and module features
+- [x] Build roles CRUD in the current app
+- [x] Build permission assignment/editing flow for roles
+- [x] Add user-to-role assignment flow where needed
+- [x] Wire middleware/policy usage into the current app
+- [x] Add tests for roles/permissions CRUD and enforcement
+- [x] Run Pint, PHPUnit, and static analysis
 
 ## Phase 4 — Inertia-native platform foundation
 
@@ -94,6 +95,8 @@
 - [ ] Define feature parity checklist versus Astero
 
 ## Phase 8 — Module migrations
+
+Note: the modules currently present in this repository remain test/demo fixtures only. Do not expand them with new product behavior while planning or executing Astero module migrations.
 
 ### Recommended order
 

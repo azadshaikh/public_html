@@ -78,6 +78,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const canViewRoles = auth.abilities.viewRoles;
     const canAddRoles = auth.abilities.addRoles;
     const canViewUsers = auth.abilities.viewUsers;
+    const canAddUsers = auth.abilities.addUsers;
     const isDashboardPage = currentComponent === 'dashboard';
     const isMoviesDemoPage = currentComponent.startsWith('demo/movies/');
     const isModulesPage =
@@ -151,6 +152,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                         isActive:
                                             currentUrl === '/users' ||
                                             isUsersPage,
+                                    },
+                                ]
+                              : []),
+                          ...(canAddUsers
+                              ? [
+                                    {
+                                        title: 'New user',
+                                        url: '/users/create',
+                                        icon: <PlusIcon />,
+                                        isActive:
+                                            currentUrl === '/users/create',
                                     },
                                 ]
                               : []),

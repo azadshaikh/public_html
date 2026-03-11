@@ -45,12 +45,21 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
         Route::get('/', [ManagedUserController::class, 'index'])
             ->middleware('permission:view_users')
             ->name('index');
+        Route::get('create', [ManagedUserController::class, 'create'])
+            ->middleware('permission:add_users')
+            ->name('create');
+        Route::post('/', [ManagedUserController::class, 'store'])
+            ->middleware('permission:add_users')
+            ->name('store');
         Route::get('{user}/edit', [ManagedUserController::class, 'edit'])
             ->middleware('permission:edit_users')
             ->name('edit');
         Route::put('{user}', [ManagedUserController::class, 'update'])
             ->middleware('permission:edit_users')
             ->name('update');
+        Route::delete('{user}', [ManagedUserController::class, 'destroy'])
+            ->middleware('permission:delete_users')
+            ->name('destroy');
     });
 
     Route::prefix('demo')->name('demo.')->group(function (): void {

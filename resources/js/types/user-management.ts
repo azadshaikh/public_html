@@ -18,10 +18,12 @@ export type ManagedUserFormValues = {
     email: string;
     active: boolean;
     roles: number[];
+    password: string;
+    password_confirmation: string;
 };
 
 export type ManagedUserEditingTarget = ManagedUserListItem &
-    ManagedUserFormValues;
+    Omit<ManagedUserFormValues, 'password' | 'password_confirmation'>;
 
 export type ManagedUserRoleOption = {
     id: number;
@@ -49,6 +51,11 @@ export type UsersIndexPageProps = {
 
 export type UserEditPageProps = {
     user: ManagedUserEditingTarget;
+    initialValues: ManagedUserFormValues;
+    availableRoles: ManagedUserRoleOption[];
+};
+
+export type UserCreatePageProps = {
     initialValues: ManagedUserFormValues;
     availableRoles: ManagedUserRoleOption[];
 };

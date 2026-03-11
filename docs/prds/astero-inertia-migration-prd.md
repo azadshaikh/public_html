@@ -42,6 +42,7 @@ Create a single modern codebase that:
 - Preserving every implementation detail if a cleaner current design is better.
 - Migrating all external packages at once before they are needed.
 - Rebuilding legacy groups CRUD/features in the new app unless a concrete later need appears.
+- Expanding the current local demo/testing modules as product features, because they are temporary placeholders that will be replaced by migrated Astero modules.
 
 ## Guiding principles
 
@@ -52,6 +53,8 @@ Create a single modern codebase that:
 ### 2. Keep the current module runtime
 
 The current application's module runtime is the migration target. Astero modules should be adapted to it instead of reintroducing `nwidart/laravel-modules` as the core architecture.
+
+The current local modules in this repository are only a testing harness for that runtime. They should not receive new product implementation effort unless a change is strictly required to support the migration platform itself.
 
 ### 3. Shared app first
 
@@ -236,6 +239,7 @@ The migration is successful when:
 - Roles and permissions CRUD will be implemented before broader shared/common migration.
 - Groups CRUD/features are excluded from the current migration scope.
 - Media migration will run as a separate dedicated step, not as incidental shared-foundation work.
+- The current local modules are temporary testing/demo modules and will be replaced by migrated Astero modules, so feature work should target migration foundations and real Astero replacements instead of extending those placeholders.
 
 ## Reference tracker
 

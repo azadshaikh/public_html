@@ -30,10 +30,11 @@ export default function UsersEdit({
         <AppLayout
             breadcrumbs={breadcrumbs}
             title={`Edit ${user.name}`}
-            description="Adjust account details and role assignments without touching password or ownership data."
+            description="Adjust account details, role assignments, and credentials without changing account ownership."
         >
             <Head title={`Edit ${user.name}`} />
             <ManagedUserForm
+                mode="edit"
                 user={user}
                 initialValues={initialValues}
                 availableRoles={availableRoles}
