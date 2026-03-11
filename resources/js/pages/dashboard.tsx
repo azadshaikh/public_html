@@ -1,4 +1,3 @@
-import AppHead from '@/components/app-head'
 import {
   ArrowUpRightIcon,
   CalendarClockIcon,
@@ -11,16 +10,8 @@ import {
   UsersIcon,
   WandSparklesIcon,
 } from 'lucide-react'
-import { AppSidebar } from "@/components/app-sidebar"
+import AppHead from '@/components/app-head'
 import { Badge } from "@/components/ui/badge"
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -32,11 +23,6 @@ import {
 import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
 import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@/components/ui/sidebar"
-import {
   Table,
   TableBody,
   TableCell,
@@ -44,6 +30,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import AppLayout from '@/layouts/app-layout'
+import { dashboard } from '@/routes'
+import type { BreadcrumbItem } from '@/types'
+
+const breadcrumbs: BreadcrumbItem[] = [
+  {
+    title: 'Dashboard',
+    href: dashboard(),
+  },
+]
 
 const stats = [
   {
@@ -146,40 +142,31 @@ function statusVariant(status: string): 'default' | 'secondary' | 'outline' | 'g
   }
 }
 
-export default function Page() {
+export default function Dashboard() {
   return (
-    <SidebarProvider>
+    <AppLayout
+      breadcrumbs={breadcrumbs}
+      title="Dashboard"
+      description="Monitor publishing velocity, editorial pipeline progress, and audience engagement from one CMS dashboard."
+      headerActions={
+        <>
+          <Button>
+            <PlusIcon />
+            New article
+          </Button>
+          <Button variant="outline">
+            <WandSparklesIcon />
+            Open content studio
+          </Button>
+        </>
+      }
+    >
       <AppHead
         title="Dashboard"
         description="Monitor publishing velocity, editorial pipeline progress, and audience engagement from one CMS dashboard."
       />
-      <AppSidebar />
-      <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
-          <div className="flex items-center gap-2 px-4">
-            <SidebarTrigger className="-ml-1" />
-            <Separator
-              orientation="vertical"
-              className="mr-2 data-vertical:h-4 data-vertical:self-auto"
-            />
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="#">
-                    CMS workspace
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator className="hidden md:block" />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>Dashboard</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-          </div>
-        </header>
 
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          <section className="grid gap-4 xl:grid-cols-[1.7fr_1fr]">
+      <section className="grid gap-4 xl:grid-cols-[1.7fr_1fr]">
             <Card className="border-none bg-gradient-to-br from-foreground to-foreground/85 text-background shadow-none ring-0">
               <CardHeader>
                 <Badge variant="secondary" className="w-fit bg-background/15 text-background hover:bg-background/15">
@@ -255,9 +242,9 @@ export default function Page() {
                 </div>
               </CardContent>
             </Card>
-          </section>
+      </section>
 
-          <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {stats.map((stat) => {
               const Icon = stat.icon
 
@@ -280,9 +267,9 @@ export default function Page() {
                 </Card>
               )
             })}
-          </section>
+      </section>
 
-          <section className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
+      <section className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
             <Card>
               <CardHeader>
                 <CardTitle>Editorial pipeline</CardTitle>
@@ -325,9 +312,9 @@ export default function Page() {
                 </Button>
               </CardContent>
             </Card>
-          </section>
+      </section>
 
-          <section className="grid gap-4 xl:grid-cols-[1.45fr_0.8fr]">
+      <section className="grid gap-4 xl:grid-cols-[1.45fr_0.8fr]">
             <Card>
               <CardHeader>
                 <CardTitle>Recent content</CardTitle>
@@ -380,9 +367,7 @@ export default function Page() {
                 ))}
               </CardContent>
             </Card>
-          </section>
-        </div>
-      </SidebarInset>
-    </SidebarProvider>
+      </section>
+    </AppLayout>
   )
 }

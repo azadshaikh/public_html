@@ -8,8 +8,8 @@ import TwoFactorSetupModal from '@/components/two-factor-setup-modal';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useTwoFactorAuth } from '@/hooks/use-two-factor-auth';
-import AppLayout from '@/layouts/app-layout';
 import AccountLayout from '@/layouts/account/layout';
+import AppLayout from '@/layouts/app-layout';
 import { disable, enable, show } from '@/routes/two-factor';
 import type { BreadcrumbItem } from '@/types';
 
@@ -42,13 +42,15 @@ export default function TwoFactor({
     const [showSetupModal, setShowSetupModal] = useState<boolean>(false);
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <AppLayout
+            breadcrumbs={breadcrumbs}
+            title="Two-factor authentication"
+            description="Manage an additional verification step for your account sign-in flow."
+        >
             <AppHead
                 title="Two-factor authentication"
                 description="Manage an additional verification step for your account sign-in flow."
             />
-
-            <h1 className="sr-only">Two-factor authentication</h1>
 
             <AccountLayout>
                 <div className="space-y-6">

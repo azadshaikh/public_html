@@ -8,8 +8,8 @@ import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import AppLayout from '@/layouts/app-layout';
 import AccountLayout from '@/layouts/account/layout';
+import AppLayout from '@/layouts/app-layout';
 import { edit } from '@/routes/profile';
 import { send } from '@/routes/verification';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
@@ -31,13 +31,15 @@ export default function Profile({
     const { auth } = usePage<AuthenticatedSharedData>().props;
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <AppLayout
+            breadcrumbs={breadcrumbs}
+            title="Profile"
+            description="Update your profile details and email address."
+        >
             <AppHead
                 title="Profile"
                 description="Update your profile details and email address."
             />
-
-            <h1 className="sr-only">Profile</h1>
 
             <AccountLayout>
                 <div className="space-y-6">

@@ -8,8 +8,8 @@ import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import AppLayout from '@/layouts/app-layout';
 import AccountLayout from '@/layouts/account/layout';
+import AppLayout from '@/layouts/app-layout';
 import { edit } from '@/routes/user-password';
 import type { BreadcrumbItem } from '@/types';
 
@@ -25,13 +25,15 @@ export default function Password() {
     const currentPasswordInput = useRef<HTMLInputElement>(null);
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <AppLayout
+            breadcrumbs={breadcrumbs}
+            title="Password"
+            description="Change your password and keep your account secure."
+        >
             <AppHead
                 title="Password"
                 description="Change your password and keep your account secure."
             />
-
-            <h1 className="sr-only">Password</h1>
 
             <AccountLayout>
                 <div className="space-y-6">

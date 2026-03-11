@@ -7,6 +7,7 @@ import {
     SparklesIcon,
     Trash2Icon,
 } from 'lucide-react';
+import MovieController from '@/actions/App/Http/Controllers/Demo/MovieController';
 import AppHead from '@/components/app-head';
 import MovieArtwork from '@/components/demo/movies/movie-artwork';
 import { Badge } from '@/components/ui/badge';
@@ -45,7 +46,6 @@ import {
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem, MovieListItem, MoviesIndexPageProps } from '@/types';
-import MovieController from '@/actions/App/Http/Controllers/Demo/MovieController';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -71,13 +71,17 @@ export default function MoviesDemoIndex({
     };
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <AppLayout
+            breadcrumbs={breadcrumbs}
+            title="Movies demo"
+            description="Browse, filter, and manage a large demo movie CRUD with mixed field types."
+        >
             <AppHead
                 title="Movies demo"
                 description="Browse, filter, and manage a large demo movie CRUD with mixed field types."
             />
 
-            <div className="flex flex-col gap-8 p-4 md:p-6">
+            <div className="flex flex-col gap-8">
                 <section className="grid gap-6 xl:grid-cols-[minmax(0,1.7fr)_minmax(320px,1fr)]">
                     <Card className="border-none bg-gradient-to-br from-foreground to-foreground/85 text-background shadow-none">
                         <CardHeader>
