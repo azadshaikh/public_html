@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Inertia\Properties\UserAvatar;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -40,15 +41,15 @@ class HandleInertiaRequests extends Middleware
             'appName' => config('app.name'),
             'auth' => [
                 'user' => fn () => $request->user()
-                    ? $request->user()->only(
-                        'id',
-                        'name',
-                        'email',
-                        'avatar',
-                        'email_verified_at',
-                        'created_at',
-                        'updated_at',
-                    )
+                    ? [
+                        'id' => $request->user()->id,
+                        'name' => $request->user()->name,
+                        'email' => $request->user()->email,
+                        'avatar' => new UserAvatar($request->user()),
+                        'email_verified_at' => $request->user()->email_verified_at,
+                        'created_at' => $request->user()->created_at,
+                        'updated_at' => $request->user()->updated_at,
+                    ]
                     : null,
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
