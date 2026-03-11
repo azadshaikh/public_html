@@ -41,6 +41,7 @@ Create a single modern codebase that:
 - Copying Astero's old runtime wholesale.
 - Preserving every implementation detail if a cleaner current design is better.
 - Migrating all external packages at once before they are needed.
+- Rebuilding legacy groups CRUD/features in the new app unless a concrete later need appears.
 
 ## Guiding principles
 
@@ -116,9 +117,22 @@ Primary areas:
 - `Traits`
 - `Support`
 - `Services`
-- shared model systems such as notes, addresses, groups, settings, media, activity
+- shared model systems such as notes, addresses, settings, activity
 
-### Phase 3 — Inertia-native foundation
+### Phase 3 — Roles and permissions foundation
+
+Rebuild the authorization base early because most migrated application features depend on roles and permissions.
+
+This includes:
+
+- selecting the target authorization package/pattern,
+- defining the initial role set,
+- defining the permission naming convention,
+- building roles CRUD and permission assignment UX,
+- wiring role and permission checks into the new app,
+- and seeding the minimum application-level roles and permissions needed before broader migration work.
+
+### Phase 4 — Inertia-native foundation
 
 Convert the best Astero scaffold ideas into a cleaner Inertia-native module pattern.
 
@@ -131,11 +145,22 @@ This includes:
 - detail page patterns,
 - shared layouts and module shell behavior.
 
-### Phase 4 — Shared foundation migration
+### Phase 5 — Shared foundation migration
 
 Port the shared foundations required by the first real modules.
 
-### Phase 5 — Module migration template
+### Phase 6 — Media migration foundation
+
+Treat media as a dedicated migration track instead of a side task.
+
+This includes:
+
+- evaluating Astero's old media behavior and data model,
+- deciding the target storage and library strategy for the new app,
+- defining upload, browse, attach, and cleanup flows for `Inertia`/React,
+- and migrating media only when the new foundation is explicit and testable.
+
+### Phase 7 — Module migration template
 
 Use one smaller real module to establish a repeatable migration template.
 
@@ -148,7 +173,7 @@ Reason:
 - moderate dependency surface,
 - lower risk than `Platform` or `CMS`.
 
-### Phase 6 — Module-by-module migration
+### Phase 8 — Module-by-module migration
 
 Recommended order:
 
@@ -208,6 +233,9 @@ The migration is successful when:
 - `Unpoly` will not be migrated directly.
 - The current Inertia-based application is the destination.
 - Migration will proceed app-first, then module-by-module.
+- Roles and permissions CRUD will be implemented before broader shared/common migration.
+- Groups CRUD/features are excluded from the current migration scope.
+- Media migration will run as a separate dedicated step, not as incidental shared-foundation work.
 
 ## Reference tracker
 

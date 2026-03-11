@@ -2,9 +2,9 @@ import { createInertiaApp } from '@inertiajs/react';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import '../css/app.css';
-import { resolveInertiaPage } from './lib/inertia-page-resolver';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { initializeTheme } from '@/hooks/use-appearance';
+import { resolveInertiaPage } from './lib/inertia-page-resolver';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 const inertiaDefaults = {

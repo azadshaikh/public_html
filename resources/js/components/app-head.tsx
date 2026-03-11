@@ -3,25 +3,25 @@ import type { PropsWithChildren } from 'react';
 import type { SharedData } from '@/types';
 
 type AppHeadProps = PropsWithChildren<{
-    title?: string;
-    description?: string;
+  title?: string;
+  description?: string;
 }>;
 
 export default function AppHead({
-    title,
-    description,
-    children,
+  title,
+  description,
+  children,
 }: AppHeadProps) {
-    const { appName } = usePage<SharedData>().props;
+  const { appName } = usePage<SharedData>().props;
 
-    return (
-        <Head title={title}>
-            <meta
-                head-key="description"
-                name="description"
-                content={description ?? `${appName} application`}
-            />
-            {children}
-        </Head>
-    );
+  return (
+    <Head title={title}>
+      <meta
+        head-key="description"
+        name="description"
+        content={description ?? `${appName} application`}
+      />
+      {children}
+    </Head>
+  );
 }

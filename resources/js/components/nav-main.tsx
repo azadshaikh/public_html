@@ -1,4 +1,6 @@
 import { Link } from '@inertiajs/react';
+import { ChevronRightIcon } from 'lucide-react';
+import type { ReactNode } from 'react';
 import {
   Collapsible,
   CollapsibleContent,
@@ -14,8 +16,6 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from '@/components/ui/sidebar';
-import { ChevronRightIcon } from 'lucide-react';
-import type { ReactNode } from 'react';
 
 type NavMainItem = {
   title: string;
