@@ -1,4 +1,4 @@
-import { Head } from '@inertiajs/react';
+import AppHead from '@/components/app-head';
 import AppearanceTabs from '@/components/appearance-tabs';
 import Heading from '@/components/heading';
 import AppLayout from '@/layouts/app-layout';
@@ -16,7 +16,10 @@ const breadcrumbs: BreadcrumbItem[] = [
 export default function Appearance() {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Appearance" />
+            <AppHead
+                title="Appearance"
+                description="Choose the color theme and appearance settings for your account."
+            />
 
             <h1 className="sr-only">Appearance</h1>
 

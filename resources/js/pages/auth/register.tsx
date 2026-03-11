@@ -1,4 +1,5 @@
-import { Form, Head } from '@inertiajs/react';
+import { Form } from '@inertiajs/react';
+import AppHead from '@/components/app-head';
 import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
 import TextLink from '@/components/text-link';
@@ -16,7 +17,10 @@ export default function Register() {
             title="Create an account"
             description="Enter your details below to create your account"
         >
-            <Head title="Register" />
+            <AppHead
+                title="Register"
+                description="Create a new account to start using the application."
+            />
             <Form
                 {...store.form()}
                 resetOnSuccess={['password', 'password_confirmation']}

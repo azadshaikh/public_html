@@ -1,6 +1,7 @@
-import { Form, Head } from '@inertiajs/react';
+import { Form } from '@inertiajs/react';
 import { REGEXP_ONLY_DIGITS } from 'input-otp';
 import { useMemo, useState } from 'react';
+import AppHead from '@/components/app-head';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -50,7 +51,10 @@ export default function TwoFactorChallenge() {
             title={authConfigContent.title}
             description={authConfigContent.description}
         >
-            <Head title="Two-factor authentication" />
+            <AppHead
+                title="Two-factor authentication"
+                description="Confirm your sign-in with an authentication code or a recovery code."
+            />
 
             <div className="space-y-6">
                 <Form

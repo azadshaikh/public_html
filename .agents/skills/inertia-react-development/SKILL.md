@@ -29,6 +29,8 @@ Useful topics:
 - `inertia react v3 upgrade guide`
 - `client-side setup`
 - `server-side setup`
+- `title and meta`
+- `links`
 - `http client interceptors`
 - `createInertiaApp defaults config`
 - `strict mode pages shorthand`
@@ -45,6 +47,7 @@ Useful topics:
 - React 19+ is required.
 - Axios is no longer required. Inertia v3 ships with a built-in XHR client and built-in interceptors.
 - `@inertiajs/vite` is the preferred client setup for v3 and can auto-resolve pages and mount the app with a minimal `createInertiaApp()` entrypoint.
+- Inertia v3 can opt into the standards-compliant `data-inertia` head attribute via `defaults.future.useDataInertiaHeadAttribute`.
 - SSR works automatically in Vite development mode with `@inertiajs/vite`; a separate SSR server is not needed during normal dev.
 
 ## Setup Guidance
@@ -77,6 +80,7 @@ Prefer documented setup options instead of custom bootstrapping when they cover 
 - `pages: './AppPages'` changes the page directory.
 - `pages` may also be an object with `path`, `extension`, `lazy`, and `transform`.
 - `defaults` configures form, prefetch, and visit defaults.
+- `defaults.future.useDataInertiaHeadAttribute` switches head tracking from `inertia` to `data-inertia`.
 - `id` changes the app root element and must match the server-side `@inertia(...)` root id.
 
 Example:
@@ -92,6 +96,9 @@ createInertiaApp({
     defaults: {
         form: {
             recentlySuccessfulDuration: 5000,
+        },
+        future: {
+            useDataInertiaHeadAttribute: true,
         },
     },
 })
@@ -132,6 +139,34 @@ If `@inertiajs/vite` is not being used, provide explicit `resolve` and `setup` c
 
 React page components should live in `resources/js/pages` using the existing project conventions.
 
+### Titles and Meta
+
+Prefer a shared app-level head wrapper for page titles and common metadata.
+
+- Use Inertia's `<Head>` to manage page `<title>` and `<meta>` tags.
+- Keep tags that should always exist in the Blade root template out of page-level `<Head>` blocks.
+- Use `head-key` on duplicate-prone tags such as description metadata.
+- Multiple `<Head>` instances are valid; layouts can provide defaults and pages can override them.
+
+Example wrapper:
+
+```react
+import { Head } from '@inertiajs/react'
+
+export default function AppHead({ title, children }) {
+    return (
+        <Head title={title}>
+            <meta
+                head-key="description"
+                name="description"
+                content="Default app description"
+            />
+            {children}
+        </Head>
+    )
+}
+```
+
 ### Basic Page Example
 
 ```react
@@ -169,6 +204,19 @@ import { Link } from '@inertiajs/react'
 </Link>
 ```
 
+For non-`GET` visits, prefer button rendering for accessibility. Avoid creating `POST`/`PUT`/`PATCH`/`DELETE` anchor links.
+
+### Wayfinder Links
+
+When Wayfinder is available, pass the returned object directly to `href`.
+
+```react
+import { Link } from '@inertiajs/react'
+import { show } from '@/actions/App/Http/Controllers/UserController'
+
+<Link href={show(1)}>View user</Link>
+```
+
 ### Prefetching
 
 Prefetch pages to improve perceived performance:
@@ -180,6 +228,15 @@ import { Link } from '@inertiajs/react'
     Users
 </Link>
 ```
+
+### Common Link Options
+
+- `replace` replaces the current browser history entry instead of pushing a new one.
+- `preserveState` preserves local page state.
+- `preserveScroll` preserves the current scroll position.
+- `only` requests a subset of props on partial reloads.
+- `viewTransition` opts a link into the browser View Transitions API.
+- Active links receive a `data-loading` attribute during in-flight requests.
 
 ### Programmatic Visits
 
@@ -196,6 +253,12 @@ router.visit('/users', {
     data: { name: 'John' },
     onSuccess: () => console.log('Success!'),
 })
+```
+
+For `router.get()`, explicitly set `preserveState` when a same-page visit should keep local state:
+
+```react
+router.get('/users', { search: 'John' }, { preserveState: true })
 ```
 
 ### Instant Visits
@@ -541,6 +604,13 @@ Server-side `Inertia::render()`, prop types like `Inertia::optional()` and `Iner
 ## Common Pitfalls
 
 - Using plain `<a>` tags for internal navigation
+- Duplicating root-template `<head>` tags in page-level `<Head>` blocks
+- Forgetting `head-key` on page-specific description or Open Graph tags that can appear more than once
+- Repeating title boilerplate instead of using a small shared `AppHead` wrapper
+- Using non-`GET` links as anchors instead of buttons
+- Forgetting that Wayfinder objects can be passed directly to `Link href`
+- Overlooking `replace`, `preserveState`, `preserveScroll`, `only`, or `viewTransition` when they improve UX
+- Ignoring the `data-loading` attribute when styling loading navigation states
 - Rebuilding page resolution manually when `@inertiajs/vite` already covers the setup
 - Forgetting to keep the client `id` and server `@inertia(...)` root id in sync
 - Registering `HandleInertiaRequests` in the wrong Laravel 12 location

@@ -1,4 +1,5 @@
-import { Form, Head } from '@inertiajs/react';
+import { Form } from '@inertiajs/react';
+import AppHead from '@/components/app-head';
 import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
 import { Button } from '@/components/ui/button';
@@ -13,7 +14,10 @@ export default function ConfirmPassword() {
             title="Confirm your password"
             description="This is a secure area of the application. Please confirm your password before continuing."
         >
-            <Head title="Confirm password" />
+            <AppHead
+                title="Confirm password"
+                description="Re-enter your password before continuing to a protected area."
+            />
 
             <Form {...store.form()} resetOnSuccess={['password']}>
                 {({ processing, errors }) => (

@@ -1,6 +1,7 @@
-import { Form, Head } from '@inertiajs/react';
+import { Form } from '@inertiajs/react';
 import { ShieldBan, ShieldCheck } from 'lucide-react';
 import { useState } from 'react';
+import AppHead from '@/components/app-head';
 import Heading from '@/components/heading';
 import TwoFactorRecoveryCodes from '@/components/two-factor-recovery-codes';
 import TwoFactorSetupModal from '@/components/two-factor-setup-modal';
@@ -42,7 +43,10 @@ export default function TwoFactor({
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Two-factor authentication" />
+            <AppHead
+                title="Two-factor authentication"
+                description="Manage an additional verification step for your account sign-in flow."
+            />
 
             <h1 className="sr-only">Two-factor authentication</h1>
 

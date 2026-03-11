@@ -1,4 +1,5 @@
-import { Form, Head } from '@inertiajs/react';
+import { Form } from '@inertiajs/react';
+import AppHead from '@/components/app-head';
 import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
 import { Button } from '@/components/ui/button';
@@ -19,7 +20,10 @@ export default function ResetPassword({ token, email }: Props) {
             title="Reset password"
             description="Please enter your new password below"
         >
-            <Head title="Reset password" />
+            <AppHead
+                title="Reset password"
+                description="Choose a new password for your account."
+            />
 
             <Form
                 {...update.form()}

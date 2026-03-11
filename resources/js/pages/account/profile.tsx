@@ -1,6 +1,7 @@
 import { Transition } from '@headlessui/react';
-import { Form, Head, Link, usePage } from '@inertiajs/react';
+import { Form, Link, usePage } from '@inertiajs/react';
 import ProfileController from '@/actions/App/Http/Controllers/Account/ProfileController';
+import AppHead from '@/components/app-head';
 import DeleteUser from '@/components/delete-user';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
@@ -31,7 +32,10 @@ export default function Profile({
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Profile" />
+            <AppHead
+                title="Profile"
+                description="Update your profile details and email address."
+            />
 
             <h1 className="sr-only">Profile</h1>
 

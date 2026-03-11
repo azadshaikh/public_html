@@ -32,6 +32,7 @@ This application is a Laravel application and its main Laravel ecosystems packag
 
 This project has domain-specific skills available. You MUST activate the relevant skill whenever you work in that domain—don't wait until you're stuck.
 
+- `shadcn` — Activates whenever working with shadcn/ui components, `components.json`, registry items, presets, generated blocks, or component composition/styling fixes. Use when adding or updating shadcn components, checking registry docs/examples, or deciding whether to reuse an existing shadcn primitive before building custom UI.
 - `wayfinder-development` — Activates whenever referencing backend routes in frontend components. Use when importing from @/actions or @/routes, calling Laravel routes from TypeScript, or working with Wayfinder route functions.
 - `inertia-react-development` — Develops Inertia.js v3 React client-side applications. Activates when creating React pages, forms, or navigation; using &lt;Link&gt;, &lt;Form&gt;, useForm, useHttp, useLayoutProps, or router; working with deferred props, prefetching, optimistic updates, instant visits, or polling; or when user mentions React with Inertia, React pages, React forms, or React navigation.
 - `tailwindcss-development` — Styles applications using Tailwind CSS v4 utilities. Activates when adding styles, restyling components, working with gradients, spacing, layout, flex, grid, responsive design, dark mode, colors, typography, or borders; or when the user mentions CSS, styling, classes, Tailwind, restyle, hero section, cards, buttons, or any visual/UI changes.
@@ -121,6 +122,7 @@ This project has domain-specific skills available. You MUST activate the relevan
 - Use appropriate PHP type hints for method parameters.
 
 <!-- Explicit Return Types and Method Params -->
+
 ```php
 protected function isAccessible(User $user, ?string $path = null): bool
 {
@@ -161,6 +163,12 @@ protected function isAccessible(User $user, ?string $path = null): bool
 - Use all Inertia features from v1, v2, and v3. Check the documentation before making changes to ensure the correct approach.
 - New v3 features: standalone HTTP requests (`useHttp` hook), optimistic updates with automatic rollback, layout props (`useLayoutProps` hook), instant visits, simplified SSR via `@inertiajs/vite` plugin, custom exception handling for error pages.
 - Carried over from v2: deferred props, infinite scroll, merging props, polling, prefetching, once props, flash data.
+- Use Inertia's `<Head>` for page titles and metadata. Prefer a small shared wrapper component for default descriptions and consistent metadata.
+- Keep root-template head elements in `resources/views/app.blade.php`; page-level `<Head>` should override or extend, not duplicate them. Use `head-key` for duplicate-prone tags like `description`.
+- Use Inertia `<Link>` for internal navigation. For non-`GET` visits, prefer button rendering over anchor links for accessibility.
+- When Wayfinder is available, pass the generated object directly to `Link href`, form helpers, or router methods.
+- Use `replace`, `preserveState`, `preserveScroll`, `only`, and `viewTransition` intentionally when they improve navigation UX.
+- You may opt into the standards-compliant `data-inertia` head attribute with `defaults.future.useDataInertiaHeadAttribute`.
 - When using deferred props, add an empty state with a pulsing or animated skeleton.
 - Axios has been removed. Use the built-in XHR client with interceptors, or install Axios separately if needed.
 - `Inertia::lazy()` / `LazyProp` has been removed. Use `Inertia::optional()` instead.
@@ -168,7 +176,7 @@ protected function isAccessible(User $user, ?string $path = null): bool
 - SSR works automatically in Vite dev mode with `@inertiajs/vite` - no separate Node.js server needed during development.
 - Event renames: `invalid` is now `httpException`, `exception` is now `networkError`.
 - `router.cancel()` replaced by `router.cancelAll()`.
-- The `future` configuration namespace has been removed - all v2 future options are now always enabled.
+- Do not assume all historical `future` options are gone; follow the current docs for any still-supported `defaults.future` flags.
 
 === laravel/core rules ===
 

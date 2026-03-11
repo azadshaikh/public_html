@@ -18,6 +18,9 @@ createServer((page) =>
             form: {
                 recentlySuccessfulDuration: 5000,
             },
+            future: {
+                useDataInertiaHeadAttribute: true,
+            },
             prefetch: {
                 cacheFor: '1m',
                 hoverDelay: 150,

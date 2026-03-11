@@ -1,6 +1,7 @@
 // Components
-import { Form, Head } from '@inertiajs/react';
+import { Form } from '@inertiajs/react';
 import { LoaderCircle } from 'lucide-react';
+import AppHead from '@/components/app-head';
 import InputError from '@/components/input-error';
 import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
@@ -16,7 +17,10 @@ export default function ForgotPassword({ status }: { status?: string }) {
             title="Forgot password"
             description="Enter your email to receive a password reset link"
         >
-            <Head title="Forgot password" />
+            <AppHead
+                title="Forgot password"
+                description="Request a password reset link for your account."
+            />
 
             {status && (
                 <div className="mb-4 text-center text-sm font-medium text-green-600">

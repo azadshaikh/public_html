@@ -1,7 +1,8 @@
 import { Transition } from '@headlessui/react';
-import { Form, Head } from '@inertiajs/react';
+import { Form } from '@inertiajs/react';
 import { useRef } from 'react';
 import PasswordController from '@/actions/App/Http/Controllers/Account/PasswordController';
+import AppHead from '@/components/app-head';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
@@ -25,7 +26,10 @@ export default function Password() {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Password" />
+            <AppHead
+                title="Password"
+                description="Change your password and keep your account secure."
+            />
 
             <h1 className="sr-only">Password</h1>
 

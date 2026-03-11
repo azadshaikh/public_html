@@ -1,4 +1,4 @@
-import { Head } from '@inertiajs/react'
+import AppHead from '@/components/app-head'
 import {
   ArrowUpRightIcon,
   CalendarClockIcon,
@@ -149,7 +149,10 @@ function statusVariant(status: string): 'default' | 'secondary' | 'outline' | 'g
 export default function Page() {
   return (
     <SidebarProvider>
-      <Head title="Dashboard" />
+      <AppHead
+        title="Dashboard"
+        description="Monitor publishing velocity, editorial pipeline progress, and audience engagement from one CMS dashboard."
+      />
       <AppSidebar />
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">

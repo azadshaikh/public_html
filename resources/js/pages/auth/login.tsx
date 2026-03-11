@@ -1,4 +1,5 @@
-import { Form, Head } from '@inertiajs/react';
+import { Form } from '@inertiajs/react';
+import AppHead from '@/components/app-head';
 import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
 import TextLink from '@/components/text-link';
@@ -28,7 +29,10 @@ export default function Login({
             title="Log in to your account"
             description="Enter your email and password below to log in"
         >
-            <Head title="Log in" />
+            <AppHead
+                title="Log in"
+                description="Access your account using your email address and password."
+            />
 
             <Form
                 {...store.form()}
