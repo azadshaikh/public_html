@@ -1,4 +1,3 @@
-import { Head } from '@inertiajs/react';
 import ManagedUserController from '@/actions/App/Http/Controllers/ManagedUserController';
 import ManagedUserForm from '@/components/users/managed-user-form';
 import AppLayout from '@/layouts/app-layout';
@@ -31,7 +30,6 @@ export default function UsersCreate({
             title="Create user"
             description="Provision a new managed account before more migrated features depend on it."
         >
-            <Head title="Create user" />
             <ManagedUserForm
                 mode="create"
                 initialValues={initialValues}

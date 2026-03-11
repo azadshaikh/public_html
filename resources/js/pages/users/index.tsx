@@ -1,4 +1,4 @@
-import { Form, Head, Link, router, usePage } from '@inertiajs/react';
+import { Form, Link, router, usePage } from '@inertiajs/react';
 import {
     PlusIcon,
     PencilIcon,
@@ -99,8 +99,6 @@ export default function UsersIndex({
                 ) : undefined
             }
         >
-            <Head title="Users" />
-
             <div className="flex flex-col gap-6">
                 <section className="grid gap-4 md:grid-cols-3">
                     <ResourceStatCard

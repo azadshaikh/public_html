@@ -1,4 +1,3 @@
-import { Head } from '@inertiajs/react';
 import RoleController from '@/actions/App/Http/Controllers/RoleController';
 import RoleForm from '@/components/roles/role-form';
 import AppLayout from '@/layouts/app-layout';
@@ -30,7 +29,6 @@ export default function RolesCreate({
             title="Create role"
             description="Add a reusable permission bundle for the workflows you are migrating next."
         >
-            <Head title="Create role" />
             <RoleForm
                 mode="create"
                 initialValues={initialValues}

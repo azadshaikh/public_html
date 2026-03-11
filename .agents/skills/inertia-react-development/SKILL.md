@@ -58,6 +58,24 @@ Useful topics:
 - Inertia v3 can opt into the standards-compliant `data-inertia` head attribute via `defaults.future.useDataInertiaHeadAttribute`.
 - SSR works automatically in Vite development mode with `@inertiajs/vite`; a separate SSR server is not needed during normal dev.
 
+### Project Inertia v3 Defaults
+
+Use the project's current v3 rules as the baseline, not older v1/v2-era habits.
+
+- New v3 features in active use include `useHttp`, optimistic updates, layout props, instant visits, and simplified Vite-based SSR behavior.
+- Features carried forward and still valid include deferred props, polling, prefetching, prop merging, infinite scroll, and flash data.
+- Prefer Inertia's `<Head>` through the shared app wrapper, `Link`, `<Form>`, `useForm`, `useHttp`, and `router` helpers instead of custom page plumbing.
+- Use `useHttp` for standalone JSON or external requests that should not trigger navigation; prefer it over raw `fetch()` for app-owned endpoints when Inertia ergonomics are useful.
+- Prefer built-in Inertia Precognition support for forms and `useForm` when real-time Laravel validation is needed.
+- Prefer built-in optimistic updates only for small, reversible UI changes, and return the minimal changed subset for predictable rollback.
+- Prefer `router.get/post/put/patch/delete/reload` over raw `router.visit()` when they better express intent.
+- Use `router.push()` and `router.replace()` only for client-only navigation that should not hit the server.
+- Use prop helpers like `router.replaceProp()`, `router.appendToProp()`, and `router.prependToProp()` for lightweight client-only prop updates.
+- Cancel stale work with `router.cancelAll()` when needed.
+- This project does not use `viewTransition`; do not add it to links, visits, or global defaults.
+- When using deferred props, provide a visible empty or loading state.
+- Do not assume all historical `future` flags are gone; follow the current docs for still-supported `defaults.future` options.
+
 ## Setup Guidance
 
 ### React Client Setup
@@ -147,6 +165,47 @@ If `@inertiajs/vite` is not being used, provide explicit `resolve` and `setup` c
 
 React page components should live in `resources/js/pages` using the existing project conventions.
 
+### Project Page Conventions
+
+For authenticated application pages in this project, prefer the shared app shell instead of building page wrappers ad hoc.
+
+- Use `AppLayout` for normal authenticated pages.
+- Pass `breadcrumbs`, `title`, `description`, and optional `headerActions` into `AppLayout`.
+- Let the layout render the page header through the shared shell instead of repeating page titles inside the body.
+- Use `AccountLayout` only inside `AppLayout` for account/settings screens.
+- Keep page body content focused on the feature content itself: filters, alerts, forms, tables, empty states, and detail sections.
+
+Example:
+
+```react
+import UserController from '@/actions/App/Http/Controllers/UserController'
+import { Button } from '@/components/ui/button'
+import AppLayout from '@/layouts/app-layout'
+import { dashboard } from '@/routes/index'
+
+const breadcrumbs = [
+    { title: 'Dashboard', href: dashboard() },
+    { title: 'Users', href: UserController.index() },
+]
+
+export default function UsersIndex() {
+    return (
+        <AppLayout
+            breadcrumbs={breadcrumbs}
+            title="Users"
+            description="Manage account access and profile details."
+            headerActions={
+                <Button asChild>
+                    <Link href={UserController.create()}>Add User</Link>
+                </Button>
+            }
+        >
+            <div className="flex flex-col gap-6">...</div>
+        </AppLayout>
+    )
+}
+```
+
 ### Titles and Meta
 
 Prefer a shared app-level head wrapper for page titles and common metadata.
@@ -155,6 +214,7 @@ Prefer a shared app-level head wrapper for page titles and common metadata.
 - Keep tags that should always exist in the Blade root template out of page-level `<Head>` blocks.
 - Use `head-key` on duplicate-prone tags such as description metadata.
 - Multiple `<Head>` instances are valid; layouts can provide defaults and pages can override them.
+- In this project, `AppLayout` already sets page metadata through the shared `AppHead` wrapper. Do not add a page-level `<Head title="..." />` on pages that already pass `title` and `description` to `AppLayout` unless the page truly needs extra head tags beyond what the layout provides.
 
 Example wrapper:
 
@@ -175,6 +235,32 @@ export default function AppHead({ title, children }) {
 }
 ```
 
+Project rule of thumb:
+
+- If the page uses `AppLayout` and already passes `title` / `description`, do not also add `<Head title="..." />`.
+- If a page uses a different layout that does not own head metadata, then page-level `<Head>` may still be appropriate.
+
+Example for this project:
+
+```react
+<AppLayout
+    breadcrumbs={breadcrumbs}
+    title="Roles"
+    description="Manage user roles and permissions"
+>
+    <div className="flex flex-col gap-6">...</div>
+</AppLayout>
+```
+
+Not this:
+
+```react
+<AppLayout title="Roles" description="Manage user roles and permissions">
+    <Head title="Roles" />
+    ...
+</AppLayout>
+```
+
 ### Basic Page Example
 
 ```react
@@ -188,6 +274,54 @@ export default function UsersIndex({ users }) {
         </div>
     )
 }
+```
+
+### Resource Page Composition
+
+For back-office resource pages in this project, prefer a predictable body order so future resource pages stay visually consistent.
+
+Typical order:
+
+1. filter section
+2. flash/error alerts
+3. registry table or main content
+4. empty state when no rows exist
+
+Use the shared resource primitives when they fit:
+
+- `ResourceSectionCard`
+- `ResourceFeedbackAlerts`
+- `ResourceStatCard` when metrics are truly useful
+
+Do not add summary cards by default. Only keep them when the metrics materially help the page.
+
+Example:
+
+```react
+<div className="flex flex-col gap-6">
+    <ResourceSectionCard
+        title="Filter roles"
+        description="Search by label, key, or description."
+    >
+        <Form {...RoleController.index.form()} method="get">
+            ...
+        </Form>
+    </ResourceSectionCard>
+
+    <ResourceFeedbackAlerts
+        status={status}
+        statusIcon={<ShieldCheckIcon />}
+        error={error}
+        errorIcon={<ShieldAlertIcon />}
+    />
+
+    <ResourceSectionCard
+        title="Role registry"
+        description="Manage user roles and permissions."
+    >
+        <Table>...</Table>
+    </ResourceSectionCard>
+</div>
 ```
 
 ## Client-Side Navigation
@@ -223,6 +357,24 @@ import { Link } from '@inertiajs/react'
 import { show } from '@/actions/App/Http/Controllers/UserController'
 
 <Link href={show(1)}>View user</Link>
+```
+
+Project convention:
+
+- Prefer controller action imports from `@/actions/...` for resource navigation.
+- Pass Wayfinder objects directly to `Link href`, `<Form>`, or `useForm.submit()`.
+- Avoid hard-coded internal URLs when a generated action helper exists.
+
+Example:
+
+```react
+import ManagedUserController from '@/actions/App/Http/Controllers/ManagedUserController'
+
+<Link href={ManagedUserController.create()}>Add User</Link>
+
+<Form {...ManagedUserController.index.form()} method="get">
+    ...
+</Form>
 ```
 
 ### Prefetching
@@ -305,6 +457,8 @@ Important `router.visit()` options in v3 include:
 
 Prefer `router.reload()` when reloading the current page, since it preserves state and scroll automatically.
 
+Use `replace`, `preserveState`, `preserveScroll`, `only`, `except`, and `preserveErrors` intentionally when they improve navigation UX.
+
 When uploading files with Laravel, avoid `put`/`patch` uploads directly. Use `post` with `_method` spoofing if needed.
 
 ### Global Visit Options
@@ -358,6 +512,11 @@ When Wayfinder route definitions include component metadata, `instant` can be us
 
 This requires Wayfinder to generate Inertia component metadata.
 
+Project caution:
+
+- Use instant visits only for pages that can render safely with shared props while page-specific props are still loading.
+- Avoid instant visits when the intermediate render would be misleading or structurally incomplete.
+
 ### Visit Cancellation
 
 Cancel in-flight requests with `router.cancelAll()`.
@@ -410,6 +569,28 @@ export default function CreateUser() {
 - Prefer `<Form>` for straightforward server-driven forms that can rely on `name` attributes and uncontrolled inputs.
 - Prefer `useForm` when the UI needs controlled React state, imperative submission, remembered history state, client-side mutation, or cancellation.
 - With React `<Form>`, use `defaultValue` and `defaultChecked` for initial values instead of controlled `value` state unless the UI truly requires control.
+
+Project convention:
+
+- Prefer `<Form>` for index filters and simple server-driven search/filter toolbars.
+- Prefer `useForm` for richer edit/create screens like role assignment, password fields, checkbox collections, or other interactive forms.
+
+Examples:
+
+```react
+// Good: simple index filtering
+<Form {...RoleController.index.form()} method="get" options={{ preserveScroll: true }}>
+    <input name="search" defaultValue={filters.search} />
+</Form>
+
+// Good: interactive managed user form
+const form = useForm({
+    name: initialValues.name,
+    email: initialValues.email,
+    roles: initialValues.roles,
+    password: '',
+})
+```
 
 ### `<Form>` Patterns
 
@@ -518,6 +699,7 @@ Useful v3 `useForm` helpers include:
 - `isDirty`
 - `resetAndClearErrors()`
 - `cancel()`
+- `dontRemember()`
 - `progress`
 - `withPrecognition()`
 - `validate()`, `touch()`, `touched()`, `invalid()`, and `valid()` when Precognition is enabled
@@ -600,6 +782,11 @@ Useful `useHttp` capabilities in v3:
 - `progress` for upload UI
 - `optimistic()` for request-local optimistic updates
 - `withPrecognition()` plus `validate()`, `touch()`, `touched()`, `valid()`, and `invalid()`
+
+Project guidance:
+
+- Prefer `useHttp` for modal fetches, background refreshes, wizard-like setup flows, upload side panels, or JSON mutations that should stay outside the page-visit lifecycle.
+- Prefer normal Inertia visits for full page transitions and standard create/edit/update/delete resource flows.
 
 Example:
 
@@ -750,6 +937,11 @@ Persistent layout guidance:
 
 Prefer layout props for dynamic layout concerns like titles, active sections, or sidebar state. Do not use them as a replacement for shared page props.
 
+Project caution:
+
+- Only use `useLayoutProps`, `setLayoutProps()`, `setLayoutPropsFor()`, or `resetLayoutProps()` with persistent layouts.
+- Do not use layout props with plain wrapper layouts that remount every visit, such as pages that simply render `AppLayout` as a normal component.
+
 ### View Transitions
 
 This project does not use Inertia view transitions.
@@ -856,19 +1048,26 @@ Use `preserveErrors` when partial reloads should keep validation errors visible.
     - `exception` → `networkError`
 - Per-visit callbacks changed to `onHttpException` and `onNetworkError`.
 - Axios is no longer the default HTTP client.
-- The old `future` config block is gone; those options are always enabled.
+- Some historical `future` behavior is now standard, but current docs still expose supported `defaults.future` flags such as `useDataInertiaHeadAttribute`.
 - Inertia packages are ESM-only; use `import`, not `require()`.
 
 ## Server-Side Notes
 
 Server-side `Inertia::render()`, prop types like `Inertia::optional()` and `Inertia::defer()`, middleware, SSR, root templates, and error page rendering belong to the Inertia Laravel guidance.
 
+Important v3 server-side reminders to keep in mind while working on client pages:
+
+- `Inertia::lazy()` / `LazyProp` was removed; use `Inertia::optional()` instead.
+- Prop helpers such as `Inertia::optional()`, `Inertia::defer()`, and `Inertia::merge()` work inside nested arrays using dot notation.
+
 ## Common Pitfalls
 
 - Using plain `<a>` tags for internal navigation
 - Duplicating root-template `<head>` tags in page-level `<Head>` blocks
+- Adding redundant `<Head title="..." />` blocks on `AppLayout` pages that already pass metadata to the shared layout wrapper
 - Forgetting `head-key` on page-specific description or Open Graph tags that can appear more than once
 - Repeating title boilerplate instead of using a small shared `AppHead` wrapper
+- Repeating page header markup inside page bodies instead of using `AppLayout` with `title`, `description`, and `headerActions`
 - Controlling `<Form>` inputs unnecessarily when `name` plus `defaultValue` / `defaultChecked` is enough
 - Forgetting `disableWhileProcessing` when duplicate submissions or clicks are possible
 - Manually resetting fields when `resetOnSuccess`, `resetOnError`, or `setDefaultsOnSuccess` already fit the workflow
@@ -903,3 +1102,5 @@ Server-side `Inertia::render()`, prop types like `Inertia::optional()` and `Iner
 - Replacing existing content with skeletons during React deferred reloads when a smaller inline reloading indicator would be better
 - Ignoring `preserveErrors` needs during partial reloads
 - Using CommonJS `require()` imports with ESM-only Inertia packages
+- Hard-coding internal app URLs when a Wayfinder action helper already exists
+- Treating every resource page as if it needs summary stat cards, even when the metrics add noise instead of clarity

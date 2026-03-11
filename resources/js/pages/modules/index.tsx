@@ -1,4 +1,4 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import {
     ArrowLeftIcon,
     PackageIcon,
@@ -182,8 +182,6 @@ export default function ModulesIndex({
                 </div>
             }
         >
-            <Head title="Modules" />
-
             <div className="flex flex-col gap-6">
                 <Card className="py-0 shadow-none">
                     <CardContent className="flex flex-col gap-4 py-4">

@@ -1,4 +1,3 @@
-import { Head } from '@inertiajs/react';
 import RoleController from '@/actions/App/Http/Controllers/RoleController';
 import RoleForm from '@/components/roles/role-form';
 import AppLayout from '@/layouts/app-layout';
@@ -31,7 +30,6 @@ export default function RolesEdit({
             title={`Edit ${role.display_name}`}
             description="Update the role label, guidance, and permission bundle without changing module behavior accidentally."
         >
-            <Head title={`Edit ${role.display_name}`} />
             <RoleForm
                 mode="edit"
                 role={role}

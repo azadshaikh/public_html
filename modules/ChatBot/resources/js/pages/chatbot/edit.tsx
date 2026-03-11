@@ -1,4 +1,3 @@
-import { Head } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes/index';
 import type { BreadcrumbItem } from '@/types';
@@ -43,7 +42,6 @@ export default function ChatBotEdit({
             title={`Edit ${prompt.name}`}
             description={module.description}
         >
-            <Head title={`Edit ${prompt.name}`} />
             <PromptTemplateForm
                 mode="edit"
                 module={module}

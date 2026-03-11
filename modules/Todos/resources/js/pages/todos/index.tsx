@@ -1,4 +1,4 @@
-import { Form, Head, Link, router } from '@inertiajs/react';
+import { Form, Link, router } from '@inertiajs/react';
 import {
     CheckSquareIcon,
     LayoutDashboardIcon,
@@ -132,8 +132,6 @@ export default function TodosIndex({
                 </div>
             }
         >
-            <Head title={`${module.name} tasks`} />
-
             <section className="grid gap-4 xl:grid-cols-[1.35fr_1fr]">
                 <Card className="border-none bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-none ring-0">
                     <CardHeader>

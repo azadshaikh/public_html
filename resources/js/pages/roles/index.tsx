@@ -1,4 +1,4 @@
-import { Form, Head, Link, router } from '@inertiajs/react';
+import { Form, Link, router } from '@inertiajs/react';
 import {
     PlusIcon,
     SearchIcon,
@@ -9,11 +9,10 @@ import {
     UsersIcon,
 } from 'lucide-react';
 import RoleController from '@/actions/App/Http/Controllers/RoleController';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { ResourceFeedbackAlerts } from '@/components/resource/resource-feedback-alerts';
 import { ResourceSectionCard } from '@/components/resource/resource-section-card';
-import { ResourceStatCard } from '@/components/resource/resource-stat-card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
     Empty,
     EmptyDescription,
@@ -57,7 +56,6 @@ const breadcrumbs: BreadcrumbItem[] = [
 export default function RolesIndex({
     roles,
     filters,
-    stats,
     status,
     error,
 }: RolesIndexPageProps) {
@@ -79,37 +77,17 @@ export default function RolesIndex({
         <AppLayout
             breadcrumbs={breadcrumbs}
             title="Roles"
-            description="Create and manage reusable permission bundles before migrating more Astero features."
+            description="Manage user roles and permissions"
             headerActions={
                 <Button asChild>
                     <Link href={RoleController.create()}>
                         <PlusIcon data-icon="inline-start" />
-                        New role
+                        Add Role
                     </Link>
                 </Button>
             }
         >
-            <Head title="Roles" />
-
             <div className="flex flex-col gap-6">
-                <section className="grid gap-4 md:grid-cols-3">
-                    <ResourceStatCard
-                        title="Total roles"
-                        value={stats.total}
-                        description="All system and custom roles currently available."
-                    />
-                    <ResourceStatCard
-                        title="System roles"
-                        value={stats.system}
-                        description="Protected foundation roles used by the platform."
-                    />
-                    <ResourceStatCard
-                        title="Custom roles"
-                        value={stats.custom}
-                        description="Roles created for project-specific workflows."
-                    />
-                </section>
-
                 <ResourceSectionCard
                     title="Filter roles"
                     description="Search by label, key, or description and narrow the result set."

@@ -1,4 +1,3 @@
-import { Head } from '@inertiajs/react';
 import ManagedUserController from '@/actions/App/Http/Controllers/ManagedUserController';
 import ManagedUserForm from '@/components/users/managed-user-form';
 import AppLayout from '@/layouts/app-layout';
@@ -32,7 +31,6 @@ export default function UsersEdit({
             title={`Edit ${user.name}`}
             description="Adjust account details, role assignments, and credentials without changing account ownership."
         >
-            <Head title={`Edit ${user.name}`} />
             <ManagedUserForm
                 mode="edit"
                 user={user}

@@ -1,4 +1,3 @@
-import { Head } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes/index';
 import type { BreadcrumbItem } from '@/types';
@@ -39,7 +38,6 @@ export default function CmsCreate({
             title={`Create ${module.name} page`}
             description={module.description}
         >
-            <Head title={`Create ${module.name} page`} />
             <CmsPageForm
                 mode="create"
                 module={module}

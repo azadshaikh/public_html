@@ -1,4 +1,3 @@
-import { Head } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes/index';
 import type { BreadcrumbItem } from '@/types';
@@ -42,7 +41,6 @@ export default function CmsEdit({
             title={`Edit ${page.title}`}
             description={module.description}
         >
-            <Head title={`Edit ${page.title}`} />
             <CmsPageForm
                 mode="edit"
                 module={module}
