@@ -20,6 +20,8 @@ export type Auth = {
     addRoles: boolean;
     editRoles: boolean;
     deleteRoles: boolean;
+    viewUsers: boolean;
+    editUsers: boolean;
   };
 };
 
@@ -33,7 +35,7 @@ export type SharedData = {
 };
 
 export type AuthenticatedSharedData = Omit<SharedData, 'auth'> & {
-  auth: {
+  auth: Auth & {
     user: User;
   };
 };

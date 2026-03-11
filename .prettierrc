@@ -16,19 +16,6 @@
     "tabWidth": 4,
     "overrides": [
         {
-            "files": [
-                "**/*.js",
-                "**/*.jsx",
-                "**/*.cjs",
-                "**/*.mjs",
-                "**/*.ts",
-                "**/*.tsx"
-            ],
-            "options": {
-                "tabWidth": 2
-            }
-        },
-        {
             "files": "**/*.yml",
             "options": {
                 "tabWidth": 2

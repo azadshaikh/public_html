@@ -77,6 +77,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const canManageModules = auth.abilities.manageModules;
   const canViewRoles = auth.abilities.viewRoles;
   const canAddRoles = auth.abilities.addRoles;
+  const canViewUsers = auth.abilities.viewUsers;
   const isDashboardPage = currentComponent === 'dashboard';
   const isMoviesDemoPage = currentComponent.startsWith('demo/movies/');
   const isModulesPage =
@@ -84,6 +85,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     currentUrl.startsWith('/modules');
   const isRolesPage =
     currentComponent.startsWith('roles/') || currentUrl.startsWith('/roles');
+  const isUsersPage =
+    currentComponent.startsWith('users/') || currentUrl.startsWith('/users');
   const moduleItems = page.props.modules?.items ?? [];
 
   const moduleNavItems = moduleItems.map((module) => {
@@ -137,6 +140,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 url: RoleController.index().url,
                 isActive: currentUrl === RoleController.index().url,
               },
+              ...(canViewUsers
+                ? [
+                    {
+                      title: 'Users',
+                      url: '/users',
+                      isActive: currentUrl === '/users' || isUsersPage,
+                    },
+                  ]
+                : []),
               ...(canAddRoles
                 ? [
                     {

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Demo\MovieController;
+use App\Http\Controllers\ManagedUserController;
 use App\Http\Controllers\ModuleController;
 use App\Http\Controllers\RoleController;
 use Illuminate\Support\Facades\Route;
@@ -38,6 +39,18 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
         Route::delete('{role}', [RoleController::class, 'destroy'])
             ->middleware('permission:delete_roles')
             ->name('destroy');
+    });
+
+    Route::prefix('users')->name('users.')->group(function (): void {
+        Route::get('/', [ManagedUserController::class, 'index'])
+            ->middleware('permission:view_users')
+            ->name('index');
+        Route::get('{user}/edit', [ManagedUserController::class, 'edit'])
+            ->middleware('permission:edit_users')
+            ->name('edit');
+        Route::put('{user}', [ManagedUserController::class, 'update'])
+            ->middleware('permission:edit_users')
+            ->name('update');
     });
 
     Route::prefix('demo')->name('demo.')->group(function (): void {

@@ -4,3 +4,4 @@ export type * from './movie';
 export type * from './navigation';
 export type * from './role';
 export type * from './ui';
+export type * from './user-management';
