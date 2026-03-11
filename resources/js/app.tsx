@@ -6,6 +6,18 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { initializeTheme } from '@/hooks/use-appearance';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+const inertiaDefaults = {
+    form: {
+        recentlySuccessfulDuration: 5000,
+    },
+    future: {
+        useDataInertiaHeadAttribute: true,
+    },
+    prefetch: {
+        cacheFor: '1m',
+        hoverDelay: 150,
+    },
+};
 
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
@@ -13,18 +25,7 @@ createInertiaApp({
         path: './pages',
         extension: '.tsx',
     },
-    defaults: {
-        form: {
-            recentlySuccessfulDuration: 5000,
-        },
-        future: {
-            useDataInertiaHeadAttribute: true,
-        },
-        prefetch: {
-            cacheFor: '1m',
-            hoverDelay: 150,
-        },
-    },
+    defaults: inertiaDefaults,
     setup({ el, App, props }) {
         if (!el) {
             return;
@@ -48,6 +49,8 @@ createInertiaApp({
     },
     progress: {
         color: '#4B5563',
+        delay: 0,
+        showSpinner: false,
     },
 });
 
