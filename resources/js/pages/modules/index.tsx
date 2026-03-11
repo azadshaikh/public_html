@@ -1,33 +1,33 @@
 import { Head, Link, router } from '@inertiajs/react';
 import {
-    ArrowLeftIcon,
-    PackageIcon,
-    SearchIcon,
-    ShieldAlertIcon,
+  ArrowLeftIcon,
+  PackageIcon,
+  SearchIcon,
+  ShieldAlertIcon,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
-    Card,
-    CardContent,
-    CardTitle,
-    CardFooter,
-    CardHeader,
+  Card,
+  CardContent,
+  CardTitle,
+  CardFooter,
+  CardHeader,
 } from '@/components/ui/card';
 import {
-    Empty,
-    EmptyContent,
-    EmptyDescription,
-    EmptyHeader,
-    EmptyMedia,
-    EmptyTitle,
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
 } from '@/components/ui/empty';
 import {
-    InputGroup,
-    InputGroupAddon,
-    InputGroupInput,
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
 } from '@/components/ui/input-group';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import AppLayout from '@/layouts/app-layout';
@@ -36,357 +36,329 @@ import { dashboard } from '@/routes/index';
 import type { BreadcrumbItem, ManagedModule } from '@/types';
 
 type ModuleManagementPageProps = {
-    managedModules: ManagedModule[];
-    status?: string;
-    error?: string;
+  managedModules: ManagedModule[];
+  status?: string;
+  error?: string;
 };
 
 const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Dashboard',
-        href: dashboard(),
-    },
-    {
-        title: 'Modules',
-        href: '/modules',
-    },
+  {
+    title: 'Dashboard',
+    href: dashboard(),
+  },
+  {
+    title: 'Modules',
+    href: '/modules',
+  },
 ];
 
 const statusFilterOptions = [
-    {
-        label: 'All',
-        value: 'all',
-    },
-    {
-        label: 'Enabled',
-        value: 'enabled',
-    },
-    {
-        label: 'Disabled',
-        value: 'disabled',
-    },
+  {
+    label: 'All',
+    value: 'all',
+  },
+  {
+    label: 'Enabled',
+    value: 'enabled',
+  },
+  {
+    label: 'Disabled',
+    value: 'disabled',
+  },
 ] as const;
 
 export default function ModulesIndex({
-    managedModules,
-    status,
-    error,
+  managedModules,
+  status,
+  error,
 }: ModuleManagementPageProps) {
-    const [search, setSearch] = useState('');
-    const [statusFilter, setStatusFilter] = useState<
-        'all' | 'enabled' | 'disabled'
-    >('all');
-    const [processingModule, setProcessingModule] = useState<string | null>(
-        null,
-    );
-    const [moduleStatuses, setModuleStatuses] = useState<
-        Record<string, 'enabled' | 'disabled'>
-    >(
-        Object.fromEntries(
-            managedModules.map((module) => [module.name, module.status]),
-        ) as Record<string, 'enabled' | 'disabled'>,
-    );
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<
+    'all' | 'enabled' | 'disabled'
+  >('all');
+  const [processingModule, setProcessingModule] = useState<string | null>(null);
+  const [moduleStatuses, setModuleStatuses] = useState<
+    Record<string, 'enabled' | 'disabled'>
+  >(
+    Object.fromEntries(
+      managedModules.map((module) => [module.name, module.status]),
+    ) as Record<string, 'enabled' | 'disabled'>,
+  );
 
-    const modules = useMemo(() => {
-        return managedModules
-            .map((module) => {
-                const currentStatus =
-                    moduleStatuses[module.name] ?? module.status;
+  const modules = useMemo(() => {
+    return managedModules
+      .map((module) => {
+        const currentStatus = moduleStatuses[module.name] ?? module.status;
 
-                return {
-                    ...module,
-                    status: currentStatus,
-                    enabled: currentStatus === 'enabled',
-                };
-            })
-            .filter((module) => {
-                if (statusFilter !== 'all' && module.status !== statusFilter) {
-                    return false;
-                }
-
-                const query = search.trim().toLowerCase();
-
-                if (query === '') {
-                    return true;
-                }
-
-                return [module.name, module.version, module.description]
-                    .join(' ')
-                    .toLowerCase()
-                    .includes(query);
-            })
-            .sort((left, right) => left.name.localeCompare(right.name));
-    }, [managedModules, moduleStatuses, search, statusFilter]);
-
-    const enabledCount = Object.values(moduleStatuses).filter(
-        (value) => value === 'enabled',
-    ).length;
-    const disabledCount = managedModules.length - enabledCount;
-
-    const overviewItems = [
-        {
-            label: 'Total modules',
-            value: managedModules.length,
-            valueClassName: 'text-foreground',
-        },
-        {
-            label: 'Enabled',
-            value: enabledCount,
-            valueClassName: 'text-emerald-600 dark:text-emerald-400',
-        },
-        {
-            label: 'Disabled',
-            value: disabledCount,
-            valueClassName: 'text-rose-600 dark:text-rose-400',
-        },
-    ] as const;
-
-    function updateModuleStatus(moduleName: string, enabled: boolean) {
-        const nextStatuses: Record<string, 'enabled' | 'disabled'> = {
-            ...moduleStatuses,
-            [moduleName]: enabled ? 'enabled' : 'disabled',
+        return {
+          ...module,
+          status: currentStatus,
+          enabled: currentStatus === 'enabled',
         };
+      })
+      .filter((module) => {
+        if (statusFilter !== 'all' && module.status !== statusFilter) {
+          return false;
+        }
 
-        setModuleStatuses(nextStatuses);
-        setProcessingModule(moduleName);
+        const query = search.trim().toLowerCase();
 
-        router.patch(
-            '/modules',
-            {
-                modules: nextStatuses,
-            },
-            {
-                preserveScroll: true,
-                onError: () => {
-                    setModuleStatuses(moduleStatuses);
-                },
-                onFinish: () => {
-                    setProcessingModule(null);
-                },
-            },
-        );
-    }
+        if (query === '') {
+          return true;
+        }
 
-    return (
-        <AppLayout
-            breadcrumbs={breadcrumbs}
-            title="Manage Modules"
-            description="Enable, disable, and browse local modules from one control center."
-            headerActions={
-                <div className="flex flex-wrap gap-3">
-                    <Button asChild variant="outline">
-                        <Link href={dashboard()}>
-                            <ArrowLeftIcon data-icon="inline-start" />
-                            Back to dashboard
-                        </Link>
-                    </Button>
-                </div>
-            }
-        >
-            <Head title="Modules" />
+        return [module.name, module.version, module.description]
+          .join(' ')
+          .toLowerCase()
+          .includes(query);
+      })
+      .sort((left, right) => left.name.localeCompare(right.name));
+  }, [managedModules, moduleStatuses, search, statusFilter]);
 
-            <div className="flex flex-col gap-6">
-                <Card className="py-0 shadow-none">
-                    <CardContent className="flex flex-col gap-4 py-4">
-                        <div className="grid gap-3 sm:grid-cols-3">
-                            {overviewItems.map((item) => (
-                                <div
-                                    key={item.label}
-                                    className="flex items-center justify-between gap-3 rounded-lg border bg-muted/20 px-4 py-4"
-                                >
-                                    <span className="text-xs font-medium tracking-[0.14em] text-muted-foreground uppercase">
-                                        {item.label}
-                                    </span>
-                                    <span
-                                        className={cn(
-                                            'text-2xl font-semibold tracking-tight',
-                                            item.valueClassName,
-                                        )}
-                                    >
-                                        {item.value}
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
+  const enabledCount = Object.values(moduleStatuses).filter(
+    (value) => value === 'enabled',
+  ).length;
+  const disabledCount = managedModules.length - enabledCount;
 
-                        <div className="flex flex-col gap-4 border-t pt-4 xl:flex-row xl:items-center xl:justify-between">
-                            <InputGroup className="h-10 w-full xl:max-w-md">
-                                <InputGroupAddon>
-                                    <SearchIcon />
-                                </InputGroupAddon>
-                                <InputGroupInput
-                                    value={search}
-                                    onChange={(event) =>
-                                        setSearch(event.target.value)
-                                    }
-                                    placeholder="Search modules by name, version, or description"
-                                />
-                            </InputGroup>
+  const overviewItems = [
+    {
+      label: 'Total modules',
+      value: managedModules.length,
+      valueClassName: 'text-foreground',
+    },
+    {
+      label: 'Enabled',
+      value: enabledCount,
+      valueClassName: 'text-emerald-600 dark:text-emerald-400',
+    },
+    {
+      label: 'Disabled',
+      value: disabledCount,
+      valueClassName: 'text-rose-600 dark:text-rose-400',
+    },
+  ] as const;
 
-                            <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
-                                <ToggleGroup
-                                    type="single"
-                                    value={statusFilter}
-                                    variant="outline"
-                                    onValueChange={(value) =>
-                                        setStatusFilter(
-                                            (value === '' ? 'all' : value) as
-                                                | 'all'
-                                                | 'enabled'
-                                                | 'disabled',
-                                        )
-                                    }
-                                >
-                                    {statusFilterOptions.map((option) => (
-                                        <ToggleGroupItem
-                                            key={option.value}
-                                            value={option.value}
-                                            className="h-10 px-3"
-                                        >
-                                            {option.label}
-                                        </ToggleGroupItem>
-                                    ))}
-                                </ToggleGroup>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
+  function updateModuleStatus(moduleName: string, enabled: boolean) {
+    const nextStatuses: Record<string, 'enabled' | 'disabled'> = {
+      ...moduleStatuses,
+      [moduleName]: enabled ? 'enabled' : 'disabled',
+    };
 
-                {status ? (
-                    <Alert>
-                        <PackageIcon />
-                        <AlertTitle>Saved</AlertTitle>
-                        <AlertDescription>{status}</AlertDescription>
-                    </Alert>
-                ) : null}
+    setModuleStatuses(nextStatuses);
+    setProcessingModule(moduleName);
 
-                {error ? (
-                    <Alert className="border-destructive/30 text-destructive dark:border-destructive/40">
-                        <ShieldAlertIcon />
-                        <AlertTitle>Unavailable</AlertTitle>
-                        <AlertDescription>{error}</AlertDescription>
-                    </Alert>
-                ) : null}
-
-                <section className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-                    {modules.map((module) => {
-                        const isProcessing = processingModule === module.name;
-                        const actionLabel = module.enabled
-                            ? 'Disable'
-                            : 'Enable';
-                        const actionVariant = module.enabled
-                            ? 'outline'
-                            : 'default';
-
-                        return (
-                            <Card
-                                key={module.name}
-                                size="sm"
-                                className="h-full py-0 shadow-none"
-                            >
-                                <CardHeader className="min-h-16 items-center border-b">
-                                    <div className="flex items-start gap-3">
-                                        <div
-                                            className={cn(
-                                                'flex size-8 shrink-0 items-center justify-center rounded-lg border text-muted-foreground',
-                                                module.enabled &&
-                                                    'bg-secondary text-foreground',
-                                                !module.enabled && 'bg-muted',
-                                            )}
-                                        >
-                                            <PackageIcon className="size-4" />
-                                        </div>
-                                        <div className="min-w-0 flex-1">
-                                            <CardTitle className="truncate text-sm">
-                                                {module.name}
-                                            </CardTitle>
-                                        </div>
-                                    </div>
-                                </CardHeader>
-
-                                <CardContent className="flex min-h-0 flex-1 flex-col gap-3 py-3">
-                                    <div className="flex flex-wrap gap-2">
-                                        <Badge variant="outline">
-                                            v{module.version}
-                                        </Badge>
-                                        <Badge
-                                            variant={
-                                                module.enabled
-                                                    ? 'secondary'
-                                                    : 'outline'
-                                            }
-                                            className={cn(
-                                                module.enabled
-                                                    ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300'
-                                                    : 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300',
-                                            )}
-                                        >
-                                            {module.enabled
-                                                ? 'Enabled'
-                                                : 'Disabled'}
-                                        </Badge>
-                                    </div>
-
-                                    <p className="line-clamp-2 min-h-10 text-xs/5 text-muted-foreground">
-                                        {module.description ||
-                                            'No description available for this module yet.'}
-                                    </p>
-                                </CardContent>
-
-                                <CardFooter className="min-h-16 items-end bg-transparent p-3 pt-0">
-                                    <Button
-                                        variant={actionVariant}
-                                        size="sm"
-                                        className="w-full"
-                                        disabled={isProcessing}
-                                        onClick={() =>
-                                            updateModuleStatus(
-                                                module.name,
-                                                !module.enabled,
-                                            )
-                                        }
-                                    >
-                                        {isProcessing
-                                            ? 'Updating...'
-                                            : actionLabel}
-                                    </Button>
-                                </CardFooter>
-                            </Card>
-                        );
-                    })}
-
-                    {modules.length === 0 ? (
-                        <Card className="md:col-span-2 lg:col-span-4">
-                            <CardContent className="py-10">
-                                <Empty className="border-none p-0">
-                                    <EmptyHeader>
-                                        <EmptyMedia variant="icon">
-                                            <SearchIcon />
-                                        </EmptyMedia>
-                                        <EmptyTitle>
-                                            No modules matched the current
-                                            filters
-                                        </EmptyTitle>
-                                        <EmptyDescription>
-                                            Try a different search term or clear
-                                            the filters to see the full module
-                                            list again.
-                                        </EmptyDescription>
-                                    </EmptyHeader>
-                                    <EmptyContent>
-                                        <Button
-                                            variant="outline"
-                                            onClick={resetFilters}
-                                        >
-                                            Reset filters
-                                        </Button>
-                                    </EmptyContent>
-                                </Empty>
-                            </CardContent>
-                        </Card>
-                    ) : null}
-                </section>
-            </div>
-        </AppLayout>
+    router.patch(
+      '/modules',
+      {
+        modules: nextStatuses,
+      },
+      {
+        preserveScroll: true,
+        onError: () => {
+          setModuleStatuses(moduleStatuses);
+        },
+        onFinish: () => {
+          setProcessingModule(null);
+        },
+      },
     );
+  }
+
+  return (
+    <AppLayout
+      breadcrumbs={breadcrumbs}
+      title="Manage Modules"
+      description="Enable, disable, and browse local modules from one control center."
+      headerActions={
+        <div className="flex flex-wrap gap-3">
+          <Button asChild variant="outline">
+            <Link href={dashboard()}>
+              <ArrowLeftIcon data-icon="inline-start" />
+              Back to dashboard
+            </Link>
+          </Button>
+        </div>
+      }
+    >
+      <Head title="Modules" />
+
+      <div className="flex flex-col gap-6">
+        <Card className="py-0 shadow-none">
+          <CardContent className="flex flex-col gap-4 py-4">
+            <div className="grid gap-3 sm:grid-cols-3">
+              {overviewItems.map((item) => (
+                <div
+                  key={item.label}
+                  className="flex items-center justify-between gap-3 rounded-lg border bg-muted/20 px-4 py-4"
+                >
+                  <span className="text-xs font-medium tracking-[0.14em] text-muted-foreground uppercase">
+                    {item.label}
+                  </span>
+                  <span
+                    className={cn(
+                      'text-2xl font-semibold tracking-tight',
+                      item.valueClassName,
+                    )}
+                  >
+                    {item.value}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex flex-col gap-4 border-t pt-4 xl:flex-row xl:items-center xl:justify-between">
+              <InputGroup className="h-10 w-full xl:max-w-md">
+                <InputGroupAddon>
+                  <SearchIcon />
+                </InputGroupAddon>
+                <InputGroupInput
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder="Search modules by name, version, or description"
+                />
+              </InputGroup>
+
+              <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
+                <ToggleGroup
+                  type="single"
+                  value={statusFilter}
+                  variant="outline"
+                  onValueChange={(value) =>
+                    setStatusFilter(
+                      (value === '' ? 'all' : value) as
+                        | 'all'
+                        | 'enabled'
+                        | 'disabled',
+                    )
+                  }
+                >
+                  {statusFilterOptions.map((option) => (
+                    <ToggleGroupItem
+                      key={option.value}
+                      value={option.value}
+                      className="h-10 px-3"
+                    >
+                      {option.label}
+                    </ToggleGroupItem>
+                  ))}
+                </ToggleGroup>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {status ? (
+          <Alert>
+            <PackageIcon />
+            <AlertTitle>Saved</AlertTitle>
+            <AlertDescription>{status}</AlertDescription>
+          </Alert>
+        ) : null}
+
+        {error ? (
+          <Alert className="border-destructive/30 text-destructive dark:border-destructive/40">
+            <ShieldAlertIcon />
+            <AlertTitle>Unavailable</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        ) : null}
+
+        <section className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+          {modules.map((module) => {
+            const isProcessing = processingModule === module.name;
+            const actionLabel = module.enabled ? 'Disable' : 'Enable';
+            const actionVariant = module.enabled ? 'outline' : 'default';
+
+            return (
+              <Card
+                key={module.name}
+                size="sm"
+                className="h-full py-0 shadow-none"
+              >
+                <CardHeader className="min-h-16 items-center border-b">
+                  <div className="flex items-start gap-3">
+                    <div
+                      className={cn(
+                        'flex size-8 shrink-0 items-center justify-center rounded-lg border text-muted-foreground',
+                        module.enabled && 'bg-secondary text-foreground',
+                        !module.enabled && 'bg-muted',
+                      )}
+                    >
+                      <PackageIcon className="size-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <CardTitle className="truncate text-sm">
+                        {module.name}
+                      </CardTitle>
+                    </div>
+                  </div>
+                </CardHeader>
+
+                <CardContent className="flex min-h-0 flex-1 flex-col gap-3 py-3">
+                  <div className="flex flex-wrap gap-2">
+                    <Badge variant="outline">v{module.version}</Badge>
+                    <Badge
+                      variant={module.enabled ? 'secondary' : 'outline'}
+                      className={cn(
+                        module.enabled
+                          ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300'
+                          : 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300',
+                      )}
+                    >
+                      {module.enabled ? 'Enabled' : 'Disabled'}
+                    </Badge>
+                  </div>
+
+                  <p className="line-clamp-2 min-h-10 text-xs/5 text-muted-foreground">
+                    {module.description ||
+                      'No description available for this module yet.'}
+                  </p>
+                </CardContent>
+
+                <CardFooter className="min-h-16 items-end bg-transparent p-3 pt-0">
+                  <Button
+                    variant={actionVariant}
+                    size="sm"
+                    className="w-full"
+                    disabled={isProcessing}
+                    onClick={() =>
+                      updateModuleStatus(module.name, !module.enabled)
+                    }
+                  >
+                    {isProcessing ? 'Updating...' : actionLabel}
+                  </Button>
+                </CardFooter>
+              </Card>
+            );
+          })}
+
+          {modules.length === 0 ? (
+            <Card className="md:col-span-2 lg:col-span-4">
+              <CardContent className="py-10">
+                <Empty className="border-none p-0">
+                  <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                      <SearchIcon />
+                    </EmptyMedia>
+                    <EmptyTitle>
+                      No modules matched the current filters
+                    </EmptyTitle>
+                    <EmptyDescription>
+                      Try a different search term or clear the filters to see
+                      the full module list again.
+                    </EmptyDescription>
+                  </EmptyHeader>
+                  <EmptyContent>
+                    <Button variant="outline" onClick={resetFilters}>
+                      Reset filters
+                    </Button>
+                  </EmptyContent>
+                </Empty>
+              </CardContent>
+            </Card>
+          ) : null}
+        </section>
+      </div>
+    </AppLayout>
+  );
 }
