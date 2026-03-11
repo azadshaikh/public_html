@@ -75,11 +75,25 @@
 
 ## Phase 4 — Inertia-native platform foundation
 
-- [ ] Define target architecture for shared module-friendly CRUD patterns
-- [ ] Decide what survives from Astero scaffold design
-- [ ] Build Inertia-native CRUD foundation for forms, tables, filters, actions, stats, and detail pages
-- [ ] Standardize route, request, resource, and page conventions for modules
-- [ ] Define shared layout and module-shell conventions
+- [x] Define target architecture for shared module-friendly CRUD patterns
+- [x] Decide what survives from Astero scaffold design
+- [~] Build Inertia-native CRUD foundation for forms, tables, filters, actions, stats, and detail pages
+- [x] Standardize route, request, resource, and page conventions for modules
+- [x] Define shared layout and module-shell conventions
+
+### Phase 4 decisions
+
+- Backend routes stay Laravel-first and Wayfinder-backed: each migrated module should expose named web routes, use controller actions instead of ad hoc closures, and regenerate typed helpers for frontend links and forms.
+- Server responses should prefer a consistent pattern: index pages return filter state, lightweight stats, list rows, and option sets; create/edit pages return focused form payloads; destructive actions redirect with flash status/error messages.
+- Validation should stay in dedicated Form Request classes, not inline controller validation. Request classes should normalize booleans, enums, and IDs in `prepareForValidation()` so React pages receive predictable shapes.
+- Frontend page structure should follow the current `roles` and `users` pattern: `index.tsx`, `create.tsx`, and `edit.tsx` pages under `resources/js/pages/<module>/`, with larger forms extracted into `resources/js/components/<module>/`.
+- Page chrome should continue using `AppLayout`, shared breadcrumbs, page title/description, and optional `headerActions`. The layout shell is already established through `AppShell`, `AppSidebar`, `AppContent`, and `AppPageHeader`.
+- Module navigation should plug into one shared sidebar model: one top-level module node, child entries for index/create flows where needed, permission-gated visibility, and active-state detection from both URL and Inertia component namespace.
+- `Inertia` forms should prefer Wayfinder form objects or `useForm` submit actions. Use `Link` for internal navigation, `router.*` for destructive or imperative actions, and shared flash/error alerts near the top of each page.
+- Index pages should use a consistent content order: stats row, filter card, flash/error alerts, then registry/detail table card. Empty states should use the shared `Empty` primitives.
+- Astero scaffold artifacts that survive conceptually are filters, columns, status tabs, stats, and action groupings. They should survive only as UX ideas, not as direct ports of `App\Scaffold\*`, Blade partials, or scaffold service contracts.
+- Initial shared resource primitives are now extracted from `roles` and `users`: reusable stat cards, section cards, and feedback alerts under `resources/js/components/resource/`.
+- Shared CRUD foundation work is still pending implementation. When built, it should extract repeated patterns from current `roles` and `users` pages into reusable `Inertia`/React primitives instead of reproducing Astero's scaffold runtime.
 
 ## Phase 5 — Shared foundation migration
 

@@ -9,16 +9,11 @@ import {
     UsersIcon,
 } from 'lucide-react';
 import RoleController from '@/actions/App/Http/Controllers/RoleController';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
+import { ResourceFeedbackAlerts } from '@/components/resource/resource-feedback-alerts';
+import { ResourceSectionCard } from '@/components/resource/resource-section-card';
+import { ResourceStatCard } from '@/components/resource/resource-stat-card';
 import {
     Empty,
     EmptyDescription,
@@ -98,233 +93,187 @@ export default function RolesIndex({
 
             <div className="flex flex-col gap-6">
                 <section className="grid gap-4 md:grid-cols-3">
-                    <RoleStatCard
+                    <ResourceStatCard
                         title="Total roles"
                         value={stats.total}
                         description="All system and custom roles currently available."
                     />
-                    <RoleStatCard
+                    <ResourceStatCard
                         title="System roles"
                         value={stats.system}
                         description="Protected foundation roles used by the platform."
                     />
-                    <RoleStatCard
+                    <ResourceStatCard
                         title="Custom roles"
                         value={stats.custom}
                         description="Roles created for project-specific workflows."
                     />
                 </section>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Filter roles</CardTitle>
-                        <CardDescription>
-                            Search by label, key, or description and narrow the
-                            result set.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <Form
-                            {...RoleController.index.form()}
-                            method="get"
-                            options={{ preserveScroll: true }}
-                            className="grid gap-4 md:grid-cols-[minmax(0,2fr)_minmax(200px,1fr)_auto]"
+                <ResourceSectionCard
+                    title="Filter roles"
+                    description="Search by label, key, or description and narrow the result set."
+                >
+                    <Form
+                        {...RoleController.index.form()}
+                        method="get"
+                        options={{ preserveScroll: true }}
+                        className="grid gap-4 md:grid-cols-[minmax(0,2fr)_minmax(200px,1fr)_auto]"
+                    >
+                        <InputGroup className="w-full">
+                            <InputGroupAddon>
+                                <SearchIcon />
+                            </InputGroupAddon>
+                            <InputGroupInput
+                                name="search"
+                                defaultValue={filters.search}
+                                placeholder="Search roles"
+                            />
+                        </InputGroup>
+
+                        <NativeSelect
+                            name="scope"
+                            className="w-full"
+                            defaultValue={filters.scope}
                         >
-                            <InputGroup className="w-full">
-                                <InputGroupAddon>
-                                    <SearchIcon />
-                                </InputGroupAddon>
-                                <InputGroupInput
-                                    name="search"
-                                    defaultValue={filters.search}
-                                    placeholder="Search roles"
-                                />
-                            </InputGroup>
+                            <NativeSelectOption value="all">
+                                All roles
+                            </NativeSelectOption>
+                            <NativeSelectOption value="system">
+                                System roles
+                            </NativeSelectOption>
+                            <NativeSelectOption value="custom">
+                                Custom roles
+                            </NativeSelectOption>
+                        </NativeSelect>
 
-                            <NativeSelect
-                                name="scope"
-                                className="w-full"
-                                defaultValue={filters.scope}
-                            >
-                                <NativeSelectOption value="all">
-                                    All roles
-                                </NativeSelectOption>
-                                <NativeSelectOption value="system">
-                                    System roles
-                                </NativeSelectOption>
-                                <NativeSelectOption value="custom">
-                                    Custom roles
-                                </NativeSelectOption>
-                            </NativeSelect>
+                        <Button type="submit">Apply</Button>
+                    </Form>
+                </ResourceSectionCard>
 
-                            <Button type="submit">Apply</Button>
-                        </Form>
-                    </CardContent>
-                </Card>
+                <ResourceFeedbackAlerts
+                    status={status}
+                    statusIcon={<ShieldCheckIcon />}
+                    error={error}
+                    errorIcon={<ShieldAlertIcon />}
+                />
 
-                {status ? (
-                    <Alert>
-                        <ShieldCheckIcon />
-                        <AlertTitle>Saved</AlertTitle>
-                        <AlertDescription>{status}</AlertDescription>
-                    </Alert>
-                ) : null}
+                <ResourceSectionCard
+                    title="Role registry"
+                    description="Roles are sorted with platform roles first so migration-critical access stays obvious."
+                >
+                    {roles.length === 0 ? (
+                        <Empty>
+                            <EmptyHeader>
+                                <EmptyMedia variant="icon">
+                                    <ShieldCheckIcon />
+                                </EmptyMedia>
+                                <EmptyTitle>No roles found</EmptyTitle>
+                                <EmptyDescription>
+                                    Try a different filter or create the first
+                                    custom role.
+                                </EmptyDescription>
+                            </EmptyHeader>
+                        </Empty>
+                    ) : (
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Role</TableHead>
+                                    <TableHead>Key</TableHead>
+                                    <TableHead>Permissions</TableHead>
+                                    <TableHead>Users</TableHead>
+                                    <TableHead>Status</TableHead>
+                                    <TableHead className="text-right">
+                                        Actions
+                                    </TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {roles.map((role: RoleListItem) => {
+                                    const deleteDisabled =
+                                        role.is_system || role.users_count > 0;
 
-                {error ? (
-                    <Alert className="border-destructive/30 text-destructive dark:border-destructive/40">
-                        <ShieldAlertIcon />
-                        <AlertTitle>Action blocked</AlertTitle>
-                        <AlertDescription>{error}</AlertDescription>
-                    </Alert>
-                ) : null}
-
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Role registry</CardTitle>
-                        <CardDescription>
-                            Roles are sorted with platform roles first so
-                            migration-critical access stays obvious.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        {roles.length === 0 ? (
-                            <Empty>
-                                <EmptyHeader>
-                                    <EmptyMedia variant="icon">
-                                        <ShieldCheckIcon />
-                                    </EmptyMedia>
-                                    <EmptyTitle>No roles found</EmptyTitle>
-                                    <EmptyDescription>
-                                        Try a different filter or create the
-                                        first custom role.
-                                    </EmptyDescription>
-                                </EmptyHeader>
-                            </Empty>
-                        ) : (
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Role</TableHead>
-                                        <TableHead>Key</TableHead>
-                                        <TableHead>Permissions</TableHead>
-                                        <TableHead>Users</TableHead>
-                                        <TableHead>Status</TableHead>
-                                        <TableHead className="text-right">
-                                            Actions
-                                        </TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {roles.map((role: RoleListItem) => {
-                                        const deleteDisabled =
-                                            role.is_system ||
-                                            role.users_count > 0;
-
-                                        return (
-                                            <TableRow key={role.id}>
-                                                <TableCell className="align-top">
-                                                    <div className="flex flex-col gap-1">
-                                                        <span className="font-medium text-foreground">
-                                                            {role.display_name}
-                                                        </span>
-                                                        <span className="max-w-lg text-sm text-muted-foreground">
-                                                            {role.description ??
-                                                                'No description provided.'}
-                                                        </span>
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <code className="rounded bg-muted px-2 py-1 text-xs">
-                                                        {role.name}
-                                                    </code>
-                                                </TableCell>
-                                                <TableCell>
-                                                    {role.permissions_count}
-                                                </TableCell>
-                                                <TableCell>
-                                                    <span className="inline-flex items-center gap-1.5">
-                                                        <UsersIcon className="size-4 text-muted-foreground" />
-                                                        {role.users_count}
+                                    return (
+                                        <TableRow key={role.id}>
+                                            <TableCell className="align-top">
+                                                <div className="flex flex-col gap-1">
+                                                    <span className="font-medium text-foreground">
+                                                        {role.display_name}
                                                     </span>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Badge
-                                                        variant={
-                                                            role.is_system
-                                                                ? 'secondary'
-                                                                : 'outline'
+                                                    <span className="max-w-lg text-sm text-muted-foreground">
+                                                        {role.description ??
+                                                            'No description provided.'}
+                                                    </span>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <code className="rounded bg-muted px-2 py-1 text-xs">
+                                                    {role.name}
+                                                </code>
+                                            </TableCell>
+                                            <TableCell>
+                                                {role.permissions_count}
+                                            </TableCell>
+                                            <TableCell>
+                                                <span className="inline-flex items-center gap-1.5">
+                                                    <UsersIcon className="size-4 text-muted-foreground" />
+                                                    {role.users_count}
+                                                </span>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge
+                                                    variant={
+                                                        role.is_system
+                                                            ? 'secondary'
+                                                            : 'outline'
+                                                    }
+                                                >
+                                                    {role.is_system
+                                                        ? 'System'
+                                                        : 'Custom'}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="flex justify-end gap-2">
+                                                    <Button
+                                                        asChild
+                                                        variant="outline"
+                                                        size="sm"
+                                                    >
+                                                        <Link
+                                                            href={RoleController.edit(
+                                                                role.id,
+                                                            )}
+                                                        >
+                                                            <PencilIcon data-icon="inline-start" />
+                                                            Edit
+                                                        </Link>
+                                                    </Button>
+                                                    <Button
+                                                        type="button"
+                                                        variant="outline"
+                                                        size="sm"
+                                                        disabled={
+                                                            deleteDisabled
+                                                        }
+                                                        onClick={() =>
+                                                            handleDelete(role)
                                                         }
                                                     >
-                                                        {role.is_system
-                                                            ? 'System'
-                                                            : 'Custom'}
-                                                    </Badge>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <div className="flex justify-end gap-2">
-                                                        <Button
-                                                            asChild
-                                                            variant="outline"
-                                                            size="sm"
-                                                        >
-                                                            <Link
-                                                                href={RoleController.edit(
-                                                                    role.id,
-                                                                )}
-                                                            >
-                                                                <PencilIcon data-icon="inline-start" />
-                                                                Edit
-                                                            </Link>
-                                                        </Button>
-                                                        <Button
-                                                            type="button"
-                                                            variant="outline"
-                                                            size="sm"
-                                                            disabled={
-                                                                deleteDisabled
-                                                            }
-                                                            onClick={() =>
-                                                                handleDelete(
-                                                                    role,
-                                                                )
-                                                            }
-                                                        >
-                                                            <Trash2Icon data-icon="inline-start" />
-                                                            Delete
-                                                        </Button>
-                                                    </div>
-                                                </TableCell>
-                                            </TableRow>
-                                        );
-                                    })}
-                                </TableBody>
-                            </Table>
-                        )}
-                    </CardContent>
-                </Card>
+                                                        <Trash2Icon data-icon="inline-start" />
+                                                        Delete
+                                                    </Button>
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    );
+                                })}
+                            </TableBody>
+                        </Table>
+                    )}
+                </ResourceSectionCard>
             </div>
         </AppLayout>
-    );
-}
-
-function RoleStatCard({
-    title,
-    value,
-    description,
-}: {
-    title: string;
-    value: number;
-    description: string;
-}) {
-    return (
-        <Card>
-            <CardHeader>
-                <CardDescription>{title}</CardDescription>
-                <CardTitle className="text-3xl">{value}</CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0 text-sm text-muted-foreground">
-                {description}
-            </CardContent>
-        </Card>
     );
 }

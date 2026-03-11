@@ -159,6 +159,19 @@ This includes:
 - detail page patterns,
 - shared layouts and module shell behavior.
 
+Initial Phase 4 decisions:
+
+- Module CRUD should be organized around explicit Laravel controllers, Form Requests, and `Inertia::render()` pages, with Wayfinder-generated helpers as the frontend contract.
+- Route naming should stay resource-like and predictable so frontend pages can import named controller actions directly from `@/actions/...`.
+- Each migrated module should use a standard page set in `resources/js/pages/<module>/`: `index.tsx`, `create.tsx`, `edit.tsx`, and additional detail pages only when the business flow truly needs them.
+- Shared page payloads should be intentionally shaped for `Inertia`: index payloads provide filters, stats, rows, and option lists; form pages provide initial values plus option sets; status/error messages should flow through redirects and shared props instead of custom response fragments.
+- Larger forms should live in extracted module components under `resources/js/components/<module>/`, while small one-off pages can stay inline.
+- The existing application shell is the target layout model: shared breadcrumbs, title/description/header actions, sidebar navigation, and content spacing should flow through `AppLayout` rather than module-specific wrappers.
+- Navigation conventions are now fixed early: each module gets one sidebar section entry with nested links for major CRUD flows, permission gating, and active-state detection based on route/namespace rather than module-local config files copied from Astero.
+- Filters, stats, registries, alerts, and empty states should be built from shared React UI primitives and consistent Tailwind spacing, not legacy Blade partial composition.
+- Astero scaffold concepts such as columns, filters, and status tabs may inspire shared React abstractions later, but the scaffold runtime itself is not part of the target architecture.
+- The remaining implementation work in this phase is to extract reusable CRUD primitives from the already-built `roles` and `users` pages so the first real migrated module (`Customers`) can land on a stable pattern.
+
 ### Phase 5 — Shared foundation migration
 
 Port the shared foundations required by the first real modules.
