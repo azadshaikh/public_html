@@ -16,7 +16,9 @@
         "laravel/wayfinder": "^0.1.14"
     },
     "require-dev": {
+        "driftingly/rector-laravel": "^2.1.9",
         "fakerphp/faker": "^1.24.1",
+        "larastan/larastan": "^3.9",
         "laravel/boost": "^2.2",
         "laravel/pail": "^1.2.6",
         "laravel/pint": "^1.28.0",
@@ -24,7 +26,8 @@
         "laravel/tinker": "^2.11.1",
         "mockery/mockery": "^1.6.12",
         "nunomaduro/collision": "^8.9.1",
-        "phpunit/phpunit": "^12.5.14"
+        "phpunit/phpunit": "^12.5.14",
+        "rector/rector": "^2.3"
     },
     "autoload": {
         "psr-4": {
@@ -56,6 +59,26 @@
         ],
         "lint:check": [
             "pint --parallel --test"
+        ],
+        "analyse": [
+            "@php vendor/bin/phpstan analyse --memory-limit=1G"
+        ],
+        "rector": [
+            "@php vendor/bin/rector process"
+        ],
+        "rector:dry": [
+            "@php vendor/bin/rector process --dry-run"
+        ],
+        "quality:check": [
+            "Composer\\Config::disableProcessTimeout",
+            "@lint:check",
+            "@analyse",
+            "pnpm lint:check",
+            "pnpm format:check",
+            "pnpm types:check",
+            "@php artisan test:guard --ansi",
+            "@php artisan config:clear --ansi",
+            "@php artisan test"
         ],
         "ci:check": [
             "Composer\\Config::disableProcessTimeout",

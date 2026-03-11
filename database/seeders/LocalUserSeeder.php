@@ -12,14 +12,11 @@ class LocalUserSeeder extends Seeder
      */
     public function run(): void
     {
-        User::updateOrCreate(
-            ['email' => 'su@astero.in'],
-            [
-                'name' => 'Local User',
-                'password' => 'PassWord@1234',
-                'active' => true,
-                'email_verified_at' => now(),
-            ],
-        );
+        User::query()->updateOrCreate(['email' => 'su@astero.in'], [
+            'name' => 'Local User',
+            'password' => 'PassWord@1234',
+            'active' => true,
+            'email_verified_at' => now(),
+        ]);
     }
 }

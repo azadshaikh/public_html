@@ -10,6 +10,9 @@
         "format:check": "prettier --check resources/",
         "lint": "eslint . --fix",
         "lint:check": "eslint .",
+        "phpstan": "vendor/bin/phpstan analyse --memory-limit=1G",
+        "rector": "vendor/bin/rector process",
+        "rector:dry": "vendor/bin/rector process --dry-run",
         "types:check": "tsc --noEmit"
     },
     "devDependencies": {

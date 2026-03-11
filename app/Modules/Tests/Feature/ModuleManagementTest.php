@@ -55,7 +55,7 @@ class ModuleManagementTest extends TestCase
         $this->actingAs($user)
             ->get(route('modules.index'))
             ->assertOk()
-            ->assertInertia(fn (Assert $page) => $page
+            ->assertInertia(fn (Assert $page): Assert => $page
                 ->component('modules/index')
                 ->has('managedModules', 3)
                 ->where('managedModules.0.name', 'CMS')

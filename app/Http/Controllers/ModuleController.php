@@ -17,7 +17,7 @@ class ModuleController extends Controller
      */
     public function index(): Response
     {
-        $moduleManager = app(ModuleManager::class);
+        $moduleManager = resolve(ModuleManager::class);
 
         return Inertia::render('modules/index', [
             'managedModules' => $moduleManager->managementData()->all(),
@@ -32,9 +32,9 @@ class ModuleController extends Controller
     public function update(UpdateModulesRequest $request): RedirectResponse
     {
         try {
-            app(ModuleLifecycleManager::class)->syncStatuses($request->validated('modules'));
-        } catch (Throwable $exception) {
-            report($exception);
+            resolve(ModuleLifecycleManager::class)->syncStatuses($request->validated('modules'));
+        } catch (Throwable $throwable) {
+            report($throwable);
 
             return to_route('modules.index')->with('error', 'Unable to update the selected modules right now.');
         }

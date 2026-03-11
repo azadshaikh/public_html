@@ -28,7 +28,7 @@ class ModuleManager
      */
     public function all(): Collection
     {
-        if ($this->modules !== null) {
+        if ($this->modules instanceof Collection) {
             return $this->modules;
         }
 
@@ -56,8 +56,11 @@ class ModuleManager
         $normalizedModule = $this->normalizeModuleIdentifier($module);
 
         return $this->enabled()->contains(function (ModuleManifest $manifest) use ($normalizedModule): bool {
-            return $this->normalizeModuleIdentifier($manifest->slug) === $normalizedModule
-                || $this->normalizeModuleIdentifier($manifest->name) === $normalizedModule;
+            if ($this->normalizeModuleIdentifier($manifest->slug) === $normalizedModule) {
+                return true;
+            }
+
+            return $this->normalizeModuleIdentifier($manifest->name) === $normalizedModule;
         });
     }
 
@@ -66,8 +69,11 @@ class ModuleManager
         $normalizedModule = $this->normalizeModuleIdentifier($module);
 
         return $this->all()->first(function (ModuleManifest $manifest) use ($normalizedModule): bool {
-            return $this->normalizeModuleIdentifier($manifest->slug) === $normalizedModule
-                || $this->normalizeModuleIdentifier($manifest->name) === $normalizedModule;
+            if ($this->normalizeModuleIdentifier($manifest->slug) === $normalizedModule) {
+                return true;
+            }
+
+            return $this->normalizeModuleIdentifier($manifest->name) === $normalizedModule;
         });
     }
 
@@ -75,8 +81,8 @@ class ModuleManager
     {
         $manifest = $this->find($module);
 
-        if ($manifest === null) {
-            throw new InvalidArgumentException("Unable to locate module [{$module}].");
+        if (! $manifest instanceof ModuleManifest) {
+            throw new InvalidArgumentException(sprintf('Unable to locate module [%s].', $module));
         }
 
         return $manifest;
@@ -198,21 +204,19 @@ class ModuleManager
         try {
             /** @var mixed $decoded */
             $decoded = json_decode($manifestContents, true, 512, JSON_THROW_ON_ERROR);
-        } catch (JsonException $exception) {
-            throw new RuntimeException("The enabled modules manifest at [{$manifestPath}] is not valid JSON.", previous: $exception);
+        } catch (JsonException $jsonException) {
+            throw new RuntimeException(sprintf('The enabled modules manifest at [%s] is not valid JSON.', $manifestPath), $jsonException->getCode(), previous: $jsonException);
         }
 
         if (! is_array($decoded)) {
-            throw new InvalidArgumentException("The enabled modules manifest at [{$manifestPath}] must decode to an array.");
+            throw new InvalidArgumentException(sprintf('The enabled modules manifest at [%s] must decode to an array.', $manifestPath));
         }
 
         return collect($decoded)
-            ->filter(function (mixed $status, mixed $module): bool {
-                return is_string($module)
-                    && trim($module) !== ''
-                    && is_string($status)
-                    && in_array(strtolower(trim($status)), ['enable', 'enabled', 'disable', 'disabled'], true);
-            })
+            ->filter(fn (mixed $status, mixed $module): bool => is_string($module)
+                && trim($module) !== ''
+                && is_string($status)
+                && in_array(strtolower(trim($status)), ['enable', 'enabled', 'disable', 'disabled'], true))
             ->mapWithKeys(fn (string $status, string $module): array => [
                 $module => $this->normalizeModuleStatus($status),
             ])
@@ -242,12 +246,12 @@ class ModuleManager
         try {
             /** @var mixed $decoded */
             $decoded = json_decode($this->files->get($manifestPath), true, 512, JSON_THROW_ON_ERROR);
-        } catch (JsonException $exception) {
-            throw new RuntimeException("The module manifest at [{$manifestPath}] is not valid JSON.", previous: $exception);
+        } catch (JsonException $jsonException) {
+            throw new RuntimeException(sprintf('The module manifest at [%s] is not valid JSON.', $manifestPath), $jsonException->getCode(), previous: $jsonException);
         }
 
         if (! is_array($decoded)) {
-            throw new InvalidArgumentException("The module manifest at [{$manifestPath}] must decode to an array.");
+            throw new InvalidArgumentException(sprintf('The module manifest at [%s] must decode to an array.', $manifestPath));
         }
 
         $directoryName = basename($modulePath);
@@ -259,7 +263,7 @@ class ModuleManager
         $provider = trim((string) ($decoded['provider'] ?? ''));
 
         if ($name === '' || $namespace === '' || $provider === '') {
-            throw new InvalidArgumentException("The module manifest at [{$manifestPath}] must define [name], [namespace], and [provider].");
+            throw new InvalidArgumentException(sprintf('The module manifest at [%s] must define [name], [namespace], and [provider].', $manifestPath));
         }
 
         return new ModuleManifest(

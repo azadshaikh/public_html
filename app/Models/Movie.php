@@ -5,7 +5,45 @@ namespace App\Models;
 use Database\Factories\MovieFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property string $title
+ * @property string $slug
+ * @property string|null $tagline
+ * @property string $synopsis
+ * @property string|null $notes
+ * @property string $director
+ * @property string|null $studio
+ * @property string $status
+ * @property string $rating
+ * @property string|null $language
+ * @property Carbon|null $release_date
+ * @property string|null $release_time
+ * @property int|null $runtime_minutes
+ * @property string|null $budget
+ * @property string|null $box_office
+ * @property string|null $ticket_price
+ * @property int|null $metascore
+ * @property int|null $audience_score
+ * @property string|null $imdb_rating
+ * @property string|null $trailer_url
+ * @property string|null $official_site
+ * @property list<string>|null $genres
+ * @property list<string>|null $spoken_languages
+ * @property list<string>|null $available_formats
+ * @property list<string>|null $streaming_platforms
+ * @property list<string>|null $content_warnings
+ * @property bool $is_featured
+ * @property bool $is_now_showing
+ * @property bool $has_post_credit_scene
+ * @property bool $is_family_friendly
+ * @property string|null $poster_path
+ * @property string|null $backdrop_path
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ */
 class Movie extends Model
 {
     /** @use HasFactory<MovieFactory> */

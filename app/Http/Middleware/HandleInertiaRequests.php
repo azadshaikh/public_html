@@ -37,13 +37,13 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
-        $modules = app(ModuleManager::class)->sharedData();
+        $modules = resolve(ModuleManager::class)->sharedData();
 
         return [
             ...parent::share($request),
             'appName' => config('app.name'),
             'auth' => [
-                'user' => fn () => $request->user()
+                'user' => fn (): ?array => $request->user()
                     ? [
                         'id' => $request->user()->id,
                         'name' => $request->user()->name,

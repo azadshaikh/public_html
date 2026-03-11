@@ -22,7 +22,7 @@ final class ProductionTestCommandGuard
         return $isProduction && self::normalizeCommand($command) === 'test';
     }
 
-    protected static function normalizeCommand(?string $command): string
+    private static function normalizeCommand(?string $command): string
     {
         return strtolower(trim((string) $command));
     }

@@ -7,9 +7,9 @@ final class ModuleAutoloader
     /**
      * @var array<string, string>
      */
-    protected static array $prefixes = [];
+    private static array $prefixes = [];
 
-    protected static bool $registered = false;
+    private static bool $registered = false;
 
     /**
      * @param  array<int, ModuleManifest>  $modules
@@ -29,7 +29,7 @@ final class ModuleAutoloader
         self::$registered = true;
     }
 
-    protected static function autoload(string $class): void
+    private static function autoload(string $class): void
     {
         foreach (self::$prefixes as $prefix => $basePath) {
             if (! str_starts_with($class, $prefix)) {

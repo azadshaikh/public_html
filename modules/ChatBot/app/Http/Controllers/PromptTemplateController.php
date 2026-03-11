@@ -23,9 +23,9 @@ class PromptTemplateController extends Controller
             ->when($filters['search'] !== '', function (Builder $query) use ($filters): void {
                 $query->where(function (Builder $query) use ($filters): void {
                     $query
-                        ->where('name', 'ilike', "%{$filters['search']}%")
-                        ->orWhere('slug', 'ilike', "%{$filters['search']}%")
-                        ->orWhere('purpose', 'ilike', "%{$filters['search']}%");
+                        ->where('name', 'ilike', sprintf('%%%s%%', $filters['search']))
+                        ->orWhere('slug', 'ilike', sprintf('%%%s%%', $filters['search']))
+                        ->orWhere('purpose', 'ilike', sprintf('%%%s%%', $filters['search']));
                 });
             })
             ->when($filters['status'] !== '', fn (Builder $query) => $query->where('status', $filters['status']))
@@ -33,16 +33,19 @@ class PromptTemplateController extends Controller
             ->orderBy('name')
             ->paginate(8)
             ->withQueryString()
-            ->through(fn (PromptTemplate $prompt): array => [
-                'id' => $prompt->id,
-                'name' => $prompt->name,
-                'slug' => $prompt->slug,
-                'purpose' => $prompt->purpose,
-                'model' => $prompt->model,
-                'tone' => $prompt->tone,
-                'status' => $prompt->status,
-                'is_default' => $prompt->is_default,
-            ]);
+            ->through(function (mixed $prompt): array {
+                /** @var PromptTemplate $prompt */
+                return [
+                    'id' => $prompt->id,
+                    'name' => $prompt->name,
+                    'slug' => $prompt->slug,
+                    'purpose' => $prompt->purpose,
+                    'model' => $prompt->model,
+                    'tone' => $prompt->tone,
+                    'status' => $prompt->status,
+                    'is_default' => $prompt->is_default,
+                ];
+            });
 
         return Inertia::render('chatbot/index', [
             'module' => $this->module()->toSharedArray(),
@@ -149,6 +152,6 @@ class PromptTemplateController extends Controller
 
     protected function module(): ModuleManifest
     {
-        return app(ModuleManager::class)->findOrFail('chatbot');
+        return resolve(ModuleManager::class)->findOrFail('chatbot');
     }
 }

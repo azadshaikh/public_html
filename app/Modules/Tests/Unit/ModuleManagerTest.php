@@ -4,7 +4,10 @@ namespace App\Modules\Tests\Unit;
 
 use App\Modules\ModuleManager;
 use App\Modules\Support\ModuleManifest;
+use Illuminate\Contracts\Config\Repository;
+use Illuminate\Filesystem\Filesystem;
 use Illuminate\Routing\Route;
+use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\File;
 use Tests\TestCase;
 
@@ -45,8 +48,8 @@ class ModuleManagerTest extends TestCase
         config()->set('modules.manifest', $manifestPath);
 
         $moduleManager = new ModuleManager(
-            files: app('files'),
-            config: app('config'),
+            files: resolve(Filesystem::class),
+            config: resolve(Repository::class),
         );
 
         $this->assertCount(0, $moduleManager->enabled());
@@ -66,8 +69,8 @@ class ModuleManagerTest extends TestCase
         config()->set('modules.manifest', $manifestPath);
 
         $moduleManager = new ModuleManager(
-            files: app('files'),
-            config: app('config'),
+            files: resolve(Filesystem::class),
+            config: resolve(Repository::class),
         );
 
         $this->assertCount(1, $moduleManager->enabled());
@@ -85,8 +88,8 @@ class ModuleManagerTest extends TestCase
         config()->set('modules.manifest', $manifestPath);
 
         $moduleManager = new ModuleManager(
-            files: app('files'),
-            config: app('config'),
+            files: resolve(Filesystem::class),
+            config: resolve(Repository::class),
         );
 
         $this->assertCount(0, $moduleManager->enabled());
@@ -102,8 +105,8 @@ class ModuleManagerTest extends TestCase
         config()->set('modules.manifest', $manifestPath);
 
         $moduleManager = new ModuleManager(
-            files: app('files'),
-            config: app('config'),
+            files: resolve(Filesystem::class),
+            config: resolve(Repository::class),
         );
 
         $this->assertCount(0, $moduleManager->enabled());
@@ -115,7 +118,7 @@ class ModuleManagerTest extends TestCase
     {
         collect(['cms.index', 'chatbot.index', 'todos.index'])
             ->each(function (string $routeName): void {
-                $route = app('router')->getRoutes()->getByName($routeName);
+                $route = resolve(Router::class)->getRoutes()->getByName($routeName);
 
                 $this->assertInstanceOf(Route::class, $route);
                 $this->assertContains('web', $route->gatherMiddleware());

@@ -42,7 +42,7 @@ class ChatBotModuleTest extends TestCase
                 'search' => 'support',
             ]))
             ->assertOk()
-            ->assertInertia(fn (Assert $page) => $page
+            ->assertInertia(fn (Assert $page): Assert => $page
                 ->component('chatbot/index')
                 ->where('module.name', 'ChatBot')
                 ->where('filters.status', 'active')

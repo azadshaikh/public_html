@@ -23,26 +23,29 @@ class CmsPageController extends Controller
             ->when($filters['search'] !== '', function (Builder $query) use ($filters): void {
                 $query->where(function (Builder $query) use ($filters): void {
                     $query
-                        ->where('title', 'ilike', "%{$filters['search']}%")
-                        ->orWhere('slug', 'ilike', "%{$filters['search']}%")
-                        ->orWhere('summary', 'ilike', "%{$filters['search']}%");
+                        ->where('title', 'ilike', sprintf('%%%s%%', $filters['search']))
+                        ->orWhere('slug', 'ilike', sprintf('%%%s%%', $filters['search']))
+                        ->orWhere('summary', 'ilike', sprintf('%%%s%%', $filters['search']));
                 });
             })
             ->when($filters['status'] !== '', fn (Builder $query) => $query->where('status', $filters['status']))
             ->orderByDesc('is_featured')
-            ->orderByDesc('published_at')
+            ->latest('published_at')
             ->orderBy('title')
             ->paginate(8)
             ->withQueryString()
-            ->through(fn (CmsPage $page): array => [
-                'id' => $page->id,
-                'title' => $page->title,
-                'slug' => $page->slug,
-                'summary' => $page->summary,
-                'status' => $page->status,
-                'published_at' => $page->published_at?->toDateString(),
-                'is_featured' => $page->is_featured,
-            ]);
+            ->through(function (mixed $page): array {
+                /** @var CmsPage $page */
+                return [
+                    'id' => $page->id,
+                    'title' => $page->title,
+                    'slug' => $page->slug,
+                    'summary' => $page->summary,
+                    'status' => $page->status,
+                    'published_at' => $page->published_at?->toDateString(),
+                    'is_featured' => $page->is_featured,
+                ];
+            });
 
         return Inertia::render('cms/index', [
             'module' => $this->module()->toSharedArray(),
@@ -143,6 +146,6 @@ class CmsPageController extends Controller
 
     protected function module(): ModuleManifest
     {
-        return app(ModuleManager::class)->findOrFail('cms');
+        return resolve(ModuleManager::class)->findOrFail('cms');
     }
 }

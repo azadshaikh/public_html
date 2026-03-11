@@ -44,7 +44,7 @@ class CmsModuleTest extends TestCase
                 'search' => 'home',
             ]))
             ->assertOk()
-            ->assertInertia(fn (Assert $page) => $page
+            ->assertInertia(fn (Assert $page): Assert => $page
                 ->component('cms/index')
                 ->where('module.name', 'CMS')
                 ->where('filters.status', 'published')

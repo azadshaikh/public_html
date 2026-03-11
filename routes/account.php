@@ -5,14 +5,14 @@ use App\Http\Controllers\Account\ProfileController;
 use App\Http\Controllers\Account\TwoFactorAuthenticationController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth'])->group(function (): void {
     Route::redirect('account', '/account/profile');
 
     Route::get('account/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('account/profile', [ProfileController::class, 'update'])->name('profile.update');
 });
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::delete('account/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::get('account/password', [PasswordController::class, 'edit'])->name('user-password.edit');

@@ -4,6 +4,7 @@ namespace Tests\Support;
 
 use Illuminate\Contracts\Console\Kernel;
 use Symfony\Component\Console\Input\ArgvInput;
+use Throwable;
 
 final class TestEnvironmentRestorer
 {
@@ -34,11 +35,7 @@ final class TestEnvironmentRestorer
             return false;
         }
 
-        if ($dbConnection === 'sqlite' && ($dbDatabase === '' || $dbDatabase === ':memory:')) {
-            return false;
-        }
-
-        return true;
+        return ! ($dbConnection === 'sqlite' && ($dbDatabase === '' || $dbDatabase === ':memory:'));
     }
 
     public static function restore(): void
@@ -49,10 +46,10 @@ final class TestEnvironmentRestorer
 
         try {
             self::restoreInProcess();
-        } catch (\Throwable $exception) {
+        } catch (Throwable $throwable) {
             \file_put_contents('php://stderr', \implode(PHP_EOL, [
                 'Failed to restore the application database after testing.',
-                $exception->getMessage(),
+                $throwable->getMessage(),
                 '',
             ]));
         }
@@ -82,16 +79,16 @@ final class TestEnvironmentRestorer
         $artisan = \escapeshellarg($artisanPath);
 
         return \implode(' && ', [
-            "APP_ENV=local {$php} {$artisan} migrate --force --no-interaction",
-            "APP_ENV=local {$php} {$artisan} db:seed --force --no-interaction",
-            "APP_ENV=local {$php} {$artisan} optimize:clear --no-interaction",
+            sprintf('APP_ENV=local %s %s migrate --force --no-interaction', $php, $artisan),
+            sprintf('APP_ENV=local %s %s db:seed --force --no-interaction', $php, $artisan),
+            sprintf('APP_ENV=local %s %s optimize:clear --no-interaction', $php, $artisan),
         ]);
     }
 
     /**
      * @return array<string, string|null>
      */
-    protected static function environment(): array
+    private static function environment(): array
     {
         return [
             'RESTORE_APP_AFTER_TESTING' => \getenv('RESTORE_APP_AFTER_TESTING') ?: null,
@@ -100,7 +97,7 @@ final class TestEnvironmentRestorer
         ];
     }
 
-    protected static function setLocalEnvironment(): void
+    private static function setLocalEnvironment(): void
     {
         \putenv('APP_ENV=local');
         $_ENV['APP_ENV'] = 'local';

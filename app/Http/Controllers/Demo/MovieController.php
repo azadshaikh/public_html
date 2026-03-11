@@ -29,10 +29,10 @@ class MovieController extends Controller
             ->when($filters['search'] !== '', function (Builder $query) use ($filters): void {
                 $query->where(function (Builder $query) use ($filters): void {
                     $query
-                        ->where('title', 'ilike', "%{$filters['search']}%")
-                        ->orWhere('slug', 'ilike', "%{$filters['search']}%")
-                        ->orWhere('director', 'ilike', "%{$filters['search']}%")
-                        ->orWhere('studio', 'ilike', "%{$filters['search']}%");
+                        ->where('title', 'ilike', sprintf('%%%s%%', $filters['search']))
+                        ->orWhere('slug', 'ilike', sprintf('%%%s%%', $filters['search']))
+                        ->orWhere('director', 'ilike', sprintf('%%%s%%', $filters['search']))
+                        ->orWhere('studio', 'ilike', sprintf('%%%s%%', $filters['search']));
                 });
             })
             ->when($filters['status'] !== '', fn (Builder $query) => $query->where('status', $filters['status']))
@@ -205,11 +205,11 @@ class MovieController extends Controller
     protected function applySort(Builder $query, string $sort): void
     {
         match ($sort) {
-            'release_asc' => $query->orderBy('release_date')->orderBy('title'),
+            'release_asc' => $query->oldest('release_date')->orderBy('title'),
             'title_asc' => $query->orderBy('title'),
             'runtime_desc' => $query->orderByDesc('runtime_minutes')->orderBy('title'),
-            'recently_added' => $query->orderByDesc('created_at'),
-            default => $query->orderByDesc('release_date')->orderBy('title'),
+            'recently_added' => $query->latest(),
+            default => $query->latest('release_date')->orderBy('title'),
         };
     }
 

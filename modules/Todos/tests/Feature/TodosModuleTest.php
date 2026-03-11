@@ -42,7 +42,7 @@ class TodosModuleTest extends TestCase
                 'search' => 'launch',
             ]))
             ->assertOk()
-            ->assertInertia(fn (Assert $page) => $page
+            ->assertInertia(fn (Assert $page): Assert => $page
                 ->component('todos/index')
                 ->where('module.name', 'Todos')
                 ->where('filters.status', 'in_progress')

@@ -57,7 +57,7 @@ class ModuleLifecycleManager
             ]);
         }
 
-        $seederClass = $module->namespace.'Database\\Seeders\\DatabaseSeeder';
+        $seederClass = rtrim($module->namespace, '\\').'\\Database\\Seeders\\DatabaseSeeder';
 
         if (class_exists($seederClass)) {
             Artisan::call('db:seed', [

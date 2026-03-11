@@ -42,7 +42,7 @@ class MovieCrudTest extends TestCase
                 'search' => 'Arc',
             ]))
             ->assertOk()
-            ->assertInertia(fn (Assert $page) => $page
+            ->assertInertia(fn (Assert $page): Assert => $page
                 ->component('demo/movies/index')
                 ->where('filters.status', 'released')
                 ->where('filters.search', 'Arc')
@@ -166,7 +166,7 @@ class MovieCrudTest extends TestCase
             'title' => 'The Midnight Circuit',
             'slug' => 'the-midnight-circuit',
             'tagline' => 'A neon-soaked pursuit through a city wired for chaos.',
-            'synopsis' => 'A burned-out courier uncovers a conspiracy hidden inside the city\'s transit grid and has one night to deliver the evidence before the network collapses. The chase moves through rooftops, underground markets, and overloaded data tunnels as every faction in the metropolis turns against her.',
+            'synopsis' => "A burned-out courier uncovers a conspiracy hidden inside the city's transit grid and has one night to deliver the evidence before the network collapses. The chase moves through rooftops, underground markets, and overloaded data tunnels as every faction in the metropolis turns against her.",
             'notes' => 'Use this record to validate long text, grouped checkboxes, switches, and media uploads.',
             'director' => 'Jordan Vega',
             'studio' => 'North Star Pictures',

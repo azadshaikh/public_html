@@ -23,28 +23,31 @@ class TodoTaskController extends Controller
             ->when($filters['search'] !== '', function (Builder $query) use ($filters): void {
                 $query->where(function (Builder $query) use ($filters): void {
                     $query
-                        ->where('title', 'ilike', "%{$filters['search']}%")
-                        ->orWhere('slug', 'ilike', "%{$filters['search']}%")
-                        ->orWhere('owner', 'ilike', "%{$filters['search']}%");
+                        ->where('title', 'ilike', sprintf('%%%s%%', $filters['search']))
+                        ->orWhere('slug', 'ilike', sprintf('%%%s%%', $filters['search']))
+                        ->orWhere('owner', 'ilike', sprintf('%%%s%%', $filters['search']));
                 });
             })
             ->when($filters['status'] !== '', fn (Builder $query) => $query->where('status', $filters['status']))
             ->orderByDesc('is_blocked')
             ->orderByRaw("case priority when 'high' then 1 when 'medium' then 2 else 3 end")
-            ->orderBy('due_date')
+            ->oldest('due_date')
             ->orderBy('title')
             ->paginate(8)
             ->withQueryString()
-            ->through(fn (TodoTask $task): array => [
-                'id' => $task->id,
-                'title' => $task->title,
-                'slug' => $task->slug,
-                'status' => $task->status,
-                'priority' => $task->priority,
-                'owner' => $task->owner,
-                'due_date' => $task->due_date?->toDateString(),
-                'is_blocked' => $task->is_blocked,
-            ]);
+            ->through(function (mixed $task): array {
+                /** @var TodoTask $task */
+                return [
+                    'id' => $task->id,
+                    'title' => $task->title,
+                    'slug' => $task->slug,
+                    'status' => $task->status,
+                    'priority' => $task->priority,
+                    'owner' => $task->owner,
+                    'due_date' => $task->due_date?->toDateString(),
+                    'is_blocked' => $task->is_blocked,
+                ];
+            });
 
         return Inertia::render('todos/index', [
             'module' => $this->module()->toSharedArray(),
@@ -150,6 +153,6 @@ class TodoTaskController extends Controller
 
     protected function module(): ModuleManifest
     {
-        return app(ModuleManager::class)->findOrFail('todos');
+        return resolve(ModuleManager::class)->findOrFail('todos');
     }
 }
