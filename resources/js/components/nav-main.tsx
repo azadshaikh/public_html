@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { ChevronRightIcon } from 'lucide-react';
+import * as React from 'react';
 import type { AnchorHTMLAttributes } from 'react';
 import { NavigationIcon } from '@/components/navigation-icon';
 import {
@@ -17,7 +18,6 @@ import {
     SidebarMenuSubButton,
     SidebarMenuSubItem,
 } from '@/components/ui/sidebar';
-import { cn } from '@/lib/utils';
 import type { NavigationItem, NavigationSection } from '@/types';
 
 function buildAnchorAttributes(
@@ -40,13 +40,12 @@ function buildAnchorAttributes(
     };
 }
 
-function NavigationLink({
-    item,
-    children,
-}: {
-    item: NavigationItem;
-    children: React.ReactNode;
-}) {
+const NavigationLink = React.forwardRef<
+    HTMLAnchorElement,
+    AnchorHTMLAttributes<HTMLAnchorElement> & {
+        item: NavigationItem;
+    }
+>(({ item, children, ...props }, ref) => {
     if (!item.url) {
         return <>{children}</>;
     }
@@ -57,52 +56,24 @@ function NavigationLink({
 
     if (shouldUseAnchor) {
         return (
-            <a href={item.url} {...buildAnchorAttributes(item)}>
+            <a
+                ref={ref}
+                href={item.url}
+                {...buildAnchorAttributes(item)}
+                {...props}
+            >
                 {children}
             </a>
         );
     }
 
-    return <Link href={item.url}>{children}</Link>;
-}
-
-function NavItemLabel({
-    item,
-    depth,
-}: {
-    item: NavigationItem;
-    depth: number;
-}) {
-    const isTopLevel = depth === 0;
-
     return (
-        <>
-            <NavigationIcon
-                svg={item.icon}
-                className={cn(
-                    isTopLevel
-                        ? 'text-sidebar-foreground/70 [&_svg]:size-3.5'
-                        : 'text-sidebar-foreground/65 [&_svg]:size-3.5',
-                )}
-            />
-            <span
-                className={cn(
-                    'truncate',
-                    isTopLevel
-                        ? 'text-sidebar-foreground'
-                        : 'text-sidebar-foreground/85',
-                )}
-            >
-                {item.label}
-            </span>
-            {item.badge?.value ? (
-                <span className="ml-auto rounded-full bg-sidebar-foreground/10 px-1.5 py-0.5 text-[10px] leading-none font-semibold text-sidebar-foreground/70 group-data-[collapsible=icon]:hidden">
-                    {item.badge.value}
-                </span>
-            ) : null}
-        </>
+        <Link ref={ref} href={item.url} {...props}>
+            {children}
+        </Link>
     );
-}
+});
+NavigationLink.displayName = 'NavigationLink';
 
 function NavMainLeaf({ item, depth }: { item: NavigationItem; depth: number }) {
     if (!item.url) {
@@ -116,11 +87,10 @@ function NavMainLeaf({ item, depth }: { item: NavigationItem; depth: number }) {
                     asChild
                     tooltip={item.label}
                     isActive={item.active}
-                    size="default"
-                    className="h-8 rounded-md px-2 font-normal shadow-none hover:bg-sidebar-accent/55 data-[active=true]:bg-sidebar-accent/70 data-[active=true]:font-medium"
                 >
                     <NavigationLink item={item}>
-                        <NavItemLabel item={item} depth={depth} />
+                        <NavigationIcon svg={item.icon} />
+                        <span>{item.label}</span>
                     </NavigationLink>
                 </SidebarMenuButton>
             </SidebarMenuItem>
@@ -131,7 +101,7 @@ function NavMainLeaf({ item, depth }: { item: NavigationItem; depth: number }) {
         <SidebarMenuSubItem>
             <SidebarMenuSubButton asChild isActive={item.active}>
                 <NavigationLink item={item}>
-                    <NavItemLabel item={item} depth={depth} />
+                    <span>{item.label}</span>
                 </NavigationLink>
             </SidebarMenuSubButton>
         </SidebarMenuSubItem>
@@ -156,17 +126,13 @@ function NavMainBranch({
             >
                 <SidebarMenuItem>
                     <CollapsibleTrigger asChild>
-                        <SidebarMenuButton
-                            tooltip={item.label}
-                            isActive={item.active}
-                            size="default"
-                            className="h-8 rounded-md px-2 font-normal shadow-none hover:bg-sidebar-accent/55 data-[active=true]:bg-sidebar-accent/70 data-[active=true]:font-medium"
-                        >
-                            <NavItemLabel item={item} depth={depth} />
-                            <ChevronRightIcon className="ml-auto size-4 text-sidebar-foreground/45 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                        <SidebarMenuButton tooltip={item.label}>
+                            <NavigationIcon svg={item.icon} />
+                            <span>{item.label}</span>
+                            <ChevronRightIcon className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                         </SidebarMenuButton>
                     </CollapsibleTrigger>
-                    <CollapsibleContent className="pt-1">
+                    <CollapsibleContent>
                         <SidebarMenuSub>
                             {children.map((child) => (
                                 <NavMainNode
@@ -192,12 +158,12 @@ function NavMainBranch({
                 <div>
                     <CollapsibleTrigger asChild>
                         <SidebarMenuSubButton isActive={item.active}>
-                            <NavItemLabel item={item} depth={depth} />
+                            <span>{item.label}</span>
                             <ChevronRightIcon className="ml-auto transition-transform duration-200 group-data-[state=open]/sub-collapsible:rotate-90" />
                         </SidebarMenuSubButton>
                     </CollapsibleTrigger>
                     <CollapsibleContent>
-                        <SidebarMenuSub className="mx-2.5 mt-1">
+                        <SidebarMenuSub>
                             {children.map((child) => (
                                 <NavMainNode
                                     key={`${item.key}-${child.key}`}
@@ -225,13 +191,11 @@ export function NavMain({ sections }: { sections: NavigationSection[] }) {
     return (
         <>
             {sections.map((section) => (
-                <SidebarGroup key={section.key} className="py-0.5">
+                <SidebarGroup key={section.key}>
                     {section.show_label ? (
-                        <SidebarGroupLabel className="px-2 text-xs font-medium text-sidebar-foreground/50">
-                            {section.label}
-                        </SidebarGroupLabel>
+                        <SidebarGroupLabel>{section.label}</SidebarGroupLabel>
                     ) : null}
-                    <SidebarMenu className="gap-0">
+                    <SidebarMenu>
                         {section.items.map((item) => (
                             <NavMainNode key={item.key} item={item} depth={0} />
                         ))}

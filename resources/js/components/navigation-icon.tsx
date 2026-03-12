@@ -13,10 +13,7 @@ export function NavigationIcon({ svg, className }: NavigationIconProps) {
     return (
         <span
             aria-hidden="true"
-            className={cn(
-                'inline-flex shrink-0 items-center justify-center [&_svg]:size-4 [&_svg]:shrink-0',
-                className,
-            )}
+            className={cn('shrink-0', className)}
             dangerouslySetInnerHTML={{ __html: svg }}
         />
     );

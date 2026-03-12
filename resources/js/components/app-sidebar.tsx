@@ -16,7 +16,6 @@ import {
     SidebarFooter,
     SidebarHeader,
     SidebarRail,
-    SidebarSeparator,
 } from '@/components/ui/sidebar';
 import type { AuthenticatedSharedData } from '@/types';
 
@@ -58,7 +57,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <NavMain sections={contentSections} />
             </SidebarContent>
             <SidebarFooter>
-                <SidebarSeparator />
                 <NavUser user={auth.user} />
             </SidebarFooter>
             <SidebarRail />
