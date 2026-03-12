@@ -1,5 +1,7 @@
 <?php
 
+use Illuminate\Support\ServiceProvider;
+
 return [
 
     /*
@@ -13,7 +15,13 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'Laravel'),
+    'name' => env('APP_NAME', 'Astero'),
+
+    'admin_slug' => trim((string) env('ADMIN_SLUG', ''), '/'),
+
+    // HTTP Response Caching - Sets Cache-Control headers for CDN/browser caching
+    'cdn_cache_headers' => env('CDN_CACHE_HEADERS', true),
+    'cdn_cache_max_age' => env('CDN_CACHE_MAX_AGE', 31536000), // 1 year in seconds
 
     /*
     |--------------------------------------------------------------------------
@@ -65,7 +73,7 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    'timezone' => env('APP_TIMEZONE', 'UTC'),
 
     /*
     |--------------------------------------------------------------------------
@@ -101,7 +109,7 @@ return [
 
     'previous_keys' => [
         ...array_filter(
-            explode(',', (string) env('APP_PREVIOUS_KEYS', '')),
+            explode(',', (string) env('APP_PREVIOUS_KEYS', ''))
         ),
     ],
 
@@ -122,5 +130,7 @@ return [
         'driver' => env('APP_MAINTENANCE_DRIVER', 'file'),
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
+
+    'providers' => ServiceProvider::defaultProviders()->toArray(),
 
 ];

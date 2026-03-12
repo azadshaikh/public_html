@@ -2,18 +2,22 @@
 
 namespace App\Providers;
 
-use App\Console\ProductionTestCommandGuard;
-use App\Models\Role;
-use App\Models\User;
-use Carbon\CarbonImmutable;
-use Illuminate\Console\Events\CommandStarting;
-use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\Date;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\Gate;
+use App\Http\Middleware\LimitLoginAttempts;
+use App\Models\Settings;
+use App\Observers\SettingsObserver;
+use App\Services\GeoDataService;
+use App\Services\GeoIpService;
+use App\Services\SettingsCacheService;
+use App\Support\Storage\SslTolerantFtpAdapter;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Filesystem\FilesystemAdapter;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Validation\Rules\Password;
+use League\Flysystem\Filesystem;
+use League\Flysystem\Ftp\FtpConnectionOptions;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -22,7 +26,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(fn (): GeoDataService => new GeoDataService);
+
+        $this->app->singleton(fn (): GeoIpService => new GeoIpService);
+
+        // Register SettingsCacheService as singleton for consistent caching
+        $this->app->singleton(fn (): SettingsCacheService => new SettingsCacheService);
     }
 
     /**
@@ -30,53 +39,29 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        $this->configureDefaults();
-        $this->configureAuthorization();
-        $this->configureConsoleSafety();
-    }
-
-    /**
-     * Configure default behaviors for production-ready applications.
-     */
-    protected function configureDefaults(): void
-    {
-        Date::use(CarbonImmutable::class);
-
-        $this->app->resolving(
-            LengthAwarePaginator::class,
-            fn (LengthAwarePaginator $paginator) => $paginator->onEachSide(1)
-        );
-
-        DB::prohibitDestructiveCommands(
-            app()->isProduction(),
-        );
-
-        Password::defaults(fn (): ?Password => app()->isProduction()
-            ? Password::min(12)
-                ->mixedCase()
-                ->letters()
-                ->numbers()
-                ->symbols()
-                ->uncompromised()
-            : null,
-        );
-    }
-
-    protected function configureAuthorization(): void
-    {
-        Gate::before(function (User $user, string $ability): ?bool {
-            if ($user->hasRole(Role::SUPER_USER)) {
-                return true;
+        // Register SSL-tolerant FTP driver to handle BunnyCDN's unclean SSL shutdown
+        Storage::extend('ftp', function ($app, array $config): FilesystemAdapter {
+            if (! isset($config['root'])) {
+                $config['root'] = '';
             }
 
-            return null;
-        });
-    }
+            $adapter = new SslTolerantFtpAdapter(FtpConnectionOptions::fromArray($config));
 
-    protected function configureConsoleSafety(): void
-    {
-        Event::listen(CommandStarting::class, function (CommandStarting $event): void {
-            ProductionTestCommandGuard::ensureSafe(app()->isProduction(), $event->command);
+            return new FilesystemAdapter(
+                new Filesystem($adapter, $config),
+                $adapter,
+                $config,
+            );
         });
+
+        // Register the LimitLoginAttempts middleware
+        Route::aliasMiddleware('limit.login.attempts', LimitLoginAttempts::class);
+
+        RateLimiter::for('api', fn (Request $request) => Limit::perSecond(1)->by($request->user()?->id ?: $request->ip()));
+
+        RateLimiter::for('geoip', fn (Request $request) => Limit::perMinute(60)->by($request->ip()));
+
+        // Register Settings model observer for automatic cache invalidation
+        Settings::observe(SettingsObserver::class);
     }
 }

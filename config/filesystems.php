@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'default' => env('FILESYSTEM_DISK', 'local'),
+    'default' => env('STORAGE_DISK', 'public'),
 
     /*
     |--------------------------------------------------------------------------
@@ -30,20 +30,24 @@ return [
 
     'disks' => [
 
-        'local' => [
+        // Private disk is used to store private files which are not accessible to public.
+        /*
+        'private' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),
-            'serve' => true,
-            'throw' => false,
-            'report' => false,
+            'url' => env('APP_URL').'/storage/private',
+            'visibility' => env('FILESYSTEM_PRIVATE_VISIBILITY', 'private'),
+            'throw' => env('FILESYSTEM_PRIVATE_THROW', false),
         ],
+        */
 
+        // Public disk is used to store public files which are accessible to public.
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
-            'url' => rtrim((string) env('APP_URL', 'http://localhost'), '/').'/storage',
-            'visibility' => 'public',
-            'throw' => false,
+            'url' => env('APP_URL').'/storage',
+            'visibility' => env('FILESYSTEM_PUBLIC_VISIBILITY', 'public'),
+            'throw' => env('FILESYSTEM_PUBLIC_THROW', false),
             'report' => false,
         ],
 
@@ -53,13 +57,27 @@ return [
             'secret' => env('AWS_SECRET_ACCESS_KEY'),
             'region' => env('AWS_DEFAULT_REGION'),
             'bucket' => env('AWS_BUCKET'),
-            'url' => env('AWS_URL'),
+            'url' => env('STORAGE_CDN_URL'),
             'endpoint' => env('AWS_ENDPOINT'),
-            'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
-            'throw' => false,
-            'report' => false,
+            'use_path_style_endpoint' => (bool) env('AWS_USE_PATH_STYLE_ENDPOINT', false),
+            'visibility' => env('AWS_S3_VISIBILITY', 'public'),
+            'throw' => env('AWS_S3_THROW', false),
+            'report' => env('AWS_S3_REPORT', false),
         ],
-
+        'ftp' => [
+            'driver' => 'ftp',
+            'host' => env('FTP_HOST', 'storage.bunnycdn.com'),
+            'username' => env('FTP_USERNAME'),
+            'password' => env('FTP_PASSWORD'),
+            'url' => env('STORAGE_CDN_URL'),
+            'root' => env('FTP_ROOT', ''),
+            'port' => (int) env('FTP_PORT', 21),
+            'passive' => (bool) env('FTP_PASSIVE', true),
+            'timeout' => (int) env('FTP_TIMEOUT', 30),
+            'ssl' => (bool) env('FTP_SSL', true),
+            'ssl_mode' => env('FTP_SSL_MODE', 'explicit'),
+            'ignorePassiveAddress' => (bool) env('FTP_IGNORE_PASSIVE_ADDRESS', true),
+        ],
     ],
 
     /*
@@ -75,6 +93,10 @@ return [
 
     'links' => [
         public_path('storage') => storage_path('app/public'),
+        // public_path('assets') => resource_path('assets'),
+        // public_path('js') => resource_path('js'),
+        // public_path('css') => resource_path('css'),
+        // public_path('vendors') => resource_path('vendors'),
     ],
 
 ];

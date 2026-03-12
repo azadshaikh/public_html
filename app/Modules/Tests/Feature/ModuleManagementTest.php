@@ -2,6 +2,7 @@
 
 namespace App\Modules\Tests\Feature;
 
+use App\Enums\Status;
 use App\Models\Role;
 use App\Models\User;
 use App\Modules\ModuleManager;
@@ -49,7 +50,7 @@ class ModuleManagementTest extends TestCase
 
     public function test_guests_are_redirected_from_the_module_management_page(): void
     {
-        $this->get(route('modules.index'))
+        $this->get(route('app.masters.modules.index'))
             ->assertRedirect(route('login'));
     }
 
@@ -57,11 +58,13 @@ class ModuleManagementTest extends TestCase
     {
         $user = User::factory()->create([
             'email_verified_at' => now(),
+            'first_name' => 'Module',
+            'status' => Status::ACTIVE,
         ]);
         $user->assignRole(Role::findByName('administrator', 'web'));
 
         $this->actingAs($user)
-            ->get(route('modules.index'))
+            ->get(route('app.masters.modules.index'))
             ->assertOk()
             ->assertInertia(fn (Assert $page): Assert => $page
                 ->component('modules/index')
@@ -83,18 +86,20 @@ class ModuleManagementTest extends TestCase
     {
         $user = User::factory()->create([
             'email_verified_at' => now(),
+            'first_name' => 'Module',
+            'status' => Status::ACTIVE,
         ]);
         $user->assignRole(Role::findByName('administrator', 'web'));
 
         $this->actingAs($user)
-            ->patch(route('modules.update'), [
+            ->patch(route('app.masters.modules.update'), [
                 'modules' => [
                     'CMS' => 'disabled',
                     'ChatBot' => 'enabled',
                     'Todos' => 'enabled',
                 ],
             ])
-            ->assertRedirect(route('modules.index'))
+            ->assertRedirect(route('app.masters.modules.index'))
             ->assertSessionHas('status', 'Module settings updated.');
 
         $this->assertSame([
@@ -108,10 +113,12 @@ class ModuleManagementTest extends TestCase
     {
         $user = User::factory()->create([
             'email_verified_at' => now(),
+            'first_name' => 'Module',
+            'status' => Status::ACTIVE,
         ]);
 
         $this->actingAs($user)
-            ->get(route('modules.index'))
+            ->get(route('app.masters.modules.index'))
             ->assertForbidden();
     }
 }

@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
-use App\Models\Role;
-use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class LocalUserSeeder extends Seeder
 {
@@ -13,13 +13,50 @@ class LocalUserSeeder extends Seeder
      */
     public function run(): void
     {
-        $user = User::query()->updateOrCreate(['email' => 'su@astero.in'], [
-            'name' => 'Super User',
-            'password' => 'PassWord@1234',
-            'active' => true,
-            'email_verified_at' => now(),
-        ]);
+        $now = now();
+        $existingUserId = DB::table('users')
+            ->where('email', 'su@astero.in')
+            ->orWhere('username', 'superuser')
+            ->value('id');
 
-        $user->assignRole(Role::SUPER_USER);
+        $payload = [
+            'name' => 'Super User',
+            'first_name' => 'Super',
+            'last_name' => 'User',
+            'username' => 'superuser',
+            'email' => 'su@astero.in',
+            'password' => Hash::make('PassWord@1234'),
+            'status' => 'active',
+            'email_verified_at' => $now,
+            'notifications_enabled' => true,
+            'updated_at' => $now,
+        ];
+
+        if ($existingUserId) {
+            DB::table('users')->where('id', $existingUserId)->update($payload);
+            $userId = (int) $existingUserId;
+        } else {
+            $userId = (int) DB::table('users')->insertGetId([
+                ...$payload,
+                'created_at' => $now,
+            ]);
+        }
+
+        $superUserRoleId = DB::table('roles')->where('name', 'super_user')->value('id');
+
+        if ($superUserRoleId === null) {
+            return;
+        }
+
+        DB::table('model_has_roles')
+            ->where('model_type', 'App\\Models\\User')
+            ->where('model_id', $userId)
+            ->delete();
+
+        DB::table('model_has_roles')->insert([
+            'role_id' => $superUserRoleId,
+            'model_type' => 'App\\Models\\User',
+            'model_id' => $userId,
+        ]);
     }
 }

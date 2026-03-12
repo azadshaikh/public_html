@@ -2,9 +2,14 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Enums\Status;
+use App\Models\Settings;
 use App\Models\User;
+use App\Services\SettingsCacheService;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\RateLimiter;
+use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Fortify\Features;
 use Tests\TestCase;
 
@@ -12,24 +17,44 @@ class AuthenticationTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->withoutMiddleware(ValidateCsrfToken::class);
+    }
+
     public function test_login_screen_can_be_rendered(): void
     {
         $response = $this->get(route('login'));
 
-        $response->assertOk();
+        $response->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->component('auth/login')
+                ->where('canResetPassword', true)
+                ->where('canRegister', true)
+                ->where('socialProviders.google', false)
+                ->where('socialProviders.github', false));
     }
 
     public function test_users_can_authenticate_using_the_login_screen(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create([
+            'first_name' => 'Test',
+            'status' => Status::ACTIVE,
+        ]);
 
         $response = $this->post(route('login.store'), [
             'email' => $user->email,
             'password' => 'password',
         ]);
 
-        $this->assertAuthenticated();
         $response->assertRedirect(route('dashboard', absolute: false));
+
+        $this->get(route('login'))
+            ->assertRedirect(route('dashboard', absolute: false));
+
+        $this->assertAuthenticated();
     }
 
     public function test_users_with_two_factor_enabled_are_redirected_to_two_factor_challenge(): void
@@ -41,21 +66,17 @@ class AuthenticationTest extends TestCase
             'confirmPassword' => true,
         ]);
 
-        $user = User::factory()->create();
+        $user = User::factory()->withTwoFactor()->create([
+            'status' => Status::ACTIVE,
+        ]);
 
-        $user->forceFill([
-            'two_factor_secret' => encrypt('test-secret'),
-            'two_factor_recovery_codes' => encrypt(json_encode(['code1', 'code2'])),
-            'two_factor_confirmed_at' => now(),
-        ])->save();
-
-        $response = $this->post(route('login'), [
+        $response = $this->post(route('login.store'), [
             'email' => $user->email,
             'password' => 'password',
         ]);
 
-        $response->assertRedirect(route('two-factor.login'));
-        $response->assertSessionHas('login.id', $user->id);
+        $response->assertRedirect(route('two-factor.challenge'));
+        $response->assertSessionHas('auth.two_factor.user_id', $user->id);
         $this->assertGuest();
     }
 
@@ -73,25 +94,55 @@ class AuthenticationTest extends TestCase
 
     public function test_users_can_logout(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create([
+            'first_name' => 'Test',
+            'status' => Status::ACTIVE,
+        ]);
 
         $response = $this->actingAs($user)->post(route('logout'));
 
+        $response->assertRedirect(route('login', absolute: false));
+
+        $this->get(route('login'))
+            ->assertOk();
+
         $this->assertGuest();
-        $response->assertRedirect(route('home'));
     }
 
     public function test_users_are_rate_limited(): void
     {
         $user = User::factory()->create();
 
-        RateLimiter::increment(md5('login'.implode('|', [$user->email, '127.0.0.1'])), amount: 5);
+        Settings::query()->create([
+            'key' => 'login_security_limit_login_attempts_enabled',
+            'value' => 'true',
+            'type' => 'boolean',
+        ]);
+
+        Settings::query()->create([
+            'key' => 'login_security_limit_login_attempts',
+            'value' => '5',
+            'type' => 'integer',
+        ]);
+
+        Settings::query()->create([
+            'key' => 'login_security_lockout_time',
+            'value' => '60',
+            'type' => 'integer',
+        ]);
+
+        app(SettingsCacheService::class)->refresh();
+
+        for ($attempt = 0; $attempt < 5; $attempt++) {
+            RateLimiter::hit('127.0.0.1', 3600);
+        }
 
         $response = $this->post(route('login.store'), [
             'email' => $user->email,
             'password' => 'wrong-password',
         ]);
 
-        $response->assertTooManyRequests();
+        $response->assertRedirect();
+        $response->assertSessionHasErrors('email');
     }
 }

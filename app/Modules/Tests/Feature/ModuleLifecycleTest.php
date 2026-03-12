@@ -2,6 +2,7 @@
 
 namespace App\Modules\Tests\Feature;
 
+use App\Enums\Status;
 use App\Models\Role;
 use App\Models\User;
 use App\Modules\ModuleManager;
@@ -58,18 +59,20 @@ class ModuleLifecycleTest extends TestCase
 
         $user = User::factory()->create([
             'email_verified_at' => now(),
+            'first_name' => 'Module',
+            'status' => Status::ACTIVE,
         ]);
         $user->assignRole(Role::findByName('administrator', 'web'));
 
         $this->actingAs($user)
-            ->patch(route('modules.update'), [
+            ->patch(route('app.masters.modules.update'), [
                 'modules' => [
                     'CMS' => 'enabled',
                     'ChatBot' => 'enabled',
                     'Todos' => 'enabled',
                 ],
             ])
-            ->assertRedirect(route('modules.index'))
+            ->assertRedirect(route('app.masters.modules.index'))
             ->assertSessionHas('status', 'Module settings updated.');
 
         $this->assertTrue(Schema::hasTable('todo_tasks'));
@@ -106,18 +109,20 @@ class ModuleLifecycleTest extends TestCase
 
         $user = User::factory()->create([
             'email_verified_at' => now(),
+            'first_name' => 'Module',
+            'status' => Status::ACTIVE,
         ]);
         $user->assignRole(Role::findByName('administrator', 'web'));
 
         $this->actingAs($user)
-            ->patch(route('modules.update'), [
+            ->patch(route('app.masters.modules.update'), [
                 'modules' => [
                     'CMS' => 'enabled',
                     'ChatBot' => 'enabled',
                     'Todos' => 'disabled',
                 ],
             ])
-            ->assertRedirect(route('modules.index'))
+            ->assertRedirect(route('app.masters.modules.index'))
             ->assertSessionHas('status', 'Module settings updated.');
 
         $this->assertTrue(Schema::hasTable('todo_tasks'));

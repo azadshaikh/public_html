@@ -69,6 +69,8 @@ Most Astero modules depend heavily on shared application layers such as traits, 
 
 The database should move toward Astero's actual product model, but not through a blind copy of legacy history. We should keep the current custom module migration loading and module seeding orchestration, then replace or rewrite application-level migrations and seeders so the target schema reflects the business domain we actually want to run.
 
+Migration files are considered locked once moved into the target application. Do not edit migrations without explicit approval.
+
 ### 5. Refactor when it improves the target
 
 The objective is not a byte-for-byte port. If an Astero pattern is too Blade-centric, too `Unpoly`-specific, or structurally outdated, it should be redesigned for the new app.

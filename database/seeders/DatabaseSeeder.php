@@ -12,29 +12,58 @@ class DatabaseSeeder extends Seeder
     use WithoutModelEvents;
 
     /**
-     * Seed the application's database.
+     * Get the application's core seeders.
+     *
+     * @return array<int, class-string<Seeder>>
      */
-    public function run(): void
+    public function getSeeders(): array
     {
-        $this->call(RolesAndPermissionsSeeder::class);
+        $isLocalEnvironment = $this->command?->getLaravel()->environment('local')
+            ?? app()->environment('local');
 
-        if ($this->command->getLaravel()->environment('local')) {
-            $this->call([
-                LocalUserSeeder::class,
-                LocalDatagridUsersSeeder::class,
-            ]);
+        $seeders = [
+            RolesAndPermissionsSeeder::class,
+            SettingSeeder::class,
+            RegistrationSettingsSeeder::class,
+            MediaSettingSeeder::class,
+            EmailProviderSeeder::class,
+            EmailTemplateSeeder::class,
+        ];
+
+        if ($isLocalEnvironment) {
+            array_splice($seeders, 1, 0, [LocalUserSeeder::class]);
+            $seeders[] = LocalDatagridUsersSeeder::class;
         }
 
+        return $seeders;
+    }
+
+    /**
+     * Get the enabled module seeders.
+     *
+     * @return array<int, class-string<Seeder>>
+     */
+    public function getModuleSeeders(): array
+    {
         $enabledModules = resolve(ModuleManager::class)->enabled();
 
         ModuleAutoloader::register($enabledModules->all());
 
-        $moduleSeeders = $enabledModules
+        return $enabledModules
             ->map(fn ($module): string => rtrim($module->namespace, '\\').'\\Database\\Seeders\\DatabaseSeeder')
             ->filter(fn (string $class): bool => class_exists($class))
             ->values()
             ->all();
+    }
 
+    /**
+     * Seed the application's database.
+     */
+    public function run(): void
+    {
+        $this->call($this->getSeeders());
+
+        $moduleSeeders = $this->getModuleSeeders();
         if ($moduleSeeders !== []) {
             $this->call($moduleSeeders);
         }

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Enums\Status;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -21,7 +22,7 @@ class TwoFactorChallengeTest extends TestCase
 
     public function test_two_factor_challenge_redirects_to_login_when_not_authenticated(): void
     {
-        $response = $this->get(route('two-factor.login'));
+        $response = $this->get(route('two-factor.challenge'));
 
         $response->assertRedirect(route('login'));
     }
@@ -33,23 +34,21 @@ class TwoFactorChallengeTest extends TestCase
             'confirmPassword' => true,
         ]);
 
-        $user = User::factory()->create();
-
-        $user->forceFill([
-            'two_factor_secret' => encrypt('test-secret'),
-            'two_factor_recovery_codes' => encrypt(json_encode(['code1', 'code2'])),
-            'two_factor_confirmed_at' => now(),
-        ])->save();
-
-        $this->post(route('login'), [
-            'email' => $user->email,
-            'password' => 'password',
+        $user = User::factory()->withTwoFactor()->create([
+            'status' => Status::ACTIVE,
         ]);
 
-        $this->get(route('two-factor.login'))
+        $this->withSession([
+            'auth.two_factor' => [
+                'user_id' => $user->id,
+                'remember' => false,
+                'created_at' => now()->timestamp,
+            ],
+        ])->get(route('two-factor.challenge'))
             ->assertOk()
             ->assertInertia(fn (Assert $page): Assert => $page
-                ->component('auth/two-factor-challenge'),
+                ->component('auth/two-factor-challenge')
+                ->where('email', $user->email),
             );
     }
 }

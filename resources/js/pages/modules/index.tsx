@@ -36,20 +36,11 @@ import type { BreadcrumbItem, ManagedModule } from '@/types';
 
 type ModuleManagementPageProps = {
     managedModules: ManagedModule[];
+    indexUrl: string;
+    updateUrl: string;
     status?: string;
     error?: string;
 };
-
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Dashboard',
-        href: dashboard(),
-    },
-    {
-        title: 'Modules',
-        href: '/modules',
-    },
-];
 
 const statusFilterOptions = [
     {
@@ -68,9 +59,22 @@ const statusFilterOptions = [
 
 export default function ModulesIndex({
     managedModules,
+    indexUrl,
+    updateUrl,
     status,
     error,
 }: ModuleManagementPageProps) {
+    const breadcrumbs: BreadcrumbItem[] = [
+        {
+            title: 'Dashboard',
+            href: dashboard(),
+        },
+        {
+            title: 'Modules',
+            href: indexUrl,
+        },
+    ];
+
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState<
         'all' | 'enabled' | 'disabled'
@@ -150,7 +154,7 @@ export default function ModulesIndex({
         setProcessingModule(moduleName);
 
         router.patch(
-            '/modules',
+            updateUrl,
             {
                 modules: nextStatuses,
             },

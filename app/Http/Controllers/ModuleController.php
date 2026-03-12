@@ -21,6 +21,8 @@ class ModuleController extends Controller
 
         return Inertia::render('modules/index', [
             'managedModules' => $moduleManager->managementData()->all(),
+            'indexUrl' => route('app.masters.modules.index'),
+            'updateUrl' => route('app.masters.modules.update'),
             'status' => session('status'),
             'error' => session('error'),
         ]);
@@ -36,9 +38,9 @@ class ModuleController extends Controller
         } catch (Throwable $throwable) {
             report($throwable);
 
-            return to_route('modules.index')->with('error', 'Unable to update the selected modules right now.');
+            return to_route('app.masters.modules.index')->with('error', 'Unable to update the selected modules right now.');
         }
 
-        return to_route('modules.index')->with('status', 'Module settings updated.');
+        return to_route('app.masters.modules.index')->with('status', 'Module settings updated.');
     }
 }

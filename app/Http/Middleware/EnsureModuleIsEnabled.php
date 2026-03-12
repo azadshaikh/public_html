@@ -22,7 +22,7 @@ class EnsureModuleIsEnabled
     public function handle(Request $request, Closure $next, string $module): Response|RedirectResponse
     {
         if (! $this->moduleManager->isEnabled($module)) {
-            return to_route('modules.index')->with('error', 'That module is disabled.');
+            return to_route('app.masters.modules.index')->with('error', 'That module is disabled.');
         }
 
         return $next($request);

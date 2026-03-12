@@ -22,6 +22,17 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Super User Role
+    |--------------------------------------------------------------------------
+    |
+    | Defines the role ID used for super user bypass checks.
+    |
+    */
+
+    'super_user_role_id' => (int) env('SUPER_USER_ROLE_ID', 1),
+
+    /*
+    |--------------------------------------------------------------------------
     | Authentication Guards
     |--------------------------------------------------------------------------
     |
@@ -66,11 +77,6 @@ return [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', User::class),
         ],
-
-        // 'users' => [
-        //     'driver' => 'database',
-        //     'table' => 'users',
-        // ],
     ],
 
     /*
@@ -96,8 +102,8 @@ return [
         'users' => [
             'provider' => 'users',
             'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
-            'expire' => 60,
-            'throttle' => 60,
+            'expire' => env('AUTH_PASSWORD_EXPIRE', 60),
+            'throttle' => env('AUTH_PASSWORD_THROTTLE', 60),
         ],
     ],
 
@@ -106,12 +112,25 @@ return [
     | Password Confirmation Timeout
     |--------------------------------------------------------------------------
     |
-    | Here you may define the number of seconds before a password confirmation
+    | Here you may define the amount of seconds before a password confirmation
     | window expires and users are asked to re-enter their password via the
     | confirmation screen. By default, the timeout lasts for three hours.
     |
     */
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Remember Me Duration
+    |--------------------------------------------------------------------------
+    |
+    | When users select "Remember Me" during login, they will remain
+    | authenticated for this duration (in minutes). Default is 30 days.
+    | Without remember me, session expires after config('session.lifetime').
+    |
+    */
+
+    'remember_me_duration' => env('AUTH_REMEMBER_ME_DURATION', 43200), // 30 days in minutes
 
 ];

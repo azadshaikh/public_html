@@ -55,10 +55,6 @@ return [
 
         'postmark' => [
             'transport' => 'postmark',
-            // 'message_stream_id' => env('POSTMARK_MESSAGE_STREAM_ID'),
-            // 'client' => [
-            //     'timeout' => 5,
-            // ],
         ],
 
         'resend' => [
@@ -81,20 +77,12 @@ return [
 
         'failover' => [
             'transport' => 'failover',
-            'mailers' => [
-                'smtp',
-                'log',
-            ],
-            'retry_after' => 60,
+            'mailers' => explode(',', (string) env('MAIL_FAILOVER_MAILERS', 'smtp,log')),
         ],
 
         'roundrobin' => [
             'transport' => 'roundrobin',
-            'mailers' => [
-                'ses',
-                'postmark',
-            ],
-            'retry_after' => 60,
+            'mailers' => explode(',', (string) env('MAIL_ROUNDROBIN_MAILERS', 'ses,postmark')),
         ],
 
     ],
@@ -112,7 +100,22 @@ return [
 
     'from' => [
         'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
-        'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel')),
+        'name' => env('MAIL_FROM_NAME', 'Example'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Templated Mail Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Map application features to specific email template identifiers. These
+    | IDs refer to entries in the email_templates table and allow services
+    | to consistently load the correct template without hard-coding them.
+    |
+    */
+
+    'templates' => [
+        'verify_email_id' => (int) env('MAIL_TEMPLATE_VERIFY_EMAIL_ID', 2),
     ],
 
 ];

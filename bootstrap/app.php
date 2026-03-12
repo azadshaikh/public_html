@@ -1,6 +1,9 @@
 <?php
 
+use App\Http\Middleware\CheckRegistrationEnabled;
+use App\Http\Middleware\CheckUserStatusMiddleware;
 use App\Http\Middleware\EnsureModuleIsEnabled;
+use App\Http\Middleware\EnsureProfileCompletionIsSatisfied;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Foundation\Application;
@@ -21,10 +24,13 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
 
         $middleware->alias([
+            'check.registration.enabled' => CheckRegistrationEnabled::class,
             'module.enabled' => EnsureModuleIsEnabled::class,
             'permission' => PermissionMiddleware::class,
+            'profile.completed' => EnsureProfileCompletionIsSatisfied::class,
             'role' => RoleMiddleware::class,
             'role_or_permission' => RoleOrPermissionMiddleware::class,
+            'user.status' => CheckUserStatusMiddleware::class,
         ]);
 
         $middleware->web(append: [
