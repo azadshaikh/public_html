@@ -179,11 +179,6 @@ class NotFoundLogger
             $metadata['is_ajax'] = true;
         }
 
-        // Check for Unpoly request
-        if ($request->hasHeader('X-Up-Target')) {
-            $metadata['is_unpoly'] = true;
-        }
-
         return $metadata;
     }
 }

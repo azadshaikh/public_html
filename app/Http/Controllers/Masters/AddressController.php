@@ -39,6 +39,11 @@ class AddressController extends ScaffoldController implements HasMiddleware
         return $this->addressService;
     }
 
+    protected function inertiaPage(): string
+    {
+        return 'masters/addresses';
+    }
+
     /**
      * Get additional data for create/edit forms
      */

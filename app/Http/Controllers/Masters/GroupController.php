@@ -54,6 +54,11 @@ class GroupController extends ScaffoldController implements HasMiddleware
         return $this->groupService;
     }
 
+    protected function inertiaPage(): string
+    {
+        return 'masters/groups';
+    }
+
     protected function getFormViewData(Model $model): array
     {
         return [

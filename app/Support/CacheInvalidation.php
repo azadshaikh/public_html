@@ -63,18 +63,13 @@ class CacheInvalidation
         ?array $previousValues = null,
         array $publicStatuses = ['published', 'scheduled'],
         bool $invalidateFrontendCache = true,
-        bool $clearUnpolyCache = true,
         bool $dispatchRecache = true
     ): bool {
         if (! self::affectsPublic($model, $previousValues, $publicStatuses)) {
-            if ($clearUnpolyCache) {
-                self::flagUnpolyClearCache();
-            }
-
             return false;
         }
 
-        self::touch($reason, $invalidateFrontendCache, $clearUnpolyCache, $dispatchRecache);
+        self::touch($reason, $invalidateFrontendCache, $dispatchRecache);
 
         return true;
     }
@@ -82,19 +77,13 @@ class CacheInvalidation
     /**
      * Mark the application caches as dirty after a content/settings mutation.
      *
-     * - Flags current Unpoly request to clear its client cache
      * - Dispatches astero:recache asynchronously (debounced)
      */
     public static function touch(
         string $reason,
         bool $invalidateFrontendCache = true,
-        bool $clearUnpolyCache = true,
         bool $dispatchRecache = true
     ): void {
-        if ($clearUnpolyCache) {
-            self::flagUnpolyClearCache();
-        }
-
         if ($invalidateFrontendCache && $dispatchRecache) {
             self::dispatchRecacheDebounced($reason);
         }
@@ -113,20 +102,6 @@ class CacheInvalidation
             } catch (Throwable) {
                 // Best-effort: cache clearing should never break the request.
             }
-        }
-    }
-
-    private static function flagUnpolyClearCache(): void
-    {
-        try {
-            if (app()->runningInConsole()) {
-                return;
-            }
-
-            $request = request();
-            $request->attributes->set('astero.unpoly_clear_cache', true);
-        } catch (Throwable) {
-            // Best-effort
         }
     }
 

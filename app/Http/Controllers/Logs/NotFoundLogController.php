@@ -8,10 +8,12 @@ use App\Models\NotFoundLog;
 use App\Scaffold\ScaffoldController;
 use App\Services\NotFoundLogService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class NotFoundLogController extends ScaffoldController implements HasMiddleware
 {
@@ -36,43 +38,29 @@ class NotFoundLogController extends ScaffoldController implements HasMiddleware
     // OVERRIDE: Custom index with statistics
     // ================================================================
 
-    public function index(Request $request): View|JsonResponse
+    public function index(Request $request): Response|RedirectResponse
     {
-        // If this is an AJAX/JSON request, return data
-        if ($request->expectsJson() || $request->ajax()) {
-            return $this->data($request);
-        }
+        $this->enforcePermission('view');
 
-        // Get config from service (Scaffoldable trait provides getDataGridConfig)
-        $config = $this->service()->getDataGridConfig();
+        $data = $this->service()->getData($request);
         $statistics = $this->service()->getStatistics();
 
-        // Get initial data for SSR (avoids extra AJAX request on page load)
-        $initialData = $this->service()->getData($request);
-
-        return view($this->scaffold()->getIndexView(), [
-            'config' => $config,
+        return Inertia::render($this->inertiaPage().'/index', [
+            ...$data,
             'statistics' => $statistics,
-            'initialData' => $initialData,
         ]);
     }
 
-    public function show(int|string $id): View|JsonResponse
+    public function show(int|string $id): Response
     {
+        $this->enforcePermission('view');
+
         /** @var NotFoundLog $notFoundLog */
         $notFoundLog = $this->findModel((int) $id);
-
-        if (request()->expectsJson()) {
-            return response()->json([
-                'status' => 'success',
-                'data' => $notFoundLog,
-            ]);
-        }
-
         $recentActivity = $this->service()->getRecentActivityStats($notFoundLog);
 
-        return view($this->scaffold()->getShowView(), [
-            'notFoundLog' => $notFoundLog,
+        return Inertia::render($this->inertiaPage().'/show', [
+            'notFoundLog' => $notFoundLog->toArray(),
             'recentUrlStats' => $recentActivity['url'],
             'recentIpStats' => $recentActivity['ip'],
         ]);
@@ -132,5 +120,10 @@ class NotFoundLogController extends ScaffoldController implements HasMiddleware
     protected function service(): NotFoundLogService
     {
         return $this->notFoundLogService;
+    }
+
+    protected function inertiaPage(): string
+    {
+        return 'logs/not-found-logs';
     }
 }

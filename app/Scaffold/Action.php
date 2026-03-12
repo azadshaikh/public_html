@@ -63,9 +63,6 @@ class Action
     // Status conditions
     public array $conditions = [];
 
-    // Force full page reload (bypass Unpoly SPA navigation)
-    public bool $fullReload = false;
-
     // Additional metadata
     public array $meta = [];
 
@@ -446,17 +443,6 @@ class Action
         return $this;
     }
 
-    /**
-     * Force full page reload (bypass Unpoly SPA navigation)
-     * Useful for actions that change session state like impersonate
-     */
-    public function fullReload(bool $value = true): self
-    {
-        $this->fullReload = $value;
-
-        return $this;
-    }
-
     // =========================================================================
     // SERIALIZATION
     // =========================================================================
@@ -478,7 +464,6 @@ class Action
             'variant' => $this->variant !== 'default' ? $this->variant : null,
             'scope' => $this->scope,
             'conditions' => $this->conditions === [] ? null : $this->conditions,
-            'fullReload' => $this->fullReload ?: null,
             'attributes' => $this->attributes === [] ? null : $this->attributes,
             ...$this->meta,
         ], fn ($v): bool => $v !== null);
@@ -566,7 +551,6 @@ class Action
                 'method' => $actionData['method'] ?? 'GET',
                 'confirm' => $actionData['confirm'] ?? null,
                 'variant' => $actionData['variant'] ?? 'default',
-                'fullReload' => $actionData['fullReload'] ?? false,
                 'attributes' => $actionData['attributes'] ?? null,
             ];
 

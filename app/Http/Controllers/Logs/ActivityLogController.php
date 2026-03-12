@@ -8,10 +8,12 @@ use App\Scaffold\ScaffoldController;
 use App\Services\ActivityLogService;
 use App\Traits\ActivityTrait;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class ActivityLogController extends ScaffoldController implements HasMiddleware
 {
@@ -38,28 +40,21 @@ class ActivityLogController extends ScaffoldController implements HasMiddleware
     // OVERRIDE: Custom index with statistics
     // ================================================================
 
-    public function index(Request $request): View|JsonResponse
+    public function index(Request $request): Response|RedirectResponse
     {
-        // If this is an AJAX/JSON request, return data
-        if ($request->expectsJson() || $request->ajax()) {
-            return $this->data($request);
-        }
+        $this->enforcePermission('view');
 
-        // Get config from service (Scaffoldable trait provides getDataGridConfig)
-        $initialData = $this->service()->getData($request);
-        $config = $this->service()->getDataGridConfig();
-        $statistics = $initialData['statistics'] ?? $this->service()->getStatistics();
+        $data = $this->service()->getData($request);
+        $statistics = $data['statistics'] ?? $this->service()->getStatistics();
 
-        // Get filter options
         $filterOptions = [
             'event' => $this->service()->getEventOptions(),
             'causer_id' => $this->service()->getUserOptions(),
         ];
 
-        return view($this->scaffold()->getIndexView(), [
-            'config' => $config,
+        return Inertia::render($this->inertiaPage().'/index', [
+            ...$data,
             'statistics' => $statistics,
-            'initialData' => $initialData,
             'filterOptions' => $filterOptions,
         ]);
     }
@@ -106,5 +101,10 @@ class ActivityLogController extends ScaffoldController implements HasMiddleware
     protected function service(): ActivityLogService
     {
         return $this->activityLogService;
+    }
+
+    protected function inertiaPage(): string
+    {
+        return 'logs/activity-logs';
     }
 }

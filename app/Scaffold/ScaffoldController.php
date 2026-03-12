@@ -14,53 +14,33 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 use LogicException;
 use RuntimeException;
 
 /**
- * ScaffoldController - Convention-based CRUD controller
+ * ScaffoldController - Convention-based Inertia CRUD controller.
  *
- * Provides complete CRUD functionality with ZERO abstract methods.
+ * Provides complete CRUD functionality via Inertia::render().
  * All configuration is derived from the ScaffoldDefinition via the service.
  *
- * Response format for DataGrid:
- * {
- *     status: 'success',
- *     data: {
- *         items: [...],
- *         pagination: {...},
- *         columns: [...],
- *         filters: [...],
- *         bulk_actions: [...],
- *         statistics: {...},
- *         empty_state_config: {...}
- *     }
- * }
+ * Subclasses must implement:
+ * - service(): returns the ScaffoldServiceInterface implementation
+ * - inertiaPage(): returns the Inertia page component path prefix (e.g., 'users')
  *
  * @example
- * class AddressController extends ScaffoldController
+ * class UserController extends ScaffoldController
  * {
- *     public function __construct(private readonly AddressService $service)
- *     {
- *         // That's it! Everything auto-configured.
- *     }
+ *     public function __construct(private readonly UserService $userService) {}
  *
- *     protected function service(): AddressService
- *     {
- *         return $this->service;
- *     }
+ *     protected function service(): UserService { return $this->userService; }
  *
- *     // Optional: customize side effects
- *     protected function handleCreationSideEffects(Model $model): void
- *     {
- *         // Dispatch events, clear cache, etc.
- *     }
+ *     protected function inertiaPage(): string { return 'users'; }
  * }
  */
 abstract class ScaffoldController extends Controller
@@ -72,140 +52,93 @@ abstract class ScaffoldController extends Controller
     // =========================================================================
 
     /**
-     * Display a listing of the resource (HTML view or JSON for AJAX)
-     * Note: RedirectResponse is allowed for nested resources that redirect to parent
+     * Display a listing of the resource via Inertia.
      *
-     * Server-Side Rendering: Initial page load includes data directly,
-     * so the DataGrid renders immediately without an additional AJAX call.
-     * AJAX is only used for subsequent interactions (filters, pagination, etc.)
+     * Inertia handles re-fetching on filter/sort/paginate interactions
+     * via router.get() with preserveState, so no separate data() endpoint is needed.
      */
-    public function index(Request $request): View|JsonResponse|RedirectResponse
+    public function index(Request $request): Response|RedirectResponse
     {
         $this->enforcePermission('view');
 
-        // Return JSON for AJAX requests (DataGrid interactions: filter, paginate, etc.)
-        if ($request->ajax() || $request->wantsJson()) {
-            $data = $this->service()->getData($request);
-
-            return $this->buildDataGridResponse($data);
-        }
-
-        // For initial HTML page load, include data for immediate rendering
-        // This avoids a "loading" state and extra round-trip to the server
         $data = $this->service()->getData($request);
 
-        return view($this->scaffold()->getIndexView(), [
-            'config' => $this->service()->getDataGridConfig(),
-            'initialData' => $data, // Pass data for server-side rendering
+        return Inertia::render($this->inertiaPage().'/index', [
+            'config' => $this->service()->getScaffoldDefinition()->toInertiaConfig(),
+            ...$data,
+            ...$this->getIndexViewData($request),
         ]);
     }
 
     /**
-     * Get data for DataGrid (JSON API endpoint)
+     * Show the form for creating a new resource.
      */
-    public function data(Request $request): JsonResponse
-    {
-        $this->enforcePermission('view');
-
-        $data = $this->service()->getData($request);
-
-        return $this->buildDataGridResponse($data);
-    }
-
-    /**
-     * Show the form for creating a new resource
-     */
-    /**
-     * Show the form for creating a new resource
-     */
-    public function create(): View|RedirectResponse
+    public function create(): Response
     {
         $this->enforcePermission('add');
 
         $modelClass = $this->getModelClass();
         $model = new $modelClass;
 
-        return view($this->scaffold()->getCreateView(), [
-            $this->getModelKey() => $model,
+        return Inertia::render($this->inertiaPage().'/create', [
             ...$this->getFormViewData($model),
         ]);
     }
 
     /**
-     * Store a newly created resource in storage
+     * Store a newly created resource in storage.
      */
-    public function store(Request $request): RedirectResponse|JsonResponse
+    public function store(Request $request): RedirectResponse
     {
         $this->enforcePermission('add');
 
         $validatedData = $this->validateRequest($request);
         $model = $this->service()->create($validatedData);
 
-        // Invalidate caches only for public-affecting records.
         CacheInvalidation::touchForModel($model, $this->getEntityName().' created');
 
         $this->handleCreationSideEffects($model);
         $this->logActivity($model, ActivityAction::CREATE, $this->getEntityName().' created successfully');
 
-        $successMessage = $this->buildCreateSuccessMessage($model);
-
-        // Determine redirect route: show > edit > index
-        $redirectRoute = $this->getAfterStoreRedirectUrl($model);
-
-        if ($request->expectsJson()) {
-            return response()->json([
-                'status' => 'success',
-                'message' => $successMessage,
-                'data' => ['id' => $model->getKey()],
-                'redirect' => $redirectRoute,
-            ], 201);
-        }
-
         return redirect()
-            ->to($redirectRoute)
-            ->with('success', $successMessage);
+            ->to($this->getAfterStoreRedirectUrl($model))
+            ->with('status', $this->buildCreateSuccessMessage($model));
     }
 
     /**
-     * Display the specified resource
+     * Display the specified resource.
      */
-    public function show(int|string $id): View|JsonResponse|RedirectResponse
+    public function show(int|string $id): Response
     {
         $this->enforcePermission('view');
 
         $model = $this->findModel($id);
 
-        if (request()->expectsJson()) {
-            return response()->json([
-                'status' => 'success',
-                'data' => $model,
-            ]);
-        }
-
-        return view($this->scaffold()->getShowView(), [
-            $this->getModelKey() => $model,
+        return Inertia::render($this->inertiaPage().'/show', [
+            $this->getModelKey() => $this->transformModelForShow($model),
+            ...$this->getShowViewData($model),
         ]);
     }
 
     /**
-     * Show the form for editing the specified resource
+     * Show the form for editing the specified resource.
      */
-    public function edit(int|string $id): View|RedirectResponse
+    public function edit(int|string $id): Response
     {
         $this->enforcePermission('edit');
 
         $model = $this->findModel($id);
 
-        return view($this->scaffold()->getEditView(), [
-            $this->getModelKey() => $model,
+        return Inertia::render($this->inertiaPage().'/edit', [
+            $this->getModelKey() => $this->transformModelForEdit($model),
             ...$this->getFormViewData($model),
         ]);
     }
 
     /**
-     * Update the specified resource in storage
+     * Update the specified resource in storage.
      */
-    public function update(Request $request, int|string $id): RedirectResponse|JsonResponse
+    public function update(Request $request, int|string $id): RedirectResponse
     {
         $this->enforcePermission('edit');
 
@@ -225,86 +158,44 @@ abstract class ScaffoldController extends Controller
             $previousValues
         );
 
-        $successMessage = $this->buildUpdateSuccessMessage($updatedModel);
-
-        if ($request->expectsJson()) {
-            return response()->json([
-                'status' => 'success',
-                'message' => $successMessage,
-                'redirect' => route($this->scaffold()->getEditRoute(), $updatedModel),
-            ]);
-        }
-
         return to_route($this->scaffold()->getEditRoute(), $updatedModel)
-            ->with('success', $successMessage);
+            ->with('status', $this->buildUpdateSuccessMessage($updatedModel));
     }
 
     /**
-     * Remove the specified resource from storage (soft delete only)
-     *
-     * For permanent deletion, use the dedicated forceDelete() endpoint.
+     * Remove the specified resource from storage (soft delete only).
      */
-    public function destroy(Request $request, int|string $id): RedirectResponse|JsonResponse
+    public function destroy(int|string $id): RedirectResponse
     {
         $this->enforcePermission('delete');
 
         try {
             $model = $this->findModel($id);
         } catch (ModelNotFoundException) {
-            $message = $this->getEntityName().' already deleted';
-
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'status' => 'success',
-                    'message' => $message,
-                    'redirect' => route($this->scaffold()->getIndexRoute()),
-                ]);
-            }
-
             return to_route($this->scaffold()->getIndexRoute())
-                ->with('success', $message);
+                ->with('status', $this->getEntityName().' already deleted.');
         }
 
-        // If already trashed, redirect to forceDelete endpoint instead
         if (method_exists($model, 'trashed') && $model->trashed()) {
-            $message = $this->getEntityName().' is already in trash. Use permanent delete to remove it.';
-
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => $message,
-                ], 400);
-            }
-
             return back()
-                ->with('warning', $message);
+                ->with('error', $this->getEntityName().' is already in trash. Use permanent delete to remove it.');
         }
 
-        // Soft delete only
         $this->service()->delete($model);
-        $message = $this->getEntityName().' moved to trash';
 
-        CacheInvalidation::touchForModel($model, $message);
+        CacheInvalidation::touchForModel($model, $this->getEntityName().' moved to trash');
 
         $this->handleDeletionSideEffects($model);
-        $this->logActivity($model, ActivityAction::DELETE, $message);
-
-        if ($request->expectsJson()) {
-            return response()->json([
-                'status' => 'success',
-                'message' => $message,
-                'redirect' => route($this->scaffold()->getIndexRoute()),
-            ]);
-        }
+        $this->logActivity($model, ActivityAction::DELETE, $this->getEntityName().' moved to trash');
 
         return to_route($this->scaffold()->getIndexRoute())
-            ->with('success', $message);
+            ->with('status', $this->getEntityName().' moved to trash.');
     }
 
     /**
-     * Restore a soft-deleted resource
+     * Restore a soft-deleted resource.
      */
-    public function restore(Request $request, int|string $id): RedirectResponse|JsonResponse
+    public function restore(int|string $id): RedirectResponse
     {
         $this->enforcePermission('restore');
 
@@ -315,68 +206,32 @@ abstract class ScaffoldController extends Controller
         $this->handleRestorationSideEffects($model);
         $this->logActivity($model, ActivityAction::RESTORE, $this->getEntityName().' restored');
 
-        if ($request->expectsJson()) {
-            return response()->json([
-                'status' => 'success',
-                'message' => $this->getEntityName().' restored successfully',
-                'redirect' => route($this->scaffold()->getIndexRoute()),
-            ]);
-        }
-
         return back()
-            ->with('success', $this->getEntityName().' restored successfully');
+            ->with('status', $this->getEntityName().' restored successfully.');
     }
 
     /**
-     * Permanently delete a resource (force delete)
-     * This is a dedicated endpoint for force deletion from trash
+     * Permanently delete a resource (force delete from trash only).
      */
-    public function forceDelete(Request $request, int|string $id): RedirectResponse|JsonResponse
+    public function forceDelete(int|string $id): RedirectResponse
     {
         $this->enforcePermission('delete');
 
         try {
             $model = $this->findModel($id);
         } catch (ModelNotFoundException) {
-            $message = $this->getEntityName().' already deleted';
-
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'status' => 'success',
-                    'message' => $message,
-                    'redirect' => route($this->scaffold()->getIndexRoute()),
-                ]);
-            }
-
             return to_route($this->scaffold()->getIndexRoute())
-                ->with('success', $message);
+                ->with('status', $this->getEntityName().' already deleted.');
         }
 
-        // Ensure the model is trashed before force deleting
         if (! method_exists($model, 'trashed') || ! $model->trashed()) {
-            $message = $this->getEntityName().' must be in trash before permanent deletion';
-
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => $message,
-                ], 400);
-            }
-
             return back()
-                ->with('error', $message);
+                ->with('error', $this->getEntityName().' must be in trash before permanent deletion.');
         }
 
         try {
             $this->service()->forceDelete($model);
         } catch (RuntimeException $runtimeException) {
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => $runtimeException->getMessage(),
-                ], 422);
-            }
-
             return back()
                 ->with('error', $runtimeException->getMessage());
         }
@@ -384,37 +239,26 @@ abstract class ScaffoldController extends Controller
         CacheInvalidation::touchForModel($model, $this->getEntityName().' permanently deleted');
         $this->logActivity($model, ActivityAction::FORCE_DELETE, $this->getEntityName().' permanently deleted');
 
-        if ($request->expectsJson()) {
-            return response()->json([
-                'status' => 'success',
-                'message' => $this->getEntityName().' permanently deleted',
-                'redirect' => route($this->scaffold()->getIndexRoute()),
-            ]);
-        }
-
         return to_route($this->scaffold()->getIndexRoute())
-            ->with('success', $this->getEntityName().' permanently deleted');
+            ->with('status', $this->getEntityName().' permanently deleted.');
     }
 
     /**
-     * Handle bulk actions (DataGrid format)
+     * Handle bulk actions.
      */
-    public function bulkAction(Request $request): JsonResponse
+    public function bulkAction(Request $request): RedirectResponse
     {
         $request->validate([
             'action' => ['required', 'string'],
             'ids' => ['required_without:select_all', 'array'],
-            'ids.*' => ['required'],  // Accept any scalar ID (int, UUID, slug)
+            'ids.*' => ['required'],
             'select_all' => ['nullable', 'boolean'],
         ]);
 
         try {
             $result = $this->service()->handleBulkAction($request);
         } catch (RuntimeException $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage(),
-            ], 422);
+            return back()->with('error', $e->getMessage());
         }
 
         CacheInvalidation::touch('Bulk '.$request->input('action').': '.$this->getEntityPlural());
@@ -430,25 +274,32 @@ abstract class ScaffoldController extends Controller
             sprintf('Bulk %s: %d %s affected', $request->input('action'), $result['affected'], $this->getEntityPlural())
         );
 
-        return response()->json([
-            'status' => 'success',
-            'message' => $result['message'],
-            'affected' => $result['affected'],
-        ]);
+        return back()->with('status', $result['message']);
     }
 
+    // =========================================================================
+    // ABSTRACT METHODS
+    // =========================================================================
+
     /**
-     * Get the service instance
-     * This is the ONLY method that must be implemented
+     * Get the service instance.
      */
     abstract protected function service(): ScaffoldServiceInterface;
+
+    /**
+     * Get the Inertia page component path prefix.
+     *
+     * Returns the base path for this resource's page components.
+     * For example, 'users' maps to pages: users/index, users/create, users/edit, users/show.
+     */
+    abstract protected function inertiaPage(): string;
 
     // =========================================================================
     // CONFIGURATION (All derived from service/scaffold definition)
     // =========================================================================
 
     /**
-     * Get scaffold definition from service (uses service cache)
+     * Get scaffold definition from service (uses service cache).
      */
     protected function scaffold(): ScaffoldDefinition
     {
@@ -456,7 +307,7 @@ abstract class ScaffoldController extends Controller
     }
 
     /**
-     * Get model class from scaffold
+     * Get model class from scaffold.
      */
     protected function getModelClass(): string
     {
@@ -464,7 +315,7 @@ abstract class ScaffoldController extends Controller
     }
 
     /**
-     * Get entity name from scaffold
+     * Get entity name from scaffold.
      */
     protected function getEntityName(): string
     {
@@ -472,7 +323,7 @@ abstract class ScaffoldController extends Controller
     }
 
     /**
-     * Get entity plural name from scaffold
+     * Get entity plural name from scaffold.
      */
     protected function getEntityPlural(): string
     {
@@ -480,7 +331,7 @@ abstract class ScaffoldController extends Controller
     }
 
     /**
-     * Get route prefix from scaffold
+     * Get route prefix from scaffold.
      */
     protected function getRoutePrefix(): string
     {
@@ -488,43 +339,51 @@ abstract class ScaffoldController extends Controller
     }
 
     // =========================================================================
-    // RESPONSE BUILDERS (DataGrid Format)
+    // RESPONSE BUILDERS
     // =========================================================================
 
     /**
-     * Build JSON response for DataGrid
+     * Build success message for create operation.
      */
-    protected function buildDataGridResponse(array $data): JsonResponse
+    protected function buildCreateSuccessMessage(Model $model): string
     {
-        return response()->json([
-            'status' => 'success',
-            'data' => $data,
-        ])->withHeaders([
-            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
-            'Pragma' => 'no-cache',
-        ]);
+        return $this->getEntityName().' created successfully.';
     }
 
     /**
-     * Build success message for create operation
+     * Build success message for update operation.
      */
-    protected function buildCreateSuccessMessage(Model $model): array
+    protected function buildUpdateSuccessMessage(Model $model): string
     {
-        return [
-            'title' => $this->getEntityName().' Created!',
-            'message' => sprintf('Your %s has been created successfully.', $this->getEntityName()),
-        ];
+        return $this->getEntityName().' updated successfully.';
+    }
+
+    // =========================================================================
+    // MODEL TRANSFORMERS
+    // =========================================================================
+
+    /**
+     * Transform a model for the show page.
+     *
+     * Override in subclass to control what data the show page receives.
+     *
+     * @return array<string, mixed>
+     */
+    protected function transformModelForShow(Model $model): array
+    {
+        return $model->toArray();
     }
 
     /**
-     * Build success message for update operation
+     * Transform a model for the edit form.
+     *
+     * Override in subclass to shape the form's initial values.
+     *
+     * @return array<string, mixed>
      */
-    protected function buildUpdateSuccessMessage(Model $model): array
+    protected function transformModelForEdit(Model $model): array
     {
-        return [
-            'title' => $this->getEntityName().' Updated!',
-            'message' => 'All changes have been saved successfully.',
-        ];
+        return $model->toArray();
     }
 
     // =========================================================================
@@ -532,7 +391,7 @@ abstract class ScaffoldController extends Controller
     // =========================================================================
 
     /**
-     * Get the redirect URL after storing a new resource
+     * Get the redirect URL after storing a new resource.
      * Priority: show > edit > index
      */
     protected function getAfterStoreRedirectUrl(Model $model): string
@@ -562,7 +421,37 @@ abstract class ScaffoldController extends Controller
     }
 
     /**
-     * Hook: Called after model creation
+     * Hook: Additional data for the index page.
+     *
+     * @return array<string, mixed>
+     */
+    protected function getIndexViewData(Request $request): array
+    {
+        return [];
+    }
+
+    /**
+     * Hook: Additional data for the show page.
+     *
+     * @return array<string, mixed>
+     */
+    protected function getShowViewData(Model $model): array
+    {
+        return [];
+    }
+
+    /**
+     * Hook: Additional data for create/edit forms (options, defaults, etc.).
+     *
+     * @return array<string, mixed>
+     */
+    protected function getFormViewData(Model $model): array
+    {
+        return [];
+    }
+
+    /**
+     * Hook: Called after model creation.
      */
     protected function handleCreationSideEffects(Model $model): void
     {
@@ -570,7 +459,7 @@ abstract class ScaffoldController extends Controller
     }
 
     /**
-     * Hook: Called after model update
+     * Hook: Called after model update.
      */
     protected function handleUpdateSideEffects(Model $model): void
     {
@@ -579,7 +468,6 @@ abstract class ScaffoldController extends Controller
 
     /**
      * Hook: Called after model update, with access to previous values.
-     * Default behavior calls handleUpdateSideEffects() for backward compatibility.
      */
     protected function handleUpdateSideEffectsWithPrevious(Model $model, array $previousValues): void
     {
@@ -587,7 +475,7 @@ abstract class ScaffoldController extends Controller
     }
 
     /**
-     * Hook: Called after model deletion
+     * Hook: Called after model deletion.
      */
     protected function handleDeletionSideEffects(Model $model): void
     {
@@ -595,7 +483,7 @@ abstract class ScaffoldController extends Controller
     }
 
     /**
-     * Hook: Called after model restoration
+     * Hook: Called after model restoration.
      */
     protected function handleRestorationSideEffects(Model $model): void
     {
@@ -611,28 +499,13 @@ abstract class ScaffoldController extends Controller
     }
 
     /**
-     * Get additional data for create/edit views
-     * Override in subclass to add select options, etc.
-     */
-    protected function getFormViewData(Model $model): array
-    {
-        return [];
-    }
-
-    /**
-     * Capture previous values for activity logging
-     *
-     * By default, captures all attributes to ensure we have a complete baseline
-     * for comparison against the post-update state.
+     * Capture previous values for activity logging.
      *
      * @param  Model  $model  The model before update
-     * @return array<string, mixed> Previous values keyed by field name
+     * @return array<string, mixed>
      */
     protected function capturePreviousValues(Model $model): array
     {
-        // Capture ALL attributes (except hidden) to ensure we have value for every field
-        // This avoids "old: null" issues for non-fillable fields (like id, timestamps)
-        // when comparing against the full post-update state.
         $attributes = $model->getAttributes();
         $hidden = $model->getHidden();
 
@@ -644,7 +517,7 @@ abstract class ScaffoldController extends Controller
     // =========================================================================
 
     /**
-     * Get model key for views (e.g., 'address' for Address model)
+     * Get model key for page props (e.g., 'user' for User model).
      */
     protected function getModelKey(): string
     {
@@ -652,13 +525,10 @@ abstract class ScaffoldController extends Controller
     }
 
     /**
-     * Find model by ID or route key (includes trashed items for show/edit of soft-deleted records)
-     *
-     * Supports integer IDs, UUIDs, and slug-based route keys.
+     * Find model by ID or route key, including trashed records.
      */
     protected function findModel(int|string $id): Model
     {
-        // Prefer service-scoped lookup (prevents bypassing visibility/tenant scopes).
         $service = $this->service();
         if (method_exists($service, 'findModelForCrud')) {
             return $service->findModelForCrud($id, request());
@@ -668,22 +538,17 @@ abstract class ScaffoldController extends Controller
         $model = new $modelClass;
         $routeKeyName = $model->getRouteKeyName();
 
-        // Build query with trashed support if model uses SoftDeletes.
-        // Note: `withTrashed()` is a forwarded builder method, so `method_exists($modelClass, 'withTrashed')`
-        // is false even when SoftDeletes is present.
         $query = $modelClass::query();
 
         if (in_array(SoftDeletes::class, class_uses_recursive($modelClass), true)) {
             $query->withTrashed();
         }
 
-        // Use the model's route key name for lookup (supports id, uuid, slug, etc.)
         return $query->where($routeKeyName, $id)->firstOrFail();
     }
 
     /**
      * Defense-in-depth permission check based on scaffold permissionPrefix.
-     * Controllers still typically apply middleware, but this prevents accidental gaps.
      */
     protected function enforcePermission(string $ability): void
     {
@@ -699,23 +564,18 @@ abstract class ScaffoldController extends Controller
     }
 
     /**
-     * Validate request using FormRequest or rules
-     * Override in subclass to use custom FormRequest
+     * Validate request using the definition's FormRequest class.
      */
     protected function validateRequest(Request $request): array
     {
-        // Check if definition has a specific request class
         $definition = $this->scaffold();
         $requestClass = $definition->getRequestClass();
 
         if ($requestClass && class_exists($requestClass)) {
-            // Create FormRequest instance with current request data
             /** @var FormRequest $formRequest */
             $formRequest = $requestClass::createFrom($request);
             $formRequest->setContainer(app());
             $formRequest->setRedirector(resolve(Redirector::class));
-
-            // Trigger validation (throws ValidationException on failure)
             $formRequest->validateResolved();
 
             return $formRequest->validated();
@@ -727,7 +587,7 @@ abstract class ScaffoldController extends Controller
     }
 
     /**
-     * Map bulk action to activity action type
+     * Map bulk action to activity action type.
      */
     protected function getBulkActionType(string $action): ActivityAction
     {

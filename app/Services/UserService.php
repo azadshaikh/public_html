@@ -54,6 +54,27 @@ class UserService implements ScaffoldServiceInterface
         ];
     }
 
+    /**
+     * Get paginated users with UserResource transformation.
+     *
+     * Returns an array matching the standard Laravel paginator format
+     * (data, links, current_page, etc.) expected by the DataGrid component.
+     */
+    public function getPaginatedUsers(Request $request): array
+    {
+        $query = $this->buildListQuery($request);
+        $paginator = $query->paginate($this->getPerPage($request))->onEachSide(1);
+
+        // Convert paginator to array (standard format with links[] as page links)
+        $paginatedArray = $paginator->toArray();
+
+        // Replace raw model data with resource-transformed data
+        $paginatedArray['data'] = UserResource::collection($paginator->items())
+            ->resolve(request());
+
+        return $paginatedArray;
+    }
+
     // ================================================================
     // CUSTOM OPTIONS (for forms)
     // ================================================================
@@ -567,13 +588,26 @@ class UserService implements ScaffoldServiceInterface
             });
         }
 
-        // Date range filter
-        if ($from = $request->input('created_at_from')) {
-            $query->whereDate('created_at', '>=', $from);
-        }
+        // Date range filter — supports comma-separated format from DataGrid (e.g. "2024-01-01,2024-12-31")
+        // as well as legacy separate created_at_from / created_at_to params
+        if ($createdAt = $request->input('created_at')) {
+            $dates = explode(',', $createdAt, 2);
 
-        if ($to = $request->input('created_at_to')) {
-            $query->whereDate('created_at', '<=', $to);
+            if (! empty($dates[0])) {
+                $query->whereDate('created_at', '>=', $dates[0]);
+            }
+
+            if (! empty($dates[1])) {
+                $query->whereDate('created_at', '<=', $dates[1]);
+            }
+        } else {
+            if ($from = $request->input('created_at_from')) {
+                $query->whereDate('created_at', '>=', $from);
+            }
+
+            if ($to = $request->input('created_at_to')) {
+                $query->whereDate('created_at', '<=', $to);
+            }
         }
     }
 

@@ -13,7 +13,6 @@ use App\Services\LaravelTools\PhpService;
 use App\Services\LaravelTools\RouteService;
 use App\Traits\ActivityTrait;
 use App\Traits\HasAlerts;
-use App\Traits\ResponseTrait;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -24,7 +23,6 @@ class LaravelToolsController extends Controller
 {
     use ActivityTrait;
     use HasAlerts;
-    use ResponseTrait;
 
     public function __construct(
         protected EnvService $envService,

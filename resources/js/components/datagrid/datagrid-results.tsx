@@ -1,6 +1,7 @@
 import * as React from 'react';
 import type { Key } from 'react';
 import { DatagridActionMenu } from '@/components/datagrid/datagrid-action-menu';
+import { renderCellByType } from '@/components/datagrid/datagrid-cell-renderers';
 import { DatagridPagination } from '@/components/datagrid/datagrid-pagination';
 import { SortIcon } from '@/components/datagrid/sort-icon';
 import type {
@@ -10,6 +11,16 @@ import type {
     DatagridProps,
 } from '@/components/datagrid/types';
 import { normalizeRowKey } from '@/components/datagrid/utils';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -96,6 +107,8 @@ export function DatagridResults<T>({
     handlePerPageChange,
     resolvedSummary,
 }: DatagridResultsProps<T>) {
+    const [confirmBulkAction, setConfirmBulkAction] =
+        React.useState<DatagridBulkAction<T> | null>(null);
     const perPageItems = React.useMemo(
         () =>
             perPage?.options.map((option) => ({
@@ -136,12 +149,18 @@ export function DatagridResults<T>({
                                             bulkAction.variant ?? 'outline'
                                         }
                                         disabled={disabled}
-                                        onClick={() =>
+                                        onClick={() => {
+                                            if (bulkAction.confirm) {
+                                                setConfirmBulkAction(
+                                                    bulkAction,
+                                                );
+                                                return;
+                                            }
                                             bulkAction.onSelect(
                                                 selectedRows,
                                                 clearSelection,
-                                            )
-                                        }
+                                            );
+                                        }}
                                     >
                                         {bulkAction.icon}
                                         {bulkAction.label}
@@ -159,6 +178,41 @@ export function DatagridResults<T>({
                         </div>
                     </div>
                 ) : null}
+
+                <AlertDialog
+                    open={!!confirmBulkAction}
+                    onOpenChange={(open) => !open && setConfirmBulkAction(null)}
+                >
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                {confirmBulkAction?.confirm}
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                                variant={
+                                    confirmBulkAction?.variant === 'destructive'
+                                        ? 'destructive'
+                                        : 'default'
+                                }
+                                onClick={() => {
+                                    if (confirmBulkAction) {
+                                        confirmBulkAction.onSelect(
+                                            selectedRows,
+                                            clearSelection,
+                                        );
+                                    }
+                                    setConfirmBulkAction(null);
+                                }}
+                            >
+                                Confirm
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
 
                 {rows.data.length === 0 ? (
                     <div className="p-4">
@@ -419,7 +473,19 @@ export function DatagridResults<T>({
                                                     column.cellClassName,
                                                 )}
                                             >
-                                                {column.cell(row)}
+                                                {column.cell
+                                                    ? column.cell(row)
+                                                    : renderCellByType({
+                                                          value: (
+                                                              row as Record<
+                                                                  string,
+                                                                  unknown
+                                                              >
+                                                          )[column.key],
+                                                          type:
+                                                              column.type ??
+                                                              'text',
+                                                      })}
                                             </TableCell>
                                         ))}
                                         {rowActions ? (

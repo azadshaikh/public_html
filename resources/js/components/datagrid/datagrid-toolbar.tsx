@@ -5,9 +5,18 @@ import {
     SearchIcon,
 } from 'lucide-react';
 import * as React from 'react';
+import {
+    DatagridBooleanFilterField,
+    DatagridDateRangeFilterField,
+    DatagridNumberFilterField,
+    DatagridSelectFilterField,
+} from '@/components/datagrid/datagrid-filters';
 import type {
+    DatagridBooleanFilter,
+    DatagridDateRangeFilter,
     DatagridFilter,
     DatagridHiddenFilter,
+    DatagridNumberFilter,
     DatagridProps,
     DatagridSearchFilter,
     DatagridSelectFilter,
@@ -22,11 +31,6 @@ import {
     InputGroupAddon,
     InputGroupInput,
 } from '@/components/ui/input-group';
-import { Label } from '@/components/ui/label';
-import {
-    NativeSelect,
-    NativeSelectOption,
-} from '@/components/ui/native-select';
 import {
     Sheet,
     SheetContent,
@@ -103,12 +107,33 @@ export function DatagridToolbar({
     const selectFilters = filters.filter(
         (filter): filter is DatagridSelectFilter => filter.type === 'select',
     );
+    const dateRangeFilters = filters.filter(
+        (filter): filter is DatagridDateRangeFilter =>
+            filter.type === 'date_range',
+    );
+    const booleanFilters = filters.filter(
+        (filter): filter is DatagridBooleanFilter => filter.type === 'boolean',
+    );
+    const numberFilters = filters.filter(
+        (filter): filter is DatagridNumberFilter => filter.type === 'number',
+    );
     const hiddenFilters = filters.filter(
         (filter): filter is DatagridHiddenFilter => filter.type === 'hidden',
     );
-    const activeSelectFilterCount = selectFilters.filter(
-        (filter) => filter.value !== getFilterDefaultValue(filter),
-    ).length;
+
+    const sheetFilterCount =
+        selectFilters.length +
+        dateRangeFilters.length +
+        booleanFilters.length +
+        numberFilters.length;
+
+    const activeSheetFilterCount =
+        selectFilters.filter(
+            (filter) => filter.value !== getFilterDefaultValue(filter),
+        ).length +
+        dateRangeFilters.filter((filter) => filter.value !== '').length +
+        booleanFilters.filter((filter) => filter.value !== '').length +
+        numberFilters.filter((filter) => filter.value !== '').length;
 
     if (!tabs && !hasVisibleFilters) {
         return null;
@@ -160,6 +185,15 @@ export function DatagridToolbar({
                     filter.name,
                     getFilterDefaultValue(filter),
                 ]),
+            ),
+            ...Object.fromEntries(
+                dateRangeFilters.map((filter) => [filter.name, '']),
+            ),
+            ...Object.fromEntries(
+                booleanFilters.map((filter) => [filter.name, '']),
+            ),
+            ...Object.fromEntries(
+                numberFilters.map((filter) => [filter.name, '']),
             ),
             page: 1,
         });
@@ -247,7 +281,7 @@ export function DatagridToolbar({
                             </form>
                         ) : null}
 
-                        {selectFilters.length > 0 ? (
+                        {sheetFilterCount > 0 ? (
                             <Sheet
                                 open={isFilterSheetOpen}
                                 onOpenChange={setIsFilterSheetOpen}
@@ -261,12 +295,12 @@ export function DatagridToolbar({
                                     >
                                         <FilterIcon data-icon="inline-start" />
                                         {submitLabel}
-                                        {activeSelectFilterCount > 0 ? (
+                                        {activeSheetFilterCount > 0 ? (
                                             <Badge
                                                 variant="secondary"
                                                 className="rounded-full px-1.5 py-0 text-[0.7rem]"
                                             >
-                                                {activeSelectFilterCount}
+                                                {activeSheetFilterCount}
                                             </Badge>
                                         ) : null}
                                     </Button>
@@ -305,45 +339,31 @@ export function DatagridToolbar({
                                             />
 
                                             {selectFilters.map((filter) => (
-                                                <div
+                                                <DatagridSelectFilterField
                                                     key={filter.name}
-                                                    className="space-y-2"
-                                                >
-                                                    <Label
-                                                        htmlFor={`datagrid-filter-${filter.name}`}
-                                                    >
-                                                        {formatFilterLabel(
-                                                            filter.name,
-                                                        )}
-                                                    </Label>
-                                                    <NativeSelect
-                                                        id={`datagrid-filter-${filter.name}`}
-                                                        size="comfortable"
-                                                        name={filter.name}
-                                                        defaultValue={
-                                                            filter.value
-                                                        }
-                                                        className={cn(
-                                                            'w-full',
-                                                            filter.className,
-                                                        )}
-                                                    >
-                                                        {filter.options.map(
-                                                            (option) => (
-                                                                <NativeSelectOption
-                                                                    key={`${filter.name}-${option.value}`}
-                                                                    value={
-                                                                        option.value
-                                                                    }
-                                                                >
-                                                                    {
-                                                                        option.label
-                                                                    }
-                                                                </NativeSelectOption>
-                                                            ),
-                                                        )}
-                                                    </NativeSelect>
-                                                </div>
+                                                    filter={filter}
+                                                />
+                                            ))}
+
+                                            {dateRangeFilters.map((filter) => (
+                                                <DatagridDateRangeFilterField
+                                                    key={filter.name}
+                                                    filter={filter}
+                                                />
+                                            ))}
+
+                                            {booleanFilters.map((filter) => (
+                                                <DatagridBooleanFilterField
+                                                    key={filter.name}
+                                                    filter={filter}
+                                                />
+                                            ))}
+
+                                            {numberFilters.map((filter) => (
+                                                <DatagridNumberFilterField
+                                                    key={filter.name}
+                                                    filter={filter}
+                                                />
                                             ))}
                                         </div>
                                     </form>
@@ -467,10 +487,4 @@ function buildSharedParams({
 
 function getFilterDefaultValue(filter: DatagridSelectFilter): string {
     return filter.options[0]?.value ?? '';
-}
-
-function formatFilterLabel(name: string): string {
-    return name
-        .replaceAll('_', ' ')
-        .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }

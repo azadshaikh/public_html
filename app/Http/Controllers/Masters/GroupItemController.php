@@ -11,11 +11,10 @@ use App\Models\GroupItem;
 use App\Scaffold\ScaffoldController;
 use App\Services\GroupItemService;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
-use Illuminate\View\View;
+use Inertia\Response;
 
 class GroupItemController extends ScaffoldController implements HasMiddleware
 {
@@ -27,26 +26,18 @@ class GroupItemController extends ScaffoldController implements HasMiddleware
     }
 
     /**
-     * Override index to redirect to Group show page
-     * (Items are displayed within the Group show page, not as standalone index)
+     * Override index to redirect to Group show page.
+     * Items are displayed within the Group show page, not as standalone index.
      */
-    public function index(Request $request): View|JsonResponse|RedirectResponse
+    public function index(Request $request): Response|RedirectResponse
     {
-        // For AJAX/JSON requests, return data normally (for DataGrid embedded in Group show)
-        if ($request->ajax() || $request->wantsJson()) {
-            $data = $this->service()->getData($request);
-
-            return $this->buildDataGridResponse($data);
-        }
-
-        // For regular requests, redirect to Group show page
         return redirect($this->getGroupShowUrl());
     }
 
     /**
-     * Override store to redirect to group show page (not items index)
+     * Override store to redirect to group show page.
      */
-    public function store(Request $request): RedirectResponse|JsonResponse
+    public function store(Request $request): RedirectResponse
     {
         $validatedData = $this->validateRequest($request);
         $model = $this->service()->create($validatedData);
@@ -54,24 +45,14 @@ class GroupItemController extends ScaffoldController implements HasMiddleware
         $this->handleCreationSideEffects($model);
         $this->logActivity($model, ActivityAction::CREATE, $this->getEntityName().' created successfully');
 
-        $successMessage = $this->buildCreateSuccessMessage($model);
-
-        if ($request->expectsJson()) {
-            return response()->json([
-                'status' => 'success',
-                'message' => $successMessage,
-                'data' => ['id' => $model->getKey()],
-                'redirect' => $this->getGroupShowUrl(),
-            ], 201);
-        }
-
-        return redirect($this->getGroupShowUrl())->with('success', $successMessage);
+        return redirect($this->getGroupShowUrl())
+            ->with('status', $this->buildCreateSuccessMessage($model));
     }
 
     /**
-     * Override update to redirect to group show page
+     * Override update to redirect to group show page.
      */
-    public function update(Request $request, int|string $id): RedirectResponse|JsonResponse
+    public function update(Request $request, int|string $id): RedirectResponse
     {
         $model = $this->findModel((int) $id);
         $validatedData = $this->validateRequest($request);
@@ -81,23 +62,14 @@ class GroupItemController extends ScaffoldController implements HasMiddleware
         $this->handleUpdateSideEffects($model);
         $this->logActivity($model, ActivityAction::UPDATE, $this->getEntityName().' updated successfully');
 
-        $successMessage = $this->buildUpdateSuccessMessage($model);
-
-        if ($request->expectsJson()) {
-            return response()->json([
-                'status' => 'success',
-                'message' => $successMessage,
-                'redirect' => $this->getGroupShowUrl(),
-            ]);
-        }
-
-        return redirect($this->getGroupShowUrl())->with('success', $successMessage);
+        return redirect($this->getGroupShowUrl())
+            ->with('status', $this->buildUpdateSuccessMessage($model));
     }
 
     /**
-     * Override destroy to redirect to group show page
+     * Override destroy to redirect to group show page.
      */
-    public function destroy(Request $request, int|string $id): RedirectResponse|JsonResponse
+    public function destroy(int|string $id): RedirectResponse
     {
         $model = $this->findModel((int) $id);
         $this->service()->delete($model);
@@ -105,67 +77,45 @@ class GroupItemController extends ScaffoldController implements HasMiddleware
         $this->handleDeletionSideEffects($model);
         $this->logActivity($model, ActivityAction::DELETE, $this->getEntityName().' moved to trash');
 
-        $successMessage = $this->getEntityName().' moved to trash';
-
-        if ($request->expectsJson()) {
-            return response()->json([
-                'status' => 'success',
-                'message' => $successMessage,
-                'redirect' => $this->getGroupShowUrl(),
-            ]);
-        }
-
-        return redirect($this->getGroupShowUrl())->with('success', $successMessage);
+        return redirect($this->getGroupShowUrl())
+            ->with('status', $this->getEntityName().' moved to trash.');
     }
 
     /**
-     * Override restore to redirect to group show page
+     * Override restore to redirect to group show page.
      */
-    public function restore(Request $request, int|string $id): RedirectResponse|JsonResponse
+    public function restore(int|string $id): RedirectResponse
     {
         $model = $this->service()->restore((int) $id);
 
         $this->logActivity($model, ActivityAction::RESTORE, $this->getEntityName().' restored');
 
-        $successMessage = $this->getEntityName().' restored successfully';
-
-        if ($request->expectsJson()) {
-            return response()->json([
-                'status' => 'success',
-                'message' => $successMessage,
-                'redirect' => $this->getGroupShowUrl(),
-            ]);
-        }
-
-        return redirect($this->getGroupShowUrl())->with('success', $successMessage);
+        return redirect($this->getGroupShowUrl())
+            ->with('status', $this->getEntityName().' restored successfully.');
     }
 
     /**
-     * Override forceDelete to redirect to group show page
+     * Override forceDelete to redirect to group show page.
      */
-    public function forceDelete(Request $request, int|string $id): RedirectResponse|JsonResponse
+    public function forceDelete(int|string $id): RedirectResponse
     {
         $model = $this->service()->findModel((int) $id, true);
         $this->service()->forceDelete((int) $id);
 
         $this->logActivity($model, ActivityAction::FORCE_DELETE, $this->getEntityName().' permanently deleted');
 
-        $successMessage = $this->getEntityName().' permanently deleted';
-
-        if ($request->expectsJson()) {
-            return response()->json([
-                'status' => 'success',
-                'message' => $successMessage,
-                'redirect' => $this->getGroupShowUrl(),
-            ]);
-        }
-
-        return redirect($this->getGroupShowUrl())->with('success', $successMessage);
+        return redirect($this->getGroupShowUrl())
+            ->with('status', $this->getEntityName().' permanently deleted.');
     }
 
     protected function service(): GroupItemService
     {
         return $this->groupItemService;
+    }
+
+    protected function inertiaPage(): string
+    {
+        return 'masters/group-items';
     }
 
     /**

@@ -11,7 +11,6 @@ use App\Models\Settings;
 use App\Services\SettingsCacheService;
 use App\Traits\ActivityTrait;
 use App\Traits\HasAlerts;
-use App\Traits\ResponseTrait;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -29,7 +28,6 @@ class SettingsController extends Controller
 {
     use ActivityTrait;
     use HasAlerts;
-    use ResponseTrait;
 
     public function __construct(private readonly Settings $settings, private readonly SettingsCacheService $settingsCacheService) {}
 

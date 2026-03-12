@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Scaffold;
 
 use Illuminate\Routing\Controllers\Middleware;
-use Illuminate\Support\Facades\Route;
 
 /**
  * ScaffoldDefinition - Defines a complete CRUD scaffold configuration
@@ -366,6 +365,64 @@ abstract class ScaffoldDefinition
         return false;
     }
 
+    // =========================================================================
+    // INERTIA CONFIG EXPORT
+    // =========================================================================
+
+    /**
+     * Export the full scaffold configuration as Inertia-consumable props.
+     *
+     * Returns columns, filters, actions, status tabs, and settings
+     * that the React DataGrid component can consume directly.
+     *
+     * @return array{
+     *     columns: array<int, array<string, mixed>>,
+     *     filters: array<int, array<string, mixed>>,
+     *     actions: array<int, array<string, mixed>>,
+     *     statusTabs: array<int, array<string, mixed>>,
+     *     settings: array<string, mixed>,
+     * }
+     */
+    public function toInertiaConfig(): array
+    {
+        return [
+            'columns' => collect($this->columns())
+                ->filter(fn (Column $col): bool => $col->visible)
+                ->map(fn (Column $col): array => $col->toArray())
+                ->values()
+                ->all(),
+
+            'filters' => collect($this->filters())
+                ->map(fn (Filter $filter): array => $filter->toArray())
+                ->values()
+                ->all(),
+
+            'actions' => collect($this->actions())
+                ->filter(fn (Action $action): bool => $action->authorized())
+                ->map(fn (Action $action): array => $action->toArray())
+                ->values()
+                ->all(),
+
+            'statusTabs' => collect($this->statusTabs())
+                ->map(fn (StatusTab $tab): array => $tab->toArray())
+                ->values()
+                ->all(),
+
+            'settings' => [
+                'perPage' => $this->getPerPage(),
+                'defaultSort' => $this->getDefaultSort(),
+                'defaultDirection' => $this->getDefaultSortDirection(),
+                'enableBulkActions' => $this->hasBulkActions(),
+                'enableExport' => $this->hasExport(),
+                'hasNotes' => $this->hasNotes(),
+                'entityName' => $this->getEntityName(),
+                'entityPlural' => $this->getEntityPlural(),
+                'routePrefix' => $this->getRoutePrefix(),
+                'statusField' => $this->getStatusField(),
+            ],
+        ];
+    }
+
     /**
      * Get standard CRUD middleware configuration
      *
@@ -437,111 +494,6 @@ abstract class ScaffoldDefinition
     }
 
     /**
-     * Get index view path (auto-discovers module views)
-     */
-    public function getIndexView(): string
-    {
-        return $this->resolveViewPath('index');
-    }
-
-    /**
-     * Get create view path (auto-discovers module views)
-     */
-    public function getCreateView(): string
-    {
-        return $this->resolveViewPath('create');
-    }
-
-    /**
-     * Get edit view path (auto-discovers module views)
-     */
-    public function getEditView(): string
-    {
-        return $this->resolveViewPath('edit');
-    }
-
-    /**
-     * Get show view path (auto-discovers module views)
-     */
-    public function getShowView(): string
-    {
-        return $this->resolveViewPath('show');
-    }
-
-    /**
-     * Export configuration for DataGrid JavaScript
-     */
-    public function toDataGridConfig(): array
-    {
-        // Determine current status context for conditional actions.
-        // Supports both query-based (?status=trash) and path-based (/.../trash) status tabs.
-        $currentStatus = request()->input('status')
-            ?? request()->route('status')
-            ?? request()->route('status_slug')
-            ?? 'all';
-
-        $routes = [
-            'index' => route($this->getIndexRoute()),
-        ];
-
-        $createRoute = $this->getCreateRoute();
-        if ($createRoute && Route::has($createRoute)) {
-            $routes['create'] = route($createRoute);
-        }
-
-        $bulkActionRoute = $this->getBulkActionRoute();
-        if ($this->hasBulkActions() && $bulkActionRoute && Route::has($bulkActionRoute)) {
-            $routes['bulkAction'] = route($bulkActionRoute);
-        }
-
-        return [
-            'entity' => [
-                'name' => $this->getEntityName(),
-                'plural' => $this->getEntityPlural(),
-            ],
-            'columns' => collect($this->columns())
-                ->filter(fn (Column $col): bool => $col->visible)
-                ->map(fn (Column $col): array => $col->toArray())
-                ->values()
-                ->all(),
-            'filters' => collect($this->filters())
-                ->map(fn (Filter $filter): array => $filter->toArray())
-                ->all(),
-            'actions' => collect($this->actions())
-                ->filter(fn (Action $action): bool => $action->authorized() && $action->shouldShow((string) $currentStatus))
-                ->map(fn (Action $action): array => $action->toArray())
-                ->all(),
-            'statusTabs' => collect($this->statusTabs())
-                ->map(function (StatusTab $tab): array {
-                    // Auto-generate URL if not set
-                    if (! $tab->url) {
-                        $tab->url = route($this->getIndexRoute(), $tab->key ?: null);
-                    }
-
-                    return $tab->toArray();
-                })
-                ->all(),
-            'settings' => [
-                'perPage' => $this->getPerPage(),
-                'defaultSort' => $this->getDefaultSort(),
-                'defaultSortDirection' => $this->getDefaultSortDirection(),
-                'statusField' => $this->getStatusField(),
-                'enableBulkActions' => $this->hasBulkActions(),
-                'enableExport' => $this->hasExport(),
-            ],
-            'routes' => $routes,
-        ];
-    }
-
-    /**
-     * Export configuration as JSON
-     */
-    public function toJson(): string
-    {
-        return json_encode($this->toDataGridConfig(), JSON_THROW_ON_ERROR);
-    }
-
-    /**
      * Get default CRUD actions with automatic permission integration
      *
      * Provides standard actions: show, edit, delete, restore, force_delete
@@ -610,46 +562,5 @@ abstract class ScaffoldDefinition
                 ->showOnStatus('trash')
                 ->forBoth(),
         ];
-    }
-
-    /**
-     * Resolve view path with module auto-discovery
-     *
-     * Detects if the Definition is inside a module (Modules\ModuleName\...)
-     * and returns the appropriate view path:
-     * - Module: 'modulename::entityfolder.viewname' (e.g., 'demo::crud.index')
-     * - App: 'app/path/viewname' (e.g., 'app/roles/index')
-     *
-     * Uses the LAST SEGMENT of routePrefix as the view folder.
-     *
-     * ⚠️ CAVEAT: Only works for flat view folder structures!
-     * If your views are nested (e.g., 'demo::admin/users/index'), you must
-     * override getIndexView(), getCreateView(), etc. explicitly.
-     *
-     * Examples:
-     *   - routePrefix 'app.demo.crud' → view 'demo::crud.index' ✅
-     *   - routePrefix 'app.demo.admin.users' → view 'demo::users.index' (only last segment!)
-     *     For nested: override getIndexView() to return 'demo::admin.users.index'
-     */
-    protected function resolveViewPath(string $viewName): string
-    {
-        $definitionClass = static::class;
-        $routePrefix = $this->getRoutePrefix();
-
-        // Check if this Definition is in a module namespace
-        if (str_starts_with($definitionClass, 'Modules\\')) {
-            // Extract module name: Modules\Demo\Definitions\CrudDemoDefinition -> Demo
-            $parts = explode('\\', $definitionClass);
-            $moduleName = strtolower($parts[1]); // 'demo'
-
-            // Use last segment of routePrefix as entity folder: app.demo.crud -> crud
-            $routeParts = explode('.', $routePrefix);
-            $entityFolder = end($routeParts); // 'crud'
-
-            return sprintf('%s::%s.%s', $moduleName, $entityFolder, $viewName);
-        }
-
-        // App-level definition: use route prefix converted to path
-        return str_replace('.', '/', $routePrefix).'/'.$viewName;
     }
 }

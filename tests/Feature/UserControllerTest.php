@@ -1,0 +1,577 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Tests\Feature;
+
+use App\Enums\Status;
+use App\Models\Role;
+use App\Models\User;
+use Database\Seeders\RolesAndPermissionsSeeder;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
+use Tests\TestCase;
+
+class UserControllerTest extends TestCase
+{
+    use RefreshDatabase;
+
+    private User $admin;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $this->admin = User::factory()->create([
+            'first_name' => 'Admin',
+            'last_name' => 'User',
+            'status' => Status::ACTIVE,
+        ]);
+        $this->admin->assignRole(Role::findByName('administrator', 'web'));
+    }
+
+    // =========================================================================
+    // INDEX — Authentication & Authorization
+    // =========================================================================
+
+    public function test_guests_cannot_access_users_index(): void
+    {
+        $this->get(route('app.users.index'))
+            ->assertRedirect(route('login'));
+    }
+
+    public function test_users_without_permission_cannot_access_users_index(): void
+    {
+        $user = User::factory()->create([
+            'first_name' => 'Regular',
+            'last_name' => 'User',
+            'status' => Status::ACTIVE,
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('app.users.index'))
+            ->assertForbidden();
+    }
+
+    public function test_user_with_view_users_permission_can_access_index(): void
+    {
+        $user = User::factory()->create([
+            'first_name' => 'Viewer',
+            'last_name' => 'User',
+            'status' => Status::ACTIVE,
+        ]);
+        $user->givePermissionTo('view_users');
+
+        $this->actingAs($user)
+            ->get(route('app.users.index'))
+            ->assertOk();
+    }
+
+    // =========================================================================
+    // INDEX — Inertia Props
+    // =========================================================================
+
+    public function test_admin_can_access_users_index(): void
+    {
+        $this->actingAs($this->admin)
+            ->get(route('app.users.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->component('users/index')
+                ->has('users')
+                ->has('users.data')
+                ->has('statistics')
+                ->has('filters')
+                ->has('roles')
+                ->has('showPendingTab')
+                ->has('registrationSettings')
+            );
+    }
+
+    public function test_users_index_returns_paginated_users(): void
+    {
+        User::factory()->count(5)->create(['status' => Status::ACTIVE]);
+
+        $this->actingAs($this->admin)
+            ->get(route('app.users.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->component('users/index')
+                ->has('users.data', 6) // 5 created + 1 admin
+            );
+    }
+
+    public function test_users_index_returns_correct_statistics(): void
+    {
+        User::factory()->create(['status' => Status::ACTIVE]);
+        User::factory()->create(['status' => Status::PENDING]);
+        User::factory()->create(['status' => Status::SUSPENDED]);
+        User::factory()->create(['status' => Status::BANNED]);
+
+        $trashed = User::factory()->create(['status' => Status::ACTIVE]);
+        $trashed->delete();
+
+        $this->actingAs($this->admin)
+            ->get(route('app.users.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->where('statistics.total', 5) // 4 + admin (trash excluded from total)
+                ->where('statistics.active', 2) // 1 active + admin
+                ->where('statistics.pending', 1)
+                ->where('statistics.suspended', 1)
+                ->where('statistics.banned', 1)
+                ->where('statistics.trash', 1)
+            );
+    }
+
+    public function test_users_index_returns_user_resource_shape(): void
+    {
+        User::factory()->create([
+            'first_name' => 'Jane',
+            'last_name' => 'Doe',
+            'email' => 'jane@example.com',
+            'status' => Status::ACTIVE,
+        ]);
+
+        $this->actingAs($this->admin)
+            ->get(route('app.users.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->has('users.data.0', fn (Assert $user): Assert => $user
+                    ->has('id')
+                    ->has('name')
+                    ->has('email')
+                    ->has('status')
+                    ->has('status_label')
+                    ->has('email_verified')
+                    ->has('roles')
+                    ->has('created_at')
+                    ->has('show_url')
+                    ->has('actions')
+                    ->etc()
+                )
+            );
+    }
+
+    // =========================================================================
+    // INDEX — Filters
+    // =========================================================================
+
+    public function test_users_index_filters_by_status_tab(): void
+    {
+        User::factory()->create(['status' => Status::SUSPENDED]);
+
+        $this->actingAs($this->admin)
+            ->get(route('app.users.index', ['status' => 'suspended']))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->has('users.data', 1)
+                ->where('filters.status', 'suspended')
+            );
+    }
+
+    public function test_users_index_filters_by_search(): void
+    {
+        User::factory()->create([
+            'name' => 'FindMe Uniquely',
+            'first_name' => 'FindMe',
+            'last_name' => 'Uniquely',
+            'status' => Status::ACTIVE,
+        ]);
+        User::factory()->create([
+            'name' => 'Other Person',
+            'first_name' => 'Other',
+            'last_name' => 'Person',
+            'status' => Status::ACTIVE,
+        ]);
+
+        $this->actingAs($this->admin)
+            ->get(route('app.users.index', ['search' => 'FindMe']))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->has('users.data', 1)
+                ->where('filters.search', 'FindMe')
+            );
+    }
+
+    public function test_users_index_filters_by_role(): void
+    {
+        $role = Role::create(['name' => 'test-role', 'guard_name' => 'web']);
+        $userWithRole = User::factory()->create(['status' => Status::ACTIVE]);
+        $userWithRole->assignRole($role);
+
+        User::factory()->create(['status' => Status::ACTIVE]);
+
+        $this->actingAs($this->admin)
+            ->get(route('app.users.index', ['role_id' => $role->id]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->has('users.data', 1)
+                ->where('filters.role_id', (string) $role->id)
+            );
+    }
+
+    public function test_users_index_filters_by_email_verified(): void
+    {
+        User::factory()->unverified()->create(['status' => Status::ACTIVE]);
+
+        $this->actingAs($this->admin)
+            ->get(route('app.users.index', ['email_verified' => 'unverified']))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->where('filters.email_verified', 'unverified')
+            );
+    }
+
+    public function test_users_index_filters_by_date_range(): void
+    {
+        User::factory()->create([
+            'status' => Status::ACTIVE,
+            'created_at' => now()->subYear(),
+        ]);
+        User::factory()->create([
+            'status' => Status::ACTIVE,
+            'created_at' => now()->subDays(5),
+        ]);
+
+        $from = now()->subMonth()->format('Y-m-d');
+        $to = now()->format('Y-m-d');
+
+        $this->actingAs($this->admin)
+            ->get(route('app.users.index', ['created_at' => "{$from},{$to}"]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->where('filters.created_at', "{$from},{$to}")
+            );
+    }
+
+    public function test_users_index_preserves_filter_state_in_response(): void
+    {
+        $this->actingAs($this->admin)
+            ->get(route('app.users.index', [
+                'search' => 'test',
+                'sort' => 'name',
+                'direction' => 'asc',
+                'per_page' => 25,
+            ]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->where('filters.search', 'test')
+                ->where('filters.sort', 'name')
+                ->where('filters.direction', 'asc')
+                ->where('filters.per_page', 25)
+            );
+    }
+
+    // =========================================================================
+    // SHOW
+    // =========================================================================
+
+    public function test_guests_cannot_access_users_show(): void
+    {
+        $user = User::factory()->create(['status' => Status::ACTIVE]);
+
+        $this->get(route('app.users.show', $user))
+            ->assertRedirect(route('login'));
+    }
+
+    public function test_admin_can_view_user_show_page(): void
+    {
+        $user = User::factory()->create([
+            'name' => 'John Doe',
+            'first_name' => 'John',
+            'last_name' => 'Doe',
+            'status' => Status::ACTIVE,
+        ]);
+
+        $this->actingAs($this->admin)
+            ->get(route('app.users.show', $user))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->component('users/show')
+                ->has('user.id')
+                ->has('user.email')
+                ->has('user.status')
+                ->has('user.actions')
+                ->has('userActivities')
+            );
+    }
+
+    public function test_admin_can_view_trashed_user(): void
+    {
+        $user = User::factory()->create(['status' => Status::ACTIVE]);
+        $user->delete();
+
+        $this->actingAs($this->admin)
+            ->get(route('app.users.show', $user))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->component('users/show')
+                ->has('user')
+            );
+    }
+
+    // =========================================================================
+    // CREATE
+    // =========================================================================
+
+    public function test_admin_can_access_create_page(): void
+    {
+        $this->actingAs($this->admin)
+            ->get(route('app.users.create'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->component('users/create')
+                ->has('initialValues')
+                ->has('availableRoles')
+                ->where('initialValues.name', '')
+                ->where('initialValues.email', '')
+                ->where('initialValues.active', true)
+                ->where('initialValues.roles', [])
+                ->where('initialValues.password', '')
+            );
+    }
+
+    public function test_guests_cannot_access_create_page(): void
+    {
+        $this->get(route('app.users.create'))
+            ->assertRedirect(route('login'));
+    }
+
+    // =========================================================================
+    // EDIT
+    // =========================================================================
+
+    public function test_admin_can_access_edit_page(): void
+    {
+        $user = User::factory()->create([
+            'first_name' => 'Jane',
+            'last_name' => 'Doe',
+            'email' => 'jane@example.com',
+            'status' => Status::ACTIVE,
+        ]);
+
+        $this->actingAs($this->admin)
+            ->get(route('app.users.edit', $user))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->component('users/edit')
+                ->has('initialValues')
+                ->has('availableRoles')
+                ->has('user')
+            );
+    }
+
+    // =========================================================================
+    // DESTROY
+    // =========================================================================
+
+    public function test_admin_can_soft_delete_user(): void
+    {
+        $user = User::factory()->create(['status' => Status::ACTIVE]);
+
+        $this->actingAs($this->admin)
+            ->delete(route('app.users.destroy', $user))
+            ->assertRedirect();
+
+        $this->assertSoftDeleted('users', ['id' => $user->id]);
+    }
+
+    public function test_super_user_cannot_be_deleted(): void
+    {
+        $this->actingAs($this->admin)
+            ->delete(route('app.users.destroy', 1))
+            ->assertRedirect()
+            ->assertSessionHas('error', 'Cannot delete the super user account.');
+    }
+
+    // =========================================================================
+    // STATUS ACTIONS
+    // =========================================================================
+
+    public function test_admin_can_suspend_user(): void
+    {
+        $user = User::factory()->create(['status' => Status::ACTIVE]);
+
+        $this->actingAs($this->admin)
+            ->patch(route('app.users.suspend', $user))
+            ->assertRedirect();
+
+        $user->refresh();
+        $this->assertEquals(Status::SUSPENDED, $user->status);
+    }
+
+    public function test_admin_can_ban_user(): void
+    {
+        $user = User::factory()->create(['status' => Status::ACTIVE]);
+
+        $this->actingAs($this->admin)
+            ->patch(route('app.users.ban', $user))
+            ->assertRedirect();
+
+        $user->refresh();
+        $this->assertEquals(Status::BANNED, $user->status);
+    }
+
+    public function test_admin_can_unban_user(): void
+    {
+        $user = User::factory()->create(['status' => Status::BANNED]);
+
+        $this->actingAs($this->admin)
+            ->patch(route('app.users.unban', $user))
+            ->assertRedirect();
+
+        $user->refresh();
+        $this->assertEquals(Status::ACTIVE, $user->status);
+    }
+
+    public function test_admin_can_restore_trashed_user(): void
+    {
+        $user = User::factory()->create(['status' => Status::ACTIVE]);
+        $user->delete();
+
+        $this->actingAs($this->admin)
+            ->patch(route('app.users.restore', $user))
+            ->assertRedirect();
+
+        $user->refresh();
+        $this->assertNull($user->deleted_at);
+    }
+
+    // =========================================================================
+    // BULK ACTIONS
+    // =========================================================================
+
+    public function test_admin_can_bulk_delete_users(): void
+    {
+        $user1 = User::factory()->create(['status' => Status::ACTIVE]);
+        $user2 = User::factory()->create(['status' => Status::ACTIVE]);
+
+        $this->actingAs($this->admin)
+            ->post(route('app.users.bulk-action'), [
+                'action' => 'delete',
+                'ids' => [$user1->id, $user2->id],
+            ])
+            ->assertRedirect();
+
+        $this->assertSoftDeleted('users', ['id' => $user1->id]);
+        $this->assertSoftDeleted('users', ['id' => $user2->id]);
+    }
+
+    public function test_admin_can_bulk_suspend_users(): void
+    {
+        $user1 = User::factory()->create(['status' => Status::ACTIVE]);
+        $user2 = User::factory()->create(['status' => Status::ACTIVE]);
+
+        $this->actingAs($this->admin)
+            ->post(route('app.users.bulk-action'), [
+                'action' => 'suspend',
+                'ids' => [$user1->id, $user2->id],
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('status');
+
+        $user1->refresh();
+        $user2->refresh();
+        $this->assertEquals(Status::SUSPENDED, $user1->status);
+        $this->assertEquals(Status::SUSPENDED, $user2->status);
+    }
+
+    public function test_admin_can_bulk_ban_users(): void
+    {
+        $user1 = User::factory()->create(['status' => Status::ACTIVE]);
+        $user2 = User::factory()->create(['status' => Status::ACTIVE]);
+
+        $this->actingAs($this->admin)
+            ->post(route('app.users.bulk-action'), [
+                'action' => 'ban',
+                'ids' => [$user1->id, $user2->id],
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('status');
+
+        $user1->refresh();
+        $user2->refresh();
+        $this->assertEquals(Status::BANNED, $user1->status);
+        $this->assertEquals(Status::BANNED, $user2->status);
+    }
+
+    public function test_admin_can_bulk_unban_users(): void
+    {
+        $user1 = User::factory()->create(['status' => Status::BANNED]);
+        $user2 = User::factory()->create(['status' => Status::BANNED]);
+
+        $this->actingAs($this->admin)
+            ->post(route('app.users.bulk-action'), [
+                'action' => 'unban',
+                'ids' => [$user1->id, $user2->id],
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('status');
+
+        $user1->refresh();
+        $user2->refresh();
+        $this->assertEquals(Status::ACTIVE, $user1->status);
+        $this->assertEquals(Status::ACTIVE, $user2->status);
+    }
+
+    public function test_bulk_action_protects_super_user_from_delete(): void
+    {
+        $this->actingAs($this->admin)
+            ->post(route('app.users.bulk-action'), [
+                'action' => 'delete',
+                'ids' => [1],
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('error');
+    }
+
+    public function test_bulk_action_protects_super_user_from_ban(): void
+    {
+        $this->actingAs($this->admin)
+            ->post(route('app.users.bulk-action'), [
+                'action' => 'ban',
+                'ids' => [1],
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('error');
+    }
+
+    public function test_bulk_action_validates_action_input(): void
+    {
+        $this->actingAs($this->admin)
+            ->post(route('app.users.bulk-action'), [
+                'action' => 'invalid_action',
+                'ids' => [1],
+            ])
+            ->assertSessionHasErrors('action');
+    }
+
+    public function test_bulk_action_validates_ids_required(): void
+    {
+        $this->actingAs($this->admin)
+            ->post(route('app.users.bulk-action'), [
+                'action' => 'delete',
+            ])
+            ->assertSessionHasErrors('ids');
+    }
+
+    // =========================================================================
+    // VERIFY EMAIL
+    // =========================================================================
+
+    public function test_admin_can_verify_user_email(): void
+    {
+        $user = User::factory()->unverified()->create(['status' => Status::ACTIVE]);
+        $this->assertNull($user->email_verified_at);
+
+        $this->actingAs($this->admin)
+            ->post(route('app.users.verify-email', $user))
+            ->assertRedirect();
+
+        $user->refresh();
+        $this->assertNotNull($user->email_verified_at);
+    }
+}

@@ -11,7 +11,6 @@ use App\Models\User;
 use App\Services\MediaService;
 use App\Services\MediaTrashService;
 use App\Traits\ActivityTrait;
-use App\Traits\ResponseTrait;
 use Exception;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
@@ -30,7 +29,6 @@ use Illuminate\Support\Facades\Log;
 class MediaLibraryController extends Controller implements HasMiddleware
 {
     use ActivityTrait;
-    use ResponseTrait;
 
     private const string MODULE_TITLE = 'Media Library';
 

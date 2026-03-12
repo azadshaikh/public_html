@@ -62,6 +62,11 @@ class EmailTemplateController extends ScaffoldController implements HasMiddlewar
         return $this->emailTemplateService;
     }
 
+    protected function inertiaPage(): string
+    {
+        return 'masters/email/templates';
+    }
+
     protected function getFormViewData(Model $model): array
     {
         return [

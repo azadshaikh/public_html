@@ -127,7 +127,7 @@ trait Scaffoldable
     public function getData(Request $request): array
     {
         $query = $this->buildListQuery($request);
-        $paginator = $query->paginate($this->getPerPage($request));
+        $paginator = $query->paginate($this->getPerPage($request))->onEachSide(1);
 
         // Get current status from request (route param or query param)
         $status = $request->input('status') ?? $request->route('status') ?? 'all';
@@ -391,14 +391,6 @@ trait Scaffoldable
     // =========================================================================
     // DataGrid CONFIG
     // =========================================================================
-
-    /**
-     * Get DataGrid configuration for frontend
-     */
-    public function getDataGridConfig(): array
-    {
-        return $this->scaffold()->toDataGridConfig();
-    }
 
     /**
      * Get columns configuration for DataGrid

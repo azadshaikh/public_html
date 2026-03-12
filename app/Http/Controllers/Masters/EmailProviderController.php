@@ -34,6 +34,11 @@ class EmailProviderController extends ScaffoldController implements HasMiddlewar
         return $this->emailProviderService;
     }
 
+    protected function inertiaPage(): string
+    {
+        return 'masters/email/providers';
+    }
+
     // ================================================================
     // VALIDATION
     // ================================================================

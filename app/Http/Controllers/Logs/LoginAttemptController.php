@@ -8,10 +8,12 @@ use App\Models\LoginAttempt;
 use App\Scaffold\ScaffoldController;
 use App\Services\LoginAttemptService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class LoginAttemptController extends ScaffoldController implements HasMiddleware
 {
@@ -36,41 +38,29 @@ class LoginAttemptController extends ScaffoldController implements HasMiddleware
     // OVERRIDE: Custom index with statistics
     // ================================================================
 
-    public function index(Request $request): View|JsonResponse
+    public function index(Request $request): Response|RedirectResponse
     {
-        // If this is an AJAX/JSON request, return data
-        if ($request->expectsJson() || $request->ajax()) {
-            return $this->data($request);
-        }
+        $this->enforcePermission('view');
 
-        // Get config from service (Scaffoldable trait provides getDataGridConfig)
-        $initialData = $this->service()->getData($request);
-        $config = $this->service()->getDataGridConfig();
-        $statistics = $initialData['statistics'] ?? $this->service()->getStatistics();
+        $data = $this->service()->getData($request);
+        $statistics = $data['statistics'] ?? $this->service()->getStatistics();
 
-        return view($this->scaffold()->getIndexView(), [
-            'config' => $config,
+        return Inertia::render($this->inertiaPage().'/index', [
+            ...$data,
             'statistics' => $statistics,
-            'initialData' => $initialData,
         ]);
     }
 
-    public function show(int|string $id): View|JsonResponse
+    public function show(int|string $id): Response
     {
+        $this->enforcePermission('view');
+
         /** @var LoginAttempt $loginAttempt */
         $loginAttempt = $this->findModel((int) $id);
-
-        if (request()->expectsJson()) {
-            return response()->json([
-                'status' => 'success',
-                'data' => $loginAttempt,
-            ]);
-        }
-
         $recentActivity = $this->service()->getRecentActivityStats($loginAttempt);
 
-        return view($this->scaffold()->getShowView(), [
-            'loginAttempt' => $loginAttempt,
+        return Inertia::render($this->inertiaPage().'/show', [
+            'loginAttempt' => $loginAttempt->toArray(),
             'recentEmailStats' => $recentActivity['email'],
             'recentIpStats' => $recentActivity['ip'],
         ]);
@@ -142,5 +132,10 @@ class LoginAttemptController extends ScaffoldController implements HasMiddleware
     protected function service(): LoginAttemptService
     {
         return $this->loginAttemptService;
+    }
+
+    protected function inertiaPage(): string
+    {
+        return 'logs/login-attempts';
     }
 }

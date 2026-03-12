@@ -34,4 +34,9 @@ class EmailLogController extends ScaffoldController implements HasMiddleware
     {
         return $this->emailLogService;
     }
+
+    protected function inertiaPage(): string
+    {
+        return 'masters/email/logs';
+    }
 }

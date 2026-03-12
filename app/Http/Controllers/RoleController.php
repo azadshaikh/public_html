@@ -5,11 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\Role;
 use App\Scaffold\ScaffoldController;
 use App\Services\RoleService;
-use Illuminate\Http\JsonResponse;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 use RuntimeException;
 
 class RoleController extends ScaffoldController implements HasMiddleware
@@ -26,80 +27,56 @@ class RoleController extends ScaffoldController implements HasMiddleware
     }
 
     /**
-     * Override create to provide additional form data
+     * Override to provide additional form data for create and edit.
      */
-    public function create(): View
+    protected function getFormViewData(Model $model): array
     {
-        return parent::create()->with([
+        return [
             'statusOptions' => $this->roleService->getStatusOptions(),
             'permissions' => $this->roleService->getAllPermissions(),
-        ]);
+        ];
     }
 
     /**
-     * Override edit to provide additional form data
+     * Override show to eager load relations.
      */
-    public function edit(int|string $id): View
-    {
-        return parent::edit($id)->with([
-            'statusOptions' => $this->roleService->getStatusOptions(),
-            'permissions' => $this->roleService->getAllPermissions(),
-        ]);
-    }
-
-    /**
-     * Override show to eager load notes
-     */
-    public function show(int|string $id): View|JsonResponse
+    public function show(int|string $id): Response
     {
         $role = Role::withTrashed()
             ->with(['permissions', 'notes', 'createdBy', 'updatedBy'])
             ->findOrFail((int) $id);
 
-        if (request()->expectsJson()) {
-            return response()->json([
-                'status' => 'success',
-                'data' => $role,
-            ]);
-        }
-
-        return view($this->service()->getScaffoldDefinition()->getShowView(), [
-            'role' => $role,
-        ]);
+        return Inertia::render($this->inertiaPage().'/show', array_merge(
+            ['role' => $role],
+            $this->getShowViewData($role),
+        ));
     }
 
     /**
-     * Remove the specified resource from storage.
-     * Overridden to protect super user role (ID 1) from being trashed or deleted.
+     * Overridden to protect super user role (ID 1) from being trashed.
      */
-    public function destroy(Request $request, int|string $id): RedirectResponse|JsonResponse
+    public function destroy(int|string $id): RedirectResponse
     {
         if ((int) $id === 1) {
-            $message = 'Cannot delete the super user role.';
-
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => $message,
-                ], 403);
-            }
-
-            return back()->with('error', $message);
+            return back()->with('error', 'Cannot delete the super user role.');
         }
 
         try {
-            return parent::destroy($request, $id);
+            return parent::destroy($id);
         } catch (RuntimeException $runtimeException) {
-            return $this->deletionBlockedResponse($request, $runtimeException->getMessage());
+            return back()->with('error', $runtimeException->getMessage());
         }
     }
 
-    public function forceDelete(Request $request, int|string $id): RedirectResponse|JsonResponse
+    /**
+     * Overridden to protect super user role (ID 1) from permanent deletion.
+     */
+    public function forceDelete(int|string $id): RedirectResponse
     {
         try {
-            return parent::forceDelete($request, $id);
+            return parent::forceDelete($id);
         } catch (RuntimeException $runtimeException) {
-            return $this->deletionBlockedResponse($request, $runtimeException->getMessage());
+            return back()->with('error', $runtimeException->getMessage());
         }
     }
 
@@ -107,7 +84,7 @@ class RoleController extends ScaffoldController implements HasMiddleware
      * Handle bulk actions.
      * Overridden to protect super user role (ID 1) from destructive actions.
      */
-    public function bulkAction(Request $request): JsonResponse
+    public function bulkAction(Request $request): RedirectResponse
     {
         $action = $request->input('action');
         $ids = array_map(intval(...), $request->input('ids', []));
@@ -118,21 +95,14 @@ class RoleController extends ScaffoldController implements HasMiddleware
             $request->merge(['ids' => $ids]);
 
             if ($ids === []) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Cannot delete the super user role.',
-                ], 403);
+                return back()->with('error', 'Cannot delete the super user role.');
             }
         }
 
         try {
             return parent::bulkAction($request);
         } catch (RuntimeException $runtimeException) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $runtimeException->getMessage(),
-                'affected' => 0,
-            ], 422);
+            return back()->with('error', $runtimeException->getMessage());
         }
     }
 
@@ -141,15 +111,8 @@ class RoleController extends ScaffoldController implements HasMiddleware
         return $this->roleService;
     }
 
-    protected function deletionBlockedResponse(Request $request, string $message): RedirectResponse|JsonResponse
+    protected function inertiaPage(): string
     {
-        if ($request->expectsJson()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $message,
-            ], 422);
-        }
-
-        return back()->with('error', $message);
+        return 'roles';
     }
 }

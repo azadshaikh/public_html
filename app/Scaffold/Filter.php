@@ -214,24 +214,18 @@ class Filter
     }
 
     /**
-     * Convert to array for JSON
+     * Convert to array for Inertia props.
      */
     public function toArray(): array
     {
         $options = $this->options;
-        $renderHtml = null;
 
         // Normalize options to list format if they are associative
-        // Checks if array is associative (not a list 0..n)
         if (is_array($options) && $options !== [] && ! array_is_list($options)) {
             $options = collect($options)
                 ->map(fn ($label, $value): array => ['value' => (string) $value, 'label' => $label])
                 ->values()
                 ->all();
-        }
-
-        if ($this->type === 'date_range' && $this->useDatepicker) {
-            $renderHtml = $this->buildDateRangeDatepickerHtml();
         }
 
         return array_filter([
@@ -243,45 +237,7 @@ class Filter
             'default' => $this->default,
             'multiple' => $this->multiple ?: null,
             'dependsOn' => $this->dependsOn,
-            'renderHtml' => $renderHtml,
             ...$this->meta,
         ], fn ($v): bool => $v !== null);
-    }
-
-    private function buildDateRangeDatepickerHtml(): string
-    {
-        $fromKey = $this->key.'_from';
-        $toKey = $this->key.'_to';
-        $fromValue = (string) request()->input($fromKey, '');
-        $toValue = (string) request()->input($toKey, '');
-        $rangeSeparator = ' - ';
-        $rangeValue = trim($fromValue) !== '' && trim($toValue) !== ''
-            ? $fromValue.$rangeSeparator.$toValue
-            : (trim($fromValue) !== '' ? $fromValue : '');
-
-        $rangeHtml = view('components.form-elements.datepicker', [
-            'mode' => 'date-range',
-            'label' => null,
-            'class' => 'col-12',
-            'inputclass' => 'form-control',
-            'autoApply' => true,
-            'showDropdowns' => true,
-            'inputAttributes' => ['data-datepicker' => 'true'],
-            'name' => $this->key.'_range',
-            'value' => $rangeValue,
-            'placeholder' => 'Select range',
-            'hiddenInputAttributes' => ['data-filter-daterange' => $this->key],
-        ])->render();
-
-        $label = e($this->label);
-
-        return <<<HTML
-<div class="col-12">
-    <label class="form-label small text-muted">{$label}</label>
-    <div class="row g-2">
-        {$rangeHtml}
-    </div>
-</div>
-HTML;
     }
 }

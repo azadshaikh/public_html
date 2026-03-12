@@ -19,6 +19,37 @@ export type DatagridSelectFilter = {
     name: string;
     value: string;
     options: DatagridFilterOption[];
+    multiple?: boolean;
+    className?: string;
+};
+
+export type DatagridDateRangeFilter = {
+    type: 'date_range';
+    name: string;
+    value: string;
+    label?: string;
+    className?: string;
+};
+
+export type DatagridBooleanFilter = {
+    type: 'boolean';
+    name: string;
+    value: string;
+    label?: string;
+    trueLabel?: string;
+    falseLabel?: string;
+    className?: string;
+};
+
+export type DatagridNumberFilter = {
+    type: 'number';
+    name: string;
+    value: string;
+    label?: string;
+    min?: number;
+    max?: number;
+    step?: number;
+    placeholder?: string;
     className?: string;
 };
 
@@ -31,6 +62,9 @@ export type DatagridHiddenFilter = {
 export type DatagridFilter =
     | DatagridSearchFilter
     | DatagridSelectFilter
+    | DatagridDateRangeFilter
+    | DatagridBooleanFilter
+    | DatagridNumberFilter
     | DatagridHiddenFilter;
 
 export type DatagridTab = {
@@ -42,12 +76,22 @@ export type DatagridTab = {
     countVariant?: 'default' | 'secondary' | 'outline' | 'destructive';
 };
 
+export type DatagridColumnType =
+    | 'text'
+    | 'badge'
+    | 'boolean'
+    | 'currency'
+    | 'image'
+    | 'link'
+    | 'date';
+
 export type DatagridColumn<T> = {
     key: string;
     header: string;
     headerClassName?: string;
     cellClassName?: string;
-    cell: (row: T) => ReactNode;
+    cell?: (row: T) => ReactNode;
+    type?: DatagridColumnType;
     sortable?: boolean;
     sortKey?: string;
     cardLabel?: string;
@@ -58,6 +102,8 @@ export type DatagridAction = {
     icon?: ReactNode;
     href?: string;
     onSelect?: () => void;
+    method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+    confirm?: string;
     variant?: 'default' | 'destructive';
     disabled?: boolean;
     hidden?: boolean;
@@ -68,6 +114,7 @@ export type DatagridBulkAction<T> = {
     label: string;
     icon?: ReactNode;
     variant?: 'default' | 'destructive';
+    confirm?: string;
     onSelect: (rows: T[], clearSelection: () => void) => void;
     disabled?: boolean | ((rows: T[]) => boolean);
 };

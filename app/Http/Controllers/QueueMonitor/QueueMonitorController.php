@@ -20,7 +20,8 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class QueueMonitorController extends ScaffoldController implements HasMiddleware
 {
@@ -38,6 +39,11 @@ class QueueMonitorController extends ScaffoldController implements HasMiddleware
         return $this->queueMonitorService;
     }
 
+    protected function inertiaPage(): string
+    {
+        return 'masters/queue-monitor';
+    }
+
     public static function middleware(): array
     {
         return (new QueueMonitorDefinition)->getMiddleware();
@@ -47,11 +53,9 @@ class QueueMonitorController extends ScaffoldController implements HasMiddleware
     // INDEX — Override to inject metrics
     // =========================================================================
 
-    public function index(Request $request): View|JsonResponse|RedirectResponse
+    public function index(Request $request): Response|RedirectResponse
     {
-        if ($request->ajax() || $request->wantsJson()) {
-            return parent::index($request);
-        }
+        $this->enforcePermission('view');
 
         $metrics = config('queue-monitor.ui.show_metrics') ? $this->collectMetrics() : null;
         $data = $this->service()->getData($request);
@@ -63,9 +67,8 @@ class QueueMonitorController extends ScaffoldController implements HasMiddleware
             ? $this->workerMonitorService->getWorkerStats()
             : null;
 
-        return view('app.masters.queue-monitor.jobs', [
-            'config' => $this->service()->getDataGridConfig(),
-            'initialData' => $data,
+        return Inertia::render($this->inertiaPage().'/index', [
+            ...$data,
             'metrics' => $metrics,
             'queueStats' => $queueStats,
             'chartData' => $chartData,
@@ -90,21 +93,13 @@ class QueueMonitorController extends ScaffoldController implements HasMiddleware
     // DESTROY — Override to say "deleted" (hard delete, no trash)
     // =========================================================================
 
-    public function destroy(Request $request, int|string $id): RedirectResponse|JsonResponse
+    public function destroy(int|string $id): RedirectResponse
     {
         $model = Monitor::query()->findOrFail($id);
         $model->delete();
 
-        $message = 'Monitor entry deleted.';
-
-        if ($request->expectsJson()) {
-            return response()->json([
-                'status' => 'success',
-                'message' => $message,
-            ]);
-        }
-
-        return to_route('app.masters.queue-monitor.index')->with('success', $message);
+        return to_route('app.masters.queue-monitor.index')
+            ->with('status', 'Monitor entry deleted.');
     }
 
     // =========================================================================

@@ -93,7 +93,7 @@
 
 - [x] Define target architecture for shared module-friendly CRUD patterns
 - [x] Decide what survives from Astero scaffold design
-- [~] Build Inertia-native CRUD foundation for forms, tables, filters, actions, stats, and detail pages
+- [~] Build Inertia-native CRUD foundation for forms, tables, filters, actions, stats, and detail pages → [scaffold-inertia-crud-tracker.md](scaffold-inertia-crud-tracker.md)
 - [x] Standardize route, request, resource, and page conventions for modules
 - [x] Define shared layout and module-shell conventions
 

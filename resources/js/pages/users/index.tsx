@@ -1,9 +1,14 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import {
-    CircleOffIcon,
+    BanIcon,
+    CheckCircleIcon,
+    EyeIcon,
     ListIcon,
-    PlusIcon,
+    PauseCircleIcon,
     PencilIcon,
+    PlusIcon,
+    RefreshCwIcon,
+    ShieldAlertIcon,
     ShieldCheckIcon,
     Trash2Icon,
     UserCogIcon,
@@ -27,40 +32,220 @@ import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes/index';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
 import type {
-    ManagedUserListItem,
+    UserListItem,
+    UserRowAction,
     UsersIndexPageProps,
 } from '@/types/user-management';
 
+// =========================================================================
+// CONSTANTS
+// =========================================================================
+
 const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Dashboard',
-        href: dashboard(),
-    },
-    {
-        title: 'Users',
-        href: UserController.index(),
-    },
+    { title: 'Dashboard', href: dashboard() },
+    { title: 'Users', href: UserController.index() },
 ];
+
+const ICON_MAP: Record<string, React.ReactNode> = {
+    'ri-eye-line': <EyeIcon />,
+    'ri-pencil-line': <PencilIcon />,
+    'ri-user-settings-line': <UserCogIcon />,
+    'ri-pause-circle-line': <PauseCircleIcon />,
+    'ri-forbid-line': <BanIcon />,
+    'ri-checkbox-circle-line': <CheckCircleIcon />,
+    'ri-delete-bin-line': <Trash2Icon />,
+    'ri-delete-bin-fill': <Trash2Icon />,
+    'ri-refresh-line': <RefreshCwIcon />,
+};
+
+const STATUS_BADGE_VARIANT: Record<
+    string,
+    'default' | 'secondary' | 'outline' | 'destructive'
+> = {
+    active: 'default',
+    pending: 'outline',
+    suspended: 'secondary',
+    banned: 'destructive',
+};
+
+// =========================================================================
+// HELPERS
+// =========================================================================
+
+function mapBackendAction(action: UserRowAction): DatagridAction {
+    const icon = ICON_MAP[action.icon];
+    const isDestructive = action.method === 'DELETE' || action.label === 'Ban';
+
+    // Full page reloads (e.g. impersonate) — use onSelect with location change
+    if (action.fullReload) {
+        return {
+            label: action.label,
+            icon,
+            onSelect: () => {
+                window.location.href = action.url;
+            },
+        };
+    }
+
+    // Navigation actions (GET without side effects)
+    if (action.method === 'GET') {
+        return {
+            label: action.label,
+            icon,
+            href: action.url,
+        };
+    }
+
+    // Mutating actions — use Inertia router via href + method + confirm
+    return {
+        label: action.label,
+        icon,
+        href: action.url,
+        method: action.method,
+        confirm: action.confirm,
+        variant: isDestructive ? 'destructive' : 'default',
+    };
+}
+
+// =========================================================================
+// COMPONENT
+// =========================================================================
 
 export default function UsersIndex({
     users,
     filters,
-    stats,
+    statistics,
     roles,
+    showPendingTab,
     status,
     error,
 }: UsersIndexPageProps) {
     const page = usePage<AuthenticatedSharedData>();
     const getInitials = useInitials();
+
     const canAddUsers = page.props.auth.abilities.addUsers;
-    const canEditUsers = page.props.auth.abilities.editUsers;
-    const canDeleteUsers = page.props.auth.abilities.deleteUsers;
     const currentUserId = page.props.auth.user.id;
 
-    const renderUserIdentity = (user: ManagedUserListItem) => (
-        <div className="flex min-w-0 items-center gap-3">
+    // ----- Filters -----
+
+    const gridFilters: DatagridFilter[] = [
+        {
+            type: 'search',
+            name: 'search',
+            value: filters.search,
+            placeholder: 'Search users...',
+            className: 'lg:min-w-80',
+        },
+        {
+            type: 'select',
+            name: 'role_id',
+            value: filters.role_id,
+            options: [
+                { value: '', label: 'All roles' },
+                ...Object.entries(roles).map(([id, name]) => ({
+                    value: id,
+                    label: name,
+                })),
+            ],
+        },
+        {
+            type: 'select',
+            name: 'email_verified',
+            value: filters.email_verified,
+            options: [
+                { value: '', label: 'All verification' },
+                { value: 'verified', label: 'Verified' },
+                { value: 'unverified', label: 'Unverified' },
+            ],
+        },
+        {
+            type: 'select',
+            name: 'gender',
+            value: filters.gender,
+            options: [
+                { value: '', label: 'All genders' },
+                { value: 'male', label: 'Male' },
+                { value: 'female', label: 'Female' },
+                { value: 'other', label: 'Other' },
+            ],
+        },
+        {
+            type: 'date_range',
+            name: 'created_at',
+            value: filters.created_at,
+            label: 'Registration date',
+        },
+    ];
+
+    // ----- Status tabs -----
+
+    const statusTabs: DatagridTab[] = [
+        {
+            label: 'All',
+            value: 'all',
+            count: statistics.total,
+            active: filters.status === 'all',
+            icon: <ListIcon />,
+            countVariant: 'secondary',
+        },
+        {
+            label: 'Active',
+            value: 'active',
+            count: statistics.active,
+            active: filters.status === 'active',
+            icon: <ShieldCheckIcon />,
+            countVariant: 'secondary',
+        },
+        ...(showPendingTab
+            ? [
+                  {
+                      label: 'Pending',
+                      value: 'pending',
+                      count: statistics.pending,
+                      active: filters.status === 'pending',
+                      icon: <PauseCircleIcon />,
+                      countVariant: 'outline' as const,
+                  },
+              ]
+            : []),
+        {
+            label: 'Suspended',
+            value: 'suspended',
+            count: statistics.suspended,
+            active: filters.status === 'suspended',
+            icon: <PauseCircleIcon />,
+            countVariant: 'outline',
+        },
+        {
+            label: 'Banned',
+            value: 'banned',
+            count: statistics.banned,
+            active: filters.status === 'banned',
+            icon: <BanIcon />,
+            countVariant: 'destructive',
+        },
+        {
+            label: 'Trash',
+            value: 'trash',
+            count: statistics.trash,
+            active: filters.status === 'trash',
+            icon: <Trash2Icon />,
+            countVariant: 'destructive',
+        },
+    ];
+
+    // ----- Columns -----
+
+    const renderUserIdentity = (user: UserListItem) => (
+        <Link
+            href={user.show_url}
+            className="flex min-w-0 items-center gap-3 hover:opacity-80"
+        >
             <Avatar className="size-8 overflow-hidden rounded-full">
-                <AvatarImage src={user.avatar} alt={user.name} />
+                <AvatarImage
+                    src={user.avatar_url ?? undefined}
+                    alt={user.name}
+                />
                 <AvatarFallback className="rounded-lg bg-neutral-200 text-black dark:bg-neutral-700 dark:text-white">
                     {getInitials(user.name)}
                 </AvatarFallback>
@@ -74,121 +259,42 @@ export default function UsersIndex({
                     {user.email}
                 </span>
             </div>
-        </div>
+        </Link>
     );
 
-    const handleDelete = (user: ManagedUserListItem) => {
-        if (!canDeleteUsers) {
-            return;
-        }
-
-        if (!window.confirm(`Delete ${user.name}?`)) {
-            return;
-        }
-
-        router.delete(UserController.destroy(user.id).url, {
-            preserveScroll: true,
-        });
-    };
-
-    const handleBulkDelete = (
-        selectedUsers: ManagedUserListItem[],
-        clearSelection: () => void,
-    ) => {
-        if (!canDeleteUsers || selectedUsers.length === 0) {
-            return;
-        }
-
-        const label =
-            selectedUsers.length === 1
-                ? selectedUsers[0].name
-                : `${selectedUsers.length} users`;
-
-        if (!window.confirm(`Delete ${label}?`)) {
-            return;
-        }
-
-        router.post(
-            UserController.bulkAction().url,
-            {
-                action: 'delete',
-                ids: selectedUsers.map((user) => user.id),
-            },
-            {
-                preserveScroll: true,
-                onSuccess: () => {
-                    clearSelection();
-                },
-            },
-        );
-    };
-
-    const gridFilters: DatagridFilter[] = [
-        {
-            type: 'search',
-            name: 'search',
-            value: filters.search,
-            placeholder: 'Search...',
-            className: 'lg:min-w-80',
-        },
-        {
-            type: 'select',
-            name: 'role',
-            value: filters.role,
-            options: [
-                { value: '', label: 'All roles' },
-                ...roles.map((role) => ({
-                    value: role.name,
-                    label: role.display_name,
-                })),
-            ],
-        },
-        {
-            type: 'select',
-            name: 'verification',
-            value: filters.verification,
-            options: [
-                { value: 'all', label: 'All verification' },
-                { value: 'verified', label: 'Verified' },
-                { value: 'unverified', label: 'Unverified' },
-            ],
-        },
-    ];
-
-    const statusTabs: DatagridTab[] = [
-        {
-            label: 'All',
-            value: 'all',
-            count: stats.total,
-            active: filters.status === 'all',
-            icon: <ListIcon />,
-            countVariant: 'secondary',
-        },
-        {
-            label: 'Active',
-            value: 'active',
-            count: stats.active,
-            active: filters.status === 'active',
-            icon: <ShieldCheckIcon />,
-            countVariant: 'secondary',
-        },
-        {
-            label: 'Inactive',
-            value: 'inactive',
-            count: stats.inactive,
-            active: filters.status === 'inactive',
-            icon: <CircleOffIcon />,
-            countVariant: 'outline',
-        },
-    ];
-
-    const columns: DatagridColumn<ManagedUserListItem>[] = [
+    const columns: DatagridColumn<UserListItem>[] = [
         {
             key: 'name',
             header: 'User',
             sortable: true,
             sortKey: 'name',
             cell: renderUserIdentity,
+        },
+        {
+            key: 'email_verified',
+            header: 'Verified',
+            headerClassName: 'w-28 text-center',
+            cellClassName: 'w-28 text-center',
+            sortable: true,
+            sortKey: 'email_verified_at',
+            cell: (user) => (
+                <Badge variant={user.email_verified ? 'secondary' : 'outline'}>
+                    {user.email_verified ? 'Verified' : 'Unverified'}
+                </Badge>
+            ),
+        },
+        {
+            key: 'roles',
+            header: 'Roles',
+            cell: (user) => (
+                <div className="flex flex-wrap gap-1">
+                    {user.roles.map((role) => (
+                        <Badge key={role} variant="outline">
+                            {role}
+                        </Badge>
+                    ))}
+                </div>
+            ),
         },
         {
             key: 'status',
@@ -198,87 +304,127 @@ export default function UsersIndex({
             sortable: true,
             sortKey: 'status',
             cell: (user) => (
-                <Badge variant={user.active ? 'secondary' : 'outline'}>
-                    {user.active ? 'Active' : 'Inactive'}
+                <Badge variant={STATUS_BADGE_VARIANT[user.status] ?? 'outline'}>
+                    {user.status_label}
                 </Badge>
             ),
         },
         {
-            key: 'verification',
-            header: 'Verification',
-            headerClassName: 'w-36 text-center',
-            cellClassName: 'w-36 text-center',
+            key: 'created_at',
+            header: 'Registered',
+            headerClassName: 'w-36',
+            cellClassName: 'w-36',
             sortable: true,
-            sortKey: 'verification',
+            sortKey: 'created_at',
             cell: (user) => (
-                <Badge
-                    variant={user.email_verified_at ? 'secondary' : 'outline'}
+                <span
+                    className="text-sm text-muted-foreground"
+                    title={user.created_at}
                 >
-                    {user.email_verified_at ? 'Verified' : 'Unverified'}
-                </Badge>
-            ),
-        },
-        {
-            key: 'roles',
-            header: 'Roles',
-            sortable: true,
-            sortKey: 'roles',
-            cell: (user) => (
-                <div className="flex flex-wrap justify-center gap-2 lg:justify-start">
-                    {user.roles.map((role) => (
-                        <Badge key={role.id} variant="outline">
-                            {role.display_name}
-                        </Badge>
-                    ))}
-                </div>
+                    {user.created_at_human}
+                </span>
             ),
         },
     ];
 
-    const rowActions =
-        canEditUsers || canDeleteUsers
-            ? (user: ManagedUserListItem): DatagridAction[] => {
-                  const actions: DatagridAction[] = [];
+    // ----- Row actions (from backend per-row) -----
 
-                  if (canEditUsers) {
-                      actions.push({
-                          label: 'Edit',
-                          href: UserController.edit(user.id).url,
-                          icon: <PencilIcon />,
-                      });
-                  }
+    const rowActions = (user: UserListItem): DatagridAction[] =>
+        Object.values(user.actions).map(mapBackendAction);
 
-                  if (canDeleteUsers) {
-                      actions.push({
-                          label: 'Delete',
-                          onSelect: () => handleDelete(user),
-                          icon: <Trash2Icon />,
-                          variant: 'destructive',
-                      });
-                  }
+    // ----- Bulk actions -----
 
-                  return actions;
-              }
-            : undefined;
+    const handleBulkAction = (
+        action: string,
+        confirmMessage: string,
+        selectedUsers: UserListItem[],
+        clearSelection: () => void,
+    ) => {
+        if (selectedUsers.length === 0) {
+            return;
+        }
 
-    const bulkActions: DatagridBulkAction<ManagedUserListItem>[] =
-        canDeleteUsers
-            ? [
-                  {
-                      key: 'bulk-delete',
-                      label: 'Delete selected',
-                      icon: <Trash2Icon />,
-                      variant: 'destructive',
-                      onSelect: handleBulkDelete,
-                  },
-              ]
-            : [];
+        router.post(
+            UserController.bulkAction().url,
+            {
+                action,
+                ids: selectedUsers.map((u) => u.id),
+            },
+            {
+                preserveScroll: true,
+                onSuccess: () => clearSelection(),
+            },
+        );
+    };
+
+    const bulkActions: DatagridBulkAction<UserListItem>[] = [
+        {
+            key: 'bulk-delete',
+            label: 'Move to Trash',
+            icon: <Trash2Icon />,
+            variant: 'destructive',
+            confirm: 'Move selected users to trash?',
+            onSelect: (rows, clear) =>
+                handleBulkAction('delete', 'Move to trash?', rows, clear),
+        },
+        {
+            key: 'bulk-suspend',
+            label: 'Suspend',
+            icon: <PauseCircleIcon />,
+            confirm: 'Suspend selected users? They will be unable to log in.',
+            onSelect: (rows, clear) =>
+                handleBulkAction('suspend', 'Suspend?', rows, clear),
+            hidden: filters.status === 'trash',
+        },
+        {
+            key: 'bulk-ban',
+            label: 'Ban',
+            icon: <BanIcon />,
+            variant: 'destructive',
+            confirm:
+                'Ban selected users? They will be permanently blocked from logging in.',
+            onSelect: (rows, clear) =>
+                handleBulkAction('ban', 'Ban?', rows, clear),
+            hidden: filters.status === 'trash',
+        },
+        {
+            key: 'bulk-unban',
+            label: 'Unban',
+            icon: <CheckCircleIcon />,
+            confirm: 'Unban selected users?',
+            onSelect: (rows, clear) =>
+                handleBulkAction('unban', 'Unban?', rows, clear),
+            hidden: filters.status !== 'banned',
+        },
+        {
+            key: 'bulk-restore',
+            label: 'Restore',
+            icon: <RefreshCwIcon />,
+            confirm: 'Restore selected users from trash?',
+            onSelect: (rows, clear) =>
+                handleBulkAction('restore', 'Restore?', rows, clear),
+            hidden: filters.status !== 'trash',
+        },
+        {
+            key: 'bulk-force-delete',
+            label: 'Delete Permanently',
+            icon: <Trash2Icon />,
+            variant: 'destructive',
+            confirm:
+                '⚠️ Permanently delete selected users? This cannot be undone!',
+            onSelect: (rows, clear) =>
+                handleBulkAction('force_delete', 'Force delete?', rows, clear),
+            hidden: filters.status !== 'trash',
+        },
+    ].filter((action) => !action.hidden);
+
+    // ----- Render -----
 
     return (
         <AppLayout
             breadcrumbs={breadcrumbs}
             title="Users"
-            description="Manage account status and role assignments so migrated features can rely on stable access control."
+            description="Manage user accounts, roles, and access control."
             headerActions={
                 canAddUsers ? (
                     <Button asChild>
@@ -295,7 +441,7 @@ export default function UsersIndex({
                     status={status}
                     statusIcon={<ShieldCheckIcon />}
                     error={error}
-                    errorIcon={<UserCogIcon />}
+                    errorIcon={<ShieldAlertIcon />}
                 />
 
                 <Datagrid
@@ -326,7 +472,7 @@ export default function UsersIndex({
                     renderCardHeader={renderUserIdentity}
                     renderCard={(user) => (
                         <div className="flex flex-col gap-4">
-                            <div className="grid gap-3 sm:grid-cols-2">
+                            <div className="grid gap-3 sm:grid-cols-3">
                                 <div className="rounded-lg border bg-muted/30 px-3 py-2">
                                     <div className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
                                         Status
@@ -334,42 +480,49 @@ export default function UsersIndex({
                                     <div className="mt-1">
                                         <Badge
                                             variant={
-                                                user.active
-                                                    ? 'secondary'
-                                                    : 'outline'
+                                                STATUS_BADGE_VARIANT[
+                                                    user.status
+                                                ] ?? 'outline'
                                             }
                                         >
-                                            {user.active
-                                                ? 'Active'
-                                                : 'Inactive'}
+                                            {user.status_label}
                                         </Badge>
                                     </div>
                                 </div>
 
                                 <div className="rounded-lg border bg-muted/30 px-3 py-2">
                                     <div className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                                        Verification
+                                        Verified
                                     </div>
                                     <div className="mt-1">
                                         <Badge
                                             variant={
-                                                user.email_verified_at
+                                                user.email_verified
                                                     ? 'secondary'
                                                     : 'outline'
                                             }
                                         >
-                                            {user.email_verified_at
+                                            {user.email_verified
                                                 ? 'Verified'
                                                 : 'Unverified'}
                                         </Badge>
                                     </div>
                                 </div>
+
+                                <div className="rounded-lg border bg-muted/30 px-3 py-2">
+                                    <div className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                                        Registered
+                                    </div>
+                                    <div className="mt-1 text-sm text-muted-foreground">
+                                        {user.created_at_human}
+                                    </div>
+                                </div>
                             </div>
 
-                            <div className="flex flex-wrap gap-2">
+                            <div className="flex flex-wrap gap-1">
                                 {user.roles.map((role) => (
-                                    <Badge key={role.id} variant="outline">
-                                        {role.display_name}
+                                    <Badge key={role} variant="outline">
+                                        {role}
                                     </Badge>
                                 ))}
                             </div>
@@ -381,7 +534,7 @@ export default function UsersIndex({
                         icon: <UsersIcon />,
                         title: 'No users found',
                         description:
-                            'Try a different filter or create a matching account first.',
+                            'Try a different filter or create a new user account.',
                     }}
                 />
             </div>

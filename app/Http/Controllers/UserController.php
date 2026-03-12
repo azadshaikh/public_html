@@ -6,7 +6,9 @@ namespace App\Http\Controllers;
 
 use App\Enums\ActivityAction;
 use App\Enums\Status;
+use App\Http\Resources\UserResource;
 use App\Models\ActivityLog;
+use App\Models\Role;
 use App\Models\User;
 use App\Scaffold\ScaffoldController;
 use App\Services\GeoIpService;
@@ -14,13 +16,13 @@ use App\Services\UserService;
 use Exception;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class UserController extends ScaffoldController implements HasMiddleware
 {
@@ -47,25 +49,38 @@ class UserController extends ScaffoldController implements HasMiddleware
     }
 
     // ================================================================
-    // OVERRIDE INDEX TO ADD REGISTRATION SETTINGS
+    // OVERRIDE INDEX TO PROVIDE CLEAN PROPS FOR REACT DATAGRID
     // ================================================================
 
-    public function index(Request $request, ?string $status = null): View|JsonResponse
+    public function index(Request $request): Response|RedirectResponse
     {
-        // If this is an AJAX/JSON request, return data
-        if ($request->expectsJson() || $request->ajax()) {
-            return $this->data($request);
-        }
+        $this->enforcePermission('view');
 
-        $initialData = $this->service()->getData($request);
-        $config = $this->service()->getDataGridConfig();
-        $statistics = $initialData['statistics'] ?? $this->service()->getStatistics();
+        $statistics = $this->userService->getStatistics();
+        $autoApprove = filter_var(setting('registration_auto_approve', true), FILTER_VALIDATE_BOOLEAN);
+        $status = $request->input('status') ?? $request->route('status') ?? 'all';
+        $perPage = $this->service()->getScaffoldDefinition()->getPerPage();
 
-        return view($this->service()->getScaffoldDefinition()->getIndexView(), [
-            'config' => $config,
-            'initialData' => $initialData,
-            'status' => $status ?? 'all',
+        return Inertia::render($this->inertiaPage().'/index', [
+            'users' => $this->userService->getPaginatedUsers($request),
+            'statistics' => $statistics,
+            'filters' => [
+                'search' => $request->input('search', ''),
+                'role_id' => $request->input('role_id', ''),
+                'email_verified' => $request->input('email_verified', ''),
+                'gender' => $request->input('gender', ''),
+                'created_at' => $request->input('created_at', ''),
+                'status' => $status,
+                'sort' => $request->input('sort', 'created_at'),
+                'direction' => $request->input('direction', 'desc'),
+                'per_page' => (int) $request->input('per_page', $perPage),
+                'view' => $request->input('view', 'table'),
+            ],
+            'roles' => $this->userService->getRoleFilterOptions(),
+            'showPendingTab' => ! $autoApprove,
             'registrationSettings' => $this->userService->getRegistrationSettingsSummary($statistics),
+            'status' => session('status'),
+            'error' => session('error'),
         ]);
     }
 
@@ -73,30 +88,34 @@ class UserController extends ScaffoldController implements HasMiddleware
     // OVERRIDE SHOW TO ADD ACTIVITY LOGS FOR TABS
     // ================================================================
 
-    public function show(int|string $id): View|JsonResponse
+    public function show(int|string $id): Response
     {
-        $user = User::withTrashed()->findOrFail((int) $id);
+        $user = User::withTrashed()
+            ->with(['roles', 'primaryAddress'])
+            ->findOrFail((int) $id);
 
-        if (request()->expectsJson()) {
-            return response()->json([
-                'status' => 'success',
-                'data' => $user,
-            ]);
-        }
-
-        // Get activity logs for this user
-        $user_activities = ActivityLog::query()
+        $userActivities = ActivityLog::query()
             ->where('subject_type', User::class)
             ->where('subject_id', $user->id)
             ->with('causer')
             ->latest()
             ->limit(50)
-            ->get();
+            ->get()
+            ->map(fn (ActivityLog $activity): array => [
+                'id' => $activity->id,
+                'description' => $activity->description,
+                'event' => $activity->event,
+                'causer_name' => $activity->causer?->name ?? 'System',
+                'properties' => $activity->properties,
+                'created_at' => $activity->created_at?->toISOString(),
+                'created_at_human' => $activity->created_at?->diffForHumans(),
+            ]);
 
-        return view($this->service()->getScaffoldDefinition()->getShowView(), [
-            'user' => $user,
-            'page_title' => 'User: '.$user->name,
-            'user_activities' => $user_activities,
+        return Inertia::render($this->inertiaPage().'/show', [
+            'user' => (new UserResource($user))->toArray(request()),
+            'userActivities' => $userActivities,
+            'status' => session('status'),
+            'error' => session('error'),
         ]);
     }
 
@@ -108,7 +127,7 @@ class UserController extends ScaffoldController implements HasMiddleware
      * Update the specified resource in storage.
      * Overridden to protect super user (ID 1) from status changes.
      */
-    public function update(Request $request, int|string $id): RedirectResponse|JsonResponse
+    public function update(Request $request, int|string $id): RedirectResponse
     {
         $user = User::query()->findOrFail((int) $id);
 
@@ -116,20 +135,10 @@ class UserController extends ScaffoldController implements HasMiddleware
         if ($user->id === 1 && $request->has('status')) {
             $restrictedStatuses = [Status::BANNED->value, Status::SUSPENDED->value];
             if (in_array($request->input('status'), $restrictedStatuses, true)) {
-                $message = 'Cannot set super user status to banned or suspended.';
-
-                if ($request->expectsJson()) {
-                    return response()->json([
-                        'status' => 'error',
-                        'message' => $message,
-                    ], 403);
-                }
-
-                return back()->withInput()->with('error', $message);
+                return back()->withInput()->with('error', 'Cannot set super user status to banned or suspended.');
             }
         }
 
-        // Call parent update
         return parent::update($request, $id);
     }
 
@@ -141,24 +150,13 @@ class UserController extends ScaffoldController implements HasMiddleware
      * Remove the specified resource from storage.
      * Overridden to protect super user (ID 1) from being trashed or deleted.
      */
-    public function destroy(Request $request, int|string $id): RedirectResponse|JsonResponse
+    public function destroy(int|string $id): RedirectResponse
     {
-        // Protect super user (ID 1) from being deleted
         if ((int) $id === 1) {
-            $message = 'Cannot delete the super user account.';
-
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => $message,
-                ], 403);
-            }
-
-            return back()->with('error', $message);
+            return back()->with('error', 'Cannot delete the super user account.');
         }
 
-        // Call parent destroy
-        return parent::destroy($request, $id);
+        return parent::destroy($id);
     }
 
     // ================================================================
@@ -214,20 +212,10 @@ class UserController extends ScaffoldController implements HasMiddleware
     /**
      * Suspend a user.
      */
-    public function suspend(User $user): RedirectResponse|JsonResponse
+    public function suspend(User $user): RedirectResponse
     {
-        // Protect super user (ID 1) from being suspended
         if ($user->id === 1) {
-            $message = 'Cannot suspend the super user account.';
-
-            if (request()->expectsJson()) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => $message,
-                ], 403);
-            }
-
-            return back()->with('error', $message);
+            return back()->with('error', 'Cannot suspend the super user account.');
         }
 
         $this->userService->suspendUser($user);
@@ -239,33 +227,16 @@ class UserController extends ScaffoldController implements HasMiddleware
             ['action' => 'suspend', 'user_id' => $user->id]
         );
 
-        if (request()->expectsJson()) {
-            return response()->json([
-                'status' => 'success',
-                'message' => sprintf('User %s has been suspended.', $user->name),
-            ]);
-        }
-
-        return back()->with('success', sprintf('User %s has been suspended.', $user->name));
+        return back()->with('status', sprintf('User %s has been suspended.', $user->name));
     }
 
     /**
      * Ban a user.
      */
-    public function ban(User $user): RedirectResponse|JsonResponse
+    public function ban(User $user): RedirectResponse
     {
-        // Protect super user (ID 1) from being banned
         if ($user->id === 1) {
-            $message = 'Cannot ban the super user account.';
-
-            if (request()->expectsJson()) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => $message,
-                ], 403);
-            }
-
-            return back()->with('error', $message);
+            return back()->with('error', 'Cannot ban the super user account.');
         }
 
         $this->userService->banUser($user);
@@ -277,20 +248,13 @@ class UserController extends ScaffoldController implements HasMiddleware
             ['action' => 'ban', 'user_id' => $user->id]
         );
 
-        if (request()->expectsJson()) {
-            return response()->json([
-                'status' => 'success',
-                'message' => sprintf('User %s has been banned.', $user->name),
-            ]);
-        }
-
-        return back()->with('success', sprintf('User %s has been banned.', $user->name));
+        return back()->with('status', sprintf('User %s has been banned.', $user->name));
     }
 
     /**
      * Unban a user.
      */
-    public function unban(User $user): RedirectResponse|JsonResponse
+    public function unban(User $user): RedirectResponse
     {
         $this->userService->unbanUser($user);
 
@@ -301,14 +265,7 @@ class UserController extends ScaffoldController implements HasMiddleware
             ['action' => 'unban', 'user_id' => $user->id]
         );
 
-        if (request()->expectsJson()) {
-            return response()->json([
-                'status' => 'success',
-                'message' => sprintf('User %s has been unbanned.', $user->name),
-            ]);
-        }
-
-        return back()->with('success', sprintf('User %s has been unbanned.', $user->name));
+        return back()->with('status', sprintf('User %s has been unbanned.', $user->name));
     }
 
     /**
@@ -430,7 +387,7 @@ class UserController extends ScaffoldController implements HasMiddleware
     // OVERRIDE BULK ACTION FOR CUSTOM USER ACTIONS
     // ================================================================
 
-    public function bulkAction(Request $request): JsonResponse
+    public function bulkAction(Request $request): RedirectResponse
     {
         $request->validate([
             'action' => ['required', 'string', 'in:delete,restore,force_delete,suspend,ban,unban'],
@@ -444,15 +401,11 @@ class UserController extends ScaffoldController implements HasMiddleware
         // Protect super user (ID 1) from destructive or restrictive actions
         $protectedActions = ['delete', 'force_delete', 'suspend', 'ban'];
         if (in_array($action, $protectedActions) && in_array(1, $ids, true)) {
-            // Remove super user from the list and add to errors
             $ids = array_values(array_filter($ids, fn ($id): bool => $id !== 1));
             $request->merge(['ids' => $ids]);
 
             if ($ids === []) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Cannot perform this action on the super user account.',
-                ], 403);
+                return back()->with('error', 'Cannot perform this action on the super user account.');
             }
         }
 
@@ -461,7 +414,6 @@ class UserController extends ScaffoldController implements HasMiddleware
             if (in_array($action, ['suspend', 'ban', 'unban'])) {
                 $result = $this->userService->handleCustomBulkAction($action, $ids);
             } else {
-                // Use standard scaffold bulk action via service's handleBulkAction
                 $result = $this->service()->handleBulkAction($request);
             }
 
@@ -483,7 +435,6 @@ class UserController extends ScaffoldController implements HasMiddleware
                 default => 'processed',
             };
 
-            // Get counts from result (handle different response formats)
             $successCount = $result['success_count'] ?? $result['affected'] ?? 0;
             $totalCount = $result['total_count'] ?? $result['affected'] ?? count($ids);
 
@@ -502,20 +453,9 @@ class UserController extends ScaffoldController implements HasMiddleware
                 ]
             );
 
-            return response()->json([
-                'status' => 'success',
-                'message' => $result['message'] ?? sprintf('%s users %s successfully.', $successCount, $actionDescription),
-                'results' => [
-                    'success_count' => $successCount,
-                    'total_count' => $totalCount,
-                    'errors' => $result['errors'] ?? [],
-                ],
-            ]);
+            return back()->with('status', sprintf('%s users %s successfully.', $successCount, $actionDescription));
         } catch (Exception $exception) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Bulk action failed: '.$exception->getMessage(),
-            ], 500);
+            return back()->with('error', 'Bulk action failed: '.$exception->getMessage());
         }
     }
 
@@ -528,6 +468,11 @@ class UserController extends ScaffoldController implements HasMiddleware
         return $this->userService;
     }
 
+    protected function inertiaPage(): string
+    {
+        return 'users';
+    }
+
     // ================================================================
     // VALIDATION
     // ================================================================
@@ -538,14 +483,42 @@ class UserController extends ScaffoldController implements HasMiddleware
 
     protected function getFormViewData(Model $model): array
     {
+        /** @var User $user */
+        $user = $model;
+
+        // Build initialValues for the React form
+        $initialValues = [
+            'name' => $user->exists ? ($user->getAttribute('name') ?? '') : '',
+            'email' => $user->exists ? ($user->getAttribute('email') ?? '') : '',
+            'active' => $user->exists ? ($user->getAttribute('status')?->value ?? 'active') === 'active' : true,
+            'roles' => $user->exists ? $user->roles()->pluck('id')->toArray() : [],
+            'password' => '',
+            'password_confirmation' => '',
+        ];
+
+        // Build availableRoles with id, name, display_name, is_system
+        $superUserRoleId = User::superUserRoleId();
+        $availableRoles = Role::visibleToCurrentUser()
+            ->select('id', 'name', 'display_name')
+            ->orderBy('name')
+            ->get()
+            ->map(fn (Role $role): array => [
+                'id' => $role->id,
+                'name' => $role->name,
+                'display_name' => $role->display_name ?? ucfirst((string) $role->name),
+                'is_system' => $role->id === $superUserRoleId,
+            ])
+            ->toArray();
+
         $data = [
+            'initialValues' => $initialValues,
+            'availableRoles' => $availableRoles,
             'statusOptions' => $this->userService->getStatusOptions(),
             'genderOptions' => $this->userService->getGenderOptions(),
-            'roleOptions' => $this->userService->getRoleOptions(),
         ];
 
         // Auto-detect country for new users only
-        if (! $model->exists) {
+        if (! $user->exists) {
             $location = $this->geoIpService->getLocationFromIp(request()->ip());
             $detectedCountry = $location['country']['iso_code'] ?? null;
 

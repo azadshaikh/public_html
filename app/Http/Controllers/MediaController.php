@@ -11,7 +11,6 @@ use App\Services\MediaService;
 use App\Services\MediaTrashService;
 use App\Services\MediaVariationService;
 use App\Traits\ActivityTrait;
-use App\Traits\ResponseTrait;
 use Exception;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
@@ -25,7 +24,6 @@ use Illuminate\Support\Str;
 class MediaController extends Controller
 {
     use ActivityTrait;
-    use ResponseTrait;
 
     private const string MODULE_TITLE = 'Media';
 

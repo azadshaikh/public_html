@@ -49,11 +49,6 @@ interface ScaffoldServiceInterface
     public function getData(Request $request): array;
 
     /**
-     * Get DataGrid configuration (columns, filters, actions, etc.).
-     */
-    public function getDataGridConfig(): array;
-
-    /**
      * Create a new model instance.
      */
     public function create(array $data): Model;
