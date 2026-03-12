@@ -174,6 +174,7 @@ For authenticated application pages in this project, prefer the shared app shell
 - Let the layout render the page header through the shared shell instead of repeating page titles inside the body.
 - Use `AccountLayout` only inside `AppLayout` for account/settings screens.
 - Keep page body content focused on the feature content itself: filters, alerts, forms, tables, empty states, and detail sections.
+- Use default control sizing for page actions, filter bars, datagrid toolbars, and form controls. Treat `sm`/`xs` variants as explicit density changes that should only be used when the UI truly needs tighter spacing; if that tradeoff is not obvious, confirm it with the user first.
 
 Example:
 

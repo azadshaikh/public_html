@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\BulkDestroyRolesRequest;
 use App\Http\Requests\StoreRoleRequest;
 use App\Http\Requests\UpdateRoleRequest;
 use App\Models\Permission;
@@ -21,12 +22,7 @@ class RoleController extends Controller
      */
     public function index(Request $request): Response
     {
-        $filters = [
-            'search' => trim((string) $request->string('search')),
-            'scope' => in_array((string) $request->string('scope'), ['all', 'system', 'custom'], true)
-                ? (string) $request->string('scope')
-                : 'all',
-        ];
+        $filters = $this->filters($request);
 
         $roles = Role::query()
             ->withCount(['permissions', 'users'])
@@ -40,11 +36,10 @@ class RoleController extends Controller
             })
             ->when($filters['scope'] === 'system', fn (Builder $query) => $query->where('is_system', true))
             ->when($filters['scope'] === 'custom', fn (Builder $query) => $query->where('is_system', false))
-            ->orderByDesc('is_system')
-            ->orderByRaw('LOWER(COALESCE(display_name, name))')
-            ->get()
-            ->map(fn (Role $role): array => $this->roleListItem($role))
-            ->values();
+            ->tap(fn (Builder $query) => $this->applySort($query, $filters['sort'], $filters['direction']))
+            ->paginate($filters['per_page'])
+            ->withQueryString()
+            ->through(fn (Role $role): array => $this->roleListItem($role));
 
         return Inertia::render('roles/index', [
             'roles' => $roles,
@@ -57,6 +52,68 @@ class RoleController extends Controller
             'status' => session('status'),
             'error' => session('error'),
         ]);
+    }
+
+    public function bulkDestroy(BulkDestroyRolesRequest $request): RedirectResponse
+    {
+        $roleIds = collect($request->validated('role_ids'))
+            ->map(fn (mixed $roleId): int => (int) $roleId)
+            ->unique()
+            ->values();
+
+        $roles = Role::query()
+            ->withCount('users')
+            ->whereIn('id', $roleIds)
+            ->get();
+
+        $deletedCount = 0;
+        $systemCount = 0;
+        $assignedCount = 0;
+
+        foreach ($roles as $role) {
+            if ($role->is_system) {
+                $systemCount++;
+
+                continue;
+            }
+
+            if ($role->users_count > 0) {
+                $assignedCount++;
+
+                continue;
+            }
+
+            $role->delete();
+            $deletedCount++;
+        }
+
+        $response = back();
+
+        if ($deletedCount > 0) {
+            $response = $response->with(
+                'status',
+                sprintf('Deleted %d %s.', $deletedCount, Str::plural('role', $deletedCount)),
+            );
+        }
+
+        if ($systemCount > 0 || $assignedCount > 0) {
+            $blockedParts = [];
+
+            if ($systemCount > 0) {
+                $blockedParts[] = sprintf('%d system %s', $systemCount, Str::plural('role', $systemCount));
+            }
+
+            if ($assignedCount > 0) {
+                $blockedParts[] = sprintf('%d assigned %s', $assignedCount, Str::plural('role', $assignedCount));
+            }
+
+            $response = $response->with(
+                'error',
+                sprintf('Skipped %s.', implode(' and ', $blockedParts)),
+            );
+        }
+
+        return $response;
     }
 
     /**
@@ -165,6 +222,58 @@ class RoleController extends Controller
             'permissions_count' => (int) $role->permissions_count,
             'users_count' => (int) $role->users_count,
         ];
+    }
+
+    /**
+     * @return array{search: string, scope: 'all'|'system'|'custom', sort: 'role'|'permissions'|'users'|'status', direction: 'asc'|'desc', per_page: int, view: 'table'|'cards'}
+     */
+    protected function filters(Request $request): array
+    {
+        $sort = (string) $request->query('sort', 'role');
+        $direction = (string) $request->query('direction', 'asc');
+        $perPage = (int) $request->integer('per_page', 10);
+        $view = (string) $request->query('view', 'table');
+
+        return [
+            'search' => trim((string) $request->query('search', '')),
+            'scope' => in_array((string) $request->query('scope', 'all'), ['all', 'system', 'custom'], true)
+                ? (string) $request->query('scope', 'all')
+                : 'all',
+            'sort' => in_array($sort, ['role', 'permissions', 'users', 'status'], true)
+                ? $sort
+                : 'role',
+            'direction' => in_array($direction, ['asc', 'desc'], true)
+                ? $direction
+                : 'asc',
+            'per_page' => in_array($perPage, [10, 25, 50, 100], true)
+                ? $perPage
+                : 10,
+            'view' => in_array($view, ['table', 'cards'], true)
+                ? $view
+                : 'table',
+        ];
+    }
+
+    protected function applySort(Builder $query, string $sort, string $direction): void
+    {
+        $direction = $direction === 'desc' ? 'desc' : 'asc';
+
+        match ($sort) {
+            'permissions' => $query
+                ->orderBy('permissions_count', $direction)
+                ->orderByDesc('is_system')
+                ->orderByRaw('LOWER(COALESCE(display_name, name)) ASC'),
+            'users' => $query
+                ->orderBy('users_count', $direction)
+                ->orderByDesc('is_system')
+                ->orderByRaw('LOWER(COALESCE(display_name, name)) ASC'),
+            'status' => $query
+                ->orderBy('is_system', $direction)
+                ->orderByRaw('LOWER(COALESCE(display_name, name)) ASC'),
+            default => $query
+                ->orderByDesc('is_system')
+                ->orderByRaw(sprintf('LOWER(COALESCE(display_name, name)) %s', strtoupper($direction))),
+        };
     }
 
     /**

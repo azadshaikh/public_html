@@ -45,6 +45,7 @@ This project has domain-specific skills available. You MUST activate the relevan
 - You must follow all existing code conventions used in this application. When creating or editing a file, check sibling files for the correct structure, approach, and naming.
 - Use descriptive names for variables and methods. For example, `isRegisteredForDiscounts`, not `discount()`.
 - Check for existing components to reuse before writing a new one.
+- Default to standard component sizing for buttons, inputs, selects, tabs, and datagrid/filter controls. Do not reach for `sm` or smaller variants unless the tighter density is clearly necessary; if it materially affects UI density, confirm with the user first.
 - This is a greenfield application. Prefer the cleanest current design over preserving legacy patterns.
 - There are no live instances that require backward compatibility. Do not keep compatibility layers, transitional APIs, or temporary shims unless the user explicitly asks for them.
 - Remove dead code, unused branches, stale helpers, obsolete UI, and old integration paths as part of the change whenever they are no longer needed.

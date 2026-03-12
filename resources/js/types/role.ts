@@ -1,3 +1,5 @@
+import type { PaginatedData } from '@/types/pagination';
+
 export type PermissionOption = {
     id: number;
     name: string;
@@ -37,10 +39,14 @@ export type RoleEditingTarget = RoleFormValues & {
 };
 
 export type RolesIndexPageProps = {
-    roles: RoleListItem[];
+    roles: PaginatedData<RoleListItem>;
     filters: {
         search: string;
         scope: 'all' | 'system' | 'custom';
+        sort: 'role' | 'permissions' | 'users' | 'status';
+        direction: 'asc' | 'desc';
+        per_page: number;
+        view: 'table' | 'cards';
     };
     stats: {
         total: number;

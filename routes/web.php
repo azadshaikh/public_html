@@ -30,6 +30,9 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
         Route::post('/', [RoleController::class, 'store'])
             ->middleware('permission:add_roles')
             ->name('store');
+        Route::delete('bulk', [RoleController::class, 'bulkDestroy'])
+            ->middleware('permission:delete_roles')
+            ->name('bulk-destroy');
         Route::get('{role}/edit', [RoleController::class, 'edit'])
             ->middleware('permission:edit_roles')
             ->name('edit');

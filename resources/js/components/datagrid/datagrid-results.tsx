@@ -1,0 +1,367 @@
+import * as React from 'react';
+import type { Key } from 'react';
+import { DatagridActionMenu } from '@/components/datagrid/datagrid-action-menu';
+import { DatagridPagination } from '@/components/datagrid/datagrid-pagination';
+import { SortIcon } from '@/components/datagrid/sort-icon';
+import type {
+    DatagridAction,
+    DatagridBulkAction,
+    DatagridColumn,
+    DatagridProps,
+} from '@/components/datagrid/types';
+import { normalizeRowKey } from '@/components/datagrid/utils';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+    Empty,
+    EmptyDescription,
+    EmptyHeader,
+    EmptyMedia,
+    EmptyTitle,
+} from '@/components/ui/empty';
+import {
+    NativeSelect,
+    NativeSelectOption,
+} from '@/components/ui/native-select';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
+import { cn } from '@/lib/utils';
+
+type DatagridResultsProps<T> = {
+    rows: DatagridProps<T>['rows'];
+    empty: DatagridProps<T>['empty'];
+    hasSelection: boolean;
+    selectedRows: T[];
+    bulkActions: DatagridBulkAction<T>[];
+    setSelectedKeys: React.Dispatch<React.SetStateAction<string[]>>;
+    view?: DatagridProps<T>['view'];
+    renderCard?: DatagridProps<T>['renderCard'];
+    rowActions?: (row: T) => DatagridAction[];
+    isRowSelectable?: (row: T) => boolean;
+    selectedKeySet: Set<string>;
+    getRowKey: (row: T) => Key;
+    toggleRowSelection: (row: T, checked: boolean) => void;
+    allSelectableRowsSelected: boolean;
+    someSelectableRowsSelected: boolean;
+    toggleAllRows: (checked: boolean) => void;
+    resolvedColumns: DatagridColumn<T>[];
+    columns: DatagridColumn<T>[];
+    sorting?: DatagridProps<T>['sorting'];
+    handleSort: (column: DatagridColumn<T>) => void;
+    perPage?: DatagridProps<T>['perPage'];
+    handlePerPageChange: (value: string) => void;
+    resolvedSummary?: string;
+};
+
+export function DatagridResults<T>({
+    rows,
+    empty,
+    hasSelection,
+    selectedRows,
+    bulkActions,
+    setSelectedKeys,
+    view,
+    renderCard,
+    rowActions,
+    isRowSelectable,
+    selectedKeySet,
+    getRowKey,
+    toggleRowSelection,
+    allSelectableRowsSelected,
+    someSelectableRowsSelected,
+    toggleAllRows,
+    resolvedColumns,
+    columns,
+    sorting,
+    handleSort,
+    perPage,
+    handlePerPageChange,
+    resolvedSummary,
+}: DatagridResultsProps<T>) {
+    return (
+        <Card className="mt-2 pt-0">
+            <CardContent className="p-0">
+                {hasSelection && selectedRows.length > 0 ? (
+                    <div className="flex flex-col gap-3 border-b bg-muted/40 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="text-sm text-foreground">
+                            {selectedRows.length} selected
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2">
+                            {bulkActions.map((bulkAction) => {
+                                const disabled =
+                                    typeof bulkAction.disabled === 'function'
+                                        ? bulkAction.disabled(selectedRows)
+                                        : bulkAction.disabled;
+
+                                return (
+                                    <Button
+                                        key={bulkAction.key}
+                                        type="button"
+                                        size="sm"
+                                        variant={
+                                            bulkAction.variant ?? 'outline'
+                                        }
+                                        disabled={disabled}
+                                        onClick={() =>
+                                            bulkAction.onSelect(selectedRows)
+                                        }
+                                    >
+                                        {bulkAction.icon}
+                                        {bulkAction.label}
+                                    </Button>
+                                );
+                            })}
+                            <Button
+                                type="button"
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setSelectedKeys([])}
+                            >
+                                Clear
+                            </Button>
+                        </div>
+                    </div>
+                ) : null}
+
+                {rows.data.length === 0 ? (
+                    <div className="p-4">
+                        <Empty>
+                            <EmptyHeader>
+                                <EmptyMedia variant="icon">
+                                    {empty.icon}
+                                </EmptyMedia>
+                                <EmptyTitle>{empty.title}</EmptyTitle>
+                                <EmptyDescription>
+                                    {empty.description}
+                                </EmptyDescription>
+                            </EmptyHeader>
+                        </Empty>
+                    </div>
+                ) : view?.value === 'cards' && renderCard ? (
+                    <div className="grid gap-4 p-4 md:grid-cols-2 xl:grid-cols-3">
+                        {rows.data.map((row) => {
+                            const rowKey = normalizeRowKey(getRowKey(row));
+                            const actions =
+                                rowActions?.(row).filter(
+                                    (rowAction) => !rowAction.hidden,
+                                ) ?? [];
+                            const rowSelectable = isRowSelectable
+                                ? isRowSelectable(row)
+                                : true;
+                            const isSelected = selectedKeySet.has(rowKey);
+
+                            return (
+                                <Card
+                                    key={rowKey}
+                                    className={cn(
+                                        'overflow-hidden',
+                                        isSelected &&
+                                            'border-primary/40 bg-primary/5',
+                                    )}
+                                >
+                                    <CardContent className="flex flex-col gap-4 p-4">
+                                        <div className="flex items-start justify-between gap-3">
+                                            {hasSelection ? (
+                                                <Checkbox
+                                                    checked={isSelected}
+                                                    disabled={!rowSelectable}
+                                                    aria-label="Select row"
+                                                    onCheckedChange={(
+                                                        checked,
+                                                    ) =>
+                                                        toggleRowSelection(
+                                                            row,
+                                                            checked === true,
+                                                        )
+                                                    }
+                                                />
+                                            ) : (
+                                                <div />
+                                            )}
+                                            {actions.length > 0 ? (
+                                                <DatagridActionMenu
+                                                    actions={actions}
+                                                />
+                                            ) : null}
+                                        </div>
+                                        {renderCard(row)}
+                                    </CardContent>
+                                </Card>
+                            );
+                        })}
+                    </div>
+                ) : (
+                    <Table className="table-auto">
+                        <TableHeader>
+                            <TableRow className="hover:bg-transparent">
+                                {hasSelection ? (
+                                    <TableHead className="w-12 px-4">
+                                        <Checkbox
+                                            checked={
+                                                allSelectableRowsSelected
+                                                    ? true
+                                                    : someSelectableRowsSelected
+                                                      ? 'indeterminate'
+                                                      : false
+                                            }
+                                            aria-label="Select all rows"
+                                            onCheckedChange={(checked) =>
+                                                toggleAllRows(checked === true)
+                                            }
+                                        />
+                                    </TableHead>
+                                ) : null}
+
+                                {resolvedColumns.map((column) => {
+                                    const sortKey =
+                                        column.sortKey ?? column.key;
+                                    const isSorted = sorting?.sort === sortKey;
+                                    const headerLabel =
+                                        column.header.toUpperCase();
+
+                                    return (
+                                        <TableHead
+                                            key={column.key}
+                                            className={cn(
+                                                'h-11 px-4 pt-1 align-middle text-[0.72rem] font-bold tracking-[0.03em] text-muted-foreground uppercase',
+                                                column.headerClassName,
+                                            )}
+                                        >
+                                            {column.sortable ? (
+                                                <button
+                                                    type="button"
+                                                    className="inline-flex h-full items-center gap-1.5 text-left leading-none transition-colors hover:text-foreground"
+                                                    onClick={() =>
+                                                        handleSort(column)
+                                                    }
+                                                >
+                                                    <span className="leading-none">
+                                                        {headerLabel}
+                                                    </span>
+                                                    <SortIcon
+                                                        active={isSorted}
+                                                        direction={
+                                                            isSorted
+                                                                ? sorting?.direction
+                                                                : undefined
+                                                        }
+                                                    />
+                                                </button>
+                                            ) : (
+                                                <span className="inline-flex h-full items-center leading-none">
+                                                    {headerLabel}
+                                                </span>
+                                            )}
+                                        </TableHead>
+                                    );
+                                })}
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {rows.data.map((row) => {
+                                const rowKey = normalizeRowKey(getRowKey(row));
+                                const actions = rowActions?.(row).filter(
+                                    (rowAction) => !rowAction.hidden,
+                                );
+                                const rowSelectable = isRowSelectable
+                                    ? isRowSelectable(row)
+                                    : true;
+                                const isSelected = selectedKeySet.has(rowKey);
+
+                                return (
+                                    <TableRow
+                                        key={rowKey}
+                                        data-state={
+                                            isSelected ? 'selected' : undefined
+                                        }
+                                    >
+                                        {hasSelection ? (
+                                            <TableCell className="px-4 py-3 align-top">
+                                                <Checkbox
+                                                    checked={isSelected}
+                                                    disabled={!rowSelectable}
+                                                    aria-label="Select row"
+                                                    onCheckedChange={(
+                                                        checked,
+                                                    ) =>
+                                                        toggleRowSelection(
+                                                            row,
+                                                            checked === true,
+                                                        )
+                                                    }
+                                                />
+                                            </TableCell>
+                                        ) : null}
+
+                                        {columns.map((column) => (
+                                            <TableCell
+                                                key={`${rowKey}-${column.key}`}
+                                                className={cn(
+                                                    'px-4 py-3 align-top whitespace-normal',
+                                                    column.cellClassName,
+                                                )}
+                                            >
+                                                {column.cell(row)}
+                                            </TableCell>
+                                        ))}
+                                        {rowActions ? (
+                                            <TableCell className="px-4 py-3 text-right align-top">
+                                                <DatagridActionMenu
+                                                    actions={actions ?? []}
+                                                />
+                                            </TableCell>
+                                        ) : null}
+                                    </TableRow>
+                                );
+                            })}
+                        </TableBody>
+                    </Table>
+                )}
+
+                {rows.data.length > 0 ? (
+                    <div className="flex flex-col gap-3 border-t px-4 pt-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                        <div className="flex flex-col gap-2 text-xs text-muted-foreground sm:flex-row sm:flex-nowrap sm:items-center sm:gap-3">
+                            {perPage ? (
+                                <div className="flex shrink-0 items-center gap-2">
+                                    <span>Per page:</span>
+                                    <NativeSelect
+                                        size="sm"
+                                        className="w-20"
+                                        value={String(perPage.value)}
+                                        onChange={(event) =>
+                                            handlePerPageChange(
+                                                event.target.value,
+                                            )
+                                        }
+                                    >
+                                        {perPage.options.map((option) => (
+                                            <NativeSelectOption
+                                                key={`per-page-${option}`}
+                                                value={String(option)}
+                                            >
+                                                {option}
+                                            </NativeSelectOption>
+                                        ))}
+                                    </NativeSelect>
+                                </div>
+                            ) : null}
+
+                            <div className="leading-5 sm:whitespace-nowrap">
+                                {resolvedSummary}
+                            </div>
+                        </div>
+
+                        <DatagridPagination links={rows.links} />
+                    </div>
+                ) : null}
+            </CardContent>
+        </Card>
+    );
+}

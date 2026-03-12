@@ -48,8 +48,113 @@ class RoleManagementTest extends TestCase
                 ->where('stats.total', 6)
                 ->where('stats.system', 6)
                 ->where('stats.custom', 0)
-                ->has('roles', 6)
-                ->where('roles.0.is_system', true));
+                ->where('filters.sort', 'role')
+                ->where('filters.direction', 'asc')
+                ->where('filters.per_page', 10)
+                ->where('filters.view', 'table')
+                ->where('roles.current_page', 1)
+                ->where('roles.total', 6)
+                ->has('roles.data', 6)
+                ->where('roles.data.0.is_system', true));
+    }
+
+    public function test_administrators_can_sort_paginate_and_change_role_views(): void
+    {
+        $user = $this->administrator();
+
+        foreach (range(1, 11) as $index) {
+            Role::query()->create([
+                'name' => sprintf('custom_role_%d', $index),
+                'guard_name' => 'web',
+                'display_name' => sprintf('Custom Role %d', $index),
+                'description' => sprintf('Custom role description %d', $index),
+                'is_system' => false,
+            ]);
+        }
+
+        $this->actingAs($user)
+            ->get(route('roles.index', [
+                'scope' => 'custom',
+                'sort' => 'role',
+                'direction' => 'desc',
+                'per_page' => 10,
+                'view' => 'cards',
+            ]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->component('roles/index')
+                ->where('filters.scope', 'custom')
+                ->where('filters.sort', 'role')
+                ->where('filters.direction', 'desc')
+                ->where('filters.per_page', 10)
+                ->where('filters.view', 'cards')
+                ->where('roles.current_page', 1)
+                ->where('roles.last_page', 2)
+                ->where('roles.total', 11)
+                ->has('roles.data', 10)
+                ->where('roles.data.0.name', 'custom_role_9'));
+    }
+
+    public function test_administrators_can_bulk_delete_eligible_roles(): void
+    {
+        $user = $this->administrator();
+
+        $deletableRole = Role::query()->create([
+            'name' => 'bulk_delete_role',
+            'guard_name' => 'web',
+            'display_name' => 'Bulk Delete Role',
+            'description' => 'Can be removed in bulk.',
+            'is_system' => false,
+        ]);
+
+        $assignedRole = Role::query()->create([
+            'name' => 'bulk_assigned_role',
+            'guard_name' => 'web',
+            'display_name' => 'Bulk Assigned Role',
+            'description' => 'Should remain assigned.',
+            'is_system' => false,
+        ]);
+
+        $assignedUser = User::factory()->create();
+        $assignedUser->assignRole($assignedRole);
+
+        $systemRole = Role::query()->where('name', Role::SUPER_USER)->firstOrFail();
+
+        $this->actingAs($user)
+            ->delete(route('roles.bulk-destroy'), [
+                'role_ids' => [$deletableRole->id, $assignedRole->id, $systemRole->id],
+            ])
+            ->assertRedirect();
+
+        $this->assertDatabaseMissing('roles', [
+            'id' => $deletableRole->id,
+        ]);
+
+        $this->assertDatabaseHas('roles', [
+            'id' => $assignedRole->id,
+        ]);
+
+        $this->assertDatabaseHas('roles', [
+            'id' => $systemRole->id,
+        ]);
+    }
+
+    public function test_users_without_delete_permissions_cannot_bulk_delete_roles(): void
+    {
+        $user = User::factory()->create();
+        $role = Role::query()->create([
+            'name' => 'forbidden_bulk_role',
+            'guard_name' => 'web',
+            'display_name' => 'Forbidden Bulk Role',
+            'description' => 'Used for authorization testing.',
+            'is_system' => false,
+        ]);
+
+        $this->actingAs($user)
+            ->delete(route('roles.bulk-destroy'), [
+                'role_ids' => [$role->id],
+            ])
+            ->assertForbidden();
     }
 
     public function test_administrators_can_create_a_custom_role_with_permissions(): void
