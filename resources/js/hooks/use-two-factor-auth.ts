@@ -1,6 +1,4 @@
-import { useHttp } from '@inertiajs/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { qrCode, recoveryCodes, secretKey } from '@/routes/two-factor';
 import type { TwoFactorSecretKey, TwoFactorSetupData } from '@/types';
 
 export type UseTwoFactorAuthReturn = {
@@ -19,55 +17,41 @@ export type UseTwoFactorAuthReturn = {
 
 export const OTP_MAX_LENGTH = 6;
 
+const unavailableMessage =
+    'Two-factor setup data is not available from the current route helpers.';
+
 export const useTwoFactorAuth = (): UseTwoFactorAuthReturn => {
-    const qrCodeRequest = useHttp<Record<string, never>, TwoFactorSetupData>(
-        {},
-    );
-    const secretKeyRequest = useHttp<Record<string, never>, TwoFactorSecretKey>(
-        {},
-    );
-    const recoveryCodesRequest = useHttp<Record<string, never>, string[]>({});
-    const qrCodeRequestRef = useRef(qrCodeRequest);
-    const secretKeyRequestRef = useRef(secretKeyRequest);
-    const recoveryCodesRequestRef = useRef(recoveryCodesRequest);
+    const hasReportedUnavailableRef = useRef(false);
     const [qrCodeSvg, setQrCodeSvg] = useState<string | null>(null);
     const [manualSetupKey, setManualSetupKey] = useState<string | null>(null);
     const [recoveryCodesList, setRecoveryCodesList] = useState<string[]>([]);
     const [errors, setErrors] = useState<string[]>([]);
 
-    useEffect(() => {
-        qrCodeRequestRef.current = qrCodeRequest;
-        secretKeyRequestRef.current = secretKeyRequest;
-        recoveryCodesRequestRef.current = recoveryCodesRequest;
-    }, [qrCodeRequest, secretKeyRequest, recoveryCodesRequest]);
-
     const hasSetupData = qrCodeSvg !== null && manualSetupKey !== null;
+
+    const reportUnavailable = useCallback((): void => {
+        if (hasReportedUnavailableRef.current) {
+            return;
+        }
+
+        hasReportedUnavailableRef.current = true;
+        setErrors([unavailableMessage]);
+    }, []);
 
     const clearErrors = useCallback((): void => {
         setErrors([]);
+        hasReportedUnavailableRef.current = false;
     }, []);
 
     const fetchQrCode = useCallback(async (): Promise<void> => {
-        try {
-            const { svg } = await qrCodeRequestRef.current.get(qrCode.url());
-            setQrCodeSvg(svg);
-        } catch {
-            setErrors((prev) => [...prev, 'Failed to fetch QR code']);
-            setQrCodeSvg(null);
-        }
-    }, []);
+        setQrCodeSvg(null);
+        reportUnavailable();
+    }, [reportUnavailable]);
 
     const fetchSetupKey = useCallback(async (): Promise<void> => {
-        try {
-            const { secretKey: key } = await secretKeyRequestRef.current.get(
-                secretKey.url(),
-            );
-            setManualSetupKey(key);
-        } catch {
-            setErrors((prev) => [...prev, 'Failed to fetch a setup key']);
-            setManualSetupKey(null);
-        }
-    }, []);
+        setManualSetupKey(null);
+        reportUnavailable();
+    }, [reportUnavailable]);
 
     const clearSetupData = useCallback((): void => {
         setManualSetupKey(null);
@@ -76,17 +60,10 @@ export const useTwoFactorAuth = (): UseTwoFactorAuthReturn => {
     }, [clearErrors]);
 
     const fetchRecoveryCodes = useCallback(async (): Promise<void> => {
-        try {
-            clearErrors();
-            const codes = await recoveryCodesRequestRef.current.get(
-                recoveryCodes.url(),
-            );
-            setRecoveryCodesList(codes);
-        } catch {
-            setErrors((prev) => [...prev, 'Failed to fetch recovery codes']);
-            setRecoveryCodesList([]);
-        }
-    }, [clearErrors]);
+        clearErrors();
+        setRecoveryCodesList([]);
+        reportUnavailable();
+    }, [clearErrors, reportUnavailable]);
 
     const fetchSetupData = useCallback(async (): Promise<void> => {
         clearErrors();

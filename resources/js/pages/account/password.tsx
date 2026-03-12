@@ -1,7 +1,7 @@
 import { Transition } from '@headlessui/react';
 import { Form } from '@inertiajs/react';
 import { useRef } from 'react';
-import PasswordController from '@/actions/App/Http/Controllers/Account/PasswordController';
+import ProfileController from '@/actions/App/Http/Controllers/Profile/ProfileController';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
@@ -9,13 +9,13 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import AccountLayout from '@/layouts/account/layout';
 import AppLayout from '@/layouts/app-layout';
-import { edit } from '@/routes/user-password';
+import { password as passwordRoute } from '@/routes/app/profile/security';
 import type { BreadcrumbItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Password',
-        href: edit(),
+        href: passwordRoute(),
     },
 ];
 
@@ -38,7 +38,7 @@ export default function Password() {
                     />
 
                     <Form
-                        {...PasswordController.update.form()}
+                        {...ProfileController.updatePassword.form()}
                         options={{
                             preserveScroll: true,
                         }}

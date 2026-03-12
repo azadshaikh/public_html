@@ -3,31 +3,27 @@ import type { PropsWithChildren } from 'react';
 import { Button } from '@/components/ui/button';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import { cn, toUrl } from '@/lib/utils';
-import { edit as editAppearance } from '@/routes/appearance';
-import { edit } from '@/routes/profile';
-import { show } from '@/routes/two-factor';
-import { edit as editPassword } from '@/routes/user-password';
+import { profile as profileRoute } from '@/routes/app';
+import {
+    password as passwordRoute,
+    twoFactor as twoFactorRoute,
+} from '@/routes/app/profile/security';
 import type { NavItem } from '@/types';
 
 const sidebarNavItems: NavItem[] = [
     {
         title: 'Profile',
-        href: edit(),
+        href: profileRoute(),
         icon: null,
     },
     {
         title: 'Password',
-        href: editPassword(),
+        href: passwordRoute(),
         icon: null,
     },
     {
         title: 'Two-factor auth',
-        href: show(),
-        icon: null,
-    },
-    {
-        title: 'Appearance',
-        href: editAppearance(),
+        href: twoFactorRoute(),
         icon: null,
     },
 ];

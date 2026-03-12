@@ -9,7 +9,11 @@ import { Button } from '@/components/ui/button';
 import { useTwoFactorAuth } from '@/hooks/use-two-factor-auth';
 import AccountLayout from '@/layouts/account/layout';
 import AppLayout from '@/layouts/app-layout';
-import { disable, enable, show } from '@/routes/two-factor';
+import { twoFactor as twoFactorRoute } from '@/routes/app/profile/security';
+import {
+    destroy as disableTwoFactor,
+    store as enableTwoFactor,
+} from '@/routes/app/profile/two-factor';
 import type { BreadcrumbItem } from '@/types';
 
 type Props = {
@@ -20,7 +24,7 @@ type Props = {
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Two-factor authentication',
-        href: show(),
+        href: twoFactorRoute(),
     },
 ];
 
@@ -71,7 +75,7 @@ export default function TwoFactor({
 
                             <div className="relative inline">
                                 <Form
-                                    {...disable.form()}
+                                    {...disableTwoFactor.form()}
                                     disableWhileProcessing
                                 >
                                     {({ processing }) => (
@@ -106,7 +110,7 @@ export default function TwoFactor({
                                     </Button>
                                 ) : (
                                     <Form
-                                        {...enable.form()}
+                                        {...enableTwoFactor.form()}
                                         disableWhileProcessing
                                         onSuccess={() =>
                                             setShowSetupModal(true)

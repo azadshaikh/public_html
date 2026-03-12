@@ -9,7 +9,7 @@ import {
     UserCogIcon,
     UsersIcon,
 } from 'lucide-react';
-import ManagedUserController from '@/actions/App/Http/Controllers/ManagedUserController';
+import UserController from '@/actions/App/Http/Controllers/UserController';
 import { Datagrid } from '@/components/datagrid/datagrid';
 import type {
     DatagridAction,
@@ -38,7 +38,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
     {
         title: 'Users',
-        href: ManagedUserController.index(),
+        href: UserController.index(),
     },
 ];
 
@@ -86,7 +86,7 @@ export default function UsersIndex({
             return;
         }
 
-        router.delete(ManagedUserController.destroy(user.id).url, {
+        router.delete(UserController.destroy(user.id).url, {
             preserveScroll: true,
         });
     };
@@ -108,15 +108,19 @@ export default function UsersIndex({
             return;
         }
 
-        router.delete(ManagedUserController.bulkDestroy().url, {
-            data: {
-                user_ids: selectedUsers.map((user) => user.id),
+        router.post(
+            UserController.bulkAction().url,
+            {
+                action: 'delete',
+                ids: selectedUsers.map((user) => user.id),
             },
-            preserveScroll: true,
-            onSuccess: () => {
-                clearSelection();
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    clearSelection();
+                },
             },
-        });
+        );
     };
 
     const gridFilters: DatagridFilter[] = [
@@ -239,7 +243,7 @@ export default function UsersIndex({
                   if (canEditUsers) {
                       actions.push({
                           label: 'Edit',
-                          href: ManagedUserController.edit(user.id).url,
+                          href: UserController.edit(user.id).url,
                           icon: <PencilIcon />,
                       });
                   }
@@ -278,7 +282,7 @@ export default function UsersIndex({
             headerActions={
                 canAddUsers ? (
                     <Button asChild>
-                        <Link href={ManagedUserController.create()}>
+                        <Link href={UserController.create()}>
                             <PlusIcon data-icon="inline-start" />
                             New user
                         </Link>
@@ -295,7 +299,7 @@ export default function UsersIndex({
                 />
 
                 <Datagrid
-                    action={ManagedUserController.index().url}
+                    action={UserController.index().url}
                     rows={users}
                     columns={columns}
                     filters={gridFilters}

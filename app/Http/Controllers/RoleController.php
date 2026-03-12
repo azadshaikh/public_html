@@ -12,7 +12,7 @@ use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\View\View;
 use RuntimeException;
 
-class RolesController extends ScaffoldController implements HasMiddleware
+class RoleController extends ScaffoldController implements HasMiddleware
 {
     public function __construct(
         private readonly RoleService $roleService
@@ -68,17 +68,12 @@ class RolesController extends ScaffoldController implements HasMiddleware
         ]);
     }
 
-    // ================================================================
-    // OVERRIDE DESTROY TO PROTECT SUPER USER ROLE
-    // ================================================================
-
     /**
      * Remove the specified resource from storage.
      * Overridden to protect super user role (ID 1) from being trashed or deleted.
      */
     public function destroy(Request $request, int|string $id): RedirectResponse|JsonResponse
     {
-        // Protect super user role (ID 1) from being deleted
         if ((int) $id === 1) {
             $message = 'Cannot delete the super user role.';
 
@@ -108,10 +103,6 @@ class RolesController extends ScaffoldController implements HasMiddleware
         }
     }
 
-    // ================================================================
-    // OVERRIDE BULK ACTION TO PROTECT SUPER USER ROLE
-    // ================================================================
-
     /**
      * Handle bulk actions.
      * Overridden to protect super user role (ID 1) from destructive actions.
@@ -121,10 +112,8 @@ class RolesController extends ScaffoldController implements HasMiddleware
         $action = $request->input('action');
         $ids = array_map(intval(...), $request->input('ids', []));
 
-        // Protect super user role (ID 1) from delete/force_delete actions
         $protectedActions = ['delete', 'force_delete'];
         if (in_array($action, $protectedActions) && in_array(1, $ids, true)) {
-            // Remove super user role from the list
             $ids = array_values(array_filter($ids, fn ($id): bool => $id !== 1));
             $request->merge(['ids' => $ids]);
 

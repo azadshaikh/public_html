@@ -76,15 +76,19 @@ export default function RolesIndex({
             return;
         }
 
-        router.delete(RoleController.bulkDestroy().url, {
-            data: {
-                role_ids: selectedRoles.map((role) => role.id),
+        router.post(
+            RoleController.bulkAction().url,
+            {
+                action: 'delete',
+                ids: selectedRoles.map((role) => role.id),
             },
-            preserveScroll: true,
-            onSuccess: () => {
-                clearSelection();
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    clearSelection();
+                },
             },
-        });
+        );
     };
 
     const gridFilters: DatagridFilter[] = [

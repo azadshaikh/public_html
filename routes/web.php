@@ -26,7 +26,7 @@ use App\Http\Controllers\Profile\ProfileController;
 use App\Http\Controllers\Profile\ProfileTwoFactorController;
 use App\Http\Controllers\QueueMonitor\QueueMonitorController;
 use App\Http\Controllers\RevisionsController;
-use App\Http\Controllers\RolesController;
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\UserController;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
@@ -221,21 +221,21 @@ Route::prefix($adminPrefix)->group(function (): void {
             // --- Roles Management ---
             Route::group(['prefix' => 'roles', 'as' => 'roles.'], function (): void {
                 // Static routes FIRST
-                Route::get('/data', [RolesController::class, 'data'])->name('data');
-                Route::post('/bulk-action', [RolesController::class, 'bulkAction'])->name('bulk-action');
+                Route::get('/data', [RoleController::class, 'data'])->name('data');
+                Route::post('/bulk-action', [RoleController::class, 'bulkAction'])->name('bulk-action');
 
                 // Standard CRUD routes
-                Route::get('/create', [RolesController::class, 'create'])->name('create');
-                Route::post('/store', [RolesController::class, 'store'])->name('store');
-                Route::get('/{role}/show', [RolesController::class, 'show'])->name('show');
-                Route::get('/{role}/edit', [RolesController::class, 'edit'])->name('edit');
-                Route::put('/{role}', [RolesController::class, 'update'])->name('update');
-                Route::delete('/{role}/delete', [RolesController::class, 'destroy'])->name('destroy');
-                Route::patch('/{role}/restore', [RolesController::class, 'restore'])->name('restore');
-                Route::delete('/{role}/force-delete', [RolesController::class, 'forceDelete'])->name('force-delete');
+                Route::get('/create', [RoleController::class, 'create'])->name('create');
+                Route::post('/store', [RoleController::class, 'store'])->name('store');
+                Route::get('/{role}/show', [RoleController::class, 'show'])->name('show');
+                Route::get('/{role}/edit', [RoleController::class, 'edit'])->name('edit');
+                Route::put('/{role}', [RoleController::class, 'update'])->name('update');
+                Route::delete('/{role}/delete', [RoleController::class, 'destroy'])->name('destroy');
+                Route::patch('/{role}/restore', [RoleController::class, 'restore'])->name('restore');
+                Route::delete('/{role}/force-delete', [RoleController::class, 'forceDelete'])->name('force-delete');
 
                 // Main index route with status filtering (must come last due to optional parameter)
-                Route::get('/{status?}', [RolesController::class, 'index'])
+                Route::get('/{status?}', [RoleController::class, 'index'])
                     ->where('status', 'all|'.implode('|', [
                         Status::ACTIVE->value,
                         Status::INACTIVE->value,

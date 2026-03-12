@@ -1,4 +1,4 @@
-import ManagedUserController from '@/actions/App/Http/Controllers/ManagedUserController';
+import UserController from '@/actions/App/Http/Controllers/UserController';
 import ManagedUserForm from '@/components/users/managed-user-form';
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes/index';
@@ -17,11 +17,11 @@ export default function UsersEdit({
         },
         {
             title: 'Users',
-            href: ManagedUserController.index(),
+            href: UserController.index(),
         },
         {
             title: user.name,
-            href: ManagedUserController.edit(user.id),
+            href: UserController.edit(user.id),
         },
     ];
 

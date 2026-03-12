@@ -6,7 +6,7 @@ import {
     UserCogIcon,
 } from 'lucide-react';
 import type { FormEvent } from 'react';
-import ManagedUserController from '@/actions/App/Http/Controllers/ManagedUserController';
+import UserController from '@/actions/App/Http/Controllers/UserController';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -48,8 +48,8 @@ export default function ManagedUserForm({
     const form = useForm<ManagedUserFormValues>(initialValues);
     const submitAction =
         mode === 'create'
-            ? ManagedUserController.store()
-            : ManagedUserController.update(user!.id);
+            ? UserController.store()
+            : UserController.update(user!.id);
     const submitLabel = mode === 'create' ? 'Create user' : 'Save user';
 
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -352,7 +352,7 @@ export default function ManagedUserForm({
 
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card px-4 py-3">
                 <Button asChild variant="outline">
-                    <Link href={ManagedUserController.index()}>
+                    <Link href={UserController.index()}>
                         <ArrowLeftIcon data-icon="inline-start" />
                         Back to users
                     </Link>

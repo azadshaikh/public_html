@@ -23,8 +23,8 @@ import {
     useSidebar,
 } from '@/components/ui/sidebar';
 import { useInitials } from '@/hooks/use-initials';
+import { profile as profileRoute } from '@/routes/app';
 import { logout } from '@/routes/index';
-import { edit as editProfile } from '@/routes/profile';
 
 export function NavUser({
     user,
@@ -98,7 +98,7 @@ export function NavUser({
                         <DropdownMenuGroup>
                             <DropdownMenuItem asChild>
                                 <Link
-                                    href={editProfile()}
+                                    href={profileRoute()}
                                     className="w-full cursor-pointer"
                                 >
                                     <BadgeCheckIcon />
