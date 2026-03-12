@@ -13,6 +13,7 @@ import ManagedUserController from '@/actions/App/Http/Controllers/ManagedUserCon
 import { Datagrid } from '@/components/datagrid/datagrid';
 import type {
     DatagridAction,
+    DatagridBulkAction,
     DatagridColumn,
     DatagridFilter,
     DatagridTab,
@@ -51,6 +52,7 @@ export default function UsersIndex({
     const canAddUsers = page.props.auth.abilities.addUsers;
     const canEditUsers = page.props.auth.abilities.editUsers;
     const canDeleteUsers = page.props.auth.abilities.deleteUsers;
+    const currentUserId = page.props.auth.user.id;
 
     const handleDelete = (user: ManagedUserListItem) => {
         if (!canDeleteUsers) {
@@ -63,6 +65,34 @@ export default function UsersIndex({
 
         router.delete(ManagedUserController.destroy(user.id).url, {
             preserveScroll: true,
+        });
+    };
+
+    const handleBulkDelete = (
+        selectedUsers: ManagedUserListItem[],
+        clearSelection: () => void,
+    ) => {
+        if (!canDeleteUsers || selectedUsers.length === 0) {
+            return;
+        }
+
+        const label =
+            selectedUsers.length === 1
+                ? selectedUsers[0].name
+                : `${selectedUsers.length} users`;
+
+        if (!window.confirm(`Delete ${label}?`)) {
+            return;
+        }
+
+        router.delete(ManagedUserController.bulkDestroy().url, {
+            data: {
+                user_ids: selectedUsers.map((user) => user.id),
+            },
+            preserveScroll: true,
+            onSuccess: () => {
+                clearSelection();
+            },
         });
     };
 
@@ -213,6 +243,19 @@ export default function UsersIndex({
               }
             : undefined;
 
+    const bulkActions: DatagridBulkAction<ManagedUserListItem>[] =
+        canDeleteUsers
+            ? [
+                  {
+                      key: 'bulk-delete',
+                      label: 'Delete selected',
+                      icon: <Trash2Icon />,
+                      variant: 'destructive',
+                      onSelect: handleBulkDelete,
+                  },
+              ]
+            : [];
+
     return (
         <AppLayout
             breadcrumbs={breadcrumbs}
@@ -248,6 +291,8 @@ export default function UsersIndex({
                     }}
                     getRowKey={(user) => user.id}
                     rowActions={rowActions}
+                    bulkActions={bulkActions}
+                    isRowSelectable={(user) => user.id !== currentUserId}
                     sorting={{
                         sort: filters.sort,
                         direction: filters.direction,

@@ -59,7 +59,10 @@ export default function RolesIndex({
         });
     };
 
-    const handleBulkDelete = (selectedRoles: RoleListItem[]) => {
+    const handleBulkDelete = (
+        selectedRoles: RoleListItem[],
+        clearSelection: () => void,
+    ) => {
         if (selectedRoles.length === 0) {
             return;
         }
@@ -78,6 +81,9 @@ export default function RolesIndex({
                 role_ids: selectedRoles.map((role) => role.id),
             },
             preserveScroll: true,
+            onSuccess: () => {
+                clearSelection();
+            },
         });
     };
 
@@ -261,7 +267,8 @@ export default function RolesIndex({
                                     {role.display_name}
                                 </span>
                                 <span className="text-sm text-muted-foreground">
-                                    {role.description ?? 'No description provided.'}
+                                    {role.description ??
+                                        'No description provided.'}
                                 </span>
                                 <code className="mt-1 w-fit rounded bg-muted px-1.5 py-0.5 text-[0.7rem] text-muted-foreground">
                                     {role.name}
@@ -298,7 +305,9 @@ export default function RolesIndex({
                                                     : 'outline'
                                             }
                                         >
-                                            {role.is_system ? 'System' : 'Custom'}
+                                            {role.is_system
+                                                ? 'System'
+                                                : 'Custom'}
                                         </Badge>
                                     </div>
                                 </div>

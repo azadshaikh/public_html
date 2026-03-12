@@ -46,11 +46,12 @@ const itemVariants = cva(
         default: "gap-2.5 px-3 py-2.5",
         sm: "gap-2.5 px-3 py-2.5",
         xs: "gap-2 px-2.5 py-2 in-data-[slot=dropdown-menu-content]:p-0",
+        comfortable: "gap-3 px-4 py-3",
       },
     },
     defaultVariants: {
       variant: "default",
-      size: "default",
+      size: "comfortable",
     },
   }
 )
@@ -58,7 +59,7 @@ const itemVariants = cva(
 function Item({
   className,
   variant = "default",
-  size = "default",
+  size = "comfortable",
   asChild = false,
   ...props
 }: React.ComponentProps<"div"> &

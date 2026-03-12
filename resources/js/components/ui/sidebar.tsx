@@ -476,11 +476,12 @@ const sidebarMenuButtonVariants = cva(
         default: "h-8 text-sm",
         sm: "h-7 text-xs",
         lg: "h-12 text-sm group-data-[collapsible=icon]:p-0!",
+        comfortable: "h-9 text-sm group-data-[collapsible=icon]:p-2.5!",
       },
     },
     defaultVariants: {
       variant: "default",
-      size: "default",
+      size: "comfortable",
     },
   }
 )
@@ -489,7 +490,7 @@ function SidebarMenuButton({
   asChild = false,
   isActive = false,
   variant = "default",
-  size = "default",
+  size = "comfortable",
   tooltip,
   className,
   ...props

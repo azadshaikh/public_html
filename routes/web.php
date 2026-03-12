@@ -54,6 +54,9 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
         Route::post('/', [ManagedUserController::class, 'store'])
             ->middleware('permission:add_users')
             ->name('store');
+        Route::delete('bulk', [ManagedUserController::class, 'bulkDestroy'])
+            ->middleware('permission:delete_users')
+            ->name('bulk-destroy');
         Route::get('{user}/edit', [ManagedUserController::class, 'edit'])
             ->middleware('permission:edit_users')
             ->name('edit');

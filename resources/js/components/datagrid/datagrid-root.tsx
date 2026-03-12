@@ -41,7 +41,9 @@ export function Datagrid<T>({
     const searchInputRef = React.useRef<HTMLInputElement | null>(null);
     const searchTimeoutRef = React.useRef<number | null>(null);
     const storedViewAppliedRef = React.useRef(false);
-    const [selectedKeys, setSelectedKeys] = React.useState<string[]>([]);
+    const [selectedItemsMap, setSelectedItemsMap] = React.useState<
+        Record<string, T>
+    >({});
 
     const visit = React.useCallback(
         (params: Record<string, string | number | null | undefined>) => {
@@ -128,15 +130,12 @@ export function Datagrid<T>({
         [getRowKey, selectableRows],
     );
     const selectedKeySet = React.useMemo(
-        () => new Set(selectedKeys),
-        [selectedKeys],
+        () => new Set(Object.keys(selectedItemsMap)),
+        [selectedItemsMap],
     );
     const selectedRows = React.useMemo(
-        () =>
-            rows.data.filter((row) =>
-                selectedKeySet.has(normalizeRowKey(getRowKey(row))),
-            ),
-        [getRowKey, rows.data, selectedKeySet],
+        () => Object.values(selectedItemsMap),
+        [selectedItemsMap],
     );
     const allSelectableRowsSelected =
         selectableRowKeys.length > 0 &&
@@ -149,10 +148,6 @@ export function Datagrid<T>({
         (rows.total > 0
             ? `Showing ${rows.from ?? 0} to ${rows.to ?? 0} of ${rows.total} results`
             : undefined);
-
-    React.useEffect(() => {
-        setSelectedKeys([]);
-    }, [rows.data]);
 
     React.useEffect(() => {
         return () => {
@@ -305,19 +300,42 @@ export function Datagrid<T>({
     const toggleRowSelection = (row: T, checked: boolean) => {
         const key = normalizeRowKey(getRowKey(row));
 
-        setSelectedKeys((currentKeys) => {
+        setSelectedItemsMap((currentMap) => {
             if (checked) {
-                return currentKeys.includes(key)
-                    ? currentKeys
-                    : [...currentKeys, key];
+                if (currentMap[key]) return currentMap;
+                return { ...currentMap, [key]: row };
             }
 
-            return currentKeys.filter((currentKey) => currentKey !== key);
+            const newMap = { ...currentMap };
+            delete newMap[key];
+            return newMap;
         });
     };
 
     const toggleAllRows = (checked: boolean) => {
-        setSelectedKeys(checked ? selectableRowKeys : []);
+        if (checked) {
+            setSelectedItemsMap((currentMap) => {
+                const newMap = { ...currentMap };
+                for (const row of selectableRows) {
+                    const key = normalizeRowKey(getRowKey(row));
+                    newMap[key] = row;
+                }
+                return newMap;
+            });
+        } else {
+            setSelectedItemsMap((currentMap) => {
+                const newMap = { ...currentMap };
+                for (const row of selectableRows) {
+                    const key = normalizeRowKey(getRowKey(row));
+                    delete newMap[key];
+                }
+                return newMap;
+            });
+        }
+    };
+
+    const clearSelection = () => {
+        setSelectedItemsMap({});
     };
 
     return (
@@ -366,7 +384,7 @@ export function Datagrid<T>({
                 hasSelection={hasSelection}
                 selectedRows={selectedRows}
                 bulkActions={bulkActions}
-                setSelectedKeys={setSelectedKeys}
+                clearSelection={clearSelection}
                 view={view}
                 renderCard={renderCard}
                 rowActions={rowActions}

@@ -68,7 +68,7 @@ export type DatagridBulkAction<T> = {
     label: string;
     icon?: ReactNode;
     variant?: 'default' | 'destructive';
-    onSelect: (rows: T[]) => void;
+    onSelect: (rows: T[], clearSelection: () => void) => void;
     disabled?: boolean | ((rows: T[]) => boolean);
 };
 

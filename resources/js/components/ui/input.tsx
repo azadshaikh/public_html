@@ -2,8 +2,8 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
-type InputProps = React.ComponentProps<"input"> & {
-  size?: "sm" | "default" | "comfortable"
+type InputProps = Omit<React.ComponentProps<"input">, "size"> & {
+  size?: "sm" | "default" | "comfortable" | number;
 }
 
 function Input({

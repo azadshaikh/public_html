@@ -192,6 +192,54 @@ class UserRoleManagementTest extends TestCase
         $this->assertFalse($managedUser->hasRole('user'));
     }
 
+    public function test_administrators_can_bulk_delete_eligible_users(): void
+    {
+        $administrator = $this->administrator();
+        $staffRole = Role::query()->where('name', 'staff')->firstOrFail();
+
+        $deletableUser = User::factory()->create([
+            'name' => 'Bulk Delete User',
+            'email' => 'bulk-delete-user@example.com',
+        ]);
+        $deletableUser->assignRole($staffRole);
+
+        $protectedSuperUser = User::factory()->create([
+            'name' => 'Protected Super User',
+            'email' => 'protected-super-user@example.com',
+        ]);
+        $protectedSuperUser->assignRole(Role::query()->where('name', Role::SUPER_USER)->firstOrFail());
+
+        $this->actingAs($administrator)
+            ->delete(route('users.bulk-destroy'), [
+                'user_ids' => [$deletableUser->id, $protectedSuperUser->id, $administrator->id],
+            ])
+            ->assertRedirect();
+
+        $this->assertDatabaseMissing('users', [
+            'id' => $deletableUser->id,
+        ]);
+
+        $this->assertDatabaseHas('users', [
+            'id' => $protectedSuperUser->id,
+        ]);
+
+        $this->assertDatabaseHas('users', [
+            'id' => $administrator->id,
+        ]);
+    }
+
+    public function test_users_without_delete_permissions_cannot_bulk_delete_users(): void
+    {
+        $user = User::factory()->create();
+        $managedUser = User::factory()->create();
+
+        $this->actingAs($user)
+            ->delete(route('users.bulk-destroy'), [
+                'user_ids' => [$managedUser->id],
+            ])
+            ->assertForbidden();
+    }
+
     public function test_the_last_super_user_assignment_cannot_be_removed(): void
     {
         $administrator = $this->administrator();

@@ -40,7 +40,7 @@ type DatagridResultsProps<T> = {
     hasSelection: boolean;
     selectedRows: T[];
     bulkActions: DatagridBulkAction<T>[];
-    setSelectedKeys: React.Dispatch<React.SetStateAction<string[]>>;
+    clearSelection: () => void;
     view?: DatagridProps<T>['view'];
     renderCard?: DatagridProps<T>['renderCard'];
     rowActions?: (row: T) => DatagridAction[];
@@ -66,7 +66,7 @@ export function DatagridResults<T>({
     hasSelection,
     selectedRows,
     bulkActions,
-    setSelectedKeys,
+    clearSelection,
     view,
     renderCard,
     rowActions,
@@ -110,7 +110,10 @@ export function DatagridResults<T>({
                                         }
                                         disabled={disabled}
                                         onClick={() =>
-                                            bulkAction.onSelect(selectedRows)
+                                            bulkAction.onSelect(
+                                                selectedRows,
+                                                clearSelection,
+                                            )
                                         }
                                     >
                                         {bulkAction.icon}
@@ -122,7 +125,7 @@ export function DatagridResults<T>({
                                 type="button"
                                 size="sm"
                                 variant="ghost"
-                                onClick={() => setSelectedKeys([])}
+                                onClick={clearSelection}
                             >
                                 Clear
                             </Button>

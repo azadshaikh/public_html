@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\BulkDestroyManagedUsersRequest;
 use App\Http\Requests\StoreManagedUserRequest;
 use App\Http\Requests\UpdateManagedUserRequest;
 use App\Models\Role;
@@ -56,6 +57,72 @@ class ManagedUserController extends Controller
             'status' => session('status'),
             'error' => session('error'),
         ]);
+    }
+
+    public function bulkDestroy(BulkDestroyManagedUsersRequest $request): RedirectResponse
+    {
+        $userIds = collect($request->validated('user_ids'))
+            ->map(fn (mixed $userId): int => (int) $userId)
+            ->unique()
+            ->values();
+
+        $users = User::query()
+            ->with('roles')
+            ->whereIn('id', $userIds)
+            ->get();
+
+        $deletedCount = 0;
+        $currentUserCount = 0;
+        $protectedSuperUserCount = 0;
+
+        foreach ($users as $user) {
+            if (Auth::id() === $user->id) {
+                $currentUserCount++;
+
+                continue;
+            }
+
+            if ($user->hasRole(Role::SUPER_USER) && User::role(Role::SUPER_USER)->count() <= 1) {
+                $protectedSuperUserCount++;
+
+                continue;
+            }
+
+            $user->delete();
+            $deletedCount++;
+        }
+
+        $response = back();
+
+        if ($deletedCount > 0) {
+            $response = $response->with(
+                'status',
+                sprintf('Deleted %d %s.', $deletedCount, Str::plural('user', $deletedCount)),
+            );
+        }
+
+        if ($currentUserCount > 0 || $protectedSuperUserCount > 0) {
+            $blockedParts = [];
+
+            if ($currentUserCount > 0) {
+                $blockedParts[] = sprintf('%d current %s', $currentUserCount, Str::plural('account', $currentUserCount));
+            }
+
+            if ($protectedSuperUserCount > 0) {
+                $blockedParts[] = sprintf(
+                    '%d protected super %s',
+                    $protectedSuperUserCount,
+                    Str::plural('user', $protectedSuperUserCount),
+                );
+            }
+
+            $response = $response->with(
+                'error',
+                sprintf('Skipped %s.', implode(' and ', $blockedParts)),
+            );
+        }
+
+        return $response;
     }
 
     public function create(): Response
