@@ -19,7 +19,10 @@ class DatabaseSeeder extends Seeder
         $this->call(RolesAndPermissionsSeeder::class);
 
         if ($this->command->getLaravel()->environment('local')) {
-            $this->call(LocalUserSeeder::class);
+            $this->call([
+                LocalUserSeeder::class,
+                LocalDatagridUsersSeeder::class,
+            ]);
         }
 
         $enabledModules = resolve(ModuleManager::class)->enabled();

@@ -18,16 +18,11 @@ class ManagedUserController extends Controller
 {
     public function index(Request $request): Response
     {
-        $filters = [
-            'search' => trim((string) $request->string('search')),
-            'role' => trim((string) $request->string('role')),
-            'status' => in_array((string) $request->string('status'), ['all', 'active', 'inactive'], true)
-                ? (string) $request->string('status')
-                : 'all',
-        ];
+        $filters = $this->filters($request);
 
         $users = User::query()
             ->with('roles')
+            ->withCount('roles')
             ->when($filters['search'] !== '', function (Builder $query) use ($filters): void {
                 $query->where(function (Builder $query) use ($filters): void {
                     $query
@@ -42,28 +37,12 @@ class ManagedUserController extends Controller
             })
             ->when($filters['status'] === 'active', fn (Builder $query) => $query->where('active', true))
             ->when($filters['status'] === 'inactive', fn (Builder $query) => $query->where('active', false))
-            ->orderByRaw('LOWER(name)')
-            ->get()
-            ->map(fn (User $user): array => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'active' => (bool) $user->active,
-                'email_verified_at' => $user->email_verified_at,
-                'roles' => $user->roles
-                    ->map(function (mixed $role): array {
-                        /** @var Role $role */
-
-                        return [
-                            'id' => $role->id,
-                            'name' => $role->name,
-                            'display_name' => $role->display_name ?: Str::headline($role->name),
-                        ];
-                    })
-                    ->values()
-                    ->all(),
-            ])
-            ->values();
+            ->when($filters['verification'] === 'verified', fn (Builder $query) => $query->whereNotNull('email_verified_at'))
+            ->when($filters['verification'] === 'unverified', fn (Builder $query) => $query->whereNull('email_verified_at'))
+            ->tap(fn (Builder $query) => $this->applySort($query, $filters['sort'], $filters['direction']))
+            ->paginate($filters['per_page'])
+            ->withQueryString()
+            ->through(fn (User $user): array => $this->userPayload($user));
 
         return Inertia::render('users/index', [
             'users' => $users,
@@ -186,6 +165,63 @@ class ManagedUserController extends Controller
                 ->values()
                 ->all(),
         ];
+    }
+
+    /**
+     * @return array{search: string, role: string, status: 'all'|'active'|'inactive', verification: 'all'|'verified'|'unverified', sort: 'name'|'status'|'verification'|'roles', direction: 'asc'|'desc', per_page: int, view: 'table'|'cards'}
+     */
+    protected function filters(Request $request): array
+    {
+        $sort = (string) $request->query('sort', 'name');
+        $direction = (string) $request->query('direction', 'asc');
+        $perPage = (int) $request->integer('per_page', 10);
+        $view = (string) $request->query('view', 'table');
+
+        return [
+            'search' => trim((string) $request->query('search', '')),
+            'role' => trim((string) $request->query('role', '')),
+            'status' => in_array((string) $request->query('status', 'all'), ['all', 'active', 'inactive'], true)
+                ? (string) $request->query('status', 'all')
+                : 'all',
+            'verification' => in_array((string) $request->query('verification', 'all'), ['all', 'verified', 'unverified'], true)
+                ? (string) $request->query('verification', 'all')
+                : 'all',
+            'sort' => in_array($sort, ['name', 'status', 'verification', 'roles'], true)
+                ? $sort
+                : 'name',
+            'direction' => in_array($direction, ['asc', 'desc'], true)
+                ? $direction
+                : 'asc',
+            'per_page' => in_array($perPage, [10, 25, 50, 100], true)
+                ? $perPage
+                : 10,
+            'view' => in_array($view, ['table', 'cards'], true)
+                ? $view
+                : 'table',
+        ];
+    }
+
+    protected function applySort(Builder $query, string $sort, string $direction): void
+    {
+        $direction = $direction === 'desc' ? 'desc' : 'asc';
+
+        match ($sort) {
+            'roles' => $query
+                ->orderBy('roles_count', $direction)
+                ->orderByRaw('LOWER(name) ASC'),
+            'status' => $query
+                ->orderBy('active', $direction)
+                ->orderByRaw('LOWER(name) ASC'),
+            'verification' => $query
+                ->orderByRaw(
+                    sprintf(
+                        'CASE WHEN email_verified_at IS NULL THEN 1 ELSE 0 END %s',
+                        strtoupper($direction),
+                    ),
+                )
+                ->orderByRaw('LOWER(name) ASC'),
+            default => $query->orderByRaw(sprintf('LOWER(name) %s', strtoupper($direction))),
+        };
     }
 
     /**

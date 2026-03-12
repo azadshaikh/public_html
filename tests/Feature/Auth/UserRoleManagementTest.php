@@ -53,13 +53,56 @@ class UserRoleManagementTest extends TestCase
                 ->component('users/index')
                 ->where('stats.total', 2)
                 ->where('stats.active', 2)
-                ->has('users', 2)
-                ->where('users', fn (Collection $users): bool => $users->contains(
+                ->where('filters.sort', 'name')
+                ->where('filters.direction', 'asc')
+                ->where('filters.per_page', 10)
+                ->where('filters.view', 'table')
+                ->where('users.total', 2)
+                ->has('users.data', 2)
+                ->where('users.data', fn (Collection $users): bool => $users->contains(
                     fn (array $user): bool => $user['email'] === 'casey@example.com'
                         && collect($user['roles'])->contains(
                             fn (array $role): bool => $role['name'] === 'staff'
                         )
                 )));
+    }
+
+    public function test_administrators_can_filter_the_users_index(): void
+    {
+        $administrator = $this->administrator();
+        $staffRole = Role::query()->where('name', 'staff')->firstOrFail();
+
+        $inactiveUnverifiedUser = User::factory()->create([
+            'name' => 'Morgan Staff',
+            'email' => 'morgan@example.com',
+            'active' => false,
+            'email_verified_at' => null,
+        ]);
+        $inactiveUnverifiedUser->assignRole($staffRole);
+
+        $activeVerifiedUser = User::factory()->create([
+            'name' => 'Taylor Staff',
+            'email' => 'taylor@example.com',
+            'active' => true,
+            'email_verified_at' => now(),
+        ]);
+        $activeVerifiedUser->assignRole($staffRole);
+
+        $this->actingAs($administrator)
+            ->get(route('users.index', [
+                'status' => 'inactive',
+                'role' => 'staff',
+                'verification' => 'unverified',
+            ]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->component('users/index')
+                ->where('filters.status', 'inactive')
+                ->where('filters.role', 'staff')
+                ->where('filters.verification', 'unverified')
+                ->where('users.total', 1)
+                ->has('users.data', 1)
+                ->where('users.data.0.email', 'morgan@example.com'));
     }
 
     public function test_administrators_can_view_the_user_edit_screen(): void

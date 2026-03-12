@@ -1,43 +1,25 @@
-import { Form, Link, router, usePage } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import {
+    CircleOffIcon,
+    ListIcon,
     PlusIcon,
     PencilIcon,
-    SearchIcon,
     ShieldCheckIcon,
     Trash2Icon,
     UserCogIcon,
     UsersIcon,
 } from 'lucide-react';
 import ManagedUserController from '@/actions/App/Http/Controllers/ManagedUserController';
+import { Datagrid } from '@/components/datagrid/datagrid';
+import type {
+    DatagridAction,
+    DatagridColumn,
+    DatagridFilter,
+    DatagridTab,
+} from '@/components/datagrid/datagrid';
 import { ResourceFeedbackAlerts } from '@/components/resource/resource-feedback-alerts';
-import { ResourceSectionCard } from '@/components/resource/resource-section-card';
-import { ResourceStatCard } from '@/components/resource/resource-stat-card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-    Empty,
-    EmptyDescription,
-    EmptyHeader,
-    EmptyMedia,
-    EmptyTitle,
-} from '@/components/ui/empty';
-import {
-    InputGroup,
-    InputGroupAddon,
-    InputGroupInput,
-} from '@/components/ui/input-group';
-import {
-    NativeSelect,
-    NativeSelectOption,
-} from '@/components/ui/native-select';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes/index';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
@@ -67,6 +49,7 @@ export default function UsersIndex({
 }: UsersIndexPageProps) {
     const page = usePage<AuthenticatedSharedData>();
     const canAddUsers = page.props.auth.abilities.addUsers;
+    const canEditUsers = page.props.auth.abilities.editUsers;
     const canDeleteUsers = page.props.auth.abilities.deleteUsers;
 
     const handleDelete = (user: ManagedUserListItem) => {
@@ -82,6 +65,153 @@ export default function UsersIndex({
             preserveScroll: true,
         });
     };
+
+    const gridFilters: DatagridFilter[] = [
+        {
+            type: 'search',
+            name: 'search',
+            value: filters.search,
+            placeholder: 'Search...',
+            className: 'lg:min-w-80',
+        },
+        {
+            type: 'select',
+            name: 'role',
+            value: filters.role,
+            options: [
+                { value: '', label: 'All roles' },
+                ...roles.map((role) => ({
+                    value: role.name,
+                    label: role.display_name,
+                })),
+            ],
+        },
+        {
+            type: 'select',
+            name: 'verification',
+            value: filters.verification,
+            options: [
+                { value: 'all', label: 'All verification' },
+                { value: 'verified', label: 'Verified' },
+                { value: 'unverified', label: 'Unverified' },
+            ],
+        },
+    ];
+
+    const statusTabs: DatagridTab[] = [
+        {
+            label: 'All',
+            value: 'all',
+            count: stats.total,
+            active: filters.status === 'all',
+            icon: <ListIcon />,
+            countVariant: 'secondary',
+        },
+        {
+            label: 'Active',
+            value: 'active',
+            count: stats.active,
+            active: filters.status === 'active',
+            icon: <ShieldCheckIcon />,
+            countVariant: 'secondary',
+        },
+        {
+            label: 'Inactive',
+            value: 'inactive',
+            count: stats.inactive,
+            active: filters.status === 'inactive',
+            icon: <CircleOffIcon />,
+            countVariant: 'outline',
+        },
+    ];
+
+    const columns: DatagridColumn<ManagedUserListItem>[] = [
+        {
+            key: 'name',
+            header: 'User',
+            sortable: true,
+            sortKey: 'name',
+            cell: (user) => (
+                <div className="flex min-w-0 flex-col gap-1">
+                    <span className="font-medium text-foreground">
+                        {user.name}
+                    </span>
+                    <span className="text-sm text-muted-foreground">
+                        {user.email}
+                    </span>
+                </div>
+            ),
+        },
+        {
+            key: 'status',
+            header: 'Status',
+            headerClassName: 'w-28 text-center',
+            cellClassName: 'w-28 text-center',
+            sortable: true,
+            sortKey: 'status',
+            cell: (user) => (
+                <Badge variant={user.active ? 'secondary' : 'outline'}>
+                    {user.active ? 'Active' : 'Inactive'}
+                </Badge>
+            ),
+        },
+        {
+            key: 'verification',
+            header: 'Verification',
+            headerClassName: 'w-36 text-center',
+            cellClassName: 'w-36 text-center',
+            sortable: true,
+            sortKey: 'verification',
+            cell: (user) => (
+                <Badge
+                    variant={user.email_verified_at ? 'secondary' : 'outline'}
+                >
+                    {user.email_verified_at ? 'Verified' : 'Unverified'}
+                </Badge>
+            ),
+        },
+        {
+            key: 'roles',
+            header: 'Roles',
+            sortable: true,
+            sortKey: 'roles',
+            cell: (user) => (
+                <div className="flex flex-wrap justify-center gap-2 lg:justify-start">
+                    {user.roles.map((role) => (
+                        <Badge key={role.id} variant="outline">
+                            {role.display_name}
+                        </Badge>
+                    ))}
+                </div>
+            ),
+        },
+    ];
+
+    const rowActions =
+        canEditUsers || canDeleteUsers
+            ? (user: ManagedUserListItem): DatagridAction[] => {
+                  const actions: DatagridAction[] = [];
+
+                  if (canEditUsers) {
+                      actions.push({
+                          label: 'Edit',
+                          href: ManagedUserController.edit(user.id).url,
+                          icon: <PencilIcon />,
+                      });
+                  }
+
+                  if (canDeleteUsers) {
+                      actions.push({
+                          label: 'Delete',
+                          onSelect: () => handleDelete(user),
+                          icon: <Trash2Icon />,
+                          variant: 'destructive',
+                      });
+                  }
+
+                  return actions;
+              }
+            : undefined;
 
     return (
         <AppLayout
@@ -100,83 +230,6 @@ export default function UsersIndex({
             }
         >
             <div className="flex flex-col gap-6">
-                <section className="grid gap-4 md:grid-cols-3">
-                    <ResourceStatCard
-                        title="Total users"
-                        value={stats.total}
-                        description="All accounts currently in the application."
-                    />
-                    <ResourceStatCard
-                        title="Active users"
-                        value={stats.active}
-                        description="Accounts currently marked as active."
-                    />
-                    <ResourceStatCard
-                        title="Inactive users"
-                        value={stats.inactive}
-                        description="Accounts that remain stored but are flagged inactive."
-                    />
-                </section>
-
-                <ResourceSectionCard
-                    title="Filter users"
-                    description="Narrow the registry by name, email, status, or assigned role."
-                >
-                    <Form
-                        {...ManagedUserController.index.form()}
-                        method="get"
-                        options={{ preserveScroll: true }}
-                        className="grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(200px,1fr)_minmax(200px,1fr)_auto]"
-                    >
-                        <InputGroup className="w-full">
-                            <InputGroupAddon>
-                                <SearchIcon />
-                            </InputGroupAddon>
-                            <InputGroupInput
-                                name="search"
-                                defaultValue={filters.search}
-                                placeholder="Search users by name or email"
-                            />
-                        </InputGroup>
-
-                        <NativeSelect
-                            name="status"
-                            className="w-full"
-                            defaultValue={filters.status}
-                        >
-                            <NativeSelectOption value="all">
-                                All statuses
-                            </NativeSelectOption>
-                            <NativeSelectOption value="active">
-                                Active
-                            </NativeSelectOption>
-                            <NativeSelectOption value="inactive">
-                                Inactive
-                            </NativeSelectOption>
-                        </NativeSelect>
-
-                        <NativeSelect
-                            name="role"
-                            className="w-full"
-                            defaultValue={filters.role}
-                        >
-                            <NativeSelectOption value="">
-                                All roles
-                            </NativeSelectOption>
-                            {roles.map((role) => (
-                                <NativeSelectOption
-                                    key={role.id}
-                                    value={role.name}
-                                >
-                                    {role.display_name}
-                                </NativeSelectOption>
-                            ))}
-                        </NativeSelect>
-
-                        <Button type="submit">Apply</Button>
-                    </Form>
-                </ResourceSectionCard>
-
                 <ResourceFeedbackAlerts
                     status={status}
                     statusIcon={<ShieldCheckIcon />}
@@ -184,125 +237,98 @@ export default function UsersIndex({
                     errorIcon={<UserCogIcon />}
                 />
 
-                <ResourceSectionCard
-                    title="User registry"
-                    description="Each account can hold multiple roles while permissions continue to flow through role bundles."
-                >
-                    {users.length === 0 ? (
-                        <Empty>
-                            <EmptyHeader>
-                                <EmptyMedia variant="icon">
-                                    <UsersIcon />
-                                </EmptyMedia>
-                                <EmptyTitle>No users found</EmptyTitle>
-                                <EmptyDescription>
-                                    Adjust the filters or create a matching
-                                    account first.
-                                </EmptyDescription>
-                            </EmptyHeader>
-                        </Empty>
-                    ) : (
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>User</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead>Email verification</TableHead>
-                                    <TableHead>Roles</TableHead>
-                                    <TableHead className="text-right">
-                                        Actions
-                                    </TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {users.map((user: ManagedUserListItem) => (
-                                    <TableRow key={user.id}>
-                                        <TableCell className="align-top">
-                                            <div className="flex flex-col gap-1">
-                                                <span className="font-medium text-foreground">
-                                                    {user.name}
-                                                </span>
-                                                <span className="text-sm text-muted-foreground">
-                                                    {user.email}
-                                                </span>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge
-                                                variant={
-                                                    user.active
-                                                        ? 'secondary'
-                                                        : 'outline'
-                                                }
-                                            >
-                                                {user.active
-                                                    ? 'Active'
-                                                    : 'Inactive'}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge
-                                                variant={
-                                                    user.email_verified_at
-                                                        ? 'secondary'
-                                                        : 'outline'
-                                                }
-                                            >
-                                                {user.email_verified_at
-                                                    ? 'Verified'
-                                                    : 'Unverified'}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex flex-wrap gap-2">
-                                                {user.roles.map((role) => (
-                                                    <Badge
-                                                        key={role.id}
-                                                        variant="outline"
-                                                    >
-                                                        {role.display_name}
-                                                    </Badge>
-                                                ))}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex justify-end gap-2">
-                                                <Button
-                                                    asChild
-                                                    variant="outline"
-                                                    size="sm"
-                                                >
-                                                    <Link
-                                                        href={ManagedUserController.edit(
-                                                            user.id,
-                                                        )}
-                                                    >
-                                                        <PencilIcon data-icon="inline-start" />
-                                                        Edit
-                                                    </Link>
-                                                </Button>
+                <Datagrid
+                    action={ManagedUserController.index().url}
+                    rows={users}
+                    columns={columns}
+                    filters={gridFilters}
+                    tabs={{
+                        name: 'status',
+                        items: statusTabs,
+                    }}
+                    getRowKey={(user) => user.id}
+                    rowActions={rowActions}
+                    sorting={{
+                        sort: filters.sort,
+                        direction: filters.direction,
+                    }}
+                    perPage={{
+                        value: filters.per_page,
+                        options: [10, 25, 50, 100],
+                    }}
+                    view={{
+                        value: filters.view,
+                        storageKey: 'users-datagrid-view',
+                    }}
+                    renderCard={(user) => (
+                        <div className="flex flex-col gap-4">
+                            <div className="flex flex-col gap-1">
+                                <span className="font-medium text-foreground">
+                                    {user.name}
+                                </span>
+                                <span className="text-sm text-muted-foreground">
+                                    {user.email}
+                                </span>
+                            </div>
 
-                                                {canDeleteUsers ? (
-                                                    <Button
-                                                        type="button"
-                                                        variant="outline"
-                                                        size="sm"
-                                                        onClick={() =>
-                                                            handleDelete(user)
-                                                        }
-                                                    >
-                                                        <Trash2Icon data-icon="inline-start" />
-                                                        Delete
-                                                    </Button>
-                                                ) : null}
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
+                            <div className="grid gap-3 sm:grid-cols-2">
+                                <div className="rounded-lg border bg-muted/30 px-3 py-2">
+                                    <div className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                                        Status
+                                    </div>
+                                    <div className="mt-1">
+                                        <Badge
+                                            variant={
+                                                user.active
+                                                    ? 'secondary'
+                                                    : 'outline'
+                                            }
+                                        >
+                                            {user.active
+                                                ? 'Active'
+                                                : 'Inactive'}
+                                        </Badge>
+                                    </div>
+                                </div>
+
+                                <div className="rounded-lg border bg-muted/30 px-3 py-2">
+                                    <div className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                                        Verification
+                                    </div>
+                                    <div className="mt-1">
+                                        <Badge
+                                            variant={
+                                                user.email_verified_at
+                                                    ? 'secondary'
+                                                    : 'outline'
+                                            }
+                                        >
+                                            {user.email_verified_at
+                                                ? 'Verified'
+                                                : 'Unverified'}
+                                        </Badge>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex flex-wrap gap-2">
+                                {user.roles.map((role) => (
+                                    <Badge key={role.id} variant="outline">
+                                        {role.display_name}
+                                    </Badge>
                                 ))}
-                            </TableBody>
-                        </Table>
+                            </div>
+                        </div>
                     )}
-                </ResourceSectionCard>
+                    submitLabel="Filters"
+                    submitButtonVariant="outline"
+                    empty={{
+                        icon: <UsersIcon />,
+                        title: 'No users found',
+                        description:
+                            'Try a different filter or create a matching account first.',
+                    }}
+                />
             </div>
         </AppLayout>
     );

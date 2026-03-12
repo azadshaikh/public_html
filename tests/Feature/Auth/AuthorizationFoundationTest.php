@@ -4,6 +4,7 @@ namespace Tests\Feature\Auth;
 
 use App\Models\Role;
 use App\Models\User;
+use Database\Seeders\LocalDatagridUsersSeeder;
 use Database\Seeders\LocalUserSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -108,5 +109,30 @@ class AuthorizationFoundationTest extends TestCase
         $user = User::query()->where('email', 'su@astero.in')->firstOrFail();
 
         $this->assertTrue($user->isSuperUser());
+    }
+
+    public function test_local_datagrid_user_seeder_creates_datagrid_testing_users(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+        $this->seed(LocalDatagridUsersSeeder::class);
+
+        $users = User::query()
+            ->with('roles')
+            ->where('email', 'like', 'datagrid-user-%@example.test')
+            ->orderBy('email')
+            ->get();
+
+        $this->assertCount(56, $users);
+        $this->assertTrue($users->contains(fn (User $user): bool => ! $user->active));
+        $this->assertTrue($users->contains(fn (User $user): bool => $user->email_verified_at === null));
+        $this->assertTrue($users->every(fn (User $user): bool => $user->roles->isNotEmpty()));
+        $this->assertFalse($users->contains(fn (User $user): bool => $user->isSuperUser()));
+
+        $this->seed(LocalDatagridUsersSeeder::class);
+
+        $this->assertSame(
+            56,
+            User::query()->where('email', 'like', 'datagrid-user-%@example.test')->count(),
+        );
     }
 }

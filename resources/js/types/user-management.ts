@@ -1,3 +1,5 @@
+import type { PaginatedData } from '@/types/pagination';
+
 export type ManagedUserRole = {
     id: number;
     name: string;
@@ -33,11 +35,16 @@ export type ManagedUserRoleOption = {
 };
 
 export type UsersIndexPageProps = {
-    users: ManagedUserListItem[];
+    users: PaginatedData<ManagedUserListItem>;
     filters: {
         search: string;
         role: string;
         status: 'all' | 'active' | 'inactive';
+        verification: 'all' | 'verified' | 'unverified';
+        sort: 'name' | 'status' | 'verification' | 'roles';
+        direction: 'asc' | 'desc';
+        per_page: number;
+        view: 'table' | 'cards';
     };
     stats: {
         total: number;

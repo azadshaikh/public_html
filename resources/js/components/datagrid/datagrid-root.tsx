@@ -333,7 +333,6 @@ export function Datagrid<T>({
 
             {hasToolbar ? (
                 <DatagridToolbar
-                    action={action}
                     tabs={tabs}
                     activeTabValue={activeTabValue}
                     hasVisibleFilters={hasVisibleFilters}
@@ -356,6 +355,7 @@ export function Datagrid<T>({
                     searchInputRef={searchInputRef}
                     onTabChange={handleTabChange}
                     onSearchChange={handleSearchChange}
+                    onFilterSubmit={visit}
                     onViewChange={handleViewChange}
                 />
             ) : null}
