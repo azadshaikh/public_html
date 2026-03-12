@@ -11,8 +11,21 @@ import type {
 } from '@/components/datagrid/types';
 import { normalizeRowKey } from '@/components/datagrid/utils';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import {
+    Card,
+    CardAction,
+    CardContent,
+    CardHeader,
+} from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+    Combobox,
+    ComboboxContent,
+    ComboboxItem,
+    ComboboxList,
+    ComboboxTrigger,
+    ComboboxValue,
+} from '@/components/ui/combobox';
 import {
     Empty,
     EmptyDescription,
@@ -20,10 +33,6 @@ import {
     EmptyMedia,
     EmptyTitle,
 } from '@/components/ui/empty';
-import {
-    NativeSelect,
-    NativeSelectOption,
-} from '@/components/ui/native-select';
 import {
     Table,
     TableBody,
@@ -42,6 +51,7 @@ type DatagridResultsProps<T> = {
     bulkActions: DatagridBulkAction<T>[];
     clearSelection: () => void;
     view?: DatagridProps<T>['view'];
+    renderCardHeader?: DatagridProps<T>['renderCardHeader'];
     renderCard?: DatagridProps<T>['renderCard'];
     rowActions?: (row: T) => DatagridAction[];
     isRowSelectable?: (row: T) => boolean;
@@ -68,6 +78,7 @@ export function DatagridResults<T>({
     bulkActions,
     clearSelection,
     view,
+    renderCardHeader,
     renderCard,
     rowActions,
     isRowSelectable,
@@ -85,6 +96,22 @@ export function DatagridResults<T>({
     handlePerPageChange,
     resolvedSummary,
 }: DatagridResultsProps<T>) {
+    const perPageItems = React.useMemo(
+        () =>
+            perPage?.options.map((option) => ({
+                label: String(option),
+                value: String(option),
+            })) ?? [],
+        [perPage?.options],
+    );
+    const selectedPerPageItem = React.useMemo(
+        () =>
+            perPageItems.find(
+                (item) => item.value === String(perPage?.value ?? ''),
+            ) ?? null,
+        [perPage?.value, perPageItems],
+    );
+
     return (
         <Card className="mt-2 py-0">
             <CardContent className="p-0">
@@ -169,33 +196,76 @@ export function DatagridResults<T>({
                                             'border-primary/40 bg-primary/5',
                                     )}
                                 >
-                                    <CardContent className="flex flex-col gap-4 p-4">
-                                        <div className="flex items-start justify-between gap-3">
-                                            {hasSelection ? (
-                                                <Checkbox
-                                                    checked={isSelected}
-                                                    disabled={!rowSelectable}
-                                                    aria-label="Select row"
-                                                    onCheckedChange={(
-                                                        checked,
-                                                    ) =>
-                                                        toggleRowSelection(
-                                                            row,
-                                                            checked === true,
-                                                        )
-                                                    }
-                                                />
-                                            ) : (
-                                                <div />
-                                            )}
-                                            {actions.length > 0 ? (
-                                                <DatagridActionMenu
-                                                    actions={actions}
-                                                />
-                                            ) : null}
-                                        </div>
-                                        {renderCard(row)}
-                                    </CardContent>
+                                    {renderCardHeader ? (
+                                        <>
+                                            <CardHeader className="border-b pt-4">
+                                                <div className="flex min-w-0 items-start gap-3">
+                                                    {hasSelection ? (
+                                                        <Checkbox
+                                                            checked={isSelected}
+                                                            disabled={
+                                                                !rowSelectable
+                                                            }
+                                                            aria-label="Select row"
+                                                            onCheckedChange={(
+                                                                checked,
+                                                            ) =>
+                                                                toggleRowSelection(
+                                                                    row,
+                                                                    checked ===
+                                                                        true,
+                                                                )
+                                                            }
+                                                        />
+                                                    ) : null}
+                                                    <div className="min-w-0 flex-1">
+                                                        {renderCardHeader(row)}
+                                                    </div>
+                                                </div>
+                                                {actions.length > 0 ? (
+                                                    <CardAction>
+                                                        <DatagridActionMenu
+                                                            actions={actions}
+                                                        />
+                                                    </CardAction>
+                                                ) : null}
+                                            </CardHeader>
+                                            <CardContent className="flex flex-col gap-4 p-4">
+                                                {renderCard(row)}
+                                            </CardContent>
+                                        </>
+                                    ) : (
+                                        <CardContent className="flex flex-col gap-4 p-4">
+                                            <div className="flex items-start justify-between gap-3">
+                                                {hasSelection ? (
+                                                    <Checkbox
+                                                        checked={isSelected}
+                                                        disabled={
+                                                            !rowSelectable
+                                                        }
+                                                        aria-label="Select row"
+                                                        onCheckedChange={(
+                                                            checked,
+                                                        ) =>
+                                                            toggleRowSelection(
+                                                                row,
+                                                                checked ===
+                                                                    true,
+                                                            )
+                                                        }
+                                                    />
+                                                ) : (
+                                                    <div />
+                                                )}
+                                                {actions.length > 0 ? (
+                                                    <DatagridActionMenu
+                                                        actions={actions}
+                                                    />
+                                                ) : null}
+                                            </div>
+                                            {renderCard(row)}
+                                        </CardContent>
+                                    )}
                                 </Card>
                             );
                         })}
@@ -372,25 +442,43 @@ export function DatagridResults<T>({
                             {perPage ? (
                                 <div className="flex shrink-0 items-center gap-2">
                                     <span>Per page:</span>
-                                    <NativeSelect
-                                        size="sm"
-                                        className="w-20"
-                                        value={String(perPage.value)}
-                                        onChange={(event) =>
-                                            handlePerPageChange(
-                                                event.target.value,
-                                            )
-                                        }
+                                    <Combobox
+                                        items={perPageItems}
+                                        itemToStringLabel={(item) => item.label}
+                                        value={selectedPerPageItem}
+                                        onValueChange={(item) => {
+                                            if (!item) {
+                                                return;
+                                            }
+
+                                            handlePerPageChange(item.value);
+                                        }}
                                     >
-                                        {perPage.options.map((option) => (
-                                            <NativeSelectOption
-                                                key={`per-page-${option}`}
-                                                value={String(option)}
-                                            >
-                                                {option}
-                                            </NativeSelectOption>
-                                        ))}
-                                    </NativeSelect>
+                                        <ComboboxTrigger
+                                            render={
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="w-20 justify-between px-2 font-normal"
+                                                />
+                                            }
+                                        >
+                                            <ComboboxValue />
+                                        </ComboboxTrigger>
+                                        <ComboboxContent>
+                                            <ComboboxList>
+                                                {perPageItems.map((item) => (
+                                                    <ComboboxItem
+                                                        key={`per-page-${item.value}`}
+                                                        value={item}
+                                                    >
+                                                        {item.label}
+                                                    </ComboboxItem>
+                                                ))}
+                                            </ComboboxList>
+                                        </ComboboxContent>
+                                    </Combobox>
                                 </div>
                             ) : null}
 

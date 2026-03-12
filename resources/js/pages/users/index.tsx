@@ -305,17 +305,18 @@ export default function UsersIndex({
                         value: filters.view,
                         storageKey: 'users-datagrid-view',
                     }}
+                    renderCardHeader={(user) => (
+                        <div className="flex min-w-0 flex-col gap-1">
+                            <span className="truncate font-medium text-foreground">
+                                {user.name}
+                            </span>
+                            <span className="truncate text-sm text-muted-foreground">
+                                {user.email}
+                            </span>
+                        </div>
+                    )}
                     renderCard={(user) => (
                         <div className="flex flex-col gap-4">
-                            <div className="flex flex-col gap-1">
-                                <span className="font-medium text-foreground">
-                                    {user.name}
-                                </span>
-                                <span className="text-sm text-muted-foreground">
-                                    {user.email}
-                                </span>
-                            </div>
-
                             <div className="grid gap-3 sm:grid-cols-2">
                                 <div className="rounded-lg border bg-muted/30 px-3 py-2">
                                     <div className="text-xs font-medium tracking-wide text-muted-foreground uppercase">

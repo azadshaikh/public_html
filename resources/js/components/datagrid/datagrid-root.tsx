@@ -28,6 +28,7 @@ export function Datagrid<T>({
     sorting,
     perPage,
     view,
+    renderCardHeader,
     renderCard,
     summary,
     submitLabel = 'Apply',
@@ -386,6 +387,7 @@ export function Datagrid<T>({
                 bulkActions={bulkActions}
                 clearSelection={clearSelection}
                 view={view}
+                renderCardHeader={renderCardHeader}
                 renderCard={renderCard}
                 rowActions={rowActions}
                 isRowSelectable={isRowSelectable}

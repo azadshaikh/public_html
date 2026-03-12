@@ -105,6 +105,43 @@ class UserRoleManagementTest extends TestCase
                 ->where('users.data.0.email', 'morgan@example.com'));
     }
 
+    public function test_administrators_can_sort_paginate_and_change_user_views(): void
+    {
+        $administrator = $this->administrator();
+        $staffRole = Role::query()->where('name', 'staff')->firstOrFail();
+
+        foreach (range(1, 11) as $index) {
+            $user = User::factory()->create([
+                'name' => sprintf('Managed User %02d', $index),
+                'email' => sprintf('managed-user-%02d@example.com', $index),
+                'active' => $index % 2 === 0,
+            ]);
+            $user->assignRole($staffRole);
+        }
+
+        $this->actingAs($administrator)
+            ->get(route('users.index', [
+                'role' => 'staff',
+                'sort' => 'name',
+                'direction' => 'desc',
+                'per_page' => 10,
+                'view' => 'cards',
+            ]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->component('users/index')
+                ->where('filters.role', 'staff')
+                ->where('filters.sort', 'name')
+                ->where('filters.direction', 'desc')
+                ->where('filters.per_page', 10)
+                ->where('filters.view', 'cards')
+                ->where('users.current_page', 1)
+                ->where('users.last_page', 2)
+                ->where('users.total', 11)
+                ->has('users.data', 10)
+                ->where('users.data.0.email', 'managed-user-11@example.com'));
+    }
+
     public function test_administrators_can_view_the_user_edit_screen(): void
     {
         $administrator = $this->administrator();

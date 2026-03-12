@@ -108,6 +108,7 @@ export type DatagridProps<T> = {
         paramName?: string;
         storageKey?: string;
     };
+    renderCardHeader?: (row: T) => ReactNode;
     renderCard?: (row: T) => ReactNode;
     summary?: string;
     submitLabel?: string;
