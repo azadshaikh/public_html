@@ -230,6 +230,7 @@ export function DatagridToolbar({
                                 type="single"
                                 value={view.value}
                                 variant="outline"
+                                size="comfortable"
                                 onValueChange={(value) => {
                                     if (
                                         value === 'table' ||

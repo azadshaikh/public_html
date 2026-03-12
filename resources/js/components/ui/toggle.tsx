@@ -14,13 +14,14 @@ const toggleVariants = cva(
       },
       size: {
         default: "h-8 min-w-8 px-2",
+        comfortable: "h-9 min-w-9 px-2.5",
         sm: "h-7 min-w-7 rounded-[min(var(--radius-md),12px)] px-1.5 text-[0.8rem]",
         lg: "h-9 min-w-9 px-2.5",
       },
     },
     defaultVariants: {
       variant: "default",
-      size: "default",
+      size: "comfortable",
     },
   }
 )
@@ -28,7 +29,7 @@ const toggleVariants = cva(
 function Toggle({
   className,
   variant = "default",
-  size = "default",
+  size = "comfortable",
   ...props
 }: React.ComponentProps<typeof TogglePrimitive.Root> &
   VariantProps<typeof toggleVariants>) {

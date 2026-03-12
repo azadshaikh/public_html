@@ -32,7 +32,7 @@ export function Datagrid<T>({
     summary,
     submitLabel = 'Apply',
     submitButtonVariant = 'outline',
-    submitButtonSize = 'default',
+    submitButtonSize = 'comfortable',
     title,
     description,
     className,

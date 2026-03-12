@@ -112,7 +112,7 @@ export type DatagridProps<T> = {
     summary?: string;
     submitLabel?: string;
     submitButtonVariant?: 'default' | 'outline' | 'secondary' | 'ghost';
-    submitButtonSize?: 'default' | 'sm' | 'xs';
+    submitButtonSize?: 'comfortable' | 'default' | 'sm' | 'xs';
     title?: string;
     description?: string;
     className?: string;
