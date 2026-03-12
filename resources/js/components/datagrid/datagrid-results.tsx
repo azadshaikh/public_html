@@ -205,7 +205,15 @@ export function DatagridResults<T>({
                         <TableHeader>
                             <TableRow className="hover:bg-transparent">
                                 {hasSelection ? (
-                                    <TableHead className="w-12 px-4">
+                                    <TableHead 
+                                        className="w-12 cursor-pointer px-4"
+                                        onClick={(e) => {
+                                            if ((e.target as HTMLElement).closest('button[role="checkbox"]')) {
+                                                return;
+                                            }
+                                            toggleAllRows(!allSelectableRowsSelected);
+                                        }}
+                                    >
                                         <Checkbox
                                             checked={
                                                 allSelectableRowsSelected
@@ -286,7 +294,18 @@ export function DatagridResults<T>({
                                         }
                                     >
                                         {hasSelection ? (
-                                            <TableCell className="px-4 py-3 align-top">
+                                            <TableCell 
+                                                className={cn(
+                                                    "px-4 py-3 align-top",
+                                                    rowSelectable && "cursor-pointer"
+                                                )}
+                                                onClick={(e) => {
+                                                    if (!rowSelectable || (e.target as HTMLElement).closest('button[role="checkbox"]')) {
+                                                        return;
+                                                    }
+                                                    toggleRowSelection(row, !isSelected);
+                                                }}
+                                            >
                                                 <Checkbox
                                                     checked={isSelected}
                                                     disabled={!rowSelectable}
