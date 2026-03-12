@@ -7,6 +7,7 @@ use App\Models\Role;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Console\Events\CommandStarting;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
@@ -40,6 +41,11 @@ class AppServiceProvider extends ServiceProvider
     protected function configureDefaults(): void
     {
         Date::use(CarbonImmutable::class);
+
+        $this->app->resolving(
+            LengthAwarePaginator::class,
+            fn (LengthAwarePaginator $paginator) => $paginator->onEachSide(1)
+        );
 
         DB::prohibitDestructiveCommands(
             app()->isProduction(),

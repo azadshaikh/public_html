@@ -326,8 +326,8 @@ export function DatagridResults<T>({
                 )}
 
                 {rows.data.length > 0 ? (
-                    <div className="flex flex-col gap-3 border-t px-4 pt-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-                        <div className="flex flex-col gap-2 text-xs text-muted-foreground sm:flex-row sm:flex-nowrap sm:items-center sm:gap-3">
+                    <div className="flex flex-col items-center gap-4 border-t px-4 pt-4 pb-2 text-center sm:flex-row sm:justify-between sm:gap-4 sm:pt-3 sm:pb-0 sm:text-left">
+                        <div className="flex w-full flex-col items-center gap-3 text-xs text-muted-foreground sm:w-auto sm:flex-row sm:flex-nowrap sm:gap-3">
                             {perPage ? (
                                 <div className="flex shrink-0 items-center gap-2">
                                     <span>Per page:</span>

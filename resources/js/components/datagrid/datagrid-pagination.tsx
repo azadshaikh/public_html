@@ -25,8 +25,8 @@ export function DatagridPagination({ links }: { links: PaginatorLink[] }) {
     });
 
     return (
-        <Pagination className="justify-start lg:justify-end">
-            <PaginationContent className="flex-wrap justify-start sm:justify-end">
+        <Pagination className="w-full justify-center sm:mx-0 sm:w-auto sm:justify-end">
+            <PaginationContent className="flex-wrap justify-center sm:justify-end">
                 <PaginationItem>
                     {previousLink?.url ? (
                         <Button asChild variant="ghost" size="icon-sm">
@@ -57,6 +57,20 @@ export function DatagridPagination({ links }: { links: PaginatorLink[] }) {
                         link.label,
                     );
 
+                    const isSecondAndFollowedByEllipsis =
+                        index === 1 &&
+                        pageLinks.length > 2 &&
+                        normalizePaginationLabel(pageLinks[2].label) === '...';
+                    const isSecondToLastAndPrecededByEllipsis =
+                        index === pageLinks.length - 2 &&
+                        pageLinks.length > 2 &&
+                        normalizePaginationLabel(
+                            pageLinks[pageLinks.length - 3].label,
+                        ) === '...';
+                    const isHiddenOnMobile =
+                        isSecondAndFollowedByEllipsis ||
+                        isSecondToLastAndPrecededByEllipsis;
+
                     if (normalizedLabel === '...') {
                         return (
                             <PaginationItem key={`ellipsis-${index}`}>
@@ -66,7 +80,12 @@ export function DatagridPagination({ links }: { links: PaginatorLink[] }) {
                     }
 
                     return (
-                        <PaginationItem key={`${normalizedLabel}-${index}`}>
+                        <PaginationItem
+                            key={`${normalizedLabel}-${index}`}
+                            className={cn(
+                                isHiddenOnMobile && 'hidden sm:block',
+                            )}
+                        >
                             {link.url ? (
                                 <Button
                                     asChild
