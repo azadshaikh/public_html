@@ -1,9 +1,6 @@
 import {
     ActivityIcon,
-    CheckCircle2Icon,
-    DatabaseIcon,
     FolderKanbanIcon,
-    ImageIcon,
     MailCheckIcon,
     ShieldCheckIcon,
     UsersIcon,
@@ -125,109 +122,6 @@ export default function Dashboard({
             title="Dashboard"
             description="Track core application health, account activity, and operational readiness from one place."
         >
-            <section className="grid gap-4 xl:grid-cols-[1.7fr_1fr]">
-                <Card className="border-none bg-gradient-to-br from-foreground to-foreground/85 text-background shadow-none ring-0">
-                    <CardHeader>
-                        <Badge
-                            variant="secondary"
-                            className="w-fit bg-background/15 text-background hover:bg-background/15"
-                        >
-                            Application overview
-                        </Badge>
-                        <CardTitle className="text-3xl font-semibold tracking-tight text-background md:text-4xl">
-                            Operational visibility at a glance
-                        </CardTitle>
-                        <CardDescription className="max-w-2xl text-background/75">
-                            Keep an eye on user growth, role distribution,
-                            verification progress, media usage, and recent
-                            changes across the application.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-                        <div className="grid gap-3 sm:grid-cols-3">
-                            <div>
-                                <div className="text-2xl font-semibold">
-                                    {formatNumber(summary.totalUsers)}
-                                </div>
-                                <div className="text-sm text-background/70">
-                                    registered accounts
-                                </div>
-                            </div>
-                            <div>
-                                <div className="text-2xl font-semibold">
-                                    {formatNumber(summary.activeUsers)}
-                                </div>
-                                <div className="text-sm text-background/70">
-                                    active users
-                                </div>
-                            </div>
-                            <div>
-                                <div className="text-2xl font-semibold">
-                                    {formatNumber(summary.totalRoles)}
-                                </div>
-                                <div className="text-sm text-background/70">
-                                    defined roles
-                                </div>
-                            </div>
-                        </div>
-                        <div className="rounded-2xl border border-background/10 bg-background/10 px-4 py-3 text-sm text-background/80">
-                            <div className="font-medium text-background">
-                                {verificationRate}% of users have verified email
-                            </div>
-                            <div className="mt-1 text-background/70">
-                                {formatNumber(summary.recentActivityCount)}{' '}
-                                logged activities in the last 30 days.
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader>
-                        <CardTitle>System pulse</CardTitle>
-                        <CardDescription>
-                            The most important platform signals right now.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="rounded-xl border bg-muted/40 p-4">
-                            <div className="mb-1 flex items-center gap-2 text-sm font-medium">
-                                <CheckCircle2Icon className="size-4 text-primary" />
-                                {verificationRate}% email verification coverage
-                            </div>
-                            <p className="text-sm text-muted-foreground">
-                                Verified accounts reduce friction for account
-                                recovery, notifications, and admin workflows.
-                            </p>
-                        </div>
-                        <div className="rounded-xl border bg-muted/40 p-4">
-                            <div className="mb-1 flex items-center gap-2 text-sm font-medium">
-                                <DatabaseIcon className="size-4 text-primary" />
-                                {formatNumber(summary.activeActors)} active
-                                contributors
-                            </div>
-                            <p className="text-sm text-muted-foreground">
-                                Users created or updated data across the app in
-                                the last 30 days.
-                            </p>
-                        </div>
-                        <div className="rounded-xl border bg-muted/40 p-4">
-                            <div className="mb-1 flex items-center gap-2 text-sm font-medium">
-                                <ImageIcon className="size-4 text-primary" />
-                                {summary.totalMedia === null
-                                    ? 'Media insights unavailable'
-                                    : `${formatNumber(summary.totalMedia)} media items stored`}
-                            </div>
-                            <p className="text-sm text-muted-foreground">
-                                {summary.totalMedia === null
-                                    ? 'Grant media access to include storage and asset metrics on this dashboard.'
-                                    : `${formatNumber(summary.imageMedia)} of them are images ready for reuse across the application.`}
-                            </p>
-                        </div>
-                    </CardContent>
-                </Card>
-            </section>
-
             <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                 {stats.map((stat) => {
                     const Icon = stat.icon;

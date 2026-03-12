@@ -14,6 +14,7 @@ import {
     ShieldCheckIcon,
 } from 'lucide-react';
 import * as React from 'react';
+import ModuleController from '@/actions/App/Http/Controllers/ModuleController';
 import RoleController from '@/actions/App/Http/Controllers/RoleController';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -77,10 +78,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const canAddRoles = auth.abilities.addRoles;
     const canViewUsers = auth.abilities.viewUsers;
     const canAddUsers = auth.abilities.addUsers;
+    const moduleManagementUrl = ModuleController.index().url;
     const isDashboardPage = currentComponent === 'dashboard';
     const isModulesPage =
         currentComponent.startsWith('modules/') ||
-        currentUrl.startsWith('/modules');
+        currentUrl.startsWith(moduleManagementUrl);
     const isRolesPage =
         currentComponent.startsWith('roles/') ||
         currentUrl.startsWith('/roles');
@@ -122,7 +124,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             ? [
                   {
                       title: 'Modules',
-                      url: '/modules',
+                      url: moduleManagementUrl,
                       icon: <PackageIcon />,
                       isActive: isModulesPage,
                   },

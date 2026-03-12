@@ -43,7 +43,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Inertia::handleExceptionsUsing(function (ExceptionResponse $response): ?ExceptionResponse {
-            if ($response->request->expectsJson()) {
+            if (config('app.debug') || $response->request->expectsJson()) {
                 return null;
             }
 

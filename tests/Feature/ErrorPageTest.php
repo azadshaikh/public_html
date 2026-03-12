@@ -13,6 +13,8 @@ class ErrorPageTest extends TestCase
     {
         parent::setUp();
 
+        config()->set('app.debug', false);
+
         Route::middleware('web')->prefix('/_test/errors')->group(function (): void {
             Route::get('/401', fn () => abort(401))->name('test.errors.401');
             Route::get('/402', fn () => abort(402, 'Billing access is required.'))->name('test.errors.402');
@@ -81,5 +83,14 @@ class ErrorPageTest extends TestCase
             ->assertForbidden()
             ->assertHeaderMissing('X-Inertia')
             ->assertJsonStructure(['message']);
+    }
+
+    public function test_debug_mode_uses_laravels_default_error_rendering(): void
+    {
+        config()->set('app.debug', true);
+
+        $this->get('/_test/errors/403')
+            ->assertForbidden()
+            ->assertHeaderMissing('X-Inertia');
     }
 }
