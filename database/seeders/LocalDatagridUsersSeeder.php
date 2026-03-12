@@ -9,7 +9,7 @@ use Illuminate\Database\Seeder;
 
 class LocalDatagridUsersSeeder extends Seeder
 {
-    private const USER_COUNT = 256;
+    public const USER_COUNT = 256;
 
     /**
      * Seed local-only users for datagrid testing.

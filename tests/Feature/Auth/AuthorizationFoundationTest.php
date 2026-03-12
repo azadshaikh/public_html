@@ -122,7 +122,7 @@ class AuthorizationFoundationTest extends TestCase
             ->orderBy('email')
             ->get();
 
-        $this->assertCount(56, $users);
+        $this->assertCount(LocalDatagridUsersSeeder::USER_COUNT, $users);
         $this->assertTrue($users->contains(fn (User $user): bool => ! $user->active));
         $this->assertTrue($users->contains(fn (User $user): bool => $user->email_verified_at === null));
         $this->assertTrue($users->every(fn (User $user): bool => $user->roles->isNotEmpty()));
@@ -131,7 +131,7 @@ class AuthorizationFoundationTest extends TestCase
         $this->seed(LocalDatagridUsersSeeder::class);
 
         $this->assertSame(
-            56,
+            LocalDatagridUsersSeeder::USER_COUNT,
             User::query()->where('email', 'like', 'datagrid-user-%@example.test')->count(),
         );
     }
