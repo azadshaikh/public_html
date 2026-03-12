@@ -8,7 +8,6 @@ use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 use Inertia\Testing\AssertableInertia as Assert;
-use Laravel\Fortify\Features;
 use Tests\TestCase;
 
 class RegistrationTest extends TestCase
@@ -20,8 +19,6 @@ class RegistrationTest extends TestCase
         parent::setUp();
 
         $this->withoutMiddleware(ValidateCsrfToken::class);
-
-        $this->skipUnlessFortifyFeature(Features::registration());
     }
 
     public function test_registration_screen_can_be_rendered(): void

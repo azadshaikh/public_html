@@ -15,7 +15,6 @@
         "inertiajs/inertia-laravel": "^3.0.0-beta",
         "laravel/ai": "^0.2.6",
         "laravel/cashier": "^16.2",
-        "laravel/fortify": "^1.36.1",
         "laravel/framework": "^12.54.1",
         "laravel/socialite": "^5.24",
         "laravel/wayfinder": "^0.1.14",

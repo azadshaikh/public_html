@@ -6,19 +6,11 @@ use App\Enums\Status;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
-use Laravel\Fortify\Features;
 use Tests\TestCase;
 
 class TwoFactorChallengeTest extends TestCase
 {
     use RefreshDatabase;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        $this->skipUnlessFortifyFeature(Features::twoFactorAuthentication());
-    }
 
     public function test_two_factor_challenge_redirects_to_login_when_not_authenticated(): void
     {
@@ -29,11 +21,6 @@ class TwoFactorChallengeTest extends TestCase
 
     public function test_two_factor_challenge_can_be_rendered(): void
     {
-        Features::twoFactorAuthentication([
-            'confirm' => true,
-            'confirmPassword' => true,
-        ]);
-
         $user = User::factory()->withTwoFactor()->create([
             'status' => Status::ACTIVE,
         ]);

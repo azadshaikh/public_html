@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Queue;
 use Inertia\Testing\AssertableInertia as Assert;
-use Laravel\Fortify\Features;
 use Tests\TestCase;
 
 class PasswordResetTest extends TestCase
@@ -22,8 +21,6 @@ class PasswordResetTest extends TestCase
         parent::setUp();
 
         $this->withoutMiddleware(ValidateCsrfToken::class);
-
-        $this->skipUnlessFortifyFeature(Features::resetPasswords());
     }
 
     public function test_reset_password_link_screen_can_be_rendered(): void

@@ -2,83 +2,83 @@
 
 namespace Tests\Feature\Account;
 
+use App\Enums\Status;
 use App\Models\User;
+use App\Services\TwoFactorAuthenticationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Inertia\Testing\AssertableInertia as Assert;
-use Laravel\Fortify\Features;
 use Tests\TestCase;
 
 class TwoFactorAuthenticationTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_two_factor_account_page_can_be_rendered(): void
+    public function test_authenticated_user_can_start_two_factor_setup(): void
     {
-        $this->skipUnlessFortifyFeature(Features::twoFactorAuthentication());
-
-        Features::twoFactorAuthentication([
-            'confirm' => true,
-            'confirmPassword' => true,
-        ]);
-
-        $user = User::factory()->create();
-
-        $this->actingAs($user)
-            ->withSession(['auth.password_confirmed_at' => time()])
-            ->get(route('two-factor.show'))
-            ->assertInertia(fn (Assert $page): Assert => $page
-                ->component('account/two-factor')
-                ->where('twoFactorEnabled', false),
-            );
-    }
-
-    public function test_two_factor_account_page_requires_password_confirmation_when_enabled(): void
-    {
-        $this->skipUnlessFortifyFeature(Features::twoFactorAuthentication());
-
-        $user = User::factory()->create();
-
-        Features::twoFactorAuthentication([
-            'confirm' => true,
-            'confirmPassword' => true,
-        ]);
-
-        $response = $this->actingAs($user)
-            ->get(route('two-factor.show'));
-
-        $response->assertRedirect(route('password.confirm'));
-    }
-
-    public function test_two_factor_account_page_does_not_requires_password_confirmation_when_disabled(): void
-    {
-        $this->skipUnlessFortifyFeature(Features::twoFactorAuthentication());
-
-        $user = User::factory()->create();
-
-        Features::twoFactorAuthentication([
-            'confirm' => true,
-            'confirmPassword' => false,
+        $user = User::factory()->create([
+            'first_name' => 'Test',
+            'status' => Status::ACTIVE,
         ]);
 
         $this->actingAs($user)
-            ->get(route('two-factor.show'))
-            ->assertOk()
-            ->assertInertia(fn (Assert $page): Assert => $page
-                ->component('account/two-factor'),
-            );
+            ->post(route('app.profile.two-factor.store'))
+            ->assertRedirect(route('app.profile.security.two-factor', absolute: false))
+            ->assertSessionHas('success');
+
+        $user->refresh();
+
+        $this->assertNotNull($user->two_factor_secret);
+        $this->assertNull($user->two_factor_confirmed_at);
     }
 
-    public function test_two_factor_account_page_returns_forbidden_response_when_two_factor_is_disabled(): void
+    public function test_authenticated_user_can_confirm_two_factor_setup(): void
     {
-        $this->skipUnlessFortifyFeature(Features::twoFactorAuthentication());
+        $user = User::factory()->create([
+            'first_name' => 'Test',
+            'status' => Status::ACTIVE,
+            'two_factor_secret' => 'JBSWY3DPEHPK3PXP',
+            'two_factor_confirmed_at' => null,
+        ]);
 
-        config(['fortify.features' => []]);
-
-        $user = User::factory()->create();
+        $code = app(TwoFactorAuthenticationService::class)->generateCodeForSecret((string) $user->two_factor_secret);
 
         $this->actingAs($user)
-            ->withSession(['auth.password_confirmed_at' => time()])
-            ->get(route('two-factor.show'))
-            ->assertForbidden();
+            ->post(route('app.profile.two-factor.confirm'), [
+                'code' => $code,
+            ])
+            ->assertRedirect(route('app.profile.security.two-factor', absolute: false))
+            ->assertSessionHas('success')
+            ->assertSessionHas('two_factor.recovery_codes');
+
+        $user->refresh();
+
+        $this->assertNotNull($user->two_factor_confirmed_at);
+        $this->assertNotEmpty($user->two_factor_recovery_codes);
+    }
+
+    public function test_authenticated_user_can_disable_two_factor(): void
+    {
+        $user = User::factory()->withTwoFactor()->create([
+            'first_name' => 'Test',
+            'status' => Status::ACTIVE,
+        ]);
+
+        $this->actingAs($user)
+            ->delete(route('app.profile.two-factor.destroy'), [
+                'current_password' => 'password',
+            ])
+            ->assertRedirect(route('app.profile.security.two-factor', absolute: false))
+            ->assertSessionHas('success');
+
+        $user->refresh();
+
+        $this->assertNull($user->two_factor_secret);
+        $this->assertNull($user->two_factor_confirmed_at);
+        $this->assertNull($user->two_factor_recovery_codes);
+    }
+
+    public function test_guest_is_redirected_from_two_factor_setup_route(): void
+    {
+        $this->post(route('app.profile.two-factor.store'))
+            ->assertRedirect(route('login'));
     }
 }
