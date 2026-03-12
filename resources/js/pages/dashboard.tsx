@@ -1,17 +1,14 @@
 import {
-    ArrowUpRightIcon,
-    CalendarClockIcon,
-    FileTextIcon,
+    ActivityIcon,
+    CheckCircle2Icon,
+    DatabaseIcon,
     FolderKanbanIcon,
-    MessageSquareMoreIcon,
-    NewspaperIcon,
-    PlusIcon,
-    SparklesIcon,
+    ImageIcon,
+    MailCheckIcon,
+    ShieldCheckIcon,
     UsersIcon,
-    WandSparklesIcon,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import {
     Card,
     CardContent,
@@ -19,6 +16,13 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import {
+    Empty,
+    EmptyDescription,
+    EmptyHeader,
+    EmptyMedia,
+    EmptyTitle,
+} from '@/components/ui/empty';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -40,127 +44,86 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-const stats = [
-    {
-        title: 'Published posts',
-        value: '128',
-        change: '+12% this month',
-        icon: NewspaperIcon,
-    },
-    {
-        title: 'Pending review',
-        value: '18',
-        change: '5 need approval today',
-        icon: FolderKanbanIcon,
-    },
-    {
-        title: 'Active members',
-        value: '2,431',
-        change: '+8.4% audience growth',
-        icon: UsersIcon,
-    },
-    {
-        title: 'Comments',
-        value: '342',
-        change: '24 unread conversations',
-        icon: MessageSquareMoreIcon,
-    },
-] as const;
+type DashboardPageProps = {
+    summary: {
+        totalUsers: number;
+        activeUsers: number;
+        verifiedUsers: number;
+        totalRoles: number;
+        customRoles: number;
+        totalMedia: number | null;
+        imageMedia: number | null;
+        recentActivityCount: number;
+        activeActors: number;
+    };
+    verificationRate: number;
+    mediaUsage: {
+        usedSizeReadable: string;
+        maxSizeReadable: string;
+        remainingReadable: string | null;
+        percentageUsed: number;
+    } | null;
+    recentUsers: Array<{
+        id: number;
+        name: string;
+        email: string | null;
+        status: string;
+        joinedAt: string | null;
+    }>;
+    recentActivities: Array<{
+        id: number;
+        title: string;
+        meta: string;
+    }>;
+};
 
-const pipeline = [
-    { label: 'Drafts', value: 42 },
-    { label: 'In review', value: 68 },
-    { label: 'Scheduled', value: 53 },
-    { label: 'Published', value: 84 },
-] as const;
-
-const recentContent = [
-    {
-        title: 'Spring campaign landing page',
-        type: 'Page',
-        status: 'Published',
-        author: 'Nadia Rahman',
-        updated: '12 min ago',
-        views: '4.8k',
-    },
-    {
-        title: 'Product launch email sequence',
-        type: 'Campaign',
-        status: 'Review',
-        author: 'Arjun Patel',
-        updated: '34 min ago',
-        views: '1.2k',
-    },
-    {
-        title: 'Knowledge base: API authentication',
-        type: 'Article',
-        status: 'Scheduled',
-        author: 'Sarah Chen',
-        updated: '1 hour ago',
-        views: '860',
-    },
-    {
-        title: 'Homepage hero experiment B',
-        type: 'Experiment',
-        status: 'Draft',
-        author: 'Imran Hossain',
-        updated: '3 hours ago',
-        views: '—',
-    },
-] as const;
-
-const activities = [
-    {
-        title: 'Homepage redesign approved',
-        meta: 'Design team • 8 minutes ago',
-    },
-    {
-        title: 'Editorial calendar updated for April',
-        meta: 'Content ops • 26 minutes ago',
-    },
-    {
-        title: 'Media library storage reached 78%',
-        meta: 'System alert • 1 hour ago',
-    },
-    {
-        title: 'New author onboarding completed',
-        meta: 'People ops • 2 hours ago',
-    },
-] as const;
-
-function statusVariant(
-    status: string,
-): 'default' | 'secondary' | 'outline' | 'ghost' {
-    switch (status) {
-        case 'Published':
-            return 'default';
-        case 'Review':
-            return 'secondary';
-        case 'Scheduled':
-            return 'outline';
-        default:
-            return 'ghost';
+function formatNumber(value: number | null): string {
+    if (value === null) {
+        return '—';
     }
+
+    return new Intl.NumberFormat().format(value);
 }
 
-export default function Dashboard() {
+export default function Dashboard({
+    summary,
+    verificationRate,
+    mediaUsage,
+    recentUsers,
+    recentActivities,
+}: DashboardPageProps) {
+    const stats = [
+        {
+            title: 'Total users',
+            value: formatNumber(summary.totalUsers),
+            change: `${formatNumber(summary.activeUsers)} active accounts`,
+            icon: UsersIcon,
+        },
+        {
+            title: 'Verified users',
+            value: formatNumber(summary.verifiedUsers),
+            change: `${verificationRate}% verification rate`,
+            icon: MailCheckIcon,
+        },
+        {
+            title: 'Roles',
+            value: formatNumber(summary.totalRoles),
+            change: `${formatNumber(summary.customRoles)} custom roles`,
+            icon: ShieldCheckIcon,
+        },
+        {
+            title: 'Recent activity',
+            value: formatNumber(summary.recentActivityCount),
+            change: `${formatNumber(summary.activeActors)} active actors in 30 days`,
+            icon: ActivityIcon,
+        },
+    ] as const;
+
     return (
         <AppLayout
             breadcrumbs={breadcrumbs}
             title="Dashboard"
-            description="Monitor publishing velocity, editorial pipeline progress, and audience engagement from one CMS dashboard."
-            headerActions={
-                <>
-                    <Button>
-                        <PlusIcon />
-                        New article
-                    </Button>
-                    <Button variant="outline">
-                        <WandSparklesIcon />
-                        Open content studio
-                    </Button>
-                </>
-            }
+            description="Track core application health, account activity, and operational readiness from one place."
         >
             <section className="grid gap-4 xl:grid-cols-[1.7fr_1fr]">
                 <Card className="border-none bg-gradient-to-br from-foreground to-foreground/85 text-background shadow-none ring-0">
@@ -169,97 +132,96 @@ export default function Dashboard() {
                             variant="secondary"
                             className="w-fit bg-background/15 text-background hover:bg-background/15"
                         >
-                            CMS overview
+                            Application overview
                         </Badge>
                         <CardTitle className="text-3xl font-semibold tracking-tight text-background md:text-4xl">
-                            Content performance at a glance
+                            Operational visibility at a glance
                         </CardTitle>
                         <CardDescription className="max-w-2xl text-background/75">
-                            Monitor publishing velocity, editorial pipeline,
-                            audience engagement, and team activity from one
-                            place.
+                            Keep an eye on user growth, role distribution,
+                            verification progress, media usage, and recent
+                            changes across the application.
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                         <div className="grid gap-3 sm:grid-cols-3">
                             <div>
                                 <div className="text-2xl font-semibold">
-                                    94%
+                                    {formatNumber(summary.totalUsers)}
                                 </div>
                                 <div className="text-sm text-background/70">
-                                    on-time publishing rate
+                                    registered accounts
                                 </div>
                             </div>
                             <div>
                                 <div className="text-2xl font-semibold">
-                                    31.4k
+                                    {formatNumber(summary.activeUsers)}
                                 </div>
                                 <div className="text-sm text-background/70">
-                                    monthly readers
+                                    active users
                                 </div>
                             </div>
                             <div>
-                                <div className="text-2xl font-semibold">12</div>
+                                <div className="text-2xl font-semibold">
+                                    {formatNumber(summary.totalRoles)}
+                                </div>
                                 <div className="text-sm text-background/70">
-                                    campaigns running
+                                    defined roles
                                 </div>
                             </div>
                         </div>
-                        <div className="flex flex-wrap gap-2">
-                            <Button
-                                variant="secondary"
-                                className="bg-background text-foreground hover:bg-background/90"
-                            >
-                                <PlusIcon />
-                                New article
-                            </Button>
-                            <Button
-                                variant="outline"
-                                className="border-background/20 bg-transparent text-background hover:bg-background/10 hover:text-background"
-                            >
-                                <WandSparklesIcon />
-                                Open content studio
-                            </Button>
+                        <div className="rounded-2xl border border-background/10 bg-background/10 px-4 py-3 text-sm text-background/80">
+                            <div className="font-medium text-background">
+                                {verificationRate}% of users have verified email
+                            </div>
+                            <div className="mt-1 text-background/70">
+                                {formatNumber(summary.recentActivityCount)}{' '}
+                                logged activities in the last 30 days.
+                            </div>
                         </div>
                     </CardContent>
                 </Card>
 
                 <Card>
                     <CardHeader>
-                        <CardTitle>Today’s focus</CardTitle>
+                        <CardTitle>System pulse</CardTitle>
                         <CardDescription>
-                            What your team should prioritize next.
+                            The most important platform signals right now.
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="rounded-xl border bg-muted/40 p-4">
                             <div className="mb-1 flex items-center gap-2 text-sm font-medium">
-                                <CalendarClockIcon className="size-4 text-primary" />
-                                6 posts scheduled for today
+                                <CheckCircle2Icon className="size-4 text-primary" />
+                                {verificationRate}% email verification coverage
                             </div>
                             <p className="text-sm text-muted-foreground">
-                                Confirm hero assets and SEO metadata before the
-                                noon publishing window.
+                                Verified accounts reduce friction for account
+                                recovery, notifications, and admin workflows.
                             </p>
                         </div>
                         <div className="rounded-xl border bg-muted/40 p-4">
                             <div className="mb-1 flex items-center gap-2 text-sm font-medium">
-                                <SparklesIcon className="size-4 text-primary" />
-                                AI suggestions ready
+                                <DatabaseIcon className="size-4 text-primary" />
+                                {formatNumber(summary.activeActors)} active
+                                contributors
                             </div>
                             <p className="text-sm text-muted-foreground">
-                                14 content briefs have optimization suggestions
-                                for titles, excerpts, and CTAs.
+                                Users created or updated data across the app in
+                                the last 30 days.
                             </p>
                         </div>
                         <div className="rounded-xl border bg-muted/40 p-4">
                             <div className="mb-1 flex items-center gap-2 text-sm font-medium">
-                                <ArrowUpRightIcon className="size-4 text-primary" />
-                                Traffic spike detected
+                                <ImageIcon className="size-4 text-primary" />
+                                {summary.totalMedia === null
+                                    ? 'Media insights unavailable'
+                                    : `${formatNumber(summary.totalMedia)} media items stored`}
                             </div>
                             <p className="text-sm text-muted-foreground">
-                                The API authentication article is trending.
-                                Consider featuring it on the homepage.
+                                {summary.totalMedia === null
+                                    ? 'Grant media access to include storage and asset metrics on this dashboard.'
+                                    : `${formatNumber(summary.imageMedia)} of them are images ready for reuse across the application.`}
                             </p>
                         </div>
                     </CardContent>
@@ -300,52 +262,119 @@ export default function Dashboard() {
             <section className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
                 <Card>
                     <CardHeader>
-                        <CardTitle>Editorial pipeline</CardTitle>
+                        <CardTitle>Account health</CardTitle>
                         <CardDescription>
-                            Track how content is moving through your workflow.
+                            Key operational signals for users, roles, and media.
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-5">
-                        {pipeline.map((item) => (
-                            <div key={item.label} className="space-y-2">
+                        <div className="space-y-2">
+                            <div className="flex items-center justify-between text-sm">
+                                <span className="font-medium">
+                                    Email verification
+                                </span>
+                                <span className="text-muted-foreground">
+                                    {verificationRate}%
+                                </span>
+                            </div>
+                            <Progress
+                                value={verificationRate}
+                                className="h-2"
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <div className="flex items-center justify-between text-sm">
+                                <span className="font-medium">
+                                    Active users share
+                                </span>
+                                <span className="text-muted-foreground">
+                                    {summary.totalUsers > 0
+                                        ? Math.round(
+                                              (summary.activeUsers /
+                                                  summary.totalUsers) *
+                                                  100,
+                                          )
+                                        : 0}
+                                    %
+                                </span>
+                            </div>
+                            <Progress
+                                value={
+                                    summary.totalUsers > 0
+                                        ? Math.round(
+                                              (summary.activeUsers /
+                                                  summary.totalUsers) *
+                                                  100,
+                                          )
+                                        : 0
+                                }
+                                className="h-2"
+                            />
+                        </div>
+
+                        {mediaUsage ? (
+                            <div className="space-y-2">
                                 <div className="flex items-center justify-between text-sm">
                                     <span className="font-medium">
-                                        {item.label}
+                                        Media storage usage
                                     </span>
                                     <span className="text-muted-foreground">
-                                        {item.value}%
+                                        {mediaUsage.percentageUsed}%
                                     </span>
                                 </div>
-                                <Progress value={item.value} className="h-2" />
+                                <Progress
+                                    value={Math.min(
+                                        mediaUsage.percentageUsed,
+                                        100,
+                                    )}
+                                    className="h-2"
+                                />
+                                <div className="flex flex-wrap justify-between gap-2 text-xs text-muted-foreground">
+                                    <span>
+                                        Used: {mediaUsage.usedSizeReadable}
+                                    </span>
+                                    <span>
+                                        Limit: {mediaUsage.maxSizeReadable}
+                                    </span>
+                                </div>
                             </div>
-                        ))}
+                        ) : null}
                     </CardContent>
                 </Card>
 
                 <Card>
                     <CardHeader>
-                        <CardTitle>Quick actions</CardTitle>
+                        <CardTitle>Media capacity</CardTitle>
                         <CardDescription>
-                            Common actions for editors and administrators.
+                            Current storage status for the application library.
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="grid gap-3">
-                        <Button className="justify-start">
-                            <PlusIcon />
-                            Create new post
-                        </Button>
-                        <Button variant="outline" className="justify-start">
-                            <FolderKanbanIcon />
-                            Review submissions
-                        </Button>
-                        <Button variant="outline" className="justify-start">
-                            <FileTextIcon />
-                            Manage page templates
-                        </Button>
-                        <Button variant="outline" className="justify-start">
-                            <UsersIcon />
-                            Invite team member
-                        </Button>
+                        <div className="rounded-xl border bg-muted/30 p-4">
+                            <div className="text-sm text-muted-foreground">
+                                Media items
+                            </div>
+                            <div className="mt-2 text-2xl font-semibold">
+                                {formatNumber(summary.totalMedia)}
+                            </div>
+                        </div>
+                        <div className="rounded-xl border bg-muted/30 p-4">
+                            <div className="text-sm text-muted-foreground">
+                                Image assets
+                            </div>
+                            <div className="mt-2 text-2xl font-semibold">
+                                {formatNumber(summary.imageMedia)}
+                            </div>
+                        </div>
+                        <div className="rounded-xl border bg-muted/30 p-4">
+                            <div className="text-sm text-muted-foreground">
+                                Remaining storage
+                            </div>
+                            <div className="mt-2 text-lg font-semibold">
+                                {mediaUsage?.remainingReadable ?? 'Unavailable'}
+                            </div>
+                        </div>
                     </CardContent>
                 </Card>
             </section>
@@ -353,81 +382,99 @@ export default function Dashboard() {
             <section className="grid gap-4 xl:grid-cols-[1.45fr_0.8fr]">
                 <Card>
                     <CardHeader>
-                        <CardTitle>Recent content</CardTitle>
+                        <CardTitle>Newest accounts</CardTitle>
                         <CardDescription>
-                            Latest updates across posts, pages, campaigns, and
-                            experiments.
+                            Recently created users across the application.
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Title</TableHead>
-                                    <TableHead>Type</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead>Author</TableHead>
-                                    <TableHead>Updated</TableHead>
-                                    <TableHead className="text-right">
-                                        Views
-                                    </TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {recentContent.map((item) => (
-                                    <TableRow key={item.title}>
-                                        <TableCell className="font-medium">
-                                            {item.title}
-                                        </TableCell>
-                                        <TableCell className="text-muted-foreground">
-                                            {item.type}
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge
-                                                variant={statusVariant(
-                                                    item.status,
-                                                )}
-                                            >
-                                                {item.status}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell>{item.author}</TableCell>
-                                        <TableCell className="text-muted-foreground">
-                                            {item.updated}
-                                        </TableCell>
-                                        <TableCell className="text-right font-medium">
-                                            {item.views}
-                                        </TableCell>
+                        {recentUsers.length > 0 ? (
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Name</TableHead>
+                                        <TableHead>Email</TableHead>
+                                        <TableHead>Status</TableHead>
+                                        <TableHead className="text-right">
+                                            Joined
+                                        </TableHead>
                                     </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
+                                </TableHeader>
+                                <TableBody>
+                                    {recentUsers.map((user) => (
+                                        <TableRow key={user.id}>
+                                            <TableCell className="font-medium">
+                                                {user.name}
+                                            </TableCell>
+                                            <TableCell className="text-muted-foreground">
+                                                {user.email ?? '—'}
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge variant="outline">
+                                                    {user.status}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell className="text-right text-muted-foreground">
+                                                {user.joinedAt ?? '—'}
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        ) : (
+                            <Empty>
+                                <EmptyHeader>
+                                    <EmptyMedia variant="icon">
+                                        <UsersIcon />
+                                    </EmptyMedia>
+                                    <EmptyTitle>No recent users</EmptyTitle>
+                                    <EmptyDescription>
+                                        Newly created accounts will appear here.
+                                    </EmptyDescription>
+                                </EmptyHeader>
+                            </Empty>
+                        )}
                     </CardContent>
                 </Card>
 
                 <Card>
                     <CardHeader>
-                        <CardTitle>Team activity</CardTitle>
+                        <CardTitle>Recent activity</CardTitle>
                         <CardDescription>
-                            Recent changes made in your workspace.
+                            Latest changes recorded by the application.
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        {activities.map((activity, index) => (
-                            <div key={activity.title}>
-                                <div className="rounded-xl border bg-muted/30 p-4">
-                                    <p className="font-medium">
-                                        {activity.title}
-                                    </p>
-                                    <p className="mt-1 text-sm text-muted-foreground">
-                                        {activity.meta}
-                                    </p>
+                        {recentActivities.length > 0 ? (
+                            recentActivities.map((activity, index) => (
+                                <div key={activity.id}>
+                                    <div className="rounded-xl border bg-muted/30 p-4">
+                                        <p className="font-medium">
+                                            {activity.title}
+                                        </p>
+                                        <p className="mt-1 text-sm text-muted-foreground">
+                                            {activity.meta}
+                                        </p>
+                                    </div>
+                                    {index !== recentActivities.length - 1 ? (
+                                        <Separator className="my-3" />
+                                    ) : null}
                                 </div>
-                                {index !== activities.length - 1 ? (
-                                    <Separator className="my-3" />
-                                ) : null}
-                            </div>
-                        ))}
+                            ))
+                        ) : (
+                            <Empty>
+                                <EmptyHeader>
+                                    <EmptyMedia variant="icon">
+                                        <FolderKanbanIcon />
+                                    </EmptyMedia>
+                                    <EmptyTitle>No activity yet</EmptyTitle>
+                                    <EmptyDescription>
+                                        Logged events will appear here after
+                                        users start interacting with the app.
+                                    </EmptyDescription>
+                                </EmptyHeader>
+                            </Empty>
+                        )}
                     </CardContent>
                 </Card>
             </section>

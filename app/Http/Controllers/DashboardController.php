@@ -2,18 +2,18 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\Status;
 use App\Models\ActivityLog;
 use App\Models\CustomMedia;
+use App\Models\Role;
 use App\Models\User;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\View\View;
-use Modules\CMS\Models\CmsPost;
-use Modules\Todos\Services\TodoService;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class DashboardController extends Controller
 {
@@ -32,7 +32,7 @@ class DashboardController extends Controller
         return to_route('login');
     }
 
-    public function index(): View|RedirectResponse
+    public function index(): Response|RedirectResponse
     {
         $user = auth()->user();
 
@@ -48,86 +48,65 @@ class DashboardController extends Controller
             return to_route('agency.websites.index');
         }
 
-        $view_data = [];
-        $view_data['page_title'] = __('dashboard');
-        $view_data['page_description'] = __('dashboard description');
+        $mediaUsage = $user->can('view_media') ? CustomMedia::getUsedStorageSize() : null;
+        $activitySummary = ActivityLog::getStatistics(30);
+        $verifiedUsers = User::query()->whereNotNull('email_verified_at')->count();
+        $totalUsers = User::query()->count();
+        $defaultRoleNames = ['super_user', 'administrator', 'manager', 'customer', 'staff', 'user'];
 
-        // CMS Module Statistics (failsafe - only loads if module exists)
-        if (active_modules('cms')) {
-            $cmsPostModel = CmsPost::class;
-
-            // Page Statistics
-            $view_data['page_statistics'] = $cmsPostModel::getStatistics('page');
-
-            // Post Statistics
-            $view_data['post_statistics'] = $cmsPostModel::getStatistics('post');
-
-            // Category Statistics
-            if (auth()->user()->can('view_categories')) {
-                $view_data['category_statistics'] = $cmsPostModel::getStatistics('category');
-            }
-
-            // Recent Posts
-            $view_data['recent_posts'] = $cmsPostModel::with(['author', 'featuredImage'])
-                ->where('type', 'post')
-                ->where('status', 'published')
-                ->latest('published_at')
+        return Inertia::render('dashboard', [
+            'summary' => [
+                'totalUsers' => $totalUsers,
+                'activeUsers' => User::query()->where('status', Status::ACTIVE)->count(),
+                'verifiedUsers' => $verifiedUsers,
+                'totalRoles' => Role::query()->count(),
+                'customRoles' => Role::query()->whereNotIn('name', $defaultRoleNames)->count(),
+                'totalMedia' => $user->can('view_media') ? CustomMedia::withoutTrashed()->count() : null,
+                'imageMedia' => $user->can('view_media')
+                    ? CustomMedia::withoutTrashed()->where('mime_type', 'like', 'image/%')->count()
+                    : null,
+                'recentActivityCount' => $activitySummary['total_activities'] ?? 0,
+                'activeActors' => $activitySummary['unique_users'] ?? 0,
+            ],
+            'verificationRate' => $totalUsers > 0
+                ? (int) round(($verifiedUsers / $totalUsers) * 100)
+                : 0,
+            'mediaUsage' => $mediaUsage ? [
+                'usedSizeReadable' => $mediaUsage['used_size_readable'],
+                'maxSizeReadable' => $mediaUsage['max_size_readable'],
+                'remainingReadable' => $mediaUsage['remaining_readable'],
+                'percentageUsed' => (float) $mediaUsage['percentage_used'],
+            ] : null,
+            'recentUsers' => User::query()
+                ->latest()
                 ->limit(5)
-                ->get();
-        }
+                ->get()
+                ->map(fn (User $recentUser): array => [
+                    'id' => $recentUser->id,
+                    'name' => $recentUser->name ?: $recentUser->email ?: 'Unnamed user',
+                    'email' => $recentUser->email,
+                    'status' => $recentUser->status?->label() ?? 'Unknown',
+                    'joinedAt' => $recentUser->created_at?->diffForHumans(),
+                ])
+                ->values()
+                ->all(),
+            'recentActivities' => ActivityLog::query()
+                ->with('causer')
+                ->latest()
+                ->limit(6)
+                ->get()
+                ->map(function (ActivityLog $activity): array {
+                    $causerName = $activity->causer?->name ?: $activity->causer?->email ?: 'System';
 
-        // Media Statistics
-        if (auth()->user()->can('view_media')) {
-            $view_data['total_media'] = CustomMedia::withoutTrashed()->count();
-            $view_data['total_media_images'] = CustomMedia::withoutTrashed()
-                ->where('mime_type', 'like', 'image/%')
-                ->count();
-        }
-
-        // Todo Module Statistics (failsafe - only loads if module exists)
-        if (active_modules('todos') && auth()->user()->can('view_todos')) {
-            $todoService = resolve(TodoService::class);
-            $todoStatistics = $todoService->getStatistics();
-
-            $view_data['todo_statistics'] = $todoStatistics;
-            $view_data['pending_todos'] = $todoStatistics['pending'] ?? 0;
-            $view_data['in_progress_todos'] = $todoStatistics['in_progress'] ?? 0;
-            $view_data['completed_todos'] = $todoStatistics['completed'] ?? 0;
-            $view_data['overdue_todos'] = $todoStatistics['overdue'] ?? 0;
-            $view_data['total_todos'] = $todoStatistics['total'] ?? 0;
-
-            $todoModel = $todoService->getModelClass();
-            $view_data['pending_todos_list'] = $todoModel::query()
-                ->whereIn('status', ['pending', 'in_progress'])
-                ->orderByRaw("CASE WHEN status = 'in_progress' THEN 0 WHEN status = 'pending' THEN 1 ELSE 2 END")
-                ->orderBy('due_date')
-                ->limit(5)
-                ->get();
-        }
-
-        // Recent Activities (super_user only)
-        if (auth()->user()->hasRole('super_user')) {
-            $recentActivitiesQuery = ActivityLog::query();
-            $currentUser = Auth::user();
-
-            if ($currentUser && ! $currentUser->isSuperUser()) {
-                $superUserIds = DB::table('model_has_roles')
-                    ->where('role_id', User::superUserRoleId())
-                    ->where('model_type', User::class)
-                    ->pluck('model_id');
-
-                $recentActivitiesQuery
-                    ->whereNotNull('causer_id')
-                    ->whereNotIn('causer_id', $superUserIds);
-            }
-
-            $view_data['recent_activities'] = $recentActivitiesQuery
-                ->orderBy('created_at', 'desc')
-                ->limit(10)
-                ->get();
-        }
-
-        return view('app.dashboard', $view_data);
+                    return [
+                        'id' => $activity->id,
+                        'title' => $activity->description ?: ($activity->event ? ucfirst(str_replace('_', ' ', $activity->event)) : 'Activity recorded'),
+                        'meta' => sprintf('%s • %s', $causerName, $activity->created_at?->diffForHumans() ?? 'just now'),
+                    ];
+                })
+                ->values()
+                ->all(),
+        ]);
     }
 
     public function cacheClear(): JsonResponse

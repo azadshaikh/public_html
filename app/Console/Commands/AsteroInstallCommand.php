@@ -35,7 +35,6 @@ use Throwable;
  * - Detailed logging for debugging
  * - Graceful error handling
  * - Verbosity control (-v for verbose, -q for quiet)
- * - SQLite force deletion for local environment (use scripts/install-with-force.php --force)
  */
 class AsteroInstallCommand extends Command
 {
