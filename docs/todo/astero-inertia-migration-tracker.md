@@ -12,10 +12,13 @@
 - [x] Confirm migration direction: current app remains target platform
 - [x] Confirm `Unpoly` will not be migrated as-is
 - [x] Confirm migration strategy: shared app first, then modules one by one
+- [x] Confirm the custom module runtime remains the target runtime
+- [x] Confirm module migration loading and root module seeding orchestration stay in place
+- [x] Confirm current starter auth/schema choices are replaceable if they do not fit the Astero-aligned target
 - [x] Review and approve PRD
 - [x] Exclude legacy groups CRUD/features from current migration scope
 - [x] Split media into a dedicated migration track
-- [x] Prioritize roles/permissions before broader shared migration
+- [x] Insert a database baseline rebase before CRUD-by-CRUD migration
 - [x] Freeze feature work on current local demo/testing modules except for migration-platform support
 - [ ] Finalize module migration order
 
@@ -55,25 +58,38 @@
 - Contracts inventory is small: `ScaffoldServiceInterface` should be refactored away into the new `Inertia` CRUD foundation, while `MonitoredJobContract` can stay deferred until queue-monitoring work is real.
 - Enums split cleanly into three buckets: port/refactor later for shared behavior (`ActivityAction`, `NoteType`, `NoteVisibility`, notification enums), defer until their track starts (`MediaUploadErrorType`, `MonitorStatus`), and avoid blindly porting Astero's generic `Status` enum where the new app already prefers explicit booleans or domain-specific states.
 - Traits and support classes confirm that Astero's most reusable shared systems are activity, addresses, metadata, notes, revisions, and cache helpers. `Support\Unpoly` is dropped, monitoring/media helpers are deferred, and scaffold helpers are refactor targets rather than direct ports.
-- Shared model inventory shows the main polymorphic foundations are `Address`, `Note`, `ActivityLog`, `CustomMedia`, `Revision*`, and metadata/settings models. These remain shared-foundation candidates, but media still stays on its dedicated Phase 6 track.
+- Shared model inventory shows the main polymorphic foundations are `Address`, `Note`, `ActivityLog`, `CustomMedia`, `Revision*`, and metadata/settings models. These remain shared-foundation candidates, but media still stays on its dedicated Phase 7 track.
 - The first real module dependency map is now clear from `Customers`: it depends on shared user/role assignment, addresses, metadata, notes/activity, optional media attachment, and integration contracts for billing/subscriptions. Its legacy `App\Scaffold\*` stack, Blade views, and scaffold services should be rebuilt as `Inertia` patterns instead of ported.
 - Customers also uses legacy navigation configuration in `tmp/astero/modules/Customers/config/navigation.php`, so navigation conventions should be decided during shared-foundation inventory instead of waiting for later UI implementation.
 - Legacy groups CRUD remains dropped. `Customers` references `GroupItem`, but that should be replaced with cleaner module-owned enums or lookups unless a real cross-module dependency proves otherwise.
 
-## Phase 3 — Roles and permissions foundation
+## Phase 3 — Database baseline rebase
+
+- [ ] Inventory current application migrations and classify each as keep / rewrite / drop
+- [ ] Inventory current application seeders and classify each as keep / rewrite / drop
+- [ ] Inventory Astero migrations by business domain and dependency order
+- [ ] Inventory Astero seeders by bootstrap / demo / import purpose
+- [ ] Define the merged target baseline schema for the new app
+- [ ] Define the merged target seeding order for the new app
+- [ ] Preserve root `DatabaseSeeder` module orchestration while rewriting app-level seeding
+- [ ] Preserve module migration loading in module service providers
+- [ ] Have Astero migration/seeder files moved into the repo for reconciliation
+- [ ] Make `php artisan migrate:fresh --seed` pass against the rebased schema
+
+## Phase 4 — Identity and authorization foundation
 
 - [x] Inventory Astero role/permission architecture, seeders, guards, and UI flows
-- [x] Decide target authorization package/pattern for the new app
-- [x] Define role model scope and initial seed data for the target app
-- [x] Define permission naming convention for application and module features
-- [x] Build roles CRUD in the current app
-- [x] Build permission assignment/editing flow for roles
-- [x] Add user-to-role assignment flow where needed
-- [x] Wire middleware/policy usage into the current app
-- [x] Add tests for roles/permissions CRUD and enforcement
-- [x] Run Pint, PHPUnit, and static analysis
+- [~] Decide target authorization package/pattern for the Astero-aligned app
+- [ ] Define role model scope and initial seed data for the rebased app
+- [ ] Define permission naming convention for application and module features
+- [ ] Reconcile existing roles/users CRUD with the rebased schema
+- [ ] Reconcile permission assignment/editing flow with the rebased schema
+- [ ] Reconcile user-to-role assignment flow where needed
+- [ ] Wire middleware/policy usage into the rebased app
+- [ ] Add tests for the finalized roles/permissions approach
+- [ ] Run Pint, PHPUnit, and static analysis
 
-## Phase 4 — Inertia-native platform foundation
+## Phase 5 — Inertia-native platform foundation
 
 - [x] Define target architecture for shared module-friendly CRUD patterns
 - [x] Decide what survives from Astero scaffold design
@@ -81,7 +97,7 @@
 - [x] Standardize route, request, resource, and page conventions for modules
 - [x] Define shared layout and module-shell conventions
 
-### Phase 4 decisions
+### Phase 5 decisions
 
 - Backend routes stay Laravel-first and Wayfinder-backed: each migrated module should expose named web routes, use controller actions instead of ad hoc closures, and regenerate typed helpers for frontend links and forms.
 - Server responses should prefer a consistent pattern: index pages return filter state, lightweight stats, list rows, and option sets; create/edit pages return focused form payloads; destructive actions redirect with flash status/error messages.
@@ -95,7 +111,7 @@
 - Initial shared resource primitives are now extracted from `roles` and `users`: reusable stat cards, section cards, and feedback alerts under `resources/js/components/resource/`.
 - Shared CRUD foundation work is still pending implementation. When built, it should extract repeated patterns from current `roles` and `users` pages into reusable `Inertia`/React primitives instead of reproducing Astero's scaffold runtime.
 
-## Phase 5 — Shared foundation migration
+## Phase 6 — Shared foundation migration
 
 - [ ] Port core enums
 - [ ] Port core contracts
@@ -105,21 +121,21 @@
 - [ ] Add tests for migrated shared foundation
 - [ ] Run Pint, PHPUnit, and static analysis
 
-## Phase 6 — Media migration foundation
+## Phase 7 — Media migration foundation
 
 - [ ] Inventory Astero media model, usage patterns, and upload/browse flows
 - [ ] Decide target media library/storage strategy for the new app
 - [ ] Define Inertia-native media UX and attachment patterns
 - [ ] Add tests for the chosen media foundation
 
-## Phase 7 — Module migration template
+## Phase 8 — Module migration template
 
 - [ ] Use one small real module as migration template
 - [ ] Produce module inventory template: models, migrations, routes, services, UI, tests, dependencies
 - [ ] Define per-module acceptance checklist
 - [ ] Define feature parity checklist versus Astero
 
-## Phase 8 — Module migrations
+## Phase 9 — Module migrations
 
 Note: the modules currently present in this repository remain test/demo fixtures only. Do not expand them with new product behavior while planning or executing Astero module migrations.
 
@@ -136,13 +152,13 @@ Note: the modules currently present in this repository remain test/demo fixtures
 - [ ] `Helpdesk`
 - [ ] Remaining support/internal modules
 
-## Phase 9 — Cross-cutting migration work
+## Phase 10 — Cross-cutting migration work
 
 - [ ] Payments: introduce `Cashier` when billing/subscriptions work begins
 - [ ] Notifications/activity logs: port only the patterns still needed
 - [ ] Settings/notes/addresses: migrate only after shared usage is confirmed
 
-## Phase 10 — Hardening and cutover
+## Phase 11 — Hardening and cutover
 
 - [ ] Run targeted regression tests per migrated module
 - [ ] Run full test suite
@@ -156,4 +172,6 @@ Note: the modules currently present in this repository remain test/demo fixtures
 - [ ] Keep `Orders` as separate module or absorb into `Billing`
 - [ ] Migrate Astero scaffold classes directly or rebuild cleaner Inertia-native equivalents
 - [ ] Which shared systems move early: notes, addresses, settings
+- [ ] Which current application migrations survive the database baseline rebase
+- [ ] Which current seeders survive the database baseline rebase
 - [ ] Whether some modules should be merged or retired during migration
