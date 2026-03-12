@@ -1,4 +1,5 @@
 import type { InstalledModule } from '@/types/module';
+import type { NavigationByArea } from '@/types/navigation';
 
 export type User = {
     id: number;
@@ -30,6 +31,7 @@ export type Auth = {
 export type SharedData = {
     appName: string;
     auth: Auth;
+    navigation: NavigationByArea;
     modules: {
         items: InstalledModule[];
     };

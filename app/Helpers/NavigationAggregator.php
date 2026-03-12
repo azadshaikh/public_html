@@ -142,7 +142,7 @@ class NavigationAggregator
             if ($sectionItems !== []) {
                 $allSections[] = [
                     'key' => $sectionKey,
-                    'label' => $section['label'] ?? '',
+                    'label' => __($section['label'] ?? ''),
                     'weight' => $section['weight'] ?? 0,
                     'type' => 'app',
                     'area' => $section['area'] ?? 'bottom',
@@ -194,7 +194,7 @@ class NavigationAggregator
                         if ($moduleItems !== []) {
                             $allSections[] = [
                                 'key' => is_string($secKey) ? $secKey : ($moduleSection['key'] ?? $moduleSlug),
-                                'label' => $moduleSection['label'] ?? ucfirst((string) $moduleSlug),
+                                'label' => __($moduleSection['label'] ?? ucfirst((string) $moduleSlug)),
                                 'weight' => $moduleSection['weight'] ?? 1000,
                                 'type' => 'module',
                                 'area' => $moduleSection['area'] ?? 'modules',
@@ -288,7 +288,7 @@ class NavigationAggregator
 
             $built[] = [
                 'key' => is_string($itemKey) ? $itemKey : ($item['key'] ?? ''),
-                'label' => $item['label'] ?? '',
+                'label' => __($item['label'] ?? ''),
                 'url' => $itemUrl,
                 'icon' => $item['icon'] ?? '',
                 'active_patterns' => $item['active_patterns'] ?? [],

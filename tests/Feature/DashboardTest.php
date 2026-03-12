@@ -56,8 +56,38 @@ class DashboardTest extends TestCase
             ->assertInertia(fn (Assert $page): Assert => $page
                 ->component('dashboard')
                 ->has('summary')
+                ->has('navigation.top', 1)
+                ->has('navigation.modules', 1)
+                ->where('navigation.top.0.items.0.label', 'Dashboard')
+                ->where('navigation.modules.0.items.0.label', 'Modules')
+                ->where('navigation.modules.0.items.0.url', route('app.masters.modules.index'))
+                ->where('navigation.top.0.items.0.active', true)
+                ->where('navigation.top.0.items.0.icon', fn (string $icon): bool => str_starts_with($icon, '<svg'))
                 ->has('recentUsers')
                 ->has('recentActivities')
                 ->where('summary.totalUsers', 1));
+    }
+
+    public function test_dashboard_navigation_is_filtered_by_permission(): void
+    {
+        $user = User::factory()->create([
+            'first_name' => 'Limited',
+            'last_name' => 'Viewer',
+            'status' => Status::ACTIVE,
+        ]);
+        $user->givePermissionTo('view_dashboard');
+
+        $this->actingAs($user)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->component('dashboard')
+                ->has('navigation.top', 1)
+                ->has('navigation.bottom', 1)
+                ->has('navigation.top.0.items', 1)
+                ->has('navigation.bottom.0.items', 3)
+                ->where('navigation.top.0.items.0.label', 'Dashboard')
+                ->where('navigation.modules', [])
+                ->where('navigation.cms', []));
     }
 }

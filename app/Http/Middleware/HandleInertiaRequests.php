@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Helpers\NavigationAggregator;
 use App\Inertia\Properties\UserAvatar;
 use App\Modules\ModuleManager;
 use Illuminate\Http\Request;
@@ -78,6 +79,7 @@ class HandleInertiaRequests extends Middleware
                         'deleteUsers' => false,
                     ],
             ],
+            'navigation' => fn (): array => NavigationAggregator::getUnifiedByArea($request->user()),
             'modules' => $modules,
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
