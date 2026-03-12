@@ -85,8 +85,12 @@ export function DatagridToolbar({
         <div className="flex flex-col gap-3 lg:gap-4">
             <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
                 {tabs ? (
-                    <Tabs value={activeTabValue} onValueChange={onTabChange}>
-                        <TabsList className="h-auto flex-wrap">
+                    <Tabs
+                        value={activeTabValue}
+                        size="comfortable"
+                        onValueChange={onTabChange}
+                    >
+                        <TabsList className="flex-wrap">
                             {tabs.items.map((item) => (
                                 <TabsTrigger
                                     key={item.value}
@@ -174,6 +178,7 @@ export function DatagridToolbar({
                                 return (
                                     <InputGroup
                                         key={filter.name}
+                                        size="comfortable"
                                         className={cn(
                                             'w-full lg:min-w-[21rem]',
                                             filter.className,
@@ -196,6 +201,7 @@ export function DatagridToolbar({
                             return (
                                 <NativeSelect
                                     key={filter.name}
+                                    size="comfortable"
                                     name={filter.name}
                                     defaultValue={filter.value}
                                     className={cn(
