@@ -205,13 +205,21 @@ export function DatagridResults<T>({
                         <TableHeader>
                             <TableRow className="hover:bg-transparent">
                                 {hasSelection ? (
-                                    <TableHead 
+                                    <TableHead
                                         className="w-12 cursor-pointer px-4"
                                         onClick={(e) => {
-                                            if ((e.target as HTMLElement).closest('button[role="checkbox"]')) {
+                                            if (
+                                                (
+                                                    e.target as HTMLElement
+                                                ).closest(
+                                                    'button[role="checkbox"]',
+                                                )
+                                            ) {
                                                 return;
                                             }
-                                            toggleAllRows(!allSelectableRowsSelected);
+                                            toggleAllRows(
+                                                !allSelectableRowsSelected,
+                                            );
                                         }}
                                     >
                                         <Checkbox
@@ -294,16 +302,27 @@ export function DatagridResults<T>({
                                         }
                                     >
                                         {hasSelection ? (
-                                            <TableCell 
+                                            <TableCell
                                                 className={cn(
-                                                    "px-4 py-3 align-top",
-                                                    rowSelectable && "cursor-pointer"
+                                                    'px-4 py-3 align-top',
+                                                    rowSelectable &&
+                                                        'cursor-pointer',
                                                 )}
                                                 onClick={(e) => {
-                                                    if (!rowSelectable || (e.target as HTMLElement).closest('button[role="checkbox"]')) {
+                                                    if (
+                                                        !rowSelectable ||
+                                                        (
+                                                            e.target as HTMLElement
+                                                        ).closest(
+                                                            'button[role="checkbox"]',
+                                                        )
+                                                    ) {
                                                         return;
                                                     }
-                                                    toggleRowSelection(row, !isSelected);
+                                                    toggleRowSelection(
+                                                        row,
+                                                        !isSelected,
+                                                    );
                                                 }}
                                             >
                                                 <Checkbox
