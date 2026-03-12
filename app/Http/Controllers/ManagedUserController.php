@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\BulkDestroyManagedUsersRequest;
 use App\Http\Requests\StoreManagedUserRequest;
 use App\Http\Requests\UpdateManagedUserRequest;
+use App\Inertia\Properties\UserAvatar;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
@@ -217,6 +218,7 @@ class ManagedUserController extends Controller
             'id' => $user->id,
             'name' => $user->name,
             'email' => $user->email,
+            'avatar' => new UserAvatar($user),
             'active' => (bool) $user->active,
             'email_verified_at' => $user->email_verified_at,
             'roles' => $user->roles

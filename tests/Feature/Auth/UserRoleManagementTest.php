@@ -61,6 +61,8 @@ class UserRoleManagementTest extends TestCase
                 ->has('users.data', 2)
                 ->where('users.data', fn (Collection $users): bool => $users->contains(
                     fn (array $user): bool => $user['email'] === 'casey@example.com'
+                        && is_string($user['avatar'])
+                        && str_contains($user['avatar'], 'ui-avatars.com')
                         && collect($user['roles'])->contains(
                             fn (array $role): bool => $role['name'] === 'staff'
                         )

@@ -41,20 +41,64 @@ export function Datagrid<T>({
 }: DatagridProps<T>) {
     const searchInputRef = React.useRef<HTMLInputElement | null>(null);
     const searchTimeoutRef = React.useRef<number | null>(null);
+    const pendingVisitSignatureRef = React.useRef<string | null>(null);
     const storedViewAppliedRef = React.useRef(false);
     const [selectedItemsMap, setSelectedItemsMap] = React.useState<
         Record<string, T>
     >({});
 
+    const buildVisitSignature = React.useCallback(
+        (params: Record<string, string | number | null | undefined>) => {
+            const normalizedAction =
+                typeof window === 'undefined'
+                    ? action
+                    : new URL(action, window.location.href).toString();
+            const url = new URL(normalizedAction);
+            const cleanedParams = cleanParams(params);
+
+            for (const [key, value] of Object.entries(cleanedParams).sort(
+                ([left], [right]) => left.localeCompare(right),
+            )) {
+                url.searchParams.set(key, String(value));
+            }
+
+            return url.toString();
+        },
+        [action],
+    );
+
     const visit = React.useCallback(
         (params: Record<string, string | number | null | undefined>) => {
-            router.get(action, cleanParams(params), {
+            const cleanedParams = cleanParams(params);
+            const nextVisitSignature = buildVisitSignature(cleanedParams);
+
+            if (
+                typeof window !== 'undefined' &&
+                nextVisitSignature === window.location.href
+            ) {
+                return;
+            }
+
+            if (pendingVisitSignatureRef.current === nextVisitSignature) {
+                return;
+            }
+
+            pendingVisitSignatureRef.current = nextVisitSignature;
+
+            router.get(action, cleanedParams, {
                 preserveScroll: true,
                 preserveState: true,
                 replace: true,
+                onFinish: () => {
+                    if (
+                        pendingVisitSignatureRef.current === nextVisitSignature
+                    ) {
+                        pendingVisitSignatureRef.current = null;
+                    }
+                },
             });
         },
-        [action],
+        [action, buildVisitSignature],
     );
 
     const sortParamName = sorting?.sortParamName ?? 'sort';
@@ -229,9 +273,13 @@ export function Datagrid<T>({
     }, [filters]);
 
     const handleTabChange = (value: string) => {
+        if (!tabs || value === activeTabValue) {
+            return;
+        }
+
         visit({
             ...currentParams,
-            [tabs!.name]: value,
+            [tabs.name]: value,
             page: 1,
         });
     };

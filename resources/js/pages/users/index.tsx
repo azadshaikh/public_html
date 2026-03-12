@@ -19,8 +19,10 @@ import type {
     DatagridTab,
 } from '@/components/datagrid/datagrid';
 import { ResourceFeedbackAlerts } from '@/components/resource/resource-feedback-alerts';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { useInitials } from '@/hooks/use-initials';
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes/index';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
@@ -49,10 +51,31 @@ export default function UsersIndex({
     error,
 }: UsersIndexPageProps) {
     const page = usePage<AuthenticatedSharedData>();
+    const getInitials = useInitials();
     const canAddUsers = page.props.auth.abilities.addUsers;
     const canEditUsers = page.props.auth.abilities.editUsers;
     const canDeleteUsers = page.props.auth.abilities.deleteUsers;
     const currentUserId = page.props.auth.user.id;
+
+    const renderUserIdentity = (user: ManagedUserListItem) => (
+        <div className="flex min-w-0 items-center gap-3">
+            <Avatar className="size-8 overflow-hidden rounded-full">
+                <AvatarImage src={user.avatar} alt={user.name} />
+                <AvatarFallback className="rounded-lg bg-neutral-200 text-black dark:bg-neutral-700 dark:text-white">
+                    {getInitials(user.name)}
+                </AvatarFallback>
+            </Avatar>
+
+            <div className="flex min-w-0 flex-col gap-1">
+                <span className="truncate font-medium text-foreground">
+                    {user.name}
+                </span>
+                <span className="truncate text-sm text-muted-foreground">
+                    {user.email}
+                </span>
+            </div>
+        </div>
+    );
 
     const handleDelete = (user: ManagedUserListItem) => {
         if (!canDeleteUsers) {
@@ -161,16 +184,7 @@ export default function UsersIndex({
             header: 'User',
             sortable: true,
             sortKey: 'name',
-            cell: (user) => (
-                <div className="flex min-w-0 flex-col gap-1">
-                    <span className="font-medium text-foreground">
-                        {user.name}
-                    </span>
-                    <span className="text-sm text-muted-foreground">
-                        {user.email}
-                    </span>
-                </div>
-            ),
+            cell: renderUserIdentity,
         },
         {
             key: 'status',
@@ -305,16 +319,7 @@ export default function UsersIndex({
                         value: filters.view,
                         storageKey: 'users-datagrid-view',
                     }}
-                    renderCardHeader={(user) => (
-                        <div className="flex min-w-0 flex-col gap-1">
-                            <span className="truncate font-medium text-foreground">
-                                {user.name}
-                            </span>
-                            <span className="truncate text-sm text-muted-foreground">
-                                {user.email}
-                            </span>
-                        </div>
-                    )}
+                    renderCardHeader={renderUserIdentity}
                     renderCard={(user) => (
                         <div className="flex flex-col gap-4">
                             <div className="grid gap-3 sm:grid-cols-2">

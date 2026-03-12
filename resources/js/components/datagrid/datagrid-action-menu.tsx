@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { MoreHorizontalIcon } from 'lucide-react';
+import { EllipsisVerticalIcon } from 'lucide-react';
 import type { DatagridAction } from '@/components/datagrid/types';
 import { Button } from '@/components/ui/button';
 import {
@@ -18,11 +18,12 @@ export function DatagridActionMenu({ actions }: { actions: DatagridAction[] }) {
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
                 <Button
-                    variant="ghost"
-                    size="icon-sm"
+                    variant="outline"
+                    size="icon-comfortable"
+                    className="rounded-full shadow-xs"
                     aria-label="Open row actions"
                 >
-                    <MoreHorizontalIcon />
+                    <EllipsisVerticalIcon />
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="min-w-40">
