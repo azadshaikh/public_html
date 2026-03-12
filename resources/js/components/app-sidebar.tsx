@@ -7,7 +7,6 @@ import {
     TerminalIcon,
     TerminalSquareIcon,
     BotIcon,
-    ClapperboardIcon,
     PackageIcon,
     CheckSquareIcon,
     FileTextIcon,
@@ -15,7 +14,6 @@ import {
     ShieldCheckIcon,
 } from 'lucide-react';
 import * as React from 'react';
-import MovieController from '@/actions/App/Http/Controllers/Demo/MovieController';
 import RoleController from '@/actions/App/Http/Controllers/RoleController';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -80,7 +78,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const canViewUsers = auth.abilities.viewUsers;
     const canAddUsers = auth.abilities.addUsers;
     const isDashboardPage = currentComponent === 'dashboard';
-    const isMoviesDemoPage = currentComponent.startsWith('demo/movies/');
     const isModulesPage =
         currentComponent.startsWith('modules/') ||
         currentUrl.startsWith('/modules');
@@ -183,24 +180,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               ]
             : []),
         ...moduleNavItems,
-        {
-            title: 'Movies demo',
-            icon: <ClapperboardIcon />,
-            isActive: isMoviesDemoPage,
-            items: [
-                {
-                    title: 'Browse movies',
-                    url: MovieController.index().url,
-                    isActive: currentUrl === MovieController.index().url,
-                },
-                {
-                    title: 'Create movie',
-                    url: MovieController.create().url,
-                    icon: <PlusIcon />,
-                    isActive: currentUrl === MovieController.create().url,
-                },
-            ],
-        },
     ];
 
     return (

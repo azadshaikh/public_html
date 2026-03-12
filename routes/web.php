@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\Demo\MovieController;
 use App\Http\Controllers\ManagedUserController;
 use App\Http\Controllers\ModuleController;
 use App\Http\Controllers\RoleController;
@@ -66,10 +65,6 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
         Route::delete('{user}', [ManagedUserController::class, 'destroy'])
             ->middleware('permission:delete_users')
             ->name('destroy');
-    });
-
-    Route::prefix('demo')->name('demo.')->group(function (): void {
-        Route::resource('movies', MovieController::class);
     });
 });
 
