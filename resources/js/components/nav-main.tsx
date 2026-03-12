@@ -2,6 +2,7 @@ import { Link } from '@inertiajs/react';
 import { ChevronRightIcon } from 'lucide-react';
 import * as React from 'react';
 import type { AnchorHTMLAttributes } from 'react';
+import { NavBadge } from '@/components/nav-badge';
 import { NavigationIcon } from '@/components/navigation-icon';
 import {
     Collapsible,
@@ -91,6 +92,9 @@ function NavMainLeaf({ item, depth }: { item: NavigationItem; depth: number }) {
                     <NavigationLink item={item}>
                         <NavigationIcon svg={item.icon} />
                         <span>{item.label}</span>
+                        {item.badge?.value ? (
+                            <NavBadge badge={item.badge} />
+                        ) : null}
                     </NavigationLink>
                 </SidebarMenuButton>
             </SidebarMenuItem>
@@ -129,6 +133,9 @@ function NavMainBranch({
                         <SidebarMenuButton tooltip={item.label}>
                             <NavigationIcon svg={item.icon} />
                             <span>{item.label}</span>
+                            {item.badge?.value ? (
+                                <NavBadge badge={item.badge} />
+                            ) : null}
                             <ChevronRightIcon className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                         </SidebarMenuButton>
                     </CollapsibleTrigger>
