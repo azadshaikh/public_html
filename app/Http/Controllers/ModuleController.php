@@ -23,7 +23,6 @@ class ModuleController extends Controller
             'managedModules' => $moduleManager->managementData()->all(),
             'indexUrl' => route('app.masters.modules.index'),
             'updateUrl' => route('app.masters.modules.update'),
-            'status' => session('status'),
             'error' => session('error'),
         ]);
     }
@@ -41,6 +40,6 @@ class ModuleController extends Controller
             return to_route('app.masters.modules.index')->with('error', 'Unable to update the selected modules right now.');
         }
 
-        return to_route('app.masters.modules.index')->with('status', 'Module settings updated.');
+        return to_route('app.masters.modules.index')->with('success', 'Module settings updated.');
     }
 }

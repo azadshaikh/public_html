@@ -254,7 +254,7 @@ if (! function_exists('active_modules')) {
                     ->map(fn ($module): array => [
                         'name' => $module->name,
                         'slug' => $module->slug,
-                        'folder_name' => $module->name,
+                        'folder_name' => basename($module->basePath),
                         'icon' => null,
                         'prefix' => $module->url(),
                     ])

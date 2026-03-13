@@ -244,10 +244,19 @@ Route::prefix($adminPrefix)->group(function (): void {
             // --- System Settings ---
             Route::group(['prefix' => 'settings', 'as' => 'settings.'], function (): void {
                 Route::get('/', [SettingsController::class, 'index'])->name('index');
+
+                // Per-section pages
+                Route::get('/general', [SettingsController::class, 'general'])->name('general');
+                Route::get('/localization', [SettingsController::class, 'localization'])->name('localization');
+                Route::get('/registration', [SettingsController::class, 'registration'])->name('registration');
+                Route::get('/social-authentication', [SettingsController::class, 'socialAuthentication'])->name('social-authentication');
+                Route::get('/site-access-protection', [SettingsController::class, 'siteAccessProtection'])->name('site-access-protection');
+                Route::get('/maintenance', [SettingsController::class, 'maintenance'])->name('maintenance');
+                Route::get('/coming-soon', [SettingsController::class, 'comingSoon'])->name('coming-soon');
+                Route::get('/development', [SettingsController::class, 'development'])->name('development');
+
+                // Updates
                 Route::put('/{meta_group}/update', [SettingsController::class, 'update'])->name('update');
-                Route::post('send-test-mail', [SettingsController::class, 'sendTestMail'])->name('send-test-mail');
-                Route::post('export-settings', [SettingsController::class, 'exportSettings'])->name('export');
-                Route::post('import-settings', [SettingsController::class, 'importSettings'])->name('import');
             });
 
             // --- Comment Management ---
@@ -383,9 +392,21 @@ Route::prefix($adminPrefix)->group(function (): void {
 
             // --- Masters: General Settings ---
             Route::group(['prefix' => 'masters/settings', 'as' => 'masters.settings.'], function (): void {
-                Route::get('/', [MastersSettingsController::class, 'settings'])->name('index');
+                Route::get('/', [MastersSettingsController::class, 'index'])->name('index');
+
+                // Per-section pages
+                Route::get('/app', [MastersSettingsController::class, 'app'])->name('app');
+                Route::get('/branding', [MastersSettingsController::class, 'branding'])->name('branding');
+                Route::get('/login-security', [MastersSettingsController::class, 'loginSecurity'])->name('login-security');
+                Route::get('/email', [MastersSettingsController::class, 'email'])->name('email');
+                Route::get('/storage', [MastersSettingsController::class, 'storage'])->name('storage');
+                Route::get('/media', [MastersSettingsController::class, 'media'])->name('media');
+                Route::get('/debug', [MastersSettingsController::class, 'debug'])->name('debug');
+
+                // Updates + actions
                 Route::put('/{meta_group}/update', [MastersSettingsController::class, 'update'])->name('update');
-                Route::post('/test-storage-connection', [MastersSettingsController::class, 'testStorageConnection'])->name('test-storage-connection');
+                Route::post('/email/send-test-mail', [MastersSettingsController::class, 'sendTestMail'])->name('send-test-mail');
+                Route::post('/storage/test-connection', [MastersSettingsController::class, 'testStorageConnection'])->name('test-storage-connection');
             });
 
             // --- Masters: Laravel Tools ---

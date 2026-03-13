@@ -6,13 +6,11 @@ use App\Enums\ActivityAction;
 use App\Enums\Status;
 use App\Http\Requests\SettingsRequest;
 use App\Jobs\RecacheApplication;
-use App\Mail\TestEmail;
 use App\Models\Role;
 use App\Models\Settings;
 use App\Services\GeoDataService;
 use App\Traits\ActivityTrait;
 use App\Traits\HasAlerts;
-use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -20,9 +18,9 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 use Throwable;
 
 class SettingsController extends Controller
@@ -38,16 +36,177 @@ class SettingsController extends Controller
     ) {}
 
     /**
-     * Display the settings page.
+     * Redirect to the first visible settings section.
      */
-    public function index(): View
+    public function index(): RedirectResponse
     {
         $this->authorizeManageSettings();
 
-        $viewData = $this->formOptions();
-        $viewData['settings'] = $this->getCachedSettings();
+        $firstSection = $this->isCmsEnabled() ? 'general' : 'localization';
 
-        return view('app.settings.settings', $viewData);
+        return redirect()->route('app.settings.'.$firstSection);
+    }
+
+    /**
+     * General settings (CMS-dependent).
+     */
+    public function general(): Response
+    {
+        $this->authorizeManageSettings();
+
+        $settings = $this->getCachedSettings();
+
+        return Inertia::render('settings/general', [
+            'settings' => [
+                'site_title' => $settings['site_title'] ?? config('app.name'),
+                'tagline' => $settings['tagline'] ?? '',
+            ],
+            'settingsNav' => $this->getSettingsNav(),
+        ]);
+    }
+
+    /**
+     * Localization settings.
+     */
+    public function localization(): Response
+    {
+        $this->authorizeManageSettings();
+
+        $settings = $this->getSettingsByPrefix('localization');
+
+        return Inertia::render('settings/localization', [
+            'settings' => [
+                'language' => $settings['language'] ?? config('app.locale', 'en'),
+                'date_format' => $settings['date_format'] ?? 'd M Y',
+                'time_format' => $settings['time_format'] ?? 'g:i a',
+                'timezone' => $settings['timezone'] ?? config('app.timezone', 'UTC'),
+            ],
+            'options' => [
+                'languages' => $this->formatConfigOptions(config('languages')),
+                'dateFormats' => $this->formatConfigOptions(config('constants.date_formats')),
+                'timeFormats' => $this->formatConfigOptions(config('constants.time_formats')),
+                'timezones' => $this->getTimezoneOptions(),
+            ],
+            'settingsNav' => $this->getSettingsNav(),
+        ]);
+    }
+
+    /**
+     * Registration settings.
+     */
+    public function registration(): Response
+    {
+        $this->authorizeManageSettings();
+
+        $settings = $this->getSettingsByPrefix('registration');
+
+        return Inertia::render('settings/registration', [
+            'settings' => [
+                'enable_registration' => $this->toBool($settings['enable_registration'] ?? 'true'),
+                'default_role' => $settings['default_role'] ?? '',
+                'require_email_verification' => $this->toBool($settings['require_email_verification'] ?? 'false'),
+                'auto_approve' => $this->toBool($settings['auto_approve'] ?? 'true'),
+            ],
+            'options' => [
+                'roles' => $this->getRoleOptions(),
+            ],
+            'settingsNav' => $this->getSettingsNav(),
+        ]);
+    }
+
+    /**
+     * Social authentication settings.
+     */
+    public function socialAuthentication(): Response
+    {
+        $this->authorizeManageSettings();
+
+        return Inertia::render('settings/social-authentication', [
+            'settings' => [
+                'enable_social_authentication' => $this->toBool(get_env_value('SOCIAL_AUTH_ENABLED', 'false')),
+                'enable_google_authentication' => $this->toBool(get_env_value('GOOGLE_AUTH_ENABLED', 'false')),
+                'google_client_id' => get_env_value('GOOGLE_CLIENT_ID', ''),
+                'google_client_secret' => get_env_value('GOOGLE_CLIENT_SECRET', ''),
+                'enable_github_authentication' => $this->toBool(get_env_value('GITHUB_AUTH_ENABLED', 'false')),
+                'github_client_id' => get_env_value('GITHUB_CLIENT_ID', ''),
+                'github_client_secret' => get_env_value('GITHUB_CLIENT_SECRET', ''),
+            ],
+            'settingsNav' => $this->getSettingsNav(),
+        ]);
+    }
+
+    /**
+     * Site access protection settings (CMS-dependent).
+     */
+    public function siteAccessProtection(): Response
+    {
+        $this->authorizeManageSettings();
+
+        $settings = $this->getSettingsByPrefix('site_access_protection');
+
+        return Inertia::render('settings/site-access-protection', [
+            'settings' => [
+                'mode_enabled' => $this->toBool($settings['mode_enabled'] ?? 'false'),
+                'password' => $settings['password'] ?? '',
+                'protection_message' => $settings['protection_message'] ?? '',
+            ],
+            'settingsNav' => $this->getSettingsNav(),
+        ]);
+    }
+
+    /**
+     * Maintenance mode settings (CMS-dependent).
+     */
+    public function maintenance(): Response
+    {
+        $this->authorizeManageSettings();
+
+        $settings = $this->getSettingsByPrefix('maintenance');
+
+        return Inertia::render('settings/maintenance', [
+            'settings' => [
+                'mode_enabled' => $this->toBool($settings['mode_enabled'] ?? 'false'),
+                'maintenance_mode_type' => $settings['maintenance_mode_type'] ?? 'frontend',
+                'title' => $settings['title'] ?? '',
+                'message' => $settings['message'] ?? '',
+            ],
+            'settingsNav' => $this->getSettingsNav(),
+        ]);
+    }
+
+    /**
+     * Coming soon mode settings (CMS-dependent).
+     */
+    public function comingSoon(): Response
+    {
+        $this->authorizeManageSettings();
+
+        $settings = $this->getSettingsByPrefix('coming_soon');
+
+        return Inertia::render('settings/coming-soon', [
+            'settings' => [
+                'enabled' => $this->toBool($settings['enabled'] ?? 'false'),
+                'description' => $settings['description'] ?? '',
+            ],
+            'settingsNav' => $this->getSettingsNav(),
+        ]);
+    }
+
+    /**
+     * Development mode settings (CMS-dependent).
+     */
+    public function development(): Response
+    {
+        $this->authorizeManageSettings();
+
+        $settings = $this->getSettingsByPrefix('development');
+
+        return Inertia::render('settings/development', [
+            'settings' => [
+                'mode_enabled' => $this->toBool($settings['mode_enabled'] ?? 'false'),
+            ],
+            'settingsNav' => $this->getSettingsNav(),
+        ]);
     }
 
     /**
@@ -58,8 +217,7 @@ class SettingsController extends Controller
         $this->authorizeManageSettings();
 
         $metaGroup = Str::slug($metaGroup, '_');
-        $section = $request->input('section');
-        $redirectUrl = $request->input('redirect_to') ?: $this->getRedirectUrl('app.settings.index', $section);
+        $redirectUrl = $request->input('redirect_to') ?: url()->previous();
 
         $this->generalSettingsUpdated = false;
 
@@ -142,173 +300,120 @@ class SettingsController extends Controller
         }
     }
 
-    /**
-     * Send a test email using the provided SMTP configuration.
-     */
-    public function sendTestMail(Request $request): JsonResponse
-    {
-        $request->validate([
-            'email' => ['required', 'email'],
-            'email_driver' => ['required'],
-            'email_sent_from_name' => ['required'],
-            'email_sent_from_address' => ['required', 'email'],
-            'smtp_host' => ['required_if:email_driver,smtp'],
-            'smtp_port' => ['required_if:email_driver,smtp'],
-            'smtp_username' => ['required_if:email_driver,smtp'],
-            'smtp_password' => ['required_if:email_driver,smtp'],
-            'smtp_encryption' => ['required_if:email_driver,smtp'],
-            'smtp_security_type' => ['required_if:email_driver,smtp'],
-        ]);
-
-        $email = $request->input('email');
-
-        try {
-            $emailDriver = $request->input('email_driver');
-            if ($emailDriver === 'smtp') {
-                config([
-                    'mail.default' => 'smtp',
-                    'mail.mailers.smtp.host' => $request->input('smtp_host'),
-                    'mail.mailers.smtp.port' => $request->input('smtp_port'),
-                    'mail.mailers.smtp.username' => $request->input('smtp_username'),
-                    'mail.mailers.smtp.password' => $request->input('smtp_password'),
-                    'mail.mailers.smtp.encryption' => $request->input('smtp_encryption'),
-                    'mail.mailers.smtp.security_type' => $request->input('smtp_security_type'),
-                    'mail.mailers.smtp.streams.ssl.allow_self_signed' => true,
-                ]);
-            } else {
-                config([
-                    'mail.default' => 'sendmail',
-                    'mail.mailers.sendmail.path' => '/usr/sbin/sendmail -bs',
-                ]);
-            }
-
-            config([
-                'mail.from.address' => $request->input('email_sent_from_address'),
-                'mail.from.name' => $request->input('email_sent_from_name'),
-            ]);
-
-            Mail::to($email)->send(new TestEmail);
-
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Test email sent successfully.',
-            ]);
-        } catch (Exception $exception) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Failed to send test email: '.$exception->getMessage(),
-            ], 500);
-        }
-    }
-
-    /**
-     * Export settings data.
-     */
-    public function exportSettings(Request $request): JsonResponse
-    {
-        $exportOptions = $request->input('export_options', []);
-        $settings = Settings::withoutTrashed()->get();
-
-        $settingsData = $settings->filter(function ($setting) use ($exportOptions): bool {
-            if ($exportOptions === 'all' || empty($exportOptions)) {
-                return true;
-            }
-
-            foreach ($exportOptions as $option) {
-                if (str_contains((string) $setting->key, $option)) {
-                    return true;
-                }
-            }
-
-            return false;
-        });
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Settings exported successfully.',
-            'jsondata' => $settingsData->values()->toJson(),
-        ]);
-    }
-
-    /**
-     * Import settings from a JSON file.
-     */
-    public function importSettings(Request $request): JsonResponse
-    {
-        $request->validate([
-            'import_file' => ['required', 'mimes:json'],
-        ], ['import_file.mimes' => 'Please upload a valid json file.']);
-
-        $fileContents = File::get($request->file('import_file')->getRealPath());
-        $settings = json_decode($fileContents, true) ?? [];
-
-        if (empty($settings)) {
-            return response()->json([
-                'status' => 2,
-                'type' => 'toast',
-                'message' => 'failed to import settings. No data found in the file.',
-                'refresh' => 'true',
-            ]);
-        }
-
-        $wasImported = false;
-        $userId = Auth::id();
-
-        foreach ($settings as $entry) {
-            if (! isset($entry['key'], $entry['value'])) {
-                continue;
-            }
-
-            $data = [
-                'key' => $entry['key'],
-                'value' => $entry['value'],
-                'updated_by' => $userId,
-            ];
-
-            $existing = $this->settings->where('key', $entry['key'])->first();
-
-            if ($existing) {
-                $existing->update($data);
-                $wasImported = true;
-
-                continue;
-            }
-
-            $data['created_by'] = $userId;
-            $this->settings->create($data);
-            $wasImported = true;
-        }
-
-        if (! $wasImported) {
-            return $this->errorResponse('failed to import settings. Please check the data and try again.');
-        }
-
-        dispatch(new RecacheApplication('Settings import'));
-
-        return response()->json([
-            'status' => 1,
-            'type' => 'toast',
-            'message' => 'Settings imported successfully.',
-            'refresh' => 'true',
-        ]);
-    }
-
     private function authorizeManageSettings(): void
     {
         abort_unless(Auth::user()?->can('manage_system_settings'), 401);
     }
 
-    private function formOptions(): array
+    /**
+     * Check if CMS module is active.
+     */
+    private function isCmsEnabled(): bool
     {
-        $countries = array_map(
-            fn (array $country): array => [
-                'value' => $country['iso2'],
-                'label' => $country['name'],
-            ],
-            $this->geoDataService->getAllCountries()
-        );
+        return function_exists('module_enabled') && module_enabled('CMS');
+    }
 
-        $roles = Role::query()
+    /**
+     * Build the settings sidebar navigation data.
+     */
+    private function getSettingsNav(): array
+    {
+        $cmsEnabled = $this->isCmsEnabled();
+
+        $sections = [
+            ['slug' => 'general', 'label' => 'General', 'cmsOnly' => true],
+            ['slug' => 'localization', 'label' => 'Localization', 'cmsOnly' => false],
+            ['slug' => 'registration', 'label' => 'Registration', 'cmsOnly' => false],
+            ['slug' => 'social-authentication', 'label' => 'Social Authentication', 'cmsOnly' => false],
+            ['slug' => 'site-access-protection', 'label' => 'Site Access Protection', 'cmsOnly' => true],
+            ['slug' => 'maintenance', 'label' => 'Maintenance Mode', 'cmsOnly' => true],
+            ['slug' => 'coming-soon', 'label' => 'Coming Soon Mode', 'cmsOnly' => true],
+            ['slug' => 'development', 'label' => 'Development Mode', 'cmsOnly' => true],
+        ];
+
+        $visible = array_values(array_filter($sections, fn (array $s): bool => ! $s['cmsOnly'] || $cmsEnabled));
+
+        return array_map(fn (array $s): array => [
+            'slug' => $s['slug'],
+            'label' => $s['label'],
+            'href' => route('app.settings.'.$s['slug']),
+        ], $visible);
+    }
+
+    /**
+     * Get settings for a given prefix (meta group), stripping the prefix from keys.
+     */
+    private function getSettingsByPrefix(string $prefix): array
+    {
+        $all = $this->getCachedSettings();
+        $prefixed = $prefix.'_';
+        $result = [];
+
+        foreach ($all as $key => $value) {
+            if (str_starts_with((string) $key, $prefixed)) {
+                $result[substr((string) $key, strlen($prefixed))] = $value;
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Convert a setting value to boolean.
+     */
+    private function toBool(mixed $value): bool
+    {
+        if (is_bool($value)) {
+            return $value;
+        }
+
+        return in_array(strtolower((string) $value), ['1', 'true', 'yes', 'on'], true);
+    }
+
+    /**
+     * Format config options array to [{value, label}] format.
+     */
+    private function formatConfigOptions(?array $options): array
+    {
+        if ($options === null) {
+            return [];
+        }
+
+        $result = [];
+
+        foreach ($options as $key => $item) {
+            if (is_array($item) && isset($item['value'], $item['label'])) {
+                $result[] = ['value' => $item['value'], 'label' => $item['label']];
+            } else {
+                $result[] = ['value' => $key, 'label' => is_string($item) ? $item : $key];
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Get timezone options.
+     */
+    private function getTimezoneOptions(): array
+    {
+        $timezones = (array) config('timezones');
+
+        // Config already returns [{value, label}] arrays — pass through directly.
+        if (isset($timezones[0]) && is_array($timezones[0]) && isset($timezones[0]['value'], $timezones[0]['label'])) {
+            return $timezones;
+        }
+
+        // Fallback: plain string list
+        return array_map(static fn ($tz): array => ['value' => $tz, 'label' => $tz], $timezones);
+    }
+
+    /**
+     * Get role options for registration settings.
+     */
+    private function getRoleOptions(): array
+    {
+        return Role::query()
             ->where('status', Status::ACTIVE)
             ->orderBy('display_name')
             ->orderBy('name')
@@ -323,28 +428,6 @@ class SettingsController extends Controller
             })
             ->values()
             ->all();
-
-        return [
-            'module_title' => __('settings.settings'),
-            'module_name' => __('settings.settings'),
-            'module_path' => 'app.settings',
-            'parent_module' => __('settings.app_settings'),
-            'action' => 'settings',
-            'page_title' => __('settings.settings'),
-            'date_formats' => config('constants.date_formats'),
-            'time_formats' => config('constants.time_formats'),
-            'timezones' => config('timezones'),
-            'email_drivers' => config('constants.email_drivers'),
-            'security_types' => [
-                'tls' => ['label' => 'TLS', 'value' => 'tls'],
-                'ssl' => ['label' => 'SSL', 'value' => 'ssl'],
-            ],
-            'storage_drivers' => config('constants.storage_drivers'),
-            'languages' => config('languages'),
-            'countries' => $countries,
-            'roles' => $roles,
-            'validationFieldLabels' => $this->getValidationFieldLabels(),
-        ];
     }
 
     private function getCachedSettings(): array

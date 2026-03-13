@@ -106,7 +106,7 @@ class ModuleManagementTest extends TestCase
                 ],
             ])
             ->assertRedirect(route('app.masters.modules.index'))
-            ->assertSessionHas('status', 'Module settings updated.');
+            ->assertSessionHas('success', 'Module settings updated.');
 
         $this->assertSame([
             'CMS' => 'disabled',

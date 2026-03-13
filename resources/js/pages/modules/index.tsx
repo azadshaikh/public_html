@@ -6,6 +6,8 @@ import {
     ShieldAlertIcon,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { showAppToast } from '@/components/forms/form-success-toast';
+import { suppressNextFlashToast } from '@/hooks/use-flash-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -39,7 +41,6 @@ type ModuleManagementPageProps = {
     managedModules: ManagedModule[];
     indexUrl: string;
     updateUrl: string;
-    status?: string;
     error?: string;
 };
 
@@ -62,7 +63,6 @@ export default function ModulesIndex({
     managedModules,
     indexUrl,
     updateUrl,
-    status,
     error,
 }: ModuleManagementPageProps) {
     const breadcrumbs: BreadcrumbItem[] = [
@@ -166,6 +166,13 @@ export default function ModulesIndex({
             },
             {
                 preserveScroll: true,
+                onSuccess: () => {
+                    suppressNextFlashToast();
+                    showAppToast({
+                        title: enabled ? 'Module Enabled' : 'Module Disabled',
+                        description: `${moduleName} module is ${enabled ? 'enabled' : 'disabled'}.`,
+                    });
+                },
                 onError: () => {
                     setModuleStatuses(moduleStatuses);
                 },
@@ -258,14 +265,6 @@ export default function ModulesIndex({
                         </div>
                     </CardContent>
                 </Card>
-
-                {status ? (
-                    <Alert>
-                        <PackageIcon />
-                        <AlertTitle>Saved</AlertTitle>
-                        <AlertDescription>{status}</AlertDescription>
-                    </Alert>
-                ) : null}
 
                 {error ? (
                     <Alert className="border-destructive/30 text-destructive dark:border-destructive/40">

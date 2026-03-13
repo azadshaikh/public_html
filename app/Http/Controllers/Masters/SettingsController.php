@@ -7,6 +7,7 @@ use App\Helpers\NavigationHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SettingsRequest;
 use App\Jobs\RecacheApplication;
+use App\Mail\TestEmail;
 use App\Models\Settings;
 use App\Services\SettingsCacheService;
 use App\Traits\ActivityTrait;
@@ -17,8 +18,10 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 use RuntimeException;
 use Symfony\Component\Process\PhpExecutableFinder;
 use Symfony\Component\Process\Process;
@@ -32,16 +35,180 @@ class SettingsController extends Controller
     public function __construct(private readonly Settings $settings, private readonly SettingsCacheService $settingsCacheService) {}
 
     /**
-     * Display the master settings page
+     * Redirect to the first master settings section.
      */
-    public function settings(): View
+    public function index(): RedirectResponse
     {
         $this->authorizeSettingsAccess();
 
-        $view_data = $this->getViewData();
-        $view_data['settings'] = $this->getCachedSettings();
+        return redirect()->route('app.masters.settings.app');
+    }
 
-        return view('app.masters.settings.settings', $view_data);
+    /**
+     * App settings (homepage redirect).
+     */
+    public function app(): Response
+    {
+        $this->authorizeSettingsAccess();
+
+        $isCmsEnabled = $this->isCmsEnabled();
+
+        return Inertia::render('master-settings/app', [
+            'settings' => [
+                'homepage_redirect_enabled' => $this->toBool(get_env_value('HOMEPAGE_REDIRECT_ENABLED', 'false')),
+                'homepage_redirect_slug' => get_env_value('HOMEPAGE_REDIRECT_SLUG', ''),
+            ],
+            'cmsEnabled' => $isCmsEnabled,
+            'settingsNav' => $this->getSettingsNav(),
+        ]);
+    }
+
+    /**
+     * Branding settings.
+     */
+    public function branding(): Response
+    {
+        $this->authorizeSettingsAccess();
+
+        return Inertia::render('master-settings/branding', [
+            'settings' => [
+                'brand_name' => get_env_value('BRANDING_NAME', config('app.name')),
+                'brand_website' => get_env_value('BRANDING_WEBSITE', ''),
+                'logo' => get_env_value('BRANDING_LOGO', ''),
+                'icon' => get_env_value('BRANDING_ICON', ''),
+            ],
+            'settingsNav' => $this->getSettingsNav(),
+        ]);
+    }
+
+    /**
+     * Login security settings.
+     */
+    public function loginSecurity(): Response
+    {
+        $this->authorizeSettingsAccess();
+
+        $settings = $this->getCachedSettings();
+
+        return Inertia::render('master-settings/login-security', [
+            'settings' => [
+                'admin_login_url_slug' => get_env_file_value('ADMIN_SLUG', config('app.admin_slug')),
+                'limit_login_attempts_enabled' => $this->toBool($settings['login_security_limit_login_attempts_enabled'] ?? 'false'),
+                'limit_login_attempts' => $settings['login_security_limit_login_attempts'] ?? '5',
+                'lockout_time' => $settings['login_security_lockout_time'] ?? '60',
+            ],
+            'settingsNav' => $this->getSettingsNav(),
+        ]);
+    }
+
+    /**
+     * Email settings (moved from System Settings).
+     */
+    public function email(): Response
+    {
+        $this->authorizeSettingsAccess();
+
+        return Inertia::render('master-settings/email', [
+            'settings' => [
+                'email_driver' => get_env_value('MAIL_MAILER', 'sendmail'),
+                'email_host' => get_env_value('MAIL_HOST', ''),
+                'email_port' => get_env_value('MAIL_PORT', '587'),
+                'email_username' => get_env_value('MAIL_USERNAME', ''),
+                'email_password' => get_env_value('MAIL_PASSWORD', ''),
+                'email_encryption' => get_env_value('MAIL_ENCRYPTION', 'tls'),
+                'email_from_address' => get_env_value('MAIL_FROM_ADDRESS', ''),
+                'email_from_name' => get_env_value('MAIL_FROM_NAME', config('app.name')),
+            ],
+            'options' => [
+                'emailDrivers' => $this->formatConfigOptions(config('constants.email_drivers')),
+                'securityTypes' => [
+                    ['value' => 'tls', 'label' => 'TLS'],
+                    ['value' => 'ssl', 'label' => 'SSL'],
+                ],
+            ],
+            'settingsNav' => $this->getSettingsNav(),
+        ]);
+    }
+
+    /**
+     * Storage settings.
+     */
+    public function storage(): Response
+    {
+        $this->authorizeSettingsAccess();
+
+        return Inertia::render('master-settings/storage', [
+            'settings' => [
+                'storage_driver' => get_env_value('STORAGE_DISK', 'public'),
+                'root_folder' => get_env_value('STORAGE_ROOT_FOLDER', ''),
+                'max_storage_size' => get_env_value('MAX_STORAGE_SIZE', ''),
+                'storage_cdn_url' => get_env_value('STORAGE_CDN_URL', ''),
+                // FTP
+                'ftp_host' => get_env_value('FTP_HOST', ''),
+                'ftp_username' => get_env_value('FTP_USERNAME', ''),
+                'ftp_password' => get_env_value('FTP_PASSWORD', ''),
+                'ftp_root' => get_env_value('FTP_ROOT', ''),
+                'ftp_port' => get_env_value('FTP_PORT', '21'),
+                'ftp_passive' => $this->toBool(get_env_value('FTP_PASSIVE', 'false')),
+                'ftp_timeout' => get_env_value('FTP_TIMEOUT', '30'),
+                'ftp_ssl' => $this->toBool(get_env_value('FTP_SSL', 'false')),
+                'ftp_ssl_mode' => get_env_value('FTP_SSL_MODE', 'explicit'),
+                // S3
+                'access_key' => get_env_value('AWS_ACCESS_KEY_ID', ''),
+                'secret_key' => get_env_value('AWS_SECRET_ACCESS_KEY', ''),
+                'bucket' => get_env_value('AWS_BUCKET', ''),
+                'region' => get_env_value('AWS_DEFAULT_REGION', ''),
+                'endpoint' => get_env_value('AWS_ENDPOINT', ''),
+                'use_path_style_endpoint' => $this->toBool(get_env_value('AWS_USE_PATH_STYLE_ENDPOINT', 'FALSE')),
+            ],
+            'options' => [
+                'storageDrivers' => $this->formatConfigOptions(config('constants.storage_drivers')),
+            ],
+            'settingsNav' => $this->getSettingsNav(),
+        ]);
+    }
+
+    /**
+     * Media settings.
+     */
+    public function media(): Response
+    {
+        $this->authorizeSettingsAccess();
+
+        return Inertia::render('master-settings/media', [
+            'settings' => [
+                'max_file_name_length' => get_env_value('MEDIA_MAX_FILE_NAME_LENGTH', ''),
+                'max_upload_size' => get_env_value('MEDIA_MAX_SIZE_IN_MB', ''),
+                'allowed_file_types' => trim((string) get_env_value('MEDIA_ALLOWED_FILE_TYPES', ''), '"'),
+                'image_optimization' => $this->toBool(get_env_value('MEDIA_IMAGE_OPTIMIZATION', 'false')),
+                'image_quality' => get_env_value('MEDIA_IMAGE_QUALITY', ''),
+                'thumbnail_width' => get_env_value('MEDIA_THUMBNAIL_WIDTH', '150'),
+                'small_width' => get_env_value('MEDIA_SMALL_WIDTH', ''),
+                'medium_width' => get_env_value('MEDIA_MEDIUM_WIDTH', ''),
+                'large_width' => get_env_value('MEDIA_LARGE_WIDTH', ''),
+                'xlarge_width' => get_env_value('MEDIA_XLARGE_WIDTH', '1920'),
+                'delete_trashed' => $this->toBool(get_env_value('MEDIA_AUTO_DELETE_TRASHED', 'false')),
+                'delete_trashed_days' => get_env_value('MEDIA_TRASH_AUTO_DELETE_DAYS', ''),
+            ],
+            'settingsNav' => $this->getSettingsNav(),
+        ]);
+    }
+
+    /**
+     * Debug settings.
+     */
+    public function debug(): Response
+    {
+        $this->authorizeSettingsAccess();
+
+        return Inertia::render('master-settings/debug', [
+            'settings' => [
+                'enable_debugging' => $this->toBool(get_env_value('APP_DEBUG', 'false')),
+                'enable_debugging_bar' => $this->toBool(get_env_value('DEBUGBAR_ENABLED', 'false')),
+                'enable_html_minification' => $this->toBool(get_env_value('HTML_MINIFICATION_ENABLED', 'false')),
+            ],
+            'settingsNav' => $this->getSettingsNav(),
+        ]);
     }
 
     /**
@@ -52,7 +219,7 @@ class SettingsController extends Controller
         $this->authorizeSettingsAccess();
 
         $section = $request->input('section');
-        $redirectUrl = $this->getRedirectUrl('app.masters.settings.index', $section);
+        $redirectUrl = url()->previous();
 
         try {
             // Store old values for activity logging
@@ -116,7 +283,64 @@ class SettingsController extends Controller
     }
 
     /**
-     * Test storage connection with provided credentials
+     * Send a test email using the provided SMTP configuration.
+     */
+    public function sendTestMail(Request $request): JsonResponse
+    {
+        $this->authorizeSettingsAccess();
+
+        $request->validate([
+            'email' => ['required', 'email'],
+            'email_driver' => ['required'],
+            'email_from_name' => ['required'],
+            'email_from_address' => ['required', 'email'],
+            'email_host' => ['required_if:email_driver,smtp'],
+            'email_port' => ['required_if:email_driver,smtp'],
+            'email_username' => ['required_if:email_driver,smtp'],
+            'email_password' => ['required_if:email_driver,smtp'],
+            'email_encryption' => ['required_if:email_driver,smtp'],
+        ]);
+
+        try {
+            $emailDriver = $request->input('email_driver');
+            if ($emailDriver === 'smtp') {
+                config([
+                    'mail.default' => 'smtp',
+                    'mail.mailers.smtp.host' => $request->input('email_host'),
+                    'mail.mailers.smtp.port' => $request->input('email_port'),
+                    'mail.mailers.smtp.username' => $request->input('email_username'),
+                    'mail.mailers.smtp.password' => $request->input('email_password'),
+                    'mail.mailers.smtp.encryption' => $request->input('email_encryption'),
+                    'mail.mailers.smtp.streams.ssl.allow_self_signed' => true,
+                ]);
+            } else {
+                config([
+                    'mail.default' => 'sendmail',
+                    'mail.mailers.sendmail.path' => '/usr/sbin/sendmail -bs',
+                ]);
+            }
+
+            config([
+                'mail.from.address' => $request->input('email_from_address'),
+                'mail.from.name' => $request->input('email_from_name'),
+            ]);
+
+            Mail::to($request->input('email'))->send(new TestEmail);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Test email sent successfully.',
+            ]);
+        } catch (Exception $exception) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send test email: '.$exception->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Test storage connection with provided credentials.
      */
     public function testStorageConnection(Request $request): JsonResponse
     {
@@ -200,37 +424,75 @@ class SettingsController extends Controller
     }
 
     /**
-     * Get view data for settings page
-     */
-    private function getViewData(): array
-    {
-        return [
-            'module_title' => __('settings.settings'),
-            'module_name' => __('settings.settings'),
-            'module_path' => 'app.masters.settings',
-            'parent_module' => __('settings.system_settings'),
-            'action' => 'settings',
-            'page_title' => __('settings.master_settings'),
-            'date_formats' => $this->getFormattedOptions('constants.date_formats'),
-            'time_formats' => $this->getFormattedOptions('constants.time_formats'),
-            'timezones' => $this->getTimezoneOptions(),
-            'email_drivers' => config('constants.email_drivers'),
-            'security_types' => [
-                'tls' => ['label' => 'TLS', 'value' => 'tls'],
-                'ssl' => ['label' => 'SSL', 'value' => 'ssl'],
-            ],
-            'storage_drivers' => config('constants.storage_drivers'),
-            'languages' => config('constants.languages'),
-            'theme_modes' => config('constants.theme_modes'),
-        ];
-    }
-
-    /**
-     * Authorize access to settings
+     * Authorize access to master settings — super user role only.
      */
     private function authorizeSettingsAccess(): void
     {
-        abort_unless(Auth::user()->can('manage_system_settings'), 401);
+        abort_unless(Auth::user()?->isSuperUser(), 403);
+    }
+
+    /**
+     * Check if CMS module is active.
+     */
+    private function isCmsEnabled(): bool
+    {
+        return function_exists('module_enabled') && module_enabled('CMS');
+    }
+
+    /**
+     * Build the master settings sidebar navigation data.
+     */
+    private function getSettingsNav(): array
+    {
+        $sections = [
+            ['slug' => 'app', 'label' => 'App Settings'],
+            ['slug' => 'branding', 'label' => 'Branding'],
+            ['slug' => 'login-security', 'label' => 'Login Security'],
+            ['slug' => 'email', 'label' => 'Email'],
+            ['slug' => 'storage', 'label' => 'Storage'],
+            ['slug' => 'media', 'label' => 'Media'],
+            ['slug' => 'debug', 'label' => 'Debug'],
+        ];
+
+        return array_map(fn (array $s): array => [
+            'slug' => $s['slug'],
+            'label' => $s['label'],
+            'href' => route('app.masters.settings.'.$s['slug']),
+        ], $sections);
+    }
+
+    /**
+     * Convert a setting value to boolean.
+     */
+    private function toBool(mixed $value): bool
+    {
+        if (is_bool($value)) {
+            return $value;
+        }
+
+        return in_array(strtolower((string) $value), ['1', 'true', 'yes', 'on'], true);
+    }
+
+    /**
+     * Format config options array to [{value, label}] format.
+     */
+    private function formatConfigOptions(?array $options): array
+    {
+        if ($options === null) {
+            return [];
+        }
+
+        $result = [];
+
+        foreach ($options as $key => $item) {
+            if (is_array($item) && isset($item['value'], $item['label'])) {
+                $result[] = ['value' => $item['value'], 'label' => $item['label']];
+            } else {
+                $result[] = ['value' => $key, 'label' => is_string($item) ? $item : $key];
+            }
+        }
+
+        return $result;
     }
 
     /**
@@ -453,8 +715,43 @@ class SettingsController extends Controller
             'branding' => $this->handleBrandingSettings(...),
             'login_security' => $this->handleLoginSecuritySettings(...),
             'app' => $this->handleAppSettings(...),
+            'email' => $this->handleEmailSettings(...),
             default => $this->handleGenericSettings(...),
         };
+    }
+
+    /**
+     * Handle email settings (environment variables)
+     */
+    private function handleEmailSettings(array $data): array
+    {
+        $mapping = [
+            'email_driver' => 'MAIL_MAILER',
+            'email_host' => 'MAIL_HOST',
+            'email_port' => 'MAIL_PORT',
+            'email_username' => 'MAIL_USERNAME',
+            'email_password' => 'MAIL_PASSWORD',
+            'email_encryption' => 'MAIL_ENCRYPTION',
+            'email_from_address' => 'MAIL_FROM_ADDRESS',
+            'email_from_name' => 'MAIL_FROM_NAME',
+        ];
+
+        $envValues = [];
+        foreach ($mapping as $field => $envKey) {
+            if (array_key_exists($field, $data)) {
+                $envValues[$envKey] = $data[$field] ?? '';
+            }
+        }
+
+        if ($envValues !== []) {
+            set_env_values_bulk($envValues, false);
+        }
+
+        return [
+            'success' => true,
+            'message' => 'Email settings updated successfully.',
+            'recache_sync' => true,
+        ];
     }
 
     /**
@@ -815,32 +1112,6 @@ class SettingsController extends Controller
     }
 
     /**
-     * Get formatted options from config
-     */
-    private function getFormattedOptions(string $configKey): array
-    {
-        $options = [];
-        foreach (config($configKey) as $key => $value) {
-            $options[] = ['value' => $key, 'label' => $value];
-        }
-
-        return $options;
-    }
-
-    /**
-     * Get timezone options
-     */
-    private function getTimezoneOptions(): array
-    {
-        $timezones = [];
-        foreach (config('timezones') as $tzdata) {
-            $timezones[] = ['value' => $tzdata, 'label' => $tzdata];
-        }
-
-        return $timezones;
-    }
-
-    /**
      * Get current settings state for activity logging
      */
     private function getCurrentSettingsState(string $metaGroup): array
@@ -916,6 +1187,19 @@ class SettingsController extends Controller
                     'limit_login_attempts_enabled' => $settings['login_security_limit_login_attempts_enabled'] ?? 'false',
                     'limit_login_attempts' => $settings['login_security_limit_login_attempts'] ?? '5',
                     'lockout_time' => $settings['login_security_lockout_time'] ?? '60',
+                ];
+                break;
+
+            case 'email':
+                $currentState = [
+                    'email_driver' => get_env_value('MAIL_MAILER', 'sendmail'),
+                    'email_host' => get_env_value('MAIL_HOST', ''),
+                    'email_port' => get_env_value('MAIL_PORT', '587'),
+                    'email_username' => get_env_value('MAIL_USERNAME', ''),
+                    'email_password' => get_env_value('MAIL_PASSWORD', ''),
+                    'email_encryption' => get_env_value('MAIL_ENCRYPTION', 'tls'),
+                    'email_from_address' => get_env_value('MAIL_FROM_ADDRESS', ''),
+                    'email_from_name' => get_env_value('MAIL_FROM_NAME', config('app.name')),
                 ];
                 break;
         }
@@ -1182,10 +1466,12 @@ class SettingsController extends Controller
     private function getFriendlyMetaGroupName(string $metaGroup): string
     {
         $names = [
+            'app' => 'App',
             'branding' => 'Branding',
             'storage' => 'Storage',
             'media' => 'Media',
             'debug' => 'Debug',
+            'email' => 'Email',
             'login_security' => 'Login Security',
         ];
 
@@ -1213,6 +1499,10 @@ class SettingsController extends Controller
     private function getFieldLabelsForMetaGroup(): array
     {
         return [
+            // App
+            'homepage_redirect_enabled' => 'Homepage Redirect',
+            'homepage_redirect_slug' => 'Homepage Redirect Slug',
+
             // Branding
             'brand_name' => 'Brand Name',
             'brand_website' => 'Brand Website',
@@ -1226,6 +1516,16 @@ class SettingsController extends Controller
             'primary_color_rgb' => 'Primary Color RGB',
             'secondary_color' => 'Secondary Color',
             'secondary_color_rgb' => 'Secondary Color RGB',
+
+            // Email
+            'email_driver' => 'Email Driver',
+            'email_host' => 'SMTP Host',
+            'email_port' => 'SMTP Port',
+            'email_username' => 'SMTP Username',
+            'email_password' => 'SMTP Password',
+            'email_encryption' => 'Encryption',
+            'email_from_address' => 'From Address',
+            'email_from_name' => 'From Name',
 
             // Storage
             'storage_driver' => 'Storage Driver',

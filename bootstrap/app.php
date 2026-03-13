@@ -16,12 +16,17 @@ use App\Http\Middleware\ModuleAccessMiddleware;
 use App\Http\Middleware\SiteAccessProtectionMiddleware;
 use App\Http\Middleware\SuperUserPermissionMiddleware;
 use App\Http\Middleware\UrlExtension;
+use App\Services\NotFoundLogger;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
 use Spatie\Permission\Middleware\RoleMiddleware;
 use Spatie\Permission\Middleware\RoleOrPermissionMiddleware;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -58,5 +63,41 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->render(function (NotFoundHttpException $exception, Request $request) {
+            if (! $request->expectsJson()) {
+                rescue(
+                    callback: function () use ($request): void {
+                        resolve(NotFoundLogger::class)->log($request);
+                    },
+                    report: true,
+                );
+            }
+
+            return null;
+        });
+
+        $exceptions->respond(function (Response $response, Throwable $exception, Request $request): Response {
+            if (app()->hasDebugModeEnabled() || $request->expectsJson()) {
+                return $response;
+            }
+
+            $status = $response->getStatusCode();
+            $supportedStatuses = [401, 402, 403, 404, 419, 429, 500, 503];
+
+            if (! in_array($status, $supportedStatuses, true)) {
+                return $response;
+            }
+
+            $message = trim($exception->getMessage());
+            $defaultMessage = Response::$statusTexts[$status] ?? '';
+
+            if ($message === '' || $message === $defaultMessage) {
+                $message = null;
+            }
+
+            return Inertia::render("errors/{$status}", [
+                'status' => $status,
+                'message' => $message,
+            ])->toResponse($request)->setStatusCode($status);
+        });
     })->create();

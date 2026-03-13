@@ -3,6 +3,7 @@ export type * from './module';
 export type * from './navigation';
 export type * from './pagination';
 export type * from './role';
+export type * from './settings';
 export type * from './ui';
 export type * from './user-management';
 export type * from './user-management';
