@@ -854,12 +854,11 @@ class SettingsController extends Controller
         $adminSlug = trim((string) ($data['admin_login_url_slug'] ?? ''), '/');
         $data['admin_login_url_slug'] = $adminSlug;
 
-        // Prepare payload - handle checkbox toggle
-        if (! isset($data['enable_login_attempt_limiting'])) {
-            $data['limit_login_attempts_enabled'] = 'false';
-        } else {
+        // Prepare payload - handle boolean toggle from React
+        if (isset($data['limit_login_attempts_enabled']) && $data['limit_login_attempts_enabled']) {
             $data['limit_login_attempts_enabled'] = 'true';
-            unset($data['enable_login_attempt_limiting']);
+        } else {
+            $data['limit_login_attempts_enabled'] = 'false';
         }
 
         // Update ADMIN_SLUG in .env if changed

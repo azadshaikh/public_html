@@ -16,7 +16,7 @@ class SettingsRequest extends FormRequest
     public function rules(): array
     {
         // use url parameter meta_group for set rules based on meta_group
-        $meta_group = $this->input('meta_group');
+        $meta_group = $this->route('meta_group') ?? $this->input('meta_group');
         $rules = [];
         switch ($meta_group) {
             case 'general':
@@ -95,9 +95,9 @@ class SettingsRequest extends FormRequest
             case 'login_security':
                 $rules = [
                     'admin_login_url_slug' => ['required', 'string', 'max:255', 'alpha_dash:ascii'],
-                    'enable_login_attempt_limiting' => ['nullable'],
-                    'limit_login_attempts' => ['required_if:enable_login_attempt_limiting,1', 'integer', 'min:1'],
-                    'lockout_time' => ['required_if:enable_login_attempt_limiting,1', 'integer', 'min:1'],
+                    'limit_login_attempts_enabled' => ['nullable', 'boolean'],
+                    'limit_login_attempts' => ['required_if:limit_login_attempts_enabled,true', 'integer', 'min:1'],
+                    'lockout_time' => ['required_if:limit_login_attempts_enabled,true', 'integer', 'min:1'],
                 ];
                 break;
             case 'social_authentication':
@@ -214,7 +214,8 @@ class SettingsRequest extends FormRequest
     public function messages(): array
     {
         $messages = [];
-        switch ($this->input('meta_group')) {
+        $metaGroup = $this->route('meta_group') ?? $this->input('meta_group');
+        switch ($metaGroup) {
             case 'general':
                 $messages = [
                     'app_title.required' => 'App title is required',

@@ -355,7 +355,7 @@ class SettingsControllerTest extends TestCase
     public function test_guests_cannot_update_master_settings(): void
     {
         $this->put(route('app.masters.settings.update', 'branding'), [
-            'meta_group' => 'branding',
+            
             'brand_name' => 'Test',
         ])->assertRedirect(route('login'));
     }
@@ -364,7 +364,7 @@ class SettingsControllerTest extends TestCase
     {
         $this->actingAs($this->admin)
             ->put(route('app.masters.settings.update', 'branding'), [
-                'meta_group' => 'branding',
+                
                 'brand_name' => 'Test',
                 'brand_website' => 'https://example.com',
                 'logo' => 'logo.png',
@@ -380,7 +380,7 @@ class SettingsControllerTest extends TestCase
     {
         $this->actingAs($this->superUser)
             ->put(route('app.masters.settings.update', 'branding'), [
-                'meta_group' => 'branding',
+                
                 'brand_name' => '',
             ])
             ->assertSessionHasErrors('brand_name');
@@ -390,7 +390,7 @@ class SettingsControllerTest extends TestCase
     {
         $this->actingAs($this->superUser)
             ->put(route('app.masters.settings.update', 'branding'), [
-                'meta_group' => 'branding',
+                
                 'brand_name' => 'Test Brand',
                 'brand_website' => 'https://example.com',
                 'logo' => 'logo.png',
@@ -408,7 +408,7 @@ class SettingsControllerTest extends TestCase
     {
         $this->actingAs($this->superUser)
             ->put(route('app.masters.settings.update', 'login_security'), [
-                'meta_group' => 'login_security',
+                
                 'admin_login_url_slug' => 'admin',
                 'limit_login_attempts_enabled' => true,
                 'limit_login_attempts' => '5',
@@ -426,7 +426,7 @@ class SettingsControllerTest extends TestCase
     {
         $this->actingAs($this->superUser)
             ->put(route('app.masters.settings.update', 'debug'), [
-                'meta_group' => 'debug',
+                
                 'enable_debugging' => false,
                 'enable_debugging_bar' => false,
                 'enable_html_minification' => false,
