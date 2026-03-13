@@ -3,6 +3,9 @@
     "slug": "chatbot",
     "version": "1.0.0",
     "description": "Starter chatbot module with a prompt template CRUD.",
+    "author": "AsteroDigital",
+    "homepage": "https://asterodigital.com",
+    "icon": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"4\" width=\"18\" height=\"14\" rx=\"4\"></rect><path d=\"m8 18-3 3\"></path><path d=\"M9 10h.01\"></path><path d=\"M15 10h.01\"></path><path d=\"M9 14h6\"></path></svg>",
     "namespace": "Modules\\ChatBot\\",
     "provider": "Modules\\ChatBot\\Providers\\ChatBotServiceProvider"
 }

@@ -89,7 +89,7 @@ class ModuleManager
     }
 
     /**
-     * @return array{items: array<int, array{name: string, slug: string, version: string, description: string, inertiaNamespace: string, url: string}>}
+     * @return array{items: array<int, array{name: string, slug: string, version: string, description: string, author: ?string, homepage: ?string, icon: ?string, inertiaNamespace: string, url: string}>}
      */
     public function sharedData(): array
     {
@@ -102,7 +102,7 @@ class ModuleManager
     }
 
     /**
-     * @return Collection<int, array{name: string, version: string, description: string, status: string, enabled: bool}>
+     * @return Collection<int, array{name: string, version: string, description: string, author: ?string, homepage: ?string, icon: ?string, status: string, enabled: bool}>
      */
     public function managementData(): Collection
     {
@@ -259,6 +259,9 @@ class ModuleManager
         $enabledModules = $this->enabledModuleSlugs();
 
         $name = trim((string) ($decoded['name'] ?? ''));
+        $author = trim((string) ($decoded['author'] ?? ''));
+        $homepage = trim((string) ($decoded['homepage'] ?? ''));
+        $icon = trim((string) ($decoded['icon'] ?? ''));
         $namespace = trim((string) ($decoded['namespace'] ?? ''));
         $provider = trim((string) ($decoded['provider'] ?? ''));
 
@@ -271,6 +274,9 @@ class ModuleManager
             slug: $slug,
             version: (string) ($decoded['version'] ?? '1.0.0'),
             description: (string) ($decoded['description'] ?? ''),
+            author: $author !== '' ? $author : null,
+            homepage: $homepage !== '' ? $homepage : null,
+            icon: $icon !== '' ? $icon : null,
             namespace: rtrim($namespace, '\\').'\\',
             provider: $provider,
             basePath: $modulePath,

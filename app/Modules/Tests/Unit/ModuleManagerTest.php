@@ -32,8 +32,30 @@ class ModuleManagerTest extends TestCase
         $this->assertNotNull($module);
         $this->assertSame('CMS', $module->name);
         $this->assertSame('Modules\\Cms\\', $module->namespace);
+        $this->assertNull($module->author);
+        $this->assertNull($module->homepage);
+        $this->assertNull($module->icon);
         $this->assertSame('cms/', $module->inertiaNamespace());
         $this->assertSame('/cms', $module->url());
+    }
+
+    public function test_it_exposes_optional_author_homepage_and_icon_metadata_from_module_manifests(): void
+    {
+        $module = $this->app->make(ModuleManager::class)
+            ->enabled()
+            ->first(fn (ModuleManifest $module): bool => $module->slug === 'chatbot');
+
+        $this->assertNotNull($module);
+        $this->assertSame('AsteroDigital', $module->author);
+        $this->assertSame('https://asterodigital.com', $module->homepage);
+        $this->assertStringContainsString('<svg', (string) $module->icon);
+
+        $sharedModule = collect($this->app->make(ModuleManager::class)->sharedData()['items'])
+            ->firstWhere('slug', 'chatbot');
+
+        $this->assertSame('AsteroDigital', $sharedModule['author']);
+        $this->assertSame('https://asterodigital.com', $sharedModule['homepage']);
+        $this->assertStringContainsString('<svg', (string) $sharedModule['icon']);
     }
 
     public function test_it_only_enables_modules_listed_in_the_root_manifest(): void

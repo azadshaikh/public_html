@@ -9,6 +9,9 @@ final readonly class ModuleManifest
         public string $slug,
         public string $version,
         public string $description,
+        public ?string $author,
+        public ?string $homepage,
+        public ?string $icon,
         public string $namespace,
         public string $provider,
         public string $basePath,
@@ -27,7 +30,7 @@ final readonly class ModuleManifest
     }
 
     /**
-     * @return array{name: string, slug: string, version: string, description: string, inertiaNamespace: string, url: string}
+     * @return array{name: string, slug: string, version: string, description: string, author: ?string, homepage: ?string, icon: ?string, inertiaNamespace: string, url: string}
      */
     public function toSharedArray(): array
     {
@@ -36,13 +39,16 @@ final readonly class ModuleManifest
             'slug' => $this->slug,
             'version' => $this->version,
             'description' => $this->description,
+            'author' => $this->author,
+            'homepage' => $this->homepage,
+            'icon' => $this->icon,
             'inertiaNamespace' => $this->inertiaNamespace(),
             'url' => $this->url(),
         ];
     }
 
     /**
-     * @return array{name: string, version: string, description: string}
+     * @return array{name: string, version: string, description: string, author: ?string, homepage: ?string, icon: ?string}
      */
     public function toManagementArray(): array
     {
@@ -50,6 +56,9 @@ final readonly class ModuleManifest
             'name' => $this->name,
             'version' => $this->version,
             'description' => $this->description,
+            'author' => $this->author,
+            'homepage' => $this->homepage,
+            'icon' => $this->icon,
         ];
     }
 }

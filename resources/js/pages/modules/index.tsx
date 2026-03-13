@@ -28,6 +28,7 @@ import {
     InputGroupAddon,
     InputGroupInput,
 } from '@/components/ui/input-group';
+import { NavigationIcon } from '@/components/navigation-icon';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
@@ -113,7 +114,12 @@ export default function ModulesIndex({
                     return true;
                 }
 
-                return [module.name, module.version, module.description]
+                return [
+                    module.name,
+                    module.version,
+                    module.description,
+                    module.author ?? '',
+                ]
                     .join(' ')
                     .toLowerCase()
                     .includes(query);
@@ -295,7 +301,14 @@ export default function ModulesIndex({
                                                 !module.enabled && 'bg-muted',
                                             )}
                                         >
-                                            <PackageIcon className="size-3.5" />
+                                            {module.icon ? (
+                                                <NavigationIcon
+                                                    svg={module.icon}
+                                                    className="text-current [&_svg]:size-3.5"
+                                                />
+                                            ) : (
+                                                <PackageIcon className="size-3.5" />
+                                            )}
                                         </div>
                                         <div className="min-w-0 flex-1">
                                             <CardTitle className="truncate text-sm">
@@ -332,6 +345,30 @@ export default function ModulesIndex({
                                         {module.description ||
                                             'No description available for this module yet.'}
                                     </p>
+
+                                    <div className="min-h-5 text-xs text-muted-foreground">
+                                        {module.author ? (
+                                            <span>
+                                                By{' '}
+                                                {module.homepage ? (
+                                                    <a
+                                                        href={module.homepage}
+                                                        target="_blank"
+                                                        rel="noreferrer noopener"
+                                                        className="font-medium text-foreground underline-offset-4 transition-colors hover:text-primary hover:underline"
+                                                    >
+                                                        {module.author}
+                                                    </a>
+                                                ) : (
+                                                    <span className="font-medium text-foreground">
+                                                        {module.author}
+                                                    </span>
+                                                )}
+                                            </span>
+                                        ) : (
+                                            <span>Author not specified.</span>
+                                        )}
+                                    </div>
                                 </CardContent>
 
                                 <CardFooter className="min-h-12 items-end bg-transparent px-3 pt-0 pb-2">
