@@ -221,7 +221,6 @@ Route::prefix($adminPrefix)->group(function (): void {
             // --- Roles Management ---
             Route::group(['prefix' => 'roles', 'as' => 'roles.'], function (): void {
                 // Static routes FIRST
-                Route::get('/data', [RoleController::class, 'data'])->name('data');
                 Route::post('/bulk-action', [RoleController::class, 'bulkAction'])->name('bulk-action');
 
                 // Standard CRUD routes

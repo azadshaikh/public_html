@@ -20,7 +20,6 @@ import {
     FieldLabel,
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import type {
     PermissionGroup,
     RoleEditingTarget,
@@ -170,33 +169,6 @@ export default function RoleForm({
                                 <FieldError>{form.errors.name}</FieldError>
                             </Field>
                         </FieldGroup>
-
-                        <Field data-invalid={Boolean(form.errors.description)}>
-                            <FieldLabel htmlFor="description">
-                                Description
-                            </FieldLabel>
-                            <Textarea
-                                id="description"
-                                value={form.data.description}
-                                onChange={(event) =>
-                                    form.setData(
-                                        'description',
-                                        event.target.value,
-                                    )
-                                }
-                                aria-invalid={
-                                    Boolean(form.errors.description) ||
-                                    undefined
-                                }
-                                placeholder="Explain who should receive this role and how it should be used."
-                                rows={5}
-                            />
-                            <FieldDescription>
-                                Keep descriptions short and operational so
-                                future module work can reuse roles confidently.
-                            </FieldDescription>
-                            <FieldError>{form.errors.description}</FieldError>
-                        </Field>
 
                         {role ? (
                             <div className="rounded-xl border border-dashed bg-muted/20 p-4 text-sm text-muted-foreground">

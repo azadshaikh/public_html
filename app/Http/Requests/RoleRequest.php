@@ -70,5 +70,11 @@ class RoleRequest extends ScaffoldRequest
                 'guard_name' => 'web',
             ]);
         }
+
+        if (! $this->has('status') || empty($this->status)) {
+            $this->merge([
+                'status' => 'active',
+            ]);
+        }
     }
 }

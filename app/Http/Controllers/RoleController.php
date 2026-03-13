@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\Status;
 use App\Models\Role;
 use App\Scaffold\ScaffoldController;
 use App\Services\RoleService;
@@ -26,31 +27,117 @@ class RoleController extends ScaffoldController implements HasMiddleware
         ];
     }
 
-    /**
-     * Override to provide additional form data for create and edit.
-     */
-    protected function getFormViewData(Model $model): array
+    // ================================================================
+    // OVERRIDE INDEX TO PROVIDE CLEAN PROPS FOR REACT DATAGRID
+    // ================================================================
+
+    public function index(Request $request): Response|RedirectResponse
     {
-        return [
-            'statusOptions' => $this->roleService->getStatusOptions(),
-            'permissions' => $this->roleService->getAllPermissions(),
-        ];
+        $this->enforcePermission('view');
+
+        $status = $request->input('status') ?? $request->route('status') ?? 'all';
+        $perPage = $this->service()->getScaffoldDefinition()->getPerPage();
+
+        return Inertia::render($this->inertiaPage().'/index', [
+            'roles' => $this->roleService->getPaginatedRoles($request),
+            'statistics' => $this->roleService->getStatistics(),
+            'filters' => [
+                'search' => $request->input('search', ''),
+                'status' => $status,
+                'sort' => $request->input('sort', 'display_name'),
+                'direction' => $request->input('direction', 'asc'),
+                'per_page' => (int) $request->input('per_page', $perPage),
+                'view' => $request->input('view', 'table'),
+            ],
+            'status' => session('status'),
+            'error' => session('error'),
+        ]);
     }
 
-    /**
-     * Override show to eager load relations.
-     */
+    // ================================================================
+    // OVERRIDE SHOW TO PROVIDE RICH ROLE DETAIL
+    // ================================================================
+
     public function show(int|string $id): Response
     {
         $role = Role::withTrashed()
             ->with(['permissions', 'notes', 'createdBy', 'updatedBy'])
+            ->withCount(['users', 'permissions'])
             ->findOrFail((int) $id);
 
-        return Inertia::render($this->inertiaPage().'/show', array_merge(
-            ['role' => $role],
-            $this->getShowViewData($role),
-        ));
+        return Inertia::render($this->inertiaPage().'/show', [
+            'role' => [
+                'id' => $role->id,
+                'name' => $role->name,
+                'display_name' => $role->display_name,
+                'guard_name' => $role->guard_name,
+                'status' => $role->status instanceof Status ? $role->status->value : (string) $role->status,
+                'status_label' => $role->status instanceof Status ? $role->status->label() : ucfirst((string) $role->status),
+                'is_system' => $role->id === (int) config('permission.super_user_role_id', 1),
+                'is_trashed' => $role->trashed(),
+                'trashed_at' => $role->deleted_at?->toISOString(),
+                'trashed_at_formatted' => $role->deleted_at ? app_date_time_format($role->deleted_at, 'datetime') : null,
+                'users_count' => $role->users_count,
+                'permissions_count' => $role->permissions_count,
+                'notes_count' => $role->notes->count(),
+                'created_at' => $role->created_at?->toISOString(),
+                'created_at_formatted' => app_date_time_format($role->created_at, 'datetime'),
+                'updated_at' => $role->updated_at?->toISOString(),
+                'updated_at_formatted' => app_date_time_format($role->updated_at, 'datetime'),
+                'created_by' => $role->createdBy?->name ?? 'System',
+                'updated_by' => $role->updatedBy?->name ?? 'System',
+            ],
+            'permissionGroups' => $this->roleService->getGroupedPermissionsForRole($role),
+            'status' => session('status'),
+            'error' => session('error'),
+        ]);
     }
+
+    // ================================================================
+    // FORM DATA
+    // ================================================================
+
+    /**
+     * Provide initialValues and permissionGroups for the React form.
+     */
+    protected function getFormViewData(Model $model): array
+    {
+        /** @var Role $role */
+        $role = $model;
+
+        return [
+            'initialValues' => [
+                'name' => $role->exists ? ($role->name ?? '') : '',
+                'display_name' => $role->exists ? ($role->display_name ?? '') : '',
+                'permissions' => $role->exists ? $role->permissions()->pluck('permissions.id')->toArray() : [],
+            ],
+            'permissionGroups' => $this->roleService->getAllPermissionsGrouped(),
+        ];
+    }
+
+    /**
+     * Shape the role for the edit form's RoleEditingTarget.
+     */
+    protected function transformModelForEdit(Model $model): array
+    {
+        /** @var Role $role */
+        $role = $model;
+        $role->loadCount(['users', 'permissions']);
+
+        return [
+            'id' => $role->id,
+            'name' => $role->name,
+            'display_name' => $role->display_name,
+            'permissions' => $role->permissions()->pluck('permissions.id')->toArray(),
+            'is_system' => $role->id === (int) config('permission.super_user_role_id', 1),
+            'users_count' => $role->users_count,
+            'permissions_count' => $role->permissions_count,
+        ];
+    }
+
+    // ================================================================
+    // PROTECTION OVERRIDES
+    // ================================================================
 
     /**
      * Overridden to protect super user role (ID 1) from being trashed.

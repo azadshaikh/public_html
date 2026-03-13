@@ -1,13 +1,16 @@
 import { Link, router } from '@inertiajs/react';
 import {
-    CircleIcon,
+    CheckCircleIcon,
+    EyeIcon,
     ListIcon,
     PencilIcon,
     PlusIcon,
+    RefreshCwIcon,
     ShieldAlertIcon,
     ShieldCheckIcon,
+    ShieldIcon,
+    SlashIcon,
     Trash2Icon,
-    UserRoundCheckIcon,
     UsersIcon,
 } from 'lucide-react';
 import RoleController from '@/actions/App/Http/Controllers/RoleController';
@@ -28,38 +31,30 @@ import type { BreadcrumbItem } from '@/types';
 import type { RoleListItem, RolesIndexPageProps } from '@/types/role';
 
 const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Dashboard',
-        href: dashboard(),
-    },
-    {
-        title: 'Roles',
-        href: RoleController.index(),
-    },
+    { title: 'Dashboard', href: dashboard() },
+    { title: 'Roles', href: RoleController.index() },
 ];
+
+const STATUS_BADGE_VARIANT: Record<
+    string,
+    'default' | 'secondary' | 'outline' | 'destructive'
+> = {
+    active: 'default',
+    inactive: 'secondary',
+    trashed: 'destructive',
+};
 
 export default function RolesIndex({
     roles,
     filters,
-    stats,
+    statistics,
     status,
     error,
 }: RolesIndexPageProps) {
-    const handleDelete = (role: RoleListItem) => {
-        if (role.is_system || role.users_count > 0) {
-            return;
-        }
+    // ----- Bulk action helper -----
 
-        if (!window.confirm(`Delete ${role.display_name}?`)) {
-            return;
-        }
-
-        router.delete(RoleController.destroy(role.id).url, {
-            preserveScroll: true,
-        });
-    };
-
-    const handleBulkDelete = (
+    const handleBulkAction = (
+        action: string,
         selectedRoles: RoleListItem[],
         clearSelection: () => void,
     ) => {
@@ -67,85 +62,97 @@ export default function RolesIndex({
             return;
         }
 
-        const label =
-            selectedRoles.length === 1
-                ? selectedRoles[0].display_name
-                : `${selectedRoles.length} roles`;
-
-        if (!window.confirm(`Delete ${label}?`)) {
-            return;
-        }
-
         router.post(
             RoleController.bulkAction().url,
             {
-                action: 'delete',
+                action,
                 ids: selectedRoles.map((role) => role.id),
             },
             {
                 preserveScroll: true,
-                onSuccess: () => {
-                    clearSelection();
-                },
+                onSuccess: () => clearSelection(),
             },
         );
     };
+
+    // ----- Filters -----
 
     const gridFilters: DatagridFilter[] = [
         {
             type: 'search',
             name: 'search',
             value: filters.search,
-            placeholder: 'Search...',
+            placeholder: 'Search roles...',
             className: 'lg:min-w-80',
         },
     ];
 
-    const scopeTabs: DatagridTab[] = [
+    // ----- Status tabs -----
+
+    const statusTabs: DatagridTab[] = [
         {
             label: 'All',
             value: 'all',
-            count: stats.total,
-            active: filters.scope === 'all',
+            count: statistics.total,
+            active: filters.status === 'all',
             icon: <ListIcon />,
             countVariant: 'secondary',
         },
         {
-            label: 'System',
-            value: 'system',
-            count: stats.system,
-            active: filters.scope === 'system',
-            icon: <ShieldCheckIcon />,
+            label: 'Active',
+            value: 'active',
+            count: statistics.active,
+            active: filters.status === 'active',
+            icon: <CheckCircleIcon />,
             countVariant: 'secondary',
         },
         {
-            label: 'Custom',
-            value: 'custom',
-            count: stats.custom,
-            active: filters.scope === 'custom',
-            icon: <CircleIcon />,
+            label: 'Inactive',
+            value: 'inactive',
+            count: statistics.inactive,
+            active: filters.status === 'inactive',
+            icon: <SlashIcon />,
             countVariant: 'outline',
         },
+        {
+            label: 'Trash',
+            value: 'trash',
+            count: statistics.trash,
+            active: filters.status === 'trash',
+            icon: <Trash2Icon />,
+            countVariant: 'destructive',
+        },
     ];
+
+    // ----- Columns -----
 
     const columns: DatagridColumn<RoleListItem>[] = [
         {
             key: 'role',
             header: 'Role name',
             sortable: true,
-            sortKey: 'role',
+            sortKey: 'display_name',
             cell: (role) => (
-                <div className="flex min-w-0 flex-col gap-1">
-                    <span className="font-medium text-foreground">
+                <Link
+                    href={role.show_url}
+                    className="flex min-w-0 flex-col gap-1 hover:opacity-80"
+                >
+                    <span className="inline-flex items-center gap-2 font-medium text-foreground">
                         {role.display_name}
-                    </span>
-                    <span className="max-w-xl text-sm text-muted-foreground">
-                        {role.description ?? 'No description provided.'}
+                        {role.is_system && (
+                            <Badge
+                                variant="secondary"
+                                className="text-[0.65rem]"
+                            >
+                                <ShieldIcon className="mr-0.5 size-3" />
+                                System
+                            </Badge>
+                        )}
                     </span>
                     <code className="mt-1 w-fit rounded bg-muted px-1.5 py-0.5 text-[0.7rem] text-muted-foreground">
                         {role.name}
                     </code>
-                </div>
+                </Link>
             ),
         },
         {
@@ -154,7 +161,7 @@ export default function RolesIndex({
             headerClassName: 'w-28 text-center',
             cellClassName: 'w-28 text-center',
             sortable: true,
-            sortKey: 'permissions',
+            sortKey: 'permissions_count',
             cell: (role) => role.permissions_count,
         },
         {
@@ -163,7 +170,7 @@ export default function RolesIndex({
             headerClassName: 'w-24 text-center',
             cellClassName: 'w-24 text-center',
             sortable: true,
-            sortKey: 'users',
+            sortKey: 'users_count',
             cell: (role) => (
                 <span className="inline-flex items-center justify-center gap-1.5">
                     <UsersIcon className="size-4 text-muted-foreground" />
@@ -179,25 +186,67 @@ export default function RolesIndex({
             sortable: true,
             sortKey: 'status',
             cell: (role) => (
-                <Badge variant={role.is_system ? 'secondary' : 'outline'}>
-                    {role.is_system ? 'System' : 'Custom'}
+                <Badge
+                    variant={
+                        STATUS_BADGE_VARIANT[
+                            role.is_trashed ? 'trashed' : role.status
+                        ] ?? 'outline'
+                    }
+                >
+                    {role.status_label}
                 </Badge>
             ),
         },
     ];
 
+    // ----- Row actions -----
+
     const rowActions = (role: RoleListItem): DatagridAction[] => {
+        if (role.is_trashed) {
+            return [
+                {
+                    label: 'Restore',
+                    icon: <RefreshCwIcon />,
+                    href: RoleController.restore(role.id).url,
+                    method: 'PATCH',
+                    confirm: `Restore "${role.display_name}"?`,
+                },
+                {
+                    label: 'Delete Permanently',
+                    icon: <Trash2Icon />,
+                    href: RoleController.forceDelete(role.id).url,
+                    method: 'DELETE',
+                    confirm: `⚠️ Permanently delete "${role.display_name}"? This cannot be undone!`,
+                    variant: 'destructive',
+                    disabled: role.is_system,
+                },
+            ];
+        }
+
         const deleteDisabled = role.is_system || role.users_count > 0;
 
         return [
+            {
+                label: 'View',
+                href: role.show_url,
+                icon: <EyeIcon />,
+            },
             {
                 label: 'Edit',
                 href: RoleController.edit(role.id).url,
                 icon: <PencilIcon />,
             },
             {
-                label: 'Delete',
-                onSelect: () => handleDelete(role),
+                label: 'Move to Trash',
+                onSelect: () => {
+                    if (
+                        window.confirm(`Move "${role.display_name}" to trash?`)
+                    ) {
+                        router.delete(RoleController.destroy(role.id).url, {
+                            preserveScroll: true,
+                        });
+                    }
+                },
                 icon: <Trash2Icon />,
                 variant: 'destructive',
                 disabled: deleteDisabled,
@@ -205,15 +254,45 @@ export default function RolesIndex({
         ];
     };
 
+    // ----- Bulk actions -----
+
     const bulkActions: DatagridBulkAction<RoleListItem>[] = [
         {
             key: 'bulk-delete',
-            label: 'Delete selected',
+            label: 'Move to Trash',
             icon: <Trash2Icon />,
-            variant: 'destructive',
-            onSelect: handleBulkDelete,
+            variant: 'destructive' as const,
+            confirm: 'Move selected roles to trash?',
+            onSelect: (rows: RoleListItem[], clear: () => void) =>
+                handleBulkAction('delete', rows, clear),
+        },
+        {
+            key: 'bulk-restore',
+            label: 'Restore',
+            icon: <RefreshCwIcon />,
+            confirm: 'Restore selected roles from trash?',
+            onSelect: (rows: RoleListItem[], clear: () => void) =>
+                handleBulkAction('restore', rows, clear),
+        },
+        {
+            key: 'bulk-force-delete',
+            label: 'Delete Permanently',
+            icon: <Trash2Icon />,
+            variant: 'destructive' as const,
+            confirm:
+                '⚠️ Permanently delete selected roles? This cannot be undone!',
+            onSelect: (rows: RoleListItem[], clear: () => void) =>
+                handleBulkAction('force_delete', rows, clear),
         },
     ];
+
+    // Filter bulk actions based on current tab
+    const visibleBulkActions =
+        filters.status === 'trash'
+            ? bulkActions.filter((a) => a.key !== 'bulk-delete')
+            : bulkActions.filter((a) => a.key === 'bulk-delete');
+
+    // ----- Render -----
 
     return (
         <AppLayout
@@ -243,12 +322,12 @@ export default function RolesIndex({
                     columns={columns}
                     filters={gridFilters}
                     tabs={{
-                        name: 'scope',
-                        items: scopeTabs,
+                        name: 'status',
+                        items: statusTabs,
                     }}
                     getRowKey={(role) => role.id}
                     rowActions={rowActions}
-                    bulkActions={bulkActions}
+                    bulkActions={visibleBulkActions}
                     isRowSelectable={(role) =>
                         !role.is_system && role.users_count === 0
                     }
@@ -266,18 +345,26 @@ export default function RolesIndex({
                     }}
                     renderCard={(role) => (
                         <div className="flex flex-col gap-4">
-                            <div className="flex flex-col gap-1">
-                                <span className="font-medium text-foreground">
+                            <Link
+                                href={role.show_url}
+                                className="flex flex-col gap-1 hover:opacity-80"
+                            >
+                                <span className="inline-flex items-center gap-2 font-medium text-foreground">
                                     {role.display_name}
-                                </span>
-                                <span className="text-sm text-muted-foreground">
-                                    {role.description ??
-                                        'No description provided.'}
+                                    {role.is_system && (
+                                        <Badge
+                                            variant="secondary"
+                                            className="text-[0.65rem]"
+                                        >
+                                            <ShieldIcon className="mr-0.5 size-3" />
+                                            System
+                                        </Badge>
+                                    )}
                                 </span>
                                 <code className="mt-1 w-fit rounded bg-muted px-1.5 py-0.5 text-[0.7rem] text-muted-foreground">
                                     {role.name}
                                 </code>
-                            </div>
+                            </Link>
 
                             <div className="grid gap-3 sm:grid-cols-3">
                                 <div className="rounded-lg border bg-muted/30 px-3 py-2">
@@ -293,7 +380,7 @@ export default function RolesIndex({
                                         Users
                                     </div>
                                     <div className="mt-1 inline-flex items-center gap-1.5 text-sm font-medium text-foreground">
-                                        <UserRoundCheckIcon className="size-4 text-muted-foreground" />
+                                        <UsersIcon className="size-4 text-muted-foreground" />
                                         {role.users_count}
                                     </div>
                                 </div>
@@ -304,14 +391,14 @@ export default function RolesIndex({
                                     <div className="mt-1">
                                         <Badge
                                             variant={
-                                                role.is_system
-                                                    ? 'secondary'
-                                                    : 'outline'
+                                                STATUS_BADGE_VARIANT[
+                                                    role.is_trashed
+                                                        ? 'trashed'
+                                                        : role.status
+                                                ] ?? 'outline'
                                             }
                                         >
-                                            {role.is_system
-                                                ? 'System'
-                                                : 'Custom'}
+                                            {role.status_label}
                                         </Badge>
                                     </div>
                                 </div>

@@ -240,20 +240,60 @@ Two-column layout:
 - Impersonate / stop impersonating — full page reload.
 - Bulk suspend/ban/unban.
 
-### Phase 6 — Tests and quality
+### Phase 6 — Roles CRUD migration
+
+Migrate Roles CRUD to Inertia React, including a new show page that was missing. The Roles index, create, and edit pages already exist but need refinement. The show page is new (blade reference at `tmp/astero/resources/views/app/roles/show.blade.php`).
+
+#### 6.1 Backend
+
+- `RoleController` — already Inertia-ready. Override `index()` to add scope filtering (system/custom tabs), override `show()` with full role detail + grouped permissions.
+- `RoleService` — add `getPaginatedRoles()` with `RoleResource` transformation (like `UserService::getPaginatedUsers()` pattern). Add scope filtering support.
+- `RoleDefinition` — keep existing column/filter/action/statusTab config.
+- `RoleController::getFormViewData()` — already returns `statusOptions` + `permissions`. May need refinement for form initialValues pattern.
+
+#### 6.2 Roles index page refinement
+
+- Existing index works but review against blade reference for completeness.
+- Scope tabs (All/System/Custom) — already implemented.
+- Status tabs integration (All/Active/Inactive/Trash) — add if beneficial.
+- Row action: add Show link.
+- Verify soft-delete support (trash tab, restore/force-delete actions).
+
+#### 6.3 Roles show page (new)
+
+Based on blade reference (`tmp/astero/resources/views/app/roles/show.blade.php`):
+
+- Left column: Role Information card (display_name, system name, guard), Statistics card (users/permissions/notes counts), Audit Log card (created/updated by + timestamps).
+- Right column: Tabbed content — Permissions tab (grouped by module_slug, 2-column card grid with checked permission items), Notes tab.
+- Status badge + protected badge (for super user role).
+- Trashed warning banner with restore button.
+- Action bar: Edit, Delete (with confirmation), Back.
+
+#### 6.4 Roles create/edit form refinement
+
+- Existing `role-form.tsx` works. Review for:
+    - Status field (blade form has it, current React form may be missing it).
+    - Description field.
+    - Permission search/filter within the form.
+
+#### 6.5 Quality
+
+- Run Pint, ESLint, TypeScript checks.
+
+### Phase 7 — Tests and quality (all CRUDs)
+
+Combined test phase covering all scaffold CRUDs after all CRUD migrations are complete.
 
 | Area                    | Detail                                                                          |
 | ----------------------- | ------------------------------------------------------------------------------- |
 | ScaffoldController base | Index pagination/filters/sorting, CRUD operations, bulk actions                 |
 | UserController          | All Inertia responses, custom actions, permission checks, super-user protection |
-| Status transitions      | All status changes, bulk operations                                             |
+| RoleController          | All Inertia responses, CRUD, permission checks, super-role protection, bulk     |
+| Status transitions      | All status changes, bulk operations across all CRUDs                            |
+| Fix all failing tests   | Review and fix pre-existing test failures across the entire test suite          |
 | Formatting              | `vendor/bin/pint --dirty`                                                       |
 | Static analysis         | PHPStan / Larastan                                                              |
 | Frontend lint           | ESLint                                                                          |
-
-### Phase 7 — Roles CRUD migration
-
-Apply the same pattern to validate the scaffold template works for a second resource. Roles is simpler (fewer custom actions) and proves the pattern is reusable.
 
 ## What stays unchanged
 

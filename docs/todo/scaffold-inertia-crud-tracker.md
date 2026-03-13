@@ -212,7 +212,56 @@
 
 ---
 
-## Phase 6 — Tests and quality
+## Phase 6 — Roles CRUD migration
+
+### 6.1 Backend
+
+- [x] Override `RoleController::index()` — status-based filtering, paginated roles with RoleResource
+- [x] Add `RoleService::getPaginatedRoles()` — paginated query with `RoleResource` transformation
+- [x] Add `RoleService::getGroupedPermissionsForRole()` — permissions grouped by module_slug
+- [x] Override `RoleController::show()` — rich role detail with grouped permissions, audit info, statistics
+- [x] Override `RoleController::getFormViewData()` — consistent initialValues pattern
+- [x] Refine `RoleResource` — added `is_system`, `is_trashed`, `show_url`, `status_label`, `status_class`
+- [x] Remove dead `/data` route from `web.php`
+- [x] Verify routes and Wayfinder generation
+
+### 6.2 Roles index page refinement
+
+- [x] Replace scope tabs (System/Custom) with status tabs (All/Active/Inactive/Trash)
+- [x] Add Show row action with link to role detail page
+- [x] Add soft-delete support (Trash tab, restore/force-delete row actions)
+- [x] Update bulk actions with trash-aware visibility (delete vs restore/force-delete)
+- [x] Role name column now links to show page with System badge inline
+- [x] Status column shows Active/Inactive/Trashed badge instead of System/Custom
+- [x] Card view updated with show link and proper status badges
+
+### 6.3 Roles show page (new)
+
+- [x] Create `resources/js/pages/roles/show.tsx`
+- [x] Identity header: display_name, status badge, Protected badge (super user), Trashed badge, description, system name
+- [x] Action buttons: Back, Edit, Restore, Delete/Force Delete, Trash (context-aware)
+- [x] Super User role protection notice (Alert)
+- [x] Trashed warning banner (destructive Alert)
+- [x] Left column: Role Information card, Statistics card (3-stat grid), Audit Log card
+- [x] Right column: Permissions tab (grouped by module_slug, 2-column card grid with permission checkmarks), Notes tab (placeholder)
+- [x] Types: added `RoleShowDetail`, `RolesShowPageProps` to `types/role.ts`
+
+### 6.4 Roles create/edit form refinement
+
+- [x] Reviewed — form handles name, display_name, description, permissions correctly
+- [x] Status field not added (status managed via index page actions, not form)
+- [x] Role form types (`RoleFormValues`, `RoleEditingTarget`) remain compatible
+
+### 6.5 Quality
+
+- [x] Run Pint — pass
+- [x] ESLint pass on all role files
+- [x] TypeScript — 0 errors in modified files
+- [x] Frontend build — successful
+
+---
+
+## Phase 7 — Tests and quality (all CRUDs)
 
 - [ ] ScaffoldController base tests — index pagination, filters, sorting
 - [ ] ScaffoldController base tests — CRUD create, update, delete
@@ -223,24 +272,16 @@
 - [x] UserController tests — super-user protection (done in Phase 5)
 - [x] UserController tests — status transitions (done in Phase 5)
 - [x] UserController tests — bulk operations (done in Phase 5)
+- [ ] RoleController tests — CRUD operations
+- [ ] RoleController tests — permission checks
+- [ ] RoleController tests — super-role protection (ID 1)
+- [ ] RoleController tests — bulk actions with protection
+- [ ] RoleController tests — show page with grouped permissions
+- [ ] Fix pre-existing test failures across entire test suite
 - [x] Run `vendor/bin/pint --dirty` (done in Phase 5)
 - [ ] PHPStan / Larastan pass
 - [x] ESLint pass on all frontend changes (done in Phase 5)
-- [ ] Full test suite green (fix pre-existing failures where possible)
-
----
-
-## Phase 7 — Roles CRUD migration
-
-- [ ] Verify `RoleController` Inertia responses
-- [ ] Wire `RoleDefinition::toInertiaConfig()` into controller
-- [ ] Simplify routes
-- [ ] Add Wayfinder generation for role routes
-- [ ] Roles index page (React) — status tabs, filters, columns, actions
-- [ ] Roles create/edit form (React) — name, guard, status, permissions
-- [ ] Roles show page (React) — details, permissions, assigned users
-- [ ] RoleController tests — CRUD, permission checks, super-role protection, bulk actions
-- [ ] Run Pint + PHPStan + ESLint
+- [ ] Full test suite green
 
 ---
 

@@ -35,6 +35,31 @@ class RoleService implements ScaffoldServiceInterface
     }
 
     // ================================================================
+    // PAGINATED ROLES (for Inertia DataGrid)
+    // ================================================================
+
+    /**
+     * Get paginated roles transformed via RoleResource.
+     *
+     * Returns an array matching the standard Laravel paginator format
+     * (data, links, current_page, etc.) expected by the DataGrid component.
+     */
+    public function getPaginatedRoles(Request $request): array
+    {
+        $query = $this->buildListQuery($request);
+        $paginator = $query->paginate($this->getPerPage($request))->onEachSide(1);
+
+        // Convert paginator to array (standard format with links[] as page links)
+        $paginatedArray = $paginator->toArray();
+
+        // Replace raw model data with resource-transformed data
+        $paginatedArray['data'] = RoleResource::collection($paginator->items())
+            ->resolve(request());
+
+        return $paginatedArray;
+    }
+
+    // ================================================================
     // STATISTICS (for tab counts)
     // ================================================================
 
@@ -113,6 +138,58 @@ class RoleService implements ScaffoldServiceInterface
     public function getAllPermissions(): Collection
     {
         return Permission::all();
+    }
+
+    /**
+     * Get ALL permissions grouped by module_slug for the form checkbox grid.
+     *
+     * @return array<int, array{group: string, label: string, permissions: array<int, array{id: int, name: string, display_name: string, description: string|null, module_slug: string|null}>}>
+     */
+    public function getAllPermissionsGrouped(): array
+    {
+        return Permission::query()
+            ->orderBy('display_name')
+            ->get()
+            ->groupBy(fn (Permission $p): string => $p->module_slug ?? 'general')
+            ->map(fn (Collection $perms, string $slug): array => [
+                'group' => $slug,
+                'label' => ucwords(str_replace('_', ' ', $slug)),
+                'permissions' => $perms->map(fn (Permission $p): array => [
+                    'id' => $p->id,
+                    'name' => $p->name,
+                    'display_name' => $p->display_name,
+                    'description' => null,
+                    'module_slug' => $p->module_slug,
+                ])->values()->all(),
+            ])
+            ->sortKeys()
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Get permissions grouped by module_slug for the show page.
+     *
+     * @return array<int, array{group: string, label: string, permissions: array<int, array{id: int, name: string, display_name: string}>}>
+     */
+    public function getGroupedPermissionsForRole(Role $role): array
+    {
+        $rolePermissions = $role->permissions;
+
+        return $rolePermissions
+            ->groupBy(fn (Permission $p): string => $p->module_slug ?? 'general')
+            ->map(fn (Collection $perms, string $slug): array => [
+                'group' => $slug,
+                'label' => ucwords(str_replace('_', ' ', $slug)),
+                'permissions' => $perms->map(fn (Permission $p): array => [
+                    'id' => $p->id,
+                    'name' => $p->name,
+                    'display_name' => $p->display_name,
+                ])->values()->all(),
+            ])
+            ->sortKeys()
+            ->values()
+            ->all();
     }
 
     protected function getResourceClass(): ?string

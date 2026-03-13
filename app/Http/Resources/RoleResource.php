@@ -26,6 +26,12 @@ class RoleResource extends ScaffoldResource
             // Link to show page
             'show_url' => route('app.roles.show', $role->getKey()),
 
+            // System role flag (super user role)
+            'is_system' => $role->id === (int) config('permission.super_user_role_id', 1),
+
+            // Soft-delete flag
+            'is_trashed' => $role->trashed(),
+
             // Badge fields for 'status' column
             'status_label' => $this->getStatusLabel($role),
             'status_class' => $this->getStatusClass($role),
