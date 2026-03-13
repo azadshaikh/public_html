@@ -309,6 +309,47 @@ Sweep of residual dead code left after Phase 1 removal of `toDataGridConfig()` f
 
 ---
 
+## Phase 7b — Badge variants & UX polish
+
+System-wide badge variant refactoring and UX improvements applied across all CRUDs.
+
+### 7b.1 Backend badge variants
+
+- [x] Add `Column::badgeVariants()` method — accepts enum class with `badge()` method or explicit array mapping
+- [x] Add `badgeVariants` and `badgeVariantKey` to `DatagridColumn<T>` TypeScript type
+- [x] Update `UserDefinition` to use `->badgeVariants(Status::class)` on status column
+- [x] Clean up `UserResource` — remove redundant `status_class` field, use definition-driven variants
+
+### 7b.2 Frontend badge rendering
+
+- [x] Create `resolveBadgeVariant()` helper in `datagrid-cell-renderers.tsx`
+- [x] Update badge renderer to use column-level `badgeVariants` map
+- [x] Update users pages to use definition-driven badge variants
+- [x] Expand `DatagridTab.countVariant` to 8 variants (default, secondary, destructive, outline, success, warning, info, muted)
+
+### 7b.3 Badge variants applied across all pages
+
+- [x] Users — status tabs with semantic colors (active→success, suspended→warning, banned→destructive, trash→muted)
+- [x] Roles — definition, resource, controller, types, index, show updated
+- [x] Activity logs, login attempts, 404 logs — badge variants updated
+- [x] Notifications — badge variants updated
+- [x] Media Library — badge variants updated
+- [x] Datagrid skill documentation updated with status tabs section
+
+### 7b.4 Toast / flash message system
+
+- [x] Sonner toast integration — global flash message handler
+- [x] Flash messages flow through Inertia shared props and redirects
+- [x] Success, error, warning, info toast variants
+
+### 7b.5 Quality
+
+- [x] All tests pass after badge variant refactoring
+- [x] Pint — pass
+- [x] No TypeScript errors
+
+---
+
 ## Phase 7 — Tests and quality (all CRUDs)
 
 - [ ] ScaffoldController base tests — index pagination, filters, sorting
@@ -337,6 +378,7 @@ Sweep of residual dead code left after Phase 1 removal of `toDataGridConfig()` f
 
 - [x] How should `toInertiaConfig()` handle action visibility rules (permissions, status conditions)?
     - **Resolved:** Actions are filtered by `authorized()` (permission check) at export time. Status conditions (`showOnStatus`/`hideOnStatus`) are exported as `conditions` array for the frontend to evaluate per-row.
-- [ ] Should DataGrid accept the full config object or decomposed props?
+- [x] Should DataGrid accept the full config object or decomposed props?
+    - **Resolved:** Decomposed props — each page wires columns, filters, tabs, and actions individually for full type safety and customization.
 - [ ] Should Users show page use Inertia deferred props for tabs (activity, notes)?
 - [ ] Avatar upload strategy — direct upload or media library integration?

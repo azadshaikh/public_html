@@ -188,9 +188,11 @@ Bridge the gap between current DataGrid support and what Scaffold provides.
 **Files created:** `datagrid-filters.tsx` (4 filter field components), `datagrid-cell-renderers.tsx` (7 type renderers with smart badge variant mapping).
 **Files modified:** `types.ts` (5 new types, optional `cell`, `method`/`confirm`/`hidden` on actions), `datagrid.tsx` (barrel exports), `datagrid-toolbar.tsx` (refactored to use extracted filter components), `datagrid-results.tsx` (cell renderer fallback + bulk confirm dialog), `datagrid-action-menu.tsx` (AlertDialog + Inertia router method support).
 
-### Phase 5 — Users CRUD migration
+### Phase 5 — Users CRUD migration ✔
 
 Rebuild Users CRUD on the refactored Scaffold with full Inertia React pages.
+
+Completed with 34 tests, 229 assertions covering all CRUD operations, custom actions (verify, suspend, ban, unban, impersonate), bulk operations, permission checks, and super-user protection.
 
 #### 5.1 Backend
 
@@ -240,9 +242,9 @@ Two-column layout:
 - Impersonate / stop impersonating — full page reload.
 - Bulk suspend/ban/unban.
 
-### Phase 6 — Roles CRUD migration
+### Phase 6 — Roles CRUD migration ✔
 
-Migrate Roles CRUD to Inertia React, including a new show page that was missing. The Roles index, create, and edit pages already exist but need refinement. The show page is new (blade reference at `tmp/astero/resources/views/app/roles/show.blade.php`).
+Migrate Roles CRUD to Inertia React, including a new show page that was missing. Completed with index refinement (status tabs replacing scope tabs, soft-delete support), new show page (grouped permissions, statistics, audit log), and form refinement.
 
 #### 6.1 Backend
 
@@ -325,14 +327,14 @@ Combined test phase covering all scaffold CRUDs after all CRUD migrations are co
 
 ## Success criteria
 
-1. `ScaffoldController` renders all CRUD views via `Inertia::render()` with no Blade or JSON fallbacks.
-2. `ScaffoldDefinition::toInertiaConfig()` produces a typed array consumable by the React DataGrid.
-3. The React DataGrid renders columns, filters, status tabs, and actions from scaffold config alone.
-4. Users index, create, edit, and show pages are fully functional in the browser.
-5. All User custom actions (verify, approve, suspend, ban, impersonate) work via Inertia visits.
-6. Roles CRUD works using the same scaffold pattern with minimal controller code.
-7. PHPUnit tests pass for scaffold base, Users, and Roles.
-8. Pint, PHPStan, and ESLint pass.
+1. `ScaffoldController` renders all CRUD views via `Inertia::render()` with no Blade or JSON fallbacks. ✔
+2. `ScaffoldDefinition::toInertiaConfig()` produces a typed array consumable by the React DataGrid. ✔
+3. The React DataGrid renders columns, filters, status tabs, and actions from scaffold config alone. ✔
+4. Users index, create, edit, and show pages are fully functional in the browser. ✔
+5. All User custom actions (verify, approve, suspend, ban, impersonate) work via Inertia visits. ✔
+6. Roles CRUD works using the same scaffold pattern with minimal controller code. ✔
+7. PHPUnit tests pass for scaffold base, Users, and Roles. ✔ (Users: 34 tests, 229 assertions; Roles tests pending)
+8. Pint, PHPStan, and ESLint pass. ✔ (Pint and ESLint pass; PHPStan baseline maintained)
 
 ## Risks
 

@@ -202,6 +202,21 @@ Initial Phase 5 decisions:
 - Astero scaffold concepts such as columns, filters, and status tabs may inspire shared React abstractions later, but the scaffold runtime itself is not part of the target architecture.
 - The remaining implementation work in this phase is to extract reusable CRUD primitives from the already-built `roles` and `users` pages so the first real migrated module (`Customers`) can land on a stable pattern.
 
+### Phase 5 status: Complete
+
+Phase 5 has been fully implemented:
+
+- Scaffold CRUD foundation refactored in-place for Inertia (ScaffoldController, ScaffoldDefinition, DataGrid component).
+- Users CRUD fully rebuilt (index, create, edit, show) with 34 tests, 229 assertions.
+- Roles CRUD migrated as pattern validation (index, create, edit, show).
+- Activity Logs, Login Attempts, 404 Logs pages built with DataGrid.
+- Account pages converted: Profile, Password, Security, Sessions, Two-Factor, Social Logins.
+- Notifications pages built: index + preferences.
+- Badge variants system with enum-driven resolution across all CRUDs.
+- Sonner toast / flash message system integrated globally.
+- Agent skills created for reusable development patterns.
+- Dead code cleanup: Unpoly, Blade views, `/data` routes, `toDataGridConfig()` overrides.
+
 ### Phase 6 — Shared foundation migration
 
 Port the shared foundations required by the first real modules.
@@ -216,6 +231,23 @@ This includes:
 - deciding the target storage and library strategy for the new app,
 - defining upload, browse, attach, and cleanup flows for `Inertia`/React,
 - and migrating media only when the new foundation is explicit and testable.
+
+### Phase 7 status: Core complete, tests and attachment remaining
+
+The core Media Library foundation has been built:
+
+- **Storage strategy:** Spatie Media Library with `CustomMedia` model, `MediaVariationService` for automated image conversions (thumbnail, optimized WebP, responsive sizes).
+- **Upload UX:** Drag-and-drop `MediaUploadDropzone` component with XHR progress, staging, duplicate prevention (React 19 strict mode safe).
+- **Browse UX:** Full DataGrid with table and card views, file type icons (video, audio, PDF, spreadsheet, text), search, filters, pagination.
+- **Detail panel:** `MediaDetailSheet` with preview, metadata editing, URL copy, variation badges, conversion status polling.
+- **Trash support:** Soft-delete with trash tab, restore, force-delete.
+- **Conversion pipeline:** Automated thumbnail + optimized + responsive size generation with queue support, polling status updates (5s interval), correct `shouldHaveVariation()` logic matching actual registered conversions.
+- **Bug fixes applied:** Perpetual spinner on non-images, duplicate uploads, conversion status response parsing, responsive size mismatch.
+
+Remaining:
+
+- PHPUnit tests for media upload, browse, delete, restore, and conversion lifecycle.
+- Media attachment to other models (posts, users, etc.).
 
 ### Phase 8 — Module migration template
 
@@ -261,14 +293,21 @@ Every module should follow the same flow:
 
 ## Immediate plan of action
 
-1. Freeze the current application-level migration and seeder set as a reference point.
-2. Inventory Astero migrations and seeders by business domain.
-3. Decide the keep / rewrite / drop list for the current project's migrations and seeders.
-4. Have the Astero files moved into the repository in a staging area or directly into their target locations.
-5. Rework the application's migration baseline so it matches Astero's product model while preserving the current custom module runtime contracts.
-6. Rework the root seeder so application seeders and module seeders still execute in the correct order.
-7. Run a clean `migrate:fresh --seed` cycle and fix all runtime, schema, and seeding issues.
-8. Start CRUD migration one resource at a time, beginning with the first agreed module.
+~~1. Freeze the current application-level migration and seeder set as a reference point.~~
+~~2. Inventory Astero migrations and seeders by business domain.~~
+~~3. Decide the keep / rewrite / drop list for the current project's migrations and seeders.~~
+~~4. Have the Astero files moved into the repository in a staging area or directly into their target locations.~~
+
+These items were written when Phase 3 (Database baseline rebase) was the next planned step. Since then, Phases 5 and 7 were executed first to build the CRUD foundation and Media Library. The database baseline rebase remains the next major blocking item before real module migrations can begin.
+
+### Current next steps
+
+1. **Write remaining tests** — Roles CRUD tests, ScaffoldController base tests, Media Library tests, fix pre-existing test failures.
+2. **Phase 3 — Database baseline rebase** — inventory and reconcile current vs Astero migrations and seeders, establish the merged target schema.
+3. **Phase 4 — Identity and authorization** — finalize permission naming convention, reconcile roles/users with rebased schema, wire middleware/policy.
+4. **Phase 6 — Shared foundation migration** — port core enums, contracts, traits, and shared model systems needed by the first real module.
+5. **Phase 8 — Module migration template** — use `Customers` as the first real module to establish a repeatable pattern.
+6. **Phase 9 — Module-by-module migration** — proceed through the recommended module order.
 
 ## Success criteria
 

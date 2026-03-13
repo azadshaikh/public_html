@@ -93,9 +93,15 @@
 
 - [x] Define target architecture for shared module-friendly CRUD patterns
 - [x] Decide what survives from Astero scaffold design
-- [~] Build Inertia-native CRUD foundation for forms, tables, filters, actions, stats, and detail pages → [scaffold-inertia-crud-tracker.md](scaffold-inertia-crud-tracker.md)
+- [x] Build Inertia-native CRUD foundation for forms, tables, filters, actions, stats, and detail pages → [scaffold-inertia-crud-tracker.md](scaffold-inertia-crud-tracker.md)
 - [x] Standardize route, request, resource, and page conventions for modules
 - [x] Define shared layout and module-shell conventions
+- [x] Build Users CRUD (index, create, edit, show) — 34 tests, 229 assertions
+- [x] Build Roles CRUD (index, create, edit, show) as pattern validation
+- [x] Badge variants system — `Column::badgeVariants()` with enum-driven variant resolution across all CRUDs
+- [x] DataGrid status tabs with semantic `countVariant` colors (8 variants)
+- [x] Sonner toast / flash message system integrated globally
+- [x] Agent skills created: `inertia-form-system`, `datagrid`, `inertia-react-development`, `wayfinder-development`, `tailwindcss-development`, `shadcn`, `laravel-inertia-crud-development`
 
 ### Phase 5 decisions
 
@@ -121,12 +127,52 @@
 - [ ] Add tests for migrated shared foundation
 - [ ] Run Pint, PHPUnit, and static analysis
 
+## Phase 5b — Log viewer & account pages
+
+Additional Inertia pages built alongside the CRUD foundation work.
+
+### Log viewer pages
+
+- [x] Activity Logs index page — DataGrid with filters, badge variants, pagination
+- [x] Activity Logs show page — detail view with formatted activity data
+- [x] Login Attempts index page — DataGrid with filters, status badges
+- [x] Login Attempts show page — detail view
+- [x] 404 Logs index page — DataGrid with filters, status badges
+- [x] 404 Logs show page — detail view
+
+### Account pages
+
+- [x] Profile page — user profile edit form
+- [x] Password page — password change form
+- [x] Security page — account security settings
+- [x] Sessions page — active session management
+- [x] Two-Factor page — 2FA setup and management
+- [x] Social Logins page — connected social accounts
+
+### Notifications
+
+- [x] Notifications index page — notification list with read/unread management
+- [x] Notification preferences page — notification channel preferences
+
 ## Phase 7 — Media migration foundation
 
-- [ ] Inventory Astero media model, usage patterns, and upload/browse flows
-- [ ] Decide target media library/storage strategy for the new app
-- [ ] Define Inertia-native media UX and attachment patterns
-- [ ] Add tests for the chosen media foundation
+- [x] Inventory Astero media model, usage patterns, and upload/browse flows
+- [x] Decide target media library/storage strategy — Spatie Media Library with `CustomMedia` model
+- [x] Define Inertia-native media UX and attachment patterns
+- [x] Build Media Library index page with DataGrid (table + card views)
+- [x] Build drag-and-drop upload component (`MediaUploadDropzone`) with XHR progress
+- [x] Build media detail sheet with metadata editing, URLs, variations, conversion status
+- [x] Build trash tab with restore/force-delete support
+- [x] Add file type icons — mime-type-aware icons (video, audio, PDF, spreadsheet, text)
+- [x] Add image conversion pipeline — `MediaVariationService` with thumbnail, optimized, responsive sizes
+- [x] Add conversion status polling (5s interval auto-stops when processing complete)
+- [x] Fix perpetual "Optimizing" spinner for non-image/SVG media
+- [x] Fix perpetual "Optimizing" spinner for images with fewer conversions than expected — `shouldHaveVariation()` now checks actual registered conversions via custom properties
+- [x] Fix duplicate file uploads from React 19 strict mode — moved XHR out of state setter into `useEffect` with `uploadedIdsRef` dedup
+- [x] Fix conversion status polling response parsing in detail sheet — read `json.data.conversion_status` not `json.conversion_status`
+- [ ] Add tests for media upload, browse, delete, restore flows
+- [ ] Add tests for conversion status lifecycle
+- [ ] Media attachment to other models (posts, users, etc.)
 
 ## Phase 8 — Module migration template
 
@@ -170,7 +216,7 @@ Note: the modules currently present in this repository remain test/demo fixtures
 ## Open decisions
 
 - [ ] Keep `Orders` as separate module or absorb into `Billing`
-- [ ] Migrate Astero scaffold classes directly or rebuild cleaner Inertia-native equivalents
+- [x] Migrate Astero scaffold classes directly or rebuild cleaner Inertia-native equivalents — **Resolved:** Scaffold refactored in-place for Inertia; `ScaffoldController` now returns `Inertia::render()` / `RedirectResponse`; `ScaffoldDefinition::toInertiaConfig()` exports typed arrays; dead Blade/Unpoly/jQuery code removed
 - [ ] Which shared systems move early: notes, addresses, settings
 - [ ] Which current application migrations survive the database baseline rebase
 - [ ] Which current seeders survive the database baseline rebase
