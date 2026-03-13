@@ -21,7 +21,7 @@ export type RoleListItem = {
     guard_name: string;
     status: string;
     status_label: string;
-    status_class: string;
+    status_badge: string;
     is_system: boolean;
     is_trashed: boolean;
     show_url: string;
@@ -66,6 +66,7 @@ export type RoleShowDetail = {
     guard_name: string;
     status: string;
     status_label: string;
+    status_badge: string;
     is_system: boolean;
     is_trashed: boolean;
     trashed_at: string | null;

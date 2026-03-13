@@ -1,4 +1,4 @@
-import { router } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import {
     AlertTriangleIcon,
     BellIcon,
@@ -7,8 +7,11 @@ import {
     InboxIcon,
     MailIcon,
     MailOpenIcon,
+    Settings2Icon,
     Trash2Icon,
 } from 'lucide-react';
+import { useState } from 'react';
+import type { ReactNode } from 'react';
 import NotificationController from '@/actions/App/Http/Controllers/NotificationController';
 import { Datagrid } from '@/components/datagrid/datagrid';
 import type {
@@ -19,9 +22,28 @@ import type {
     DatagridTab,
 } from '@/components/datagrid/datagrid';
 import { ResourceFeedbackAlerts } from '@/components/resource/resource-feedback-alerts';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogMedia,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
+import { cn } from '@/lib/utils';
 import { dashboard } from '@/routes/index';
 import type { BreadcrumbItem } from '@/types';
 import type {
@@ -34,25 +56,61 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Notifications', href: NotificationController.index() },
 ];
 
-const PRIORITY_VARIANT: Record<
-    string,
-    'default' | 'secondary' | 'outline' | 'destructive'
-> = {
-    high: 'destructive',
-    medium: 'secondary',
-    low: 'outline',
+const PRIORITY_VARIANT: Record<string, string> = {
+    high: 'danger',
+    medium: 'warning',
+    low: 'secondary',
 };
 
-const CATEGORY_VARIANT: Record<
-    string,
-    'default' | 'secondary' | 'outline' | 'destructive'
-> = {
-    system: 'destructive',
-    website: 'default',
-    user: 'secondary',
+const CATEGORY_VARIANT: Record<string, string> = {
+    system: 'danger',
+    website: 'info',
+    user: 'success',
     cms: 'outline',
     broadcast: 'secondary',
 };
+
+type NotificationsActionDialog = 'mark-all-read' | 'delete-read' | null;
+
+function formatNotificationDate(value: string): string {
+    return new Date(value).toLocaleDateString(undefined, {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+    });
+}
+
+function SummaryCard({
+    label,
+    value,
+    icon,
+    variant = 'secondary',
+}: {
+    label: string;
+    value: number;
+    icon: ReactNode;
+    variant?: string;
+}) {
+    return (
+        <div className="flex items-center gap-3 rounded-xl border bg-muted/20 px-4 py-3">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border bg-background">
+                {icon}
+            </div>
+            <div className="min-w-0">
+                <p className="text-xs font-medium tracking-[0.14em] text-muted-foreground uppercase">
+                    {label}
+                </p>
+                <div className="mt-1 flex items-center gap-2">
+                    <span className="text-xl font-semibold text-foreground">
+                        {value.toLocaleString()}
+                    </span>
+                    <Badge variant={variant}>{label}</Badge>
+                </div>
+            </div>
+        </div>
+    );
+}
 
 export default function NotificationsIndex({
     notifications,
@@ -63,13 +121,13 @@ export default function NotificationsIndex({
     status,
     error,
 }: NotificationsIndexPageProps) {
-    // ----- Bulk action helpers -----
-
     const handleMarkMultipleAsRead = (
         selectedItems: NotificationListItem[],
         clearSelection: () => void,
     ) => {
-        if (selectedItems.length === 0) return;
+        if (selectedItems.length === 0) {
+            return;
+        }
 
         router.post(
             NotificationController.markMultipleAsRead().url,
@@ -85,7 +143,9 @@ export default function NotificationsIndex({
         selectedItems: NotificationListItem[],
         clearSelection: () => void,
     ) => {
-        if (selectedItems.length === 0) return;
+        if (selectedItems.length === 0) {
+            return;
+        }
 
         router.post(
             NotificationController.deleteMultiple().url,
@@ -96,8 +156,6 @@ export default function NotificationsIndex({
             },
         );
     };
-
-    // ----- Filters -----
 
     const gridFilters: DatagridFilter[] = [
         {
@@ -127,8 +185,6 @@ export default function NotificationsIndex({
         },
     ];
 
-    // ----- Status tabs -----
-
     const statusTabs: DatagridTab[] = [
         {
             label: 'All',
@@ -144,7 +200,7 @@ export default function NotificationsIndex({
             count: stats.unread,
             active: filters.filter === 'unread',
             icon: <MailIcon />,
-            countVariant: 'default',
+            countVariant: 'info',
         },
         {
             label: 'Read',
@@ -155,8 +211,6 @@ export default function NotificationsIndex({
             countVariant: 'outline',
         },
     ];
-
-    // ----- Columns -----
 
     const columns: DatagridColumn<NotificationListItem>[] = [
         {
@@ -182,15 +236,20 @@ export default function NotificationsIndex({
             cell: (notification) => (
                 <div className="flex min-w-0 flex-col gap-0.5">
                     <span
-                        className={`text-sm ${notification.is_read ? 'text-muted-foreground' : 'font-medium text-foreground'}`}
+                        className={cn(
+                            'text-sm',
+                            notification.is_read
+                                ? 'text-muted-foreground'
+                                : 'font-medium text-foreground',
+                        )}
                     >
                         {notification.title_text}
                     </span>
-                    {notification.sanitized_message && (
+                    {notification.sanitized_message ? (
                         <span className="line-clamp-1 text-xs text-muted-foreground">
                             {notification.sanitized_message}
                         </span>
-                    )}
+                    ) : null}
                 </div>
             ),
         },
@@ -212,27 +271,17 @@ export default function NotificationsIndex({
         },
         {
             key: 'created_at',
-            header: 'Date',
+            header: 'Received',
             headerClassName: 'w-40',
             cellClassName: 'w-40',
             sortable: false,
             cell: (notification) => (
                 <span className="text-xs text-muted-foreground">
-                    {new Date(notification.created_at).toLocaleDateString(
-                        undefined,
-                        {
-                            month: 'short',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                        },
-                    )}
+                    {formatNotificationDate(notification.created_at)}
                 </span>
             ),
         },
     ];
-
-    // ----- Row actions -----
 
     const rowActions = (
         notification: NotificationListItem,
@@ -241,7 +290,7 @@ export default function NotificationsIndex({
 
         if (notification.url) {
             actions.push({
-                label: 'View',
+                label: 'Open',
                 href: NotificationController.show(notification.id).url,
                 icon: <MailOpenIcon />,
             });
@@ -278,20 +327,13 @@ export default function NotificationsIndex({
             label: 'Delete',
             icon: <Trash2Icon />,
             variant: 'destructive',
-            onSelect: () => {
-                if (window.confirm('Delete this notification?')) {
-                    router.delete(
-                        NotificationController.destroy(notification.id).url,
-                        { preserveScroll: true },
-                    );
-                }
-            },
+            confirm: 'Delete this notification permanently?',
+            href: NotificationController.destroy(notification.id).url,
+            method: 'DELETE',
         });
 
         return actions;
     };
-
-    // ----- Bulk actions -----
 
     const bulkActions: DatagridBulkAction<NotificationListItem>[] = [
         {
@@ -299,173 +341,282 @@ export default function NotificationsIndex({
             label: 'Mark as Read',
             icon: <CheckCheckIcon />,
             confirm: 'Mark selected notifications as read?',
-            onSelect: (rows: NotificationListItem[], clear: () => void) =>
-                handleMarkMultipleAsRead(rows, clear),
+            onSelect: (rows, clear) => handleMarkMultipleAsRead(rows, clear),
         },
         {
             key: 'bulk-delete',
             label: 'Delete',
             icon: <Trash2Icon />,
-            variant: 'destructive' as const,
+            variant: 'destructive',
             confirm: 'Delete selected notifications?',
-            onSelect: (rows: NotificationListItem[], clear: () => void) =>
-                handleDeleteMultiple(rows, clear),
+            onSelect: (rows, clear) => handleDeleteMultiple(rows, clear),
         },
     ];
 
-    // ----- Render -----
+    const [dialog, setDialog] = useState<NotificationsActionDialog>(null);
 
     return (
         <AppLayout
             breadcrumbs={breadcrumbs}
             title="Notifications"
-            description="View and manage your notifications"
+            description="Review alerts, activity, and messages from one inbox."
+            headerActions={
+                <Button asChild variant="outline">
+                    <Link href={NotificationController.preferences()}>
+                        <Settings2Icon data-icon="inline-start" />
+                        Preferences
+                    </Link>
+                </Button>
+            }
         >
-            <div className="flex flex-col gap-6">
-                <ResourceFeedbackAlerts
-                    status={status}
-                    statusIcon={<BellIcon />}
-                    error={error}
-                    errorIcon={<BellOffIcon />}
-                />
+            <div className="grid gap-6 xl:grid-cols-[248px_minmax(0,1fr)] 2xl:grid-cols-[260px_minmax(0,1fr)]">
+                <div className="flex flex-col gap-6">
+                    <Card className="py-6">
+                        <CardHeader className="gap-4 px-6">
+                            <div className="flex items-start justify-between gap-4">
+                                <div className="flex size-11 items-center justify-center rounded-2xl border bg-muted/30">
+                                    <BellIcon className="size-5 text-foreground" />
+                                </div>
+                                <Badge
+                                    variant={
+                                        stats.unread > 0
+                                            ? 'default'
+                                            : 'secondary'
+                                    }
+                                >
+                                    {stats.unread > 0
+                                        ? `${stats.unread} unread`
+                                        : 'All caught up'}
+                                </Badge>
+                            </div>
+                            <div className="space-y-1.5">
+                                <CardTitle className="text-xl font-semibold">
+                                    Notification center
+                                </CardTitle>
+                                <CardDescription className="text-sm leading-6">
+                                    Stay on top of alerts and account activity
+                                    from one place.
+                                </CardDescription>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="space-y-3 px-6">
+                            <SummaryCard
+                                label="Total"
+                                value={stats.total}
+                                icon={<InboxIcon className="size-4.5" />}
+                            />
+                            <SummaryCard
+                                label="Unread"
+                                value={stats.unread}
+                                icon={<MailIcon className="size-4.5" />}
+                                variant="default"
+                            />
+                            <SummaryCard
+                                label="High priority"
+                                value={stats.high_priority}
+                                icon={
+                                    <AlertTriangleIcon className="size-4.5" />
+                                }
+                                variant="destructive"
+                            />
+                        </CardContent>
+                    </Card>
 
-                {/* Statistics Cards */}
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                    <StatCard
-                        label="Total"
-                        value={stats.total}
-                        icon={<InboxIcon className="size-5" />}
-                        variant="primary"
-                    />
-                    <StatCard
-                        label="Unread"
-                        value={stats.unread}
-                        icon={<MailIcon className="size-5" />}
-                        variant="info"
-                    />
-                    <StatCard
-                        label="Read"
-                        value={stats.read}
-                        icon={<MailOpenIcon className="size-5" />}
-                        variant="success"
-                    />
-                    <StatCard
-                        label="High Priority"
-                        value={stats.high_priority}
-                        icon={<AlertTriangleIcon className="size-5" />}
-                        variant="danger"
-                    />
+                    <Card className="py-6">
+                        <CardHeader className="gap-2">
+                            <CardTitle className="text-[1.05rem] font-semibold">
+                                Quick actions
+                            </CardTitle>
+                            <CardDescription className="text-sm leading-6">
+                                Use these when you want to clean up your inbox
+                                without opening individual notifications.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                            <Button
+                                type="button"
+                                className="w-full"
+                                disabled={stats.unread === 0}
+                                onClick={() => setDialog('mark-all-read')}
+                            >
+                                <CheckCheckIcon data-icon="inline-start" />
+                                Mark all as read
+                            </Button>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                className="w-full border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                disabled={stats.read === 0}
+                                onClick={() => setDialog('delete-read')}
+                            >
+                                <Trash2Icon data-icon="inline-start" />
+                                Delete read notifications
+                            </Button>
+                        </CardContent>
+                    </Card>
                 </div>
 
-                <Datagrid
-                    action={NotificationController.index().url}
-                    rows={notifications}
-                    columns={columns}
-                    filters={gridFilters}
-                    tabs={{
-                        name: 'filter',
-                        items: statusTabs,
-                    }}
-                    getRowKey={(notification) => notification.id}
-                    rowActions={rowActions}
-                    bulkActions={bulkActions}
-                    perPage={{
-                        value: 10,
-                        options: [10, 25, 50],
-                    }}
-                    renderCard={(notification) => (
-                        <div className="flex flex-col gap-3">
-                            <div className="flex items-center gap-2">
-                                <Badge
-                                    variant={
-                                        PRIORITY_VARIANT[
-                                            notification.priority
-                                        ] ?? 'outline'
-                                    }
-                                >
-                                    {notification.priority_label}
-                                </Badge>
-                                <Badge
-                                    variant={
-                                        CATEGORY_VARIANT[
-                                            notification.category
-                                        ] ?? 'outline'
-                                    }
-                                >
-                                    {notification.category_label}
-                                </Badge>
-                                {!notification.is_read && (
+                <div className="flex flex-col gap-6">
+                    <ResourceFeedbackAlerts
+                        status={status}
+                        statusTitle="Notification updated"
+                        statusIcon={<BellIcon />}
+                        error={error}
+                        errorTitle="Notification action failed"
+                        errorIcon={<BellOffIcon />}
+                    />
+
+                    <Datagrid
+                        action={NotificationController.index().url}
+                        rows={notifications}
+                        columns={columns}
+                        filters={gridFilters}
+                        tabs={{
+                            name: 'filter',
+                            items: statusTabs,
+                        }}
+                        getRowKey={(notification) => notification.id}
+                        rowActions={rowActions}
+                        bulkActions={bulkActions}
+                        perPage={{
+                            value: 10,
+                            options: [10, 25, 50],
+                        }}
+                        empty={{
+                            icon: <InboxIcon />,
+                            title: 'No notifications found',
+                            description:
+                                'Try a different search or filter, or come back later when new activity arrives.',
+                        }}
+                        title="Inbox"
+                        description="Search, filter, and act on notifications without leaving the page."
+                        summary={`${stats.total.toLocaleString()} total notifications · ${stats.unread.toLocaleString()} unread`}
+                        renderCardHeader={(notification) => (
+                            <div className="flex items-center justify-between gap-3">
+                                <div className="flex items-center gap-2">
+                                    <Badge
+                                        variant={
+                                            PRIORITY_VARIANT[
+                                                notification.priority
+                                            ] ?? 'outline'
+                                        }
+                                    >
+                                        {notification.priority_label}
+                                    </Badge>
+                                    <Badge
+                                        variant={
+                                            CATEGORY_VARIANT[
+                                                notification.category
+                                            ] ?? 'outline'
+                                        }
+                                    >
+                                        {notification.category_label}
+                                    </Badge>
+                                </div>
+                                {!notification.is_read ? (
                                     <span className="size-2 rounded-full bg-primary" />
-                                )}
+                                ) : null}
                             </div>
-                            <div>
-                                <span
-                                    className={`text-sm ${notification.is_read ? 'text-muted-foreground' : 'font-medium text-foreground'}`}
-                                >
-                                    {notification.title_text}
-                                </span>
-                                {notification.sanitized_message && (
-                                    <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
-                                        {notification.sanitized_message}
-                                    </p>
-                                )}
+                        )}
+                        renderCard={(notification) => (
+                            <div className="flex flex-col gap-3">
+                                <div className="space-y-1">
+                                    <span
+                                        className={cn(
+                                            'text-sm',
+                                            notification.is_read
+                                                ? 'text-muted-foreground'
+                                                : 'font-medium text-foreground',
+                                        )}
+                                    >
+                                        {notification.title_text}
+                                    </span>
+                                    {notification.sanitized_message ? (
+                                        <p className="line-clamp-3 text-xs leading-5 text-muted-foreground">
+                                            {notification.sanitized_message}
+                                        </p>
+                                    ) : null}
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                    {formatNotificationDate(
+                                        notification.created_at,
+                                    )}
+                                </div>
                             </div>
-                            <div className="text-xs text-muted-foreground">
-                                {new Date(
-                                    notification.created_at,
-                                ).toLocaleDateString(undefined, {
-                                    month: 'short',
-                                    day: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                })}
-                            </div>
-                        </div>
-                    )}
-                />
+                        )}
+                        cardGridClassName="grid-cols-1"
+                    />
+                </div>
             </div>
+
+            <AlertDialog
+                open={dialog !== null}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setDialog(null);
+                    }
+                }}
+            >
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogMedia>
+                            {dialog === 'delete-read' ? (
+                                <Trash2Icon />
+                            ) : (
+                                <CheckCheckIcon />
+                            )}
+                        </AlertDialogMedia>
+                        <AlertDialogTitle>
+                            {dialog === 'delete-read'
+                                ? 'Delete all read notifications?'
+                                : 'Mark every notification as read?'}
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                            {dialog === 'delete-read'
+                                ? 'This removes only notifications you have already read. Unread notifications stay in your inbox.'
+                                : 'Unread notifications will move into your read archive so your inbox looks clean again.'}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            variant={
+                                dialog === 'delete-read'
+                                    ? 'destructive'
+                                    : 'default'
+                            }
+                            onClick={() => {
+                                if (dialog === 'delete-read') {
+                                    router.delete(
+                                        NotificationController.deleteAllRead()
+                                            .url,
+                                        {
+                                            preserveScroll: true,
+                                        },
+                                    );
+                                }
+
+                                if (dialog === 'mark-all-read') {
+                                    router.post(
+                                        NotificationController.markAllAsRead()
+                                            .url,
+                                        {},
+                                        {
+                                            preserveScroll: true,
+                                        },
+                                    );
+                                }
+
+                                setDialog(null);
+                            }}
+                        >
+                            {dialog === 'delete-read'
+                                ? 'Delete read notifications'
+                                : 'Mark all as read'}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </AppLayout>
-    );
-}
-
-// ----- StatCard -----
-
-const VARIANT_CLASSES: Record<string, string> = {
-    primary: 'bg-primary/10 text-primary',
-    success: 'bg-green-500/10 text-green-600 dark:text-green-400',
-    info: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
-    warning: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
-    danger: 'bg-red-500/10 text-red-600 dark:text-red-400',
-};
-
-function StatCard({
-    label,
-    value,
-    icon,
-    variant = 'primary',
-}: {
-    label: string;
-    value: number;
-    icon: React.ReactNode;
-    variant?: string;
-}) {
-    return (
-        <Card>
-            <CardContent className="flex items-center gap-4 py-4">
-                <div
-                    className={`flex size-10 items-center justify-center rounded-lg ${VARIANT_CLASSES[variant] ?? VARIANT_CLASSES.primary}`}
-                >
-                    {icon}
-                </div>
-                <div>
-                    <div className="text-sm font-medium text-muted-foreground">
-                        {label}
-                    </div>
-                    <div className="text-2xl font-bold text-foreground">
-                        {value.toLocaleString()}
-                    </div>
-                </div>
-            </CardContent>
-        </Card>
     );
 }

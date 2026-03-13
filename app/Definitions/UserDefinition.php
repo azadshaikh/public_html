@@ -90,7 +90,7 @@ class UserDefinition extends ScaffoldDefinition
             // Status with badge
             Column::make('status')
                 ->label('Status')
-                ->template('badge')
+                ->badgeVariants(Status::class)
                 ->sortable(),
 
             // Created date

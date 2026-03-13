@@ -34,22 +34,19 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Activity Logs', href: ActivityLogController.index() },
 ];
 
-const EVENT_BADGE_VARIANT: Record<
-    string,
-    'default' | 'secondary' | 'outline' | 'destructive'
-> = {
-    create: 'default',
-    created: 'default',
-    stored: 'default',
-    update: 'secondary',
-    updated: 'secondary',
-    edited: 'secondary',
-    delete: 'destructive',
-    deleted: 'destructive',
-    trashed: 'destructive',
+const EVENT_BADGE_VARIANT: Record<string, string> = {
+    create: 'success',
+    created: 'success',
+    stored: 'success',
+    update: 'info',
+    updated: 'info',
+    edited: 'info',
+    delete: 'danger',
+    deleted: 'danger',
+    trashed: 'danger',
     force_delete: 'destructive',
-    restore: 'outline',
-    restored: 'outline',
+    restore: 'warning',
+    restored: 'warning',
 };
 
 export default function ActivityLogsIndex({

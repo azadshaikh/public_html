@@ -6,6 +6,10 @@ import { cn } from '@/lib/utils';
 type CellRendererProps = {
     value: unknown;
     type: DatagridColumnType;
+    /** Pre-resolved badge variant from row data (via badgeVariantKey) */
+    badgeVariant?: string;
+    /** Static map of value → badge variant name */
+    badgeVariants?: Record<string, string>;
 };
 
 /**
@@ -16,10 +20,12 @@ type CellRendererProps = {
 export function renderCellByType({
     value,
     type,
+    badgeVariant,
+    badgeVariants,
 }: CellRendererProps): ReactNode {
     switch (type) {
         case 'badge':
-            return renderBadge(value);
+            return renderBadge(value, badgeVariant, badgeVariants);
         case 'boolean':
             return renderBoolean(value);
         case 'currency':
@@ -44,13 +50,17 @@ function renderText(value: unknown): ReactNode {
     return <span>{String(value)}</span>;
 }
 
-function renderBadge(value: unknown): ReactNode {
+function renderBadge(
+    value: unknown,
+    badgeVariant?: string,
+    badgeVariants?: Record<string, string>,
+): ReactNode {
     if (value === null || value === undefined || value === '') {
         return <span className="text-muted-foreground">—</span>;
     }
 
     const label = String(value);
-    const variant = getBadgeVariant(label);
+    const variant = resolveBadgeVariant(label, badgeVariant, badgeVariants);
 
     return <Badge variant={variant}>{label}</Badge>;
 }
@@ -153,41 +163,71 @@ function renderDate(value: unknown): ReactNode {
 }
 
 /**
- * Map common status labels to badge variants.
+ * Resolve the badge variant for a cell value.
+ *
+ * Priority: badgeVariant (per-row) > badgeVariants map > automatic fallback.
  */
-function getBadgeVariant(
+function resolveBadgeVariant(
     label: string,
-): 'default' | 'secondary' | 'destructive' | 'outline' {
-    const lower = label.toLowerCase();
-
-    if (
-        lower === 'active' ||
-        lower === 'published' ||
-        lower === 'verified' ||
-        lower === 'approved' ||
-        lower === 'success'
-    ) {
-        return 'default';
+    badgeVariant?: string,
+    badgeVariants?: Record<string, string>,
+): string {
+    // 1. Pre-resolved variant from row data (via badgeVariantKey)
+    if (badgeVariant) {
+        return badgeVariant;
     }
 
+    // 2. Static map lookup (via badgeVariants on column)
+    const lower = label.toLowerCase();
+    if (badgeVariants) {
+        return badgeVariants[lower] ?? badgeVariants[label] ?? 'outline';
+    }
+
+    // 3. Automatic fallback based on common status labels
     if (
-        lower === 'inactive' ||
-        lower === 'draft' ||
-        lower === 'pending' ||
-        lower === 'suspended' ||
-        lower === 'warning'
+        [
+            'active',
+            'published',
+            'approved',
+            'verified',
+            'success',
+            'completed',
+        ].includes(lower)
+    ) {
+        return 'success';
+    }
+    if (
+        [
+            'pending',
+            'under_review',
+            'under review',
+            'unverified',
+            'maintenance',
+            'suspended',
+        ].includes(lower)
+    ) {
+        return 'warning';
+    }
+    if (['draft', 'deploying'].includes(lower)) {
+        return 'info';
+    }
+    if (
+        [
+            'inactive',
+            'archived',
+            'expired',
+            'cancelled',
+            'rolled_back',
+        ].includes(lower)
     ) {
         return 'secondary';
     }
-
     if (
-        lower === 'banned' ||
-        lower === 'deleted' ||
-        lower === 'failed' ||
-        lower === 'error' ||
-        lower === 'rejected'
+        ['banned', 'deleted', 'failed', 'error', 'rejected', 'locked'].includes(
+            lower,
+        )
     ) {
-        return 'destructive';
+        return 'danger';
     }
 
     return 'outline';

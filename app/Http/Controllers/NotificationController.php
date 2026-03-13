@@ -355,13 +355,31 @@ class NotificationController extends Controller implements HasMiddleware
     /**
      * Show notification preferences page.
      */
-    public function preferences(Request $request): View
+    public function preferences(Request $request): Response
     {
         $user = $request->user();
+        $preferences = $this->notificationService->getPreferencesForUser($user);
 
-        return view('app.notifications.preferences', [
-            'user' => $user,
-            'preferences' => $this->notificationService->getPreferencesForUser($user),
+        return Inertia::render('notifications/preferences', [
+            'notificationsEnabled' => (bool) $user->notifications_enabled,
+            'preferences' => [
+                'categories' => $preferences['categories'] ?? [],
+                'priorities' => $preferences['priorities'] ?? [],
+            ],
+            'categoryPreferences' => array_map(
+                static fn (NotificationCategory $category): array => [
+                    'value' => $category->value,
+                    'label' => $category->label(),
+                ],
+                NotificationCategory::cases(),
+            ),
+            'priorityPreferences' => array_map(
+                static fn (NotificationPriority $priority): array => [
+                    'value' => $priority->value,
+                    'label' => $priority->label(),
+                ],
+                NotificationPriority::cases(),
+            ),
         ]);
     }
 

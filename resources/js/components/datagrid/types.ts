@@ -73,7 +73,16 @@ export type DatagridTab = {
     count?: number;
     active: boolean;
     icon?: ReactNode;
-    countVariant?: 'default' | 'secondary' | 'outline' | 'destructive';
+    /** Badge variant for the count pill. Supports all Badge variants. */
+    countVariant?:
+        | 'default'
+        | 'secondary'
+        | 'success'
+        | 'warning'
+        | 'info'
+        | 'danger'
+        | 'destructive'
+        | 'outline';
 };
 
 export type DatagridColumnType =
@@ -95,6 +104,18 @@ export type DatagridColumn<T> = {
     sortable?: boolean;
     sortKey?: string;
     cardLabel?: string;
+    /**
+     * Static map of cell value → Badge variant name.
+     * e.g. { active: 'success', banned: 'danger', pending: 'warning' }
+     * Only used when type is 'badge'.
+     */
+    badgeVariants?: Record<string, string>;
+    /**
+     * Field name in the row data that holds the Badge variant.
+     * e.g. 'status_badge' reads row['status_badge'] for the variant.
+     * Only used when type is 'badge'. Takes precedence over badgeVariants map.
+     */
+    badgeVariantKey?: string;
 };
 
 export type DatagridAction = {

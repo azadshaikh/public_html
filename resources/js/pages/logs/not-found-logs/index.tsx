@@ -35,13 +35,10 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: '404 Logs', href: NotFoundLogController.index() },
 ];
 
-const STATUS_BADGE_VARIANT: Record<
-    string,
-    'default' | 'secondary' | 'outline' | 'destructive'
-> = {
-    suspicious: 'destructive',
-    bot: 'secondary',
-    human: 'default',
+const STATUS_BADGE_VARIANT: Record<string, string> = {
+    suspicious: 'danger',
+    bot: 'warning',
+    human: 'success',
 };
 
 export default function NotFoundLogsIndex({
@@ -102,7 +99,7 @@ export default function NotFoundLogsIndex({
             count: statistics.suspicious,
             active: filters.status === 'suspicious',
             icon: <AlertTriangleIcon />,
-            countVariant: 'destructive',
+            countVariant: 'danger',
         },
         {
             label: 'Bots',
@@ -110,7 +107,7 @@ export default function NotFoundLogsIndex({
             count: statistics.bots,
             active: filters.status === 'bots',
             icon: <BotIcon />,
-            countVariant: 'outline',
+            countVariant: 'warning',
         },
         {
             label: 'Human',
@@ -118,7 +115,7 @@ export default function NotFoundLogsIndex({
             count: statistics.human,
             active: filters.status === 'human',
             icon: <UserIcon />,
-            countVariant: 'secondary',
+            countVariant: 'success',
         },
         {
             label: 'Trash',

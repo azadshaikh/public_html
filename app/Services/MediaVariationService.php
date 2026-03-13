@@ -320,6 +320,16 @@ class MediaVariationService
             ];
         }
 
+        // Non-image files and SVGs never have conversions — report as completed
+        if (! $this->isImage($media->mime_type) || $media->mime_type === 'image/svg+xml') {
+            return [
+                'status' => 'completed',
+                'conversions' => [],
+                'pending' => [],
+                'failed' => [],
+            ];
+        }
+
         // If conversions are disabled, report as completed (nothing to do)
         if (! config('media.image_conversions_enabled', false)) {
             return [

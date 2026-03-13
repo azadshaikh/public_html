@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Scaffold;
 
+use App\Enums\Status;
 use App\Scaffold\Action;
 use App\Scaffold\Column;
 use App\Scaffold\Filter;
@@ -287,5 +288,54 @@ class ScaffoldDefinitionInertiaConfigTest extends TestCase
         $this->assertCount(1, $config['columns']);
         // Default statusTabs returns ['all']
         $this->assertCount(1, $config['statusTabs']);
+    }
+
+    // =========================================================================
+    // BADGE VARIANTS
+    // =========================================================================
+
+    public function test_column_badge_variants_from_enum(): void
+    {
+        $column = Column::make('status')
+            ->label('Status')
+            ->badgeVariants(Status::class);
+
+        $array = $column->toArray();
+
+        $this->assertSame('badge', $array['type']);
+        $this->assertArrayHasKey('badgeVariants', $array);
+        $this->assertIsArray($array['badgeVariants']);
+        $this->assertSame('success', $array['badgeVariants']['active']);
+        $this->assertSame('danger', $array['badgeVariants']['banned']);
+        $this->assertSame('warning', $array['badgeVariants']['pending']);
+        $this->assertSame('secondary', $array['badgeVariants']['inactive']);
+    }
+
+    public function test_column_badge_variants_from_array(): void
+    {
+        $column = Column::make('type')
+            ->label('Type')
+            ->badgeVariants([
+                'admin' => 'info',
+                'user' => 'secondary',
+                'guest' => 'outline',
+            ]);
+
+        $array = $column->toArray();
+
+        $this->assertSame('badge', $array['type']);
+        $this->assertSame('info', $array['badgeVariants']['admin']);
+        $this->assertSame('secondary', $array['badgeVariants']['user']);
+        $this->assertSame('outline', $array['badgeVariants']['guest']);
+    }
+
+    public function test_badge_without_variants_has_null_badge_variants(): void
+    {
+        $column = Column::make('status')->label('Status')->badge();
+
+        $array = $column->toArray();
+
+        $this->assertSame('badge', $array['type']);
+        $this->assertArrayNotHasKey('badgeVariants', $array);
     }
 }

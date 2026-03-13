@@ -38,20 +38,6 @@ import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
 import type { UsersShowPageProps } from '@/types/user-management';
 
 // =========================================================================
-// CONSTANTS
-// =========================================================================
-
-const STATUS_BADGE_VARIANT: Record<
-    string,
-    'default' | 'secondary' | 'outline' | 'destructive'
-> = {
-    active: 'default',
-    pending: 'outline',
-    suspended: 'secondary',
-    banned: 'destructive',
-};
-
-// =========================================================================
 // HELPER COMPONENTS
 // =========================================================================
 
@@ -211,10 +197,7 @@ export default function UsersShow({
                                         {user.name}
                                     </h2>
                                     <Badge
-                                        variant={
-                                            STATUS_BADGE_VARIANT[user.status] ??
-                                            'outline'
-                                        }
+                                        variant={user.status_badge ?? 'outline'}
                                     >
                                         {user.status_label}
                                     </Badge>
@@ -449,9 +432,8 @@ export default function UsersShow({
                                                 value={
                                                     <Badge
                                                         variant={
-                                                            STATUS_BADGE_VARIANT[
-                                                                user.status
-                                                            ] ?? 'outline'
+                                                            user.status_badge ??
+                                                            'outline'
                                                         }
                                                     >
                                                         {user.status_label}

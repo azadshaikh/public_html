@@ -73,6 +73,7 @@ class RoleController extends ScaffoldController implements HasMiddleware
                 'guard_name' => $role->guard_name,
                 'status' => $role->status instanceof Status ? $role->status->value : (string) $role->status,
                 'status_label' => $role->status instanceof Status ? $role->status->label() : ucfirst((string) $role->status),
+                'status_badge' => $role->status instanceof Status ? $role->status->badge() : 'outline',
                 'is_system' => $role->id === (int) config('permission.super_user_role_id', 1),
                 'is_trashed' => $role->trashed(),
                 'trashed_at' => $role->deleted_at?->toISOString(),

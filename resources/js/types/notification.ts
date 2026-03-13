@@ -52,3 +52,20 @@ export type NotificationsIndexPageProps = {
     status?: string;
     error?: string;
 };
+
+export type NotificationPreferenceValues = {
+    categories: Record<string, boolean>;
+    priorities: Record<string, boolean>;
+};
+
+export type NotificationPreferenceOption = {
+    value: string;
+    label: string;
+};
+
+export type NotificationsPreferencesPageProps = {
+    notificationsEnabled: boolean;
+    preferences: NotificationPreferenceValues;
+    categoryPreferences: NotificationPreferenceOption[];
+    priorityPreferences: NotificationPreferenceOption[];
+};

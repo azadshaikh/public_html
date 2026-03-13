@@ -58,16 +58,6 @@ const ICON_MAP: Record<string, React.ReactNode> = {
     'ri-refresh-line': <RefreshCwIcon />,
 };
 
-const STATUS_BADGE_VARIANT: Record<
-    string,
-    'default' | 'secondary' | 'outline' | 'destructive'
-> = {
-    active: 'default',
-    pending: 'outline',
-    suspended: 'secondary',
-    banned: 'destructive',
-};
-
 // =========================================================================
 // HELPERS
 // =========================================================================
@@ -194,7 +184,7 @@ export default function UsersIndex({
             count: statistics.active,
             active: filters.status === 'active',
             icon: <ShieldCheckIcon />,
-            countVariant: 'secondary',
+            countVariant: 'success',
         },
         ...(showPendingTab
             ? [
@@ -204,7 +194,7 @@ export default function UsersIndex({
                       count: statistics.pending,
                       active: filters.status === 'pending',
                       icon: <PauseCircleIcon />,
-                      countVariant: 'outline' as const,
+                      countVariant: 'warning' as const,
                   },
               ]
             : []),
@@ -214,7 +204,7 @@ export default function UsersIndex({
             count: statistics.suspended,
             active: filters.status === 'suspended',
             icon: <PauseCircleIcon />,
-            countVariant: 'outline',
+            countVariant: 'warning',
         },
         {
             label: 'Banned',
@@ -222,7 +212,7 @@ export default function UsersIndex({
             count: statistics.banned,
             active: filters.status === 'banned',
             icon: <BanIcon />,
-            countVariant: 'destructive',
+            countVariant: 'danger',
         },
         {
             label: 'Trash',
@@ -297,17 +287,14 @@ export default function UsersIndex({
             ),
         },
         {
-            key: 'status',
+            key: 'status_label',
             header: 'Status',
             headerClassName: 'w-28 text-center',
             cellClassName: 'w-28 text-center',
             sortable: true,
             sortKey: 'status',
-            cell: (user) => (
-                <Badge variant={STATUS_BADGE_VARIANT[user.status] ?? 'outline'}>
-                    {user.status_label}
-                </Badge>
-            ),
+            type: 'badge',
+            badgeVariantKey: 'status_badge',
         },
         {
             key: 'created_at',
@@ -480,9 +467,7 @@ export default function UsersIndex({
                                     <div className="mt-1">
                                         <Badge
                                             variant={
-                                                STATUS_BADGE_VARIANT[
-                                                    user.status
-                                                ] ?? 'outline'
+                                                user.status_badge ?? 'outline'
                                             }
                                         >
                                             {user.status_label}

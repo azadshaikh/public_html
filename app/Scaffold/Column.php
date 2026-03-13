@@ -63,6 +63,14 @@ class Column
 
     public ?string $widthCss = null;
 
+    /**
+     * Map of value → badge variant name for badge-type columns.
+     * e.g. ['active' => 'success', 'banned' => 'danger']
+     *
+     * @var array<string, string>|null
+     */
+    public ?array $badgeVariants = null;
+
     public array $meta = [];
 
     /**
@@ -176,6 +184,41 @@ class Column
      */
     public function badge(): self
     {
+        $this->type = 'badge';
+
+        return $this;
+    }
+
+    /**
+     * Set badge variant mapping for badge-type columns.
+     *
+     * Accepts an enum class (reads badge() from each case) or
+     * an associative array of value => variant name.
+     *
+     * Variant names should match the Badge component variants:
+     * default, secondary, success, warning, info, danger, destructive, outline
+     *
+     * @param  array<string, string>|string  $variants  Enum class or value→variant map
+     *
+     * @example
+     * Column::make('status')->badge()->badgeVariants(Status::class)
+     * Column::make('type')->badge()->badgeVariants(['admin' => 'info', 'user' => 'secondary'])
+     */
+    public function badgeVariants(array|string $variants): self
+    {
+        if (is_string($variants) && enum_exists($variants)) {
+            $this->badgeVariants = collect($variants::cases())
+                ->filter(fn (UnitEnum $case): bool => method_exists($case, 'badge'))
+                ->mapWithKeys(function (UnitEnum $case): array {
+                    $key = $case instanceof BackedEnum ? (string) $case->value : $case->name;
+
+                    return [$key => $case->badge()];
+                })
+                ->all();
+        } else {
+            $this->badgeVariants = $variants;
+        }
+
         $this->type = 'badge';
 
         return $this;
@@ -405,6 +448,7 @@ class Column
             'visible' => $this->visible ? null : false,
             'exportable' => $this->exportable ? null : false,
             'width' => $this->width ?? $this->widthCss,
+            'badgeVariants' => $this->badgeVariants,
             ...$this->meta,
         ], fn ($v): bool => $v !== null);
     }

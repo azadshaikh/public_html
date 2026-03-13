@@ -74,10 +74,9 @@ class UserResource extends ScaffoldResource
             'tagline' => $user->getAttribute('tagline'),
             'bio' => $user->getAttribute('bio'),
 
-            // Status fields (for badge template)
+            // Status fields
             'status' => $statusValue,
             'status_label' => $this->getStatusLabel($statusValue),
-            'status_class' => $this->getStatusClass($statusValue),
 
             // Roles
             'roles' => $roles,
@@ -113,28 +112,9 @@ class UserResource extends ScaffoldResource
      */
     protected function getStatusLabel(string $status): string
     {
-        return match ($status) {
-            'active' => 'Active',
-            'pending' => 'Pending',
-            'suspended' => 'Suspended',
-            'banned' => 'Banned',
-            default => 'Unknown',
-        };
-    }
+        $enum = Status::tryFrom($status);
 
-    /**
-     * Get status CSS class for badges
-     * ⚠️ CRITICAL: Return FULL Bootstrap CSS classes!
-     */
-    protected function getStatusClass(string $status): string
-    {
-        return match ($status) {
-            'active' => 'bg-success-subtle text-success',
-            'pending' => 'bg-info-subtle text-info',
-            'suspended' => 'bg-warning-subtle text-warning',
-            'banned' => 'bg-danger-subtle text-danger',
-            default => 'bg-secondary-subtle text-secondary',
-        };
+        return $enum?->label() ?? ucfirst(str_replace('_', ' ', $status));
     }
 
     // ================================================================

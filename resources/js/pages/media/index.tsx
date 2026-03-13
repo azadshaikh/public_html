@@ -38,14 +38,11 @@ const breadcrumbs: BreadcrumbItem[] = [
 // MIME TYPE HELPERS
 // =========================================================================
 
-const MIME_BADGE_VARIANT: Record<
-    string,
-    'default' | 'secondary' | 'outline' | 'destructive'
-> = {
-    image: 'default',
-    video: 'secondary',
-    audio: 'outline',
-    application: 'outline',
+const MIME_BADGE_VARIANT: Record<string, string> = {
+    image: 'success',
+    video: 'info',
+    audio: 'warning',
+    application: 'secondary',
     text: 'outline',
 };
 
@@ -53,9 +50,7 @@ function getMimeCategory(mimeType: string): string {
     return mimeType.split('/')[0] ?? 'unknown';
 }
 
-function getMimeBadgeVariant(
-    mimeType: string,
-): 'default' | 'secondary' | 'outline' | 'destructive' {
+function getMimeBadgeVariant(mimeType: string): string {
     return MIME_BADGE_VARIANT[getMimeCategory(mimeType)] ?? 'outline';
 }
 

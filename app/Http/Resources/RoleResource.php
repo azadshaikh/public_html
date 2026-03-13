@@ -34,7 +34,6 @@ class RoleResource extends ScaffoldResource
 
             // Badge fields for 'status' column
             'status_label' => $this->getStatusLabel($role),
-            'status_class' => $this->getStatusClass($role),
 
             // Formatted Dates
             'created_at' => app_date_time_format($role->getAttribute('created_at'), 'datetime'),
@@ -52,22 +51,6 @@ class RoleResource extends ScaffoldResource
         $statusValue = $status instanceof Status ? $status->value : (string) ($status ?? 'unknown');
 
         return Status::labels()[$statusValue] ?? ucfirst($statusValue);
-    }
-
-    private function getStatusClass(Role $role): string
-    {
-        if ($role->trashed()) {
-            return 'bg-danger-subtle text-danger';
-        }
-
-        $status = $role->getAttribute('status');
-        $statusValue = $status instanceof Status ? $status->value : (string) ($status ?? '');
-
-        return match ($statusValue) {
-            'active' => 'bg-success-subtle text-success',
-            'inactive' => 'bg-warning-subtle text-warning',
-            default => 'bg-secondary-subtle text-secondary',
-        };
     }
 
     private function role(): Role

@@ -27,6 +27,7 @@ export function MediaUploadDropzone({
     const [isUploading, setIsUploading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const dragCounterRef = useRef(0);
+    const uploadedIdsRef = useRef<Set<string>>(new Set());
 
     const acceptedTypes = uploadSettings.accepted_mime_types
         .split(',')
@@ -196,16 +197,28 @@ export function MediaUploadDropzone({
 
     const startUpload = useCallback(() => {
         setIsUploading(true);
+
+        // Read current staged files, then update state and fire uploads
+        // separately to avoid side effects inside React state setters
+        // (React strict mode calls setters twice, which caused double uploads)
         setFiles((prev) => {
-            const staged = prev.filter((f) => f.status === 'staged');
-            staged.forEach((f) => {
-                uploadSingleFile({ ...f, status: 'pending' });
-            });
             return prev.map((f) =>
                 f.status === 'staged' ? { ...f, status: 'pending' } : f,
             );
         });
-    }, [uploadSingleFile]);
+    }, []);
+
+    // ── Fire XHR for newly-pending files (effect, not inside setter) ─
+
+    useEffect(() => {
+        const pending = files.filter(
+            (f) => f.status === 'pending' && !uploadedIdsRef.current.has(f.id),
+        );
+        pending.forEach((f) => {
+            uploadedIdsRef.current.add(f.id);
+            uploadSingleFile(f);
+        });
+    }, [files, uploadSingleFile]);
 
     // ── Drag events ──────────────────────────────────────────────────
 
@@ -264,6 +277,7 @@ export function MediaUploadDropzone({
             );
             return [];
         });
+        uploadedIdsRef.current.clear();
         setIsUploading(false);
     }, []);
 

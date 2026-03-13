@@ -82,7 +82,8 @@ enum Status: string
             self::DRAFT, self::DEPLOYING => 'info',
             self::PENDING, self::UNDER_REVIEW => 'warning',
             self::INACTIVE, self::ARCHIVED, self::EXPIRED, self::ROLLED_BACK, self::CANCELLED => 'secondary',
-            self::SUSPENDED, self::REJECTED, self::FAILED, self::BANNED, self::LOCKED => 'danger',
+            self::SUSPENDED => 'warning',
+            self::REJECTED, self::FAILED, self::BANNED, self::LOCKED => 'danger',
             self::UNVERIFIED, self::MAINTENANCE => 'warning',
         };
     }

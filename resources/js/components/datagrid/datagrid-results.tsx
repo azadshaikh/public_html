@@ -406,6 +406,22 @@ export function DatagridResults<T>({
                                                           type:
                                                               column.type ??
                                                               'text',
+                                                          badgeVariant:
+                                                              column.badgeVariantKey
+                                                                  ? String(
+                                                                        (
+                                                                            row as Record<
+                                                                                string,
+                                                                                unknown
+                                                                            >
+                                                                        )[
+                                                                            column
+                                                                                .badgeVariantKey
+                                                                        ] ?? '',
+                                                                    )
+                                                                  : undefined,
+                                                          badgeVariants:
+                                                              column.badgeVariants,
                                                       })}
                                             </TableCell>
                                         ))}

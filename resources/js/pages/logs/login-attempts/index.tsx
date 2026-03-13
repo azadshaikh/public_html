@@ -34,14 +34,11 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Login Attempts', href: LoginAttemptController.index() },
 ];
 
-const STATUS_BADGE_VARIANT: Record<
-    string,
-    'default' | 'secondary' | 'outline' | 'destructive'
-> = {
-    success: 'default',
-    failed: 'destructive',
-    blocked: 'secondary',
-    cleared: 'outline',
+const STATUS_BADGE_VARIANT: Record<string, string> = {
+    success: 'success',
+    failed: 'danger',
+    blocked: 'warning',
+    cleared: 'secondary',
 };
 
 export default function LoginAttemptsIndex({
@@ -102,7 +99,7 @@ export default function LoginAttemptsIndex({
             count: statistics.success,
             active: filters.status === 'success',
             icon: <CheckCircleIcon />,
-            countVariant: 'secondary',
+            countVariant: 'success',
         },
         {
             label: 'Failed',
@@ -110,7 +107,7 @@ export default function LoginAttemptsIndex({
             count: statistics.failed,
             active: filters.status === 'failed',
             icon: <XCircleIcon />,
-            countVariant: 'destructive',
+            countVariant: 'danger',
         },
         {
             label: 'Blocked',
@@ -118,7 +115,7 @@ export default function LoginAttemptsIndex({
             count: statistics.blocked,
             active: filters.status === 'blocked',
             icon: <BanIcon />,
-            countVariant: 'outline',
+            countVariant: 'warning',
         },
         {
             label: 'Trash',

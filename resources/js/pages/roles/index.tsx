@@ -35,15 +35,6 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Roles', href: RoleController.index() },
 ];
 
-const STATUS_BADGE_VARIANT: Record<
-    string,
-    'default' | 'secondary' | 'outline' | 'destructive'
-> = {
-    active: 'default',
-    inactive: 'secondary',
-    trashed: 'destructive',
-};
-
 export default function RolesIndex({
     roles,
     filters,
@@ -104,7 +95,7 @@ export default function RolesIndex({
             count: statistics.active,
             active: filters.status === 'active',
             icon: <CheckCircleIcon />,
-            countVariant: 'secondary',
+            countVariant: 'success',
         },
         {
             label: 'Inactive',
@@ -112,7 +103,7 @@ export default function RolesIndex({
             count: statistics.inactive,
             active: filters.status === 'inactive',
             icon: <SlashIcon />,
-            countVariant: 'outline',
+            countVariant: 'secondary',
         },
         {
             label: 'Trash',
@@ -179,23 +170,14 @@ export default function RolesIndex({
             ),
         },
         {
-            key: 'status',
+            key: 'status_label',
             header: 'Status',
             headerClassName: 'w-28 text-center',
             cellClassName: 'w-28 text-center',
+            type: 'badge',
+            badgeVariantKey: 'status_badge',
             sortable: true,
             sortKey: 'status',
-            cell: (role) => (
-                <Badge
-                    variant={
-                        STATUS_BADGE_VARIANT[
-                            role.is_trashed ? 'trashed' : role.status
-                        ] ?? 'outline'
-                    }
-                >
-                    {role.status_label}
-                </Badge>
-            ),
         },
     ];
 
@@ -391,11 +373,7 @@ export default function RolesIndex({
                                     <div className="mt-1">
                                         <Badge
                                             variant={
-                                                STATUS_BADGE_VARIANT[
-                                                    role.is_trashed
-                                                        ? 'trashed'
-                                                        : role.status
-                                                ] ?? 'outline'
+                                                role.status_badge ?? 'outline'
                                             }
                                         >
                                             {role.status_label}

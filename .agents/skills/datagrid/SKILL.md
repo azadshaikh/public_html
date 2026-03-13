@@ -76,9 +76,18 @@ const columns: DatagridColumn<Item>[] = [
         cell: (row) => <span className="font-medium">{row.name}</span>,
     },
     {
-        key: 'status',
+        key: 'status_label',
         header: 'Status',
-        type: 'badge', // built-in renderer: text, badge, boolean, currency, image, link, date
+        type: 'badge',
+        badgeVariantKey: 'status_badge', // reads variant from row field (e.g., 'success', 'danger')
+        sortable: true,
+        sortKey: 'status',
+    },
+    {
+        key: 'type',
+        header: 'Type',
+        type: 'badge',
+        badgeVariants: { admin: 'info', user: 'secondary', guest: 'outline' }, // static map
         sortable: true,
     },
     {
@@ -94,6 +103,37 @@ const columns: DatagridColumn<Item>[] = [
 When `cell` is provided, it overrides the `type` renderer. Use `type` for simple auto-rendering.
 
 The `cardLabel` property on a column supplies a label when rendering that column's data inside a card view.
+
+### Badge variant resolution
+
+Badge columns resolve their variant in this priority order:
+
+1. **Per-row variant** (`badgeVariantKey`) — Best when the backend sends a variant per row (e.g., `status_badge` from `ScaffoldResource::getStatusFields()`). Point `badgeVariantKey` at the row field name.
+2. **Static map** (`badgeVariants`) — Use when variant mapping is fixed and known at column definition time.
+3. **Auto-fallback** — When neither is provided, `resolveBadgeVariant()` guesses from the cell value string (e.g., "active" → `success`, "banned" → `danger`, "pending" → `warning`).
+
+Available Badge component variants: `default`, `secondary`, `success`, `warning`, `info`, `danger`, `destructive`, `outline`, `ghost`, `link`.
+
+### Backend Column API for badges
+
+In `ScaffoldDefinition` column definitions, use `Column::badgeVariants()` to configure badge variants from the backend:
+
+```php
+// From an enum with a badge() method — auto-reads variant from each case
+Column::make('status')->badgeVariants(Status::class)->sortable()
+
+// From an explicit array
+Column::make('type')->badgeVariants(['admin' => 'info', 'user' => 'secondary'])->sortable()
+
+// Plain badge without variant map (auto-fallback on frontend)
+Column::make('priority')->badge()->sortable()
+```
+
+`badgeVariants()` automatically sets the column type to `'badge'`. The variant map is serialized in `toInertiaConfig()` and available on the frontend column as `badgeVariants`.
+
+### ScaffoldResource status_badge
+
+`ScaffoldResource::getStatusFields()` automatically sends a `status_badge` field per row by calling the enum's `badge()` method. This means **no manual mapping is needed** — just point your column's `badgeVariantKey` to `'status_badge'`.
 
 ## Filter definitions
 
@@ -160,7 +200,23 @@ const tabs: DatagridTab[] = [
         count: statistics.active,
         active: filters.status === 'active',
         icon: <CheckCircleIcon />,
-        countVariant: 'secondary',
+        countVariant: 'success',
+    },
+    {
+        label: 'Suspended',
+        value: 'suspended',
+        count: statistics.suspended,
+        active: filters.status === 'suspended',
+        icon: <PauseCircleIcon />,
+        countVariant: 'warning',
+    },
+    {
+        label: 'Banned',
+        value: 'banned',
+        count: statistics.banned,
+        active: filters.status === 'banned',
+        icon: <BanIcon />,
+        countVariant: 'danger',
     },
     {
         label: 'Trash',
@@ -172,6 +228,8 @@ const tabs: DatagridTab[] = [
     },
 ];
 ```
+
+`countVariant` supports all Badge variants: `default`, `secondary`, `success`, `warning`, `info`, `danger`, `destructive`, `outline`. Use semantically meaningful colors — `success` for active, `warning` for suspended/pending, `danger` for banned/failed, `destructive` for trash.
 
 Pass as `tabs={{ name: 'status', items: tabs }}` — `name` is the query parameter name.
 
@@ -390,6 +448,10 @@ The `action` prop on the Datagrid should point to this same controller action UR
 - Use `isRowSelectable` to prevent selection of protected rows (e.g., system roles, super users).
 - Conditionally filter `bulkActions` based on the current tab (e.g., hide "Delete" on trash tab, show "Restore" only on trash tab).
 - For backend-driven actions, map `action.variant === 'danger'` to `variant: 'destructive'`.
+- For badge columns, prefer `badgeVariantKey: 'status_badge'` when the backend sends per-row variants (via `ScaffoldResource::getStatusFields()`) over hardcoding variant maps in the page.
+- Use `badgeVariants` (static map) on a column only when the variant mapping is page-specific and not derivable from the backend enum.
+- Do NOT create hardcoded `STATUS_BADGE_VARIANT` constants in pages — use `badgeVariantKey` or `badgeVariants` on the column definition instead.
+- Use semantically meaningful `countVariant` colors on status tabs to match the badge colors used in the status column (e.g., `success` for Active, `warning` for Suspended/Pending, `danger` for Banned/Failed, `destructive` for Trash).
 - Use `hidden: true` on actions that should not appear for certain row states.
 - Set `storageKey` on `view` to persist table/cards preference across sessions.
 - Default `perPage.options` are `[10, 25, 50, 100]` for standard resources; use `[24, 48, 96]` for media/thumbnail grids.
@@ -426,7 +488,14 @@ export default function ThingsIndex({ things, filters, statistics }: Props) {
             sortable: true,
             cell: (row) => <span className="font-medium">{row.name}</span>,
         },
-        { key: 'status', header: 'Status', type: 'badge', sortable: true },
+        {
+            key: 'status_label',
+            header: 'Status',
+            type: 'badge',
+            badgeVariantKey: 'status_badge',
+            sortable: true,
+            sortKey: 'status',
+        },
         { key: 'created_at', header: 'Created', type: 'date', sortable: true },
     ];
 

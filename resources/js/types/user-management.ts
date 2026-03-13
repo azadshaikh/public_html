@@ -35,7 +35,7 @@ export type UserListItem = {
     show_url: string;
     status: string;
     status_label: string;
-    status_class: string;
+    status_badge: string;
     email_verified: boolean;
     email_verified_at: string | null;
     gender: string | null;

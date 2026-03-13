@@ -29,19 +29,6 @@ import type { BreadcrumbItem } from '@/types';
 import type { PermissionGroup, RolesShowPageProps } from '@/types/role';
 
 // =========================================================================
-// CONSTANTS
-// =========================================================================
-
-const STATUS_BADGE_VARIANT: Record<
-    string,
-    'default' | 'secondary' | 'outline' | 'destructive'
-> = {
-    Active: 'default',
-    Inactive: 'secondary',
-    Trashed: 'destructive',
-};
-
-// =========================================================================
 // HELPER COMPONENTS
 // =========================================================================
 
@@ -219,11 +206,7 @@ export default function RolesShow({
                                         {role.display_name}
                                     </h2>
                                     <Badge
-                                        variant={
-                                            STATUS_BADGE_VARIANT[
-                                                role.status_label
-                                            ] ?? 'outline'
-                                        }
+                                        variant={role.status_badge ?? 'outline'}
                                     >
                                         {role.status_label}
                                     </Badge>

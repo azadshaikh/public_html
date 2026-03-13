@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Definitions;
 
+use App\Enums\Status;
 use App\Http\Requests\RoleRequest;
 use App\Models\Role;
 use App\Scaffold\Column;
@@ -69,7 +70,7 @@ class RoleDefinition extends ScaffoldDefinition
             // Status
             Column::make('status')
                 ->label('Status')
-                ->template('badge')
+                ->badgeVariants(Status::class)
                 ->sortable(),
 
             // Created At
