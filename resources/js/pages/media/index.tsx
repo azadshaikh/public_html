@@ -7,7 +7,7 @@ import {
     RefreshCwIcon,
     Trash2Icon,
 } from 'lucide-react';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
     index as mediaLibraryIndex,
     bulkAction,
@@ -84,6 +84,29 @@ export default function MediaIndex({
         setDetailMediaId(id);
         setDetailOpen(true);
     }, []);
+
+    // ----- Poll while media items are processing -----
+
+    const hasProcessing = media.data.some((m) => m.is_processing);
+    const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+    useEffect(() => {
+        if (hasProcessing) {
+            pollingRef.current = setInterval(() => {
+                router.reload({
+                    only: ['media', 'statistics'],
+                    preserveScroll: true,
+                });
+            }, 5000);
+        }
+
+        return () => {
+            if (pollingRef.current) {
+                clearInterval(pollingRef.current);
+                pollingRef.current = null;
+            }
+        };
+    }, [hasProcessing]);
 
     // ----- Bulk action helper -----
 

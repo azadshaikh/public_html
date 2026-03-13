@@ -188,7 +188,15 @@ export function MediaUploadDropzone({
                 };
             });
 
-            setFiles((prev) => [...prev, ...newFiles]);
+            // Clear finished uploads when staging new files so the
+            // staging UI becomes visible again without manual dismiss
+            setFiles((prev) => {
+                const kept = prev.filter(
+                    (f) => f.status !== 'success' && f.status !== 'error',
+                );
+                return [...kept, ...newFiles];
+            });
+            setIsUploading(false);
         },
         [validateFile, createPreview],
     );
@@ -291,19 +299,7 @@ export function MediaUploadDropzone({
         const hasSuccess = files.some((f) => f.status === 'success');
         if (!hasPending && hasSuccess) {
             router.reload({ only: ['media', 'statistics', 'storageData'] });
-
-            // Auto-dismiss completed files after a short delay
-            const timer = setTimeout(() => {
-                setFiles((prev) => {
-                    prev.filter(
-                        (f) => f.status === 'success' && f.previewUrl,
-                    ).forEach((f) => URL.revokeObjectURL(f.previewUrl!));
-                    return prev.filter((f) => f.status !== 'success');
-                });
-                setIsUploading(false);
-                onUploadComplete?.();
-            }, 2000);
-            return () => clearTimeout(timer);
+            onUploadComplete?.();
         }
     }, [files, isUploading, onUploadComplete]);
 
