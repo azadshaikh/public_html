@@ -160,9 +160,6 @@ Route::prefix($adminPrefix)->group(function (): void {
                 // STATIC ROUTES FIRST
                 // ========================================
 
-                // DataGrid API
-                Route::get('/data', [UserController::class, 'data'])->name('data');
-
                 // Bulk action
                 Route::post('/bulk-action', [UserController::class, 'bulkAction'])->name('bulk-action');
 
@@ -268,9 +265,6 @@ Route::prefix($adminPrefix)->group(function (): void {
 
             // --- Masters: Groups Management ---
             Route::group(['prefix' => 'masters/groups', 'as' => 'masters.groups.'], function (): void {
-                // Data endpoint for DataGrid
-                Route::get('/data', [GroupController::class, 'data'])->name('data');
-
                 // Bulk actions (non-parameterized route first)
                 Route::post('/bulk-action', [GroupController::class, 'bulkAction'])->name('bulk-action');
 
@@ -291,9 +285,6 @@ Route::prefix($adminPrefix)->group(function (): void {
 
                 // Group Items (nested routes)
                 Route::group(['prefix' => '{group}/items', 'as' => 'items.'], function (): void {
-                    // Data endpoint for DataGrid
-                    Route::get('/data', [GroupItemController::class, 'data'])->name('data');
-
                     // Bulk actions
                     Route::post('/bulk-action', [GroupItemController::class, 'bulkAction'])->name('bulk-action');
 
@@ -316,9 +307,6 @@ Route::prefix($adminPrefix)->group(function (): void {
 
             // --- Masters: Addresses Management ---
             Route::group(['prefix' => 'masters/addresses', 'as' => 'masters.addresses.'], function (): void {
-                // DataGrid API route
-                Route::get('/data', [AddressController::class, 'data'])->name('data');
-
                 // Specific routes FIRST (more specific patterns)
                 Route::get('/create', [AddressController::class, 'create'])->name('create');
                 Route::get('/{address}', [AddressController::class, 'show'])->name('show')->where('address', '[0-9]+');
@@ -337,7 +325,6 @@ Route::prefix($adminPrefix)->group(function (): void {
             // --- Logs: Activity Logs Management ---
             Route::group(['prefix' => 'logs/activity-logs', 'as' => 'logs.activity-logs.'], function (): void {
                 // Non-parameterized routes first
-                Route::get('/data', [ActivityLogController::class, 'data'])->name('data');
                 Route::post('bulk-action', [ActivityLogController::class, 'bulkAction'])->name('bulk-action');
                 Route::post('cleanup', [ActivityLogController::class, 'cleanup'])->name('cleanup');
                 Route::post('export', [ActivityLogController::class, 'export'])->name('export');
@@ -358,7 +345,6 @@ Route::prefix($adminPrefix)->group(function (): void {
             // --- Logs: Login Attempts Management ---
             Route::group(['prefix' => 'logs/login-attempts', 'as' => 'logs.login-attempts.'], function (): void {
                 // Non-parameterized routes first
-                Route::get('/data', [LoginAttemptController::class, 'data'])->name('data');
                 Route::post('bulk-action', [LoginAttemptController::class, 'bulkAction'])->name('bulk-action');
                 Route::post('cleanup', [LoginAttemptController::class, 'cleanup'])->name('cleanup');
                 Route::post('clear-rate-limit', [LoginAttemptController::class, 'clearRateLimit'])->name('clear-rate-limit');
@@ -379,7 +365,6 @@ Route::prefix($adminPrefix)->group(function (): void {
             // --- Logs: 404 Logs Management ---
             Route::group(['prefix' => 'logs/not-found-logs', 'as' => 'logs.not-found-logs.'], function (): void {
                 // Non-parameterized routes first
-                Route::get('/data', [NotFoundLogController::class, 'data'])->name('data');
                 Route::post('bulk-action', [NotFoundLogController::class, 'bulkAction'])->name('bulk-action');
                 Route::post('cleanup', [NotFoundLogController::class, 'cleanup'])->name('cleanup');
                 Route::get('statistics', [NotFoundLogController::class, 'statistics'])->name('statistics');
@@ -449,9 +434,6 @@ Route::prefix($adminPrefix)->group(function (): void {
                     // STATIC ROUTES FIRST
                     // ========================================
 
-                    // DataGrid API
-                    Route::get('/data', [EmailProviderController::class, 'data'])->name('data');
-
                     // Bulk action
                     Route::post('/bulk-action', [EmailProviderController::class, 'bulkAction'])->name('bulk-action');
 
@@ -492,9 +474,6 @@ Route::prefix($adminPrefix)->group(function (): void {
                     // ========================================
                     // STATIC ROUTES FIRST
                     // ========================================
-
-                    // DataGrid API
-                    Route::get('/data', [EmailTemplateController::class, 'data'])->name('data');
 
                     // Bulk action
                     Route::post('/bulk-action', [EmailTemplateController::class, 'bulkAction'])->name('bulk-action');
@@ -537,14 +516,7 @@ Route::prefix($adminPrefix)->group(function (): void {
                 // Email Logs (Read-only, no create/edit)
                 Route::group(['prefix' => 'logs', 'as' => 'logs.'], function (): void {
                     // ========================================
-                    // STATIC ROUTES FIRST
-                    // ========================================
-
-                    // DataGrid API
-                    Route::get('/data', [EmailLogController::class, 'data'])->name('data');
-
-                    // ========================================
-                    // PARAMETERIZED ROUTES NEXT
+                    // PARAMETERIZED ROUTES
                     // =========================================
 
                     // Show (with numeric constraint)
@@ -604,9 +576,8 @@ Route::prefix($adminPrefix)->group(function (): void {
 
             // --- Media Library V2 (DataGrid-based) ---
             Route::group(['prefix' => 'media-library', 'as' => 'media-library.'], function (): void {
-                Route::get('/data', [MediaLibraryController::class, 'data'])->name('data');
                 Route::post('/bulk-action', [MediaLibraryController::class, 'bulkAction'])->name('bulk-action');
-                Route::get('/{status?}', [MediaLibraryController::class, 'index'])->name('index')->where('status', '^(all|trash)$');
+                Route::get('/', [MediaLibraryController::class, 'index'])->name('index');
             });
 
             // --- Revisions Management ---

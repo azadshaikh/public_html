@@ -28,7 +28,7 @@ class NotFoundLogController extends ScaffoldController implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            new Middleware('permission:view_not_found_logs', only: ['index', 'show', 'data']),
+            new Middleware('permission:view_not_found_logs', only: ['index', 'show']),
             new Middleware('permission:delete_not_found_logs', only: ['destroy', 'bulkAction', 'restore', 'forceDelete']),
             new Middleware('permission:manage_not_found_logs', only: ['cleanup', 'statistics']),
         ];

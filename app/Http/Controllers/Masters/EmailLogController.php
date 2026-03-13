@@ -22,7 +22,7 @@ class EmailLogController extends ScaffoldController implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            new Middleware('permission:view_email_logs', only: ['index', 'show', 'data']),
+            new Middleware('permission:view_email_logs', only: ['index', 'show']),
         ];
     }
 

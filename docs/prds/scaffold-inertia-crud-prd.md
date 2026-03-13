@@ -120,19 +120,19 @@ React page (e.g. pages/users/index.tsx)
 
 Remove everything that exists only for the old Blade/Unpoly/jQuery stack.
 
-| Action                           | Target                                                                                                                              |
-| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| Delete `Unpoly.php`              | 265-line Unpoly request/response handler                                                                                            |
-| Delete `UnpolyMiddleware.php`    | 179-line middleware                                                                                                                 |
-| Delete `ResponseTrait.php`       | 42-line trait used by controllers                                                                                                   |
-| Clean `CacheInvalidation.php`    | Remove `$clearUnpolyCache` params, `flagUnpolyClearCache()`                                                                         |
-| Clean `NotFoundLogger.php`       | Remove 3-line `X-Up-Target` check                                                                                                   |
-| Clean `Action.php`               | Remove `$fullReload` + `fullReload()`                                                                                               |
-| Clean `ScaffoldDefinition`       | Remove `getIndexView()`, `getCreateView()`, `getEditView()`, `getShowView()`, `resolveViewPath()`, `toDataGridConfig()`, `toJson()` |
-| Clean `Scaffoldable` trait       | Remove `getDataGridConfig()`                                                                                                        |
-| Clean `ScaffoldServiceInterface` | Remove `getDataGridConfig()` signature                                                                                              |
-| Clean `ScaffoldController`       | Remove `view()` calls, Blade return types, `buildDataGridResponse()`, `data()` endpoint                                             |
-| Clean child controllers          | Remove `ResponseTrait` usage from 5 controllers                                                                                     |
+| Action                           | Target                                                                                                                                                                               |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Delete `Unpoly.php`              | 265-line Unpoly request/response handler                                                                                                                                             |
+| Delete `UnpolyMiddleware.php`    | 179-line middleware                                                                                                                                                                  |
+| Delete `ResponseTrait.php`       | 42-line trait used by controllers                                                                                                                                                    |
+| Clean `CacheInvalidation.php`    | Remove `$clearUnpolyCache` params, `flagUnpolyClearCache()`                                                                                                                          |
+| Clean `NotFoundLogger.php`       | Remove 3-line `X-Up-Target` check                                                                                                                                                    |
+| Clean `Action.php`               | Remove `$fullReload` + `fullReload()`                                                                                                                                                |
+| Clean `ScaffoldDefinition`       | Remove `getIndexView()`, `getCreateView()`, `getEditView()`, `getShowView()`, `resolveViewPath()`, `toDataGridConfig()`, `toJson()`. Child definition overrides cleaned in Phase 7a. |
+| Clean `Scaffoldable` trait       | Remove `getDataGridConfig()`                                                                                                                                                         |
+| Clean `ScaffoldServiceInterface` | Remove `getDataGridConfig()` signature                                                                                                                                               |
+| Clean `ScaffoldController`       | Remove `view()` calls, Blade return types, `buildDataGridResponse()`, `data()` endpoint. Dead `/data` routes and middleware refs cleaned in Phase 7a.                                |
+| Clean child controllers          | Remove `ResponseTrait` usage from 5 controllers                                                                                                                                      |
 
 ### Phase 2 — Refactor ScaffoldController for Inertia ✅
 
@@ -280,6 +280,21 @@ Based on blade reference (`tmp/astero/resources/views/app/roles/show.blade.php`)
 
 - Run Pint, ESLint, TypeScript checks.
 
+### Phase 7a — Dead `data()` route & `toDataGridConfig()` cleanup ✅
+
+Sweep of residual dead code left after Phase 1. When `toDataGridConfig()` was removed from `ScaffoldDefinition` and `data()` was removed from `ScaffoldController`, several artifacts were left behind:
+
+- **5 definitions** still had local `toDataGridConfig()` overrides that were never called by any controller, route, or frontend code.
+- **6 controllers** still listed `'data'` in their middleware `only` arrays, referencing a method that no longer exists.
+- **11 `/data` GET routes** in `routes/web.php` pointed to the removed `data()` method, causing 500 errors if accessed.
+
+| Action                                | Detail                                                                                                                                                                                       |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Remove `/data` routes                 | 11 dead `Route::get('/data', ...)` entries across Users, Groups, GroupItems, Addresses, Activity Logs, Login Attempts, 404 Logs, Email Providers, Email Templates, Email Logs, Media Library |
+| Remove `'data'` from middleware       | 6 controllers: User, ActivityLog, LoginAttempt, NotFoundLog, EmailLog, MediaLibrary                                                                                                          |
+| Remove `toDataGridConfig()` overrides | 5 definitions: ActivityLog, LoginAttempt, NotFoundLog, EmailLog, GroupItem (including `getGroupId()` helper only used by the removed method)                                                 |
+| Regenerate Wayfinder                  | Removed dead `data` exports from generated TypeScript actions                                                                                                                                |
+
 ### Phase 7 — Tests and quality (all CRUDs)
 
 Combined test phase covering all scaffold CRUDs after all CRUD migrations are complete.
@@ -304,7 +319,7 @@ Combined test phase covering all scaffold CRUDs after all CRUD migrations are co
 | `Action` builder                         | Remove `fullReload`, keep everything else                                                      |
 | `ScaffoldRequest`                        | `uniqueRule()`, `isUpdate()`, `enumRule()` helpers                                             |
 | `ScaffoldResource`                       | Model-to-array transformation                                                                  |
-| All 13 definitions                       | CRUD config stays correct                                                                      |
+| All 13 definitions                       | CRUD config stays correct (local `toDataGridConfig()` overrides removed in Phase 7a)           |
 | All 12 services                          | Business logic unchanged                                                                       |
 | `ScaffoldServiceInterface`               | Clean contract (minus removed `getDataGridConfig()`)                                           |
 

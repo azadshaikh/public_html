@@ -28,7 +28,7 @@ class LoginAttemptController extends ScaffoldController implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            new Middleware('permission:view_login_attempts', only: ['index', 'show', 'data']),
+            new Middleware('permission:view_login_attempts', only: ['index', 'show']),
             new Middleware('permission:delete_login_attempts', only: ['destroy', 'bulkAction', 'restore', 'forceDelete']),
             new Middleware('permission:manage_login_attempts', only: ['cleanup', 'clearRateLimit', 'getBlockedIps']),
         ];

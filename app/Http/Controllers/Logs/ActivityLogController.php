@@ -31,7 +31,7 @@ class ActivityLogController extends ScaffoldController implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            new Middleware('permission:view_activity_logs', only: ['index', 'show', 'data']),
+            new Middleware('permission:view_activity_logs', only: ['index', 'show']),
             new Middleware('permission:delete_activity_logs', only: ['destroy', 'bulkAction', 'restore', 'forceDelete']),
             new Middleware('permission:manage_activity_logs', only: ['cleanup', 'export']),
         ];

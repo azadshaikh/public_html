@@ -38,7 +38,7 @@ class UserController extends ScaffoldController implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            new Middleware('permission:view_users', only: ['index', 'show', 'data']),
+            new Middleware('permission:view_users', only: ['index', 'show']),
             new Middleware('permission:add_users', only: ['create', 'store']),
             new Middleware('permission:edit_users', only: ['edit', 'update', 'verifyEmail', 'approve', 'suspend', 'ban', 'unban']),
             new Middleware('permission:delete_users', only: ['destroy', 'bulkAction', 'forceDelete']),

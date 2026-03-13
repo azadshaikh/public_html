@@ -261,6 +261,54 @@
 
 ---
 
+## Phase 7a — Dead `data()` route & `toDataGridConfig()` cleanup
+
+Sweep of residual dead code left after Phase 1 removal of `toDataGridConfig()` from `ScaffoldDefinition` and `data()` from `ScaffoldController`. Several child definitions still contained local `toDataGridConfig()` overrides (never called), controllers still referenced `'data'` in middleware arrays, and `routes/web.php` still registered `/data` GET routes pointing to the removed `data()` method.
+
+### 7a.1 Remove dead `/data` routes from `routes/web.php`
+
+- [x] `UserController::data` — `/admin/users/data`
+- [x] `GroupController::data` — `/admin/masters/groups/data`
+- [x] `GroupItemController::data` — `/admin/masters/groups/{group}/items/data`
+- [x] `AddressController::data` — `/admin/masters/addresses/data`
+- [x] `ActivityLogController::data` — `/admin/logs/activity-logs/data`
+- [x] `LoginAttemptController::data` — `/admin/logs/login-attempts/data`
+- [x] `NotFoundLogController::data` — `/admin/logs/not-found-logs/data`
+- [x] `MediaLibraryController::data` — `/admin/media-library/data` (removed in earlier media library fix)
+- [x] `EmailProviderController::data` — `/admin/masters/email/providers/data`
+- [x] `EmailTemplateController::data` — `/admin/masters/email/templates/data`
+- [x] `EmailLogController::data` — `/admin/masters/email/logs/data`
+- [x] Removed associated `// DataGrid API` and `// Data endpoint for DataGrid` comments
+
+### 7a.2 Remove dead `'data'` from controller middleware arrays
+
+- [x] `UserController` — `only: ['index', 'show', 'data']` → `only: ['index', 'show']`
+- [x] `ActivityLogController` — `only: ['index', 'show', 'data']` → `only: ['index', 'show']`
+- [x] `LoginAttemptController` — `only: ['index', 'show', 'data']` → `only: ['index', 'show']`
+- [x] `NotFoundLogController` — `only: ['index', 'show', 'data']` → `only: ['index', 'show']`
+- [x] `EmailLogController` — `only: ['index', 'show', 'data']` → `only: ['index', 'show']`
+- [x] `MediaLibraryController` — `only: ['index', 'data']` → `only: ['index']`
+
+### 7a.3 Remove dead `toDataGridConfig()` overrides from definitions
+
+- [x] `ActivityLogDefinition` — removed 52-line `toDataGridConfig()` override
+- [x] `LoginAttemptDefinition` — removed 52-line `toDataGridConfig()` override
+- [x] `NotFoundLogDefinition` — removed 52-line `toDataGridConfig()` override
+- [x] `EmailLogDefinition` — removed 52-line `toDataGridConfig()` override + comments
+- [x] `GroupItemDefinition` — removed 72-line `toDataGridConfig()` override + `getGroupId()` helper (only used by `toDataGridConfig`)
+
+### 7a.4 Regenerate Wayfinder
+
+- [x] `php artisan wayfinder:generate` — removed dead `data` exports from generated TypeScript actions
+- [x] Verified no TypeScript errors from removed exports
+
+### 7a.5 Quality
+
+- [x] Pint — pass
+- [x] No TypeScript errors
+
+---
+
 ## Phase 7 — Tests and quality (all CRUDs)
 
 - [ ] ScaffoldController base tests — index pagination, filters, sorting

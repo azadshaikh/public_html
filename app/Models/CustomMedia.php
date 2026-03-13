@@ -421,6 +421,16 @@ class CustomMedia extends Media
         parent::boot();
 
         static::creating(function ($model): void {
+            // Set audit fields from authenticated user
+            if (auth()->check()) {
+                if ($model->getAttribute('created_by') === null) {
+                    $model->setAttribute('created_by', auth()->id());
+                }
+                if ($model->getAttribute('updated_by') === null) {
+                    $model->setAttribute('updated_by', auth()->id());
+                }
+            }
+
             // Generate sortable, lowercase ULID (26 chars vs 36 for UUID)
             // Time-prefixed for natural creation-order sorting in folder listings
             $model->uuid = strtolower((string) Str::ulid());

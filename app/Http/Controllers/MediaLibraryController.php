@@ -12,13 +12,14 @@ use App\Services\MediaService;
 use App\Services\MediaTrashService;
 use App\Traits\ActivityTrait;
 use Exception;
-use Illuminate\Contracts\View\View;
-use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Inertia\Inertia;
+use Inertia\Response;
 
 /**
  * MediaLibraryController - DataGrid-based Media Library V2
@@ -40,24 +41,17 @@ class MediaLibraryController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            new Middleware('permission:view_media', only: ['index', 'data']),
+            new Middleware('permission:view_media', only: ['index']),
             new Middleware('permission:delete_media', only: ['bulkAction']),
         ];
     }
 
     /**
-     * Display media library index page (HTML view)
+     * Display media library index page
      */
-    public function index(Request $request, string $status = 'all'): View|JsonResponse
+    public function index(Request $request): Response
     {
-        // DataGrid requests use the status path (/media-library/{status}) and expect JSON.
-        // Mirror ScaffoldController behavior to support StatusTabsPlugin (path-based navigation).
-        if ($request->ajax() || $request->wantsJson() || $request->expectsJson()) {
-            $request->merge(['status' => $status]);
-
-            return $this->data($request);
-        }
-
+        $status = in_array($request->input('status'), ['all', 'trash'], true) ? $request->input('status') : 'all';
         $scaffold = $this->scaffold();
         $storageData = $this->media->getUsedStorageSize();
 
@@ -102,127 +96,79 @@ class MediaLibraryController extends Controller implements HasMiddleware
             'friendly_file_types' => implode(', ', $friendlyCategories),
             'max_filename_length' => (int) config('media.max_file_name_length', 100),
             'upload_route' => route('app.media.upload-media'),
-            'settings_route' => route('app.media.upload-settings'),
         ];
 
-        // Get user options for filter
-        $ownerOptions = User::getAddedByOptions();
+        // Build initial paginated data
+        $query = CustomMedia::query();
+        if ($status === 'trash') {
+            $query->onlyTrashed();
+        } else {
+            $query->withoutTrashed();
+        }
 
-        return view('app.media-v2.index', [
-            'page_title' => self::MODULE_TITLE,
-            'breadcrumbs' => [
-                ['title' => 'Dashboard', 'url' => route('dashboard')],
-                ['title' => 'Media Library', 'url' => null],
+        $this->applyFilters($query, $request);
+
+        if ($search = $request->input('search', '')) {
+            $query->where(function ($q) use ($search): void {
+                $q->where('name', 'ilike', sprintf('%%%s%%', $search))
+                    ->orWhere('file_name', 'ilike', sprintf('%%%s%%', $search));
+            });
+        }
+
+        $sort = $request->input('sort', 'created_at');
+        $direction = $request->input('direction', 'desc');
+        $actualSortColumn = $scaffold->getActualSortColumn($sort) ?? 'created_at';
+        $query->with('owner')->orderBy($actualSortColumn, $direction);
+
+        $perPage = (int) $request->input('per_page', $scaffold->getPerPage());
+        $paginator = $query->paginate($perPage)->onEachSide(1)->withQueryString();
+
+        // Transform paginated items
+        $items = $paginator->through(fn ($media): array => (new MediaLibraryResource($media))->toArray($request));
+
+        // Owner options for filter
+        $rawOwnerOptions = User::getAddedByOptions();
+        $ownerOptions = collect($rawOwnerOptions)->map(fn ($name, $id): array => [
+            'value' => (string) $id,
+            'label' => (string) $name,
+        ])->values()->all();
+
+        return Inertia::render('media/index', [
+            'media' => $items,
+            'filters' => [
+                'search' => $request->input('search', ''),
+                'status' => $status,
+                'mime_type_category' => $request->input('mime_type_category', ''),
+                'created_by' => $request->input('created_by', ''),
+                'sort' => $sort,
+                'direction' => $direction,
+                'per_page' => $perPage,
+                'view' => $request->input('view', 'cards'),
             ],
-            'status_slug' => $status,
-            'storage_data' => $storageData,
-            'upload_settings' => $uploadSettings,
-            'owner_options' => $ownerOptions,
-            'total_files' => $this->media->withoutTrashed()->count(),
-            'trashed_files' => $this->media->onlyTrashed()->count(),
-            'tableConfig' => $scaffold->toDataGridConfig(),
-            'statusTabs' => collect($scaffold->statusTabs())->map(function ($tab): array {
-                $tab->url = route('app.media-library.index', $tab->key ?: 'all');
-
-                return $tab->toArray();
-            })->all(),
-        ]);
-    }
-
-    /**
-     * Get data for DataGrid (JSON API endpoint)
-     */
-    public function data(Request $request): JsonResponse
-    {
-        try {
-            $scaffold = $this->scaffold();
-            $status = $request->input('status', 'all');
-            $search = $request->input('search', '');
-            $sort = $request->input('sort_column', 'created_at');
-            $direction = $request->input('sort_direction', 'desc');
-            $perPage = (int) $request->input('per_page', $scaffold->getPerPage());
-
-            // Build query
-            $query = CustomMedia::query();
-
-            // Apply status filter
-            if ($status === 'trash') {
-                $query->onlyTrashed();
-            } else {
-                $query->withoutTrashed();
-            }
-
-            // Apply search
-            if ($search) {
-                $query->where(function ($q) use ($search): void {
-                    $q->where('name', 'ilike', sprintf('%%%s%%', $search))
-                        ->orWhere('file_name', 'ilike', sprintf('%%%s%%', $search));
-                });
-            }
-
-            // Apply filters
-            $this->applyFilters($query, $request);
-
-            // Eager load relationships to prevent N+1 queries
-            $query->with('owner');
-
-            // Apply sorting
-            $actualSortColumn = $scaffold->getActualSortColumn($sort) ?? 'created_at';
-            $query->orderBy($actualSortColumn, $direction);
-
-            // Paginate
-            $paginator = $query->paginate($perPage);
-
-            // Transform items (avoid JsonResource collection wrapping)
-            $items = $paginator
-                ->getCollection()
-                ->map(fn ($media): array => (new MediaLibraryResource($media))->toArray($request))
-                ->values()
-                ->all();
-
-            // Status tab counts (StatusTabsPlugin reads status_counts/statistics)
-            $statusCounts = [
+            'statistics' => [
                 'total' => CustomMedia::withoutTrashed()->count(),
                 'trash' => CustomMedia::onlyTrashed()->count(),
-            ];
-
-            return response()->json([
-                'status' => 'success',
-                'data' => [
-                    'items' => $items,
-                    'columns' => $scaffold->toDataGridConfig()['columns'],
-                    'filters' => $this->getFiltersWithOptions($scaffold),
-                    // DataGrid ActionsPlugin reads `data.actions` for both row + bulk actions.
-                    'actions' => $scaffold->toDataGridConfig()['actions'],
-                    'pagination' => [
-                        'total' => $paginator->total(),
-                        'per_page' => $paginator->perPage(),
-                        'current_page' => $paginator->currentPage(),
-                        'last_page' => $paginator->lastPage(),
-                        'from' => $paginator->firstItem(),
-                        'to' => $paginator->lastItem(),
-                    ],
-                    'status_counts' => $statusCounts,
-                    'current_status' => $status,
+            ],
+            'uploadSettings' => $uploadSettings,
+            'storageData' => $storageData,
+            'filterOptions' => [
+                'mime_type_category' => [
+                    ['value' => 'image', 'label' => 'Images'],
+                    ['value' => 'video', 'label' => 'Videos'],
+                    ['value' => 'audio', 'label' => 'Audio'],
+                    ['value' => 'document', 'label' => 'Documents'],
                 ],
-            ]);
-        } catch (Exception $exception) {
-            Log::error('MediaLibrary data() error: '.$exception->getMessage(), [
-                'trace' => $exception->getTraceAsString(),
-            ]);
-
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Failed to load media',
-                'error' => config('app.debug') ? $exception->getMessage() : 'An error occurred',
-            ], 500);
-        }
+                'created_by' => $ownerOptions,
+            ],
+            'status' => session('status'),
+            'error' => session('error'),
+        ]);
     }
 
     /**
      * Handle bulk actions
      */
-    public function bulkAction(Request $request): JsonResponse
+    public function bulkAction(Request $request): RedirectResponse
     {
         $request->validate([
             'action' => ['required', 'string', 'in:delete,restore,force_delete'],
@@ -276,17 +222,7 @@ class MediaLibraryController extends Controller implements HasMiddleware
                 'force_delete' => 'permanently deleted',
             ];
 
-            return response()->json([
-                'status' => 'success',
-                'message' => sprintf('%d file(s) %s', $count, $actionLabels[$action]),
-                'affected' => $count,
-                'data' => [
-                    'status_counts' => [
-                        'total' => CustomMedia::withoutTrashed()->count(),
-                        'trash' => CustomMedia::onlyTrashed()->count(),
-                    ],
-                ],
-            ]);
+            return back()->with('status', sprintf('%d file(s) %s', $count, $actionLabels[$action]));
         } catch (Exception $exception) {
             DB::rollBack();
             Log::error('MediaLibrary bulkAction error: '.$exception->getMessage(), [
@@ -295,11 +231,7 @@ class MediaLibraryController extends Controller implements HasMiddleware
                 'trace' => $exception->getTraceAsString(),
             ]);
 
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Failed to perform bulk action',
-                'error' => config('app.debug') ? $exception->getMessage() : 'An error occurred',
-            ], 500);
+            return back()->with('error', 'Failed to perform bulk action');
         }
     }
 
@@ -345,39 +277,5 @@ class MediaLibraryController extends Controller implements HasMiddleware
         if ($dateTo = $request->input('created_at_to')) {
             $query->whereDate('created_at', '<=', $dateTo);
         }
-    }
-
-    /**
-     * Get filters with dynamic options
-     */
-    protected function getFiltersWithOptions(MediaDefinition $scaffold): array
-    {
-        $filters = $scaffold->toDataGridConfig()['filters'];
-
-        // Add user options to created_by filter
-        foreach ($filters as &$filter) {
-            if ($filter['key'] === 'created_by') {
-                // DataGrid supports both {value: label} and [{value, label}] formats.
-                // Prefer array format to match platform conventions.
-                $rawOptions = User::getAddedByOptions();
-                $options = collect($rawOptions);
-
-                // If it's already in [{value,label}] format, keep as-is.
-                $first = $options->first();
-                if (is_array($first) && array_key_exists('value', $first) && array_key_exists('label', $first)) {
-                    $filter['options'] = $options->values()->toArray();
-
-                    continue;
-                }
-
-                // Otherwise assume {id: name} (array or collection) and convert.
-                $filter['options'] = $options
-                    ->map(fn ($name, $id): array => ['value' => (string) $id, 'label' => (string) $name])
-                    ->values()
-                    ->all();
-            }
-        }
-
-        return $filters;
     }
 }

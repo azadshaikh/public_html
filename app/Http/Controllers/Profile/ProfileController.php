@@ -15,7 +15,6 @@ use App\Services\UserService;
 use App\Traits\ActivityTrait;
 use App\Traits\HasAlerts;
 use Exception;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -49,10 +48,19 @@ class ProfileController extends Controller
     public function view(): Response
     {
         $user = auth()->user();
+        $primaryAddress = $user->primaryAddress;
 
         return Inertia::render('account/profile', [
-            'mustVerifyEmail' => $user instanceof MustVerifyEmail,
-            'status' => session('status'),
+            'profile' => [
+                'first_name' => (string) ($user->getAttribute('first_name') ?? ''),
+                'last_name' => (string) ($user->getAttribute('last_name') ?? ''),
+                'full_name' => (string) ($user->getAttribute('full_name') ?? $user->name),
+                'username' => (string) ($user->getAttribute('username') ?? ''),
+                'email' => (string) $user->email,
+                'phone' => (string) ($primaryAddress?->getAttribute('phone') ?? $user->getAttribute('phone') ?? ''),
+                'avatar_url' => $user->getAttribute('avatar_image'),
+            ],
+            'showUsername' => module_enabled('CMS'),
         ]);
     }
 

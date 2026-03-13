@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils"
 
 function Avatar({
   className,
-  size = "comfortable",
+  size = "default",
   ...props
 }: React.ComponentProps<typeof AvatarPrimitive.Root> & {
   size?: "default" | "sm" | "lg" | "comfortable"
