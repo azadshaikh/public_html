@@ -656,7 +656,12 @@ class MediaVariationService
     }
 
     /**
-     * Check if a variation should exist based on configuration
+     * Check if a variation should exist based on configuration and image dimensions.
+     *
+     * Responsive sizes (small, medium, large, xlarge) are only generated when the
+     * target width is smaller than the original image.  The upload pipeline stores
+     * a custom property (e.g. "small_width") for every responsive conversion it
+     * actually registers, so we can check for its presence here.
      */
     private function shouldHaveVariation(string $size, ?Media $media = null): bool
     {
@@ -675,9 +680,15 @@ class MediaVariationService
             return true;
         }
 
-        // For responsive sizes, always generate them for normal images
+        // For responsive sizes, only expect them when the conversion was actually
+        // registered (indicated by the "{size}_width" custom property set during
+        // createResponsiveImages).
         $responsiveSizes = ['small', 'medium', 'large', 'xlarge'];
         if (in_array($size, $responsiveSizes)) {
+            if ($media) {
+                return $media->getCustomProperty($size.'_width') !== null;
+            }
+
             return true;
         }
 

@@ -1,7 +1,11 @@
 import { router } from '@inertiajs/react';
 import {
     EyeIcon,
+    FileAudioIcon,
     FileIcon,
+    FileSpreadsheetIcon,
+    FileTextIcon,
+    FileVideoIcon,
     ImageIcon,
     ListIcon,
     RefreshCwIcon,
@@ -61,6 +65,31 @@ function isImageMimeType(mimeType: string): boolean {
 function getFileExtension(fileName: string): string {
     const ext = fileName.split('.').pop();
     return ext ? ext.toUpperCase() : '?';
+}
+
+function getFileTypeIcon(mimeType: string, className: string) {
+    if (mimeType.startsWith('video/')) {
+        return <FileVideoIcon className={className} />;
+    }
+    if (mimeType.startsWith('audio/')) {
+        return <FileAudioIcon className={className} />;
+    }
+    if (
+        mimeType === 'application/pdf' ||
+        mimeType.includes('word') ||
+        mimeType.includes('document') ||
+        mimeType === 'text/plain'
+    ) {
+        return <FileTextIcon className={className} />;
+    }
+    if (
+        mimeType.includes('spreadsheet') ||
+        mimeType.includes('excel') ||
+        mimeType === 'text/csv'
+    ) {
+        return <FileSpreadsheetIcon className={className} />;
+    }
+    return <FileIcon className={className} />;
 }
 
 // =========================================================================
@@ -217,7 +246,10 @@ export default function MediaIndex({
                             className="size-10 object-cover"
                         />
                     ) : (
-                        <FileIcon className="size-5 text-muted-foreground" />
+                        getFileTypeIcon(
+                            item.mime_type,
+                            'size-5 text-muted-foreground',
+                        )
                     )}
                 </button>
             ),
@@ -439,7 +471,10 @@ export default function MediaIndex({
                                 />
                             ) : (
                                 <div className="flex size-full items-center justify-center">
-                                    <FileIcon className="size-10 text-muted-foreground/40" />
+                                    {getFileTypeIcon(
+                                        item.mime_type,
+                                        'size-10 text-muted-foreground/40',
+                                    )}
                                 </div>
                             )}
 

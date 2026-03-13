@@ -103,23 +103,29 @@ export function MediaDetailSheet({
                     headers: { Accept: 'application/json' },
                 });
                 const json = await res.json();
-                if (
-                    json.status === 'completed' ||
-                    json.conversion_status?.status === 'completed'
-                ) {
+                const convStatus = json.data?.conversion_status;
+                if (convStatus?.status === 'completed') {
                     setDetail((prev) =>
                         prev
                             ? {
                                   ...prev,
                                   is_processing: false,
-                                  conversion_status:
-                                      json.conversion_status ??
-                                      prev.conversion_status,
+                                  conversion_status: convStatus,
                               }
                             : prev,
                     );
                     setConversionPolling(false);
                     clearInterval(interval);
+                } else if (convStatus) {
+                    // Update conversion progress even if not yet completed
+                    setDetail((prev) =>
+                        prev
+                            ? {
+                                  ...prev,
+                                  conversion_status: convStatus,
+                              }
+                            : prev,
+                    );
                 }
             } catch {
                 // ignore polling errors
