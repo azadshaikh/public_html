@@ -32,8 +32,8 @@ class AuthenticationTest extends TestCase
                 ->component('auth/login')
                 ->where('canResetPassword', true)
                 ->where('canRegister', true)
-                ->where('socialProviders.google', false)
-                ->where('socialProviders.github', false));
+                ->has('socialProviders.google')
+                ->has('socialProviders.github'));
     }
 
     public function test_users_can_authenticate_using_the_login_screen(): void

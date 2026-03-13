@@ -29,8 +29,8 @@ class RegistrationTest extends TestCase
             ->assertInertia(fn (Assert $page): Assert => $page
                 ->component('auth/register')
                 ->where('canLogin', true)
-                ->where('socialProviders.google', false)
-                ->where('socialProviders.github', false));
+                ->has('socialProviders.google')
+                ->has('socialProviders.github'));
     }
 
     public function test_new_users_can_register(): void

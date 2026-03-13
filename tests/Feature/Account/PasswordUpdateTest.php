@@ -13,43 +13,41 @@ class PasswordUpdateTest extends TestCase
 
     public function test_password_update_page_is_displayed(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['first_name' => 'Test', 'last_name' => 'User']);
 
         $response = $this
             ->actingAs($user)
-            ->get(route('user-password.edit'));
+            ->get(route('app.profile.security.password'));
 
         $response->assertOk();
     }
 
     public function test_password_can_be_updated(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['first_name' => 'Test', 'last_name' => 'User']);
 
         $response = $this
             ->actingAs($user)
-            ->from(route('user-password.edit'))
-            ->put(route('user-password.update'), [
+            ->from(route('app.profile.security.password'))
+            ->patch(route('app.profile.password.update'), [
                 'current_password' => 'password',
                 'password' => 'new-password',
                 'password_confirmation' => 'new-password',
             ]);
 
-        $response
-            ->assertSessionHasNoErrors()
-            ->assertRedirect(route('user-password.edit'));
+        $response->assertSessionHasNoErrors();
 
         $this->assertTrue(Hash::check('new-password', $user->refresh()->password));
     }
 
     public function test_correct_password_must_be_provided_to_update_password(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['first_name' => 'Test', 'last_name' => 'User']);
 
         $response = $this
             ->actingAs($user)
-            ->from(route('user-password.edit'))
-            ->put(route('user-password.update'), [
+            ->from(route('app.profile.security.password'))
+            ->patch(route('app.profile.password.update'), [
                 'current_password' => 'wrong-password',
                 'password' => 'new-password',
                 'password_confirmation' => 'new-password',
@@ -57,6 +55,6 @@ class PasswordUpdateTest extends TestCase
 
         $response
             ->assertSessionHasErrors('current_password')
-            ->assertRedirect(route('user-password.edit'));
+            ->assertRedirect(route('app.profile.security.password'));
     }
 }

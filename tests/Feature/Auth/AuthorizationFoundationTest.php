@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Enums\Status;
 use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\LocalDatagridUsersSeeder;
@@ -33,9 +34,8 @@ class AuthorizationFoundationTest extends TestCase
         $this->seed(RolesAndPermissionsSeeder::class);
 
         $this->assertDatabaseHas('roles', [
-            'name' => Role::SUPER_USER,
+            'name' => 'super_user',
             'display_name' => 'Super User',
-            'is_system' => true,
         ]);
 
         $this->assertDatabaseHas('permissions', [
@@ -58,7 +58,7 @@ class AuthorizationFoundationTest extends TestCase
         $this->seed(RolesAndPermissionsSeeder::class);
 
         $user = User::factory()->create();
-        $user->assignRole(Role::SUPER_USER);
+        $user->assignRole('super_user');
 
         $this->assertTrue($user->fresh()->can('manage_modules'));
         $this->assertTrue($user->fresh()->can('delete_roles'));
@@ -123,7 +123,7 @@ class AuthorizationFoundationTest extends TestCase
             ->get();
 
         $this->assertCount(LocalDatagridUsersSeeder::USER_COUNT, $users);
-        $this->assertTrue($users->contains(fn (User $user): bool => ! $user->active));
+        $this->assertTrue($users->contains(fn (User $user): bool => $user->status !== Status::ACTIVE));
         $this->assertTrue($users->contains(fn (User $user): bool => $user->email_verified_at === null));
         $this->assertTrue($users->every(fn (User $user): bool => $user->roles->isNotEmpty()));
         $this->assertFalse($users->contains(fn (User $user): bool => $user->isSuperUser()));

@@ -5,13 +5,12 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Masters;
 
 use App\Definitions\GroupDefinition;
-use App\Definitions\GroupItemDefinition;
 use App\Scaffold\ScaffoldController;
 use App\Services\GroupService;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controllers\HasMiddleware;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class GroupController extends ScaffoldController implements HasMiddleware
 {
@@ -25,27 +24,18 @@ class GroupController extends ScaffoldController implements HasMiddleware
     }
 
     /**
-     * Override show to include group with items relation and items config
+     * Override show to include group with items relation.
      */
-    public function show(int|string $id): View|JsonResponse
+    public function show(int|string $id): Response
     {
+        $this->enforcePermission('view');
+
         $model = $this->findModel((int) $id);
         $model->load('items');
 
-        if (request()->expectsJson()) {
-            return response()->json([
-                'status' => 'success',
-                'data' => $model,
-            ]);
-        }
-
-        // Create GroupItemDefinition with explicit group ID for nested route generation
-        $itemsDefinition = new GroupItemDefinition((int) $id);
-        $itemsConfig = $itemsDefinition->toDataGridConfig();
-
-        return view($this->scaffold()->getShowView(), [
-            $this->getModelKey() => $model,
-            'itemsConfig' => $itemsConfig,
+        return Inertia::render($this->inertiaPage().'/show', [
+            $this->getModelKey() => $model->toArray(),
+            ...$this->getShowViewData($model),
         ]);
     }
 
