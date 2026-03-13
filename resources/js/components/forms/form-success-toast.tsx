@@ -1,33 +1,97 @@
-import { CircleCheckBigIcon, XIcon } from 'lucide-react';
+import {
+    AlertCircleIcon,
+    CircleCheckBigIcon,
+    InfoIcon,
+    XIcon,
+} from 'lucide-react';
+import type { ReactNode } from 'react';
 import { toast } from 'sonner';
 
-export type FormSuccessToastOptions = {
+export type AppToastVariant = 'success' | 'error' | 'info';
+
+export type AppToastOptions = {
     id?: string;
+    variant?: AppToastVariant;
     title?: string;
     description?: string;
     duration?: number;
 };
 
-function FormSuccessToastContent({
+/** @deprecated Use AppToastOptions instead */
+export type FormSuccessToastOptions = AppToastOptions;
+
+const VARIANT_STYLES: Record<
+    AppToastVariant,
+    { border: string; bg: string; text: string; icon: ReactNode }
+> = {
+    success: {
+        border: 'border-emerald-200/70 dark:border-emerald-500/20',
+        bg: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300',
+        text: '',
+        icon: <CircleCheckBigIcon className="size-4.5" />,
+    },
+    error: {
+        border: 'border-red-200/70 dark:border-red-500/20',
+        bg: 'bg-red-50 text-red-600 dark:bg-red-500/15 dark:text-red-300',
+        text: '',
+        icon: <AlertCircleIcon className="size-4.5" />,
+    },
+    info: {
+        border: 'border-blue-200/70 dark:border-blue-500/20',
+        bg: 'bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-300',
+        text: '',
+        icon: <InfoIcon className="size-4.5" />,
+    },
+};
+
+const VARIANT_DEFAULTS: Record<
+    AppToastVariant,
+    { title: string; description: string }
+> = {
+    success: {
+        title: 'Saved',
+        description: 'Your changes have been saved successfully.',
+    },
+    error: {
+        title: 'Error',
+        description: 'Something went wrong. Please try again.',
+    },
+    info: {
+        title: 'Info',
+        description: '',
+    },
+};
+
+function AppToastContent({
     toastId,
+    variant,
     title,
     description,
 }: {
     toastId: string | number;
+    variant: AppToastVariant;
     title: string;
     description: string;
 }) {
+    const styles = VARIANT_STYLES[variant];
+
     return (
-        <div className="pointer-events-auto flex w-[min(24rem,calc(100vw-2rem))] items-start gap-3 rounded-2xl border border-emerald-200/70 bg-background/95 p-3 shadow-lg ring-1 ring-foreground/5 backdrop-blur-sm dark:border-emerald-500/20 dark:bg-popover/95 dark:ring-white/5">
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300">
-                <CircleCheckBigIcon className="size-4.5" />
+        <div
+            className={`pointer-events-auto flex w-[min(24rem,calc(100vw-2rem))] items-start gap-3 rounded-2xl border bg-background/95 p-3 shadow-lg ring-1 ring-foreground/5 backdrop-blur-sm dark:bg-popover/95 dark:ring-white/5 ${styles.border}`}
+        >
+            <div
+                className={`flex size-10 shrink-0 items-center justify-center rounded-full ${styles.bg}`}
+            >
+                {styles.icon}
             </div>
 
             <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold text-foreground">{title}</p>
-                <p className="mt-1 text-sm leading-5 text-muted-foreground">
-                    {description}
-                </p>
+                {description ? (
+                    <p className="mt-1 text-sm leading-5 text-muted-foreground">
+                        {description}
+                    </p>
+                ) : null}
             </div>
 
             <button
@@ -42,18 +106,22 @@ function FormSuccessToastContent({
     );
 }
 
-export function showFormSuccessToast({
+export function showAppToast({
     id,
-    title = 'Saved',
-    description = 'Your changes have been saved successfully.',
+    variant = 'success',
+    title,
+    description,
     duration = 4000,
-}: FormSuccessToastOptions = {}) {
+}: AppToastOptions = {}) {
+    const defaults = VARIANT_DEFAULTS[variant];
+
     return toast.custom(
         (toastId) => (
-            <FormSuccessToastContent
+            <AppToastContent
                 toastId={toastId}
-                title={title}
-                description={description}
+                variant={variant}
+                title={title ?? defaults.title}
+                description={description ?? defaults.description}
             />
         ),
         {
@@ -63,3 +131,6 @@ export function showFormSuccessToast({
         },
     );
 }
+
+/** @deprecated Use showAppToast instead */
+export const showFormSuccessToast = showAppToast;

@@ -18,6 +18,8 @@ function InputOTP({
   size = "default",
   ...props
 }: InputOTPProps) {
+  const isInvalid = props["aria-invalid"] === true || props["aria-invalid"] === "true"
+
   const otpInputProps = {
     ...props,
     containerClassName: cn(
@@ -31,6 +33,7 @@ function InputOTP({
   return (
     <div
       data-slot="input-otp-root"
+      data-invalid={isInvalid || undefined}
       data-size={size}
       className="group/input-otp"
     >
@@ -44,7 +47,7 @@ function InputOTPGroup({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="input-otp-group"
       className={cn(
-        "flex items-center rounded-lg has-aria-invalid:border-destructive has-aria-invalid:ring-3 has-aria-invalid:ring-destructive/20 dark:has-aria-invalid:ring-destructive/40",
+        "flex items-center rounded-lg group-data-[invalid=true]/input-otp:ring-3 group-data-[invalid=true]/input-otp:ring-destructive/20 dark:group-data-[invalid=true]/input-otp:ring-destructive/40",
         className
       )}
       {...props}
@@ -67,7 +70,7 @@ function InputOTPSlot({
       data-slot="input-otp-slot"
       data-active={isActive}
       className={cn(
-        "relative flex size-8 items-center justify-center border-y border-r border-input text-sm transition-all outline-none first:rounded-l-lg first:border-l last:rounded-r-lg aria-invalid:border-destructive data-[active=true]:z-10 data-[active=true]:border-ring data-[active=true]:ring-3 data-[active=true]:ring-ring/50 data-[active=true]:aria-invalid:border-destructive data-[active=true]:aria-invalid:ring-destructive/20 group-data-[size=sm]/input-otp:h-7 group-data-[size=sm]/input-otp:text-xs group-data-[size=default]/input-otp:h-8 group-data-[size=comfortable]/input-otp:h-9 group-data-[size=comfortable]/input-otp:text-base dark:bg-input/30 dark:data-[active=true]:aria-invalid:ring-destructive/40",
+        "relative flex size-8 items-center justify-center border-y border-r border-input text-sm transition-all outline-none first:rounded-l-lg first:border-l last:rounded-r-lg group-data-[invalid=true]/input-otp:border-destructive data-[active=true]:z-10 data-[active=true]:border-ring data-[active=true]:ring-3 data-[active=true]:ring-ring/50 group-data-[invalid=true]/input-otp:data-[active=true]:border-destructive group-data-[invalid=true]/input-otp:data-[active=true]:ring-destructive/20 group-data-[size=sm]/input-otp:h-7 group-data-[size=sm]/input-otp:text-xs group-data-[size=default]/input-otp:h-8 group-data-[size=comfortable]/input-otp:h-9 group-data-[size=comfortable]/input-otp:text-base dark:bg-input/30 dark:group-data-[invalid=true]/input-otp:data-[active=true]:ring-destructive/40",
         className
       )}
       {...props}

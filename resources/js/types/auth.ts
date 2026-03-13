@@ -28,6 +28,13 @@ export type Auth = {
     };
 };
 
+export type FlashData = {
+    success?: string;
+    error?: string;
+    info?: string;
+    status?: string;
+};
+
 export type SharedData = {
     appName: string;
     auth: Auth;
@@ -36,6 +43,7 @@ export type SharedData = {
         items: InstalledModule[];
     };
     sidebarOpen: boolean;
+    flash: FlashData;
 };
 
 export type AuthenticatedSharedData = Omit<SharedData, 'auth'> & {

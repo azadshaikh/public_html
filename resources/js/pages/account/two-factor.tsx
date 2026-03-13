@@ -14,7 +14,8 @@ import {
 import { useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import { FormErrorSummary } from '@/components/forms/form-error-summary';
-import { showFormSuccessToast } from '@/components/forms/form-success-toast';
+import { showAppToast } from '@/components/forms/form-success-toast';
+import { suppressNextFlashToast } from '@/hooks/use-flash-toast';
 import PasswordInput from '@/components/password-input';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -28,8 +29,18 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
-import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
+import {
+    Field,
+    FieldDescription,
+    FieldError,
+    FieldGroup,
+    FieldLabel,
+} from '@/components/ui/field';
+import {
+    InputOTP,
+    InputOTPGroup,
+    InputOTPSlot,
+} from '@/components/ui/input-otp';
 import { useAppForm } from '@/hooks/use-app-form';
 import { useClipboard } from '@/hooks/use-clipboard';
 import AppLayout from '@/layouts/app-layout';
@@ -97,13 +108,7 @@ function StatusPill({
         muted: 'secondary',
     } as const;
 
-    return (
-        <Badge
-            variant={variants[tone]}
-        >
-            {children}
-        </Badge>
-    );
+    return <Badge variant={variants[tone]}>{children}</Badge>;
 }
 
 function SectionCard({
@@ -182,7 +187,10 @@ function RecoveryCodesDialog({
 
                 <div className="grid gap-3 rounded-xl border bg-muted/30 p-4 font-mono text-sm sm:grid-cols-2">
                     {codes.map((code) => (
-                        <div key={code} className="rounded-md bg-background px-4 py-3">
+                        <div
+                            key={code}
+                            className="rounded-md bg-background px-4 py-3"
+                        >
                             {code}
                         </div>
                     ))}
@@ -230,28 +238,27 @@ function PasswordActionDialog({
     form: ReturnType<typeof useAppForm<PasswordActionFormData>>;
     onSubmit: (event: FormEvent<HTMLFormElement>) => void;
 }) {
-    const config = action === 'regenerate'
-        ? {
-              title: 'Regenerate recovery codes',
-              description:
-                  'Enter your current password to generate a fresh set of backup codes.',
-              buttonLabel: 'Regenerate codes',
-          }
-        : {
-              title: 'Disable two-factor authentication',
-              description:
-                  'Enter your current password to remove the extra sign-in verification step.',
-              buttonLabel: 'Disable 2FA',
-          };
+    const config =
+        action === 'regenerate'
+            ? {
+                  title: 'Regenerate recovery codes',
+                  description:
+                      'Enter your current password to generate a fresh set of backup codes.',
+                  buttonLabel: 'Regenerate codes',
+              }
+            : {
+                  title: 'Disable two-factor authentication',
+                  description:
+                      'Enter your current password to remove the extra sign-in verification step.',
+                  buttonLabel: 'Disable 2FA',
+              };
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>{config.title}</DialogTitle>
-                    <DialogDescription>
-                        {config.description}
-                    </DialogDescription>
+                    <DialogDescription>{config.description}</DialogDescription>
                 </DialogHeader>
 
                 <form noValidate className="space-y-4" onSubmit={onSubmit}>
@@ -301,9 +308,7 @@ function PasswordActionDialog({
                         <Button
                             type="submit"
                             variant={
-                                action === 'disable'
-                                    ? 'destructive'
-                                    : 'default'
+                                action === 'disable' ? 'destructive' : 'default'
                             }
                             disabled={form.processing}
                         >
@@ -371,18 +376,21 @@ export default function TwoFactor({
     });
 
     const copiedSetupKey = copiedText === twoFactorSetupKey;
-    const status = twoFactorEnabled
-        ? <StatusPill tone="success">Enabled</StatusPill>
-        : twoFactorPending
-          ? <StatusPill tone="warning">Setup Pending</StatusPill>
-          : <StatusPill tone="muted">Not Enabled</StatusPill>;
+    const status = twoFactorEnabled ? (
+        <StatusPill tone="success">Enabled</StatusPill>
+    ) : twoFactorPending ? (
+        <StatusPill tone="warning">Setup Pending</StatusPill>
+    ) : (
+        <StatusPill tone="muted">Not Enabled</StatusPill>
+    );
 
     const handleStartSetup = () => {
         router.post(startTwoFactorSetup(), undefined, {
             preserveScroll: true,
             onStart: () => setStartingSetup(true),
             onSuccess: () => {
-                showFormSuccessToast({
+                suppressNextFlashToast();
+                showAppToast({
                     title: 'Setup started',
                     description:
                         'Scan the QR code and confirm with the code from your authenticator app.',
@@ -492,25 +500,34 @@ export default function TwoFactor({
                                                 Why enable it
                                             </h3>
                                             <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                                                Even if someone gets your password,
-                                                they still can&apos;t sign in
-                                                without the code from your
-                                                authenticator app.
+                                                Even if someone gets your
+                                                password, they still can&apos;t
+                                                sign in without the code from
+                                                your authenticator app.
                                             </p>
                                         </div>
 
                                         <ul className="space-y-2 text-sm text-foreground">
                                             <li className="flex items-start gap-2">
                                                 <CheckIcon className="mt-0.5 size-4 shrink-0 text-emerald-600" />
-                                                <span>Extra protection for password-based sign in.</span>
+                                                <span>
+                                                    Extra protection for
+                                                    password-based sign in.
+                                                </span>
                                             </li>
                                             <li className="flex items-start gap-2">
                                                 <CheckIcon className="mt-0.5 size-4 shrink-0 text-emerald-600" />
-                                                <span>Works with 1Password, Google Authenticator, and Authy.</span>
+                                                <span>
+                                                    Works with 1Password, Google
+                                                    Authenticator, and Authy.
+                                                </span>
                                             </li>
                                             <li className="flex items-start gap-2">
                                                 <CheckIcon className="mt-0.5 size-4 shrink-0 text-emerald-600" />
-                                                <span>Setup usually takes less than a minute.</span>
+                                                <span>
+                                                    Setup usually takes less
+                                                    than a minute.
+                                                </span>
                                             </li>
                                         </ul>
                                     </div>
@@ -536,10 +553,12 @@ export default function TwoFactor({
                                             </span>
                                             <div>
                                                 <p className="font-medium text-foreground">
-                                                    Add this account to your authenticator app
+                                                    Add this account to your
+                                                    authenticator app
                                                 </p>
                                                 <p className="text-muted-foreground">
-                                                    Scan a QR code or paste a setup key.
+                                                    Scan a QR code or paste a
+                                                    setup key.
                                                 </p>
                                             </div>
                                         </li>
@@ -549,10 +568,13 @@ export default function TwoFactor({
                                             </span>
                                             <div>
                                                 <p className="font-medium text-foreground">
-                                                    Confirm with the 6-digit code
+                                                    Confirm with the 6-digit
+                                                    code
                                                 </p>
                                                 <p className="text-muted-foreground">
-                                                    We&apos;ll then generate backup recovery codes for you.
+                                                    We&apos;ll then generate
+                                                    backup recovery codes for
+                                                    you.
                                                 </p>
                                             </div>
                                         </li>
@@ -579,7 +601,10 @@ export default function TwoFactor({
                                         Open your authenticator app
                                     </p>
                                     <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                                        Scan the QR code to add this account. If scanning isn&apos;t available, use the setup key instead. Then enter the current 6-digit code shown in your app.
+                                        Scan the QR code to add this account. If
+                                        scanning isn&apos;t available, use the
+                                        setup key instead. Then enter the
+                                        current 6-digit code shown in your app.
                                     </p>
                                 </div>
                             </div>
@@ -592,7 +617,8 @@ export default function TwoFactor({
                                         Scan with your app
                                     </h3>
                                     <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                                        Use your authenticator app camera to add this account instantly.
+                                        Use your authenticator app camera to add
+                                        this account instantly.
                                     </p>
                                 </div>
 
@@ -629,7 +655,9 @@ export default function TwoFactor({
                                                     type="button"
                                                     variant="outline"
                                                     size="icon-sm"
-                                                    disabled={!twoFactorSetupKey}
+                                                    disabled={
+                                                        !twoFactorSetupKey
+                                                    }
                                                     onClick={() => {
                                                         if (twoFactorSetupKey) {
                                                             void copy(
@@ -646,7 +674,8 @@ export default function TwoFactor({
                                                 </Button>
                                             </div>
                                             <FieldDescription>
-                                                Use this if your authenticator app can&apos;t scan QR codes.
+                                                Use this if your authenticator
+                                                app can&apos;t scan QR codes.
                                             </FieldDescription>
                                         </Field>
                                     </FieldGroup>
@@ -662,11 +691,16 @@ export default function TwoFactor({
                                             Confirm your code
                                         </h3>
                                         <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                                            Enter the current 6-digit code shown in your authenticator app to finish setup.
+                                            Enter the current 6-digit code shown
+                                            in your authenticator app to finish
+                                            setup.
                                         </p>
                                     </div>
 
-                                    <FormErrorSummary errors={confirmForm.errors} minMessages={2} />
+                                    <FormErrorSummary
+                                        errors={confirmForm.errors}
+                                        minMessages={2}
+                                    />
 
                                     <Field
                                         data-invalid={
@@ -763,7 +797,8 @@ export default function TwoFactor({
                                         </p>
                                         <p className="mt-1 text-sm text-muted-foreground">
                                             You&apos;ll be asked for a 6-digit
-                                            verification code each time you sign in.
+                                            verification code each time you sign
+                                            in.
                                         </p>
                                     </div>
                                 </div>

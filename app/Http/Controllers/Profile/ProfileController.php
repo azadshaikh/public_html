@@ -142,7 +142,7 @@ class ProfileController extends Controller
         ]);
     }
 
-    public function securitySocialLogins(Request $request): RedirectResponse|SymfonyRedirectResponse|View
+    public function securitySocialLogins(Request $request): RedirectResponse|SymfonyRedirectResponse|Response
     {
         $user = auth()->user();
         $connectedProviders = $this->getConnectedSocialProviders($user);
@@ -173,10 +173,15 @@ class ProfileController extends Controller
             ->reject(fn (array $provider): bool => $connectedProviderNames->contains($provider['key']))
             ->values();
 
-        return view('app.profile.security-social-logins', [
-            'page_title' => __('profile.social_logins'),
-            'user' => $user,
-            'connectedProviders' => $connectedProviders,
+        return Inertia::render('account/social-logins', [
+            'connectedProviders' => $connectedProviders
+                ->map(fn (UserProvider $provider): array => [
+                    'key' => strtolower((string) $provider->provider),
+                    'label' => $this->getSocialProviderLabel((string) $provider->provider),
+                    'connected_at' => $provider->created_at?->toIso8601String(),
+                    'connected_at_label' => $provider->created_at?->format('M d, Y H:i') ?? 'Recently',
+                ])
+                ->values(),
             'availableProviders' => $availableProviders,
         ]);
     }
@@ -536,7 +541,6 @@ class ProfileController extends Controller
             ->map(fn (string $provider): array => [
                 'key' => $provider,
                 'label' => $this->getSocialProviderLabel($provider),
-                'icon' => $provider === 'google' ? 'ri-google-fill' : 'ri-github-fill',
             ])
             ->values();
     }

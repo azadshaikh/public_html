@@ -82,6 +82,12 @@ class HandleInertiaRequests extends Middleware
             'navigation' => fn (): array => NavigationAggregator::getUnifiedByArea($request->user()),
             'modules' => $modules,
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            'flash' => fn (): array => array_filter([
+                'success' => $request->session()->get('success'),
+                'error' => $request->session()->get('error'),
+                'info' => $request->session()->get('info'),
+                'status' => $request->session()->get('status'),
+            ]),
         ];
     }
 }

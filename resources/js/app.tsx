@@ -5,6 +5,7 @@ import '../css/app.css';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { initializeTheme } from '@/hooks/use-appearance';
+import { initFlashToasts } from '@/hooks/use-flash-toast';
 import { resolveInertiaPage } from './lib/inertia-page-resolver';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
@@ -55,3 +56,6 @@ createInertiaApp({
 
 // This will set light / dark mode on load...
 initializeTheme();
+
+// Listen for server-side flash messages and show Sonner toasts.
+initFlashToasts();

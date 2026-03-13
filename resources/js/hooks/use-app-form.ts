@@ -7,8 +7,9 @@ import type {
 } from '@inertiajs/core';
 import { router, useForm } from '@inertiajs/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { FormSuccessToastOptions } from '@/components/forms/form-success-toast';
-import { showFormSuccessToast } from '@/components/forms/form-success-toast';
+import type { AppToastOptions } from '@/components/forms/form-success-toast';
+import { showAppToast } from '@/components/forms/form-success-toast';
+import { suppressNextFlashToast } from '@/hooks/use-flash-toast';
 import { useDirtyFormGuard } from '@/hooks/use-dirty-form-guard';
 import {
     normalizeFormErrorMessage,
@@ -36,7 +37,7 @@ type UseAppFormOptions<T extends FormDataType<T>> = {
 
 type AppFormSubmitOptions = UseFormSubmitOptions & {
     setDefaultsOnSuccess?: boolean;
-    successToast?: boolean | string | FormSuccessToastOptions;
+    successToast?: boolean | string | AppToastOptions;
 };
 
 type AppFormFieldName<T extends FormDataType<T>> = Extract<keyof T, string> &
@@ -245,7 +246,7 @@ export function useAppForm<T extends FormDataType<T>>({
     const resolveSuccessToast = useCallback(
         (
             successToast: AppFormSubmitOptions['successToast'],
-        ): FormSuccessToastOptions | null => {
+        ): AppToastOptions | null => {
             if (successToast === undefined || successToast === false) {
                 return null;
             }
@@ -305,7 +306,8 @@ export function useAppForm<T extends FormDataType<T>>({
                         resolveSuccessToast(successToast);
 
                     if (resolvedSuccessToast !== null) {
-                        showFormSuccessToast(resolvedSuccessToast);
+                        suppressNextFlashToast();
+                        showAppToast(resolvedSuccessToast);
                     }
                 },
                 onFinish: (...args) => {
