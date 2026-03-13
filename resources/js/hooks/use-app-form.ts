@@ -7,8 +7,11 @@ import type {
 } from '@inertiajs/core';
 import { router, useForm } from '@inertiajs/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { FormSuccessToastOptions } from '@/components/forms/form-success-toast';
+import { showFormSuccessToast } from '@/components/forms/form-success-toast';
 import { useDirtyFormGuard } from '@/hooks/use-dirty-form-guard';
 import {
+    normalizeFormErrorMessage,
     validateFormData,
 } from '@/lib/forms';
 import type {
@@ -33,6 +36,7 @@ type UseAppFormOptions<T extends FormDataType<T>> = {
 
 type AppFormSubmitOptions = UseFormSubmitOptions & {
     setDefaultsOnSuccess?: boolean;
+    successToast?: boolean | string | FormSuccessToastOptions;
 };
 
 type AppFormFieldName<T extends FormDataType<T>> = Extract<keyof T, string> &
@@ -148,7 +152,18 @@ export function useAppForm<T extends FormDataType<T>>({
     const errors = useMemo(
         () =>
             ({
-                ...(inertiaForm.errors as FormDataErrors<T>),
+                ...Object.fromEntries(
+                    Object.entries(inertiaForm.errors as FormDataErrors<T>).map(
+                        ([field, message]) => [
+                            field,
+                            normalizeFormErrorMessage(
+                                typeof message === 'string'
+                                    ? message
+                                    : undefined,
+                            ),
+                        ],
+                    ),
+                ),
                 ...clientErrors,
             }) as FormDataErrors<T>,
         [clientErrors, inertiaForm.errors],
@@ -227,6 +242,35 @@ export function useAppForm<T extends FormDataType<T>>({
         return Object.keys(nextErrors).length === 0;
     }, [inertiaForm.data, rules]);
 
+    const resolveSuccessToast = useCallback(
+        (
+            successToast: AppFormSubmitOptions['successToast'],
+        ): FormSuccessToastOptions | null => {
+            if (successToast === undefined || successToast === false) {
+                return null;
+            }
+
+            if (successToast === true) {
+                return {
+                    id: rememberKey,
+                };
+            }
+
+            if (typeof successToast === 'string') {
+                return {
+                    id: rememberKey,
+                    description: successToast,
+                };
+            }
+
+            return {
+                id: rememberKey,
+                ...successToast,
+            };
+        },
+        [rememberKey],
+    );
+
     const submit = useCallback(
         (action: UrlMethodPair, options: AppFormSubmitOptions = {}) => {
             if (!validate()) {
@@ -235,6 +279,7 @@ export function useAppForm<T extends FormDataType<T>>({
 
             const {
                 setDefaultsOnSuccess = false,
+                successToast,
                 onSuccess,
                 onFinish,
                 ...submitOptions
@@ -255,6 +300,13 @@ export function useAppForm<T extends FormDataType<T>>({
                     }
 
                     onSuccess?.(...args);
+
+                    const resolvedSuccessToast =
+                        resolveSuccessToast(successToast);
+
+                    if (resolvedSuccessToast !== null) {
+                        showFormSuccessToast(resolvedSuccessToast);
+                    }
                 },
                 onFinish: (...args) => {
                     isSubmittingRef.current = false;
@@ -264,7 +316,14 @@ export function useAppForm<T extends FormDataType<T>>({
 
             return true;
         },
-        [clearRememberedState, inertiaForm, resetValidationState, setDefaults, validate],
+        [
+            clearRememberedState,
+            inertiaForm,
+            resetValidationState,
+            resolveSuccessToast,
+            setDefaults,
+            validate,
+        ],
     );
 
     const error = useCallback(

@@ -43,12 +43,3 @@ export type AuthenticatedSharedData = Omit<SharedData, 'auth'> & {
         user: User;
     };
 };
-
-export type TwoFactorSetupData = {
-    svg: string;
-    url: string;
-};
-
-export type TwoFactorSecretKey = {
-    secretKey: string;
-};

@@ -1,4 +1,3 @@
-import { Transition } from '@headlessui/react';
 import { SaveIcon, UploadIcon } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
@@ -137,6 +136,11 @@ export default function Profile({ profile, showUsername }: ProfilePageProps) {
         form.submit(ProfileController.update(), {
             preserveScroll: true,
             setDefaultsOnSuccess: true,
+            successToast: {
+                title: 'Profile updated',
+                description:
+                    'Your profile details have been saved successfully.',
+            },
             onSuccess: () => {
                 if (temporaryPreviewUrlRef.current !== null) {
                     URL.revokeObjectURL(temporaryPreviewUrlRef.current);
@@ -411,27 +415,11 @@ export default function Profile({ profile, showUsername }: ProfilePageProps) {
                             {form.processing ? 'Updating...' : 'Update Profile'}
                         </Button>
 
-                        <div className="flex min-h-5 items-center justify-center">
-                            {form.isDirty && !form.processing ? (
-                                <p className="text-center text-sm text-muted-foreground">
-                                    You have unsaved changes.
-                                </p>
-                            ) : (
-                                <Transition
-                                    show={form.recentlySuccessful}
-                                    enter="transition ease-out duration-200"
-                                    enterFrom="opacity-0 translate-y-1"
-                                    enterTo="opacity-100 translate-y-0"
-                                    leave="transition ease-in duration-150"
-                                    leaveFrom="opacity-100 translate-y-0"
-                                    leaveTo="opacity-0 translate-y-1"
-                                >
-                                    <p className="text-center text-sm text-muted-foreground">
-                                        Profile updated.
-                                    </p>
-                                </Transition>
-                            )}
-                        </div>
+                        {form.isDirty && !form.processing ? (
+                            <p className="text-center text-sm text-muted-foreground">
+                                You have unsaved changes.
+                            </p>
+                        ) : null}
                     </div>
                 </form>
             </div>

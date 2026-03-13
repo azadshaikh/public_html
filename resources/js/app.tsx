@@ -2,6 +2,7 @@ import { createInertiaApp } from '@inertiajs/react';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import '../css/app.css';
+import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { initializeTheme } from '@/hooks/use-appearance';
 import { resolveInertiaPage } from './lib/inertia-page-resolver';
@@ -33,6 +34,12 @@ createInertiaApp({
             <StrictMode>
                 <TooltipProvider>
                     <App {...props} />
+                    <Toaster
+                        position="top-right"
+                        closeButton={false}
+                        expand={false}
+                        richColors={false}
+                    />
                 </TooltipProvider>
             </StrictMode>
         );

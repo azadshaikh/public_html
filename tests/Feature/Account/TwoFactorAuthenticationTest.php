@@ -6,11 +6,37 @@ use App\Enums\Status;
 use App\Models\User;
 use App\Services\TwoFactorAuthenticationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class TwoFactorAuthenticationTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_two_factor_page_is_displayed_with_pending_setup_props(): void
+    {
+        $user = User::factory()->create([
+            'first_name' => 'Test',
+            'status' => Status::ACTIVE,
+            'two_factor_secret' => 'JBSWY3DPEHPK3PXP',
+            'two_factor_confirmed_at' => null,
+        ]);
+
+        $response = $this
+            ->actingAs($user)
+            ->get(route('app.profile.security.two-factor'));
+
+        $response
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->component('account/two-factor')
+                ->where('twoFactorEnabled', false)
+                ->where('twoFactorPending', true)
+                ->where('twoFactorSetupKey', 'JBSWY3DPEHPK3PXP')
+                ->has('twoFactorSetupUrl')
+                ->has('twoFactorQrCodeDataUri')
+                ->where('twoFactorRecoveryCodes', []));
+    }
 
     public function test_authenticated_user_can_start_two_factor_setup(): void
     {

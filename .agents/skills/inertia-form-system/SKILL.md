@@ -24,7 +24,9 @@ Use this skill for application forms that need consistent client + server valida
 - Put `data-invalid` on `Field` and `aria-invalid` on the actual control.
 - Use `form.error('field')` and `form.invalid('field')` so client and server errors render the same way.
 - Use `form.touch('field')` on blur and `form.setField('field', value)` on change.
+- Use `FormErrorSummary` intentionally. Keep it for larger forms or multi-field saves, but for compact forms with one or two fields prefer `minMessages={2}` or omit the summary entirely so the field-level error stays the focus.
 - Submit with `form.submit(action, { setDefaultsOnSuccess: true })` when a successful save should clear dirty state.
+- Prefer `successToast` on `form.submit(...)` for save confirmations instead of inline "Saved" text. This project now uses a shared Sonner-based success toast for form success feedback.
 - Exclude non-serializable draft values such as `File` inputs with `dontRemember`.
 
 ## Pattern
@@ -46,10 +48,14 @@ const form = useAppForm({
 const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
-    form.submit(UserController.update(user.id), {
-        preserveScroll: true,
-        setDefaultsOnSuccess: true,
-    })
+form.submit(UserController.update(user.id), {
+    preserveScroll: true,
+    setDefaultsOnSuccess: true,
+    successToast: {
+        title: 'User updated',
+        description: 'The user details were saved successfully.',
+    },
+})
 }
 
 <form noValidate onSubmit={handleSubmit}>
@@ -68,6 +74,22 @@ const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     </Field>
 </form>
 ```
+
+## Error summary guidance
+
+For dense forms with several inputs:
+
+```tsx
+<FormErrorSummary errors={form.errors} />
+```
+
+For compact forms where a summary alert feels repetitive:
+
+```tsx
+<FormErrorSummary errors={form.errors} minMessages={2} />
+```
+
+If the form is extremely small and the field-level error is enough, skip the summary completely.
 
 ## When raw Inertia `<Form>` is still fine
 

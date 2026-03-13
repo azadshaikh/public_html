@@ -20,6 +20,10 @@ export type FormValidationRules<T extends Record<string, unknown>> = Partial<{
         | Array<FormFieldValidator<T, K>>;
 }>;
 
+const knownServerErrorMessages: Record<string, string> = {
+    'auth.invalid_two_factor_code': 'The authentication code is invalid.',
+};
+
 function toValidatorArray<T extends Record<string, unknown>, K extends FormFieldName<T>>(
     validator:
         | FormFieldValidator<T, K>
@@ -73,6 +77,16 @@ export function validateFormData<T extends FormDataType<T>>(
     });
 
     return errors;
+}
+
+export function normalizeFormErrorMessage(
+    message: string | undefined,
+): string | undefined {
+    if (message === undefined) {
+        return undefined;
+    }
+
+    return knownServerErrorMessages[message] ?? message;
 }
 
 export const formValidators = {

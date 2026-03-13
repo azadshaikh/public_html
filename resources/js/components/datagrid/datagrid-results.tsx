@@ -537,7 +537,7 @@ function CardGridView<T>({
         <div
             ref={gridRef}
             className={cn(
-                'grid gap-4 p-4 md:grid-cols-2 xl:grid-cols-3',
+                'grid gap-3 p-4 md:grid-cols-2 xl:grid-cols-3',
                 cardGridClassName,
             )}
         >
@@ -557,15 +557,15 @@ function CardGridView<T>({
                         key={rowKey}
                         className={cn(
                             'overflow-hidden',
-                            cardGridClassName && 'gap-0 py-0',
+                            cardGridClassName ? 'gap-0 py-0' : 'gap-3 py-3',
                             isSelected &&
                                 'border-primary/40 bg-primary/5 ring-2 ring-primary',
                         )}
                     >
                         {renderCardHeader ? (
                             <>
-                                <CardHeader className="border-b pt-4">
-                                    <div className="flex min-w-0 items-start gap-3">
+                                <CardHeader className="border-b pb-3">
+                                    <div className="flex min-w-0 items-center gap-3">
                                         {hasSelection ? (
                                             <Checkbox
                                                 checked={isSelected}
@@ -591,7 +591,7 @@ function CardGridView<T>({
                                         </CardAction>
                                     ) : null}
                                 </CardHeader>
-                                <CardContent className="flex flex-col gap-4 p-4">
+                                <CardContent className="flex flex-col gap-3 p-4 pt-0">
                                     {renderCard(row)}
                                 </CardContent>
                             </>
@@ -621,8 +621,8 @@ function CardGridView<T>({
                                 {renderCard(row)}
                             </CardContent>
                         ) : (
-                            <CardContent className="flex flex-col gap-4 p-4">
-                                <div className="flex items-start justify-between gap-3">
+                            <CardContent className="flex flex-col gap-3 p-4">
+                                <div className="flex items-center justify-between gap-3">
                                     {hasSelection ? (
                                         <Checkbox
                                             checked={isSelected}
@@ -635,9 +635,7 @@ function CardGridView<T>({
                                                 )
                                             }
                                         />
-                                    ) : (
-                                        <div />
-                                    )}
+                                    ) : null}
                                     {actions.length > 0 ? (
                                         <DatagridActionMenu actions={actions} />
                                     ) : null}
@@ -654,13 +652,13 @@ function CardGridView<T>({
                 <Card
                     className={cn(
                         'overflow-hidden',
-                        cardGridClassName && 'gap-0 py-0',
+                        cardGridClassName ? 'gap-0 py-0' : 'gap-3 py-3',
                     )}
                 >
                     <CardContent
                         className={cn(
-                            'flex items-center justify-center',
-                            cardGridClassName ? 'aspect-square p-0' : 'p-8',
+                            'flex flex-1 items-center justify-center',
+                            cardGridClassName ? 'aspect-square p-0' : 'p-6',
                         )}
                     >
                         <button

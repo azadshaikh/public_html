@@ -2,28 +2,40 @@
 
 import * as React from "react"
 import { OTPInput, OTPInputContext } from "input-otp"
+import type { OTPInputProps } from "input-otp"
 
 import { cn } from "@/lib/utils"
 import { MinusIcon } from "lucide-react"
 
+type InputOTPProps = Omit<OTPInputProps, "size"> & {
+  containerClassName?: string
+  size?: "sm" | "default" | "comfortable"
+}
+
 function InputOTP({
   className,
   containerClassName,
+  size = "default",
   ...props
-}: React.ComponentProps<typeof OTPInput> & {
-  containerClassName?: string
-}) {
+}: InputOTPProps) {
+  const otpInputProps = {
+    ...props,
+    containerClassName: cn(
+      "cn-input-otp flex items-center has-disabled:opacity-50",
+      containerClassName
+    ),
+    spellCheck: false,
+    className: cn("disabled:cursor-not-allowed", className),
+  } as OTPInputProps
+
   return (
-    <OTPInput
-      data-slot="input-otp"
-      containerClassName={cn(
-        "cn-input-otp flex items-center has-disabled:opacity-50",
-        containerClassName
-      )}
-      spellCheck={false}
-      className={cn("disabled:cursor-not-allowed", className)}
-      {...props}
-    />
+    <div
+      data-slot="input-otp-root"
+      data-size={size}
+      className="group/input-otp"
+    >
+      <OTPInput {...otpInputProps} />
+    </div>
   )
 }
 
@@ -55,7 +67,7 @@ function InputOTPSlot({
       data-slot="input-otp-slot"
       data-active={isActive}
       className={cn(
-        "relative flex size-8 items-center justify-center border-y border-r border-input text-sm transition-all outline-none first:rounded-l-lg first:border-l last:rounded-r-lg aria-invalid:border-destructive data-[active=true]:z-10 data-[active=true]:border-ring data-[active=true]:ring-3 data-[active=true]:ring-ring/50 data-[active=true]:aria-invalid:border-destructive data-[active=true]:aria-invalid:ring-destructive/20 dark:bg-input/30 dark:data-[active=true]:aria-invalid:ring-destructive/40",
+        "relative flex size-8 items-center justify-center border-y border-r border-input text-sm transition-all outline-none first:rounded-l-lg first:border-l last:rounded-r-lg aria-invalid:border-destructive data-[active=true]:z-10 data-[active=true]:border-ring data-[active=true]:ring-3 data-[active=true]:ring-ring/50 data-[active=true]:aria-invalid:border-destructive data-[active=true]:aria-invalid:ring-destructive/20 group-data-[size=sm]/input-otp:h-7 group-data-[size=sm]/input-otp:text-xs group-data-[size=default]/input-otp:h-8 group-data-[size=comfortable]/input-otp:h-9 group-data-[size=comfortable]/input-otp:text-base dark:bg-input/30 dark:data-[active=true]:aria-invalid:ring-destructive/40",
         className
       )}
       {...props}

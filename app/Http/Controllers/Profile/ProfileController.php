@@ -135,6 +135,7 @@ class ProfileController extends Controller
         return Inertia::render('account/two-factor', [
             'twoFactorEnabled' => $twoFactorEnabled,
             'twoFactorPending' => $twoFactorPending,
+            'twoFactorSetupKey' => $twoFactorPending ? $user->two_factor_secret : null,
             'twoFactorSetupUrl' => $twoFactorSetupUrl,
             'twoFactorQrCodeDataUri' => $twoFactorQrCodeDataUri,
             'twoFactorRecoveryCodes' => $twoFactorRecoveryCodes,
