@@ -14,6 +14,7 @@ use App\Services\TwoFactorAuthenticationService;
 use App\Services\UserService;
 use App\Traits\ActivityTrait;
 use App\Traits\HasAlerts;
+use Carbon\CarbonInterface;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -223,16 +224,30 @@ class ProfileController extends Controller
             ->with('success', __('profile.social_provider_disconnected', ['provider' => $this->getSocialProviderLabel($provider)]));
     }
 
-    public function securitySessions(): View
+    public function securitySessions(): Response
     {
         $user = auth()->user();
         $currentSessionId = request()->session()->getId();
-        $sessions = $this->authService->getUserSessions($user, $currentSessionId);
+        $sessions = collect($this->authService->getUserSessions($user, $currentSessionId))
+            ->map(function (array $session): array {
+                $lastActiveAt = $session['last_active_at'] ?? null;
+
+                return [
+                    'id' => (string) ($session['id'] ?? ''),
+                    'ip_address' => (string) ($session['ip_address'] ?? 'Unknown'),
+                    'is_current' => (bool) ($session['is_current'] ?? false),
+                    'device' => (string) ($session['device'] ?? 'Desktop'),
+                    'platform' => (string) ($session['platform'] ?? 'Unknown'),
+                    'browser' => (string) ($session['browser'] ?? 'Unknown browser'),
+                    'last_active_label' => $lastActiveAt instanceof CarbonInterface
+                        ? $lastActiveAt->diffForHumans()
+                        : 'Just now',
+                ];
+            })
+            ->values();
         $sessionManagementSupported = $this->authService->isSessionManagementSupported();
 
-        return view('app.profile.security-sessions', [
-            'page_title' => __('profile.active_sessions'),
-            'user' => $user,
+        return Inertia::render('account/sessions', [
             'sessions' => $sessions,
             'sessionManagementSupported' => $sessionManagementSupported,
         ]);
