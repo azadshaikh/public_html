@@ -1,7 +1,7 @@
 import { Link, usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
-import { cn } from '@/lib/utils';
 import type { BreadcrumbItem, SettingsNavItem } from '@/types';
 
 type SettingsLayoutProps = {
@@ -21,36 +21,29 @@ export default function SettingsLayout({
 }: SettingsLayoutProps) {
     const { url } = usePage();
 
+    // Inertia url is relative (e.g., /admin/settings/general), but href might be absolute.
+    const pathname = url.split('?')[0];
+    const activeSlug =
+        settingsNav.find((item) => {
+            const itemPath = item.href.replace(/^https?:\/\/[^/]+/, '');
+            return pathname === itemPath || pathname.startsWith(`${itemPath}/`);
+        })?.slug ?? settingsNav[0]?.slug;
+
     return (
         <AppLayout breadcrumbs={breadcrumbs} title={title} description={description}>
-            <div className="flex flex-col gap-6 md:flex-row">
-                <nav className="w-full shrink-0 md:w-48 lg:w-56">
-                    <ul className="flex flex-row gap-1 overflow-x-auto md:flex-col md:overflow-visible">
-                        {settingsNav.map((item) => {
-                            const isActive = url.startsWith(item.href);
+            <Tabs value={activeSlug} orientation="vertical" className="flex w-full flex-col md:flex-row md:items-start gap-6">
+                <TabsList className="w-full shrink-0 md:w-48 lg:w-56">
+                    {settingsNav.map((item) => (
+                        <TabsTrigger key={item.slug} value={item.slug} asChild>
+                            <Link href={item.href} preserveScroll>
+                                {item.label}
+                            </Link>
+                        </TabsTrigger>
+                    ))}
+                </TabsList>
 
-                            return (
-                                <li key={item.slug}>
-                                    <Link
-                                        href={item.href}
-                                        preserveScroll
-                                        className={cn(
-                                            'block whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium transition-colors',
-                                            isActive
-                                                ? 'bg-accent text-accent-foreground'
-                                                : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
-                                        )}
-                                    >
-                                        {item.label}
-                                    </Link>
-                                </li>
-                            );
-                        })}
-                    </ul>
-                </nav>
-
-                <div className="min-w-0 flex-1">{children}</div>
-            </div>
+                <div className="min-w-0 flex-1 w-full">{children}</div>
+            </Tabs>
         </AppLayout>
     );
 }
