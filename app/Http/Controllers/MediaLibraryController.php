@@ -12,6 +12,7 @@ use App\Services\MediaService;
 use App\Services\MediaTrashService;
 use App\Traits\ActivityTrait;
 use Exception;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -41,7 +42,7 @@ class MediaLibraryController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            new Middleware('permission:view_media', only: ['index']),
+            new Middleware('permission:view_media', only: ['index', 'refreshData']),
             new Middleware('permission:delete_media', only: ['bulkAction']),
         ];
     }
@@ -233,6 +234,50 @@ class MediaLibraryController extends Controller implements HasMiddleware
 
             return back()->with('error', 'Failed to perform bulk action');
         }
+    }
+
+    /**
+     * AJAX endpoint to refresh media data, statistics, and storage info
+     */
+    public function refreshData(Request $request): JsonResponse
+    {
+        $status = in_array($request->input('status'), ['all', 'trash'], true) ? $request->input('status') : 'all';
+        $scaffold = $this->scaffold();
+
+        $query = CustomMedia::query();
+        if ($status === 'trash') {
+            $query->onlyTrashed();
+        } else {
+            $query->withoutTrashed();
+        }
+
+        $this->applyFilters($query, $request);
+
+        if ($search = $request->input('search', '')) {
+            $query->where(function ($q) use ($search): void {
+                $q->where('name', 'ilike', sprintf('%%%s%%', $search))
+                    ->orWhere('file_name', 'ilike', sprintf('%%%s%%', $search));
+            });
+        }
+
+        $sort = $request->input('sort', 'created_at');
+        $direction = $request->input('direction', 'desc');
+        $actualSortColumn = $scaffold->getActualSortColumn($sort) ?? 'created_at';
+        $query->with('owner')->orderBy($actualSortColumn, $direction);
+
+        $perPage = (int) $request->input('per_page', $scaffold->getPerPage());
+        $paginator = $query->paginate($perPage)->onEachSide(1)->withQueryString();
+
+        $items = $paginator->through(fn ($media): array => (new MediaLibraryResource($media))->toArray($request));
+
+        return response()->json([
+            'media' => $items,
+            'statistics' => [
+                'total' => CustomMedia::withoutTrashed()->count(),
+                'trash' => CustomMedia::onlyTrashed()->count(),
+            ],
+            'storageData' => $this->media->getUsedStorageSize(),
+        ]);
     }
 
     /**

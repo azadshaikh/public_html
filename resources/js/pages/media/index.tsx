@@ -63,6 +63,11 @@ function isImageMimeType(mimeType: string): boolean {
     return mimeType.startsWith('image/');
 }
 
+function getFileExtension(fileName: string): string {
+    const ext = fileName.split('.').pop();
+    return ext ? ext.toUpperCase() : '?';
+}
+
 // =========================================================================
 // PAGE COMPONENT
 // =========================================================================
@@ -393,73 +398,64 @@ export default function MediaIndex({
                     }}
                     perPage={{
                         value: filters.per_page,
-                        options: [12, 24, 48, 96],
+                        options: [24, 48, 96],
                     }}
                     view={{
                         value: filters.view,
                         storageKey: 'media-library-datagrid-view',
                     }}
+                    cardGridClassName="grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-3 p-3"
                     renderCard={(item) => (
                         <button
                             type="button"
                             onClick={() => openDetail(item.id)}
-                            className="flex w-full flex-col gap-3 text-left"
+                            className="group relative aspect-square w-full overflow-hidden bg-muted"
                         >
-                            {/* Thumbnail preview */}
-                            <div className="relative aspect-square overflow-hidden rounded-lg bg-muted">
-                                {item.thumbnail_url &&
-                                isImageMimeType(item.mime_type) ? (
-                                    <img
-                                        src={item.thumbnail_url}
-                                        alt={item.alt_text || item.name}
-                                        className="size-full object-cover"
-                                    />
-                                ) : (
-                                    <div className="flex size-full items-center justify-center">
-                                        <FileIcon className="size-12 text-muted-foreground/50" />
-                                    </div>
-                                )}
-                                {item.is_processing && (
-                                    <div className="absolute inset-0 flex items-center justify-center bg-background/60">
-                                        <div className="flex flex-col items-center gap-1">
-                                            <div className="size-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                                            <span className="text-xs font-medium text-primary">
-                                                Optimizing...
-                                            </span>
-                                        </div>
-                                    </div>
-                                )}
-                                {item.is_trashed && (
-                                    <div className="absolute top-2 left-2">
-                                        <Badge
-                                            variant="destructive"
-                                            className="text-xs"
-                                        >
-                                            Trashed
-                                        </Badge>
-                                    </div>
-                                )}
+                            {/* Thumbnail / file icon */}
+                            {item.thumbnail_url &&
+                            isImageMimeType(item.mime_type) ? (
+                                <img
+                                    src={item.thumbnail_url}
+                                    alt={item.alt_text || item.name}
+                                    className="size-full object-cover transition-transform duration-200 group-hover:scale-105"
+                                />
+                            ) : (
+                                <div className="flex size-full items-center justify-center">
+                                    <FileIcon className="size-10 text-muted-foreground/40" />
+                                </div>
+                            )}
+
+                            {/* Optimizing overlay */}
+                            {item.is_processing && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-background/60">
+                                    <Badge
+                                        variant="secondary"
+                                        className="gap-1 text-xs"
+                                    >
+                                        <div className="size-3 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                                        Optimizing
+                                    </Badge>
+                                </div>
+                            )}
+
+                            {/* Type badge (bottom-left) */}
+                            <div className="absolute bottom-0 left-0">
+                                <span className="inline-block rounded-tr-md bg-black/60 px-1.5 py-0.5 text-[10px] font-bold text-white uppercase">
+                                    {getFileExtension(item.file_name)}
+                                </span>
                             </div>
 
-                            {/* File info */}
-                            <div className="space-y-1">
-                                <p className="truncate text-sm font-medium text-foreground">
-                                    {item.file_name}
-                                </p>
-                                <div className="flex items-center gap-2">
+                            {/* Trashed badge */}
+                            {item.is_trashed && (
+                                <div className="absolute top-1 right-1">
                                     <Badge
-                                        variant={getMimeBadgeVariant(
-                                            item.mime_type,
-                                        )}
-                                        className="text-xs"
+                                        variant="destructive"
+                                        className="text-[10px] leading-none"
                                     >
-                                        {item.mime_type_label}
+                                        Trash
                                     </Badge>
-                                    <span className="text-xs text-muted-foreground">
-                                        {item.human_readable_size}
-                                    </span>
                                 </div>
-                            </div>
+                            )}
                         </button>
                     )}
                     empty={{

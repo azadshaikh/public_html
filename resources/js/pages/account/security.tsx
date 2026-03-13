@@ -1,24 +1,33 @@
 import { Link } from '@inertiajs/react';
 import {
     ChevronRightIcon,
-    KeyRoundIcon,
-    LaptopIcon,
-    LinkIcon,
+    Link2Icon,
+    LockKeyholeIcon,
     ShieldCheckIcon,
+    SmartphoneIcon,
 } from 'lucide-react';
-import Heading from '@/components/heading';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
-import AccountLayout from '@/layouts/account/layout';
 import AppLayout from '@/layouts/app-layout';
+import { cn } from '@/lib/utils';
+import { dashboard } from '@/routes';
+import { profile as profileRoute } from '@/routes/app';
 import { security as securityRoute } from '@/routes/app/profile';
 import {
     password as passwordRoute,
+    sessions as sessionsRoute,
+    socialLogins as socialLoginsRoute,
     twoFactor as twoFactorRoute,
 } from '@/routes/app/profile/security';
 import type { BreadcrumbItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
+    {
+        title: 'Dashboard',
+        href: dashboard(),
+    },
+    {
+        title: 'Profile',
+        href: profileRoute(),
+    },
     {
         title: 'Security',
         href: securityRoute(),
@@ -35,6 +44,72 @@ type SecurityProps = {
     hasPassword: boolean;
 };
 
+type SecurityCard = {
+    title: string;
+    description: string;
+    href: string;
+    icon: typeof LockKeyholeIcon;
+    status?: {
+        label: string;
+        className: string;
+    };
+};
+
+function SecurityStatus({
+    label,
+    className,
+}: {
+    label: string;
+    className: string;
+}) {
+    return (
+        <span
+            className={cn(
+                'inline-flex h-5 items-center rounded-full px-2 text-[11px] font-semibold',
+                className,
+            )}
+        >
+            {label}
+        </span>
+    );
+}
+
+function SecurityCardLink({
+    title,
+    description,
+    href,
+    icon: Icon,
+    status,
+}: SecurityCard) {
+    return (
+        <Link
+            href={href}
+            className="group block rounded-xl border bg-card transition-all duration-150 hover:-translate-y-0.5 hover:border-foreground/20 hover:shadow-[0_14px_30px_-22px_rgba(15,23,42,0.4)]"
+        >
+            <div className="flex items-start justify-between gap-4 px-6 py-5">
+                <div className="min-w-0 flex-1">
+                    <h2 className="flex items-center gap-2 text-[1.05rem] font-semibold text-foreground">
+                        <Icon className="size-[18px] shrink-0 text-foreground" />
+                        <span>{title}</span>
+                    </h2>
+
+                    <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                        {description}
+                    </p>
+
+                    {status ? (
+                        <div className="mt-4">
+                            <SecurityStatus {...status} />
+                        </div>
+                    ) : null}
+                </div>
+
+                <ChevronRightIcon className="mt-1 size-5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+            </div>
+        </Link>
+    );
+}
+
 export default function Security({
     twoFactorEnabled,
     twoFactorPending,
@@ -44,109 +119,84 @@ export default function Security({
     sessionManagementSupported,
     hasPassword,
 }: SecurityProps) {
-    const securityItems = [
+    const securityCards: SecurityCard[] = [
         {
-            title: 'Password',
+            title: 'Password & Security',
             description: hasPassword
-                ? 'Change your account password'
-                : 'Set up a password for your account',
-            icon: <KeyRoundIcon className="size-5" />,
-            href: passwordRoute(),
-            status: hasPassword ? (
-                <Badge variant="default">Set</Badge>
-            ) : (
-                <Badge variant="destructive">Not set</Badge>
-            ),
+                ? 'Strengthen your account by using a strong password.'
+                : 'Set a password to secure your account and sign-in options.',
+            href: passwordRoute().url,
+            icon: LockKeyholeIcon,
         },
         {
-            title: 'Two-Factor Authentication',
-            description: 'Add an extra layer of security to your account',
-            icon: <ShieldCheckIcon className="size-5" />,
-            href: twoFactorRoute(),
-            status: twoFactorEnabled ? (
-                <Badge variant="default">Enabled</Badge>
-            ) : twoFactorPending ? (
-                <Badge variant="secondary">Pending Setup</Badge>
-            ) : (
-                <Badge variant="outline">Disabled</Badge>
-            ),
+            title: 'Two-Factor Authentication (2FA)',
+            description:
+                'Manage two-factor authentication and recovery codes.',
+            href: twoFactorRoute().url,
+            icon: ShieldCheckIcon,
+            status: twoFactorEnabled
+                ? {
+                      label: 'Enabled',
+                      className:
+                          'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300',
+                  }
+                : twoFactorPending
+                  ? {
+                        label: 'Setup Pending',
+                        className:
+                            'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300',
+                    }
+                  : {
+                        label: 'Not Enabled',
+                        className:
+                            'bg-secondary text-secondary-foreground',
+                    },
         },
     ];
 
     if (showSocialLoginCard) {
-        securityItems.push({
-            title: 'Social Logins',
-            description: 'Manage connected social accounts',
-            icon: <LinkIcon className="size-5" />,
-            href: passwordRoute().replace('password', 'social-logins'),
-            status:
-                connectedProviderCount > 0 ? (
-                    <Badge variant="default">
-                        {connectedProviderCount} connected
-                    </Badge>
-                ) : (
-                    <Badge variant="outline">None connected</Badge>
-                ),
+        securityCards.push({
+            title: 'Social Login',
+            description: 'Manage social providers connected to your account.',
+            href: socialLoginsRoute().url,
+            icon: Link2Icon,
+            status: {
+                label: `${connectedProviderCount} connected`,
+                className:
+                    'bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300',
+            },
         });
     }
 
-    if (sessionManagementSupported) {
-        securityItems.push({
-            title: 'Active Sessions',
-            description: 'Manage your active browser sessions',
-            icon: <LaptopIcon className="size-5" />,
-            href: passwordRoute().replace('password', 'sessions'),
-            status: (
-                <Badge variant="secondary">{activeSessionCount} active</Badge>
-            ),
-        });
-    }
+    securityCards.push({
+        title: 'Active Sessions',
+        description: sessionManagementSupported
+            ? 'Review and revoke active devices signed into your account.'
+            : 'Session management is limited for your current driver.',
+        href: sessionsRoute().url,
+        icon: SmartphoneIcon,
+        status: sessionManagementSupported
+            ? {
+                  label: `${activeSessionCount} active`,
+                  className: 'bg-secondary text-secondary-foreground',
+              }
+            : {
+                  label: 'Limited',
+                  className: 'bg-secondary text-secondary-foreground',
+              },
+    });
 
     return (
         <AppLayout
             breadcrumbs={breadcrumbs}
             title="Security"
-            description="Manage your account security settings."
+            description="Manage your password and account security settings"
         >
-            <AccountLayout>
-                <div className="space-y-6">
-                    <Heading
-                        variant="small"
-                        title="Security settings"
-                        description="Manage your password, two-factor authentication, and session security"
-                    />
-
-                    <div className="space-y-3">
-                        {securityItems.map((item) => (
-                            <Link
-                                key={item.title}
-                                href={item.href}
-                                className="block"
-                            >
-                                <Card className="transition-colors hover:bg-muted/50">
-                                    <CardContent className="flex items-center gap-4 py-4">
-                                        <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                                            {item.icon}
-                                        </div>
-                                        <div className="min-w-0 flex-1">
-                                            <div className="flex items-center gap-2">
-                                                <h3 className="text-sm font-medium text-foreground">
-                                                    {item.title}
-                                                </h3>
-                                                {item.status}
-                                            </div>
-                                            <p className="mt-0.5 text-sm text-muted-foreground">
-                                                {item.description}
-                                            </p>
-                                        </div>
-                                        <ChevronRightIcon className="size-5 shrink-0 text-muted-foreground" />
-                                    </CardContent>
-                                </Card>
-                            </Link>
-                        ))}
-                    </div>
-                </div>
-            </AccountLayout>
+            <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
+                {securityCards.map((card) => (
+                    <SecurityCardLink key={card.title} {...card} />
+                ))}
+            </div>
         </AppLayout>
     );
 }

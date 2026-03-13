@@ -197,16 +197,12 @@ export function MediaUploadDropzone({
     const startUpload = useCallback(() => {
         setIsUploading(true);
         setFiles((prev) => {
-            const staged = prev.filter(
-                (f) => f.status === 'staged',
-            );
+            const staged = prev.filter((f) => f.status === 'staged');
             staged.forEach((f) => {
                 uploadSingleFile({ ...f, status: 'pending' });
             });
             return prev.map((f) =>
-                f.status === 'staged'
-                    ? { ...f, status: 'pending' }
-                    : f,
+                f.status === 'staged' ? { ...f, status: 'pending' } : f,
             );
         });
     }, [uploadSingleFile]);
@@ -299,9 +295,7 @@ export function MediaUploadDropzone({
 
     // ── Derived state ────────────────────────────────────────────────
 
-    const stagedFiles = files.filter(
-        (f) => f.status === 'staged',
-    );
+    const stagedFiles = files.filter((f) => f.status === 'staged');
     const activeFiles = files.filter((f) =>
         ['pending', 'uploading', 'success', 'error'].includes(f.status),
     );
@@ -371,9 +365,9 @@ export function MediaUploadDropzone({
                                 <button
                                     type="button"
                                     onClick={() => removeFile(f.id)}
-                                    className="absolute -top-1.5 -right-1.5 z-10 flex size-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground opacity-0 shadow-sm transition-opacity group-hover:opacity-100"
+                                    className="absolute -top-1.5 -right-1.5 z-10 flex size-5 items-center justify-center rounded-full bg-destructive text-white shadow-sm"
                                 >
-                                    <XIcon className="size-3" />
+                                    <XIcon className="size-3 stroke-[3]" />
                                 </button>
 
                                 {/* Thumbnail */}

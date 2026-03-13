@@ -157,6 +157,7 @@ export type DatagridProps<T> = {
     };
     renderCardHeader?: (row: T) => ReactNode;
     renderCard?: (row: T) => ReactNode;
+    cardGridClassName?: string;
     summary?: string;
     submitLabel?: string;
     submitButtonVariant?: 'default' | 'outline' | 'secondary' | 'ghost';

@@ -577,6 +577,7 @@ Route::prefix($adminPrefix)->group(function (): void {
             // --- Media Library V2 (DataGrid-based) ---
             Route::group(['prefix' => 'media-library', 'as' => 'media-library.'], function (): void {
                 Route::post('/bulk-action', [MediaLibraryController::class, 'bulkAction'])->name('bulk-action');
+                Route::get('/refresh', [MediaLibraryController::class, 'refreshData'])->name('refresh');
                 Route::get('/', [MediaLibraryController::class, 'index'])->name('index');
             });
 

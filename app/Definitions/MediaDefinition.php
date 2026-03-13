@@ -30,7 +30,7 @@ class MediaDefinition extends ScaffoldDefinition
     protected ?string $statusField = null;
 
     // More items per page for gallery view
-    protected int $perPage = 12;
+    protected int $perPage = 24;
 
     /**
      * Get the model class for this scaffold

@@ -1,3 +1,5 @@
+import { router } from '@inertiajs/react';
+import { ChevronRightIcon } from 'lucide-react';
 import * as React from 'react';
 import type { Key } from 'react';
 import { DatagridActionMenu } from '@/components/datagrid/datagrid-action-menu';
@@ -64,6 +66,7 @@ type DatagridResultsProps<T> = {
     view?: DatagridProps<T>['view'];
     renderCardHeader?: DatagridProps<T>['renderCardHeader'];
     renderCard?: DatagridProps<T>['renderCard'];
+    cardGridClassName?: string;
     rowActions?: (row: T) => DatagridAction[];
     isRowSelectable?: (row: T) => boolean;
     selectedKeySet: Set<string>;
@@ -91,6 +94,7 @@ export function DatagridResults<T>({
     view,
     renderCardHeader,
     renderCard,
+    cardGridClassName,
     rowActions,
     isRowSelectable,
     selectedKeySet,
@@ -229,101 +233,18 @@ export function DatagridResults<T>({
                         </Empty>
                     </div>
                 ) : view?.value === 'cards' && renderCard ? (
-                    <div className="grid gap-4 p-4 md:grid-cols-2 xl:grid-cols-3">
-                        {rows.data.map((row) => {
-                            const rowKey = normalizeRowKey(getRowKey(row));
-                            const actions =
-                                rowActions?.(row).filter(
-                                    (rowAction) => !rowAction.hidden,
-                                ) ?? [];
-                            const rowSelectable = isRowSelectable
-                                ? isRowSelectable(row)
-                                : true;
-                            const isSelected = selectedKeySet.has(rowKey);
-
-                            return (
-                                <Card
-                                    key={rowKey}
-                                    className={cn(
-                                        'overflow-hidden',
-                                        isSelected &&
-                                            'border-primary/40 bg-primary/5',
-                                    )}
-                                >
-                                    {renderCardHeader ? (
-                                        <>
-                                            <CardHeader className="border-b pt-4">
-                                                <div className="flex min-w-0 items-start gap-3">
-                                                    {hasSelection ? (
-                                                        <Checkbox
-                                                            checked={isSelected}
-                                                            disabled={
-                                                                !rowSelectable
-                                                            }
-                                                            aria-label="Select row"
-                                                            onCheckedChange={(
-                                                                checked,
-                                                            ) =>
-                                                                toggleRowSelection(
-                                                                    row,
-                                                                    checked ===
-                                                                        true,
-                                                                )
-                                                            }
-                                                        />
-                                                    ) : null}
-                                                    <div className="min-w-0 flex-1">
-                                                        {renderCardHeader(row)}
-                                                    </div>
-                                                </div>
-                                                {actions.length > 0 ? (
-                                                    <CardAction>
-                                                        <DatagridActionMenu
-                                                            actions={actions}
-                                                        />
-                                                    </CardAction>
-                                                ) : null}
-                                            </CardHeader>
-                                            <CardContent className="flex flex-col gap-4 p-4">
-                                                {renderCard(row)}
-                                            </CardContent>
-                                        </>
-                                    ) : (
-                                        <CardContent className="flex flex-col gap-4 p-4">
-                                            <div className="flex items-start justify-between gap-3">
-                                                {hasSelection ? (
-                                                    <Checkbox
-                                                        checked={isSelected}
-                                                        disabled={
-                                                            !rowSelectable
-                                                        }
-                                                        aria-label="Select row"
-                                                        onCheckedChange={(
-                                                            checked,
-                                                        ) =>
-                                                            toggleRowSelection(
-                                                                row,
-                                                                checked ===
-                                                                    true,
-                                                            )
-                                                        }
-                                                    />
-                                                ) : (
-                                                    <div />
-                                                )}
-                                                {actions.length > 0 ? (
-                                                    <DatagridActionMenu
-                                                        actions={actions}
-                                                    />
-                                                ) : null}
-                                            </div>
-                                            {renderCard(row)}
-                                        </CardContent>
-                                    )}
-                                </Card>
-                            );
-                        })}
-                    </div>
+                    <CardGridView
+                        rows={rows}
+                        getRowKey={getRowKey}
+                        rowActions={rowActions}
+                        isRowSelectable={isRowSelectable}
+                        selectedKeySet={selectedKeySet}
+                        toggleRowSelection={toggleRowSelection}
+                        hasSelection={hasSelection}
+                        renderCardHeader={renderCardHeader}
+                        renderCard={renderCard}
+                        cardGridClassName={cardGridClassName}
+                    />
                 ) : (
                     <Table className="table-auto">
                         <TableHeader>
@@ -558,5 +479,208 @@ export function DatagridResults<T>({
                 ) : null}
             </CardContent>
         </Card>
+    );
+}
+
+// ─── Card Grid View (with column-aware "Next Page" filler) ───────────────
+
+type CardGridViewProps<T> = {
+    rows: DatagridResultsProps<T>['rows'];
+    getRowKey: DatagridResultsProps<T>['getRowKey'];
+    rowActions?: DatagridResultsProps<T>['rowActions'];
+    isRowSelectable?: DatagridResultsProps<T>['isRowSelectable'];
+    selectedKeySet: DatagridResultsProps<T>['selectedKeySet'];
+    toggleRowSelection: DatagridResultsProps<T>['toggleRowSelection'];
+    hasSelection: boolean;
+    renderCardHeader?: DatagridResultsProps<T>['renderCardHeader'];
+    renderCard: NonNullable<DatagridResultsProps<T>['renderCard']>;
+    cardGridClassName?: string;
+};
+
+function CardGridView<T>({
+    rows,
+    getRowKey,
+    rowActions,
+    isRowSelectable,
+    selectedKeySet,
+    toggleRowSelection,
+    hasSelection,
+    renderCardHeader,
+    renderCard,
+    cardGridClassName,
+}: CardGridViewProps<T>) {
+    const gridRef = React.useRef<HTMLDivElement>(null);
+    const [colCount, setColCount] = React.useState(1);
+
+    React.useEffect(() => {
+        const el = gridRef.current;
+        if (!el) return;
+
+        const detectColumns = () => {
+            const style = getComputedStyle(el);
+            const cols = style.gridTemplateColumns.split(' ').length;
+            setColCount(cols);
+        };
+
+        detectColumns();
+
+        const observer = new ResizeObserver(detectColumns);
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, []);
+
+    const itemCount = rows.data.length;
+    const hasEmptySlots = itemCount > 0 && itemCount % colCount !== 0;
+    const showNextCard = !!rows.next_page_url && hasEmptySlots;
+
+    return (
+        <div
+            ref={gridRef}
+            className={cn(
+                'grid gap-4 p-4 md:grid-cols-2 xl:grid-cols-3',
+                cardGridClassName,
+            )}
+        >
+            {rows.data.map((row) => {
+                const rowKey = normalizeRowKey(getRowKey(row));
+                const actions =
+                    rowActions?.(row).filter(
+                        (rowAction) => !rowAction.hidden,
+                    ) ?? [];
+                const rowSelectable = isRowSelectable
+                    ? isRowSelectable(row)
+                    : true;
+                const isSelected = selectedKeySet.has(rowKey);
+
+                return (
+                    <Card
+                        key={rowKey}
+                        className={cn(
+                            'overflow-hidden',
+                            cardGridClassName && 'gap-0 py-0',
+                            isSelected &&
+                                'border-primary/40 bg-primary/5 ring-2 ring-primary',
+                        )}
+                    >
+                        {renderCardHeader ? (
+                            <>
+                                <CardHeader className="border-b pt-4">
+                                    <div className="flex min-w-0 items-start gap-3">
+                                        {hasSelection ? (
+                                            <Checkbox
+                                                checked={isSelected}
+                                                disabled={!rowSelectable}
+                                                aria-label="Select row"
+                                                onCheckedChange={(checked) =>
+                                                    toggleRowSelection(
+                                                        row,
+                                                        checked === true,
+                                                    )
+                                                }
+                                            />
+                                        ) : null}
+                                        <div className="min-w-0 flex-1">
+                                            {renderCardHeader(row)}
+                                        </div>
+                                    </div>
+                                    {actions.length > 0 ? (
+                                        <CardAction>
+                                            <DatagridActionMenu
+                                                actions={actions}
+                                            />
+                                        </CardAction>
+                                    ) : null}
+                                </CardHeader>
+                                <CardContent className="flex flex-col gap-4 p-4">
+                                    {renderCard(row)}
+                                </CardContent>
+                            </>
+                        ) : cardGridClassName ? (
+                            <CardContent className="relative flex flex-1 p-0">
+                                <div className="absolute top-1.5 left-1.5 z-10">
+                                    {hasSelection ? (
+                                        <Checkbox
+                                            checked={isSelected}
+                                            disabled={!rowSelectable}
+                                            aria-label="Select row"
+                                            className="border-white/70 bg-black/30 data-[state=checked]:border-primary data-[state=checked]:bg-primary"
+                                            onCheckedChange={(checked) =>
+                                                toggleRowSelection(
+                                                    row,
+                                                    checked === true,
+                                                )
+                                            }
+                                        />
+                                    ) : null}
+                                </div>
+                                {actions.length > 0 ? (
+                                    <div className="absolute top-1 right-1 z-10">
+                                        <DatagridActionMenu actions={actions} />
+                                    </div>
+                                ) : null}
+                                {renderCard(row)}
+                            </CardContent>
+                        ) : (
+                            <CardContent className="flex flex-col gap-4 p-4">
+                                <div className="flex items-start justify-between gap-3">
+                                    {hasSelection ? (
+                                        <Checkbox
+                                            checked={isSelected}
+                                            disabled={!rowSelectable}
+                                            aria-label="Select row"
+                                            onCheckedChange={(checked) =>
+                                                toggleRowSelection(
+                                                    row,
+                                                    checked === true,
+                                                )
+                                            }
+                                        />
+                                    ) : (
+                                        <div />
+                                    )}
+                                    {actions.length > 0 ? (
+                                        <DatagridActionMenu actions={actions} />
+                                    ) : null}
+                                </div>
+                                {renderCard(row)}
+                            </CardContent>
+                        )}
+                    </Card>
+                );
+            })}
+
+            {/* "Next page" filler — only when column count leaves empty slots */}
+            {showNextCard ? (
+                <Card
+                    className={cn(
+                        'overflow-hidden',
+                        cardGridClassName && 'gap-0 py-0',
+                    )}
+                >
+                    <CardContent
+                        className={cn(
+                            'flex items-center justify-center',
+                            cardGridClassName ? 'aspect-square p-0' : 'p-8',
+                        )}
+                    >
+                        <button
+                            type="button"
+                            onClick={() =>
+                                router.visit(rows.next_page_url!, {
+                                    preserveScroll: true,
+                                    preserveState: true,
+                                })
+                            }
+                            className="flex size-full flex-col items-center justify-center gap-2 text-muted-foreground transition-colors hover:text-foreground"
+                        >
+                            <ChevronRightIcon className="size-6" />
+                            <span className="text-xs font-medium">
+                                Next Page
+                            </span>
+                        </button>
+                    </CardContent>
+                </Card>
+            ) : null}
+        </div>
     );
 }

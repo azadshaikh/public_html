@@ -113,7 +113,9 @@ class ProfileController extends Controller
 
     public function securityPassword(): Response
     {
-        return Inertia::render('account/password');
+        return Inertia::render('account/password', [
+            'hasPassword' => auth()->user()->hasUsablePassword(),
+        ]);
     }
 
     public function securityTwoFactor(): Response

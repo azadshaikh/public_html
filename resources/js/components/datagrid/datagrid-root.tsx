@@ -30,6 +30,7 @@ export function Datagrid<T>({
     view,
     renderCardHeader,
     renderCard,
+    cardGridClassName,
     summary,
     submitLabel = 'Apply',
     submitButtonVariant = 'outline',
@@ -437,6 +438,7 @@ export function Datagrid<T>({
                 view={view}
                 renderCardHeader={renderCardHeader}
                 renderCard={renderCard}
+                cardGridClassName={cardGridClassName}
                 rowActions={rowActions}
                 isRowSelectable={isRowSelectable}
                 selectedKeySet={selectedKeySet}

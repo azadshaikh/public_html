@@ -5,6 +5,7 @@ namespace Tests\Feature\Account;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class PasswordUpdateTest extends TestCase
@@ -19,7 +20,11 @@ class PasswordUpdateTest extends TestCase
             ->actingAs($user)
             ->get(route('app.profile.security.password'));
 
-        $response->assertOk();
+        $response
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->component('account/password')
+                ->where('hasPassword', true));
     }
 
     public function test_password_can_be_updated(): void
