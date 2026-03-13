@@ -37,6 +37,22 @@ class ActivityLogService implements ScaffoldServiceInterface
     }
 
     // ================================================================
+    // PAGINATED DATA (Inertia/Datagrid format)
+    // ================================================================
+
+    public function getPaginatedLogs(Request $request): array
+    {
+        $query = $this->buildListQuery($request);
+        $paginator = $query->paginate($this->getPerPage($request))->onEachSide(1);
+
+        $paginatedArray = $paginator->toArray();
+        $paginatedArray['data'] = ActivityLogsResource::collection($paginator->items())
+            ->resolve(request());
+
+        return $paginatedArray;
+    }
+
+    // ================================================================
     // STATISTICS (for tab counts)
     // ================================================================
 

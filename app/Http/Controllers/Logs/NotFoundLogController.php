@@ -42,12 +42,22 @@ class NotFoundLogController extends ScaffoldController implements HasMiddleware
     {
         $this->enforcePermission('view');
 
-        $data = $this->service()->getData($request);
-        $statistics = $this->service()->getStatistics();
+        $status = $request->input('status') ?? $request->route('status') ?? 'all';
+        $perPage = $this->service()->getScaffoldDefinition()->getPerPage();
 
         return Inertia::render($this->inertiaPage().'/index', [
-            ...$data,
-            'statistics' => $statistics,
+            'notFoundLogs' => $this->notFoundLogService->getPaginatedLogs($request),
+            'statistics' => $this->notFoundLogService->getStatistics(),
+            'filters' => [
+                'search' => $request->input('search', ''),
+                'status' => $status,
+                'sort' => $request->input('sort', 'created_at'),
+                'direction' => $request->input('direction', 'desc'),
+                'per_page' => (int) $request->input('per_page', $perPage),
+                'view' => $request->input('view', 'table'),
+            ],
+            'status' => session('status'),
+            'error' => session('error'),
         ]);
     }
 

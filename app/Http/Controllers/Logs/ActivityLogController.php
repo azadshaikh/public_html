@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Logs;
 
+use App\Models\ActivityLog;
 use App\Scaffold\ScaffoldController;
 use App\Services\ActivityLogService;
 use App\Traits\ActivityTrait;
@@ -44,19 +45,51 @@ class ActivityLogController extends ScaffoldController implements HasMiddleware
     {
         $this->enforcePermission('view');
 
-        $data = $this->service()->getData($request);
-        $statistics = $data['statistics'] ?? $this->service()->getStatistics();
-
-        $filterOptions = [
-            'event' => $this->service()->getEventOptions(),
-            'causer_id' => $this->service()->getUserOptions(),
-        ];
+        $status = $request->input('status') ?? $request->route('status') ?? 'all';
+        $perPage = $this->service()->getScaffoldDefinition()->getPerPage();
 
         return Inertia::render($this->inertiaPage().'/index', [
-            ...$data,
-            'statistics' => $statistics,
-            'filterOptions' => $filterOptions,
+            'logs' => $this->activityLogService->getPaginatedLogs($request),
+            'statistics' => $this->activityLogService->getStatistics(),
+            'filterOptions' => [
+                'event' => $this->activityLogService->getEventOptions(),
+                'causer_id' => $this->activityLogService->getUserOptions(),
+            ],
+            'filters' => [
+                'search' => $request->input('search', ''),
+                'status' => $status,
+                'event' => $request->input('event', ''),
+                'causer_id' => $request->input('causer_id', ''),
+                'sort' => $request->input('sort', 'created_at'),
+                'direction' => $request->input('direction', 'desc'),
+                'per_page' => (int) $request->input('per_page', $perPage),
+                'view' => $request->input('view', 'table'),
+            ],
+            'status' => session('status'),
+            'error' => session('error'),
         ]);
+    }
+
+    // ================================================================
+    // OVERRIDE: Custom show with changes summary
+    // ================================================================
+
+    public function show(int|string $id): Response
+    {
+        $this->enforcePermission('view');
+
+        /** @var ActivityLog $activityLog */
+        $activityLog = $this->findModel((int) $id);
+
+        $data = [
+            'activityLog' => $activityLog->toArray(),
+        ];
+
+        if ($activityLog->hasTrackedChanges()) {
+            $data['changes_summary'] = $activityLog->getChangesSummary();
+        }
+
+        return Inertia::render($this->inertiaPage().'/show', $data);
     }
 
     // ================================================================

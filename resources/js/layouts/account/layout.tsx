@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import { cn, toUrl } from '@/lib/utils';
 import { profile as profileRoute } from '@/routes/app';
+import { security as securityRoute } from '@/routes/app/profile';
 import {
     password as passwordRoute,
     twoFactor as twoFactorRoute,
@@ -14,6 +15,11 @@ const sidebarNavItems: NavItem[] = [
     {
         title: 'Profile',
         href: profileRoute(),
+        icon: null,
+    },
+    {
+        title: 'Security',
+        href: securityRoute(),
         icon: null,
     },
     {

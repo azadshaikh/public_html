@@ -15,12 +15,15 @@ use App\Services\UserService;
 use App\Traits\ActivityTrait;
 use App\Traits\HasAlerts;
 use Exception;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 use Laravel\Socialite\Facades\Socialite;
 use Symfony\Component\HttpFoundation\RedirectResponse as SymfonyRedirectResponse;
 
@@ -43,13 +46,13 @@ class ProfileController extends Controller
     /**
      * Display authenticated user profile
      */
-    public function view(): View
+    public function view(): Response
     {
         $user = auth()->user();
 
-        return view('app.profile.edit', [
-            'page_title' => __('profile.profile'),
-            'user' => $user,
+        return Inertia::render('account/profile', [
+            'mustVerifyEmail' => $user instanceof MustVerifyEmail,
+            'status' => session('status'),
         ]);
     }
 
@@ -73,7 +76,7 @@ class ProfileController extends Controller
         ]);
     }
 
-    public function security(): View
+    public function security(): Response
     {
         $user = auth()->user();
         $connectedProviders = $this->getConnectedSocialProviders($user);
@@ -89,30 +92,23 @@ class ProfileController extends Controller
         $hasEnabledSocialLogins = $this->socialLoginService->hasEnabledSocialLogins();
         $showSocialLoginCard = $hasEnabledSocialLogins;
 
-        return view('app.profile.security', [
-            'page_title' => $user->name.' '.__('profile.security'),
-            'user' => $user,
+        return Inertia::render('account/security', [
             'twoFactorEnabled' => $twoFactorEnabled,
             'twoFactorPending' => $twoFactorPending,
             'showSocialLoginCard' => $showSocialLoginCard,
             'connectedProviderCount' => $connectedProviders->count(),
             'activeSessionCount' => $activeSessionCount,
             'sessionManagementSupported' => $sessionManagementSupported,
-        ]);
-    }
-
-    public function securityPassword(): View
-    {
-        $user = auth()->user();
-
-        return view('app.profile.security-password', [
-            'page_title' => __('passwords.manage_password'),
-            'user' => $user,
             'hasPassword' => $user->hasUsablePassword(),
         ]);
     }
 
-    public function securityTwoFactor(): View
+    public function securityPassword(): Response
+    {
+        return Inertia::render('account/password');
+    }
+
+    public function securityTwoFactor(): Response
     {
         $user = auth()->user();
         $twoFactorEnabled = $this->twoFactorAuthenticationService->isEnabled($user);
@@ -126,9 +122,7 @@ class ProfileController extends Controller
         $revealedRecoveryCodes = session('two_factor.recovery_codes');
         $twoFactorRecoveryCodes = is_array($revealedRecoveryCodes) ? $revealedRecoveryCodes : [];
 
-        return view('app.profile.security-two-factor', [
-            'page_title' => __('profile.two_factor_authentication'),
-            'user' => $user,
+        return Inertia::render('account/two-factor', [
             'twoFactorEnabled' => $twoFactorEnabled,
             'twoFactorPending' => $twoFactorPending,
             'twoFactorSetupUrl' => $twoFactorSetupUrl,

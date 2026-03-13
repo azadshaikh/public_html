@@ -15,6 +15,8 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 
 /**
  * NotificationController
@@ -42,7 +44,7 @@ class NotificationController extends Controller implements HasMiddleware
     /**
      * Display the notification center page.
      */
-    public function index(Request $request): View
+    public function index(Request $request): Response
     {
         $user = $request->user();
 
@@ -54,20 +56,21 @@ class NotificationController extends Controller implements HasMiddleware
 
         $notifications = $this->notificationService->getForUser($user, $filters);
         $stats = $this->notificationService->getStatsForUser($user);
-        $categoryCounts = $this->notificationService->getCountByCategory($user);
-        $priorityCounts = $this->notificationService->getCountByPriority($user);
 
-        return view('app.notifications.index', [
+        return Inertia::render('notifications/index', [
             'notifications' => $notifications,
             'stats' => $stats,
-            'filters' => $filters,
-            'unreadCount' => $stats['unread'],
-            'totalCount' => $stats['total'],
-            'categoryCounts' => $categoryCounts,
-            'priorityCounts' => $priorityCounts,
+            'filters' => [
+                'search' => $request->input('search', ''),
+                'filter' => $request->input('filter', 'all'),
+                'category' => $request->input('category', ''),
+                'priority' => $request->input('priority', ''),
+            ],
             'categoryOptions' => $this->notificationService->getCategoryOptions(),
             'priorityOptions' => $this->notificationService->getPriorityOptions(),
             'statusOptions' => $this->notificationService->getStatusOptions(),
+            'status' => session('status'),
+            'error' => session('error'),
         ]);
     }
 

@@ -37,6 +37,22 @@ class LoginAttemptService implements ScaffoldServiceInterface
     }
 
     // ================================================================
+    // PAGINATED DATA (Inertia/Datagrid format)
+    // ================================================================
+
+    public function getPaginatedAttempts(Request $request): array
+    {
+        $query = $this->buildListQuery($request);
+        $paginator = $query->paginate($this->getPerPage($request))->onEachSide(1);
+
+        $paginatedArray = $paginator->toArray();
+        $paginatedArray['data'] = LoginAttemptResource::collection($paginator->items())
+            ->resolve(request());
+
+        return $paginatedArray;
+    }
+
+    // ================================================================
     // STATISTICS (for tab counts)
     // ================================================================
 
