@@ -573,15 +573,15 @@ class SettingsController extends Controller
             set_env_value('AWS_BUCKET', $payload['bucket'] ?? '', false);
             set_env_value('AWS_DEFAULT_REGION', $payload['region'] ?? '', false);
             set_env_value('AWS_ENDPOINT', $payload['endpoint'] ?? '', false);
-            set_env_value('AWS_USE_PATH_STYLE_ENDPOINT', isset($payload['use_path_style_endpoint']) ? 'TRUE' : 'FALSE', false);
+            set_env_value('AWS_USE_PATH_STYLE_ENDPOINT', $this->toBooleanString($payload['use_path_style_endpoint'] ?? false, true), false);
         }
     }
 
     private function prepareRegistrationPayload(array &$payload): void
     {
-        $payload['enable_registration'] = isset($payload['enable_registration']) ? 'true' : 'false';
-        $payload['require_email_verification'] = isset($payload['require_email_verification']) ? 'true' : 'false';
-        $payload['auto_approve'] = isset($payload['auto_approve']) ? 'true' : 'false';
+        $payload['enable_registration'] = $this->toBooleanString($payload['enable_registration'] ?? false);
+        $payload['require_email_verification'] = $this->toBooleanString($payload['require_email_verification'] ?? false);
+        $payload['auto_approve'] = $this->toBooleanString($payload['auto_approve'] ?? false);
 
         if (array_key_exists('default_role', $payload)) {
             $payload['default_role'] = (string) $payload['default_role'];
@@ -631,12 +631,7 @@ class SettingsController extends Controller
 
     private function prepareSiteAccessProtectionPayload(array &$payload): void
     {
-        if (! isset($payload['is_enabled'])) {
-            $payload['mode_enabled'] = 'false';
-        } else {
-            $payload['mode_enabled'] = 'true';
-            unset($payload['is_enabled']);
-        }
+        $payload['mode_enabled'] = $this->toBooleanString($payload['mode_enabled'] ?? false);
     }
 
     // Google AdSense settings moved to CMS module
@@ -644,28 +639,19 @@ class SettingsController extends Controller
 
     private function prepareMaintenancePayload(array &$payload): void
     {
-        if (! isset($payload['enable_mode'])) {
-            $payload['mode_enabled'] = 'false';
-            // Keep the maintenance_mode_type even when disabled
-        } else {
-            $payload['mode_enabled'] = 'true';
-            unset($payload['enable_mode']);
-        }
+        $payload['mode_enabled'] = $this->toBooleanString($payload['mode_enabled'] ?? false);
 
         // Set default maintenance mode type if not provided
-        if (! isset($payload['maintenance_mode_type']) || empty($payload['maintenance_mode_type'])) {
+        if (! array_key_exists('maintenance_mode_type', $payload) || empty($payload['maintenance_mode_type'])) {
             $payload['maintenance_mode_type'] = 'frontend';
         }
     }
 
     private function prepareDevelopmentPayload(array &$payload): void
     {
-        // CDN caching disabled when development mode is enabled
-        $cacheEnabled = 'false';
-        if (! isset($payload['mode_enabled'])) {
-            $payload['mode_enabled'] = 'false';
-            $cacheEnabled = 'true';
-        }
+        $modeEnabled = filter_var($payload['mode_enabled'] ?? false, FILTER_VALIDATE_BOOLEAN);
+        $payload['mode_enabled'] = $this->toBooleanString($modeEnabled);
+        $cacheEnabled = $modeEnabled ? 'false' : 'true';
 
         // Set cache-related env vars
         set_env_value('CDN_CACHE_HEADERS', $cacheEnabled, false);
@@ -701,6 +687,13 @@ class SettingsController extends Controller
                 set_env_value($envKey, $value, false);
             }
         }
+    }
+
+    private function toBooleanString(mixed $value, bool $uppercase = false): string
+    {
+        $normalized = filter_var($value, FILTER_VALIDATE_BOOLEAN) ? 'true' : 'false';
+
+        return $uppercase ? strtoupper($normalized) : $normalized;
     }
 
     private function storeMetaSettings(string $metaGroup, array $payload): bool
@@ -907,7 +900,7 @@ class SettingsController extends Controller
             $normalizedNew = $this->normalizeValue($newValue, $isBooleanField);
 
             if ($normalizedOld !== $normalizedNew) {
-                $fieldLabel = $fieldLabels[$key] ?? ucwords(str_replace('_', ' ', $key));
+                $fieldLabel = $this->resolveFieldLabel($metaGroup, $key, $fieldLabels);
 
                 // Format display values - for booleans, use actual boolean type
                 if ($isBooleanField) {
@@ -1096,6 +1089,20 @@ class SettingsController extends Controller
         return in_array(strtolower($stringValue), ['1', 'true', 'yes', 'on'], true);
     }
 
+    private function resolveFieldLabel(string $metaGroup, string $key, array $fieldLabels): string
+    {
+        if ($key === 'mode_enabled') {
+            return match ($metaGroup) {
+                'site_access_protection' => 'Site Access Protection',
+                'maintenance' => 'Maintenance Mode',
+                'development' => 'Development Mode',
+                default => $fieldLabels[$key] ?? ucwords(str_replace('_', ' ', $key)),
+            };
+        }
+
+        return $fieldLabels[$key] ?? ucwords(str_replace('_', ' ', $key));
+    }
+
     /**
      * Get friendly meta group name
      */
@@ -1127,9 +1134,9 @@ class SettingsController extends Controller
         $booleanFieldsMap = [
             'registration' => ['enable_registration', 'require_email_verification', 'auto_approve'],
             'social_authentication' => ['enable_social_authentication', 'enable_google_authentication', 'enable_github_authentication'],
-            'site_access_protection' => ['is_enabled'],
+            'site_access_protection' => ['mode_enabled'],
             'google_adsense' => ['enable_adsense', 'hide_ads_for_login_user', 'hide_ads_for_home_page'],
-            'maintenance' => ['enable_mode'],
+            'maintenance' => ['mode_enabled'],
             'coming_soon' => ['enabled'],
             'development' => ['mode_enabled'],
             'media' => ['image_optimization', 'delete_trashed'],

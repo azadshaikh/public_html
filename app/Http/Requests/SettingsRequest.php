@@ -131,22 +131,25 @@ class SettingsRequest extends FormRequest
                 break;
             case 'site_access_protection':
                 $rules = [
-                    'is_enabled' => ['nullable'],
-                    'password' => ['required_if:is_enabled,1'],
-                    'message' => ['required_if:is_enabled,1'],
+                    'mode_enabled' => ['nullable', 'boolean'],
+                    'password' => ['required_if:mode_enabled,true', 'string', 'max:255'],
+                    'protection_message' => ['required_if:mode_enabled,true', 'string'],
                 ];
                 break;
                 // Google AdSense validation moved to CMS module
                 // See: modules/CMS/app/Http/Requests/UpdateSeoSettingsRequest.php
             case 'maintenance':
                 $rules = [
-                    'maintenance_mode_type' => ['nullable', 'in:frontend,backend,both'],
-                    'maintenance_message' => ['nullable'],
+                    'mode_enabled' => ['nullable', 'boolean'],
+                    'maintenance_mode_type' => ['required_if:mode_enabled,true', 'in:frontend,both'],
+                    'title' => ['nullable', 'string', 'max:255'],
+                    'message' => ['nullable', 'string'],
                 ];
                 break;
             case 'coming_soon':
                 $rules = [
-                    'message' => ['nullable'],
+                    'enabled' => ['nullable', 'boolean'],
+                    'description' => ['nullable', 'string'],
                 ];
                 break;
             case 'media':
@@ -167,14 +170,14 @@ class SettingsRequest extends FormRequest
                 break;
             case 'registration':
                 $rules = [
-                    'enable_registration' => ['nullable'],
+                    'enable_registration' => ['nullable', 'boolean'],
                     'default_role' => [
                         'required',
                         'integer',
                         Rule::exists('roles', 'id')->where(fn ($query) => $query->where('status', Status::ACTIVE->value)),
                     ],
-                    'require_email_verification' => ['nullable'],
-                    'auto_approve' => ['nullable'],
+                    'require_email_verification' => ['nullable', 'boolean'],
+                    'auto_approve' => ['nullable', 'boolean'],
                 ];
                 break;
             case 'branding':

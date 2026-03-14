@@ -862,12 +862,7 @@ class SettingsController extends Controller
         $adminSlug = trim((string) ($data['admin_login_url_slug'] ?? ''), '/');
         $data['admin_login_url_slug'] = $adminSlug;
 
-        // Prepare payload - handle boolean toggle from React
-        if (isset($data['limit_login_attempts_enabled']) && $data['limit_login_attempts_enabled']) {
-            $data['limit_login_attempts_enabled'] = 'true';
-        } else {
-            $data['limit_login_attempts_enabled'] = 'false';
-        }
+        $data['limit_login_attempts_enabled'] = $this->toBooleanString($data['limit_login_attempts_enabled'] ?? false);
 
         // Update ADMIN_SLUG in .env if changed
         $currentAdminSlug = trim((string) get_env_file_value('ADMIN_SLUG', config('app.admin_slug')), '/');
@@ -933,9 +928,9 @@ class SettingsController extends Controller
             $envValues['FTP_PASSWORD'] = $data['ftp_password'] ?? '';
             $envValues['FTP_ROOT'] = $data['ftp_root'] ?? '';
             $envValues['FTP_PORT'] = $data['ftp_port'] ?? '21';
-            $envValues['FTP_PASSIVE'] = isset($data['ftp_passive']) ? 'true' : 'false';
+            $envValues['FTP_PASSIVE'] = $this->toBooleanString($data['ftp_passive'] ?? false);
             $envValues['FTP_TIMEOUT'] = $data['ftp_timeout'] ?? '30';
-            $envValues['FTP_SSL'] = isset($data['ftp_ssl']) ? 'true' : 'false';
+            $envValues['FTP_SSL'] = $this->toBooleanString($data['ftp_ssl'] ?? false);
             $envValues['FTP_SSL_MODE'] = $data['ftp_ssl_mode'] ?? 'explicit';
         }
 
@@ -946,7 +941,7 @@ class SettingsController extends Controller
             $envValues['AWS_BUCKET'] = $data['bucket'] ?? '';
             $envValues['AWS_DEFAULT_REGION'] = $data['region'] ?? '';
             $envValues['AWS_ENDPOINT'] = $data['endpoint'] ?? '';
-            $envValues['AWS_USE_PATH_STYLE_ENDPOINT'] = isset($data['use_path_style_endpoint']) ? 'TRUE' : 'FALSE';
+            $envValues['AWS_USE_PATH_STYLE_ENDPOINT'] = $this->toBooleanString($data['use_path_style_endpoint'] ?? false, true);
         }
 
         // Bulk update all env values at once
@@ -972,6 +967,13 @@ class SettingsController extends Controller
 
         // Bulk update all env values at once
         set_env_values_bulk($envValues, false);
+    }
+
+    private function toBooleanString(mixed $value, bool $uppercase = false): string
+    {
+        $normalized = filter_var($value, FILTER_VALIDATE_BOOLEAN) ? 'true' : 'false';
+
+        return $uppercase ? strtoupper($normalized) : $normalized;
     }
 
     /**

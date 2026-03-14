@@ -9,6 +9,7 @@ use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Queue;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -23,6 +24,8 @@ class ApplicationSettingsPagesTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        Queue::fake();
 
         $this->seed(RolesAndPermissionsSeeder::class);
 
@@ -444,6 +447,81 @@ class ApplicationSettingsPagesTest extends TestCase
             ->assertRedirect();
     }
 
+    public function test_admin_can_disable_registration_settings_and_values_persist_after_reload(): void
+    {
+        $defaultRoleId = (string) Role::query()
+            ->where('status', Status::ACTIVE)
+            ->orderBy('id')
+            ->value('id');
+
+        $this->actingAs($this->admin)
+            ->put(route('app.settings.update', 'registration'), [
+                'enable_registration' => false,
+                'default_role' => $defaultRoleId,
+                'require_email_verification' => false,
+                'auto_approve' => false,
+            ])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('settings', [
+            'key' => 'registration_enable_registration',
+            'value' => 'false',
+        ]);
+        $this->assertDatabaseHas('settings', [
+            'key' => 'registration_require_email_verification',
+            'value' => 'false',
+        ]);
+        $this->assertDatabaseHas('settings', [
+            'key' => 'registration_auto_approve',
+            'value' => 'false',
+        ]);
+
+        $this->actingAs($this->admin)
+            ->get(route('app.settings.registration'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->where('settings.enable_registration', false)
+                ->where('settings.default_role', $defaultRoleId)
+                ->where('settings.require_email_verification', false)
+                ->where('settings.auto_approve', false)
+            );
+    }
+
+    public function test_admin_can_enable_site_access_protection_and_values_persist_after_reload(): void
+    {
+        $this->actingAs($this->admin)
+            ->put(route('app.settings.update', 'site_access_protection'), [
+                'mode_enabled' => true,
+                'password' => 'secret-passphrase',
+                'protection_message' => 'Protected while we prepare the site.',
+            ])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('settings', [
+            'key' => 'site_access_protection_mode_enabled',
+            'value' => 'true',
+        ]);
+        $this->assertDatabaseHas('settings', [
+            'key' => 'site_access_protection_password',
+            'value' => 'secret-passphrase',
+        ]);
+        $this->assertDatabaseHas('settings', [
+            'key' => 'site_access_protection_protection_message',
+            'value' => 'Protected while we prepare the site.',
+        ]);
+
+        $this->actingAs($this->admin)
+            ->get(route('app.settings.site-access-protection'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->where('settings.mode_enabled', true)
+                ->where('settings.password', 'secret-passphrase')
+                ->where('settings.protection_message', 'Protected while we prepare the site.')
+            );
+    }
+
     // =========================================================================
     // UPDATE — Maintenance settings
     // =========================================================================
@@ -460,6 +538,46 @@ class ApplicationSettingsPagesTest extends TestCase
             ])
             ->assertSessionHasNoErrors()
             ->assertRedirect();
+    }
+
+    public function test_admin_can_enable_maintenance_mode_and_values_persist_after_reload(): void
+    {
+        $this->actingAs($this->admin)
+            ->put(route('app.settings.update', 'maintenance'), [
+                'mode_enabled' => true,
+                'maintenance_mode_type' => 'both',
+                'title' => 'Planned Maintenance',
+                'message' => 'The full application is temporarily unavailable.',
+            ])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('settings', [
+            'key' => 'maintenance_mode_enabled',
+            'value' => 'true',
+        ]);
+        $this->assertDatabaseHas('settings', [
+            'key' => 'maintenance_maintenance_mode_type',
+            'value' => 'both',
+        ]);
+        $this->assertDatabaseHas('settings', [
+            'key' => 'maintenance_title',
+            'value' => 'Planned Maintenance',
+        ]);
+        $this->assertDatabaseHas('settings', [
+            'key' => 'maintenance_message',
+            'value' => 'The full application is temporarily unavailable.',
+        ]);
+
+        $this->actingAs($this->admin)
+            ->get(route('app.settings.maintenance'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->where('settings.mode_enabled', true)
+                ->where('settings.maintenance_mode_type', 'both')
+                ->where('settings.title', 'Planned Maintenance')
+                ->where('settings.message', 'The full application is temporarily unavailable.')
+            );
     }
 
     // =========================================================================
@@ -491,5 +609,30 @@ class ApplicationSettingsPagesTest extends TestCase
             ])
             ->assertSessionHasNoErrors()
             ->assertRedirect();
+    }
+
+    public function test_admin_can_disable_development_mode_and_restore_cache_headers(): void
+    {
+        set_env_value('CDN_CACHE_HEADERS', 'false', false);
+
+        $this->actingAs($this->admin)
+            ->put(route('app.settings.update', 'development'), [
+                'mode_enabled' => false,
+            ])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('settings', [
+            'key' => 'development_mode_enabled',
+            'value' => 'false',
+        ]);
+        $this->assertSame('true', get_env_value('CDN_CACHE_HEADERS'));
+
+        $this->actingAs($this->admin)
+            ->get(route('app.settings.development'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->where('settings.mode_enabled', false)
+            );
     }
 }

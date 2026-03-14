@@ -14,6 +14,7 @@ use Database\Seeders\RolesAndPermissionsSeeder;
 use Fruitcake\LaravelDebugbar\LaravelDebugbar;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Queue;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -30,6 +31,8 @@ class SettingsControllerTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        Queue::fake();
 
         $this->seed(RolesAndPermissionsSeeder::class);
 
@@ -438,6 +441,49 @@ class SettingsControllerTest extends TestCase
             ])
             ->assertSessionHasNoErrors()
             ->assertRedirect();
+    }
+
+    public function test_super_user_can_disable_storage_boolean_settings(): void
+    {
+        $this->actingAs($this->superUser)
+            ->put(route('app.masters.settings.update', 'storage'), [
+                'storage_driver' => 'ftp',
+                'root_folder' => 'uploads',
+                'max_storage_size' => '1024',
+                'storage_cdn_url' => '',
+                'ftp_host' => 'ftp.example.test',
+                'ftp_username' => 'ftp-user',
+                'ftp_password' => 'ftp-secret',
+                'ftp_root' => '/',
+                'ftp_port' => '21',
+                'ftp_passive' => false,
+                'ftp_timeout' => '30',
+                'ftp_ssl' => false,
+                'ftp_ssl_mode' => 'explicit',
+            ])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect();
+
+        $this->assertSame('false', get_env_value('FTP_PASSIVE'));
+        $this->assertSame('false', get_env_value('FTP_SSL'));
+
+        $this->actingAs($this->superUser)
+            ->put(route('app.masters.settings.update', 'storage'), [
+                'storage_driver' => 's3',
+                'root_folder' => 'uploads',
+                'max_storage_size' => '1024',
+                'storage_cdn_url' => 'https://cdn.example.test',
+                'access_key' => 'example-key',
+                'secret_key' => 'example-secret',
+                'bucket' => 'example-bucket',
+                'region' => 'ap-south-1',
+                'endpoint' => 'https://s3.example.test',
+                'use_path_style_endpoint' => false,
+            ])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect();
+
+        $this->assertSame('FALSE', get_env_value('AWS_USE_PATH_STYLE_ENDPOINT'));
     }
 
     public function test_debugbar_middleware_is_registered_on_web_routes(): void
