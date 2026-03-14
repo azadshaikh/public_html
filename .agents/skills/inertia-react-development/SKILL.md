@@ -179,14 +179,13 @@ For authenticated application pages in this project, prefer the shared app shell
 Example:
 
 ```react
-import UserController from '@/actions/App/Http/Controllers/UserController'
+import { Link } from '@inertiajs/react'
 import { Button } from '@/components/ui/button'
 import AppLayout from '@/layouts/app-layout'
-import { dashboard } from '@/routes/index'
 
 const breadcrumbs = [
-    { title: 'Dashboard', href: dashboard() },
-    { title: 'Users', href: UserController.index() },
+    { title: 'Dashboard', href: route('dashboard') },
+    { title: 'Users', href: route('app.users.index') },
 ]
 
 export default function UsersIndex() {
@@ -197,7 +196,7 @@ export default function UsersIndex() {
             description="Manage account access and profile details."
             headerActions={
                 <Button asChild>
-                    <Link href={UserController.create()}>Add User</Link>
+                    <Link href={route('app.users.create')}>Add User</Link>
                 </Button>
             }
         >
@@ -349,31 +348,28 @@ import { Link } from '@inertiajs/react'
 
 For non-`GET` visits, prefer button rendering for accessibility. Avoid creating `POST`/`PUT`/`PATCH`/`DELETE` anchor links.
 
-### Wayfinder Links
+### Ziggy Route Links
 
-When Wayfinder is available, pass the returned object directly to `href`.
+Use Ziggy's `route()` function to generate URL strings for navigation.
 
 ```react
 import { Link } from '@inertiajs/react'
-import { show } from '@/actions/App/Http/Controllers/UserController'
 
-<Link href={show(1)}>View user</Link>
+<Link href={route('app.users.show', { user: 1 })}>View user</Link>
 ```
 
 Project convention:
 
-- Prefer controller action imports from `@/actions/...` for resource navigation.
-- Pass Wayfinder objects directly to `Link href`, `<Form>`, or `useForm.submit()`.
-- Avoid hard-coded internal URLs when a generated action helper exists.
+- Use Ziggy's `route()` function for all internal navigation URLs.
+- Pass `route()` strings directly to `Link href`, `<Form action>`, or `form.submit()`.
+- Avoid hard-coded internal URLs when a named route exists.
 
 Example:
 
 ```react
-import ManagedUserController from '@/actions/App/Http/Controllers/ManagedUserController'
+<Link href={route('app.users.create')}>Add User</Link>
 
-<Link href={ManagedUserController.create()}>Add User</Link>
-
-<Form {...ManagedUserController.index.form()} method="get">
+<Form action={route('app.users.index')} method="get">
     ...
 </Form>
 ```
@@ -503,15 +499,13 @@ import { Link } from '@inertiajs/react'
 </Link>
 ```
 
-When Wayfinder route definitions include component metadata, `instant` can be used directly with Wayfinder links and forms.
+When using instant visits, pass the `component` prop explicitly.
 
 ```react
-<Link href={show(1)} instant>
+<Link href={route('app.posts.show', { post: 1 })} component="Posts/Show" instant>
     View post
 </Link>
 ```
-
-This requires Wayfinder to generate Inertia component metadata.
 
 Project caution:
 
@@ -595,7 +589,7 @@ const form = useForm({
 
 ### `<Form>` Patterns
 
-- Pass Wayfinder objects directly to `action`, or use generated `wayfinder.form()` helpers when available.
+- Pass Ziggy `route()` URLs to `action`, or use the URL string directly.
 - Use `transform` for lightweight payload shaping before submission.
 - Use `disableWhileProcessing` to add the `inert` attribute during submission; pair it with classes such as `inert:opacity-60` when helpful.
 - Prefer built-in reset helpers like `resetOnSuccess`, `resetOnError`, and `setDefaultsOnSuccess` over manual reset bookkeeping.
@@ -715,7 +709,7 @@ Useful v3 `useForm` helpers include:
 - Let the server redirect after successful submissions instead of expecting JSON response handling.
 - Rely on Inertia's built-in server-side validation flow instead of manual `422` parsing.
 - For file uploads, let Inertia convert the payload to `FormData` automatically.
-- Prefer Wayfinder objects with both `<Form>` and `useForm.submit()` instead of hard-coded URLs.
+- Prefer Ziggy `route()` URLs with both `<Form>` and `useForm.submit()` instead of hard-coded URLs.
 - Form helper errors are already scoped to the form instance, so error bags are usually unnecessary when using `<Form>` or `useForm`.
 
 ### Validation Notes
@@ -1076,7 +1070,7 @@ Important v3 server-side reminders to keep in mind while working on client pages
 - Storing sensitive remembered form fields instead of excluding them with `dontRemember()`
 - Re-implementing validation error parsing instead of using Inertia's built-in redirect and error handling
 - Using non-`GET` links as anchors instead of buttons
-- Forgetting that Wayfinder objects can be passed directly to `Link href`
+- Forgetting that Ziggy `route()` can generate URLs for all named routes — use it instead of hardcoding paths
 - Forgetting that `router.reload()` already preserves scroll and state
 - Using instant visits for pages that cannot render safely without page-specific props
 - Passing `pageProps` to instant visits without re-merging required shared props
@@ -1103,5 +1097,5 @@ Important v3 server-side reminders to keep in mind while working on client pages
 - Replacing existing content with skeletons during React deferred reloads when a smaller inline reloading indicator would be better
 - Ignoring `preserveErrors` needs during partial reloads
 - Using CommonJS `require()` imports with ESM-only Inertia packages
-- Hard-coding internal app URLs when a Wayfinder action helper already exists
+- Hard-coding internal app URLs when a named route exists for `route()`
 - Treating every resource page as if it needs summary stat cards, even when the metrics add noise instead of clarity

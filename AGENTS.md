@@ -16,7 +16,7 @@ This application is a Laravel application and its main Laravel ecosystems packag
 - laravel/fortify (FORTIFY) - v1
 - laravel/framework (LARAVEL) - v12
 - laravel/prompts (PROMPTS) - v0
-- laravel/wayfinder (WAYFINDER) - v0
+- tightenco/ziggy (ZIGGY) - v2
 - laravel/boost (BOOST) - v2
 - laravel/mcp (MCP) - v0
 - laravel/pail (PAIL) - v1
@@ -26,7 +26,6 @@ This application is a Laravel application and its main Laravel ecosystems packag
 - @inertiajs/react (INERTIA_REACT) - v3
 - react (REACT) - v19
 - tailwindcss (TAILWINDCSS) - v4
-- @laravel/vite-plugin-wayfinder (WAYFINDER_VITE) - v0
 - eslint (ESLINT) - v9
 - prettier (PRETTIER) - v3
 
@@ -35,12 +34,12 @@ This application is a Laravel application and its main Laravel ecosystems packag
 This project has domain-specific skills available. You MUST activate the relevant skill whenever you work in that domain—don't wait until you're stuck.
 
 - `shadcn` — Activates whenever working with shadcn/ui components, `components.json`, registry items, presets, generated blocks, or component composition/styling fixes. Use when adding or updating shadcn components, checking registry docs/examples, or deciding whether to reuse an existing shadcn primitive before building custom UI.
-- `wayfinder-development` — Activates whenever referencing backend routes in frontend components. Use when importing from @/actions or @/routes, calling Laravel routes from TypeScript, or working with Wayfinder route functions.
+- `ziggy-development` — Activates whenever referencing backend routes in frontend components. Use when generating URLs with Ziggy's `route()` function, working with named Laravel routes in TypeScript, or debugging route resolution.
 - `inertia-react-development` — Develops Inertia.js v3 React client-side applications. Activates when creating React pages, forms, or navigation; using &lt;Link&gt;, &lt;Form&gt;, useForm, useHttp, useLayoutProps, or router; working with deferred props, prefetching, optimistic updates, instant visits, or polling; or when user mentions React with Inertia, React pages, React forms, or React navigation.
 - `inertia-form-system` — Builds and updates application forms using the shared Inertia + shadcn form system. Use when creating or refactoring React forms, adding client-side validation, wiring dirty-form protection, showing consistent field errors, working with success/error toasts, or deciding between the shared form hook and raw Inertia forms.
 - `tailwindcss-development` — Styles applications using Tailwind CSS v4 utilities. Activates when adding styles, restyling components, working with gradients, spacing, layout, flex, grid, responsive design, dark mode, colors, typography, or borders; or when the user mentions CSS, styling, classes, Tailwind, restyle, hero section, cards, buttons, or any visual/UI changes.
 - `datagrid` — Builds and configures datagrid (data table) views in this project. Use when creating index pages with tables, card grids, filters, tabs, sorting, pagination, row actions, bulk actions, or custom cell/card rendering.
-- `laravel-inertia-crud-development` — Activates whenever building or expanding CRUD resources in this project. Use when creating Laravel models, migrations, factories, seeders, form requests, resource controllers, Inertia pages, Wayfinder-backed forms, filtering/sorting/pagination, media uploads, sidebar links, or PHPUnit CRUD coverage.
+- `laravel-inertia-crud-development` — Activates whenever building or expanding CRUD resources in this project. Use when creating Laravel models, migrations, factories, seeders, form requests, resource controllers, Inertia pages, Ziggy-backed forms, filtering/sorting/pagination, media uploads, sidebar links, or PHPUnit CRUD coverage.
 
 ## Conventions
 
@@ -183,7 +182,7 @@ protected function isAccessible(User $user, ?string $path = null): bool
 - With React `<Form>`, prefer `name` plus `defaultValue` / `defaultChecked` over controlled `value` state unless the UI truly needs control.
 - Use `useHttp` for standalone JSON or external requests that should not trigger page navigation; prefer it over raw `fetch()` for app-owned endpoints when Inertia request ergonomics are useful.
 - File uploads are converted to `FormData` automatically when `File` values are present. Use `progress` for upload UI, `forceFormData` only when needed, and prefer method-spoofed `post` uploads over direct `put` / `patch` multipart requests in Laravel.
-- When Wayfinder is available, pass the generated object directly to `Link href`, form helpers, or router methods.
+- Use Ziggy's `route()` function to generate URLs for `Link href`, form actions, and router methods. Pass the URL string directly.
 - Use `disableWhileProcessing`, `resetOnSuccess`, `resetOnError`, and `setDefaultsOnSuccess` intentionally to simplify form UX.
 - Use keyed `useForm()` instances for drafts that should survive history navigation, and exclude sensitive fields with `dontRemember()`.
 - `useHttp` also supports remembered state, `dontRemember()`, progress, cancellation, `withAllErrors()`, built-in Precognition, and optimistic updates.
@@ -197,7 +196,7 @@ protected function isAccessible(User $user, ?string $path = null): bool
 - Use client-side `router.push()` / `router.replace()` only when no server request should run, and keep pushed routes renderable by the server on refresh.
 - Use prop helpers like `router.replaceProp()`, `router.appendToProp()`, and `router.prependToProp()` for lightweight client-only page prop updates.
 - Cancel stale visits with `router.cancelAll()` when needed; use `onBefore`, `onCancelToken`, `onHttpException`, and `onNetworkError` deliberately for manual visits.
-- Instant visits are best for pages that can render with shared props only; use `component` or Wayfinder `instant` patterns only when the intermediate render is safe.
+- Instant visits are best for pages that can render with shared props only; use `component` only when the intermediate render is safe.
 - Use `replace`, `preserveState`, `preserveScroll`, and `only` intentionally when they improve navigation UX.
 - You may opt into the standards-compliant `data-inertia` head attribute with `defaults.future.useDataInertiaHeadAttribute`.
 - When using deferred props, add an empty state with a pulsing or animated skeleton.
@@ -290,17 +289,19 @@ protected function isAccessible(User $user, ?string $path = null): bool
 
 - Casts can and likely should be set in a `casts()` method on a model rather than the `$casts` property. Follow existing conventions from other models.
 
-=== wayfinder/core rules ===
+=== ziggy/core rules ===
 
-# Laravel Wayfinder
+# Ziggy (tightenco/ziggy)
 
-Wayfinder generates TypeScript functions for Laravel routes. Import from `@/actions/` (controllers) or `@/routes/` (named routes).
+Ziggy exposes Laravel named routes to TypeScript via the global `route()` function, powered by the `@routes` Blade directive.
 
-- IMPORTANT: Activate `wayfinder-development` skill whenever referencing backend routes in frontend components.
-- Invokable Controllers: `import StorePost from '@/actions/.../StorePostController'; StorePost()`.
-- Parameter Binding: Detects route keys (`{post:slug}`) — `show({ slug: "my-post" })`.
-- Query Merging: `show(1, { mergeQuery: { page: 2, sort: null } })` merges with current URL, `null` removes params.
-- Inertia: Use `.form()` with `<Form>` component or `form.submit(store())` with useForm.
+- IMPORTANT: Activate `ziggy-development` skill whenever referencing backend routes in frontend components.
+- Basic usage: `route('posts.show', { post: 1 })` → `"/posts/1"`.
+- The `route()` function returns a URL string. Pass it directly to `Link href`, `router.visit()`, `form.submit()`, etc.
+- Query parameters: `route('posts.index', { _query: { page: 2, sort: 'name' } })`.
+- Current route check: `route().current('posts.*')` for active link detection.
+- Route definitions are rendered server-side by the `@routes` Blade directive in `resources/views/app.blade.php` on full page loads.
+- When the admin slug changes, `Inertia::location()` forces a full page reload so `@routes` re-renders with updated route prefixes.
 
 === pint/core rules ===
 

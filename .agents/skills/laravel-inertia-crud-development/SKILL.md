@@ -1,6 +1,6 @@
 ---
 name: laravel-inertia-crud-development
-description: 'Builds Laravel 12 + Inertia React v3 CRUD flows for this project, including model scaffolding, Inertia pages, Wayfinder routes, filters, uploads, sidebar links, and PHPUnit coverage.'
+description: 'Builds Laravel 12 + Inertia React v3 CRUD flows for this project, including model scaffolding, Inertia pages, Ziggy routes, filters, uploads, sidebar links, and PHPUnit coverage.'
 license: MIT
 metadata:
     author: GitHub Copilot
@@ -24,7 +24,7 @@ Activate this skill when:
 Use this skill together with the existing domain skills that match the work:
 
 - `inertia-react-development` for page components, forms, and navigation
-- `wayfinder-development` for generated action and route helpers
+- `ziggy-development` for named route URL generation
 - `tailwindcss-development` for layout and styling
 - `shadcn` when composing UI from shadcn primitives
 
@@ -35,7 +35,7 @@ Before implementing, use project-specific docs search for:
 - `resource controllers validation file uploads storage public files`
 - `inertia forms file uploads validation`
 - `pagination filtering sorting`
-- `wayfinder inertia react forms`
+- `ziggy inertia react route generation`
 
 If styling or component choices are involved, also use the relevant Tailwind and shadcn guidance.
 
@@ -52,11 +52,10 @@ Follow this order unless the existing codebase clearly uses a different flow.
 7. Create a shared form request pattern when store and update rules overlap
 8. Build controller index/create/store/show/edit/update/destroy methods
 9. Add routes
-10. Generate Wayfinder routes with form variants
-11. Build Inertia pages and shared form components
-12. Update navigation or sidebar links
-13. Write focused feature tests
-14. Run Pint, tests, and frontend build
+10. Build Inertia pages and shared form components
+11. Update navigation or sidebar links
+12. Write focused feature tests
+13. Run Pint, tests, and frontend build
 
 ## Standard File Map
 
@@ -70,7 +69,6 @@ For a typical resource named `Thing`, prefer this structure:
 - `app/Http/Requests/Things/UpdateThingRequest.php`
 - `app/Http/Requests/Things/ThingFormRequest.php` when store/update overlap
 - `app/Http/Controllers/.../ThingController.php`
-- `resources/js/actions/.../ThingController.ts`
 - `resources/js/pages/.../things/index.tsx`
 - `resources/js/pages/.../things/create.tsx`
 - `resources/js/pages/.../things/edit.tsx`
@@ -166,7 +164,7 @@ Use `useForm` when the form contains:
 - controlled live previews
 - client-side state transformations before submit
 
-Use Wayfinder objects directly with `form.submit(...)` or `Link href={...}`.
+Use Ziggy `route()` URLs with `form.submit(method, url)` or `Link href={route('...')}` patterns.
 
 Do not force client-only component navigation for server-rendered CRUD pages unless the target page can safely render without server props.
 
@@ -210,7 +208,7 @@ If the new CRUD is discoverable in the app, update the sidebar or navigation.
 
 When adding sidebar links:
 
-- use generated Wayfinder URLs
+- use Ziggy `route()` URLs for link targets
 - keep active-state logic based on the current Inertia page name
 - do not hardcode a link as permanently active
 - avoid passing a `component` prop to `Link` unless an instant/client-only transition is intentional and safe
@@ -249,16 +247,14 @@ If SQLite test driver is unavailable in the environment, note that and use the c
 
 After implementation:
 
-1. Run `php artisan wayfinder:generate --with-form --no-interaction`
-2. Run `vendor/bin/pint --dirty --format agent` if PHP changed
-3. Run the smallest relevant `php artisan test --compact ...`
-4. Run `pnpm build` when frontend pages or route types changed
-5. Confirm the CRUD is reachable from the intended navigation
+1. Run `vendor/bin/pint --dirty --format agent` if PHP changed
+2. Run the smallest relevant `php artisan test --compact ...`
+3. Run `pnpm build` when frontend pages or route types changed
+4. Confirm the CRUD is reachable from the intended navigation
 
 ## Common Pitfalls
 
-- Forgetting to regenerate Wayfinder routes after adding resource routes
-- Using hardcoded URLs instead of generated actions/routes
+- Using hardcoded URLs instead of Ziggy `route()` for named routes
 - Returning incomplete Inertia props for index pages
 - Using client-only navigation patterns that skip required server props
 - Forgetting to delete replaced uploads

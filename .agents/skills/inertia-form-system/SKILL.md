@@ -58,7 +58,7 @@ const form = useAppForm({
 const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    form.submit(UserController.update(user.id), {
+    form.submit('put', route('app.users.update', { user: user.id }), {
         preserveScroll: true,
         setDefaultsOnSuccess: true,
         successToast: {

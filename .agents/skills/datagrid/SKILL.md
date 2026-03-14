@@ -440,7 +440,7 @@ The `action` prop on the Datagrid should point to this same controller action UR
 ## Rules
 
 - Always import from `@/components/datagrid/datagrid`, not internal component files.
-- Use Wayfinder controller actions for `action` and row action URLs.
+- Use Ziggy `route()` URLs for `action` and row action URLs.
 - Provide `getRowKey` that returns a truly unique identifier (usually `row.id`).
 - Always provide an `empty` state with an appropriate icon, title, and description.
 - Use `preserveScroll: true` on all bulk action `router.post/put/delete` calls.
@@ -468,7 +468,6 @@ import {
     ShieldCheckIcon,
     Trash2Icon,
 } from 'lucide-react';
-import Controller from '@/actions/App/Http/Controllers/ThingController';
 import { Datagrid } from '@/components/datagrid/datagrid';
 import type {
     DatagridBulkAction,
@@ -509,12 +508,12 @@ export default function ThingsIndex({ things, filters, statistics }: Props) {
     ];
 
     const rowActions = (item: Thing) => [
-        { label: 'View', icon: <EyeIcon />, href: Controller.show(item.id) },
-        { label: 'Edit', icon: <PencilIcon />, href: Controller.edit(item.id) },
+        { label: 'View', icon: <EyeIcon />, href: route('app.things.show', { thing: item.id }) },
+        { label: 'Edit', icon: <PencilIcon />, href: route('app.things.edit', { thing: item.id }) },
         {
             label: 'Delete',
             icon: <Trash2Icon />,
-            href: Controller.destroy(item.id).url,
+            href: route('app.things.destroy', { thing: item.id }),
             method: 'DELETE' as const,
             confirm: 'Delete this item?',
             variant: 'destructive' as const,
@@ -527,7 +526,7 @@ export default function ThingsIndex({ things, filters, statistics }: Props) {
         clear: () => void,
     ) => {
         router.post(
-            Controller.bulkAction().url,
+            route('app.things.bulk-action'),
             { action, ids: rows.map((r) => r.id) },
             { preserveScroll: true, onSuccess: () => clear() },
         );
@@ -538,14 +537,14 @@ export default function ThingsIndex({ things, filters, statistics }: Props) {
             title="Things"
             headerActions={
                 <Button asChild>
-                    <Link href={Controller.create()}>
+                    <Link href={route('app.things.create')}>
                         <PlusIcon /> New
                     </Link>
                 </Button>
             }
         >
             <Datagrid
-                action={Controller.index().url}
+                action={route('app.things.index')}
                 rows={things}
                 columns={columns}
                 filters={gridFilters}
