@@ -167,7 +167,8 @@ class RoleManagementTest extends TestCase
                 'action' => 'delete',
                 'ids' => [$deletableRole->id, $assignedRole->id, $systemRole->id],
             ])
-            ->assertRedirect();
+            ->assertRedirect()
+            ->assertSessionHas('error', 'Cannot delete this role because it has 1 user. Please reassign or remove the users first.');
 
         $this->assertSoftDeleted('roles', [
             'id' => $deletableRole->id,

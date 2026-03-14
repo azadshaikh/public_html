@@ -506,7 +506,6 @@ Route::prefix($adminPrefix)->group(function (): void {
             // --- Notes Management ---
             Route::group(['prefix' => 'notes', 'as' => 'notes.'], function (): void {
                 Route::post('/', [NotesController::class, 'store'])->name('store');
-                Route::get('/{note}/edit', [NotesController::class, 'edit'])->name('edit');
                 Route::put('/{note}', [NotesController::class, 'update'])->name('update');
                 Route::delete('/{note}', [NotesController::class, 'destroy'])->name('destroy');
                 Route::post('/{note}/pin', [NotesController::class, 'togglePin'])->name('toggle-pin');

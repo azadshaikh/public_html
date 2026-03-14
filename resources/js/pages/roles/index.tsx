@@ -328,9 +328,7 @@ export default function RolesIndex({
                     rowActions={rowActions}
                     bulkActions={visibleBulkActions}
                     isRowSelectable={(role) =>
-                        visibleBulkActions.length > 0 &&
-                        !role.is_system &&
-                        role.users_count === 0
+                        visibleBulkActions.length > 0 && !role.is_system
                     }
                     sorting={{
                         sort: filters.sort,

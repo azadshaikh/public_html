@@ -12,24 +12,16 @@ use App\Services\MediaTrashService;
 use App\Services\MediaVariationService;
 use App\Traits\ActivityTrait;
 use Exception;
-use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class MediaController extends Controller
 {
     use ActivityTrait;
-
-    private const string MODULE_TITLE = 'Media';
-
-    private const string MODULE_NAME = 'Media';
-
-    private const string MODULE_PATH = 'app.media';
 
     public $upload_disk;
 
@@ -39,101 +31,6 @@ class MediaController extends Controller
         private readonly MediaTrashService $mediaTrashService
     ) {
         $this->upload_disk = config('media-library.disk_name', 'public');
-    }
-
-    /**
-     * Display media management index page
-     */
-    public function index($status, Request $request): View
-    {
-        abort_unless(Auth::user()->can('view_media'), 401);
-
-        $view_data = $this->getViewData('List');
-        $view_data['filterdata'] = $request->all();
-
-        $sortable_options = [
-            'uploaded_on' => [
-                'label' => 'Uploaded On',
-                'slug' => 'uploaded_on',
-                'options' => [
-                    'latest_uploaded' => 'Newest First',
-                    'oldest_uploaded' => 'Oldest First',
-                ],
-            ],
-            'size' => [
-                'label' => 'Size',
-                'slug' => 'size',
-                'options' => [
-                    'largest' => 'Largest First',
-                    'smallest' => 'Smallest First',
-                ],
-            ],
-        ];
-
-        $view_data['sortable_options'] = $sortable_options;
-        $view_data['status_slug'] = $status;
-        $total_files = $this->media->withoutTrashed()->count();
-        $trashed_files = $this->media->onlyTrashed()->count();
-
-        $view_data['total_files'] = $total_files;
-        $view_data['trashed_files'] = $trashed_files;
-        $view_data['current_total'] = $status === 'trash' ? $trashed_files : $total_files;
-
-        // Handle filtering and sorting
-        $query = $this->media::query();
-
-        if ($status === 'trash') {
-            $query->onlyTrashed();
-        } else {
-            $query->withoutTrashed();
-        }
-
-        // Search
-        if ($request->filled('search')) {
-            $query->where('name', 'ilike', '%'.$request->search.'%');
-        }
-
-        // Filter by MIME type
-        if ($request->filled('mime_type')) {
-            $query->whereIn('mime_type', (array) $request->mime_type);
-        }
-
-        // Filter by user
-        if ($request->filled('created_by')) {
-            $query->whereIn('created_by', (array) $request->created_by);
-        }
-
-        // Sorting
-        $sort = $request->query('sort', 'latest_uploaded');
-        match ($sort) {
-            'oldest_uploaded' => $query->oldest(),
-            'largest' => $query->orderBy('size', 'desc'),
-            'smallest' => $query->orderBy('size', 'asc'),
-            default => $query->latest(),
-        };
-
-        $view_data['media_list'] = $query->paginate(20)->withQueryString();
-
-        // Prepare header actions for storage stats (displayed in action area)
-        $view_data['header_actions'] = [
-            [
-                'type' => 'span',
-                'label' => 'Used: '.($view_data['storage_data']['used_size_readable'] ?? '0 MB'),
-                'icon' => 'ri-hard-drive-line',
-                'class' => 'text-muted d-flex align-items-center bg-white border rounded px-3',
-            ],
-            [
-                'type' => 'span',
-                'label' => 'Limit: '.($view_data['storage_data']['max_size_readable'] ?? 'Unlimited'),
-                'icon' => 'ri-hard-drive-2-line',
-                'class' => 'text-muted d-flex align-items-center bg-white border rounded px-3',
-            ],
-        ];
-
-        /** @var view-string $indexView */
-        $indexView = self::MODULE_PATH.'.index';
-
-        return view($indexView, $view_data);
     }
 
     /**
@@ -1100,94 +997,6 @@ class MediaController extends Controller
                 'error' => 'Cleanup failed: '.$exception->getMessage(),
             ], 500);
         }
-    }
-
-    /**
-     * Get common view data for media management pages
-     */
-    private function getViewData(string $action, ?CustomMedia $media = null): array
-    {
-        $page_title = match ($action) {
-            'List' => 'Media Library',
-            'Create' => 'Add Media File',
-            'Edit' => 'Edit Media',
-            default => $media instanceof CustomMedia ? $media->name : 'Media'
-        };
-
-        $storage_data = $this->media->getUsedStorageSize();
-
-        $mime_types = DB::table('media')
-            ->select('mime_type as label', 'mime_type as value')
-            ->groupBy('mime_type')
-            ->get()
-            ->map(fn ($item): array => [
-                'label' => $item->label,
-                'value' => $item->value,
-            ]);
-
-        // Upload settings for Create and List actions (unified media library)
-        $upload_settings = null;
-        if (in_array($action, ['Create', 'List'])) {
-            $max_upload_size = config('media-library.max_file_size') / (1024 * 1024);
-            $accepted_file_types = config('media.media_allowed_file_types');
-
-            $allowed_types = explode(',', $accepted_file_types);
-
-            // Categorize file types for simpler display
-            $has_images = false;
-            $has_videos = false;
-            $has_documents = false;
-
-            foreach ($allowed_types as $type) {
-                $type = trim($type);
-                if (str_starts_with($type, 'image/')) {
-                    $has_images = true;
-                } elseif (str_starts_with($type, 'video/')) {
-                    $has_videos = true;
-                } elseif (str_starts_with($type, 'application/') || str_starts_with($type, 'text/')) {
-                    $has_documents = true;
-                }
-            }
-
-            $friendly_categories = [];
-            if ($has_images) {
-                $friendly_categories[] = 'Images';
-            }
-
-            if ($has_videos) {
-                $friendly_categories[] = 'Videos';
-            }
-
-            if ($has_documents) {
-                $friendly_categories[] = 'Documents';
-            }
-
-            $upload_settings = [
-                'max_size_mb' => $max_upload_size,
-                'max_size_bytes' => config('media-library.max_file_size'),
-                'accepted_mime_types' => $accepted_file_types,
-                'friendly_file_types' => implode(', ', $friendly_categories),
-                'max_filename_length' => (int) config('media.max_file_name_length', 100),
-                'upload_route' => route('app.media.upload-media'),
-                'settings_route' => route('app.media.upload-settings'),
-            ];
-        }
-
-        return [
-            'module_title' => self::MODULE_TITLE,
-            'module_name' => __(self::MODULE_NAME),
-            'module_path' => self::MODULE_PATH,
-            'module_model' => CustomMedia::class,
-            'module_name_singular' => Str::singular(self::MODULE_NAME),
-            'module_action' => $action,
-            'page_title' => $page_title,
-            'media' => $media,
-            'owner_options' => User::getAddedByOptions(),
-            'storage_data' => $storage_data,
-            'mime_types' => $mime_types,
-            'upload_settings' => $upload_settings,
-            'variation_config' => $this->mediaVariationService->getVariationConfig(),
-        ];
     }
 
     /**
