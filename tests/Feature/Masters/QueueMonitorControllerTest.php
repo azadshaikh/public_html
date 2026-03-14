@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Masters;
 
+use App\Definitions\QueueMonitorDefinition;
 use App\Enums\MonitorStatus;
 use App\Enums\Status;
+use App\Http\Middleware\EnsureSuperUserAccess;
 use App\Models\Monitor;
 use App\Models\Role;
 use App\Models\User;
@@ -127,6 +129,15 @@ class QueueMonitorControllerTest extends TestCase
         $this->actingAs($this->administrator)
             ->get(route('app.masters.queue-monitor.index'))
             ->assertForbidden();
+    }
+
+    public function test_queue_monitor_uses_common_super_user_middleware(): void
+    {
+        $middleware = collect((new QueueMonitorDefinition)->getMiddleware())
+            ->map(fn ($middleware) => $middleware->middleware)
+            ->all();
+
+        $this->assertContains(EnsureSuperUserAccess::class, $middleware);
     }
 
     public function test_workers_endpoint_returns_worker_stats_json(): void

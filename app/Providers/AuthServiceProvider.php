@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\User;
+use App\Support\Auth\SuperUserAccess;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
 
@@ -23,6 +24,10 @@ class AuthServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->registerPolicies();
+
+        Gate::define('viewLogViewer', function (?User $user): bool {
+            return SuperUserAccess::allows($user);
+        });
 
         /**
          * Super User Bypass System
@@ -48,7 +53,7 @@ class AuthServiceProvider extends ServiceProvider
          */
         Gate::before(function ($user): ?true {
             // Check if user has super_user role (by ID for reliability)
-            if ($user && $user->hasRole(User::superUserRoleId())) {
+            if (SuperUserAccess::allows($user)) {
                 return true; // Grant access to everything
             }
 

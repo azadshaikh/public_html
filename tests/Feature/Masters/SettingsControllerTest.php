@@ -6,8 +6,10 @@ namespace Tests\Feature\Masters;
 
 use App\Enums\Status;
 use App\Http\Middleware\EnableDebugbarForSuperUser;
+use App\Http\Middleware\EnsureSuperUserAccess;
 use App\Models\Role;
 use App\Models\User;
+use App\Support\Debugbar\OpenStorageResolver;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Fruitcake\LaravelDebugbar\LaravelDebugbar;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -500,18 +502,26 @@ class SettingsControllerTest extends TestCase
 
             $callback = config('debugbar.storage.open');
 
-            $this->assertIsCallable($callback);
+            $this->assertSame(OpenStorageResolver::class, $callback);
 
             $superUserRequest = Request::create('/_debugbar/open');
             $superUserRequest->setUserResolver(fn (): User => $this->superUser);
-            $this->assertTrue($callback($superUserRequest));
+            $this->assertTrue($callback::resolve($superUserRequest));
 
             $adminRequest = Request::create('/_debugbar/open');
             $adminRequest->setUserResolver(fn (): User => $this->admin);
-            $this->assertFalse($callback($adminRequest));
+            $this->assertFalse($callback::resolve($adminRequest));
         } finally {
             putenv('DEBUGBAR_OPEN_STORAGE');
             unset($_ENV['DEBUGBAR_OPEN_STORAGE'], $_SERVER['DEBUGBAR_OPEN_STORAGE']);
         }
+    }
+
+    public function test_debugbar_routes_use_common_super_user_middleware(): void
+    {
+        $this->assertContains(
+            EnsureSuperUserAccess::class,
+            config('debugbar.route_middleware', []),
+        );
     }
 }

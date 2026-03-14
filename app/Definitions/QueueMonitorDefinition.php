@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Definitions;
 
 use App\Http\Middleware\CheckQueueMonitorUiConfig;
+use App\Http\Middleware\EnsureSuperUserAccess;
 use App\Models\Monitor;
 use App\Scaffold\Action;
 use App\Scaffold\Column;
@@ -46,7 +47,7 @@ class QueueMonitorDefinition extends ScaffoldDefinition
     public function getMiddleware(): array
     {
         return [
-            new Middleware('role:super_user'),
+            new Middleware(EnsureSuperUserAccess::class),
             new Middleware(CheckQueueMonitorUiConfig::class),
         ];
     }
