@@ -214,7 +214,7 @@ class SettingsController extends Controller
     /**
      * Update settings for a specific meta group
      */
-    public function update(string $meta_group, SettingsRequest $request): RedirectResponse
+    public function update(string $meta_group, SettingsRequest $request): RedirectResponse|\Symfony\Component\HttpFoundation\Response
     {
         $this->authorizeSettingsAccess();
 
@@ -263,7 +263,14 @@ class SettingsController extends Controller
                     (bool) ($result['recache_sync'] ?? false)
                 );
 
-                // Return success with detailed change summary
+                // When admin slug changes, force a full browser reload so the
+                // @routes directive re-renders Ziggy with the new route prefixes.
+                if ($result['admin_slug_changed'] ?? false) {
+                    session()->flash('success', $changeSummary);
+
+                    return Inertia::location($redirectUrl);
+                }
+
                 return redirect($redirectUrl)
                     ->with('success', $changeSummary);
             }
