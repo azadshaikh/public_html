@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\NoteResource;
 use App\Models\Note;
 use App\Services\NoteService;
 use App\Traits\ActivityTrait;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
@@ -26,7 +28,7 @@ class NotesController extends Controller
 
     public function __construct(private readonly NoteService $noteService) {}
 
-    public function store(Request $request): JsonResponse
+    public function store(Request $request): JsonResponse|RedirectResponse
     {
         $validated = $request->validate([
             'content' => ['required', 'string'],
@@ -51,13 +53,24 @@ class NotesController extends Controller
                 'noteable_id' => $validated['noteable_id'],
             ]);
 
-            return $this->successResponse('Note added successfully.');
+            if ($this->isInertiaRequest($request)) {
+                return back()->with('success', 'Note added successfully.');
+            }
+
+            return $this->successResponse(
+                'Note added successfully.',
+                additional: $this->notesPayload($noteable, $note->fresh(['author']))
+            );
         } catch (Exception $exception) {
+            if ($this->isInertiaRequest($request)) {
+                return back()->withInput()->with('error', 'Error creating note. Please try again.');
+            }
+
             return $this->errorResponse('Error creating note: '.$exception->getMessage());
         }
     }
 
-    public function update(Request $request, Note $note): JsonResponse
+    public function update(Request $request, Note $note): JsonResponse|RedirectResponse
     {
         $validated = $request->validate([
             'content' => ['required', 'string'],
@@ -75,15 +88,28 @@ class NotesController extends Controller
                 'noteable_id' => $note->noteable_id,
             ]);
 
-            return $this->successResponse('Note updated successfully.');
+            if ($this->isInertiaRequest($request)) {
+                return back()->with('success', 'Note updated successfully.');
+            }
+
+            return $this->successResponse(
+                'Note updated successfully.',
+                additional: $this->notesPayload($note->noteable, $note->fresh(['author']))
+            );
         } catch (Exception $exception) {
+            if ($this->isInertiaRequest($request)) {
+                return back()->withInput()->with('error', 'Error updating note. Please try again.');
+            }
+
             return $this->errorResponse('Error updating note: '.$exception->getMessage());
         }
     }
 
-    public function destroy(Note $note): JsonResponse
+    public function destroy(Request $request, Note $note): JsonResponse|RedirectResponse
     {
         try {
+            $noteable = $note->noteable;
+
             $this->noteService->delete($note);
 
             $this->logDeleted($note, 'Note deleted.', [
@@ -91,13 +117,24 @@ class NotesController extends Controller
                 'noteable_id' => $note->noteable_id,
             ]);
 
-            return $this->successResponse('Note deleted successfully.');
+            if ($this->isInertiaRequest($request)) {
+                return back()->with('success', 'Note deleted successfully.');
+            }
+
+            return $this->successResponse(
+                'Note deleted successfully.',
+                additional: $this->notesPayload($noteable)
+            );
         } catch (Exception $exception) {
+            if ($this->isInertiaRequest($request)) {
+                return back()->with('error', 'Error deleting note. Please try again.');
+            }
+
             return $this->errorResponse('Error deleting note: '.$exception->getMessage());
         }
     }
 
-    public function togglePin(Note $note): JsonResponse
+    public function togglePin(Request $request, Note $note): JsonResponse|RedirectResponse
     {
         try {
             $wasPinned = $note->is_pinned;
@@ -105,10 +142,26 @@ class NotesController extends Controller
 
             $action = $wasPinned ? 'unpinned' : 'pinned';
 
-            return $this->successResponse(sprintf('Note %s successfully.', $action));
+            if ($this->isInertiaRequest($request)) {
+                return back()->with('success', sprintf('Note %s successfully.', $action));
+            }
+
+            return $this->successResponse(
+                sprintf('Note %s successfully.', $action),
+                additional: $this->notesPayload($note->noteable, $note->fresh(['author']))
+            );
         } catch (Exception $exception) {
+            if ($this->isInertiaRequest($request)) {
+                return back()->with('error', 'Error updating note. Please try again.');
+            }
+
             return $this->errorResponse('Error toggling pin: '.$exception->getMessage());
         }
+    }
+
+    private function isInertiaRequest(Request $request): bool
+    {
+        return $request->header('X-Inertia') !== null;
     }
 
     private function successResponse(string $message, ?string $redirect = null, array $additional = []): JsonResponse
@@ -125,6 +178,14 @@ class NotesController extends Controller
         }
 
         return response()->json(array_merge($response, $additional));
+    }
+
+    private function notesPayload(Model $noteable, ?Note $note = null): array
+    {
+        return [
+            'notes' => NoteResource::collection($this->noteService->getAllForModel($noteable))->resolve(request()),
+            'note' => $note ? (new NoteResource($note))->resolve(request()) : null,
+        ];
     }
 
     private function errorResponse(string $message): JsonResponse

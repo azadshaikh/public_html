@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Enums\NoteType;
+use App\Enums\NoteVisibility;
 use App\Enums\Status;
+use App\Models\Note;
 use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -431,6 +434,194 @@ class UserControllerTest extends TestCase
                 ->component('users/show')
                 ->has('user')
             );
+    }
+
+    public function test_user_show_page_includes_note_props(): void
+    {
+        $user = User::factory()->create(['status' => Status::ACTIVE]);
+
+        Note::query()->create([
+            'noteable_type' => User::class,
+            'noteable_id' => $user->id,
+            'content' => 'Follow up on profile completion.',
+            'type' => NoteType::Note,
+            'visibility' => NoteVisibility::Team,
+            'created_by' => $this->admin->id,
+            'updated_by' => $this->admin->id,
+        ]);
+
+        $this->actingAs($this->admin)
+            ->get(route('app.users.show', $user))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->component('users/show')
+                ->has('notes', 1)
+                ->where('notes.0.content', 'Follow up on profile completion.')
+                ->where('notes.0.visibility.value', NoteVisibility::Team->value)
+                ->where('noteTarget.type', User::class)
+                ->where('noteTarget.id', $user->id)
+                ->has('noteVisibilityOptions', 3)
+            );
+    }
+
+    public function test_private_notes_are_hidden_from_other_users_on_the_user_show_page(): void
+    {
+        $user = User::factory()->create(['status' => Status::ACTIVE]);
+        $viewer = User::factory()->create([
+            'first_name' => 'Viewer',
+            'last_name' => 'Admin',
+            'status' => Status::ACTIVE,
+        ]);
+        $viewer->assignRole(Role::findByName('administrator', 'web'));
+
+        Note::query()->create([
+            'noteable_type' => User::class,
+            'noteable_id' => $user->id,
+            'content' => 'Private onboarding reminder.',
+            'type' => NoteType::Note,
+            'visibility' => NoteVisibility::Private,
+            'created_by' => $this->admin->id,
+            'updated_by' => $this->admin->id,
+        ]);
+
+        Note::query()->create([
+            'noteable_type' => User::class,
+            'noteable_id' => $user->id,
+            'content' => 'Shared team note.',
+            'type' => NoteType::Note,
+            'visibility' => NoteVisibility::Team,
+            'created_by' => $this->admin->id,
+            'updated_by' => $this->admin->id,
+        ]);
+
+        $this->actingAs($viewer)
+            ->get(route('app.users.show', $user))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->component('users/show')
+                ->has('notes', 1)
+                ->where('notes.0.content', 'Shared team note.')
+            );
+    }
+
+    public function test_admin_can_add_a_note_to_a_user_via_the_notes_endpoint(): void
+    {
+        $user = User::factory()->create(['status' => Status::ACTIVE]);
+
+        $this->actingAs($this->admin)
+            ->postJson(route('app.notes.store'), [
+                'content' => 'Reach out about completing setup.',
+                'noteable_type' => User::class,
+                'noteable_id' => $user->id,
+                'visibility' => NoteVisibility::Team->value,
+            ])
+            ->assertOk()
+            ->assertJson([
+                'status' => 1,
+                'message' => 'Note added successfully.',
+            ])
+            ->assertJsonPath('notes.0.content', 'Reach out about completing setup.');
+
+        $this->assertDatabaseHas('notes', [
+            'noteable_type' => User::class,
+            'noteable_id' => $user->id,
+            'content' => 'Reach out about completing setup.',
+            'visibility' => NoteVisibility::Team->value,
+            'created_by' => $this->admin->id,
+        ]);
+    }
+
+    public function test_admin_can_update_a_user_note_via_the_notes_endpoint(): void
+    {
+        $user = User::factory()->create(['status' => Status::ACTIVE]);
+        $note = Note::query()->create([
+            'noteable_type' => User::class,
+            'noteable_id' => $user->id,
+            'content' => 'Initial note content.',
+            'type' => NoteType::Note,
+            'visibility' => NoteVisibility::Team,
+            'created_by' => $this->admin->id,
+            'updated_by' => $this->admin->id,
+        ]);
+
+        $this->actingAs($this->admin)
+            ->putJson(route('app.notes.update', $note), [
+                'content' => 'Updated note content.',
+                'visibility' => NoteVisibility::Private->value,
+            ])
+            ->assertOk()
+            ->assertJson([
+                'status' => 1,
+                'message' => 'Note updated successfully.',
+            ])
+            ->assertJsonPath('note.id', $note->id)
+            ->assertJsonPath('note.content', 'Updated note content.')
+            ->assertJsonPath('note.visibility.value', NoteVisibility::Private->value);
+
+        $this->assertDatabaseHas('notes', [
+            'id' => $note->id,
+            'content' => 'Updated note content.',
+            'visibility' => NoteVisibility::Private->value,
+            'updated_by' => $this->admin->id,
+        ]);
+    }
+
+    public function test_admin_can_toggle_pin_for_a_user_note_via_the_notes_endpoint(): void
+    {
+        $user = User::factory()->create(['status' => Status::ACTIVE]);
+        $note = Note::query()->create([
+            'noteable_type' => User::class,
+            'noteable_id' => $user->id,
+            'content' => 'Important onboarding detail.',
+            'type' => NoteType::Note,
+            'visibility' => NoteVisibility::Team,
+            'created_by' => $this->admin->id,
+            'updated_by' => $this->admin->id,
+        ]);
+
+        $this->actingAs($this->admin)
+            ->postJson(route('app.notes.toggle-pin', $note))
+            ->assertOk()
+            ->assertJson([
+                'status' => 1,
+                'message' => 'Note pinned successfully.',
+            ])
+            ->assertJsonPath('note.id', $note->id)
+            ->assertJsonPath('note.is_pinned', true);
+
+        $this->assertDatabaseHas('notes', [
+            'id' => $note->id,
+            'is_pinned' => true,
+            'pinned_by' => $this->admin->id,
+        ]);
+    }
+
+    public function test_admin_can_delete_a_user_note_via_the_notes_endpoint(): void
+    {
+        $user = User::factory()->create(['status' => Status::ACTIVE]);
+        $note = Note::query()->create([
+            'noteable_type' => User::class,
+            'noteable_id' => $user->id,
+            'content' => 'Temporary follow-up note.',
+            'type' => NoteType::Note,
+            'visibility' => NoteVisibility::Team,
+            'created_by' => $this->admin->id,
+            'updated_by' => $this->admin->id,
+        ]);
+
+        $this->actingAs($this->admin)
+            ->deleteJson(route('app.notes.destroy', $note))
+            ->assertOk()
+            ->assertJson([
+                'status' => 1,
+                'message' => 'Note deleted successfully.',
+            ])
+            ->assertJsonPath('notes', []);
+
+        $this->assertSoftDeleted('notes', [
+            'id' => $note->id,
+            'deleted_by' => $this->admin->id,
+        ]);
     }
 
     // =========================================================================

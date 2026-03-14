@@ -5,13 +5,16 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Enums\ActivityAction;
+use App\Enums\NoteVisibility;
 use App\Enums\Status;
+use App\Http\Resources\NoteResource;
 use App\Http\Resources\UserResource;
 use App\Models\ActivityLog;
 use App\Models\Role;
 use App\Models\User;
 use App\Scaffold\ScaffoldController;
 use App\Services\GeoIpService;
+use App\Services\NoteService;
 use App\Services\UserService;
 use Exception;
 use Illuminate\Auth\Events\Verified;
@@ -29,7 +32,8 @@ class UserController extends ScaffoldController implements HasMiddleware
 {
     public function __construct(
         private readonly UserService $userService,
-        private readonly GeoIpService $geoIpService
+        private readonly GeoIpService $geoIpService,
+        private readonly NoteService $noteService,
     ) {}
 
     // ================================================================
@@ -115,6 +119,12 @@ class UserController extends ScaffoldController implements HasMiddleware
         return Inertia::render($this->inertiaPage().'/show', [
             'user' => (new UserResource($user))->toArray(request()),
             'userActivities' => $userActivities,
+            'notes' => NoteResource::collection($this->noteService->getAllForModel($user))->resolve(request()),
+            'noteTarget' => [
+                'type' => User::class,
+                'id' => $user->id,
+            ],
+            'noteVisibilityOptions' => NoteVisibility::options(),
             'status' => session('status'),
             'error' => session('error'),
         ]);

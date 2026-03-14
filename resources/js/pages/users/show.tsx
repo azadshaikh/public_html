@@ -20,6 +20,7 @@ import type { ReactNode } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { NotesPanel } from '@/components/notes/notes-panel';
 import {
     Card,
     CardContent,
@@ -86,6 +87,9 @@ function SocialLink({ url, label }: { url: string | null; label: string }) {
 export default function UsersShow({
     user,
     userActivities,
+    notes,
+    noteTarget,
+    noteVisibilityOptions,
 }: UsersShowPageProps) {
     const page = usePage<AuthenticatedSharedData>();
     const getInitials = useInitials();
@@ -302,6 +306,9 @@ export default function UsersShow({
                 <Tabs defaultValue="overview">
                     <TabsList variant="line">
                         <TabsTrigger value="overview">Overview</TabsTrigger>
+                        <TabsTrigger value="notes">
+                            Notes ({notes.length})
+                        </TabsTrigger>
                         <TabsTrigger value="activity">
                             Activity ({userActivities.length})
                         </TabsTrigger>
@@ -495,6 +502,17 @@ export default function UsersShow({
                                 )}
                             </div>
                         </div>
+                    </TabsContent>
+
+                    {/* Notes Tab */}
+                    <TabsContent value="notes">
+                        <NotesPanel
+                            notes={notes}
+                            noteTarget={noteTarget}
+                            noteVisibilityOptions={noteVisibilityOptions}
+                            title="User notes"
+                            description="Keep internal context, follow-ups, and account-specific reminders in one place."
+                        />
                     </TabsContent>
 
                     {/* Activity Tab */}

@@ -189,7 +189,9 @@ class NoteService
      */
     public function search(string $query, int $limit = 50): Collection
     {
-        return Note::with(['author', 'noteable'])
+        return $this->applyCurrentUserVisibilityScope(
+            Note::with(['author', 'noteable'])
+        )
             ->where('content', 'ilike', sprintf('%%%s%%', $query))->latest()
             ->limit($limit)
             ->get();
@@ -200,7 +202,9 @@ class NoteService
      */
     public function getRecent(int $limit = 10): Collection
     {
-        return Note::with(['author', 'noteable'])->latest()
+        return $this->applyCurrentUserVisibilityScope(
+            Note::with(['author', 'noteable'])
+        )->latest()
             ->limit($limit)
             ->get();
     }
@@ -218,9 +222,31 @@ class NoteService
 
     private function notesQueryFor(Model $noteable): Builder
     {
-        return Note::query()
-            ->where('noteable_type', $noteable::class)
-            ->where('noteable_id', $noteable->getKey())
-            ->defaultOrder();
+        return $this->applyCurrentUserVisibilityScope(
+            Note::query()
+                ->where('noteable_type', $noteable::class)
+                ->where('noteable_id', $noteable->getKey())
+                ->defaultOrder()
+        );
+    }
+
+    private function applyCurrentUserVisibilityScope(Builder $query): Builder
+    {
+        $userId = auth()->id();
+
+        return $query->where(function (Builder $visibilityQuery) use ($userId): void {
+            $visibilityQuery->whereIn('visibility', [
+                NoteVisibility::Team,
+                NoteVisibility::Customer,
+            ]);
+
+            if ($userId !== null) {
+                $visibilityQuery->orWhere(function (Builder $privateQuery) use ($userId): void {
+                    $privateQuery
+                        ->where('visibility', NoteVisibility::Private)
+                        ->where('created_by', $userId);
+                });
+            }
+        });
     }
 }

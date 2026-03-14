@@ -1,4 +1,10 @@
 import type { PaginatedData } from '@/types/pagination';
+import type {
+    AppNote,
+    NoteBadgeVariant,
+    NoteTarget,
+    NoteVisibilityOption,
+} from '@/types/notes';
 
 export type ManagedUserRole = {
     id: number;
@@ -34,7 +40,7 @@ export type UserListItem = {
     show_url: string;
     status: string;
     status_label: string;
-    status_badge: string;
+    status_badge: NoteBadgeVariant;
     email_verified: boolean;
     email_verified_at: string | null;
     gender: string | null;
@@ -129,6 +135,9 @@ export type UsersShowPageProps = {
         last_access_human: string | null;
     };
     userActivities: UserActivity[];
+    notes: AppNote[];
+    noteTarget: NoteTarget;
+    noteVisibilityOptions: NoteVisibilityOption[];
     status?: string;
     error?: string;
 };
