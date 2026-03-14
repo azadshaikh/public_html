@@ -22,10 +22,10 @@ class HandleInertiaRequests extends Middleware
     /**
      * Determines the current asset version.
      *
-     * The admin slug is included so that changing it invalidates the client-side
-     * Ziggy route definitions (rendered by @routes on full page loads).  When
-     * Inertia detects a version mismatch it forces a full browser reload,
-     * ensuring the new route prefixes are picked up without a manual build.
+     * The admin slug and the user's primary role ID are included so that
+     * changing either one invalidates the client-side Ziggy route definitions
+     * (rendered on full page loads).  When Inertia detects a version mismatch
+     * it forces a full browser reload, ensuring filtered routes are refreshed.
      *
      * @see https://inertiajs.com/v3/advanced/asset-versioning
      */
@@ -33,8 +33,9 @@ class HandleInertiaRequests extends Middleware
     {
         $parentVersion = parent::version($request) ?? '';
         $adminSlug = config('app.admin_slug', '');
+        $roleId = $request->user()?->roles->first()?->id ?? 'guest';
 
-        return md5($parentVersion.'|admin_slug:'.$adminSlug);
+        return md5($parentVersion.'|admin_slug:'.$adminSlug.'|role:'.$roleId);
     }
 
     /**

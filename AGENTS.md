@@ -293,15 +293,18 @@ protected function isAccessible(User $user, ?string $path = null): bool
 
 # Ziggy (tightenco/ziggy)
 
-Ziggy exposes Laravel named routes to TypeScript via the global `route()` function, powered by the `@routes` Blade directive.
+Ziggy exposes Laravel named routes to TypeScript via the global `route()` function, powered by `ZiggyRouteFilter` which replaces the `@routes` Blade directive.
 
 - IMPORTANT: Activate `ziggy-development` skill whenever referencing backend routes in frontend components.
 - Basic usage: `route('posts.show', { post: 1 })` → `"/posts/1"`.
 - The `route()` function returns a URL string. Pass it directly to `Link href`, `router.visit()`, `form.submit()`, etc.
 - Query parameters: `route('posts.index', { _query: { page: 2, sort: 'name' } })`.
 - Current route check: `route().current('posts.*')` for active link detection.
-- Route definitions are rendered server-side by the `@routes` Blade directive in `resources/views/app.blade.php` on full page loads.
-- When the admin slug changes, `Inertia::location()` forces a full page reload so `@routes` re-renders with updated route prefixes.
+- Route definitions are rendered server-side by `ZiggyRouteFilter` in `resources/views/app.blade.php` on full page loads.
+- Routes are **filtered per user role**: super users get all routes, other users get only the groups their permissions allow. Groups are defined in `config/ziggy.php`.
+- When the admin slug or user role changes, Inertia asset versioning forces a full page reload so the filtered route set is refreshed.
+- Use `safeRoute()` and `hasRoute()` from `@/lib/safe-route` when a route may not be present for the current user.
+- Cache is stored per role ID; call `ZiggyRouteFilter::clearCache()` when permissions or route groups change.
 
 === pint/core rules ===
 

@@ -16,6 +16,7 @@ Activate whenever referencing backend routes in frontend components:
 - Building `<Link href>`, `router.visit()`, or `form.submit()` targets
 - Checking the current route for active-link styling
 - Debugging route name resolution or parameter binding
+- Working with route filtering, `safeRoute()`, or `hasRoute()`
 
 ## Documentation
 
@@ -23,15 +24,50 @@ Use `search-docs` for detailed Ziggy patterns and documentation.
 
 ## How Ziggy Works
 
-Ziggy exposes Laravel named routes to the frontend via the `@routes` Blade directive in `resources/views/app.blade.php`. This directive renders a JavaScript object containing all named routes and their parameter patterns on every full page load.
+Ziggy exposes Laravel named routes to the frontend via the `ZiggyRouteFilter` service in `resources/views/app.blade.php`. This service renders a JavaScript object containing **only the routes the current user is authorised to see**, based on their role and permissions.
 
 The global `route()` function is then available in all TypeScript/JavaScript files without explicit imports.
 
 ### Route Definitions Lifecycle
 
-- Route definitions are generated server-side by the `@routes` Blade directive on full page loads.
+- Route definitions are generated server-side by `ZiggyRouteFilter::render()` on full page loads.
+- Routes are **filtered per user role**: super users get all routes, guests see only public routes, other users see routes matching their permissions.
 - Inertia SPA navigation (XHR) does NOT re-render `<head>`, so route definitions stay fixed until the next full page load.
-- When configuration changes affect route prefixes (e.g., admin slug changes), the application forces a full page reload via `Inertia::location()` and Inertia asset versioning so that `@routes` re-renders with the updated routes.
+- When the admin slug or user role changes, Inertia asset versioning (includes role ID in the hash) forces a full page reload so routes are re-rendered with the updated set.
+- Filtered route sets are cached per role ID for performance. Call `ZiggyRouteFilter::clearCache()` when permissions or route groups change.
+
+### Route Groups (`config/ziggy.php`)
+
+Route groups define which named routes are included for each access level:
+
+| Group          | Access Level                      | Route Patterns                    |
+|----------------|-----------------------------------|-----------------------------------|
+| `public`       | Everyone (guests included)        | `login`, `register`, `password.*` |
+| `authenticated`| All logged-in users               | `dashboard`, `app.profile.*`, `app.settings.*`, `app.media.*` |
+| `users`        | Requires `view_users` permission  | `app.users.*`                     |
+| `roles`        | Requires `view_roles` permission  | `app.roles.*`                     |
+| `modules`      | Requires `manage_modules`         | `app.masters.modules.*`, `cms.*`  |
+| `masters`      | Super user only                   | `app.masters.settings.*`, `app.masters.groups.*`, `app.masters.laravel-tools.*` |
+| `logs`         | Super user only                   | `app.logs.*`, `log-viewer.*`      |
+| `broadcast`    | Super user only                   | `app.notifications.broadcast.*`   |
+
+### Safe Route Helpers (`@/lib/safe-route`)
+
+When routes are filtered, a component may reference a route not present for the current user. Use these helpers:
+
+```typescript
+import { safeRoute, hasRoute } from '@/lib/safe-route';
+
+// safeRoute — same API as route(), returns '/404' if missing
+safeRoute('app.users.index')           // URL string or '/404'
+
+// hasRoute — check existence before rendering
+if (hasRoute('app.masters.settings.index')) {
+    // render admin link
+}
+```
+
+Use `safeRoute()` when a route might not exist for the user. Use `hasRoute()` to conditionally render UI elements. Regular `route()` is fine when the route is guaranteed to exist (e.g., inside permission-gated pages).
 
 ## Quick Reference
 
@@ -170,18 +206,22 @@ Ziggy's `route()` function is globally typed via `resources/js/types/global.d.ts
 
 ## Verification
 
-1. Check that `@routes` directive exists in `resources/views/app.blade.php`
+1. Check that `ZiggyRouteFilter::render()` is called in `resources/views/app.blade.php`
 2. Verify TypeScript recognizes `route()` — no import needed
 3. Run `php artisan route:list` to confirm named routes exist
 4. Run `pnpm build` to verify no TypeScript errors
+5. Check that `config/ziggy.php` groups cover all needed routes
 
 ## Common Pitfalls
 
-- Importing `route` explicitly — it's globally available via the `@routes` Blade directive
+- Importing `route` explicitly — it's globally available via the Ziggy script tag
 - Using hardcoded URLs instead of `route()` for internal navigation
 - Forgetting that `route()` returns a string, not an object — pass it directly to `href`, `action`, or `router.visit()`
 - Using wrong route parameter names — check `php artisan route:list` for parameter bindings
 - Forgetting `_query` wrapper for query parameters (e.g., using `{ page: 2 }` instead of `{ _query: { page: 2 } }`)
 - Relying on stale Ziggy route definitions after admin slug changes — the app handles this automatically via `Inertia::location()` and asset versioning
 - Using `route().current()` without understanding that it checks against the Inertia page URL, not the browser URL
+- Calling `route('app.masters.settings.index')` for a non-super user — the route won't exist in their Ziggy config. Use `safeRoute()` or `hasRoute()` when the route may be filtered out.
+- Forgetting to add new route groups to `config/ziggy.php` when creating new CRUD resources
+- Not calling `ZiggyRouteFilter::clearCache()` after modifying permission assignments or route groups
 ```

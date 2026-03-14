@@ -36,7 +36,7 @@
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
-    @routes
+    {!! app(\App\Services\ZiggyRouteFilter::class)->render(auth()->user()) !!}
     @viteReactRefresh
     @vite('resources/js/app.tsx')
 </head>
