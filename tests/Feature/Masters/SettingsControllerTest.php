@@ -9,7 +9,7 @@ use App\Http\Middleware\EnableDebugbarForSuperUser;
 use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
-use Fruitcake\LaravelDebugbar\Facades\Debugbar;
+use Fruitcake\LaravelDebugbar\LaravelDebugbar;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -452,8 +452,8 @@ class SettingsControllerTest extends TestCase
     {
         config(['debugbar.enabled' => true]);
 
-        Debugbar::shouldReceive('enable')->once();
-        Debugbar::shouldReceive('disable')->never();
+        $debugbar = app(LaravelDebugbar::class);
+        $debugbar->disable();
 
         $request = Request::create('/admin');
         $request->setUserResolver(fn (): User => $this->superUser);
@@ -464,14 +464,15 @@ class SettingsControllerTest extends TestCase
         );
 
         $this->assertSame(200, $response->getStatusCode());
+        $this->assertTrue($debugbar->isEnabled());
     }
 
     public function test_debugbar_middleware_disables_debugbar_for_non_super_users(): void
     {
         config(['debugbar.enabled' => true]);
 
-        Debugbar::shouldReceive('disable')->once();
-        Debugbar::shouldReceive('enable')->never();
+        $debugbar = app(LaravelDebugbar::class);
+        $debugbar->enable();
 
         $request = Request::create('/admin');
         $request->setUserResolver(fn (): User => $this->admin);
@@ -482,6 +483,7 @@ class SettingsControllerTest extends TestCase
         );
 
         $this->assertSame(200, $response->getStatusCode());
+        $this->assertFalse($debugbar->isEnabled());
     }
 
     public function test_debugbar_open_storage_callback_only_allows_super_users(): void
@@ -490,24 +492,26 @@ class SettingsControllerTest extends TestCase
         $_ENV['DEBUGBAR_OPEN_STORAGE'] = 'true';
         $_SERVER['DEBUGBAR_OPEN_STORAGE'] = 'true';
 
-        config([
-            'app.debug' => true,
-            'debugbar.enabled' => true,
-        ]);
+        try {
+            config([
+                'app.debug' => true,
+                'debugbar.enabled' => true,
+            ]);
 
-        $callback = config('debugbar.storage.open');
+            $callback = config('debugbar.storage.open');
 
-        $this->assertIsCallable($callback);
+            $this->assertIsCallable($callback);
 
-        $superUserRequest = Request::create('/_debugbar/open');
-        $superUserRequest->setUserResolver(fn (): User => $this->superUser);
-        $this->assertTrue($callback($superUserRequest));
+            $superUserRequest = Request::create('/_debugbar/open');
+            $superUserRequest->setUserResolver(fn (): User => $this->superUser);
+            $this->assertTrue($callback($superUserRequest));
 
-        $adminRequest = Request::create('/_debugbar/open');
-        $adminRequest->setUserResolver(fn (): User => $this->admin);
-        $this->assertFalse($callback($adminRequest));
-
-        putenv('DEBUGBAR_OPEN_STORAGE');
-        unset($_ENV['DEBUGBAR_OPEN_STORAGE'], $_SERVER['DEBUGBAR_OPEN_STORAGE']);
+            $adminRequest = Request::create('/_debugbar/open');
+            $adminRequest->setUserResolver(fn (): User => $this->admin);
+            $this->assertFalse($callback($adminRequest));
+        } finally {
+            putenv('DEBUGBAR_OPEN_STORAGE');
+            unset($_ENV['DEBUGBAR_OPEN_STORAGE'], $_SERVER['DEBUGBAR_OPEN_STORAGE']);
+        }
     }
 }
