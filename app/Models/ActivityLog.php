@@ -43,7 +43,6 @@ class ActivityLog extends Activity
 {
     use ActivityLogsPresenter;
     use HasFactory;
-    use HasFactory;
     use SoftDeletes;
 
     /**

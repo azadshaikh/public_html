@@ -33,7 +33,6 @@ use Illuminate\Support\Facades\DB;
 class NotFoundLog extends Model
 {
     use HasFactory;
-    use HasFactory;
     use SoftDeletes;
 
     /**
@@ -267,7 +266,7 @@ class NotFoundLog extends Model
             ->select('ip_address')
             ->selectRaw('COUNT(*) as hit_count')
             ->selectRaw('COUNT(DISTINCT url) as unique_urls')
-            ->selectRaw('SUM(is_suspicious) as suspicious_count')
+            ->selectRaw('COUNT(*) FILTER (WHERE is_suspicious) as suspicious_count')
             ->groupBy('ip_address')
             ->orderByDesc('hit_count')
             ->limit($limit)

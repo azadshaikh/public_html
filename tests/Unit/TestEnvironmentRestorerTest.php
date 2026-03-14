@@ -38,7 +38,7 @@ class TestEnvironmentRestorerTest extends TestCase
     {
         $command = TestEnvironmentRestorer::command('/usr/bin/php', '/home/example-app/artisan');
 
-        $this->assertStringContainsString("APP_ENV=local '/usr/bin/php' '/home/example-app/artisan' migrate --force --no-interaction", $command);
+        $this->assertStringContainsString("APP_ENV=local '/usr/bin/php' '/home/example-app/artisan' migrate:fresh --force --no-interaction", $command);
         $this->assertStringContainsString("APP_ENV=local '/usr/bin/php' '/home/example-app/artisan' db:seed --force --no-interaction", $command);
         $this->assertStringContainsString("APP_ENV=local '/usr/bin/php' '/home/example-app/artisan' optimize:clear --no-interaction", $command);
     }

@@ -64,8 +64,8 @@ class AsteroInstallCommandTest extends TestCase
         $moduleSeeders = (new DatabaseSeeder)->getModuleSeeders();
 
         $this->assertContains('Modules\\Cms\\Database\\Seeders\\DatabaseSeeder', $moduleSeeders);
+        $this->assertContains('Modules\\ChatBot\\Database\\Seeders\\DatabaseSeeder', $moduleSeeders);
         $this->assertContains('Modules\\Todos\\Database\\Seeders\\DatabaseSeeder', $moduleSeeders);
-        $this->assertNotContains('Modules\\ChatBot\\Database\\Seeders\\DatabaseSeeder', $moduleSeeders);
     }
 
     public function test_database_seeder_includes_local_seeders_when_running_locally(): void

@@ -1006,4 +1006,29 @@ class MediaController extends Controller
     {
         $mediaService->permanentlyDeleteMedia($media);
     }
+
+    private function successResponse(string $message, ?string $redirect = null, array $additional = []): JsonResponse
+    {
+        $response = [
+            'status' => 1,
+            'type' => 'toast',
+            'message' => $message,
+            'refresh' => 'refresh',
+        ];
+
+        if ($redirect !== null) {
+            $response['redirect'] = $redirect;
+        }
+
+        return response()->json(array_merge($response, $additional));
+    }
+
+    private function errorResponse(string $message, int $statusCode = 400): JsonResponse
+    {
+        return response()->json([
+            'status' => 0,
+            'type' => 'toast',
+            'message' => $message,
+        ], $statusCode);
+    }
 }

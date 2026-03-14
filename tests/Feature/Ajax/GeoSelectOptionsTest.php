@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\Feature;
+namespace Tests\Feature\Ajax;
 
 use App\Enums\Status;
 use App\Models\User;
