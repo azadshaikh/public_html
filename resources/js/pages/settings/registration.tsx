@@ -3,7 +3,13 @@ import type { FormEvent } from 'react';
 import { FormErrorSummary } from '@/components/forms/form-error-summary';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
+import {
+    Field,
+    FieldDescription,
+    FieldError,
+    FieldGroup,
+    FieldLabel,
+} from '@/components/ui/field';
 import { NativeSelect } from '@/components/ui/native-select';
 import { Spinner } from '@/components/ui/spinner';
 import { Switch } from '@/components/ui/switch';
@@ -36,7 +42,11 @@ type RegistrationFormData = {
     auto_approve: boolean;
 };
 
-export default function Registration({ settings, options, settingsNav }: RegistrationPageProps) {
+export default function Registration({
+    settings,
+    options,
+    settingsNav,
+}: RegistrationPageProps) {
     const form = useAppForm<RegistrationFormData>({
         defaults: {
             enable_registration: settings.enable_registration,
@@ -56,15 +66,25 @@ export default function Registration({ settings, options, settingsNav }: Registr
             setDefaultsOnSuccess: true,
             successToast: {
                 title: 'Registration settings updated',
-                description: 'Your registration settings have been saved successfully.',
+                description:
+                    'Your registration settings have been saved successfully.',
             },
         });
     };
 
     return (
-        <SettingsLayout settingsNav={settingsNav} breadcrumbs={breadcrumbs} title="Settings" description="Manage your application settings.">
+        <SettingsLayout
+            settingsNav={settingsNav}
+            breadcrumbs={breadcrumbs}
+            title="Settings"
+            description="Manage your application settings."
+        >
             <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
-                <form noValidate className="flex flex-col gap-6" onSubmit={handleSubmit}>
+                <form
+                    noValidate
+                    className="flex flex-col gap-6"
+                    onSubmit={handleSubmit}
+                >
                     {form.dirtyGuardDialog}
                     <FormErrorSummary errors={form.errors} minMessages={2} />
 
@@ -78,78 +98,152 @@ export default function Registration({ settings, options, settingsNav }: Registr
                                 <Field>
                                     <div className="flex items-center justify-between gap-4">
                                         <div className="space-y-1">
-                                            <FieldLabel htmlFor="enable_registration">Enable Registration</FieldLabel>
-                                            <FieldDescription>Allow new users to register on the application.</FieldDescription>
+                                            <FieldLabel htmlFor="enable_registration">
+                                                Enable Registration
+                                            </FieldLabel>
+                                            <FieldDescription>
+                                                Allow new users to register on
+                                                the application.
+                                            </FieldDescription>
                                         </div>
                                         <Switch
                                             id="enable_registration"
-                                            checked={form.data.enable_registration}
-                                            onCheckedChange={(checked) => form.setField('enable_registration', checked === true)}
+                                            checked={
+                                                form.data.enable_registration
+                                            }
+                                            onCheckedChange={(checked) =>
+                                                form.setField(
+                                                    'enable_registration',
+                                                    checked === true,
+                                                )
+                                            }
                                             size="comfortable"
                                         />
                                     </div>
-                                    <FieldError>{form.error('enable_registration')}</FieldError>
+                                    <FieldError>
+                                        {form.error('enable_registration')}
+                                    </FieldError>
                                 </Field>
 
-                                <Field data-invalid={form.invalid('default_role') || undefined}>
-                                    <FieldLabel htmlFor="default_role">Default Role</FieldLabel>
-                                    <FieldDescription>The role assigned to newly registered users.</FieldDescription>
+                                <Field
+                                    data-invalid={
+                                        form.invalid('default_role') ||
+                                        undefined
+                                    }
+                                >
+                                    <FieldLabel htmlFor="default_role">
+                                        Default Role
+                                    </FieldLabel>
+                                    <FieldDescription>
+                                        The role assigned to newly registered
+                                        users.
+                                    </FieldDescription>
                                     <NativeSelect
                                         id="default_role"
                                         className="w-full"
                                         size="comfortable"
                                         value={form.data.default_role}
-                                        onChange={(e) => form.setField('default_role', e.target.value)}
-                                        onBlur={() => form.touch('default_role')}
-                                        aria-invalid={form.invalid('default_role') || undefined}
+                                        onChange={(e) =>
+                                            form.setField(
+                                                'default_role',
+                                                e.target.value,
+                                            )
+                                        }
+                                        onBlur={() =>
+                                            form.touch('default_role')
+                                        }
+                                        aria-invalid={
+                                            form.invalid('default_role') ||
+                                            undefined
+                                        }
                                     >
                                         <option value="">Select a role</option>
                                         {options.roles.map((opt) => (
-                                            <option key={opt.value} value={opt.value}>
+                                            <option
+                                                key={opt.value}
+                                                value={opt.value}
+                                            >
                                                 {opt.label}
                                             </option>
                                         ))}
                                     </NativeSelect>
-                                    <FieldError>{form.error('default_role')}</FieldError>
+                                    <FieldError>
+                                        {form.error('default_role')}
+                                    </FieldError>
                                 </Field>
 
                                 <Field>
                                     <div className="flex items-center justify-between gap-4">
                                         <div className="space-y-1">
-                                            <FieldLabel htmlFor="require_email_verification">Require Email Verification</FieldLabel>
-                                            <FieldDescription>Users must verify their email address before accessing the application.</FieldDescription>
+                                            <FieldLabel htmlFor="require_email_verification">
+                                                Require Email Verification
+                                            </FieldLabel>
+                                            <FieldDescription>
+                                                Users must verify their email
+                                                address before accessing the
+                                                application.
+                                            </FieldDescription>
                                         </div>
                                         <Switch
                                             id="require_email_verification"
-                                            checked={form.data.require_email_verification}
-                                            onCheckedChange={(checked) => form.setField('require_email_verification', checked === true)}
+                                            checked={
+                                                form.data
+                                                    .require_email_verification
+                                            }
+                                            onCheckedChange={(checked) =>
+                                                form.setField(
+                                                    'require_email_verification',
+                                                    checked === true,
+                                                )
+                                            }
                                             size="comfortable"
                                         />
                                     </div>
-                                    <FieldError>{form.error('require_email_verification')}</FieldError>
+                                    <FieldError>
+                                        {form.error(
+                                            'require_email_verification',
+                                        )}
+                                    </FieldError>
                                 </Field>
 
                                 <Field>
                                     <div className="flex items-center justify-between gap-4">
                                         <div className="space-y-1">
-                                            <FieldLabel htmlFor="auto_approve">Auto Approve Users</FieldLabel>
-                                            <FieldDescription>Automatically approve new user registrations without manual review.</FieldDescription>
+                                            <FieldLabel htmlFor="auto_approve">
+                                                Auto Approve Users
+                                            </FieldLabel>
+                                            <FieldDescription>
+                                                Automatically approve new user
+                                                registrations without manual
+                                                review.
+                                            </FieldDescription>
                                         </div>
                                         <Switch
                                             id="auto_approve"
                                             checked={form.data.auto_approve}
-                                            onCheckedChange={(checked) => form.setField('auto_approve', checked === true)}
+                                            onCheckedChange={(checked) =>
+                                                form.setField(
+                                                    'auto_approve',
+                                                    checked === true,
+                                                )
+                                            }
                                             size="comfortable"
                                         />
                                     </div>
-                                    <FieldError>{form.error('auto_approve')}</FieldError>
+                                    <FieldError>
+                                        {form.error('auto_approve')}
+                                    </FieldError>
                                 </Field>
                             </FieldGroup>
                         </CardContent>
                     </Card>
 
                     <Button type="submit" disabled={form.processing}>
-                        {form.processing ? <Spinner /> : <SaveIcon data-icon="inline-start" />}
+                        {form.processing ? (
+                            <Spinner />
+                        ) : (
+                            <SaveIcon data-icon="inline-start" />
+                        )}
                         {form.processing ? 'Saving...' : 'Save Settings'}
                     </Button>
                 </form>

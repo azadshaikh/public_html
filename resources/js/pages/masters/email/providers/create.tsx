@@ -5,8 +5,14 @@ import type { EmailProviderCreatePageProps } from '@/types/email';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: route('dashboard') },
-    { title: 'Email Providers', href: route('app.masters.email.providers.index') },
-    { title: 'New provider', href: route('app.masters.email.providers.create') },
+    {
+        title: 'Email Providers',
+        href: route('app.masters.email.providers.index'),
+    },
+    {
+        title: 'New provider',
+        href: route('app.masters.email.providers.create'),
+    },
 ];
 
 export default function EmailProvidersCreate({

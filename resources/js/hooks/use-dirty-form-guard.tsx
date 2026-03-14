@@ -1,7 +1,4 @@
-import type {
-    PendingVisit,
-    VisitOptions,
-} from '@inertiajs/core';
+import type { PendingVisit, VisitOptions } from '@inertiajs/core';
 import { router } from '@inertiajs/react';
 import { AlertTriangleIcon } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -127,7 +124,9 @@ export function useDirtyFormGuard({
                         <AlertDialogMedia className="bg-destructive/10 text-destructive">
                             <AlertTriangleIcon />
                         </AlertDialogMedia>
-                        <AlertDialogTitle>Discard unsaved changes?</AlertDialogTitle>
+                        <AlertDialogTitle>
+                            Discard unsaved changes?
+                        </AlertDialogTitle>
                         <AlertDialogDescription>
                             {message}
                         </AlertDialogDescription>

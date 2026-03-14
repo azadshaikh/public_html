@@ -209,10 +209,7 @@ export default function QueueMonitorIndex({
             type: 'select',
             name: 'queue',
             value: filters.queue,
-            options: [
-                { value: '', label: 'All queues' },
-                ...queueOptions,
-            ],
+            options: [{ value: '', label: 'All queues' }, ...queueOptions],
         },
         {
             type: 'search',
@@ -428,14 +425,12 @@ export default function QueueMonitorIndex({
               ]
             : [];
 
-    const chartSeries = useMemo(
-        () => buildChartSeries(chartData),
-        [chartData],
-    );
+    const chartSeries = useMemo(() => buildChartSeries(chartData), [chartData]);
 
     const refreshLabel = formatRelativeTime(lastUpdatedAt, clockNow);
     const workerHealthVariant =
-        liveWorkerStats && liveWorkerStats.running_workers < liveWorkerStats.configured_workers
+        liveWorkerStats &&
+        liveWorkerStats.running_workers < liveWorkerStats.configured_workers
             ? 'warning'
             : 'success';
 
@@ -447,7 +442,9 @@ export default function QueueMonitorIndex({
             headerActions={
                 <div className="flex flex-wrap items-center gap-2">
                     <Badge variant={paused ? 'warning' : 'secondary'}>
-                        {paused ? 'Auto-refresh paused' : `Updated ${refreshLabel}`}
+                        {paused
+                            ? 'Auto-refresh paused'
+                            : `Updated ${refreshLabel}`}
                     </Badge>
 
                     <Button
@@ -530,8 +527,8 @@ export default function QueueMonitorIndex({
                                 : 'No failed jobs'}
                             {statistics.stale > 0
                                 ? ` and ${statistics.stale} stale job${statistics.stale === 1 ? '' : 's'}`
-                                : ''}
-                            {' '}are currently tracked.
+                                : ''}{' '}
+                            are currently tracked.
                         </AlertDescription>
                     </Alert>
                 )}
@@ -558,7 +555,8 @@ export default function QueueMonitorIndex({
                                 <div>
                                     <CardTitle>Queue health</CardTitle>
                                     <CardDescription>
-                                        Running and queued are live. Success and failure counts cover the last{' '}
+                                        Running and queued are live. Success and
+                                        failure counts cover the last{' '}
                                         {ui.metricsTimeFrame} days.
                                     </CardDescription>
                                 </div>
@@ -708,8 +706,8 @@ export default function QueueMonitorIndex({
                             <div>
                                 <CardTitle>Throughput</CardTitle>
                                 <CardDescription>
-                                    Hourly succeeded and failed jobs across the last{' '}
-                                    {ui.chartHours} hours.
+                                    Hourly succeeded and failed jobs across the
+                                    last {ui.chartHours} hours.
                                 </CardDescription>
                             </div>
                         </div>
@@ -982,7 +980,8 @@ function MetricCard({
                   value: metric.previousValue,
               })
             : null;
-    const hasChanged = metric.previousValue !== null && metric.value !== metric.previousValue;
+    const hasChanged =
+        metric.previousValue !== null && metric.value !== metric.previousValue;
     const hasIncreased =
         metric.previousValue !== null && metric.value > metric.previousValue;
 
@@ -1042,7 +1041,8 @@ function WorkerPanel({
                     <div>
                         <CardTitle>Worker health</CardTitle>
                         <CardDescription>
-                            Supervisor status and detected queue workers for this application.
+                            Supervisor status and detected queue workers for
+                            this application.
                         </CardDescription>
                     </div>
                 </div>
@@ -1105,7 +1105,7 @@ function WorkerPanel({
                                                 process.status === 'running'
                                                     ? 'success'
                                                     : process.status ===
-                                                          'waiting'
+                                                        'waiting'
                                                       ? 'warning'
                                                       : 'danger'
                                             }
@@ -1217,7 +1217,11 @@ function ThroughputChart({
                     axisLine={false}
                     minTickGap={24}
                 />
-                <YAxis allowDecimals={false} tickLine={false} axisLine={false} />
+                <YAxis
+                    allowDecimals={false}
+                    tickLine={false}
+                    axisLine={false}
+                />
                 <ChartTooltip
                     content={<ChartTooltipContent indicator="line" />}
                 />
@@ -1307,11 +1311,12 @@ function ExceptionDialog({
                 <DialogHeader className="px-4 pt-4">
                     <DialogTitle>Error details</DialogTitle>
                     <DialogDescription>
-                        Full exception output captured for this queue monitor entry.
+                        Full exception output captured for this queue monitor
+                        entry.
                     </DialogDescription>
                 </DialogHeader>
                 <ScrollArea className="max-h-[60vh] px-4">
-                    <pre className="rounded-xl border bg-muted/30 p-4 text-xs leading-6 whitespace-pre-wrap break-words">
+                    <pre className="rounded-xl border bg-muted/30 p-4 text-xs leading-6 break-words whitespace-pre-wrap">
                         {exception}
                     </pre>
                 </ScrollArea>

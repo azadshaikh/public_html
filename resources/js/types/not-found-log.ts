@@ -1,5 +1,5 @@
-import type { PaginatedData } from '@/types/pagination';
 import type { RecentStats } from '@/types/login-attempt';
+import type { PaginatedData } from '@/types/pagination';
 
 export type NotFoundLogListItem = {
     id: number;

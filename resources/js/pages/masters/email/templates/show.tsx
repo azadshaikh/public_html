@@ -33,7 +33,9 @@ function DetailRow({
 
     return (
         <div className="flex items-start gap-3 py-2">
-            {icon ? <span className="mt-0.5 text-muted-foreground">{icon}</span> : null}
+            {icon ? (
+                <span className="mt-0.5 text-muted-foreground">{icon}</span>
+            ) : null}
             <div className="flex min-w-0 flex-col gap-0.5">
                 <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
                     {label}
@@ -140,14 +142,17 @@ export default function EmailTemplatesShow({
                                     </h2>
                                     <Badge
                                         variant={
-                                            (emailTemplate.status_badge as React.ComponentProps<typeof Badge>['variant']) ??
-                                            'outline'
+                                            (emailTemplate.status_badge as React.ComponentProps<
+                                                typeof Badge
+                                            >['variant']) ?? 'outline'
                                         }
                                     >
                                         {emailTemplate.status_label}
                                     </Badge>
                                     <Badge variant="secondary">
-                                        {emailTemplate.is_raw ? 'Raw HTML' : 'Plain text'}
+                                        {emailTemplate.is_raw
+                                            ? 'Raw HTML'
+                                            : 'Plain text'}
                                     </Badge>
                                     {emailTemplate.is_trashed ? (
                                         <Badge variant="destructive">
@@ -161,7 +166,8 @@ export default function EmailTemplatesShow({
                             </div>
 
                             <div className="flex flex-wrap gap-2">
-                                {emailTemplate.is_trashed && canRestoreEmailTemplates ? (
+                                {emailTemplate.is_trashed &&
+                                canRestoreEmailTemplates ? (
                                     <>
                                         <Button
                                             variant="outline"
@@ -184,7 +190,8 @@ export default function EmailTemplatesShow({
                                     </>
                                 ) : null}
 
-                                {!emailTemplate.is_trashed && canDeleteEmailTemplates ? (
+                                {!emailTemplate.is_trashed &&
+                                canDeleteEmailTemplates ? (
                                     <Button
                                         variant="destructive"
                                         size="sm"
@@ -204,7 +211,8 @@ export default function EmailTemplatesShow({
                         <AlertTriangleIcon className="size-4" />
                         <AlertTitle>This template is in trash</AlertTitle>
                         <AlertDescription>
-                            Restore it before using it in active email workflows again.
+                            Restore it before using it in active email workflows
+                            again.
                         </AlertDescription>
                     </Alert>
                 ) : null}
@@ -217,7 +225,7 @@ export default function EmailTemplatesShow({
                             </CardHeader>
                             <CardContent>
                                 <div className="rounded-lg border bg-muted/20 p-4">
-                                    <pre className="whitespace-pre-wrap break-words font-sans text-sm text-foreground">
+                                    <pre className="font-sans text-sm break-words whitespace-pre-wrap text-foreground">
                                         {emailTemplate.message}
                                     </pre>
                                 </div>
@@ -240,7 +248,8 @@ export default function EmailTemplatesShow({
                                     <DetailRow
                                         label="Recipients"
                                         value={
-                                            emailTemplate.send_to_list.length > 0 ? (
+                                            emailTemplate.send_to_list.length >
+                                            0 ? (
                                                 <div className="flex flex-wrap gap-2">
                                                     {emailTemplate.send_to_list.map(
                                                         (recipient) => (
@@ -260,12 +269,18 @@ export default function EmailTemplatesShow({
                                     />
                                     <DetailRow
                                         label="Created"
-                                        value={emailTemplate.created_at_formatted}
-                                        icon={<CalendarIcon className="size-4" />}
+                                        value={
+                                            emailTemplate.created_at_formatted
+                                        }
+                                        icon={
+                                            <CalendarIcon className="size-4" />
+                                        }
                                     />
                                     <DetailRow
                                         label="Updated"
-                                        value={emailTemplate.updated_at_formatted}
+                                        value={
+                                            emailTemplate.updated_at_formatted
+                                        }
                                     />
                                     <DetailRow
                                         label="Created by"

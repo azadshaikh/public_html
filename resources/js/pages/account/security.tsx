@@ -121,8 +121,7 @@ export default function Security({
         },
         {
             title: 'Two-Factor Authentication (2FA)',
-            description:
-                'Manage two-factor authentication and recovery codes.',
+            description: 'Manage two-factor authentication and recovery codes.',
             href: route('app.profile.security.two-factor'),
             icon: ShieldCheckIcon,
             status: twoFactorEnabled
@@ -139,8 +138,7 @@ export default function Security({
                     }
                   : {
                         label: 'Not Enabled',
-                        className:
-                            'bg-secondary text-secondary-foreground',
+                        className: 'bg-secondary text-secondary-foreground',
                     },
         },
     ];

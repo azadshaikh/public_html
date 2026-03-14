@@ -4,7 +4,9 @@ export function normalizeRowKey(key: Key): string {
     return String(key);
 }
 
-export function collectFormParams(form: HTMLFormElement): Record<string, string> {
+export function collectFormParams(
+    form: HTMLFormElement,
+): Record<string, string> {
     return Object.fromEntries(
         Array.from(new FormData(form).entries()).map(([key, value]) => [
             key,

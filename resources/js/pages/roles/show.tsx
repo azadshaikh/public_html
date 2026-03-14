@@ -8,7 +8,6 @@ import {
     KeyRoundIcon,
     PencilIcon,
     RefreshCwIcon,
-    ShieldAlertIcon,
     ShieldCheckIcon,
     ShieldIcon,
     StickyNoteIcon,
@@ -251,15 +250,15 @@ export default function RolesShow({
                                 {!role.is_trashed &&
                                     !role.is_system &&
                                     canDeleteRoles && (
-                                    <Button
-                                        variant="destructive"
-                                        size="sm"
-                                        onClick={handleDelete}
-                                    >
-                                        <Trash2Icon data-icon="inline-start" />
-                                        Trash
-                                    </Button>
-                                )}
+                                        <Button
+                                            variant="destructive"
+                                            size="sm"
+                                            onClick={handleDelete}
+                                        >
+                                            <Trash2Icon data-icon="inline-start" />
+                                            Trash
+                                        </Button>
+                                    )}
                             </div>
                         </div>
                     </CardContent>

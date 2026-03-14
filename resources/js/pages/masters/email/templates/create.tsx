@@ -5,8 +5,14 @@ import type { EmailTemplateCreatePageProps } from '@/types/email';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: route('dashboard') },
-    { title: 'Email Templates', href: route('app.masters.email.templates.index') },
-    { title: 'New template', href: route('app.masters.email.templates.create') },
+    {
+        title: 'Email Templates',
+        href: route('app.masters.email.templates.index'),
+    },
+    {
+        title: 'New template',
+        href: route('app.masters.email.templates.create'),
+    },
 ];
 
 export default function EmailTemplatesCreate({

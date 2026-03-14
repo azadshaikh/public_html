@@ -18,7 +18,11 @@ export default function ConfirmPassword() {
                 description="Re-enter your password before continuing to a protected area."
             />
 
-            <Form action={route('password.confirm.store')} method="post" resetOnSuccess={['password']}>
+            <Form
+                action={route('password.confirm.store')}
+                method="post"
+                resetOnSuccess={['password']}
+            >
                 {({ processing, errors }) => (
                     <div className="space-y-6">
                         <div className="grid gap-2">

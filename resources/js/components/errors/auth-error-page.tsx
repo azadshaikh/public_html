@@ -1,17 +1,18 @@
-import { Link, type InertiaLinkProps, usePage } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
+import type { InertiaLinkProps } from '@inertiajs/react';
 import {
     ArrowLeft,
     LayoutDashboard,
-    type LucideIcon,
     LogIn,
     LogOut,
     RefreshCw,
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import type { ComponentProps } from 'react';
 import AppHead from '@/components/app-head';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 import AuthLayout from '@/layouts/auth-layout';
+import { cn } from '@/lib/utils';
 import type { SharedData } from '@/types';
 
 type ButtonVariant = NonNullable<ComponentProps<typeof Button>['variant']>;
@@ -48,7 +49,11 @@ function ErrorLinkButton({
 }: ErrorLinkAction) {
     return (
         <Button asChild variant={variant} className="w-full sm:w-auto">
-            <Link href={href} method={method} as={method === 'get' ? 'a' : 'button'}>
+            <Link
+                href={href}
+                method={method}
+                as={method === 'get' ? 'a' : 'button'}
+            >
                 <Icon className="size-4" />
                 {label}
             </Link>

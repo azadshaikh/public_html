@@ -3,7 +3,12 @@ import type { FormEvent } from 'react';
 import { FormErrorSummary } from '@/components/forms/form-error-summary';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field';
+import {
+    Field,
+    FieldDescription,
+    FieldGroup,
+    FieldLabel,
+} from '@/components/ui/field';
 import { Spinner } from '@/components/ui/spinner';
 import { Switch } from '@/components/ui/switch';
 import { useAppForm } from '@/hooks/use-app-form';
@@ -49,15 +54,25 @@ export default function Debug({ settings, settingsNav }: DebugPageProps) {
             setDefaultsOnSuccess: true,
             successToast: {
                 title: 'Debug settings updated',
-                description: 'Your debug settings have been saved successfully.',
+                description:
+                    'Your debug settings have been saved successfully.',
             },
         });
     };
 
     return (
-        <SettingsLayout settingsNav={settingsNav} breadcrumbs={breadcrumbs} title="Master Settings" description="Manage platform-level configuration.">
+        <SettingsLayout
+            settingsNav={settingsNav}
+            breadcrumbs={breadcrumbs}
+            title="Master Settings"
+            description="Manage platform-level configuration."
+        >
             <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
-                <form noValidate className="flex flex-col gap-6" onSubmit={handleSubmit}>
+                <form
+                    noValidate
+                    className="flex flex-col gap-6"
+                    onSubmit={handleSubmit}
+                >
                     {form.dirtyGuardDialog}
                     <FormErrorSummary errors={form.errors} minMessages={2} />
 
@@ -71,13 +86,24 @@ export default function Debug({ settings, settingsNav }: DebugPageProps) {
                                 <Field>
                                     <div className="flex items-center justify-between gap-4">
                                         <div className="space-y-1">
-                                            <FieldLabel htmlFor="enable_debugging">Enable Debugging</FieldLabel>
-                                            <FieldDescription>Enable debug mode to display detailed error messages. Should be disabled in production.</FieldDescription>
+                                            <FieldLabel htmlFor="enable_debugging">
+                                                Enable Debugging
+                                            </FieldLabel>
+                                            <FieldDescription>
+                                                Enable debug mode to display
+                                                detailed error messages. Should
+                                                be disabled in production.
+                                            </FieldDescription>
                                         </div>
                                         <Switch
                                             id="enable_debugging"
                                             checked={form.data.enable_debugging}
-                                            onCheckedChange={(checked) => form.setField('enable_debugging', checked === true)}
+                                            onCheckedChange={(checked) =>
+                                                form.setField(
+                                                    'enable_debugging',
+                                                    checked === true,
+                                                )
+                                            }
                                             size="comfortable"
                                         />
                                     </div>
@@ -86,13 +112,26 @@ export default function Debug({ settings, settingsNav }: DebugPageProps) {
                                 <Field>
                                     <div className="flex items-center justify-between gap-4">
                                         <div className="space-y-1">
-                                            <FieldLabel htmlFor="enable_debugging_bar">Enable Debug Bar</FieldLabel>
-                                            <FieldDescription>Show the debug bar for inspecting queries, requests, and performance metrics.</FieldDescription>
+                                            <FieldLabel htmlFor="enable_debugging_bar">
+                                                Enable Debug Bar
+                                            </FieldLabel>
+                                            <FieldDescription>
+                                                Show the debug bar for
+                                                inspecting queries, requests,
+                                                and performance metrics.
+                                            </FieldDescription>
                                         </div>
                                         <Switch
                                             id="enable_debugging_bar"
-                                            checked={form.data.enable_debugging_bar}
-                                            onCheckedChange={(checked) => form.setField('enable_debugging_bar', checked === true)}
+                                            checked={
+                                                form.data.enable_debugging_bar
+                                            }
+                                            onCheckedChange={(checked) =>
+                                                form.setField(
+                                                    'enable_debugging_bar',
+                                                    checked === true,
+                                                )
+                                            }
                                             size="comfortable"
                                         />
                                     </div>
@@ -101,13 +140,27 @@ export default function Debug({ settings, settingsNav }: DebugPageProps) {
                                 <Field>
                                     <div className="flex items-center justify-between gap-4">
                                         <div className="space-y-1">
-                                            <FieldLabel htmlFor="enable_html_minification">Enable HTML Minification</FieldLabel>
-                                            <FieldDescription>Minify HTML output to reduce page size and improve load times.</FieldDescription>
+                                            <FieldLabel htmlFor="enable_html_minification">
+                                                Enable HTML Minification
+                                            </FieldLabel>
+                                            <FieldDescription>
+                                                Minify HTML output to reduce
+                                                page size and improve load
+                                                times.
+                                            </FieldDescription>
                                         </div>
                                         <Switch
                                             id="enable_html_minification"
-                                            checked={form.data.enable_html_minification}
-                                            onCheckedChange={(checked) => form.setField('enable_html_minification', checked === true)}
+                                            checked={
+                                                form.data
+                                                    .enable_html_minification
+                                            }
+                                            onCheckedChange={(checked) =>
+                                                form.setField(
+                                                    'enable_html_minification',
+                                                    checked === true,
+                                                )
+                                            }
                                             size="comfortable"
                                         />
                                     </div>
@@ -117,7 +170,11 @@ export default function Debug({ settings, settingsNav }: DebugPageProps) {
                     </Card>
 
                     <Button type="submit" disabled={form.processing}>
-                        {form.processing ? <Spinner /> : <SaveIcon data-icon="inline-start" />}
+                        {form.processing ? (
+                            <Spinner />
+                        ) : (
+                            <SaveIcon data-icon="inline-start" />
+                        )}
                         {form.processing ? 'Saving...' : 'Save Settings'}
                     </Button>
                 </form>

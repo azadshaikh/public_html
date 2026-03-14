@@ -34,14 +34,14 @@ export function StateSelect({
 
     useEffect(() => {
         if (!countryCode) {
-            setItems([]);
-
             return;
         }
 
         setLoading(true);
 
-        const url = route('app.ajax.geo.states') + `?country_code=${encodeURIComponent(countryCode)}`;
+        const url =
+            route('app.ajax.geo.states') +
+            `?country_code=${encodeURIComponent(countryCode)}`;
 
         fetch(url)
             .then((res) => res.json())
@@ -56,21 +56,22 @@ export function StateSelect({
             });
     }, [countryCode]);
 
+    const availableItems = countryCode ? items : [];
+
     const selectedItem = useMemo(
         () =>
-            items.find(
+            availableItems.find(
                 (item) =>
-                    item.value === value ||
-                    item.value.endsWith(`-${value}`),
+                    item.value === value || item.value.endsWith(`-${value}`),
             ) ?? null,
-        [items, value],
+        [availableItems, value],
     );
 
     const isDisabled = disabled || loading || !countryCode;
 
     return (
         <Combobox
-            items={items}
+            items={availableItems}
             itemToStringLabel={(item) => item?.label ?? ''}
             value={selectedItem}
             autoHighlight

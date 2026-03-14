@@ -3,7 +3,12 @@ import type { FormEvent } from 'react';
 import { FormErrorSummary } from '@/components/forms/form-error-summary';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
+import {
+    Field,
+    FieldError,
+    FieldGroup,
+    FieldLabel,
+} from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import { useAppForm } from '@/hooks/use-app-form';
@@ -50,15 +55,25 @@ export default function General({ settings, settingsNav }: GeneralPageProps) {
             setDefaultsOnSuccess: true,
             successToast: {
                 title: 'General settings updated',
-                description: 'Your general settings have been saved successfully.',
+                description:
+                    'Your general settings have been saved successfully.',
             },
         });
     };
 
     return (
-        <SettingsLayout settingsNav={settingsNav} breadcrumbs={breadcrumbs} title="Settings" description="Manage your application settings.">
+        <SettingsLayout
+            settingsNav={settingsNav}
+            breadcrumbs={breadcrumbs}
+            title="Settings"
+            description="Manage your application settings."
+        >
             <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
-                <form noValidate className="flex flex-col gap-6" onSubmit={handleSubmit}>
+                <form
+                    noValidate
+                    className="flex flex-col gap-6"
+                    onSubmit={handleSubmit}
+                >
                     {form.dirtyGuardDialog}
                     <FormErrorSummary errors={form.errors} minMessages={2} />
 
@@ -69,42 +84,78 @@ export default function General({ settings, settingsNav }: GeneralPageProps) {
 
                         <CardContent>
                             <FieldGroup>
-                                <Field data-invalid={form.invalid('site_title') || undefined}>
+                                <Field
+                                    data-invalid={
+                                        form.invalid('site_title') || undefined
+                                    }
+                                >
                                     <FieldLabel htmlFor="site_title">
-                                        Site Title <span className="text-destructive">*</span>
+                                        Site Title{' '}
+                                        <span className="text-destructive">
+                                            *
+                                        </span>
                                     </FieldLabel>
                                     <Input
                                         id="site_title"
                                         value={form.data.site_title}
-                                        onChange={(e) => form.setField('site_title', e.target.value)}
+                                        onChange={(e) =>
+                                            form.setField(
+                                                'site_title',
+                                                e.target.value,
+                                            )
+                                        }
                                         onBlur={() => form.touch('site_title')}
-                                        aria-invalid={form.invalid('site_title') || undefined}
+                                        aria-invalid={
+                                            form.invalid('site_title') ||
+                                            undefined
+                                        }
                                         placeholder="Enter site title"
                                         size="comfortable"
                                         autoFocus
                                     />
-                                    <FieldError>{form.error('site_title')}</FieldError>
+                                    <FieldError>
+                                        {form.error('site_title')}
+                                    </FieldError>
                                 </Field>
 
-                                <Field data-invalid={form.invalid('tagline') || undefined}>
-                                    <FieldLabel htmlFor="tagline">Tagline</FieldLabel>
+                                <Field
+                                    data-invalid={
+                                        form.invalid('tagline') || undefined
+                                    }
+                                >
+                                    <FieldLabel htmlFor="tagline">
+                                        Tagline
+                                    </FieldLabel>
                                     <Input
                                         id="tagline"
                                         value={form.data.tagline}
-                                        onChange={(e) => form.setField('tagline', e.target.value)}
+                                        onChange={(e) =>
+                                            form.setField(
+                                                'tagline',
+                                                e.target.value,
+                                            )
+                                        }
                                         onBlur={() => form.touch('tagline')}
-                                        aria-invalid={form.invalid('tagline') || undefined}
+                                        aria-invalid={
+                                            form.invalid('tagline') || undefined
+                                        }
                                         placeholder="Enter site tagline"
                                         size="comfortable"
                                     />
-                                    <FieldError>{form.error('tagline')}</FieldError>
+                                    <FieldError>
+                                        {form.error('tagline')}
+                                    </FieldError>
                                 </Field>
                             </FieldGroup>
                         </CardContent>
                     </Card>
 
                     <Button type="submit" disabled={form.processing}>
-                        {form.processing ? <Spinner /> : <SaveIcon data-icon="inline-start" />}
+                        {form.processing ? (
+                            <Spinner />
+                        ) : (
+                            <SaveIcon data-icon="inline-start" />
+                        )}
                         {form.processing ? 'Saving...' : 'Save Settings'}
                     </Button>
                 </form>

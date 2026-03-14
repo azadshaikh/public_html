@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { showAppToast } from '@/components/forms/form-success-toast';
-import { suppressNextFlashToast } from '@/hooks/use-flash-toast';
+import { NavigationIcon } from '@/components/navigation-icon';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -30,8 +30,8 @@ import {
     InputGroupAddon,
     InputGroupInput,
 } from '@/components/ui/input-group';
-import { NavigationIcon } from '@/components/navigation-icon';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { suppressNextFlashToast } from '@/hooks/use-flash-toast';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import type { BreadcrumbItem, ManagedModule } from '@/types';

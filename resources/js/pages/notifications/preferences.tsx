@@ -159,7 +159,11 @@ function PreferenceCard({
                                 descriptions[option.value] ??
                                 'This preference helps tailor what reaches your inbox.'
                             }
-                            icon={icons[option.value] ?? <BellIcon className="size-4" />}
+                            icon={
+                                icons[option.value] ?? (
+                                    <BellIcon className="size-4" />
+                                )
+                            }
                             checked={values[option.value] ?? false}
                             onCheckedChange={(checked) =>
                                 onToggle(option.value, checked)
@@ -250,9 +254,7 @@ export default function NotificationsPreferences({
                         <CardHeader className="px-6">
                             <div className="flex items-start justify-between gap-4">
                                 <div className="space-y-1">
-                                    <CardTitle>
-                                        Notification delivery
-                                    </CardTitle>
+                                    <CardTitle>Notification delivery</CardTitle>
                                     <CardDescription>
                                         Pause everything at once or keep alerts
                                         on and fine-tune the priority and
@@ -280,12 +282,14 @@ export default function NotificationsPreferences({
                                             <div
                                                 className={cn(
                                                     'flex size-8 shrink-0 items-center justify-center rounded-lg border bg-background',
-                                                    form.data.notifications_enabled
+                                                    form.data
+                                                        .notifications_enabled
                                                         ? 'text-primary'
                                                         : 'text-muted-foreground',
                                                 )}
                                             >
-                                                {form.data.notifications_enabled ? (
+                                                {form.data
+                                                    .notifications_enabled ? (
                                                     <BellIcon className="size-4" />
                                                 ) : (
                                                     <BellOffIcon className="size-4" />
@@ -304,7 +308,9 @@ export default function NotificationsPreferences({
                                     </div>
                                     <Switch
                                         id="notifications_enabled"
-                                        checked={form.data.notifications_enabled}
+                                        checked={
+                                            form.data.notifications_enabled
+                                        }
                                         onCheckedChange={(checked) =>
                                             form.setField(
                                                 'notifications_enabled',

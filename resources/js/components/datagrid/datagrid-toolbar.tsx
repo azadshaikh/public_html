@@ -285,7 +285,7 @@ export function DatagridToolbar({
                                         size="comfortable"
                                         className={cn(
                                             primarySearchFilter.className,
-                                            'w-full min-w-0 md:flex-1 md:basis-0 xl:flex-none xl:basis-auto xl:w-[14.5rem] xl:min-w-[14.5rem] 2xl:w-[15.5rem] 2xl:min-w-[15.5rem]',
+                                            'w-full min-w-0 md:flex-1 md:basis-0 xl:w-[14.5rem] xl:min-w-[14.5rem] xl:flex-none xl:basis-auto 2xl:w-[15.5rem] 2xl:min-w-[15.5rem]',
                                         )}
                                     >
                                         <InputGroupAddon>
@@ -371,9 +371,7 @@ export function DatagridToolbar({
                                                         <div className="text-sm font-medium text-foreground">
                                                             {filter.placeholder}
                                                         </div>
-                                                        <InputGroup
-                                                            size="comfortable"
-                                                        >
+                                                        <InputGroup size="comfortable">
                                                             <InputGroupAddon>
                                                                 <SearchIcon />
                                                             </InputGroupAddon>

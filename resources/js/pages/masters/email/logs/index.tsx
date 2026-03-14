@@ -43,13 +43,19 @@ export default function EmailLogsIndex({
             type: 'select',
             name: 'email_provider_id',
             value: filters.email_provider_id,
-            options: [{ value: '', label: 'All providers' }, ...providerOptions],
+            options: [
+                { value: '', label: 'All providers' },
+                ...providerOptions,
+            ],
         },
         {
             type: 'select',
             name: 'email_template_id',
             value: filters.email_template_id,
-            options: [{ value: '', label: 'All templates' }, ...templateOptions],
+            options: [
+                { value: '', label: 'All templates' },
+                ...templateOptions,
+            ],
         },
         {
             type: 'date_range',
@@ -171,7 +177,10 @@ export default function EmailLogsIndex({
                         sort: filters.sort,
                         direction: filters.direction,
                     }}
-                    perPage={{ value: filters.per_page, options: [10, 25, 50, 100] }}
+                    perPage={{
+                        value: filters.per_page,
+                        options: [10, 25, 50, 100],
+                    }}
                     view={{
                         value: filters.view,
                         storageKey: 'email-logs-datagrid-view',
@@ -187,13 +196,15 @@ export default function EmailLogsIndex({
                                         {log.subject}
                                     </Link>
                                     <p className="truncate text-sm text-muted-foreground">
-                                        {log.provider_name || 'Unknown provider'}
+                                        {log.provider_name ||
+                                            'Unknown provider'}
                                     </p>
                                 </div>
                                 <Badge
                                     variant={
-                                        (log.status_badge as React.ComponentProps<typeof Badge>['variant']) ??
-                                        'outline'
+                                        (log.status_badge as React.ComponentProps<
+                                            typeof Badge
+                                        >['variant']) ?? 'outline'
                                     }
                                 >
                                     {log.status_label}

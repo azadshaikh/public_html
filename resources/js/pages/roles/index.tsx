@@ -6,7 +6,6 @@ import {
     PencilIcon,
     PlusIcon,
     RefreshCwIcon,
-    ShieldAlertIcon,
     ShieldCheckIcon,
     ShieldIcon,
     SlashIcon,
@@ -258,10 +257,8 @@ export default function RolesIndex({
                       icon: <Trash2Icon />,
                       variant: 'destructive' as const,
                       confirm: 'Move selected roles to trash?',
-                      onSelect: (
-                          rows: RoleListItem[],
-                          clear: () => void,
-                      ) => handleBulkAction('delete', rows, clear),
+                      onSelect: (rows: RoleListItem[], clear: () => void) =>
+                          handleBulkAction('delete', rows, clear),
                   },
               ]
             : []),
@@ -272,10 +269,8 @@ export default function RolesIndex({
                       label: 'Restore',
                       icon: <RefreshCwIcon />,
                       confirm: 'Restore selected roles from trash?',
-                      onSelect: (
-                          rows: RoleListItem[],
-                          clear: () => void,
-                      ) => handleBulkAction('restore', rows, clear),
+                      onSelect: (rows: RoleListItem[], clear: () => void) =>
+                          handleBulkAction('restore', rows, clear),
                   },
               ]
             : []),
@@ -288,10 +283,8 @@ export default function RolesIndex({
                       variant: 'destructive' as const,
                       confirm:
                           '⚠️ Permanently delete selected roles? This cannot be undone!',
-                      onSelect: (
-                          rows: RoleListItem[],
-                          clear: () => void,
-                      ) => handleBulkAction('force_delete', rows, clear),
+                      onSelect: (rows: RoleListItem[], clear: () => void) =>
+                          handleBulkAction('force_delete', rows, clear),
                   },
               ]
             : []),

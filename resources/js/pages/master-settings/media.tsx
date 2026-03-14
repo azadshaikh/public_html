@@ -3,7 +3,13 @@ import type { FormEvent } from 'react';
 import { FormErrorSummary } from '@/components/forms/form-error-summary';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
+import {
+    Field,
+    FieldDescription,
+    FieldError,
+    FieldGroup,
+    FieldLabel,
+} from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Spinner } from '@/components/ui/spinner';
@@ -78,15 +84,25 @@ export default function Media({ settings, settingsNav }: MediaPageProps) {
             setDefaultsOnSuccess: true,
             successToast: {
                 title: 'Media settings updated',
-                description: 'Your media settings have been saved successfully.',
+                description:
+                    'Your media settings have been saved successfully.',
             },
         });
     };
 
     return (
-        <SettingsLayout settingsNav={settingsNav} breadcrumbs={breadcrumbs} title="Master Settings" description="Manage platform-level configuration.">
+        <SettingsLayout
+            settingsNav={settingsNav}
+            breadcrumbs={breadcrumbs}
+            title="Master Settings"
+            description="Manage platform-level configuration."
+        >
             <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
-                <form noValidate className="flex flex-col gap-6" onSubmit={handleSubmit}>
+                <form
+                    noValidate
+                    className="flex flex-col gap-6"
+                    onSubmit={handleSubmit}
+                >
                     {form.dirtyGuardDialog}
                     <FormErrorSummary errors={form.errors} minMessages={2} />
 
@@ -98,50 +114,118 @@ export default function Media({ settings, settingsNav }: MediaPageProps) {
                         <CardContent>
                             <FieldGroup>
                                 <FieldGroup className="md:grid md:grid-cols-2 md:gap-6">
-                                    <Field data-invalid={form.invalid('max_file_name_length') || undefined}>
-                                        <FieldLabel htmlFor="max_file_name_length">Max File Name Length</FieldLabel>
+                                    <Field
+                                        data-invalid={
+                                            form.invalid(
+                                                'max_file_name_length',
+                                            ) || undefined
+                                        }
+                                    >
+                                        <FieldLabel htmlFor="max_file_name_length">
+                                            Max File Name Length
+                                        </FieldLabel>
                                         <Input
                                             id="max_file_name_length"
                                             type="number"
-                                            value={form.data.max_file_name_length}
-                                            onChange={(e) => form.setField('max_file_name_length', e.target.value)}
-                                            onBlur={() => form.touch('max_file_name_length')}
-                                            aria-invalid={form.invalid('max_file_name_length') || undefined}
+                                            value={
+                                                form.data.max_file_name_length
+                                            }
+                                            onChange={(e) =>
+                                                form.setField(
+                                                    'max_file_name_length',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            onBlur={() =>
+                                                form.touch(
+                                                    'max_file_name_length',
+                                                )
+                                            }
+                                            aria-invalid={
+                                                form.invalid(
+                                                    'max_file_name_length',
+                                                ) || undefined
+                                            }
                                             placeholder="255"
                                             size="comfortable"
                                         />
-                                        <FieldError>{form.error('max_file_name_length')}</FieldError>
+                                        <FieldError>
+                                            {form.error('max_file_name_length')}
+                                        </FieldError>
                                     </Field>
 
-                                    <Field data-invalid={form.invalid('max_upload_size') || undefined}>
-                                        <FieldLabel htmlFor="max_upload_size">Max Upload Size (MB)</FieldLabel>
+                                    <Field
+                                        data-invalid={
+                                            form.invalid('max_upload_size') ||
+                                            undefined
+                                        }
+                                    >
+                                        <FieldLabel htmlFor="max_upload_size">
+                                            Max Upload Size (MB)
+                                        </FieldLabel>
                                         <Input
                                             id="max_upload_size"
                                             type="number"
                                             value={form.data.max_upload_size}
-                                            onChange={(e) => form.setField('max_upload_size', e.target.value)}
-                                            onBlur={() => form.touch('max_upload_size')}
-                                            aria-invalid={form.invalid('max_upload_size') || undefined}
+                                            onChange={(e) =>
+                                                form.setField(
+                                                    'max_upload_size',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            onBlur={() =>
+                                                form.touch('max_upload_size')
+                                            }
+                                            aria-invalid={
+                                                form.invalid(
+                                                    'max_upload_size',
+                                                ) || undefined
+                                            }
                                             placeholder="10"
                                             size="comfortable"
                                         />
-                                        <FieldError>{form.error('max_upload_size')}</FieldError>
+                                        <FieldError>
+                                            {form.error('max_upload_size')}
+                                        </FieldError>
                                     </Field>
                                 </FieldGroup>
 
-                                <Field data-invalid={form.invalid('allowed_file_types') || undefined}>
-                                    <FieldLabel htmlFor="allowed_file_types">Allowed File Types</FieldLabel>
-                                    <FieldDescription>Comma-separated list of allowed file extensions (e.g., jpg,png,gif,pdf).</FieldDescription>
+                                <Field
+                                    data-invalid={
+                                        form.invalid('allowed_file_types') ||
+                                        undefined
+                                    }
+                                >
+                                    <FieldLabel htmlFor="allowed_file_types">
+                                        Allowed File Types
+                                    </FieldLabel>
+                                    <FieldDescription>
+                                        Comma-separated list of allowed file
+                                        extensions (e.g., jpg,png,gif,pdf).
+                                    </FieldDescription>
                                     <Input
                                         id="allowed_file_types"
                                         value={form.data.allowed_file_types}
-                                        onChange={(e) => form.setField('allowed_file_types', e.target.value)}
-                                        onBlur={() => form.touch('allowed_file_types')}
-                                        aria-invalid={form.invalid('allowed_file_types') || undefined}
+                                        onChange={(e) =>
+                                            form.setField(
+                                                'allowed_file_types',
+                                                e.target.value,
+                                            )
+                                        }
+                                        onBlur={() =>
+                                            form.touch('allowed_file_types')
+                                        }
+                                        aria-invalid={
+                                            form.invalid(
+                                                'allowed_file_types',
+                                            ) || undefined
+                                        }
                                         placeholder="jpg,png,gif,pdf,doc,docx,xls,xlsx"
                                         size="comfortable"
                                     />
-                                    <FieldError>{form.error('allowed_file_types')}</FieldError>
+                                    <FieldError>
+                                        {form.error('allowed_file_types')}
+                                    </FieldError>
                                 </Field>
                             </FieldGroup>
                         </CardContent>
@@ -157,118 +241,247 @@ export default function Media({ settings, settingsNav }: MediaPageProps) {
                                 <Field>
                                     <div className="flex items-center justify-between gap-4">
                                         <div className="space-y-1">
-                                            <FieldLabel htmlFor="image_optimization">Image Optimization</FieldLabel>
-                                            <FieldDescription>Automatically optimize uploaded images to reduce file size.</FieldDescription>
+                                            <FieldLabel htmlFor="image_optimization">
+                                                Image Optimization
+                                            </FieldLabel>
+                                            <FieldDescription>
+                                                Automatically optimize uploaded
+                                                images to reduce file size.
+                                            </FieldDescription>
                                         </div>
                                         <Switch
                                             id="image_optimization"
-                                            checked={form.data.image_optimization}
-                                            onCheckedChange={(checked) => form.setField('image_optimization', checked === true)}
+                                            checked={
+                                                form.data.image_optimization
+                                            }
+                                            onCheckedChange={(checked) =>
+                                                form.setField(
+                                                    'image_optimization',
+                                                    checked === true,
+                                                )
+                                            }
                                             size="comfortable"
                                         />
                                     </div>
                                 </Field>
 
                                 {form.data.image_optimization ? (
-                                    <Field data-invalid={form.invalid('image_quality') || undefined}>
-                                        <FieldLabel htmlFor="image_quality">Image Quality (%)</FieldLabel>
+                                    <Field
+                                        data-invalid={
+                                            form.invalid('image_quality') ||
+                                            undefined
+                                        }
+                                    >
+                                        <FieldLabel htmlFor="image_quality">
+                                            Image Quality (%)
+                                        </FieldLabel>
                                         <Input
                                             id="image_quality"
                                             type="number"
                                             min="1"
                                             max="100"
                                             value={form.data.image_quality}
-                                            onChange={(e) => form.setField('image_quality', e.target.value)}
-                                            onBlur={() => form.touch('image_quality')}
-                                            aria-invalid={form.invalid('image_quality') || undefined}
+                                            onChange={(e) =>
+                                                form.setField(
+                                                    'image_quality',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            onBlur={() =>
+                                                form.touch('image_quality')
+                                            }
+                                            aria-invalid={
+                                                form.invalid('image_quality') ||
+                                                undefined
+                                            }
                                             placeholder="80"
                                             size="comfortable"
                                         />
-                                        <FieldError>{form.error('image_quality')}</FieldError>
+                                        <FieldError>
+                                            {form.error('image_quality')}
+                                        </FieldError>
                                     </Field>
                                 ) : null}
 
                                 <Separator />
 
-                                <p className="text-sm font-medium">Image Dimensions (width in pixels)</p>
+                                <p className="text-sm font-medium">
+                                    Image Dimensions (width in pixels)
+                                </p>
 
                                 <FieldGroup className="md:grid md:grid-cols-2 md:gap-6">
-                                    <Field data-invalid={form.invalid('thumbnail_width') || undefined}>
-                                        <FieldLabel htmlFor="thumbnail_width">Thumbnail</FieldLabel>
+                                    <Field
+                                        data-invalid={
+                                            form.invalid('thumbnail_width') ||
+                                            undefined
+                                        }
+                                    >
+                                        <FieldLabel htmlFor="thumbnail_width">
+                                            Thumbnail
+                                        </FieldLabel>
                                         <Input
                                             id="thumbnail_width"
                                             type="number"
                                             value={form.data.thumbnail_width}
-                                            onChange={(e) => form.setField('thumbnail_width', e.target.value)}
-                                            onBlur={() => form.touch('thumbnail_width')}
-                                            aria-invalid={form.invalid('thumbnail_width') || undefined}
+                                            onChange={(e) =>
+                                                form.setField(
+                                                    'thumbnail_width',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            onBlur={() =>
+                                                form.touch('thumbnail_width')
+                                            }
+                                            aria-invalid={
+                                                form.invalid(
+                                                    'thumbnail_width',
+                                                ) || undefined
+                                            }
                                             placeholder="150"
                                             size="comfortable"
                                         />
-                                        <FieldError>{form.error('thumbnail_width')}</FieldError>
+                                        <FieldError>
+                                            {form.error('thumbnail_width')}
+                                        </FieldError>
                                     </Field>
 
-                                    <Field data-invalid={form.invalid('small_width') || undefined}>
-                                        <FieldLabel htmlFor="small_width">Small</FieldLabel>
+                                    <Field
+                                        data-invalid={
+                                            form.invalid('small_width') ||
+                                            undefined
+                                        }
+                                    >
+                                        <FieldLabel htmlFor="small_width">
+                                            Small
+                                        </FieldLabel>
                                         <Input
                                             id="small_width"
                                             type="number"
                                             value={form.data.small_width}
-                                            onChange={(e) => form.setField('small_width', e.target.value)}
-                                            onBlur={() => form.touch('small_width')}
-                                            aria-invalid={form.invalid('small_width') || undefined}
+                                            onChange={(e) =>
+                                                form.setField(
+                                                    'small_width',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            onBlur={() =>
+                                                form.touch('small_width')
+                                            }
+                                            aria-invalid={
+                                                form.invalid('small_width') ||
+                                                undefined
+                                            }
                                             placeholder="300"
                                             size="comfortable"
                                         />
-                                        <FieldError>{form.error('small_width')}</FieldError>
+                                        <FieldError>
+                                            {form.error('small_width')}
+                                        </FieldError>
                                     </Field>
                                 </FieldGroup>
 
                                 <FieldGroup className="md:grid md:grid-cols-2 md:gap-6">
-                                    <Field data-invalid={form.invalid('medium_width') || undefined}>
-                                        <FieldLabel htmlFor="medium_width">Medium</FieldLabel>
+                                    <Field
+                                        data-invalid={
+                                            form.invalid('medium_width') ||
+                                            undefined
+                                        }
+                                    >
+                                        <FieldLabel htmlFor="medium_width">
+                                            Medium
+                                        </FieldLabel>
                                         <Input
                                             id="medium_width"
                                             type="number"
                                             value={form.data.medium_width}
-                                            onChange={(e) => form.setField('medium_width', e.target.value)}
-                                            onBlur={() => form.touch('medium_width')}
-                                            aria-invalid={form.invalid('medium_width') || undefined}
+                                            onChange={(e) =>
+                                                form.setField(
+                                                    'medium_width',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            onBlur={() =>
+                                                form.touch('medium_width')
+                                            }
+                                            aria-invalid={
+                                                form.invalid('medium_width') ||
+                                                undefined
+                                            }
                                             placeholder="600"
                                             size="comfortable"
                                         />
-                                        <FieldError>{form.error('medium_width')}</FieldError>
+                                        <FieldError>
+                                            {form.error('medium_width')}
+                                        </FieldError>
                                     </Field>
 
-                                    <Field data-invalid={form.invalid('large_width') || undefined}>
-                                        <FieldLabel htmlFor="large_width">Large</FieldLabel>
+                                    <Field
+                                        data-invalid={
+                                            form.invalid('large_width') ||
+                                            undefined
+                                        }
+                                    >
+                                        <FieldLabel htmlFor="large_width">
+                                            Large
+                                        </FieldLabel>
                                         <Input
                                             id="large_width"
                                             type="number"
                                             value={form.data.large_width}
-                                            onChange={(e) => form.setField('large_width', e.target.value)}
-                                            onBlur={() => form.touch('large_width')}
-                                            aria-invalid={form.invalid('large_width') || undefined}
+                                            onChange={(e) =>
+                                                form.setField(
+                                                    'large_width',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            onBlur={() =>
+                                                form.touch('large_width')
+                                            }
+                                            aria-invalid={
+                                                form.invalid('large_width') ||
+                                                undefined
+                                            }
                                             placeholder="1024"
                                             size="comfortable"
                                         />
-                                        <FieldError>{form.error('large_width')}</FieldError>
+                                        <FieldError>
+                                            {form.error('large_width')}
+                                        </FieldError>
                                     </Field>
                                 </FieldGroup>
 
-                                <Field data-invalid={form.invalid('xlarge_width') || undefined}>
-                                    <FieldLabel htmlFor="xlarge_width">Extra Large</FieldLabel>
+                                <Field
+                                    data-invalid={
+                                        form.invalid('xlarge_width') ||
+                                        undefined
+                                    }
+                                >
+                                    <FieldLabel htmlFor="xlarge_width">
+                                        Extra Large
+                                    </FieldLabel>
                                     <Input
                                         id="xlarge_width"
                                         type="number"
                                         value={form.data.xlarge_width}
-                                        onChange={(e) => form.setField('xlarge_width', e.target.value)}
-                                        onBlur={() => form.touch('xlarge_width')}
-                                        aria-invalid={form.invalid('xlarge_width') || undefined}
+                                        onChange={(e) =>
+                                            form.setField(
+                                                'xlarge_width',
+                                                e.target.value,
+                                            )
+                                        }
+                                        onBlur={() =>
+                                            form.touch('xlarge_width')
+                                        }
+                                        aria-invalid={
+                                            form.invalid('xlarge_width') ||
+                                            undefined
+                                        }
                                         placeholder="1920"
                                         size="comfortable"
                                     />
-                                    <FieldError>{form.error('xlarge_width')}</FieldError>
+                                    <FieldError>
+                                        {form.error('xlarge_width')}
+                                    </FieldError>
                                 </Field>
                             </FieldGroup>
                         </CardContent>
@@ -284,33 +497,69 @@ export default function Media({ settings, settingsNav }: MediaPageProps) {
                                 <Field>
                                     <div className="flex items-center justify-between gap-4">
                                         <div className="space-y-1">
-                                            <FieldLabel htmlFor="delete_trashed">Auto-Delete Trashed Media</FieldLabel>
-                                            <FieldDescription>Automatically permanently delete trashed media after a set number of days.</FieldDescription>
+                                            <FieldLabel htmlFor="delete_trashed">
+                                                Auto-Delete Trashed Media
+                                            </FieldLabel>
+                                            <FieldDescription>
+                                                Automatically permanently delete
+                                                trashed media after a set number
+                                                of days.
+                                            </FieldDescription>
                                         </div>
                                         <Switch
                                             id="delete_trashed"
                                             checked={form.data.delete_trashed}
-                                            onCheckedChange={(checked) => form.setField('delete_trashed', checked === true)}
+                                            onCheckedChange={(checked) =>
+                                                form.setField(
+                                                    'delete_trashed',
+                                                    checked === true,
+                                                )
+                                            }
                                             size="comfortable"
                                         />
                                     </div>
                                 </Field>
 
                                 {form.data.delete_trashed ? (
-                                    <Field data-invalid={form.invalid('delete_trashed_days') || undefined}>
-                                        <FieldLabel htmlFor="delete_trashed_days">Days Before Deletion</FieldLabel>
+                                    <Field
+                                        data-invalid={
+                                            form.invalid(
+                                                'delete_trashed_days',
+                                            ) || undefined
+                                        }
+                                    >
+                                        <FieldLabel htmlFor="delete_trashed_days">
+                                            Days Before Deletion
+                                        </FieldLabel>
                                         <Input
                                             id="delete_trashed_days"
                                             type="number"
                                             min="1"
-                                            value={form.data.delete_trashed_days}
-                                            onChange={(e) => form.setField('delete_trashed_days', e.target.value)}
-                                            onBlur={() => form.touch('delete_trashed_days')}
-                                            aria-invalid={form.invalid('delete_trashed_days') || undefined}
+                                            value={
+                                                form.data.delete_trashed_days
+                                            }
+                                            onChange={(e) =>
+                                                form.setField(
+                                                    'delete_trashed_days',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            onBlur={() =>
+                                                form.touch(
+                                                    'delete_trashed_days',
+                                                )
+                                            }
+                                            aria-invalid={
+                                                form.invalid(
+                                                    'delete_trashed_days',
+                                                ) || undefined
+                                            }
                                             placeholder="30"
                                             size="comfortable"
                                         />
-                                        <FieldError>{form.error('delete_trashed_days')}</FieldError>
+                                        <FieldError>
+                                            {form.error('delete_trashed_days')}
+                                        </FieldError>
                                     </Field>
                                 ) : null}
                             </FieldGroup>
@@ -318,7 +567,11 @@ export default function Media({ settings, settingsNav }: MediaPageProps) {
                     </Card>
 
                     <Button type="submit" disabled={form.processing}>
-                        {form.processing ? <Spinner /> : <SaveIcon data-icon="inline-start" />}
+                        {form.processing ? (
+                            <Spinner />
+                        ) : (
+                            <SaveIcon data-icon="inline-start" />
+                        )}
                         {form.processing ? 'Saving...' : 'Save Settings'}
                     </Button>
                 </form>

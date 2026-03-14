@@ -35,7 +35,11 @@ export default function VerifyEmail({ status }: { status?: string }) {
                     a new one below.
                 </p>
 
-                <Form action={route('verification.send')} method="post" className="space-y-4">
+                <Form
+                    action={route('verification.send')}
+                    method="post"
+                    className="space-y-4"
+                >
                     {({ processing }) => (
                         <Button
                             className="w-full"

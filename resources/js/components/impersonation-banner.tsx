@@ -1,6 +1,11 @@
 import { Link, usePage } from '@inertiajs/react';
 import { ArrowLeftRightIcon, ShieldAlertIcon } from 'lucide-react';
-import { Alert, AlertAction, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import {
+    Alert,
+    AlertAction,
+    AlertDescription,
+    AlertTitle,
+} from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import type { AuthenticatedSharedData } from '@/types';
 
@@ -8,7 +13,7 @@ export function ImpersonationBanner() {
     const { auth } = usePage<AuthenticatedSharedData>().props;
     const impersonation = auth.impersonation;
 
-    if (! impersonation?.active) {
+    if (!impersonation?.active) {
         return null;
     }
 
@@ -21,11 +26,22 @@ export function ImpersonationBanner() {
                         Impersonation active
                     </AlertTitle>
                     <AlertDescription className="pr-4 text-amber-800 dark:text-amber-100">
-                        You are signed in as {auth.user.name}. Original account: {impersonation.impersonator.name} ({impersonation.impersonator.email}).
+                        You are signed in as {auth.user.name}. Original account:{' '}
+                        {impersonation.impersonator.name} (
+                        {impersonation.impersonator.email}).
                     </AlertDescription>
                     <AlertAction>
-                        <Button asChild size="sm" variant="outline" className="border-amber-300 bg-white/80 text-amber-900 hover:bg-white dark:border-amber-400/30 dark:bg-amber-950/40 dark:text-amber-100 dark:hover:bg-amber-950/60">
-                            <Link href={impersonation.stopUrl} method="post" as="button">
+                        <Button
+                            asChild
+                            size="sm"
+                            variant="outline"
+                            className="border-amber-300 bg-white/80 text-amber-900 hover:bg-white dark:border-amber-400/30 dark:bg-amber-950/40 dark:text-amber-100 dark:hover:bg-amber-950/60"
+                        >
+                            <Link
+                                href={impersonation.stopUrl}
+                                method="post"
+                                as="button"
+                            >
                                 <ArrowLeftRightIcon data-icon="inline-start" />
                                 Stop impersonating
                             </Link>

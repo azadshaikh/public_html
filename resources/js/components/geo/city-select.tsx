@@ -32,16 +32,22 @@ export function CitySelect({
     'aria-invalid': ariaInvalid,
 }: CitySelectProps) {
     const [items, setItems] = useState<GeoOption[]>([]);
-    const [loading, setLoading] = useState(false);
+    const [loadedKey, setLoadedKey] = useState('');
+    const hasLocationContext = Boolean(stateCode || countryCode);
+    const requestKey = useMemo(() => {
+        if (!hasLocationContext) {
+            return '';
+        }
+
+        return `${countryCode}::${stateCode}`;
+    }, [countryCode, hasLocationContext, stateCode]);
 
     useEffect(() => {
-        if (!stateCode && !countryCode) {
-            setItems([]);
-
+        if (!requestKey) {
             return;
         }
 
-        setLoading(true);
+        let cancelled = false;
 
         const params = new URLSearchParams();
 
@@ -58,26 +64,49 @@ export function CitySelect({
         fetch(url)
             .then((res) => res.json())
             .then((data: { items: GeoOption[] }) => {
+                if (cancelled) {
+                    return;
+                }
+
                 setItems(data.items ?? []);
+                setLoadedKey(requestKey);
             })
             .catch(() => {
+                if (cancelled) {
+                    return;
+                }
+
                 setItems([]);
-            })
-            .finally(() => {
-                setLoading(false);
+                setLoadedKey(requestKey);
             });
-    }, [countryCode, stateCode]);
+
+        return () => {
+            cancelled = true;
+        };
+    }, [countryCode, requestKey, stateCode]);
+
+    const loading = Boolean(requestKey) && loadedKey !== requestKey;
+    const availableItems = useMemo(() => {
+        if (!requestKey || loadedKey !== requestKey) {
+            return [];
+        }
+
+        return items;
+    }, [items, loadedKey, requestKey]);
 
     const selectedItem = useMemo(
-        () => items.find((item) => item.value === value || item.label === value) ?? null,
-        [items, value],
+        () =>
+            availableItems.find(
+                (item) => item.value === value || item.label === value,
+            ) ?? null,
+        [availableItems, value],
     );
 
-    const isDisabled = disabled || loading || (!stateCode && !countryCode);
+    const isDisabled = disabled || loading || !hasLocationContext;
 
     return (
         <Combobox
-            items={items}
+            items={availableItems}
             itemToStringLabel={(item) => item?.label ?? ''}
             value={selectedItem}
             autoHighlight
@@ -89,7 +118,7 @@ export function CitySelect({
             <ComboboxInput
                 className={className}
                 placeholder={
-                    !stateCode && !countryCode
+                    !hasLocationContext
                         ? 'Select a country first'
                         : loading
                           ? 'Loading cities...'

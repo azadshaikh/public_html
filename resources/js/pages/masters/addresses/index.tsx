@@ -153,7 +153,13 @@ export default function AddressesIndex({
             sortable: true,
             sortKey: 'type',
             cell: (address) => (
-                <Badge variant={address.type_class as React.ComponentProps<typeof Badge>['variant'] ?? 'outline'}>
+                <Badge
+                    variant={
+                        (address.type_class as React.ComponentProps<
+                            typeof Badge
+                        >['variant']) ?? 'outline'
+                    }
+                >
                     {address.type_label}
                 </Badge>
             ),
@@ -162,7 +168,10 @@ export default function AddressesIndex({
             key: 'city',
             header: 'City',
             sortable: true,
-            cell: (address) => address.city || <span className="text-muted-foreground">—</span>,
+            cell: (address) =>
+                address.city || (
+                    <span className="text-muted-foreground">—</span>
+                ),
         },
         {
             key: 'country_code',
@@ -182,7 +191,13 @@ export default function AddressesIndex({
             sortable: true,
             sortKey: 'is_primary',
             cell: (address) => (
-                <Badge variant={address.primary_class as React.ComponentProps<typeof Badge>['variant'] ?? 'outline'}>
+                <Badge
+                    variant={
+                        (address.primary_class as React.ComponentProps<
+                            typeof Badge
+                        >['variant']) ?? 'outline'
+                    }
+                >
                     {address.primary_label}
                 </Badge>
             ),
@@ -206,7 +221,10 @@ export default function AddressesIndex({
                           {
                               label: 'Restore',
                               icon: <RefreshCwIcon />,
-                              href: route('app.masters.addresses.restore', address.id),
+                              href: route(
+                                  'app.masters.addresses.restore',
+                                  address.id,
+                              ),
                               method: 'PATCH' as const,
                               confirm: `Restore this address?`,
                           },
@@ -217,7 +235,10 @@ export default function AddressesIndex({
                           {
                               label: 'Delete Permanently',
                               icon: <Trash2Icon />,
-                              href: route('app.masters.addresses.force-delete', address.id),
+                              href: route(
+                                  'app.masters.addresses.force-delete',
+                                  address.id,
+                              ),
                               method: 'DELETE' as const,
                               confirm: `⚠️ Permanently delete this address? This cannot be undone!`,
                               variant: 'destructive' as const,
@@ -246,7 +267,10 @@ export default function AddressesIndex({
                 ? [
                       {
                           label: 'Move to Trash',
-                          href: route('app.masters.addresses.destroy', address.id),
+                          href: route(
+                              'app.masters.addresses.destroy',
+                              address.id,
+                          ),
                           method: 'DELETE' as const,
                           confirm: `Move this address to trash?`,
                           icon: <Trash2Icon />,
@@ -292,7 +316,8 @@ export default function AddressesIndex({
                       label: 'Delete Permanently',
                       icon: <Trash2Icon />,
                       variant: 'destructive' as const,
-                      confirm: '⚠️ Permanently delete selected addresses? This cannot be undone!',
+                      confirm:
+                          '⚠️ Permanently delete selected addresses? This cannot be undone!',
                       onSelect: (rows: AddressListItem[], clear: () => void) =>
                           handleBulkAction('force_delete', rows, clear),
                   },
@@ -374,8 +399,9 @@ export default function AddressesIndex({
                                 <div className="mt-1">
                                     <Badge
                                         variant={
-                                            (address.type_class as React.ComponentProps<typeof Badge>['variant']) ??
-                                            'outline'
+                                            (address.type_class as React.ComponentProps<
+                                                typeof Badge
+                                            >['variant']) ?? 'outline'
                                         }
                                     >
                                         {address.type_label}
@@ -388,7 +414,8 @@ export default function AddressesIndex({
                                 </div>
                                 <div className="mt-1 flex items-center gap-1.5 text-sm font-medium text-foreground">
                                     <BuildingIcon className="size-4 text-muted-foreground" />
-                                    {address.country_name ?? address.country_code}
+                                    {address.country_name ??
+                                        address.country_code}
                                 </div>
                             </div>
                             <div className="rounded-lg border bg-muted/30 px-3 py-2">
@@ -398,8 +425,9 @@ export default function AddressesIndex({
                                 <div className="mt-1">
                                     <Badge
                                         variant={
-                                            (address.primary_class as React.ComponentProps<typeof Badge>['variant']) ??
-                                            'outline'
+                                            (address.primary_class as React.ComponentProps<
+                                                typeof Badge
+                                            >['variant']) ?? 'outline'
                                         }
                                     >
                                         {address.primary_label}
@@ -413,7 +441,8 @@ export default function AddressesIndex({
                     empty={{
                         icon: <MapPinIcon />,
                         title: 'No addresses found',
-                        description: 'Try a different filter or create the first address.',
+                        description:
+                            'Try a different filter or create the first address.',
                     }}
                 />
             </div>

@@ -34,7 +34,9 @@ function DetailRow({
 
     return (
         <div className="flex items-start gap-3 py-2">
-            {icon ? <span className="mt-0.5 text-muted-foreground">{icon}</span> : null}
+            {icon ? (
+                <span className="mt-0.5 text-muted-foreground">{icon}</span>
+            ) : null}
             <div className="flex min-w-0 flex-col gap-0.5">
                 <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
                     {label}
@@ -141,8 +143,9 @@ export default function EmailProvidersShow({
                                     </h2>
                                     <Badge
                                         variant={
-                                            (emailProvider.status_badge as React.ComponentProps<typeof Badge>['variant']) ??
-                                            'outline'
+                                            (emailProvider.status_badge as React.ComponentProps<
+                                                typeof Badge
+                                            >['variant']) ?? 'outline'
                                         }
                                     >
                                         {emailProvider.status_label}
@@ -154,13 +157,17 @@ export default function EmailProvidersShow({
                                     ) : null}
                                 </div>
                                 <p className="text-sm text-muted-foreground">
-                                    {emailProvider.sender_name || 'No sender name'} ·{' '}
-                                    {emailProvider.sender_email || 'No sender email'}
+                                    {emailProvider.sender_name ||
+                                        'No sender name'}{' '}
+                                    ·{' '}
+                                    {emailProvider.sender_email ||
+                                        'No sender email'}
                                 </p>
                             </div>
 
                             <div className="flex flex-wrap gap-2">
-                                {emailProvider.is_trashed && canRestoreEmailProviders ? (
+                                {emailProvider.is_trashed &&
+                                canRestoreEmailProviders ? (
                                     <>
                                         <Button
                                             variant="outline"
@@ -183,7 +190,8 @@ export default function EmailProvidersShow({
                                     </>
                                 ) : null}
 
-                                {!emailProvider.is_trashed && canDeleteEmailProviders ? (
+                                {!emailProvider.is_trashed &&
+                                canDeleteEmailProviders ? (
                                     <Button
                                         variant="destructive"
                                         size="sm"
@@ -203,7 +211,8 @@ export default function EmailProvidersShow({
                         <AlertTriangleIcon className="size-4" />
                         <AlertTitle>This provider is in trash</AlertTitle>
                         <AlertDescription>
-                            Restore it before assigning it to active workflows again.
+                            Restore it before assigning it to active workflows
+                            again.
                         </AlertDescription>
                     </Alert>
                 ) : null}
@@ -232,7 +241,9 @@ export default function EmailProvidersShow({
                                     />
                                     <DetailRow
                                         label="Encryption"
-                                        value={emailProvider.smtp_encryption_label}
+                                        value={
+                                            emailProvider.smtp_encryption_label
+                                        }
                                     />
                                     <DetailRow
                                         label="Password"
@@ -241,7 +252,9 @@ export default function EmailProvidersShow({
                                                 ? 'Configured'
                                                 : 'Not configured'
                                         }
-                                        icon={<KeyRoundIcon className="size-4" />}
+                                        icon={
+                                            <KeyRoundIcon className="size-4" />
+                                        }
                                     />
                                 </div>
                             </CardContent>
@@ -266,12 +279,15 @@ export default function EmailProvidersShow({
                                         label="Reply-to"
                                         value={emailProvider.reply_to}
                                     />
-                                    <DetailRow label="BCC" value={emailProvider.bcc} />
+                                    <DetailRow
+                                        label="BCC"
+                                        value={emailProvider.bcc}
+                                    />
                                     <DetailRow
                                         label="Signature"
                                         value={
                                             emailProvider.signature ? (
-                                                <pre className="whitespace-pre-wrap font-sans text-sm">
+                                                <pre className="font-sans text-sm whitespace-pre-wrap">
                                                     {emailProvider.signature}
                                                 </pre>
                                             ) : null
@@ -295,12 +311,18 @@ export default function EmailProvidersShow({
                                     />
                                     <DetailRow
                                         label="Created"
-                                        value={emailProvider.created_at_formatted}
-                                        icon={<CalendarIcon className="size-4" />}
+                                        value={
+                                            emailProvider.created_at_formatted
+                                        }
+                                        icon={
+                                            <CalendarIcon className="size-4" />
+                                        }
                                     />
                                     <DetailRow
                                         label="Updated"
-                                        value={emailProvider.updated_at_formatted}
+                                        value={
+                                            emailProvider.updated_at_formatted
+                                        }
                                     />
                                     <DetailRow
                                         label="Created by"
@@ -320,7 +342,7 @@ export default function EmailProvidersShow({
                                     <CardTitle>Description</CardTitle>
                                 </CardHeader>
                                 <CardContent>
-                                    <p className="whitespace-pre-wrap text-sm text-muted-foreground">
+                                    <p className="text-sm whitespace-pre-wrap text-muted-foreground">
                                         {emailProvider.description}
                                     </p>
                                 </CardContent>

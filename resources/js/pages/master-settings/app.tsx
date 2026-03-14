@@ -3,7 +3,13 @@ import type { FormEvent } from 'react';
 import { FormErrorSummary } from '@/components/forms/form-error-summary';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
+import {
+    Field,
+    FieldDescription,
+    FieldError,
+    FieldGroup,
+    FieldLabel,
+} from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import { Switch } from '@/components/ui/switch';
@@ -30,7 +36,11 @@ type AppSettingsFormData = {
     homepage_redirect_slug: string;
 };
 
-export default function AppSettings({ settings, cmsEnabled, settingsNav }: AppSettingsPageProps) {
+export default function AppSettings({
+    settings,
+    cmsEnabled,
+    settingsNav,
+}: AppSettingsPageProps) {
     const form = useAppForm<AppSettingsFormData>({
         defaults: {
             homepage_redirect_enabled: settings.homepage_redirect_enabled,
@@ -54,9 +64,18 @@ export default function AppSettings({ settings, cmsEnabled, settingsNav }: AppSe
     };
 
     return (
-        <SettingsLayout settingsNav={settingsNav} breadcrumbs={breadcrumbs} title="Master Settings" description="Manage platform-level configuration.">
+        <SettingsLayout
+            settingsNav={settingsNav}
+            breadcrumbs={breadcrumbs}
+            title="Master Settings"
+            description="Manage platform-level configuration."
+        >
             <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
-                <form noValidate className="flex flex-col gap-6" onSubmit={handleSubmit}>
+                <form
+                    noValidate
+                    className="flex flex-col gap-6"
+                    onSubmit={handleSubmit}
+                >
                     {form.dirtyGuardDialog}
                     <FormErrorSummary errors={form.errors} minMessages={2} />
 
@@ -72,38 +91,86 @@ export default function AppSettings({ settings, cmsEnabled, settingsNav }: AppSe
                                         <Field>
                                             <div className="flex items-center justify-between gap-4">
                                                 <div className="space-y-1">
-                                                    <FieldLabel htmlFor="homepage_redirect_enabled">Homepage Redirect</FieldLabel>
-                                                    <FieldDescription>Redirect the homepage to a specific page slug.</FieldDescription>
+                                                    <FieldLabel htmlFor="homepage_redirect_enabled">
+                                                        Homepage Redirect
+                                                    </FieldLabel>
+                                                    <FieldDescription>
+                                                        Redirect the homepage to
+                                                        a specific page slug.
+                                                    </FieldDescription>
                                                 </div>
                                                 <Switch
                                                     id="homepage_redirect_enabled"
-                                                    checked={form.data.homepage_redirect_enabled}
-                                                    onCheckedChange={(checked) => form.setField('homepage_redirect_enabled', checked === true)}
+                                                    checked={
+                                                        form.data
+                                                            .homepage_redirect_enabled
+                                                    }
+                                                    onCheckedChange={(
+                                                        checked,
+                                                    ) =>
+                                                        form.setField(
+                                                            'homepage_redirect_enabled',
+                                                            checked === true,
+                                                        )
+                                                    }
                                                     size="comfortable"
                                                 />
                                             </div>
                                         </Field>
 
                                         {form.data.homepage_redirect_enabled ? (
-                                            <Field data-invalid={form.invalid('homepage_redirect_slug') || undefined}>
-                                                <FieldLabel htmlFor="homepage_redirect_slug">Redirect Slug</FieldLabel>
-                                                <FieldDescription>The page slug to redirect the homepage to (e.g., &quot;welcome&quot;).</FieldDescription>
+                                            <Field
+                                                data-invalid={
+                                                    form.invalid(
+                                                        'homepage_redirect_slug',
+                                                    ) || undefined
+                                                }
+                                            >
+                                                <FieldLabel htmlFor="homepage_redirect_slug">
+                                                    Redirect Slug
+                                                </FieldLabel>
+                                                <FieldDescription>
+                                                    The page slug to redirect
+                                                    the homepage to (e.g.,
+                                                    &quot;welcome&quot;).
+                                                </FieldDescription>
                                                 <Input
                                                     id="homepage_redirect_slug"
-                                                    value={form.data.homepage_redirect_slug}
-                                                    onChange={(e) => form.setField('homepage_redirect_slug', e.target.value)}
-                                                    onBlur={() => form.touch('homepage_redirect_slug')}
-                                                    aria-invalid={form.invalid('homepage_redirect_slug') || undefined}
+                                                    value={
+                                                        form.data
+                                                            .homepage_redirect_slug
+                                                    }
+                                                    onChange={(e) =>
+                                                        form.setField(
+                                                            'homepage_redirect_slug',
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                    onBlur={() =>
+                                                        form.touch(
+                                                            'homepage_redirect_slug',
+                                                        )
+                                                    }
+                                                    aria-invalid={
+                                                        form.invalid(
+                                                            'homepage_redirect_slug',
+                                                        ) || undefined
+                                                    }
                                                     placeholder="Enter page slug"
                                                     size="comfortable"
                                                 />
-                                                <FieldError>{form.error('homepage_redirect_slug')}</FieldError>
+                                                <FieldError>
+                                                    {form.error(
+                                                        'homepage_redirect_slug',
+                                                    )}
+                                                </FieldError>
                                             </Field>
                                         ) : null}
                                     </>
                                 ) : (
                                     <p className="text-sm text-muted-foreground">
-                                        Homepage redirect settings are available when the CMS module is enabled.
+                                        Homepage redirect settings are available
+                                        when the CMS module is enabled.
                                     </p>
                                 )}
                             </FieldGroup>
@@ -112,7 +179,11 @@ export default function AppSettings({ settings, cmsEnabled, settingsNav }: AppSe
 
                     {cmsEnabled ? (
                         <Button type="submit" disabled={form.processing}>
-                            {form.processing ? <Spinner /> : <SaveIcon data-icon="inline-start" />}
+                            {form.processing ? (
+                                <Spinner />
+                            ) : (
+                                <SaveIcon data-icon="inline-start" />
+                            )}
                             {form.processing ? 'Saving...' : 'Save Settings'}
                         </Button>
                     ) : null}

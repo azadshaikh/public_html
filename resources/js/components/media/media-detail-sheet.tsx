@@ -94,9 +94,12 @@ export function MediaDetailSheet({
         setConversionPolling(true);
         const interval = setInterval(async () => {
             try {
-                const res = await fetch(route('app.media.conversion-status', detailId), {
-                    headers: { Accept: 'application/json' },
-                });
+                const res = await fetch(
+                    route('app.media.conversion-status', detailId),
+                    {
+                        headers: { Accept: 'application/json' },
+                    },
+                );
                 const json = await res.json();
                 const convStatus = json.data?.conversion_status;
                 if (convStatus?.status === 'completed') {

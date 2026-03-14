@@ -24,13 +24,19 @@ export default function TwigError({ template, error }: TwigErrorProps) {
                     <FileWarning className="size-6" />
                 </div>
                 <div className="mt-4 space-y-2">
-                    <h2 className="text-xl font-semibold">Template error placeholder</h2>
+                    <h2 className="text-xl font-semibold">
+                        Template error placeholder
+                    </h2>
                     <p className="text-sm leading-6 text-muted-foreground">
-                        A dedicated debugging view can be implemented later for template rendering failures.
+                        A dedicated debugging view can be implemented later for
+                        template rendering failures.
                     </p>
                     {template ? (
                         <p className="text-xs text-muted-foreground">
-                            Template: <span className="font-medium text-foreground">{template}</span>
+                            Template:{' '}
+                            <span className="font-medium text-foreground">
+                                {template}
+                            </span>
                         </p>
                     ) : null}
                     {error ? (

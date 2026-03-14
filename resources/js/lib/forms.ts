@@ -24,7 +24,10 @@ const knownServerErrorMessages: Record<string, string> = {
     'auth.invalid_two_factor_code': 'The authentication code is invalid.',
 };
 
-function toValidatorArray<T extends Record<string, unknown>, K extends FormFieldName<T>>(
+function toValidatorArray<
+    T extends Record<string, unknown>,
+    K extends FormFieldName<T>,
+>(
     validator:
         | FormFieldValidator<T, K>
         | Array<FormFieldValidator<T, K>>

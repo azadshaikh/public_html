@@ -1,5 +1,11 @@
 import { Link, router } from '@inertiajs/react';
-import { ArrowLeftIcon, GithubIcon, Link2Icon, ShieldCheckIcon, UnplugIcon } from 'lucide-react';
+import {
+    ArrowLeftIcon,
+    GithubIcon,
+    Link2Icon,
+    ShieldCheckIcon,
+    UnplugIcon,
+} from 'lucide-react';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { Badge } from '@/components/ui/badge';
@@ -96,7 +102,9 @@ function ProviderIcon({
     }
 
     return (
-        <GithubIcon className={cn('size-5 shrink-0 text-foreground', className)} />
+        <GithubIcon
+            className={cn('size-5 shrink-0 text-foreground', className)}
+        />
     );
 }
 
@@ -147,16 +155,23 @@ export default function SocialLogins({
 
     const handleConnect = (provider: string) => {
         setConnectingProvider(provider);
-        window.location.assign(route('app.profile.security.social-logins.connect', { provider }));
+        window.location.assign(
+            route('app.profile.security.social-logins.connect', { provider }),
+        );
     };
 
     const handleDisconnect = (provider: string) => {
         setDisconnectingProvider(provider);
 
-        router.delete(route('app.profile.security.social-logins.disconnect', { provider }), {
-            preserveScroll: true,
-            onFinish: () => setDisconnectingProvider(null),
-        });
+        router.delete(
+            route('app.profile.security.social-logins.disconnect', {
+                provider,
+            }),
+            {
+                preserveScroll: true,
+                onFinish: () => setDisconnectingProvider(null),
+            },
+        );
     };
 
     return (
@@ -197,7 +212,9 @@ export default function SocialLogins({
                                 <EmptyMedia variant="icon">
                                     <Link2Icon />
                                 </EmptyMedia>
-                                <EmptyTitle>No connected social accounts</EmptyTitle>
+                                <EmptyTitle>
+                                    No connected social accounts
+                                </EmptyTitle>
                                 <EmptyDescription>
                                     You&apos;re currently signing in with your
                                     email and password only. Connect a provider
@@ -232,7 +249,9 @@ export default function SocialLogins({
                                                 </p>
                                                 <p className="text-sm leading-6 text-muted-foreground">
                                                     Connected on{' '}
-                                                    {provider.connected_at_label}
+                                                    {
+                                                        provider.connected_at_label
+                                                    }
                                                 </p>
                                             </div>
                                         </div>
@@ -293,7 +312,9 @@ export default function SocialLogins({
                                 <EmptyMedia variant="icon">
                                     <ShieldCheckIcon />
                                 </EmptyMedia>
-                                <EmptyTitle>Everything is already connected</EmptyTitle>
+                                <EmptyTitle>
+                                    Everything is already connected
+                                </EmptyTitle>
                                 <EmptyDescription>
                                     Every enabled social provider is already
                                     linked to this account.

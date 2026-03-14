@@ -5,7 +5,13 @@ import { FormErrorSummary } from '@/components/forms/form-error-summary';
 import { showAppToast } from '@/components/forms/form-success-toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
+import {
+    Field,
+    FieldDescription,
+    FieldError,
+    FieldGroup,
+    FieldLabel,
+} from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { NativeSelect } from '@/components/ui/native-select';
 import { Separator } from '@/components/ui/separator';
@@ -49,7 +55,11 @@ type EmailFormData = {
     email_from_name: string;
 };
 
-export default function Email({ settings, options, settingsNav }: EmailPageProps) {
+export default function Email({
+    settings,
+    options,
+    settingsNav,
+}: EmailPageProps) {
     const [testEmail, setTestEmail] = useState('');
     const [isSendingTest, setIsSendingTest] = useState(false);
 
@@ -67,7 +77,10 @@ export default function Email({ settings, options, settingsNav }: EmailPageProps
         rememberKey: 'master-settings.email',
         dirtyGuard: { enabled: true },
         rules: {
-            email_from_address: [formValidators.required('From address'), formValidators.email('From address')],
+            email_from_address: [
+                formValidators.required('From address'),
+                formValidators.email('From address'),
+            ],
             email_from_name: [formValidators.required('From name')],
         },
     });
@@ -80,7 +93,8 @@ export default function Email({ settings, options, settingsNav }: EmailPageProps
             setDefaultsOnSuccess: true,
             successToast: {
                 title: 'Email settings updated',
-                description: 'Your email settings have been saved successfully.',
+                description:
+                    'Your email settings have been saved successfully.',
             },
         });
     };
@@ -98,18 +112,24 @@ export default function Email({ settings, options, settingsNav }: EmailPageProps
         setIsSendingTest(true);
 
         try {
-            const response = await fetch(route('app.masters.settings.send-test-mail'), {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content ?? '',
-                    Accept: 'application/json',
-                    'Content-Type': 'application/json',
+            const response = await fetch(
+                route('app.masters.settings.send-test-mail'),
+                {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN':
+                            document.querySelector<HTMLMetaElement>(
+                                'meta[name="csrf-token"]',
+                            )?.content ?? '',
+                        Accept: 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: testEmail,
+                        ...form.data,
+                    }),
                 },
-                body: JSON.stringify({
-                    email: testEmail,
-                    ...form.data,
-                }),
-            });
+            );
 
             const data = await response.json();
 
@@ -122,7 +142,8 @@ export default function Email({ settings, options, settingsNav }: EmailPageProps
             showAppToast({
                 variant: 'error',
                 title: 'Test email failed',
-                description: 'An unexpected error occurred while sending the test email.',
+                description:
+                    'An unexpected error occurred while sending the test email.',
             });
         } finally {
             setIsSendingTest(false);
@@ -132,9 +153,18 @@ export default function Email({ settings, options, settingsNav }: EmailPageProps
     const isSmtp = form.data.email_driver === 'smtp';
 
     return (
-        <SettingsLayout settingsNav={settingsNav} breadcrumbs={breadcrumbs} title="Master Settings" description="Manage platform-level configuration.">
+        <SettingsLayout
+            settingsNav={settingsNav}
+            breadcrumbs={breadcrumbs}
+            title="Master Settings"
+            description="Manage platform-level configuration."
+        >
             <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
-                <form noValidate className="flex flex-col gap-6" onSubmit={handleSubmit}>
+                <form
+                    noValidate
+                    className="flex flex-col gap-6"
+                    onSubmit={handleSubmit}
+                >
                     {form.dirtyGuardDialog}
                     <FormErrorSummary errors={form.errors} minMessages={2} />
 
@@ -145,107 +175,255 @@ export default function Email({ settings, options, settingsNav }: EmailPageProps
 
                         <CardContent>
                             <FieldGroup>
-                                <Field data-invalid={form.invalid('email_driver') || undefined}>
-                                    <FieldLabel htmlFor="email_driver">Email Driver</FieldLabel>
+                                <Field
+                                    data-invalid={
+                                        form.invalid('email_driver') ||
+                                        undefined
+                                    }
+                                >
+                                    <FieldLabel htmlFor="email_driver">
+                                        Email Driver
+                                    </FieldLabel>
                                     <NativeSelect
                                         id="email_driver"
                                         className="w-full"
                                         size="comfortable"
                                         value={form.data.email_driver}
-                                        onChange={(e) => form.setField('email_driver', e.target.value)}
-                                        onBlur={() => form.touch('email_driver')}
-                                        aria-invalid={form.invalid('email_driver') || undefined}
+                                        onChange={(e) =>
+                                            form.setField(
+                                                'email_driver',
+                                                e.target.value,
+                                            )
+                                        }
+                                        onBlur={() =>
+                                            form.touch('email_driver')
+                                        }
+                                        aria-invalid={
+                                            form.invalid('email_driver') ||
+                                            undefined
+                                        }
                                     >
                                         {options.emailDrivers.map((opt) => (
-                                            <option key={opt.value} value={opt.value}>
+                                            <option
+                                                key={opt.value}
+                                                value={opt.value}
+                                            >
                                                 {opt.label}
                                             </option>
                                         ))}
                                     </NativeSelect>
-                                    <FieldError>{form.error('email_driver')}</FieldError>
+                                    <FieldError>
+                                        {form.error('email_driver')}
+                                    </FieldError>
                                 </Field>
 
                                 {isSmtp ? (
                                     <>
                                         <FieldGroup className="md:grid md:grid-cols-2 md:gap-6">
-                                            <Field data-invalid={form.invalid('email_host') || undefined}>
-                                                <FieldLabel htmlFor="email_host">SMTP Host</FieldLabel>
+                                            <Field
+                                                data-invalid={
+                                                    form.invalid(
+                                                        'email_host',
+                                                    ) || undefined
+                                                }
+                                            >
+                                                <FieldLabel htmlFor="email_host">
+                                                    SMTP Host
+                                                </FieldLabel>
                                                 <Input
                                                     id="email_host"
                                                     value={form.data.email_host}
-                                                    onChange={(e) => form.setField('email_host', e.target.value)}
-                                                    onBlur={() => form.touch('email_host')}
-                                                    aria-invalid={form.invalid('email_host') || undefined}
+                                                    onChange={(e) =>
+                                                        form.setField(
+                                                            'email_host',
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                    onBlur={() =>
+                                                        form.touch('email_host')
+                                                    }
+                                                    aria-invalid={
+                                                        form.invalid(
+                                                            'email_host',
+                                                        ) || undefined
+                                                    }
                                                     placeholder="smtp.example.com"
                                                     size="comfortable"
                                                 />
-                                                <FieldError>{form.error('email_host')}</FieldError>
+                                                <FieldError>
+                                                    {form.error('email_host')}
+                                                </FieldError>
                                             </Field>
 
-                                            <Field data-invalid={form.invalid('email_port') || undefined}>
-                                                <FieldLabel htmlFor="email_port">SMTP Port</FieldLabel>
+                                            <Field
+                                                data-invalid={
+                                                    form.invalid(
+                                                        'email_port',
+                                                    ) || undefined
+                                                }
+                                            >
+                                                <FieldLabel htmlFor="email_port">
+                                                    SMTP Port
+                                                </FieldLabel>
                                                 <Input
                                                     id="email_port"
                                                     value={form.data.email_port}
-                                                    onChange={(e) => form.setField('email_port', e.target.value)}
-                                                    onBlur={() => form.touch('email_port')}
-                                                    aria-invalid={form.invalid('email_port') || undefined}
+                                                    onChange={(e) =>
+                                                        form.setField(
+                                                            'email_port',
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                    onBlur={() =>
+                                                        form.touch('email_port')
+                                                    }
+                                                    aria-invalid={
+                                                        form.invalid(
+                                                            'email_port',
+                                                        ) || undefined
+                                                    }
                                                     placeholder="587"
                                                     size="comfortable"
                                                 />
-                                                <FieldError>{form.error('email_port')}</FieldError>
+                                                <FieldError>
+                                                    {form.error('email_port')}
+                                                </FieldError>
                                             </Field>
                                         </FieldGroup>
 
                                         <FieldGroup className="md:grid md:grid-cols-2 md:gap-6">
-                                            <Field data-invalid={form.invalid('email_username') || undefined}>
-                                                <FieldLabel htmlFor="email_username">SMTP Username</FieldLabel>
+                                            <Field
+                                                data-invalid={
+                                                    form.invalid(
+                                                        'email_username',
+                                                    ) || undefined
+                                                }
+                                            >
+                                                <FieldLabel htmlFor="email_username">
+                                                    SMTP Username
+                                                </FieldLabel>
                                                 <Input
                                                     id="email_username"
-                                                    value={form.data.email_username}
-                                                    onChange={(e) => form.setField('email_username', e.target.value)}
-                                                    onBlur={() => form.touch('email_username')}
-                                                    aria-invalid={form.invalid('email_username') || undefined}
+                                                    value={
+                                                        form.data.email_username
+                                                    }
+                                                    onChange={(e) =>
+                                                        form.setField(
+                                                            'email_username',
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                    onBlur={() =>
+                                                        form.touch(
+                                                            'email_username',
+                                                        )
+                                                    }
+                                                    aria-invalid={
+                                                        form.invalid(
+                                                            'email_username',
+                                                        ) || undefined
+                                                    }
                                                     placeholder="Enter SMTP username"
                                                     size="comfortable"
                                                 />
-                                                <FieldError>{form.error('email_username')}</FieldError>
+                                                <FieldError>
+                                                    {form.error(
+                                                        'email_username',
+                                                    )}
+                                                </FieldError>
                                             </Field>
 
-                                            <Field data-invalid={form.invalid('email_password') || undefined}>
-                                                <FieldLabel htmlFor="email_password">SMTP Password</FieldLabel>
+                                            <Field
+                                                data-invalid={
+                                                    form.invalid(
+                                                        'email_password',
+                                                    ) || undefined
+                                                }
+                                            >
+                                                <FieldLabel htmlFor="email_password">
+                                                    SMTP Password
+                                                </FieldLabel>
                                                 <Input
                                                     id="email_password"
                                                     type="password"
-                                                    value={form.data.email_password}
-                                                    onChange={(e) => form.setField('email_password', e.target.value)}
-                                                    onBlur={() => form.touch('email_password')}
-                                                    aria-invalid={form.invalid('email_password') || undefined}
+                                                    value={
+                                                        form.data.email_password
+                                                    }
+                                                    onChange={(e) =>
+                                                        form.setField(
+                                                            'email_password',
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                    onBlur={() =>
+                                                        form.touch(
+                                                            'email_password',
+                                                        )
+                                                    }
+                                                    aria-invalid={
+                                                        form.invalid(
+                                                            'email_password',
+                                                        ) || undefined
+                                                    }
                                                     placeholder="Enter SMTP password"
                                                     size="comfortable"
                                                 />
-                                                <FieldError>{form.error('email_password')}</FieldError>
+                                                <FieldError>
+                                                    {form.error(
+                                                        'email_password',
+                                                    )}
+                                                </FieldError>
                                             </Field>
                                         </FieldGroup>
 
-                                        <Field data-invalid={form.invalid('email_encryption') || undefined}>
-                                            <FieldLabel htmlFor="email_encryption">Encryption</FieldLabel>
+                                        <Field
+                                            data-invalid={
+                                                form.invalid(
+                                                    'email_encryption',
+                                                ) || undefined
+                                            }
+                                        >
+                                            <FieldLabel htmlFor="email_encryption">
+                                                Encryption
+                                            </FieldLabel>
                                             <NativeSelect
                                                 id="email_encryption"
                                                 className="w-full"
                                                 size="comfortable"
-                                                value={form.data.email_encryption}
-                                                onChange={(e) => form.setField('email_encryption', e.target.value)}
-                                                onBlur={() => form.touch('email_encryption')}
-                                                aria-invalid={form.invalid('email_encryption') || undefined}
+                                                value={
+                                                    form.data.email_encryption
+                                                }
+                                                onChange={(e) =>
+                                                    form.setField(
+                                                        'email_encryption',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                onBlur={() =>
+                                                    form.touch(
+                                                        'email_encryption',
+                                                    )
+                                                }
+                                                aria-invalid={
+                                                    form.invalid(
+                                                        'email_encryption',
+                                                    ) || undefined
+                                                }
                                             >
-                                                {options.securityTypes.map((opt) => (
-                                                    <option key={opt.value} value={opt.value}>
-                                                        {opt.label}
-                                                    </option>
-                                                ))}
+                                                {options.securityTypes.map(
+                                                    (opt) => (
+                                                        <option
+                                                            key={opt.value}
+                                                            value={opt.value}
+                                                        >
+                                                            {opt.label}
+                                                        </option>
+                                                    ),
+                                                )}
                                             </NativeSelect>
-                                            <FieldError>{form.error('email_encryption')}</FieldError>
+                                            <FieldError>
+                                                {form.error('email_encryption')}
+                                            </FieldError>
                                         </Field>
                                     </>
                                 ) : null}
@@ -253,37 +431,80 @@ export default function Email({ settings, options, settingsNav }: EmailPageProps
                                 <Separator />
 
                                 <FieldGroup className="md:grid md:grid-cols-2 md:gap-6">
-                                    <Field data-invalid={form.invalid('email_from_name') || undefined}>
+                                    <Field
+                                        data-invalid={
+                                            form.invalid('email_from_name') ||
+                                            undefined
+                                        }
+                                    >
                                         <FieldLabel htmlFor="email_from_name">
-                                            From Name <span className="text-destructive">*</span>
+                                            From Name{' '}
+                                            <span className="text-destructive">
+                                                *
+                                            </span>
                                         </FieldLabel>
                                         <Input
                                             id="email_from_name"
                                             value={form.data.email_from_name}
-                                            onChange={(e) => form.setField('email_from_name', e.target.value)}
-                                            onBlur={() => form.touch('email_from_name')}
-                                            aria-invalid={form.invalid('email_from_name') || undefined}
+                                            onChange={(e) =>
+                                                form.setField(
+                                                    'email_from_name',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            onBlur={() =>
+                                                form.touch('email_from_name')
+                                            }
+                                            aria-invalid={
+                                                form.invalid(
+                                                    'email_from_name',
+                                                ) || undefined
+                                            }
                                             placeholder="Your App Name"
                                             size="comfortable"
                                         />
-                                        <FieldError>{form.error('email_from_name')}</FieldError>
+                                        <FieldError>
+                                            {form.error('email_from_name')}
+                                        </FieldError>
                                     </Field>
 
-                                    <Field data-invalid={form.invalid('email_from_address') || undefined}>
+                                    <Field
+                                        data-invalid={
+                                            form.invalid(
+                                                'email_from_address',
+                                            ) || undefined
+                                        }
+                                    >
                                         <FieldLabel htmlFor="email_from_address">
-                                            From Address <span className="text-destructive">*</span>
+                                            From Address{' '}
+                                            <span className="text-destructive">
+                                                *
+                                            </span>
                                         </FieldLabel>
                                         <Input
                                             id="email_from_address"
                                             type="email"
                                             value={form.data.email_from_address}
-                                            onChange={(e) => form.setField('email_from_address', e.target.value)}
-                                            onBlur={() => form.touch('email_from_address')}
-                                            aria-invalid={form.invalid('email_from_address') || undefined}
+                                            onChange={(e) =>
+                                                form.setField(
+                                                    'email_from_address',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            onBlur={() =>
+                                                form.touch('email_from_address')
+                                            }
+                                            aria-invalid={
+                                                form.invalid(
+                                                    'email_from_address',
+                                                ) || undefined
+                                            }
                                             placeholder="noreply@example.com"
                                             size="comfortable"
                                         />
-                                        <FieldError>{form.error('email_from_address')}</FieldError>
+                                        <FieldError>
+                                            {form.error('email_from_address')}
+                                        </FieldError>
                                     </Field>
                                 </FieldGroup>
                             </FieldGroup>
@@ -291,7 +512,11 @@ export default function Email({ settings, options, settingsNav }: EmailPageProps
                     </Card>
 
                     <Button type="submit" disabled={form.processing}>
-                        {form.processing ? <Spinner /> : <SaveIcon data-icon="inline-start" />}
+                        {form.processing ? (
+                            <Spinner />
+                        ) : (
+                            <SaveIcon data-icon="inline-start" />
+                        )}
                         {form.processing ? 'Saving...' : 'Save Settings'}
                     </Button>
                 </form>
@@ -304,23 +529,37 @@ export default function Email({ settings, options, settingsNav }: EmailPageProps
                     <CardContent>
                         <FieldGroup>
                             <FieldDescription>
-                                Send a test email using the current configuration to verify it works correctly.
+                                Send a test email using the current
+                                configuration to verify it works correctly.
                             </FieldDescription>
 
                             <Field>
-                                <FieldLabel htmlFor="test_email">Recipient Email</FieldLabel>
+                                <FieldLabel htmlFor="test_email">
+                                    Recipient Email
+                                </FieldLabel>
                                 <div className="flex gap-3">
                                     <Input
                                         id="test_email"
                                         type="email"
                                         value={testEmail}
-                                        onChange={(e) => setTestEmail(e.target.value)}
+                                        onChange={(e) =>
+                                            setTestEmail(e.target.value)
+                                        }
                                         placeholder="test@example.com"
                                         size="comfortable"
                                         className="flex-1"
                                     />
-                                    <Button type="button" variant="outline" onClick={handleSendTestEmail} disabled={isSendingTest}>
-                                        {isSendingTest ? <Spinner /> : <SendIcon data-icon="inline-start" />}
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={handleSendTestEmail}
+                                        disabled={isSendingTest}
+                                    >
+                                        {isSendingTest ? (
+                                            <Spinner />
+                                        ) : (
+                                            <SendIcon data-icon="inline-start" />
+                                        )}
                                         {isSendingTest ? 'Sending...' : 'Send'}
                                     </Button>
                                 </div>

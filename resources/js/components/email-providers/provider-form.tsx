@@ -93,7 +93,11 @@ export default function ProviderForm({
     };
 
     return (
-        <form className="flex flex-col gap-6" onSubmit={handleSubmit} noValidate>
+        <form
+            className="flex flex-col gap-6"
+            onSubmit={handleSubmit}
+            noValidate
+        >
             {form.dirtyGuardDialog}
             <FormErrorSummary errors={form.errors} minMessages={2} />
 
@@ -105,12 +109,15 @@ export default function ProviderForm({
                             <CardTitle>Provider identity</CardTitle>
                         </div>
                         <CardDescription>
-                            Configure the mailbox identity this provider will send from.
+                            Configure the mailbox identity this provider will
+                            send from.
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <FieldGroup>
-                            <Field data-invalid={form.invalid('name') || undefined}>
+                            <Field
+                                data-invalid={form.invalid('name') || undefined}
+                            >
                                 <FieldLabel htmlFor="name">
                                     Provider name <span aria-hidden>*</span>
                                 </FieldLabel>
@@ -118,16 +125,27 @@ export default function ProviderForm({
                                     id="name"
                                     value={form.data.name}
                                     onChange={(event) =>
-                                        form.setField('name', event.target.value)
+                                        form.setField(
+                                            'name',
+                                            event.target.value,
+                                        )
                                     }
                                     onBlur={() => form.touch('name')}
-                                    aria-invalid={form.invalid('name') || undefined}
+                                    aria-invalid={
+                                        form.invalid('name') || undefined
+                                    }
                                 />
                                 <FieldError>{form.error('name')}</FieldError>
                             </Field>
 
-                            <Field data-invalid={form.invalid('description') || undefined}>
-                                <FieldLabel htmlFor="description">Description</FieldLabel>
+                            <Field
+                                data-invalid={
+                                    form.invalid('description') || undefined
+                                }
+                            >
+                                <FieldLabel htmlFor="description">
+                                    Description
+                                </FieldLabel>
                                 <Textarea
                                     id="description"
                                     rows={4}
@@ -139,13 +157,21 @@ export default function ProviderForm({
                                         )
                                     }
                                     onBlur={() => form.touch('description')}
-                                    aria-invalid={form.invalid('description') || undefined}
+                                    aria-invalid={
+                                        form.invalid('description') || undefined
+                                    }
                                 />
-                                <FieldError>{form.error('description')}</FieldError>
+                                <FieldError>
+                                    {form.error('description')}
+                                </FieldError>
                             </Field>
 
                             <div className="grid gap-4 sm:grid-cols-2">
-                                <Field data-invalid={form.invalid('sender_name') || undefined}>
+                                <Field
+                                    data-invalid={
+                                        form.invalid('sender_name') || undefined
+                                    }
+                                >
                                     <FieldLabel htmlFor="sender_name">
                                         Sender name <span aria-hidden>*</span>
                                     </FieldLabel>
@@ -159,12 +185,22 @@ export default function ProviderForm({
                                             )
                                         }
                                         onBlur={() => form.touch('sender_name')}
-                                        aria-invalid={form.invalid('sender_name') || undefined}
+                                        aria-invalid={
+                                            form.invalid('sender_name') ||
+                                            undefined
+                                        }
                                     />
-                                    <FieldError>{form.error('sender_name')}</FieldError>
+                                    <FieldError>
+                                        {form.error('sender_name')}
+                                    </FieldError>
                                 </Field>
 
-                                <Field data-invalid={form.invalid('sender_email') || undefined}>
+                                <Field
+                                    data-invalid={
+                                        form.invalid('sender_email') ||
+                                        undefined
+                                    }
+                                >
                                     <FieldLabel htmlFor="sender_email">
                                         Sender email <span aria-hidden>*</span>
                                     </FieldLabel>
@@ -178,68 +214,119 @@ export default function ProviderForm({
                                                 event.target.value,
                                             )
                                         }
-                                        onBlur={() => form.touch('sender_email')}
-                                        aria-invalid={form.invalid('sender_email') || undefined}
+                                        onBlur={() =>
+                                            form.touch('sender_email')
+                                        }
+                                        aria-invalid={
+                                            form.invalid('sender_email') ||
+                                            undefined
+                                        }
                                     />
-                                    <FieldError>{form.error('sender_email')}</FieldError>
+                                    <FieldError>
+                                        {form.error('sender_email')}
+                                    </FieldError>
                                 </Field>
                             </div>
 
                             <div className="grid gap-4 sm:grid-cols-2">
-                                <Field data-invalid={form.invalid('reply_to') || undefined}>
-                                    <FieldLabel htmlFor="reply_to">Reply-to email</FieldLabel>
+                                <Field
+                                    data-invalid={
+                                        form.invalid('reply_to') || undefined
+                                    }
+                                >
+                                    <FieldLabel htmlFor="reply_to">
+                                        Reply-to email
+                                    </FieldLabel>
                                     <Input
                                         id="reply_to"
                                         type="email"
                                         value={form.data.reply_to}
                                         onChange={(event) =>
-                                            form.setField('reply_to', event.target.value)
+                                            form.setField(
+                                                'reply_to',
+                                                event.target.value,
+                                            )
                                         }
                                         onBlur={() => form.touch('reply_to')}
-                                        aria-invalid={form.invalid('reply_to') || undefined}
+                                        aria-invalid={
+                                            form.invalid('reply_to') ||
+                                            undefined
+                                        }
                                     />
-                                    <FieldError>{form.error('reply_to')}</FieldError>
+                                    <FieldError>
+                                        {form.error('reply_to')}
+                                    </FieldError>
                                 </Field>
 
-                                <Field data-invalid={form.invalid('bcc') || undefined}>
-                                    <FieldLabel htmlFor="bcc">BCC email</FieldLabel>
+                                <Field
+                                    data-invalid={
+                                        form.invalid('bcc') || undefined
+                                    }
+                                >
+                                    <FieldLabel htmlFor="bcc">
+                                        BCC email
+                                    </FieldLabel>
                                     <Input
                                         id="bcc"
                                         type="email"
                                         value={form.data.bcc}
                                         onChange={(event) =>
-                                            form.setField('bcc', event.target.value)
+                                            form.setField(
+                                                'bcc',
+                                                event.target.value,
+                                            )
                                         }
                                         onBlur={() => form.touch('bcc')}
-                                        aria-invalid={form.invalid('bcc') || undefined}
+                                        aria-invalid={
+                                            form.invalid('bcc') || undefined
+                                        }
                                     />
                                     <FieldError>{form.error('bcc')}</FieldError>
                                 </Field>
                             </div>
 
-                            <Field data-invalid={form.invalid('signature') || undefined}>
-                                <FieldLabel htmlFor="signature">Signature</FieldLabel>
+                            <Field
+                                data-invalid={
+                                    form.invalid('signature') || undefined
+                                }
+                            >
+                                <FieldLabel htmlFor="signature">
+                                    Signature
+                                </FieldLabel>
                                 <Textarea
                                     id="signature"
                                     rows={5}
                                     value={form.data.signature}
                                     onChange={(event) =>
-                                        form.setField('signature', event.target.value)
+                                        form.setField(
+                                            'signature',
+                                            event.target.value,
+                                        )
                                     }
                                     onBlur={() => form.touch('signature')}
-                                    aria-invalid={form.invalid('signature') || undefined}
+                                    aria-invalid={
+                                        form.invalid('signature') || undefined
+                                    }
                                 />
                                 <FieldDescription>
-                                    Optional footer appended to emails sent through this provider.
+                                    Optional footer appended to emails sent
+                                    through this provider.
                                 </FieldDescription>
-                                <FieldError>{form.error('signature')}</FieldError>
+                                <FieldError>
+                                    {form.error('signature')}
+                                </FieldError>
                             </Field>
 
-                            <Field data-invalid={form.invalid('status') || undefined}>
+                            <Field
+                                data-invalid={
+                                    form.invalid('status') || undefined
+                                }
+                            >
                                 <FieldSet>
                                     <FieldLegend>Status</FieldLegend>
                                     <FieldDescription>
-                                        Keep inactive providers hidden from template selection.
+                                        Keep inactive providers hidden from
+                                        template selection.
                                     </FieldDescription>
                                     <ToggleGroup
                                         type="single"
@@ -256,7 +343,9 @@ export default function ProviderForm({
                                         }}
                                         variant="outline"
                                         className="w-full flex-wrap"
-                                        aria-invalid={form.invalid('status') || undefined}
+                                        aria-invalid={
+                                            form.invalid('status') || undefined
+                                        }
                                     >
                                         {statusOptions.map((option) => (
                                             <ToggleGroupItem
@@ -282,13 +371,18 @@ export default function ProviderForm({
                             <CardTitle>SMTP settings</CardTitle>
                         </div>
                         <CardDescription>
-                            Enter the server credentials used to deliver outgoing email.
+                            Enter the server credentials used to deliver
+                            outgoing email.
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <FieldGroup>
                             <div className="grid gap-4 sm:grid-cols-2">
-                                <Field data-invalid={form.invalid('smtp_host') || undefined}>
+                                <Field
+                                    data-invalid={
+                                        form.invalid('smtp_host') || undefined
+                                    }
+                                >
                                     <FieldLabel htmlFor="smtp_host">
                                         SMTP host <span aria-hidden>*</span>
                                     </FieldLabel>
@@ -296,15 +390,27 @@ export default function ProviderForm({
                                         id="smtp_host"
                                         value={form.data.smtp_host}
                                         onChange={(event) =>
-                                            form.setField('smtp_host', event.target.value)
+                                            form.setField(
+                                                'smtp_host',
+                                                event.target.value,
+                                            )
                                         }
                                         onBlur={() => form.touch('smtp_host')}
-                                        aria-invalid={form.invalid('smtp_host') || undefined}
+                                        aria-invalid={
+                                            form.invalid('smtp_host') ||
+                                            undefined
+                                        }
                                     />
-                                    <FieldError>{form.error('smtp_host')}</FieldError>
+                                    <FieldError>
+                                        {form.error('smtp_host')}
+                                    </FieldError>
                                 </Field>
 
-                                <Field data-invalid={form.invalid('smtp_port') || undefined}>
+                                <Field
+                                    data-invalid={
+                                        form.invalid('smtp_port') || undefined
+                                    }
+                                >
                                     <FieldLabel htmlFor="smtp_port">
                                         SMTP port <span aria-hidden>*</span>
                                     </FieldLabel>
@@ -313,17 +419,29 @@ export default function ProviderForm({
                                         inputMode="numeric"
                                         value={form.data.smtp_port}
                                         onChange={(event) =>
-                                            form.setField('smtp_port', event.target.value)
+                                            form.setField(
+                                                'smtp_port',
+                                                event.target.value,
+                                            )
                                         }
                                         onBlur={() => form.touch('smtp_port')}
-                                        aria-invalid={form.invalid('smtp_port') || undefined}
+                                        aria-invalid={
+                                            form.invalid('smtp_port') ||
+                                            undefined
+                                        }
                                     />
-                                    <FieldError>{form.error('smtp_port')}</FieldError>
+                                    <FieldError>
+                                        {form.error('smtp_port')}
+                                    </FieldError>
                                 </Field>
                             </div>
 
                             <div className="grid gap-4 sm:grid-cols-2">
-                                <Field data-invalid={form.invalid('smtp_user') || undefined}>
+                                <Field
+                                    data-invalid={
+                                        form.invalid('smtp_user') || undefined
+                                    }
+                                >
                                     <FieldLabel htmlFor="smtp_user">
                                         SMTP username <span aria-hidden>*</span>
                                     </FieldLabel>
@@ -331,15 +449,28 @@ export default function ProviderForm({
                                         id="smtp_user"
                                         value={form.data.smtp_user}
                                         onChange={(event) =>
-                                            form.setField('smtp_user', event.target.value)
+                                            form.setField(
+                                                'smtp_user',
+                                                event.target.value,
+                                            )
                                         }
                                         onBlur={() => form.touch('smtp_user')}
-                                        aria-invalid={form.invalid('smtp_user') || undefined}
+                                        aria-invalid={
+                                            form.invalid('smtp_user') ||
+                                            undefined
+                                        }
                                     />
-                                    <FieldError>{form.error('smtp_user')}</FieldError>
+                                    <FieldError>
+                                        {form.error('smtp_user')}
+                                    </FieldError>
                                 </Field>
 
-                                <Field data-invalid={form.invalid('smtp_password') || undefined}>
+                                <Field
+                                    data-invalid={
+                                        form.invalid('smtp_password') ||
+                                        undefined
+                                    }
+                                >
                                     <FieldLabel htmlFor="smtp_password">
                                         SMTP password
                                         {mode === 'create' ? (
@@ -355,20 +486,33 @@ export default function ProviderForm({
                                                 event.target.value,
                                             )
                                         }
-                                        onBlur={() => form.touch('smtp_password')}
-                                        aria-invalid={form.invalid('smtp_password') || undefined}
+                                        onBlur={() =>
+                                            form.touch('smtp_password')
+                                        }
+                                        aria-invalid={
+                                            form.invalid('smtp_password') ||
+                                            undefined
+                                        }
                                     />
                                     {mode === 'edit' ? (
                                         <FieldDescription>
-                                            Leave blank to keep the current password.
+                                            Leave blank to keep the current
+                                            password.
                                         </FieldDescription>
                                     ) : null}
-                                    <FieldError>{form.error('smtp_password')}</FieldError>
+                                    <FieldError>
+                                        {form.error('smtp_password')}
+                                    </FieldError>
                                 </Field>
                             </div>
 
                             <div className="grid gap-4 sm:grid-cols-2">
-                                <Field data-invalid={form.invalid('smtp_encryption') || undefined}>
+                                <Field
+                                    data-invalid={
+                                        form.invalid('smtp_encryption') ||
+                                        undefined
+                                    }
+                                >
                                     <FieldLabel htmlFor="smtp_encryption">
                                         Encryption <span aria-hidden>*</span>
                                     </FieldLabel>
@@ -382,8 +526,13 @@ export default function ProviderForm({
                                                 event.target.value,
                                             )
                                         }
-                                        onBlur={() => form.touch('smtp_encryption')}
-                                        aria-invalid={form.invalid('smtp_encryption') || undefined}
+                                        onBlur={() =>
+                                            form.touch('smtp_encryption')
+                                        }
+                                        aria-invalid={
+                                            form.invalid('smtp_encryption') ||
+                                            undefined
+                                        }
                                         className="w-full"
                                     >
                                         {encryptionOptions.map((option) => (
@@ -395,11 +544,19 @@ export default function ProviderForm({
                                             </NativeSelectOption>
                                         ))}
                                     </NativeSelect>
-                                    <FieldError>{form.error('smtp_encryption')}</FieldError>
+                                    <FieldError>
+                                        {form.error('smtp_encryption')}
+                                    </FieldError>
                                 </Field>
 
-                                <Field data-invalid={form.invalid('order') || undefined}>
-                                    <FieldLabel htmlFor="order">Sort order</FieldLabel>
+                                <Field
+                                    data-invalid={
+                                        form.invalid('order') || undefined
+                                    }
+                                >
+                                    <FieldLabel htmlFor="order">
+                                        Sort order
+                                    </FieldLabel>
                                     <Input
                                         id="order"
                                         type="number"
@@ -407,15 +564,23 @@ export default function ProviderForm({
                                         step="1"
                                         value={form.data.order}
                                         onChange={(event) =>
-                                            form.setField('order', event.target.value)
+                                            form.setField(
+                                                'order',
+                                                event.target.value,
+                                            )
                                         }
                                         onBlur={() => form.touch('order')}
-                                        aria-invalid={form.invalid('order') || undefined}
+                                        aria-invalid={
+                                            form.invalid('order') || undefined
+                                        }
                                     />
                                     <FieldDescription>
-                                        Lower values appear first in provider lists.
+                                        Lower values appear first in provider
+                                        lists.
                                     </FieldDescription>
-                                    <FieldError>{form.error('order')}</FieldError>
+                                    <FieldError>
+                                        {form.error('order')}
+                                    </FieldError>
                                 </Field>
                             </div>
                         </FieldGroup>

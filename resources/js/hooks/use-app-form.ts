@@ -9,23 +9,17 @@ import { router, useForm } from '@inertiajs/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { AppToastOptions } from '@/components/forms/form-success-toast';
 import { showAppToast } from '@/components/forms/form-success-toast';
-import { suppressNextFlashToast } from '@/hooks/use-flash-toast';
 import { useDirtyFormGuard } from '@/hooks/use-dirty-form-guard';
-import {
-    normalizeFormErrorMessage,
-    validateFormData,
-} from '@/lib/forms';
-import type {
-    FormFieldErrors,
-    FormValidationRules,
-} from '@/lib/forms';
+import { suppressNextFlashToast } from '@/hooks/use-flash-toast';
+import { normalizeFormErrorMessage, validateFormData } from '@/lib/forms';
+import type { FormFieldErrors, FormValidationRules } from '@/lib/forms';
 
 type DirtyGuardOptions =
     | boolean
     | {
-        enabled?: boolean;
-        message?: string;
-    };
+          enabled?: boolean;
+          message?: string;
+      };
 
 type UseAppFormOptions<T extends FormDataType<T>> = {
     defaults: T;
@@ -207,23 +201,15 @@ export function useAppForm<T extends FormDataType<T>>({
                 };
             });
         },
-        [
-            clientErrors,
-            inertiaForm,
-            submitAttempted,
-            validateField,
-        ],
+        [clientErrors, inertiaForm, submitAttempted, validateField],
     );
 
-    const touch = useCallback(
-        <K extends AppFormFieldName<T>>(field: K) => {
-            setTouchedFields((currentFields) => ({
-                ...currentFields,
-                [field]: true,
-            }));
-        },
-        [],
-    );
+    const touch = useCallback(<K extends AppFormFieldName<T>>(field: K) => {
+        setTouchedFields((currentFields) => ({
+            ...currentFields,
+            [field]: true,
+        }));
+    }, []);
 
     const validate = useCallback(() => {
         const nextErrors = validateFormData(inertiaForm.data, rules);

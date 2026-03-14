@@ -322,11 +322,16 @@ export default function NotFoundLogShow({
                                         )
                                     ) {
                                         router.delete(
-                                            route('app.logs.not-found-logs.destroy', notFoundLog.id),
+                                            route(
+                                                'app.logs.not-found-logs.destroy',
+                                                notFoundLog.id,
+                                            ),
                                             {
                                                 onSuccess: () =>
                                                     router.visit(
-                                                        route('app.logs.not-found-logs.index'),
+                                                        route(
+                                                            'app.logs.not-found-logs.index',
+                                                        ),
                                                     ),
                                             },
                                         );

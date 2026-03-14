@@ -6,7 +6,10 @@ type ErrorPageProps = {
     message?: string | null;
 };
 
-export default function ServiceUnavailable({ status, message }: ErrorPageProps) {
+export default function ServiceUnavailable({
+    status,
+    message,
+}: ErrorPageProps) {
     return (
         <AuthErrorPage
             status={status}

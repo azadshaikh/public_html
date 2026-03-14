@@ -100,7 +100,10 @@ export default function RoleForm({
                 return;
             }
 
-            form.setField('permissions', [...form.data.permissions, permissionId]);
+            form.setField('permissions', [
+                ...form.data.permissions,
+                permissionId,
+            ]);
 
             return;
         }
@@ -114,7 +117,11 @@ export default function RoleForm({
     };
 
     return (
-        <form noValidate className="flex flex-col gap-6" onSubmit={handleSubmit}>
+        <form
+            noValidate
+            className="flex flex-col gap-6"
+            onSubmit={handleSubmit}
+        >
             {form.dirtyGuardDialog}
             <FormErrorSummary errors={form.errors} minMessages={2} />
 
@@ -123,7 +130,9 @@ export default function RoleForm({
                     <CardHeader>
                         <div className="flex items-center gap-2">
                             <CardTitle>
-                                {mode === 'create' ? 'Create role' : 'Edit role'}
+                                {mode === 'create'
+                                    ? 'Create role'
+                                    : 'Edit role'}
                             </CardTitle>
                             {role?.is_system ? (
                                 <Badge variant="secondary">System</Badge>
@@ -154,18 +163,23 @@ export default function RoleForm({
                                     }
                                     onBlur={() => form.touch('display_name')}
                                     aria-invalid={
-                                        form.invalid('display_name') || undefined
+                                        form.invalid('display_name') ||
+                                        undefined
                                     }
                                     placeholder="Content Manager"
                                 />
                                 <FieldDescription>
-                                    This is the human-friendly label shown in the
-                                    admin UI.
+                                    This is the human-friendly label shown in
+                                    the admin UI.
                                 </FieldDescription>
-                                <FieldError>{form.error('display_name')}</FieldError>
+                                <FieldError>
+                                    {form.error('display_name')}
+                                </FieldError>
                             </Field>
 
-                            <Field data-invalid={form.invalid('name') || undefined}>
+                            <Field
+                                data-invalid={form.invalid('name') || undefined}
+                            >
                                 <FieldLabel htmlFor="name">Role key</FieldLabel>
                                 <Input
                                     id="name"
@@ -177,7 +191,9 @@ export default function RoleForm({
                                         )
                                     }
                                     onBlur={() => form.touch('name')}
-                                    aria-invalid={form.invalid('name') || undefined}
+                                    aria-invalid={
+                                        form.invalid('name') || undefined
+                                    }
                                     placeholder="content_manager"
                                     disabled={role?.is_system}
                                 />
@@ -195,12 +211,14 @@ export default function RoleForm({
                             </Field>
                         </FieldGroup>
 
-                        <Field data-invalid={form.invalid('status') || undefined}>
+                        <Field
+                            data-invalid={form.invalid('status') || undefined}
+                        >
                             <FieldSet>
                                 <FieldLegend>Status</FieldLegend>
                                 <FieldDescription>
-                                    Choose whether this role should be assignable in
-                                    the application.
+                                    Choose whether this role should be
+                                    assignable in the application.
                                 </FieldDescription>
                                 <ToggleGroup
                                     type="single"
@@ -215,7 +233,9 @@ export default function RoleForm({
                                             value as RoleFormValues['status'],
                                         );
                                     }}
-                                    aria-invalid={form.invalid('status') || undefined}
+                                    aria-invalid={
+                                        form.invalid('status') || undefined
+                                    }
                                     variant="outline"
                                 >
                                     {statusOptions.map((option) => (
@@ -265,16 +285,16 @@ export default function RoleForm({
                     <CardHeader>
                         <CardTitle>Permission bundle</CardTitle>
                         <CardDescription>
-                            Select the capabilities this role should unlock across
-                            the app.
+                            Select the capabilities this role should unlock
+                            across the app.
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <FieldSet>
                             <FieldLegend>Available permissions</FieldLegend>
                             <FieldDescription>
-                                Group permissions deliberately so this role stays
-                                understandable and maintainable.
+                                Group permissions deliberately so this role
+                                stays understandable and maintainable.
                             </FieldDescription>
                             {permissionGroups.length === 0 ? (
                                 <div className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">

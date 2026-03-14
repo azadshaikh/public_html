@@ -30,7 +30,9 @@ function DetailRow({
 
     return (
         <div className="flex items-start gap-3 py-2">
-            {icon ? <span className="mt-0.5 text-muted-foreground">{icon}</span> : null}
+            {icon ? (
+                <span className="mt-0.5 text-muted-foreground">{icon}</span>
+            ) : null}
             <div className="flex min-w-0 flex-col gap-0.5">
                 <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
                     {label}
@@ -76,15 +78,17 @@ export default function EmailLogsShow({ emailLog }: EmailLogShowPageProps) {
                                     </h2>
                                     <Badge
                                         variant={
-                                            (emailLog.status_badge as React.ComponentProps<typeof Badge>['variant']) ??
-                                            'outline'
+                                            (emailLog.status_badge as React.ComponentProps<
+                                                typeof Badge
+                                            >['variant']) ?? 'outline'
                                         }
                                     >
                                         {emailLog.status_label}
                                     </Badge>
                                 </div>
                                 <p className="text-sm text-muted-foreground">
-                                    {emailLog.provider_name || 'Unknown provider'}
+                                    {emailLog.provider_name ||
+                                        'Unknown provider'}
                                 </p>
                             </div>
                         </div>
@@ -99,7 +103,7 @@ export default function EmailLogsShow({ emailLog }: EmailLogShowPageProps) {
                             </CardHeader>
                             <CardContent>
                                 <div className="rounded-lg border bg-muted/20 p-4">
-                                    <pre className="whitespace-pre-wrap break-words font-sans text-sm text-foreground">
+                                    <pre className="font-sans text-sm break-words whitespace-pre-wrap text-foreground">
                                         {emailLog.body || 'No body stored.'}
                                     </pre>
                                 </div>
@@ -114,8 +118,12 @@ export default function EmailLogsShow({ emailLog }: EmailLogShowPageProps) {
                                 </CardHeader>
                                 <CardContent>
                                     <div className="rounded-lg border bg-muted/20 p-4">
-                                        <pre className="overflow-x-auto whitespace-pre-wrap break-words text-sm text-foreground">
-                                            {JSON.stringify(emailLog.context, null, 2)}
+                                        <pre className="overflow-x-auto text-sm break-words whitespace-pre-wrap text-foreground">
+                                            {JSON.stringify(
+                                                emailLog.context,
+                                                null,
+                                                2,
+                                            )}
                                         </pre>
                                     </div>
                                 </CardContent>
@@ -133,7 +141,9 @@ export default function EmailLogsShow({ emailLog }: EmailLogShowPageProps) {
                                     <DetailRow
                                         label="Template"
                                         value={emailLog.template_name}
-                                        icon={<FileTextIcon className="size-4" />}
+                                        icon={
+                                            <FileTextIcon className="size-4" />
+                                        }
                                     />
                                     <DetailRow
                                         label="Provider"
@@ -145,14 +155,16 @@ export default function EmailLogsShow({ emailLog }: EmailLogShowPageProps) {
                                         value={
                                             emailLog.recipients.length > 0 ? (
                                                 <div className="flex flex-wrap gap-2">
-                                                    {emailLog.recipients.map((recipient) => (
-                                                        <Badge
-                                                            key={recipient}
-                                                            variant="outline"
-                                                        >
-                                                            {recipient}
-                                                        </Badge>
-                                                    ))}
+                                                    {emailLog.recipients.map(
+                                                        (recipient) => (
+                                                            <Badge
+                                                                key={recipient}
+                                                                variant="outline"
+                                                            >
+                                                                {recipient}
+                                                            </Badge>
+                                                        ),
+                                                    )}
                                                 </div>
                                             ) : (
                                                 'No recipients recorded'
@@ -162,7 +174,9 @@ export default function EmailLogsShow({ emailLog }: EmailLogShowPageProps) {
                                     <DetailRow
                                         label="Sent at"
                                         value={emailLog.sent_at_formatted}
-                                        icon={<CalendarIcon className="size-4" />}
+                                        icon={
+                                            <CalendarIcon className="size-4" />
+                                        }
                                     />
                                     <DetailRow
                                         label="Logged at"

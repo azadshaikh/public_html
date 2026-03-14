@@ -1,8 +1,8 @@
 import * as React from 'react';
 import AppHead from '@/components/app-head';
-import { ImpersonationBanner } from '@/components/impersonation-banner';
 import { AppPageHeader } from '@/components/app-page-header';
 import { AppTopbar } from '@/components/app-topbar';
+import { ImpersonationBanner } from '@/components/impersonation-banner';
 import { SidebarInset } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
 import type { BreadcrumbItem } from '@/types';

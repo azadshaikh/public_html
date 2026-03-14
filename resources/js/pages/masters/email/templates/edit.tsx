@@ -11,7 +11,10 @@ export default function EmailTemplatesEdit({
 }: EmailTemplateEditPageProps) {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: route('dashboard') },
-        { title: 'Email Templates', href: route('app.masters.email.templates.index') },
+        {
+            title: 'Email Templates',
+            href: route('app.masters.email.templates.index'),
+        },
         {
             title: emailTemplate.name,
             href: route('app.masters.email.templates.edit', emailTemplate.id),

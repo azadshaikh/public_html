@@ -48,7 +48,10 @@ export default function LoginAttemptShow({
 }: LoginAttemptsShowPageProps) {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: route('dashboard') },
-        { title: 'Login Attempts', href: route('app.logs.login-attempts.index') },
+        {
+            title: 'Login Attempts',
+            href: route('app.logs.login-attempts.index'),
+        },
         { title: loginAttempt.email, href: '#' },
     ];
 
@@ -317,11 +320,16 @@ export default function LoginAttemptShow({
                                         )
                                     ) {
                                         router.delete(
-                                            route('app.logs.login-attempts.destroy', loginAttempt.id),
+                                            route(
+                                                'app.logs.login-attempts.destroy',
+                                                loginAttempt.id,
+                                            ),
                                             {
                                                 onSuccess: () =>
                                                     router.visit(
-                                                        route('app.logs.login-attempts.index'),
+                                                        route(
+                                                            'app.logs.login-attempts.index',
+                                                        ),
                                                     ),
                                             },
                                         );

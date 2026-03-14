@@ -1,7 +1,26 @@
 import { Link, usePage } from '@inertiajs/react';
+import type { LucideIcon } from 'lucide-react';
+import {
+    BadgeAlertIcon,
+    BellRingIcon,
+    BrushIcon,
+    BugIcon,
+    FolderKanbanIcon,
+    GlobeIcon,
+    HardDriveIcon,
+    ImageIcon,
+    LanguagesIcon,
+    LockKeyholeIcon,
+    LogInIcon,
+    MailIcon,
+    ShieldCheckIcon,
+    SparklesIcon,
+    WrenchIcon,
+} from 'lucide-react';
 import type { ReactNode } from 'react';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
+import { cn } from '@/lib/utils';
 import type { BreadcrumbItem, SettingsNavItem } from '@/types';
 
 type SettingsLayoutProps = {
@@ -12,6 +31,24 @@ type SettingsLayoutProps = {
     description?: string;
 };
 
+const settingsIcons: Record<string, LucideIcon> = {
+    app: FolderKanbanIcon,
+    branding: BrushIcon,
+    'coming-soon': SparklesIcon,
+    debug: BugIcon,
+    development: WrenchIcon,
+    email: MailIcon,
+    general: WrenchIcon,
+    localization: LanguagesIcon,
+    'login-security': LogInIcon,
+    maintenance: BadgeAlertIcon,
+    media: ImageIcon,
+    registration: GlobeIcon,
+    'site-access-protection': ShieldCheckIcon,
+    'social-authentication': LockKeyholeIcon,
+    storage: HardDriveIcon,
+};
+
 export default function SettingsLayout({
     children,
     settingsNav,
@@ -20,8 +57,6 @@ export default function SettingsLayout({
     description,
 }: SettingsLayoutProps) {
     const { url } = usePage();
-
-    // Inertia url is relative (e.g., /admin/settings/general), but href might be absolute.
     const pathname = url.split('?')[0];
     const activeSlug =
         settingsNav.find((item) => {
@@ -29,34 +64,63 @@ export default function SettingsLayout({
             return pathname === itemPath || pathname.startsWith(`${itemPath}/`);
         })?.slug ?? settingsNav[0]?.slug;
 
+    const railLabel = pathname.includes('/master-settings/')
+        ? 'Platform settings'
+        : 'Application settings';
+
     return (
         <AppLayout
             breadcrumbs={breadcrumbs}
             title={title}
             description={description}
         >
-            <Tabs
-                value={activeSlug}
-                orientation="vertical"
-                className="flex w-full flex-col gap-6 md:flex-row md:items-start md:gap-8"
-            >
-                <TabsList className="w-full shrink-0 p-1.5 md:w-60 lg:w-72">
-                    {settingsNav.map((item) => (
-                        <TabsTrigger
-                            key={item.slug}
-                            value={item.slug}
-                            asChild
-                            className="px-4 py-2.5 text-[15px] leading-6 md:px-4 md:py-3"
-                        >
-                            <Link href={item.href} preserveScroll>
-                                {item.label}
-                            </Link>
-                        </TabsTrigger>
-                    ))}
-                </TabsList>
+            <div className="flex w-full flex-col gap-6 lg:grid lg:grid-cols-[248px_minmax(0,1fr)] lg:items-start lg:gap-8 xl:grid-cols-[264px_minmax(0,1fr)]">
+                <aside className="w-full lg:sticky lg:top-24">
+                    <div className="rounded-xl border border-border/70 bg-muted/60 p-2.5">
+                        <div className="px-2.5 pt-1.5 pb-2.5">
+                            <p className="text-[10px] font-medium tracking-[0.12em] text-muted-foreground/70 uppercase">
+                                {railLabel}
+                            </p>
+                        </div>
+
+                        <nav className="grid gap-1" aria-label={railLabel}>
+                            {settingsNav.map((item) => {
+                                const Icon =
+                                    settingsIcons[item.slug] ?? BellRingIcon;
+
+                                return (
+                                    <Button
+                                        key={item.slug}
+                                        size="sm"
+                                        variant="ghost"
+                                        asChild
+                                        className={cn(
+                                            'h-auto w-full min-w-0 rounded-[min(var(--radius-md),12px)] justify-start px-2.5 py-2 text-sm leading-5 text-foreground/70 hover:bg-background/80 hover:text-foreground',
+                                            item.slug === activeSlug &&
+                                                'bg-background text-foreground font-medium shadow-xs',
+                                        )}
+                                    >
+                                        <Link href={item.href} preserveScroll>
+                                            <Icon
+                                                className={cn(
+                                                    'size-4 text-foreground/65',
+                                                    item.slug === activeSlug &&
+                                                        'text-foreground',
+                                                )}
+                                            />
+                                            <span className="min-w-0 truncate">
+                                                {item.label}
+                                            </span>
+                                        </Link>
+                                    </Button>
+                                );
+                            })}
+                        </nav>
+                    </div>
+                </aside>
 
                 <div className="w-full min-w-0 flex-1">{children}</div>
-            </Tabs>
+            </div>
         </AppLayout>
     );
 }

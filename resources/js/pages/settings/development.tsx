@@ -3,7 +3,12 @@ import type { FormEvent } from 'react';
 import { FormErrorSummary } from '@/components/forms/form-error-summary';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field';
+import {
+    Field,
+    FieldDescription,
+    FieldGroup,
+    FieldLabel,
+} from '@/components/ui/field';
 import { Spinner } from '@/components/ui/spinner';
 import { Switch } from '@/components/ui/switch';
 import { useAppForm } from '@/hooks/use-app-form';
@@ -26,7 +31,10 @@ type DevelopmentFormData = {
     mode_enabled: boolean;
 };
 
-export default function Development({ settings, settingsNav }: DevelopmentPageProps) {
+export default function Development({
+    settings,
+    settingsNav,
+}: DevelopmentPageProps) {
     const form = useAppForm<DevelopmentFormData>({
         defaults: {
             mode_enabled: settings.mode_enabled,
@@ -43,15 +51,25 @@ export default function Development({ settings, settingsNav }: DevelopmentPagePr
             setDefaultsOnSuccess: true,
             successToast: {
                 title: 'Development settings updated',
-                description: 'Your development mode settings have been saved successfully.',
+                description:
+                    'Your development mode settings have been saved successfully.',
             },
         });
     };
 
     return (
-        <SettingsLayout settingsNav={settingsNav} breadcrumbs={breadcrumbs} title="Settings" description="Manage your application settings.">
+        <SettingsLayout
+            settingsNav={settingsNav}
+            breadcrumbs={breadcrumbs}
+            title="Settings"
+            description="Manage your application settings."
+        >
             <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
-                <form noValidate className="flex flex-col gap-6" onSubmit={handleSubmit}>
+                <form
+                    noValidate
+                    className="flex flex-col gap-6"
+                    onSubmit={handleSubmit}
+                >
                     {form.dirtyGuardDialog}
                     <FormErrorSummary errors={form.errors} minMessages={2} />
 
@@ -65,15 +83,25 @@ export default function Development({ settings, settingsNav }: DevelopmentPagePr
                                 <Field>
                                     <div className="flex items-center justify-between gap-4">
                                         <div className="space-y-1">
-                                            <FieldLabel htmlFor="mode_enabled">Enable Development Mode</FieldLabel>
+                                            <FieldLabel htmlFor="mode_enabled">
+                                                Enable Development Mode
+                                            </FieldLabel>
                                             <FieldDescription>
-                                                Enables development mode which disables CDN cache headers. This is useful during active development.
+                                                Enables development mode which
+                                                disables CDN cache headers. This
+                                                is useful during active
+                                                development.
                                             </FieldDescription>
                                         </div>
                                         <Switch
                                             id="mode_enabled"
                                             checked={form.data.mode_enabled}
-                                            onCheckedChange={(checked) => form.setField('mode_enabled', checked === true)}
+                                            onCheckedChange={(checked) =>
+                                                form.setField(
+                                                    'mode_enabled',
+                                                    checked === true,
+                                                )
+                                            }
                                             size="comfortable"
                                         />
                                     </div>
@@ -83,7 +111,11 @@ export default function Development({ settings, settingsNav }: DevelopmentPagePr
                     </Card>
 
                     <Button type="submit" disabled={form.processing}>
-                        {form.processing ? <Spinner /> : <SaveIcon data-icon="inline-start" />}
+                        {form.processing ? (
+                            <Spinner />
+                        ) : (
+                            <SaveIcon data-icon="inline-start" />
+                        )}
                         {form.processing ? 'Saving...' : 'Save Settings'}
                     </Button>
                 </form>

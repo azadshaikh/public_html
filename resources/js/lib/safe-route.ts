@@ -11,12 +11,17 @@
  *   safeRoute('app.users.index')             // "/admin/users" or "/404"
  *   safeRoute('app.users.show', { user: 1 }) // "/admin/users/1" or "/404"
  */
-export function safeRoute(...args: Parameters<typeof route>): ReturnType<typeof route> {
+export function safeRoute(
+    ...args: Parameters<typeof route>
+): ReturnType<typeof route> {
     try {
         return route(...args);
     } catch (error) {
         if (import.meta.env.DEV) {
-            console.warn(`[safeRoute] Route "${String(args[0])}" is not available for the current user.`, error);
+            console.warn(
+                `[safeRoute] Route "${String(args[0])}" is not available for the current user.`,
+                error,
+            );
         }
 
         // When called with no arguments, route() returns a Router instance.
@@ -32,7 +37,14 @@ export function safeRoute(...args: Parameters<typeof route>): ReturnType<typeof 
 export function hasRoute(name: string): boolean {
     try {
         // Ziggy stores routes on the global Ziggy object.
-        return name in (window as unknown as { Ziggy: { routes: Record<string, unknown> } }).Ziggy.routes;
+        return (
+            name in
+            (
+                window as unknown as {
+                    Ziggy: { routes: Record<string, unknown> };
+                }
+            ).Ziggy.routes
+        );
     } catch {
         return false;
     }

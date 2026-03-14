@@ -585,7 +585,9 @@ export default function NotificationsIndex({
                             onClick={() => {
                                 if (dialog === 'delete-read') {
                                     router.delete(
-                                        route('app.notifications.delete-all-read'),
+                                        route(
+                                            'app.notifications.delete-all-read',
+                                        ),
                                         {
                                             preserveScroll: true,
                                         },
@@ -594,7 +596,9 @@ export default function NotificationsIndex({
 
                                 if (dialog === 'mark-all-read') {
                                     router.post(
-                                        route('app.notifications.mark-all-read'),
+                                        route(
+                                            'app.notifications.mark-all-read',
+                                        ),
                                         {},
                                         {
                                             preserveScroll: true,

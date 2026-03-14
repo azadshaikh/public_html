@@ -87,7 +87,9 @@ export default function ResetPassword({ token, email }: Props) {
                         </div>
 
                         <div className="text-center text-sm text-muted-foreground">
-                            <TextLink href={route('login')}>Back to log in</TextLink>
+                            <TextLink href={route('login')}>
+                                Back to log in
+                            </TextLink>
                         </div>
                     </>
                 )}

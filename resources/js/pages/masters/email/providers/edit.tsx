@@ -11,7 +11,10 @@ export default function EmailProvidersEdit({
 }: EmailProviderEditPageProps) {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: route('dashboard') },
-        { title: 'Email Providers', href: route('app.masters.email.providers.index') },
+        {
+            title: 'Email Providers',
+            href: route('app.masters.email.providers.index'),
+        },
         {
             title: emailProvider.name,
             href: route('app.masters.email.providers.edit', emailProvider.id),

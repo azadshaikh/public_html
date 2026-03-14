@@ -3,7 +3,12 @@ import type { FormEvent } from 'react';
 import { FormErrorSummary } from '@/components/forms/form-error-summary';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
+import {
+    Field,
+    FieldError,
+    FieldGroup,
+    FieldLabel,
+} from '@/components/ui/field';
 import { NativeSelect } from '@/components/ui/native-select';
 import { Spinner } from '@/components/ui/spinner';
 import { useAppForm } from '@/hooks/use-app-form';
@@ -39,7 +44,11 @@ type LocalizationFormData = {
     timezone: string;
 };
 
-export default function Localization({ settings, options, settingsNav }: LocalizationPageProps) {
+export default function Localization({
+    settings,
+    options,
+    settingsNav,
+}: LocalizationPageProps) {
     const form = useAppForm<LocalizationFormData>({
         defaults: {
             language: settings.language,
@@ -65,15 +74,25 @@ export default function Localization({ settings, options, settingsNav }: Localiz
             setDefaultsOnSuccess: true,
             successToast: {
                 title: 'Localization settings updated',
-                description: 'Your localization settings have been saved successfully.',
+                description:
+                    'Your localization settings have been saved successfully.',
             },
         });
     };
 
     return (
-        <SettingsLayout settingsNav={settingsNav} breadcrumbs={breadcrumbs} title="Settings" description="Manage your application settings.">
+        <SettingsLayout
+            settingsNav={settingsNav}
+            breadcrumbs={breadcrumbs}
+            title="Settings"
+            description="Manage your application settings."
+        >
             <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
-                <form noValidate className="flex flex-col gap-6" onSubmit={handleSubmit}>
+                <form
+                    noValidate
+                    className="flex flex-col gap-6"
+                    onSubmit={handleSubmit}
+                >
                     {form.dirtyGuardDialog}
                     <FormErrorSummary errors={form.errors} minMessages={2} />
 
@@ -84,93 +103,179 @@ export default function Localization({ settings, options, settingsNav }: Localiz
 
                         <CardContent>
                             <FieldGroup>
-                                <Field data-invalid={form.invalid('language') || undefined}>
-                                    <FieldLabel htmlFor="language">Language</FieldLabel>
+                                <Field
+                                    data-invalid={
+                                        form.invalid('language') || undefined
+                                    }
+                                >
+                                    <FieldLabel htmlFor="language">
+                                        Language
+                                    </FieldLabel>
                                     <NativeSelect
                                         id="language"
                                         className="w-full"
                                         size="comfortable"
                                         value={form.data.language}
-                                        onChange={(e) => form.setField('language', e.target.value)}
+                                        onChange={(e) =>
+                                            form.setField(
+                                                'language',
+                                                e.target.value,
+                                            )
+                                        }
                                         onBlur={() => form.touch('language')}
-                                        aria-invalid={form.invalid('language') || undefined}
+                                        aria-invalid={
+                                            form.invalid('language') ||
+                                            undefined
+                                        }
                                     >
                                         {options.languages.map((opt) => (
-                                            <option key={opt.value} value={opt.value}>
+                                            <option
+                                                key={opt.value}
+                                                value={opt.value}
+                                            >
                                                 {opt.label}
                                             </option>
                                         ))}
                                     </NativeSelect>
-                                    <FieldError>{form.error('language')}</FieldError>
+                                    <FieldError>
+                                        {form.error('language')}
+                                    </FieldError>
                                 </Field>
 
                                 <FieldGroup className="md:grid md:grid-cols-2 md:gap-6">
-                                    <Field data-invalid={form.invalid('date_format') || undefined}>
-                                        <FieldLabel htmlFor="date_format">Date Format</FieldLabel>
+                                    <Field
+                                        data-invalid={
+                                            form.invalid('date_format') ||
+                                            undefined
+                                        }
+                                    >
+                                        <FieldLabel htmlFor="date_format">
+                                            Date Format
+                                        </FieldLabel>
                                         <NativeSelect
                                             id="date_format"
                                             className="w-full"
                                             size="comfortable"
                                             value={form.data.date_format}
-                                            onChange={(e) => form.setField('date_format', e.target.value)}
-                                            onBlur={() => form.touch('date_format')}
-                                            aria-invalid={form.invalid('date_format') || undefined}
+                                            onChange={(e) =>
+                                                form.setField(
+                                                    'date_format',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            onBlur={() =>
+                                                form.touch('date_format')
+                                            }
+                                            aria-invalid={
+                                                form.invalid('date_format') ||
+                                                undefined
+                                            }
                                         >
                                             {options.dateFormats.map((opt) => (
-                                                <option key={opt.value} value={opt.value}>
+                                                <option
+                                                    key={opt.value}
+                                                    value={opt.value}
+                                                >
                                                     {opt.label}
                                                 </option>
                                             ))}
                                         </NativeSelect>
-                                        <FieldError>{form.error('date_format')}</FieldError>
+                                        <FieldError>
+                                            {form.error('date_format')}
+                                        </FieldError>
                                     </Field>
 
-                                    <Field data-invalid={form.invalid('time_format') || undefined}>
-                                        <FieldLabel htmlFor="time_format">Time Format</FieldLabel>
+                                    <Field
+                                        data-invalid={
+                                            form.invalid('time_format') ||
+                                            undefined
+                                        }
+                                    >
+                                        <FieldLabel htmlFor="time_format">
+                                            Time Format
+                                        </FieldLabel>
                                         <NativeSelect
                                             id="time_format"
                                             className="w-full"
                                             size="comfortable"
                                             value={form.data.time_format}
-                                            onChange={(e) => form.setField('time_format', e.target.value)}
-                                            onBlur={() => form.touch('time_format')}
-                                            aria-invalid={form.invalid('time_format') || undefined}
+                                            onChange={(e) =>
+                                                form.setField(
+                                                    'time_format',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            onBlur={() =>
+                                                form.touch('time_format')
+                                            }
+                                            aria-invalid={
+                                                form.invalid('time_format') ||
+                                                undefined
+                                            }
                                         >
                                             {options.timeFormats.map((opt) => (
-                                                <option key={opt.value} value={opt.value}>
+                                                <option
+                                                    key={opt.value}
+                                                    value={opt.value}
+                                                >
                                                     {opt.label}
                                                 </option>
                                             ))}
                                         </NativeSelect>
-                                        <FieldError>{form.error('time_format')}</FieldError>
+                                        <FieldError>
+                                            {form.error('time_format')}
+                                        </FieldError>
                                     </Field>
                                 </FieldGroup>
 
-                                <Field data-invalid={form.invalid('timezone') || undefined}>
-                                    <FieldLabel htmlFor="timezone">Timezone</FieldLabel>
+                                <Field
+                                    data-invalid={
+                                        form.invalid('timezone') || undefined
+                                    }
+                                >
+                                    <FieldLabel htmlFor="timezone">
+                                        Timezone
+                                    </FieldLabel>
                                     <NativeSelect
                                         id="timezone"
                                         className="w-full"
                                         size="comfortable"
                                         value={form.data.timezone}
-                                        onChange={(e) => form.setField('timezone', e.target.value)}
+                                        onChange={(e) =>
+                                            form.setField(
+                                                'timezone',
+                                                e.target.value,
+                                            )
+                                        }
                                         onBlur={() => form.touch('timezone')}
-                                        aria-invalid={form.invalid('timezone') || undefined}
+                                        aria-invalid={
+                                            form.invalid('timezone') ||
+                                            undefined
+                                        }
                                     >
                                         {options.timezones.map((opt) => (
-                                            <option key={opt.value} value={opt.value}>
+                                            <option
+                                                key={opt.value}
+                                                value={opt.value}
+                                            >
                                                 {opt.label}
                                             </option>
                                         ))}
                                     </NativeSelect>
-                                    <FieldError>{form.error('timezone')}</FieldError>
+                                    <FieldError>
+                                        {form.error('timezone')}
+                                    </FieldError>
                                 </Field>
                             </FieldGroup>
                         </CardContent>
                     </Card>
 
                     <Button type="submit" disabled={form.processing}>
-                        {form.processing ? <Spinner /> : <SaveIcon data-icon="inline-start" />}
+                        {form.processing ? (
+                            <Spinner />
+                        ) : (
+                            <SaveIcon data-icon="inline-start" />
+                        )}
                         {form.processing ? 'Saving...' : 'Save Settings'}
                     </Button>
                 </form>

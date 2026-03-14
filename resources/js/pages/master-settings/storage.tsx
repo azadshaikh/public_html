@@ -5,7 +5,13 @@ import { FormErrorSummary } from '@/components/forms/form-error-summary';
 import { showAppToast } from '@/components/forms/form-success-toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
+import {
+    Field,
+    FieldDescription,
+    FieldError,
+    FieldGroup,
+    FieldLabel,
+} from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { NativeSelect } from '@/components/ui/native-select';
 import { Spinner } from '@/components/ui/spinner';
@@ -69,7 +75,11 @@ type StorageFormData = {
     use_path_style_endpoint: boolean;
 };
 
-export default function Storage({ settings, options, settingsNav }: StoragePageProps) {
+export default function Storage({
+    settings,
+    options,
+    settingsNav,
+}: StoragePageProps) {
     const [isTesting, setIsTesting] = useState(false);
 
     const form = useAppForm<StorageFormData>({
@@ -106,7 +116,8 @@ export default function Storage({ settings, options, settingsNav }: StoragePageP
             setDefaultsOnSuccess: true,
             successToast: {
                 title: 'Storage settings updated',
-                description: 'Your storage settings have been saved successfully.',
+                description:
+                    'Your storage settings have been saved successfully.',
             },
         });
     };
@@ -115,28 +126,37 @@ export default function Storage({ settings, options, settingsNav }: StoragePageP
         setIsTesting(true);
 
         try {
-            const response = await fetch(route('app.masters.settings.test-storage-connection'), {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content ?? '',
-                    Accept: 'application/json',
-                    'Content-Type': 'application/json',
+            const response = await fetch(
+                route('app.masters.settings.test-storage-connection'),
+                {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN':
+                            document.querySelector<HTMLMetaElement>(
+                                'meta[name="csrf-token"]',
+                            )?.content ?? '',
+                        Accept: 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(form.data),
                 },
-                body: JSON.stringify(form.data),
-            });
+            );
 
             const data = await response.json();
 
             showAppToast({
                 variant: data.success ? 'success' : 'error',
-                title: data.success ? 'Connection successful' : 'Connection failed',
+                title: data.success
+                    ? 'Connection successful'
+                    : 'Connection failed',
                 description: data.message,
             });
         } catch {
             showAppToast({
                 variant: 'error',
                 title: 'Connection test failed',
-                description: 'An unexpected error occurred while testing the connection.',
+                description:
+                    'An unexpected error occurred while testing the connection.',
             });
         } finally {
             setIsTesting(false);
@@ -147,9 +167,18 @@ export default function Storage({ settings, options, settingsNav }: StoragePageP
     const isS3 = form.data.storage_driver === 's3';
 
     return (
-        <SettingsLayout settingsNav={settingsNav} breadcrumbs={breadcrumbs} title="Master Settings" description="Manage platform-level configuration.">
+        <SettingsLayout
+            settingsNav={settingsNav}
+            breadcrumbs={breadcrumbs}
+            title="Master Settings"
+            description="Manage platform-level configuration."
+        >
             <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
-                <form noValidate className="flex flex-col gap-6" onSubmit={handleSubmit}>
+                <form
+                    noValidate
+                    className="flex flex-col gap-6"
+                    onSubmit={handleSubmit}
+                >
                     {form.dirtyGuardDialog}
                     <FormErrorSummary errors={form.errors} minMessages={2} />
 
@@ -160,69 +189,149 @@ export default function Storage({ settings, options, settingsNav }: StoragePageP
 
                         <CardContent>
                             <FieldGroup>
-                                <Field data-invalid={form.invalid('storage_driver') || undefined}>
-                                    <FieldLabel htmlFor="storage_driver">Storage Driver</FieldLabel>
+                                <Field
+                                    data-invalid={
+                                        form.invalid('storage_driver') ||
+                                        undefined
+                                    }
+                                >
+                                    <FieldLabel htmlFor="storage_driver">
+                                        Storage Driver
+                                    </FieldLabel>
                                     <NativeSelect
                                         id="storage_driver"
                                         className="w-full"
                                         size="comfortable"
                                         value={form.data.storage_driver}
-                                        onChange={(e) => form.setField('storage_driver', e.target.value)}
-                                        onBlur={() => form.touch('storage_driver')}
-                                        aria-invalid={form.invalid('storage_driver') || undefined}
+                                        onChange={(e) =>
+                                            form.setField(
+                                                'storage_driver',
+                                                e.target.value,
+                                            )
+                                        }
+                                        onBlur={() =>
+                                            form.touch('storage_driver')
+                                        }
+                                        aria-invalid={
+                                            form.invalid('storage_driver') ||
+                                            undefined
+                                        }
                                     >
                                         {options.storageDrivers.map((opt) => (
-                                            <option key={opt.value} value={opt.value}>
+                                            <option
+                                                key={opt.value}
+                                                value={opt.value}
+                                            >
                                                 {opt.label}
                                             </option>
                                         ))}
                                     </NativeSelect>
-                                    <FieldError>{form.error('storage_driver')}</FieldError>
+                                    <FieldError>
+                                        {form.error('storage_driver')}
+                                    </FieldError>
                                 </Field>
 
                                 <FieldGroup className="md:grid md:grid-cols-2 md:gap-6">
-                                    <Field data-invalid={form.invalid('root_folder') || undefined}>
-                                        <FieldLabel htmlFor="root_folder">Root Folder</FieldLabel>
+                                    <Field
+                                        data-invalid={
+                                            form.invalid('root_folder') ||
+                                            undefined
+                                        }
+                                    >
+                                        <FieldLabel htmlFor="root_folder">
+                                            Root Folder
+                                        </FieldLabel>
                                         <Input
                                             id="root_folder"
                                             value={form.data.root_folder}
-                                            onChange={(e) => form.setField('root_folder', e.target.value)}
-                                            onBlur={() => form.touch('root_folder')}
-                                            aria-invalid={form.invalid('root_folder') || undefined}
+                                            onChange={(e) =>
+                                                form.setField(
+                                                    'root_folder',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            onBlur={() =>
+                                                form.touch('root_folder')
+                                            }
+                                            aria-invalid={
+                                                form.invalid('root_folder') ||
+                                                undefined
+                                            }
                                             placeholder="Enter root folder path"
                                             size="comfortable"
                                         />
-                                        <FieldError>{form.error('root_folder')}</FieldError>
+                                        <FieldError>
+                                            {form.error('root_folder')}
+                                        </FieldError>
                                     </Field>
 
-                                    <Field data-invalid={form.invalid('max_storage_size') || undefined}>
-                                        <FieldLabel htmlFor="max_storage_size">Max Storage Size (MB)</FieldLabel>
+                                    <Field
+                                        data-invalid={
+                                            form.invalid('max_storage_size') ||
+                                            undefined
+                                        }
+                                    >
+                                        <FieldLabel htmlFor="max_storage_size">
+                                            Max Storage Size (MB)
+                                        </FieldLabel>
                                         <Input
                                             id="max_storage_size"
                                             type="number"
                                             value={form.data.max_storage_size}
-                                            onChange={(e) => form.setField('max_storage_size', e.target.value)}
-                                            onBlur={() => form.touch('max_storage_size')}
-                                            aria-invalid={form.invalid('max_storage_size') || undefined}
+                                            onChange={(e) =>
+                                                form.setField(
+                                                    'max_storage_size',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            onBlur={() =>
+                                                form.touch('max_storage_size')
+                                            }
+                                            aria-invalid={
+                                                form.invalid(
+                                                    'max_storage_size',
+                                                ) || undefined
+                                            }
                                             placeholder="Leave empty for unlimited"
                                             size="comfortable"
                                         />
-                                        <FieldError>{form.error('max_storage_size')}</FieldError>
+                                        <FieldError>
+                                            {form.error('max_storage_size')}
+                                        </FieldError>
                                     </Field>
                                 </FieldGroup>
 
-                                <Field data-invalid={form.invalid('storage_cdn_url') || undefined}>
-                                    <FieldLabel htmlFor="storage_cdn_url">CDN URL</FieldLabel>
+                                <Field
+                                    data-invalid={
+                                        form.invalid('storage_cdn_url') ||
+                                        undefined
+                                    }
+                                >
+                                    <FieldLabel htmlFor="storage_cdn_url">
+                                        CDN URL
+                                    </FieldLabel>
                                     <Input
                                         id="storage_cdn_url"
                                         value={form.data.storage_cdn_url}
-                                        onChange={(e) => form.setField('storage_cdn_url', e.target.value)}
-                                        onBlur={() => form.touch('storage_cdn_url')}
-                                        aria-invalid={form.invalid('storage_cdn_url') || undefined}
+                                        onChange={(e) =>
+                                            form.setField(
+                                                'storage_cdn_url',
+                                                e.target.value,
+                                            )
+                                        }
+                                        onBlur={() =>
+                                            form.touch('storage_cdn_url')
+                                        }
+                                        aria-invalid={
+                                            form.invalid('storage_cdn_url') ||
+                                            undefined
+                                        }
                                         placeholder="https://cdn.example.com"
                                         size="comfortable"
                                     />
-                                    <FieldError>{form.error('storage_cdn_url')}</FieldError>
+                                    <FieldError>
+                                        {form.error('storage_cdn_url')}
+                                    </FieldError>
                                 </Field>
                             </FieldGroup>
                         </CardContent>
@@ -237,102 +346,225 @@ export default function Storage({ settings, options, settingsNav }: StoragePageP
                             <CardContent>
                                 <FieldGroup>
                                     <FieldGroup className="md:grid md:grid-cols-2 md:gap-6">
-                                        <Field data-invalid={form.invalid('ftp_host') || undefined}>
-                                            <FieldLabel htmlFor="ftp_host">FTP Host</FieldLabel>
+                                        <Field
+                                            data-invalid={
+                                                form.invalid('ftp_host') ||
+                                                undefined
+                                            }
+                                        >
+                                            <FieldLabel htmlFor="ftp_host">
+                                                FTP Host
+                                            </FieldLabel>
                                             <Input
                                                 id="ftp_host"
                                                 value={form.data.ftp_host}
-                                                onChange={(e) => form.setField('ftp_host', e.target.value)}
-                                                onBlur={() => form.touch('ftp_host')}
-                                                aria-invalid={form.invalid('ftp_host') || undefined}
+                                                onChange={(e) =>
+                                                    form.setField(
+                                                        'ftp_host',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                onBlur={() =>
+                                                    form.touch('ftp_host')
+                                                }
+                                                aria-invalid={
+                                                    form.invalid('ftp_host') ||
+                                                    undefined
+                                                }
                                                 placeholder="ftp.example.com"
                                                 size="comfortable"
                                             />
-                                            <FieldError>{form.error('ftp_host')}</FieldError>
+                                            <FieldError>
+                                                {form.error('ftp_host')}
+                                            </FieldError>
                                         </Field>
 
-                                        <Field data-invalid={form.invalid('ftp_port') || undefined}>
-                                            <FieldLabel htmlFor="ftp_port">FTP Port</FieldLabel>
+                                        <Field
+                                            data-invalid={
+                                                form.invalid('ftp_port') ||
+                                                undefined
+                                            }
+                                        >
+                                            <FieldLabel htmlFor="ftp_port">
+                                                FTP Port
+                                            </FieldLabel>
                                             <Input
                                                 id="ftp_port"
                                                 value={form.data.ftp_port}
-                                                onChange={(e) => form.setField('ftp_port', e.target.value)}
-                                                onBlur={() => form.touch('ftp_port')}
-                                                aria-invalid={form.invalid('ftp_port') || undefined}
+                                                onChange={(e) =>
+                                                    form.setField(
+                                                        'ftp_port',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                onBlur={() =>
+                                                    form.touch('ftp_port')
+                                                }
+                                                aria-invalid={
+                                                    form.invalid('ftp_port') ||
+                                                    undefined
+                                                }
                                                 placeholder="21"
                                                 size="comfortable"
                                             />
-                                            <FieldError>{form.error('ftp_port')}</FieldError>
+                                            <FieldError>
+                                                {form.error('ftp_port')}
+                                            </FieldError>
                                         </Field>
                                     </FieldGroup>
 
                                     <FieldGroup className="md:grid md:grid-cols-2 md:gap-6">
-                                        <Field data-invalid={form.invalid('ftp_username') || undefined}>
-                                            <FieldLabel htmlFor="ftp_username">FTP Username</FieldLabel>
+                                        <Field
+                                            data-invalid={
+                                                form.invalid('ftp_username') ||
+                                                undefined
+                                            }
+                                        >
+                                            <FieldLabel htmlFor="ftp_username">
+                                                FTP Username
+                                            </FieldLabel>
                                             <Input
                                                 id="ftp_username"
                                                 value={form.data.ftp_username}
-                                                onChange={(e) => form.setField('ftp_username', e.target.value)}
-                                                onBlur={() => form.touch('ftp_username')}
-                                                aria-invalid={form.invalid('ftp_username') || undefined}
+                                                onChange={(e) =>
+                                                    form.setField(
+                                                        'ftp_username',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                onBlur={() =>
+                                                    form.touch('ftp_username')
+                                                }
+                                                aria-invalid={
+                                                    form.invalid(
+                                                        'ftp_username',
+                                                    ) || undefined
+                                                }
                                                 placeholder="Enter FTP username"
                                                 size="comfortable"
                                             />
-                                            <FieldError>{form.error('ftp_username')}</FieldError>
+                                            <FieldError>
+                                                {form.error('ftp_username')}
+                                            </FieldError>
                                         </Field>
 
-                                        <Field data-invalid={form.invalid('ftp_password') || undefined}>
-                                            <FieldLabel htmlFor="ftp_password">FTP Password</FieldLabel>
+                                        <Field
+                                            data-invalid={
+                                                form.invalid('ftp_password') ||
+                                                undefined
+                                            }
+                                        >
+                                            <FieldLabel htmlFor="ftp_password">
+                                                FTP Password
+                                            </FieldLabel>
                                             <Input
                                                 id="ftp_password"
                                                 type="password"
                                                 value={form.data.ftp_password}
-                                                onChange={(e) => form.setField('ftp_password', e.target.value)}
-                                                onBlur={() => form.touch('ftp_password')}
-                                                aria-invalid={form.invalid('ftp_password') || undefined}
+                                                onChange={(e) =>
+                                                    form.setField(
+                                                        'ftp_password',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                onBlur={() =>
+                                                    form.touch('ftp_password')
+                                                }
+                                                aria-invalid={
+                                                    form.invalid(
+                                                        'ftp_password',
+                                                    ) || undefined
+                                                }
                                                 placeholder="Enter FTP password"
                                                 size="comfortable"
                                             />
-                                            <FieldError>{form.error('ftp_password')}</FieldError>
+                                            <FieldError>
+                                                {form.error('ftp_password')}
+                                            </FieldError>
                                         </Field>
                                     </FieldGroup>
 
-                                    <Field data-invalid={form.invalid('ftp_root') || undefined}>
-                                        <FieldLabel htmlFor="ftp_root">FTP Root Directory</FieldLabel>
+                                    <Field
+                                        data-invalid={
+                                            form.invalid('ftp_root') ||
+                                            undefined
+                                        }
+                                    >
+                                        <FieldLabel htmlFor="ftp_root">
+                                            FTP Root Directory
+                                        </FieldLabel>
                                         <Input
                                             id="ftp_root"
                                             value={form.data.ftp_root}
-                                            onChange={(e) => form.setField('ftp_root', e.target.value)}
-                                            onBlur={() => form.touch('ftp_root')}
-                                            aria-invalid={form.invalid('ftp_root') || undefined}
+                                            onChange={(e) =>
+                                                form.setField(
+                                                    'ftp_root',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            onBlur={() =>
+                                                form.touch('ftp_root')
+                                            }
+                                            aria-invalid={
+                                                form.invalid('ftp_root') ||
+                                                undefined
+                                            }
                                             placeholder="/public_html"
                                             size="comfortable"
                                         />
-                                        <FieldError>{form.error('ftp_root')}</FieldError>
+                                        <FieldError>
+                                            {form.error('ftp_root')}
+                                        </FieldError>
                                     </Field>
 
-                                    <Field data-invalid={form.invalid('ftp_timeout') || undefined}>
-                                        <FieldLabel htmlFor="ftp_timeout">Timeout (seconds)</FieldLabel>
+                                    <Field
+                                        data-invalid={
+                                            form.invalid('ftp_timeout') ||
+                                            undefined
+                                        }
+                                    >
+                                        <FieldLabel htmlFor="ftp_timeout">
+                                            Timeout (seconds)
+                                        </FieldLabel>
                                         <Input
                                             id="ftp_timeout"
                                             type="number"
                                             value={form.data.ftp_timeout}
-                                            onChange={(e) => form.setField('ftp_timeout', e.target.value)}
-                                            onBlur={() => form.touch('ftp_timeout')}
-                                            aria-invalid={form.invalid('ftp_timeout') || undefined}
+                                            onChange={(e) =>
+                                                form.setField(
+                                                    'ftp_timeout',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            onBlur={() =>
+                                                form.touch('ftp_timeout')
+                                            }
+                                            aria-invalid={
+                                                form.invalid('ftp_timeout') ||
+                                                undefined
+                                            }
                                             placeholder="30"
                                             size="comfortable"
                                         />
-                                        <FieldError>{form.error('ftp_timeout')}</FieldError>
+                                        <FieldError>
+                                            {form.error('ftp_timeout')}
+                                        </FieldError>
                                     </Field>
 
                                     <Field>
                                         <div className="flex items-center justify-between gap-4">
-                                            <FieldLabel htmlFor="ftp_passive">Passive Mode</FieldLabel>
+                                            <FieldLabel htmlFor="ftp_passive">
+                                                Passive Mode
+                                            </FieldLabel>
                                             <Switch
                                                 id="ftp_passive"
                                                 checked={form.data.ftp_passive}
-                                                onCheckedChange={(checked) => form.setField('ftp_passive', checked === true)}
+                                                onCheckedChange={(checked) =>
+                                                    form.setField(
+                                                        'ftp_passive',
+                                                        checked === true,
+                                                    )
+                                                }
                                                 size="comfortable"
                                             />
                                         </div>
@@ -340,32 +572,63 @@ export default function Storage({ settings, options, settingsNav }: StoragePageP
 
                                     <Field>
                                         <div className="flex items-center justify-between gap-4">
-                                            <FieldLabel htmlFor="ftp_ssl">SSL</FieldLabel>
+                                            <FieldLabel htmlFor="ftp_ssl">
+                                                SSL
+                                            </FieldLabel>
                                             <Switch
                                                 id="ftp_ssl"
                                                 checked={form.data.ftp_ssl}
-                                                onCheckedChange={(checked) => form.setField('ftp_ssl', checked === true)}
+                                                onCheckedChange={(checked) =>
+                                                    form.setField(
+                                                        'ftp_ssl',
+                                                        checked === true,
+                                                    )
+                                                }
                                                 size="comfortable"
                                             />
                                         </div>
                                     </Field>
 
                                     {form.data.ftp_ssl ? (
-                                        <Field data-invalid={form.invalid('ftp_ssl_mode') || undefined}>
-                                            <FieldLabel htmlFor="ftp_ssl_mode">SSL Mode</FieldLabel>
+                                        <Field
+                                            data-invalid={
+                                                form.invalid('ftp_ssl_mode') ||
+                                                undefined
+                                            }
+                                        >
+                                            <FieldLabel htmlFor="ftp_ssl_mode">
+                                                SSL Mode
+                                            </FieldLabel>
                                             <NativeSelect
                                                 id="ftp_ssl_mode"
                                                 className="w-full"
                                                 size="comfortable"
                                                 value={form.data.ftp_ssl_mode}
-                                                onChange={(e) => form.setField('ftp_ssl_mode', e.target.value)}
-                                                onBlur={() => form.touch('ftp_ssl_mode')}
-                                                aria-invalid={form.invalid('ftp_ssl_mode') || undefined}
+                                                onChange={(e) =>
+                                                    form.setField(
+                                                        'ftp_ssl_mode',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                onBlur={() =>
+                                                    form.touch('ftp_ssl_mode')
+                                                }
+                                                aria-invalid={
+                                                    form.invalid(
+                                                        'ftp_ssl_mode',
+                                                    ) || undefined
+                                                }
                                             >
-                                                <option value="explicit">Explicit</option>
-                                                <option value="implicit">Implicit</option>
+                                                <option value="explicit">
+                                                    Explicit
+                                                </option>
+                                                <option value="implicit">
+                                                    Implicit
+                                                </option>
                                             </NativeSelect>
-                                            <FieldError>{form.error('ftp_ssl_mode')}</FieldError>
+                                            <FieldError>
+                                                {form.error('ftp_ssl_mode')}
+                                            </FieldError>
                                         </Field>
                                     ) : null}
                                 </FieldGroup>
@@ -382,91 +645,204 @@ export default function Storage({ settings, options, settingsNav }: StoragePageP
                             <CardContent>
                                 <FieldGroup>
                                     <FieldGroup className="md:grid md:grid-cols-2 md:gap-6">
-                                        <Field data-invalid={form.invalid('access_key') || undefined}>
-                                            <FieldLabel htmlFor="access_key">Access Key</FieldLabel>
+                                        <Field
+                                            data-invalid={
+                                                form.invalid('access_key') ||
+                                                undefined
+                                            }
+                                        >
+                                            <FieldLabel htmlFor="access_key">
+                                                Access Key
+                                            </FieldLabel>
                                             <Input
                                                 id="access_key"
                                                 value={form.data.access_key}
-                                                onChange={(e) => form.setField('access_key', e.target.value)}
-                                                onBlur={() => form.touch('access_key')}
-                                                aria-invalid={form.invalid('access_key') || undefined}
+                                                onChange={(e) =>
+                                                    form.setField(
+                                                        'access_key',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                onBlur={() =>
+                                                    form.touch('access_key')
+                                                }
+                                                aria-invalid={
+                                                    form.invalid(
+                                                        'access_key',
+                                                    ) || undefined
+                                                }
                                                 placeholder="Enter AWS access key"
                                                 size="comfortable"
                                             />
-                                            <FieldError>{form.error('access_key')}</FieldError>
+                                            <FieldError>
+                                                {form.error('access_key')}
+                                            </FieldError>
                                         </Field>
 
-                                        <Field data-invalid={form.invalid('secret_key') || undefined}>
-                                            <FieldLabel htmlFor="secret_key">Secret Key</FieldLabel>
+                                        <Field
+                                            data-invalid={
+                                                form.invalid('secret_key') ||
+                                                undefined
+                                            }
+                                        >
+                                            <FieldLabel htmlFor="secret_key">
+                                                Secret Key
+                                            </FieldLabel>
                                             <Input
                                                 id="secret_key"
                                                 type="password"
                                                 value={form.data.secret_key}
-                                                onChange={(e) => form.setField('secret_key', e.target.value)}
-                                                onBlur={() => form.touch('secret_key')}
-                                                aria-invalid={form.invalid('secret_key') || undefined}
+                                                onChange={(e) =>
+                                                    form.setField(
+                                                        'secret_key',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                onBlur={() =>
+                                                    form.touch('secret_key')
+                                                }
+                                                aria-invalid={
+                                                    form.invalid(
+                                                        'secret_key',
+                                                    ) || undefined
+                                                }
                                                 placeholder="Enter AWS secret key"
                                                 size="comfortable"
                                             />
-                                            <FieldError>{form.error('secret_key')}</FieldError>
+                                            <FieldError>
+                                                {form.error('secret_key')}
+                                            </FieldError>
                                         </Field>
                                     </FieldGroup>
 
                                     <FieldGroup className="md:grid md:grid-cols-2 md:gap-6">
-                                        <Field data-invalid={form.invalid('bucket') || undefined}>
-                                            <FieldLabel htmlFor="bucket">Bucket</FieldLabel>
+                                        <Field
+                                            data-invalid={
+                                                form.invalid('bucket') ||
+                                                undefined
+                                            }
+                                        >
+                                            <FieldLabel htmlFor="bucket">
+                                                Bucket
+                                            </FieldLabel>
                                             <Input
                                                 id="bucket"
                                                 value={form.data.bucket}
-                                                onChange={(e) => form.setField('bucket', e.target.value)}
-                                                onBlur={() => form.touch('bucket')}
-                                                aria-invalid={form.invalid('bucket') || undefined}
+                                                onChange={(e) =>
+                                                    form.setField(
+                                                        'bucket',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                onBlur={() =>
+                                                    form.touch('bucket')
+                                                }
+                                                aria-invalid={
+                                                    form.invalid('bucket') ||
+                                                    undefined
+                                                }
                                                 placeholder="my-bucket"
                                                 size="comfortable"
                                             />
-                                            <FieldError>{form.error('bucket')}</FieldError>
+                                            <FieldError>
+                                                {form.error('bucket')}
+                                            </FieldError>
                                         </Field>
 
-                                        <Field data-invalid={form.invalid('region') || undefined}>
-                                            <FieldLabel htmlFor="region">Region</FieldLabel>
+                                        <Field
+                                            data-invalid={
+                                                form.invalid('region') ||
+                                                undefined
+                                            }
+                                        >
+                                            <FieldLabel htmlFor="region">
+                                                Region
+                                            </FieldLabel>
                                             <Input
                                                 id="region"
                                                 value={form.data.region}
-                                                onChange={(e) => form.setField('region', e.target.value)}
-                                                onBlur={() => form.touch('region')}
-                                                aria-invalid={form.invalid('region') || undefined}
+                                                onChange={(e) =>
+                                                    form.setField(
+                                                        'region',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                onBlur={() =>
+                                                    form.touch('region')
+                                                }
+                                                aria-invalid={
+                                                    form.invalid('region') ||
+                                                    undefined
+                                                }
                                                 placeholder="us-east-1"
                                                 size="comfortable"
                                             />
-                                            <FieldError>{form.error('region')}</FieldError>
+                                            <FieldError>
+                                                {form.error('region')}
+                                            </FieldError>
                                         </Field>
                                     </FieldGroup>
 
-                                    <Field data-invalid={form.invalid('endpoint') || undefined}>
-                                        <FieldLabel htmlFor="endpoint">Custom Endpoint</FieldLabel>
-                                        <FieldDescription>For S3-compatible services (e.g., DigitalOcean Spaces, MinIO).</FieldDescription>
+                                    <Field
+                                        data-invalid={
+                                            form.invalid('endpoint') ||
+                                            undefined
+                                        }
+                                    >
+                                        <FieldLabel htmlFor="endpoint">
+                                            Custom Endpoint
+                                        </FieldLabel>
+                                        <FieldDescription>
+                                            For S3-compatible services (e.g.,
+                                            DigitalOcean Spaces, MinIO).
+                                        </FieldDescription>
                                         <Input
                                             id="endpoint"
                                             value={form.data.endpoint}
-                                            onChange={(e) => form.setField('endpoint', e.target.value)}
-                                            onBlur={() => form.touch('endpoint')}
-                                            aria-invalid={form.invalid('endpoint') || undefined}
+                                            onChange={(e) =>
+                                                form.setField(
+                                                    'endpoint',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            onBlur={() =>
+                                                form.touch('endpoint')
+                                            }
+                                            aria-invalid={
+                                                form.invalid('endpoint') ||
+                                                undefined
+                                            }
                                             placeholder="https://nyc3.digitaloceanspaces.com"
                                             size="comfortable"
                                         />
-                                        <FieldError>{form.error('endpoint')}</FieldError>
+                                        <FieldError>
+                                            {form.error('endpoint')}
+                                        </FieldError>
                                     </Field>
 
                                     <Field>
                                         <div className="flex items-center justify-between gap-4">
                                             <div className="space-y-1">
-                                                <FieldLabel htmlFor="use_path_style_endpoint">Use Path Style Endpoint</FieldLabel>
-                                                <FieldDescription>Required for some S3-compatible services.</FieldDescription>
+                                                <FieldLabel htmlFor="use_path_style_endpoint">
+                                                    Use Path Style Endpoint
+                                                </FieldLabel>
+                                                <FieldDescription>
+                                                    Required for some
+                                                    S3-compatible services.
+                                                </FieldDescription>
                                             </div>
                                             <Switch
                                                 id="use_path_style_endpoint"
-                                                checked={form.data.use_path_style_endpoint}
-                                                onCheckedChange={(checked) => form.setField('use_path_style_endpoint', checked === true)}
+                                                checked={
+                                                    form.data
+                                                        .use_path_style_endpoint
+                                                }
+                                                onCheckedChange={(checked) =>
+                                                    form.setField(
+                                                        'use_path_style_endpoint',
+                                                        checked === true,
+                                                    )
+                                                }
                                                 size="comfortable"
                                             />
                                         </div>
@@ -477,13 +853,30 @@ export default function Storage({ settings, options, settingsNav }: StoragePageP
                     ) : null}
 
                     <div className="flex gap-3">
-                        <Button type="submit" disabled={form.processing} className="flex-1">
-                            {form.processing ? <Spinner /> : <SaveIcon data-icon="inline-start" />}
+                        <Button
+                            type="submit"
+                            disabled={form.processing}
+                            className="flex-1"
+                        >
+                            {form.processing ? (
+                                <Spinner />
+                            ) : (
+                                <SaveIcon data-icon="inline-start" />
+                            )}
                             {form.processing ? 'Saving...' : 'Save Settings'}
                         </Button>
 
-                        <Button type="button" variant="outline" onClick={handleTestConnection} disabled={isTesting}>
-                            {isTesting ? <Spinner /> : <WifiIcon data-icon="inline-start" />}
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={handleTestConnection}
+                            disabled={isTesting}
+                        >
+                            {isTesting ? (
+                                <Spinner />
+                            ) : (
+                                <WifiIcon data-icon="inline-start" />
+                            )}
                             {isTesting ? 'Testing...' : 'Test Connection'}
                         </Button>
                     </div>

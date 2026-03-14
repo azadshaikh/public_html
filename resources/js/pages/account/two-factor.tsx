@@ -15,7 +15,6 @@ import { useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import { FormErrorSummary } from '@/components/forms/form-error-summary';
 import { showAppToast } from '@/components/forms/form-success-toast';
-import { suppressNextFlashToast } from '@/hooks/use-flash-toast';
 import PasswordInput from '@/components/password-input';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -43,6 +42,7 @@ import {
 } from '@/components/ui/input-otp';
 import { useAppForm } from '@/hooks/use-app-form';
 import { useClipboard } from '@/hooks/use-clipboard';
+import { suppressNextFlashToast } from '@/hooks/use-flash-toast';
 import AppLayout from '@/layouts/app-layout';
 import { formValidators } from '@/lib/forms';
 import type { FormValidationRules } from '@/lib/forms';

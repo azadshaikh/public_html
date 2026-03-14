@@ -8,7 +8,6 @@ import {
     PencilIcon,
     PlusIcon,
     RefreshCwIcon,
-    ShieldAlertIcon,
     ShieldCheckIcon,
     Trash2Icon,
     UserCogIcon,
@@ -61,8 +60,7 @@ const ICON_MAP: Record<string, React.ReactNode> = {
 
 function mapBackendAction(action: UserRowAction): DatagridAction {
     const icon = ICON_MAP[action.icon];
-    const isDestructive =
-        action.method === 'DELETE' || action.label === 'Ban';
+    const isDestructive = action.method === 'DELETE' || action.label === 'Ban';
 
     // Navigation actions (GET without side effects)
     if (action.method === 'GET') {
@@ -353,10 +351,8 @@ export default function UsersIndex({
                       icon: <PauseCircleIcon />,
                       confirm:
                           'Suspend selected users? They will be unable to log in.',
-                      onSelect: (
-                          rows: UserListItem[],
-                          clear: () => void,
-                      ) => handleBulkAction('suspend', rows, clear),
+                      onSelect: (rows: UserListItem[], clear: () => void) =>
+                          handleBulkAction('suspend', rows, clear),
                       hidden: filters.status === 'trash',
                   },
                   {
@@ -366,10 +362,8 @@ export default function UsersIndex({
                       variant: 'destructive' as const,
                       confirm:
                           'Ban selected users? They will be permanently blocked from logging in.',
-                      onSelect: (
-                          rows: UserListItem[],
-                          clear: () => void,
-                      ) => handleBulkAction('ban', rows, clear),
+                      onSelect: (rows: UserListItem[], clear: () => void) =>
+                          handleBulkAction('ban', rows, clear),
                       hidden: filters.status === 'trash',
                   },
                   {
@@ -377,10 +371,8 @@ export default function UsersIndex({
                       label: 'Unban',
                       icon: <CheckCircleIcon />,
                       confirm: 'Unban selected users?',
-                      onSelect: (
-                          rows: UserListItem[],
-                          clear: () => void,
-                      ) => handleBulkAction('unban', rows, clear),
+                      onSelect: (rows: UserListItem[], clear: () => void) =>
+                          handleBulkAction('unban', rows, clear),
                       hidden: filters.status !== 'banned',
                   },
               ]
@@ -392,10 +384,8 @@ export default function UsersIndex({
                       label: 'Restore',
                       icon: <RefreshCwIcon />,
                       confirm: 'Restore selected users from trash?',
-                      onSelect: (
-                          rows: UserListItem[],
-                          clear: () => void,
-                      ) => handleBulkAction('restore', rows, clear),
+                      onSelect: (rows: UserListItem[], clear: () => void) =>
+                          handleBulkAction('restore', rows, clear),
                       hidden: filters.status !== 'trash',
                   },
               ]
@@ -409,10 +399,8 @@ export default function UsersIndex({
                       variant: 'destructive' as const,
                       confirm:
                           '⚠️ Permanently delete selected users? This cannot be undone!',
-                      onSelect: (
-                          rows: UserListItem[],
-                          clear: () => void,
-                      ) => handleBulkAction('force_delete', rows, clear),
+                      onSelect: (rows: UserListItem[], clear: () => void) =>
+                          handleBulkAction('force_delete', rows, clear),
                       hidden: filters.status !== 'trash',
                   },
               ]

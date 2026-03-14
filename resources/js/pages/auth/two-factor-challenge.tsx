@@ -7,7 +7,11 @@ import InputError from '@/components/input-error';
 import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
+import {
+    InputOTP,
+    InputOTPGroup,
+    InputOTPSlot,
+} from '@/components/ui/input-otp';
 import { Spinner } from '@/components/ui/spinner';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AuthLayout from '@/layouts/auth-layout';
@@ -34,8 +38,7 @@ export default function TwoFactorChallenge({ email }: Props) {
         event.preventDefault();
 
         form.transform((data) => ({
-            code:
-                method === 'authenticator' ? data.code : data.recovery_code,
+            code: method === 'authenticator' ? data.code : data.recovery_code,
         }));
 
         form.post(route('two-factor.challenge.store'), {
@@ -90,7 +93,10 @@ export default function TwoFactorChallenge({ email }: Props) {
 
                     {method === 'authenticator' ? (
                         <div className="grid gap-2">
-                            <label htmlFor="code" className="text-sm font-medium">
+                            <label
+                                htmlFor="code"
+                                className="text-sm font-medium"
+                            >
                                 Authentication code
                             </label>
                             <InputOTP
@@ -112,13 +118,15 @@ export default function TwoFactorChallenge({ email }: Props) {
                                 containerClassName="w-full"
                             >
                                 <InputOTPGroup className="w-full">
-                                    {Array.from({ length: 6 }).map((_, index) => (
-                                        <InputOTPSlot
-                                            key={index}
-                                            index={index}
-                                            className="flex-1"
-                                        />
-                                    ))}
+                                    {Array.from({ length: 6 }).map(
+                                        (_, index) => (
+                                            <InputOTPSlot
+                                                key={index}
+                                                index={index}
+                                                className="flex-1"
+                                            />
+                                        ),
+                                    )}
                                 </InputOTPGroup>
                             </InputOTP>
                             <p className="text-sm text-muted-foreground">

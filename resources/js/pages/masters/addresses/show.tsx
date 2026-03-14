@@ -72,19 +72,32 @@ export default function AddressesShow({ address }: AddressShowPageProps) {
     const handleRestore = () => {
         if (!window.confirm('Restore this address?')) return;
 
-        router.patch(route('app.masters.addresses.restore', address.id), {}, { preserveScroll: true });
+        router.patch(
+            route('app.masters.addresses.restore', address.id),
+            {},
+            { preserveScroll: true },
+        );
     };
 
     const handleDelete = () => {
         if (!window.confirm('Move this address to trash?')) return;
 
-        router.delete(route('app.masters.addresses.destroy', address.id), { preserveScroll: true });
+        router.delete(route('app.masters.addresses.destroy', address.id), {
+            preserveScroll: true,
+        });
     };
 
     const handleForceDelete = () => {
-        if (!window.confirm('⚠️ Permanently delete this address? This cannot be undone!')) return;
+        if (
+            !window.confirm(
+                '⚠️ Permanently delete this address? This cannot be undone!',
+            )
+        )
+            return;
 
-        router.delete(route('app.masters.addresses.force-delete', address.id), { preserveScroll: true });
+        router.delete(route('app.masters.addresses.force-delete', address.id), {
+            preserveScroll: true,
+        });
     };
 
     return (
@@ -124,8 +137,9 @@ export default function AddressesShow({ address }: AddressShowPageProps) {
                                     </h2>
                                     <Badge
                                         variant={
-                                            (address.type_class as React.ComponentProps<typeof Badge>['variant']) ??
-                                            'outline'
+                                            (address.type_class as React.ComponentProps<
+                                                typeof Badge
+                                            >['variant']) ?? 'outline'
                                         }
                                     >
                                         {address.type_label}
@@ -133,8 +147,9 @@ export default function AddressesShow({ address }: AddressShowPageProps) {
                                     {address.is_primary && (
                                         <Badge
                                             variant={
-                                                (address.primary_class as React.ComponentProps<typeof Badge>['variant']) ??
-                                                'secondary'
+                                                (address.primary_class as React.ComponentProps<
+                                                    typeof Badge
+                                                >['variant']) ?? 'secondary'
                                             }
                                         >
                                             {address.primary_label}
@@ -220,7 +235,9 @@ export default function AddressesShow({ address }: AddressShowPageProps) {
                                     <DetailRow
                                         label="Company"
                                         value={address.company}
-                                        icon={<BuildingIcon className="size-4" />}
+                                        icon={
+                                            <BuildingIcon className="size-4" />
+                                        }
                                     />
                                     <DetailRow
                                         label="Phone"
@@ -300,8 +317,9 @@ export default function AddressesShow({ address }: AddressShowPageProps) {
                                         <div className="mt-1">
                                             <Badge
                                                 variant={
-                                                    (address.type_class as React.ComponentProps<typeof Badge>['variant']) ??
-                                                    'outline'
+                                                    (address.type_class as React.ComponentProps<
+                                                        typeof Badge
+                                                    >['variant']) ?? 'outline'
                                                 }
                                             >
                                                 {address.type_label}
@@ -315,8 +333,9 @@ export default function AddressesShow({ address }: AddressShowPageProps) {
                                         <div className="mt-1">
                                             <Badge
                                                 variant={
-                                                    (address.primary_class as React.ComponentProps<typeof Badge>['variant']) ??
-                                                    'outline'
+                                                    (address.primary_class as React.ComponentProps<
+                                                        typeof Badge
+                                                    >['variant']) ?? 'outline'
                                                 }
                                             >
                                                 {address.primary_label}
@@ -330,8 +349,9 @@ export default function AddressesShow({ address }: AddressShowPageProps) {
                                         <div className="mt-1">
                                             <Badge
                                                 variant={
-                                                    (address.verified_class as React.ComponentProps<typeof Badge>['variant']) ??
-                                                    'outline'
+                                                    (address.verified_class as React.ComponentProps<
+                                                        typeof Badge
+                                                    >['variant']) ?? 'outline'
                                                 }
                                             >
                                                 {address.verified_label}
@@ -360,7 +380,10 @@ export default function AddressesShow({ address }: AddressShowPageProps) {
                                         />
                                         <DetailRow
                                             label="Entity"
-                                            value={address.addressable_label ?? `#${address.addressable_id}`}
+                                            value={
+                                                address.addressable_label ??
+                                                `#${address.addressable_id}`
+                                            }
                                         />
                                     </div>
                                 </CardContent>
@@ -397,13 +420,23 @@ export default function AddressesShow({ address }: AddressShowPageProps) {
                                 <div className="divide-y">
                                     <DetailRow
                                         label="Created"
-                                        value={address.created_at_formatted ?? address.created_at}
-                                        icon={<CalendarIcon className="size-4" />}
+                                        value={
+                                            address.created_at_formatted ??
+                                            address.created_at
+                                        }
+                                        icon={
+                                            <CalendarIcon className="size-4" />
+                                        }
                                     />
                                     <DetailRow
                                         label="Last Updated"
-                                        value={address.updated_at_formatted ?? address.updated_at}
-                                        icon={<CalendarIcon className="size-4" />}
+                                        value={
+                                            address.updated_at_formatted ??
+                                            address.updated_at
+                                        }
+                                        icon={
+                                            <CalendarIcon className="size-4" />
+                                        }
                                     />
                                 </div>
                             </CardContent>

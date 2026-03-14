@@ -104,9 +104,7 @@ function resolveFlashToastOptions(
  */
 export function initFlashToasts(): void {
     router.on('navigate', (event) => {
-        const flash = event.detail?.page?.props?.flash as
-            | FlashData
-            | undefined;
+        const flash = event.detail?.page?.props?.flash as FlashData | undefined;
 
         if (flash) {
             showFlashToasts(flash);

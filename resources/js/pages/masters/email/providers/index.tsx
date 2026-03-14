@@ -44,7 +44,8 @@ export default function EmailProvidersIndex({
     const page = usePage<AuthenticatedSharedData>();
     const canAddEmailProviders = page.props.auth.abilities.addEmailProviders;
     const canEditEmailProviders = page.props.auth.abilities.editEmailProviders;
-    const canDeleteEmailProviders = page.props.auth.abilities.deleteEmailProviders;
+    const canDeleteEmailProviders =
+        page.props.auth.abilities.deleteEmailProviders;
     const canRestoreEmailProviders =
         page.props.auth.abilities.restoreEmailProviders;
 
@@ -175,9 +176,7 @@ export default function EmailProvidersIndex({
         },
     ];
 
-    const rowActions = (
-        provider: EmailProviderListItem,
-    ): DatagridAction[] => {
+    const rowActions = (provider: EmailProviderListItem): DatagridAction[] => {
         if (provider.is_trashed) {
             return [
                 ...(canRestoreEmailProviders
@@ -256,8 +255,7 @@ export default function EmailProvidersIndex({
                       onSelect: (
                           rows: EmailProviderListItem[],
                           clear: () => void,
-                      ) =>
-                          handleBulkAction('delete', rows, clear),
+                      ) => handleBulkAction('delete', rows, clear),
                   },
               ]
             : []),
@@ -271,8 +269,7 @@ export default function EmailProvidersIndex({
                       onSelect: (
                           rows: EmailProviderListItem[],
                           clear: () => void,
-                      ) =>
-                          handleBulkAction('restore', rows, clear),
+                      ) => handleBulkAction('restore', rows, clear),
                   },
               ]
             : []),
@@ -288,8 +285,7 @@ export default function EmailProvidersIndex({
                       onSelect: (
                           rows: EmailProviderListItem[],
                           clear: () => void,
-                      ) =>
-                          handleBulkAction('force_delete', rows, clear),
+                      ) => handleBulkAction('force_delete', rows, clear),
                   },
               ]
             : []),
@@ -308,7 +304,9 @@ export default function EmailProvidersIndex({
             headerActions={
                 canAddEmailProviders ? (
                     <Button asChild>
-                        <Link href={route('app.masters.email.providers.create')}>
+                        <Link
+                            href={route('app.masters.email.providers.create')}
+                        >
                             <PlusIcon data-icon="inline-start" />
                             Add Provider
                         </Link>
@@ -331,7 +329,10 @@ export default function EmailProvidersIndex({
                         sort: filters.sort,
                         direction: filters.direction,
                     }}
-                    perPage={{ value: filters.per_page, options: [10, 25, 50, 100] }}
+                    perPage={{
+                        value: filters.per_page,
+                        options: [10, 25, 50, 100],
+                    }}
                     view={{
                         value: filters.view,
                         storageKey: 'email-providers-datagrid-view',
@@ -347,14 +348,18 @@ export default function EmailProvidersIndex({
                                         {provider.name}
                                     </Link>
                                     <p className="truncate text-sm text-muted-foreground">
-                                        {provider.sender_name || 'No sender name'} ·{' '}
-                                        {provider.sender_email || 'No sender email'}
+                                        {provider.sender_name ||
+                                            'No sender name'}{' '}
+                                        ·{' '}
+                                        {provider.sender_email ||
+                                            'No sender email'}
                                     </p>
                                 </div>
                                 <Badge
                                     variant={
-                                        (provider.status_badge as React.ComponentProps<typeof Badge>['variant']) ??
-                                        'outline'
+                                        (provider.status_badge as React.ComponentProps<
+                                            typeof Badge
+                                        >['variant']) ?? 'outline'
                                     }
                                 >
                                     {provider.status_label}
@@ -368,7 +373,9 @@ export default function EmailProvidersIndex({
                                     </div>
                                     <div className="mt-1 flex items-center gap-2 text-sm text-foreground">
                                         <ServerIcon className="size-4 text-muted-foreground" />
-                                        <span className="truncate">{provider.smtp_host || 'Not set'}</span>
+                                        <span className="truncate">
+                                            {provider.smtp_host || 'Not set'}
+                                        </span>
                                     </div>
                                 </div>
                                 <div className="rounded-lg border bg-muted/30 px-3 py-2">

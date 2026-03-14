@@ -162,7 +162,9 @@ async function deleteJson(url: string): Promise<SessionActionResponse> {
         },
     });
 
-    const payload = (await response.json().catch(() => ({}))) as SessionActionResponse;
+    const payload = (await response
+        .json()
+        .catch(() => ({}))) as SessionActionResponse;
 
     if (!response.ok || !payload.success) {
         throw new Error(payload.message || 'Something went wrong.');
@@ -180,7 +182,8 @@ export default function Sessions({
     const [showRevokeOthersDialog, setShowRevokeOthersDialog] = useState(false);
     const [pendingAction, setPendingAction] = useState<string | null>(null);
 
-    const currentSession = sessions.find((session) => session.is_current) ?? null;
+    const currentSession =
+        sessions.find((session) => session.is_current) ?? null;
     const revokableSessions = sessions.filter((session) => !session.is_current);
     const sessionCountBadge = sessionManagementSupported
         ? `${sessions.length} active`
@@ -218,7 +221,9 @@ export default function Sessions({
         setPendingAction('others');
 
         try {
-            const payload = await deleteJson(route('app.profile.sessions.delete-others'));
+            const payload = await deleteJson(
+                route('app.profile.sessions.delete-others'),
+            );
 
             setSessions((currentSessions) =>
                 currentSessions.filter((session) => session.is_current),
@@ -261,7 +266,9 @@ export default function Sessions({
                     badge={
                         <Badge
                             variant={
-                                sessionManagementSupported ? 'info' : 'secondary'
+                                sessionManagementSupported
+                                    ? 'info'
+                                    : 'secondary'
                             }
                         >
                             {sessionCountBadge}
@@ -271,7 +278,9 @@ export default function Sessions({
                     {!sessionManagementSupported ? (
                         <Alert>
                             <ShieldAlertIcon className="size-4" />
-                            <AlertTitle>Session management is limited</AlertTitle>
+                            <AlertTitle>
+                                Session management is limited
+                            </AlertTitle>
                             <AlertDescription>
                                 Your current session can still be reviewed here,
                                 but revoking other devices requires the database
@@ -338,8 +347,7 @@ export default function Sessions({
                     ) : (
                         <div className="overflow-hidden rounded-xl border">
                             {sessions.map((session, index) => {
-                                const isRevoking =
-                                    pendingAction === session.id;
+                                const isRevoking = pendingAction === session.id;
 
                                 return (
                                     <div
@@ -398,7 +406,9 @@ export default function Sessions({
                                                 type="button"
                                                 variant="outline"
                                                 className="w-full border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive sm:w-auto"
-                                                disabled={pendingAction !== null}
+                                                disabled={
+                                                    pendingAction !== null
+                                                }
                                                 onClick={() =>
                                                     setRevokeSessionId(
                                                         session.id,
@@ -412,7 +422,8 @@ export default function Sessions({
                                                 )}
                                                 Revoke
                                             </Button>
-                                        ) : currentSession?.id === session.id ? (
+                                        ) : currentSession?.id ===
+                                          session.id ? (
                                             <p className="text-sm text-muted-foreground">
                                                 This device stays signed in.
                                             </p>
@@ -474,7 +485,9 @@ export default function Sessions({
                         <AlertDialogMedia>
                             <LogOutIcon />
                         </AlertDialogMedia>
-                        <AlertDialogTitle>Revoke this session?</AlertDialogTitle>
+                        <AlertDialogTitle>
+                            Revoke this session?
+                        </AlertDialogTitle>
                         <AlertDialogDescription>
                             The selected device will be signed out immediately.
                             Use this if you no longer recognize or trust it.

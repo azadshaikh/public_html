@@ -44,7 +44,8 @@ export default function EmailTemplatesIndex({
     const page = usePage<AuthenticatedSharedData>();
     const canAddEmailTemplates = page.props.auth.abilities.addEmailTemplates;
     const canEditEmailTemplates = page.props.auth.abilities.editEmailTemplates;
-    const canDeleteEmailTemplates = page.props.auth.abilities.deleteEmailTemplates;
+    const canDeleteEmailTemplates =
+        page.props.auth.abilities.deleteEmailTemplates;
     const canRestoreEmailTemplates =
         page.props.auth.abilities.restoreEmailTemplates;
 
@@ -82,7 +83,10 @@ export default function EmailTemplatesIndex({
             type: 'select',
             name: 'provider_id',
             value: filters.provider_id,
-            options: [{ value: '', label: 'All providers' }, ...providerOptions],
+            options: [
+                { value: '', label: 'All providers' },
+                ...providerOptions,
+            ],
         },
         {
             type: 'date_range',
@@ -173,9 +177,7 @@ export default function EmailTemplatesIndex({
         },
     ];
 
-    const rowActions = (
-        template: EmailTemplateListItem,
-    ): DatagridAction[] => {
+    const rowActions = (template: EmailTemplateListItem): DatagridAction[] => {
         if (template.is_trashed) {
             return [
                 ...(canRestoreEmailTemplates
@@ -254,8 +256,7 @@ export default function EmailTemplatesIndex({
                       onSelect: (
                           rows: EmailTemplateListItem[],
                           clear: () => void,
-                      ) =>
-                          handleBulkAction('delete', rows, clear),
+                      ) => handleBulkAction('delete', rows, clear),
                   },
               ]
             : []),
@@ -269,8 +270,7 @@ export default function EmailTemplatesIndex({
                       onSelect: (
                           rows: EmailTemplateListItem[],
                           clear: () => void,
-                      ) =>
-                          handleBulkAction('restore', rows, clear),
+                      ) => handleBulkAction('restore', rows, clear),
                   },
               ]
             : []),
@@ -286,8 +286,7 @@ export default function EmailTemplatesIndex({
                       onSelect: (
                           rows: EmailTemplateListItem[],
                           clear: () => void,
-                      ) =>
-                          handleBulkAction('force_delete', rows, clear),
+                      ) => handleBulkAction('force_delete', rows, clear),
                   },
               ]
             : []),
@@ -306,7 +305,9 @@ export default function EmailTemplatesIndex({
             headerActions={
                 canAddEmailTemplates ? (
                     <Button asChild>
-                        <Link href={route('app.masters.email.templates.create')}>
+                        <Link
+                            href={route('app.masters.email.templates.create')}
+                        >
                             <PlusIcon data-icon="inline-start" />
                             Add Template
                         </Link>
@@ -329,7 +330,10 @@ export default function EmailTemplatesIndex({
                         sort: filters.sort,
                         direction: filters.direction,
                     }}
-                    perPage={{ value: filters.per_page, options: [10, 25, 50, 100] }}
+                    perPage={{
+                        value: filters.per_page,
+                        options: [10, 25, 50, 100],
+                    }}
                     view={{
                         value: filters.view,
                         storageKey: 'email-templates-datagrid-view',
@@ -350,8 +354,9 @@ export default function EmailTemplatesIndex({
                                 </div>
                                 <Badge
                                     variant={
-                                        (template.status_badge as React.ComponentProps<typeof Badge>['variant']) ??
-                                        'outline'
+                                        (template.status_badge as React.ComponentProps<
+                                            typeof Badge
+                                        >['variant']) ?? 'outline'
                                     }
                                 >
                                     {template.status_label}
@@ -364,7 +369,8 @@ export default function EmailTemplatesIndex({
                                         Provider
                                     </div>
                                     <div className="mt-1 text-sm text-foreground">
-                                        {template.provider_name || 'Not assigned'}
+                                        {template.provider_name ||
+                                            'Not assigned'}
                                     </div>
                                 </div>
                                 <div className="rounded-lg border bg-muted/30 px-3 py-2">
@@ -372,7 +378,9 @@ export default function EmailTemplatesIndex({
                                         Format
                                     </div>
                                     <div className="mt-1 text-sm text-foreground">
-                                        {template.is_raw ? 'Raw HTML' : 'Plain text'}
+                                        {template.is_raw
+                                            ? 'Raw HTML'
+                                            : 'Plain text'}
                                     </div>
                                 </div>
                             </div>

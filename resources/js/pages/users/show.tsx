@@ -11,7 +11,6 @@ import {
     PauseCircleIcon,
     PencilIcon,
     RefreshCwIcon,
-    ShieldAlertIcon,
     ShieldCheckIcon,
     Trash2Icon,
     UserCogIcon,

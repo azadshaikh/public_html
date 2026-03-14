@@ -12,7 +12,12 @@ import PasswordInput from '@/components/password-input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
+import {
+    Field,
+    FieldError,
+    FieldGroup,
+    FieldLabel,
+} from '@/components/ui/field';
 import { useAppForm } from '@/hooks/use-app-form';
 import AppLayout from '@/layouts/app-layout';
 import { formValidators } from '@/lib/forms';
@@ -154,8 +159,8 @@ export default function Password({ hasPassword }: PasswordPageProps) {
                     <Alert className="border-sky-200 bg-sky-50 text-sky-900 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-100">
                         <InfoIcon className="size-4 text-sky-600 dark:text-sky-300" />
                         <AlertDescription className="text-sky-800 dark:text-sky-100">
-                            Your account currently uses social sign in only.
-                            Set a password to enable direct password sign in.
+                            Your account currently uses social sign in only. Set
+                            a password to enable direct password sign in.
                         </AlertDescription>
                     </Alert>
                 ) : null}
@@ -196,8 +201,9 @@ export default function Password({ hasPassword }: PasswordPageProps) {
                                                 form.touch('current_password')
                                             }
                                             aria-invalid={
-                                                form.invalid('current_password') ||
-                                                undefined
+                                                form.invalid(
+                                                    'current_password',
+                                                ) || undefined
                                             }
                                             autoComplete="current-password"
                                             placeholder="Enter current password"
@@ -230,13 +236,16 @@ export default function Password({ hasPassword }: PasswordPageProps) {
                                         }
                                         onBlur={() => form.touch('password')}
                                         aria-invalid={
-                                            form.invalid('password') || undefined
+                                            form.invalid('password') ||
+                                            undefined
                                         }
                                         autoComplete="new-password"
                                         placeholder="Enter new password"
                                         size="comfortable"
                                     />
-                                    <FieldError>{form.error('password')}</FieldError>
+                                    <FieldError>
+                                        {form.error('password')}
+                                    </FieldError>
                                 </Field>
 
                                 <Field
@@ -259,13 +268,12 @@ export default function Password({ hasPassword }: PasswordPageProps) {
                                             )
                                         }
                                         onBlur={() =>
-                                            form.touch(
-                                                'password_confirmation',
-                                            )
+                                            form.touch('password_confirmation')
                                         }
                                         aria-invalid={
-                                            form.invalid('password_confirmation') ||
-                                            undefined
+                                            form.invalid(
+                                                'password_confirmation',
+                                            ) || undefined
                                         }
                                         autoComplete="new-password"
                                         placeholder="Confirm your password"

@@ -86,7 +86,11 @@ export default function TemplateForm({
     };
 
     return (
-        <form className="flex flex-col gap-6" onSubmit={handleSubmit} noValidate>
+        <form
+            className="flex flex-col gap-6"
+            onSubmit={handleSubmit}
+            noValidate
+        >
             {form.dirtyGuardDialog}
             <FormErrorSummary errors={form.errors} minMessages={2} />
 
@@ -98,12 +102,15 @@ export default function TemplateForm({
                             <CardTitle>Template details</CardTitle>
                         </div>
                         <CardDescription>
-                            Define the reusable subject line and audience defaults for this email.
+                            Define the reusable subject line and audience
+                            defaults for this email.
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <FieldGroup>
-                            <Field data-invalid={form.invalid('name') || undefined}>
+                            <Field
+                                data-invalid={form.invalid('name') || undefined}
+                            >
                                 <FieldLabel htmlFor="name">
                                     Template name <span aria-hidden>*</span>
                                 </FieldLabel>
@@ -111,15 +118,24 @@ export default function TemplateForm({
                                     id="name"
                                     value={form.data.name}
                                     onChange={(event) =>
-                                        form.setField('name', event.target.value)
+                                        form.setField(
+                                            'name',
+                                            event.target.value,
+                                        )
                                     }
                                     onBlur={() => form.touch('name')}
-                                    aria-invalid={form.invalid('name') || undefined}
+                                    aria-invalid={
+                                        form.invalid('name') || undefined
+                                    }
                                 />
                                 <FieldError>{form.error('name')}</FieldError>
                             </Field>
 
-                            <Field data-invalid={form.invalid('subject') || undefined}>
+                            <Field
+                                data-invalid={
+                                    form.invalid('subject') || undefined
+                                }
+                            >
                                 <FieldLabel htmlFor="subject">
                                     Subject <span aria-hidden>*</span>
                                 </FieldLabel>
@@ -127,15 +143,24 @@ export default function TemplateForm({
                                     id="subject"
                                     value={form.data.subject}
                                     onChange={(event) =>
-                                        form.setField('subject', event.target.value)
+                                        form.setField(
+                                            'subject',
+                                            event.target.value,
+                                        )
                                     }
                                     onBlur={() => form.touch('subject')}
-                                    aria-invalid={form.invalid('subject') || undefined}
+                                    aria-invalid={
+                                        form.invalid('subject') || undefined
+                                    }
                                 />
                                 <FieldError>{form.error('subject')}</FieldError>
                             </Field>
 
-                            <Field data-invalid={form.invalid('provider_id') || undefined}>
+                            <Field
+                                data-invalid={
+                                    form.invalid('provider_id') || undefined
+                                }
+                            >
                                 <FieldLabel htmlFor="provider_id">
                                     Delivery provider <span aria-hidden>*</span>
                                 </FieldLabel>
@@ -144,10 +169,15 @@ export default function TemplateForm({
                                     name="provider_id"
                                     value={form.data.provider_id}
                                     onChange={(event) =>
-                                        form.setField('provider_id', event.target.value)
+                                        form.setField(
+                                            'provider_id',
+                                            event.target.value,
+                                        )
                                     }
                                     onBlur={() => form.touch('provider_id')}
-                                    aria-invalid={form.invalid('provider_id') || undefined}
+                                    aria-invalid={
+                                        form.invalid('provider_id') || undefined
+                                    }
                                     className="w-full"
                                 >
                                     <NativeSelectOption value="">
@@ -162,33 +192,53 @@ export default function TemplateForm({
                                         </NativeSelectOption>
                                     ))}
                                 </NativeSelect>
-                                <FieldError>{form.error('provider_id')}</FieldError>
+                                <FieldError>
+                                    {form.error('provider_id')}
+                                </FieldError>
                             </Field>
 
-                            <Field data-invalid={form.invalid('send_to') || undefined}>
-                                <FieldLabel htmlFor="send_to">Default recipients</FieldLabel>
+                            <Field
+                                data-invalid={
+                                    form.invalid('send_to') || undefined
+                                }
+                            >
+                                <FieldLabel htmlFor="send_to">
+                                    Default recipients
+                                </FieldLabel>
                                 <Textarea
                                     id="send_to"
                                     rows={3}
                                     placeholder="ops@example.com, alerts@example.com"
                                     value={form.data.send_to}
                                     onChange={(event) =>
-                                        form.setField('send_to', event.target.value)
+                                        form.setField(
+                                            'send_to',
+                                            event.target.value,
+                                        )
                                     }
                                     onBlur={() => form.touch('send_to')}
-                                    aria-invalid={form.invalid('send_to') || undefined}
+                                    aria-invalid={
+                                        form.invalid('send_to') || undefined
+                                    }
                                 />
                                 <FieldDescription>
-                                    Optional comma-separated email addresses used as a default recipient list.
+                                    Optional comma-separated email addresses
+                                    used as a default recipient list.
                                 </FieldDescription>
                                 <FieldError>{form.error('send_to')}</FieldError>
                             </Field>
 
-                            <Field data-invalid={form.invalid('status') || undefined}>
+                            <Field
+                                data-invalid={
+                                    form.invalid('status') || undefined
+                                }
+                            >
                                 <FieldSet>
                                     <FieldLegend>Status</FieldLegend>
                                     <FieldDescription>
-                                        Inactive templates stay available for history but are excluded from active workflows.
+                                        Inactive templates stay available for
+                                        history but are excluded from active
+                                        workflows.
                                     </FieldDescription>
                                     <ToggleGroup
                                         type="single"
@@ -205,7 +255,9 @@ export default function TemplateForm({
                                         }}
                                         variant="outline"
                                         className="w-full flex-wrap"
-                                        aria-invalid={form.invalid('status') || undefined}
+                                        aria-invalid={
+                                            form.invalid('status') || undefined
+                                        }
                                     >
                                         {statusOptions.map((option) => (
                                             <ToggleGroupItem
@@ -231,12 +283,17 @@ export default function TemplateForm({
                             <CardTitle>Message body</CardTitle>
                         </div>
                         <CardDescription>
-                            Compose the reusable body content that will be sent when this template is triggered.
+                            Compose the reusable body content that will be sent
+                            when this template is triggered.
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <FieldGroup>
-                            <Field data-invalid={form.invalid('message') || undefined}>
+                            <Field
+                                data-invalid={
+                                    form.invalid('message') || undefined
+                                }
+                            >
                                 <FieldLabel htmlFor="message">
                                     Message <span aria-hidden>*</span>
                                 </FieldLabel>
@@ -245,22 +302,31 @@ export default function TemplateForm({
                                     rows={16}
                                     value={form.data.message}
                                     onChange={(event) =>
-                                        form.setField('message', event.target.value)
+                                        form.setField(
+                                            'message',
+                                            event.target.value,
+                                        )
                                     }
                                     onBlur={() => form.touch('message')}
-                                    aria-invalid={form.invalid('message') || undefined}
+                                    aria-invalid={
+                                        form.invalid('message') || undefined
+                                    }
                                     className="font-mono text-sm"
                                 />
                                 <FieldDescription>
-                                    Use plain text or HTML depending on the raw mode toggle below.
+                                    Use plain text or HTML depending on the raw
+                                    mode toggle below.
                                 </FieldDescription>
                                 <FieldError>{form.error('message')}</FieldError>
                             </Field>
 
                             <Field orientation="horizontal">
-                                <FieldLabel htmlFor="is_raw">Raw HTML mode</FieldLabel>
+                                <FieldLabel htmlFor="is_raw">
+                                    Raw HTML mode
+                                </FieldLabel>
                                 <FieldDescription>
-                                    Enable this when the message body already contains full HTML markup.
+                                    Enable this when the message body already
+                                    contains full HTML markup.
                                 </FieldDescription>
                                 <Switch
                                     id="is_raw"
