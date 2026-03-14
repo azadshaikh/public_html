@@ -2,23 +2,19 @@
 
 namespace App\Http\Controllers\Masters;
 
-use App\Enums\MonitorStatus;
 use App\Http\Controllers\Controller;
-use App\Models\Monitor;
 use App\Services\LaravelTools\ArtisanService;
 use App\Services\LaravelTools\ConfigService;
 use App\Services\LaravelTools\EnvService;
-use App\Services\LaravelTools\LogService;
 use App\Services\LaravelTools\PhpService;
 use App\Services\LaravelTools\RouteService;
 use App\Support\Auth\SuperUserAccess;
 use App\Traits\ActivityTrait;
 use App\Traits\HasAlerts;
-use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class LaravelToolsController extends Controller
 {
@@ -29,7 +25,6 @@ class LaravelToolsController extends Controller
         protected EnvService $envService,
         protected ArtisanService $artisanService,
         protected ConfigService $configService,
-        protected LogService $logService,
         protected RouteService $routeService,
         protected PhpService $phpService,
     ) {}
@@ -41,14 +36,14 @@ class LaravelToolsController extends Controller
     /**
      * Dashboard index with overview stats
      */
-    public function index(): View
+    public function index(): Response
     {
         $this->authorizeAccess();
 
-        return view('app.masters.laravel-tools.index', [
-            'page_title' => __('Laravel Tools'),
+        return Inertia::render('masters/laravel-tools/index', [
             'stats' => $this->getSystemStats(),
-            'tools' => $this->getToolsList(),
+            'status' => session('status'),
+            'error' => session('error'),
         ]);
     }
 
@@ -59,15 +54,16 @@ class LaravelToolsController extends Controller
     /**
      * ENV Editor view
      */
-    public function envEditor(): View
+    public function envEditor(): Response
     {
         $this->authorizeAccess();
 
-        return view('app.masters.laravel-tools.env', [
-            'page_title' => __('ENV Editor'),
+        return Inertia::render('masters/laravel-tools/env', [
             'envContent' => $this->envService->getContent(),
             'protectedKeys' => $this->envService->getProtectedKeys(),
             'backups' => $this->envService->getBackups(),
+            'status' => session('status'),
+            'error' => session('error'),
         ]);
     }
 
@@ -128,13 +124,14 @@ class LaravelToolsController extends Controller
     /**
      * Get ENV backups list (AJAX)
      */
-    public function getEnvBackupsList(): View|string
+    public function getEnvBackupsList(): JsonResponse
     {
         $this->authorizeAccess();
 
-        return view('app.masters.laravel-tools.partials.backup-list', [
+        return response()->json([
+            'success' => true,
             'backups' => $this->envService->getBackups(),
-        ])->render();
+        ]);
     }
 
     // =========================================================================
@@ -144,13 +141,20 @@ class LaravelToolsController extends Controller
     /**
      * Artisan Runner view
      */
-    public function artisanRunner(): View
+    public function artisanRunner(): Response
     {
         $this->authorizeAccess();
 
-        return view('app.masters.laravel-tools.artisan', [
-            'page_title' => __('Artisan Runner'),
-            'commands' => $this->artisanService->getSafeCommands(),
+        return Inertia::render('masters/laravel-tools/artisan', [
+            'commands' => collect($this->artisanService->getSafeCommands())
+                ->map(fn (string $description, string $command): array => [
+                    'name' => $command,
+                    'description' => $description,
+                ])
+                ->values()
+                ->all(),
+            'status' => session('status'),
+            'error' => session('error'),
         ]);
     }
 
@@ -191,13 +195,31 @@ class LaravelToolsController extends Controller
     /**
      * Config Browser view
      */
-    public function configBrowser(): View
+    public function configBrowser(Request $request): Response
     {
         $this->authorizeAccess();
 
-        return view('app.masters.laravel-tools.config', [
-            'page_title' => __('Config Browser'),
-            'configFiles' => $this->configService->getFiles(),
+        $configFiles = collect($this->configService->getFiles())
+            ->map(fn (array $file): array => ['name' => $file['name']])
+            ->values()
+            ->all();
+
+        $selectedFile = $this->resolveSelectedConfigFile($configFiles, $request->string('file')->toString());
+        $selectedConfig = null;
+
+        if ($selectedFile !== null) {
+            $result = $this->configService->getValues($selectedFile);
+            if ($result['success']) {
+                $selectedConfig = $result['config'];
+            }
+        }
+
+        return Inertia::render('masters/laravel-tools/config', [
+            'configFiles' => $configFiles,
+            'selectedFile' => $selectedFile,
+            'selectedConfig' => $selectedConfig,
+            'status' => session('status'),
+            'error' => session('error'),
         ]);
     }
 
@@ -224,108 +246,35 @@ class LaravelToolsController extends Controller
     }
 
     // =========================================================================
-    // Log Viewer
-    // =========================================================================
-
-    /**
-     * Log Viewer
-     */
-    public function logViewer(): View
-    {
-        $this->authorizeAccess();
-
-        return view('app.masters.laravel-tools.logs', [
-            'page_title' => __('Log Viewer'),
-            'logFiles' => $this->logService->getFiles(),
-        ]);
-    }
-
-    /**
-     * Get log entries
-     */
-    public function getLogEntries(Request $request): JsonResponse
-    {
-        $this->authorizeAccess();
-
-        $result = $this->logService->getEntries(
-            $request->input('file', 'laravel.log'),
-            $request->input('level', 'all'),
-            $request->input('lines', 100)
-        );
-
-        if (! $result['success']) {
-            return response()->json([
-                'success' => false,
-                'message' => $result['error'],
-            ], 404);
-        }
-
-        return response()->json([
-            'success' => true,
-            'entries' => $result['entries'],
-            'levels' => $result['levels'],
-        ]);
-    }
-
-    /**
-     * Delete log file
-     */
-    public function deleteLog(string $filename): JsonResponse
-    {
-        $this->authorizeAccess();
-
-        $result = $this->logService->delete($filename);
-
-        if (! $result['success']) {
-            return response()->json([
-                'success' => false,
-                'message' => $result['error'],
-            ], 404);
-        }
-
-        activity()
-            ->causedBy(auth()->user())
-            ->withProperties(['file' => $filename])
-            ->log('Deleted log file');
-
-        return response()->json([
-            'success' => true,
-            'message' => $result['message'],
-        ]);
-    }
-
-    // =========================================================================
     // Route List
     // =========================================================================
 
     /**
      * Route List view
      */
-    public function routeList(): View
+    public function routeList(Request $request): Response
     {
         $this->authorizeAccess();
 
-        return view('app.masters.laravel-tools.routes', [
-            'page_title' => __('Route List'),
-        ]);
-    }
+        $search = $request->string('search')->toString();
+        $method = $request->string('method')->toString() ?: 'all';
+        $sort = $request->string('sort')->toString() ?: 'uri';
+        $direction = $request->string('direction')->toString() === 'desc' ? 'desc' : 'asc';
+        $perPage = max(10, min((int) $request->input('per_page', 25), 100));
+        $result = $this->routeService->getRoutes($search, $method, $sort, $direction, $perPage);
 
-    /**
-     * Get routes list
-     */
-    public function getRoutes(Request $request): JsonResponse
-    {
-        $this->authorizeAccess();
-
-        $result = $this->routeService->getRoutes(
-            $request->input('search') ?? '',
-            $request->input('method') ?? 'all'
-        );
-
-        return response()->json([
-            'success' => true,
+        return Inertia::render('masters/laravel-tools/routes', [
             'routes' => $result['routes'],
             'total' => $result['total'],
+            'filters' => [
+                'search' => $search,
+                'method' => $method,
+                'sort' => $sort,
+                'direction' => $direction,
+                'per_page' => $perPage,
+            ],
+            'status' => session('status'),
+            'error' => session('error'),
         ]);
     }
 
@@ -336,231 +285,18 @@ class LaravelToolsController extends Controller
     /**
      * PHP diagnostics view.
      */
-    public function phpDiagnostics(): View
+    public function phpDiagnostics(): Response
     {
         $this->authorizeAccess();
 
-        return view('app.masters.laravel-tools.php', [
-            'page_title' => __('PHP Diagnostics'),
+        return Inertia::render('masters/laravel-tools/php', [
             'summary' => $this->phpService->getSummary(),
             'settingGroups' => $this->phpService->getSettingGroups(),
             'extensions' => $this->phpService->getExtensions(),
             'pdoDrivers' => $this->phpService->getPdoDrivers(),
+            'status' => session('status'),
+            'error' => session('error'),
         ]);
-    }
-
-    // =========================================================================
-    // Laravel Queue
-    // =========================================================================
-
-    /**
-     * Laravel Queue monitor view.
-     */
-    public function queueMonitor(): View
-    {
-        $this->authorizeAccess();
-
-        return view('app.masters.laravel-tools.queue', [
-            'page_title' => __('Laravel Queue'),
-            'config' => $this->getQueueConfig(),
-            'statusTabs' => $this->getQueueStatusTabs(),
-        ]);
-    }
-
-    /**
-     * Get queue monitor data for DataGrid.
-     */
-    public function getQueueData(Request $request): JsonResponse
-    {
-        $this->authorizeAccess();
-
-        $query = Monitor::query()->latest();
-
-        // Status filter
-        $status = $request->input('status', 'all');
-        match ($status) {
-            'failed' => $query->failed(),
-            'succeeded' => $query->succeeded(),
-            'pending' => $query->whereIn('status', [
-                MonitorStatus::RUNNING,
-                MonitorStatus::STALE,
-                MonitorStatus::QUEUED,
-            ]),
-            default => null,
-        };
-
-        // Search
-        if ($search = $request->input('search')) {
-            $query->where(function ($q) use ($search): void {
-                $q->where('name', 'ilike', sprintf('%%%s%%', $search))
-                    ->orWhere('job_id', 'ilike', sprintf('%%%s%%', $search))
-                    ->orWhere('exception_message', 'ilike', sprintf('%%%s%%', $search));
-            });
-        }
-
-        // Pagination
-        $perPage = $request->input('per_page', 35);
-        $monitors = $query->paginate($perPage);
-
-        return response()->json([
-            'data' => $monitors->items(),
-            'meta' => [
-                'current_page' => $monitors->currentPage(),
-                'last_page' => $monitors->lastPage(),
-                'per_page' => $monitors->perPage(),
-                'total' => $monitors->total(),
-            ],
-        ]);
-    }
-
-    /**
-     * Retry a failed queue job.
-     */
-    public function retryQueueJob(Monitor $monitor): JsonResponse
-    {
-        $this->authorizeAccess();
-
-        if ((int) $monitor->status !== MonitorStatus::FAILED) {
-            return response()->json(['success' => false, 'message' => 'Job is not failed'], 400);
-        }
-
-        try {
-            $monitor->retry();
-
-            return response()->json(['success' => true, 'message' => 'Job queued for retry']);
-        } catch (Exception $exception) {
-            return response()->json(['success' => false, 'message' => $exception->getMessage()], 500);
-        }
-    }
-
-    /**
-     * Delete a queue monitor entry.
-     */
-    public function deleteQueueJob(Monitor $monitor): JsonResponse
-    {
-        $this->authorizeAccess();
-
-        $monitor->delete();
-
-        return response()->json(['success' => true, 'message' => 'Queue entry deleted']);
-    }
-
-    /**
-     * Purge all queue monitor entries.
-     */
-    public function purgeQueueJobs(Request $request): JsonResponse
-    {
-        $this->authorizeAccess();
-
-        $type = $request->input('type', 'all');
-
-        $query = Monitor::query();
-
-        match ($type) {
-            'failed' => $query->failed(),
-            'succeeded' => $query->succeeded(),
-            default => null,
-        };
-
-        $count = $query->count();
-        $query->delete();
-
-        return response()->json(['success' => true, 'message' => sprintf('Purged %d entries', $count)]);
-    }
-
-    /**
-     * Get DataGrid config for queue monitor.
-     */
-    protected function getQueueConfig(): array
-    {
-        return [
-            'columns' => [
-                [
-                    'key' => 'id',
-                    'label' => 'ID',
-                    'sortable' => true,
-                    'width' => '80px',
-                ],
-                [
-                    'key' => 'name',
-                    'label' => 'Job',
-                    'sortable' => true,
-                    'searchable' => true,
-                ],
-                [
-                    'key' => 'status',
-                    'label' => 'Status',
-                    'sortable' => true,
-                    'template' => 'badge',
-                ],
-                [
-                    'key' => 'queue',
-                    'label' => 'Queue',
-                    'sortable' => true,
-                ],
-                [
-                    'key' => 'attempt',
-                    'label' => 'Attempts',
-                    'sortable' => true,
-                    'center' => true,
-                ],
-                [
-                    'key' => 'time_elapsed',
-                    'label' => 'Duration',
-                    'sortable' => true,
-                    'callback' => fn ($value): string => $value ? number_format($value, 2).'s' : '-',
-                ],
-                [
-                    'key' => 'created_at',
-                    'label' => 'Created',
-                    'sortable' => true,
-                    'datetime' => true,
-                ],
-                [
-                    'key' => '_actions',
-                    'label' => 'Actions',
-                    'template' => 'actions',
-                    'excludeFromExport' => true,
-                ],
-            ],
-            'actions' => [
-                'row' => [
-                    [
-                        'label' => 'Retry',
-                        'icon' => 'ri-refresh-line',
-                        'href' => '#',
-                        'action' => 'retry',
-                        'condition' => 'row.failed',
-                    ],
-                    [
-                        'label' => 'Delete',
-                        'icon' => 'ri-delete-bin-line',
-                        'action' => 'delete',
-                        'class' => 'text-danger',
-                    ],
-                ],
-                'bulk' => [
-                    [
-                        'label' => 'Delete Selected',
-                        'action' => 'delete',
-                        'class' => 'btn-outline-danger',
-                    ],
-                ],
-            ],
-        ];
-    }
-
-    /**
-     * Get status tabs for queue monitor.
-     */
-    protected function getQueueStatusTabs(): array
-    {
-        return [
-            ['key' => 'all', 'label' => 'All', 'icon' => 'ri-list-check', 'color' => 'primary'],
-            ['key' => 'succeeded', 'label' => 'Succeeded', 'icon' => 'ri-checkbox-circle-line', 'color' => 'success'],
-            ['key' => 'failed', 'label' => 'Failed', 'icon' => 'ri-error-warning-line', 'color' => 'danger'],
-            ['key' => 'pending', 'label' => 'Pending', 'icon' => 'ri-time-line', 'color' => 'warning'],
-        ];
     }
 
     // =========================================================================
@@ -588,7 +324,6 @@ class LaravelToolsController extends Controller
             'cache_driver' => config('cache.default'),
             'cache_prefix' => config('cache.prefix') ?: '(none)',
             'session_driver' => config('session.driver'),
-            'queue_driver' => config('queue.default'),
             'database_connection' => config('database.default'),
             'timezone' => config('app.timezone'),
             'locale' => config('app.locale'),
@@ -596,69 +331,16 @@ class LaravelToolsController extends Controller
     }
 
     /**
-     * Get list of available tools
+     * Resolve the selected config file.
      */
-    protected function getToolsList(): array
+    protected function resolveSelectedConfigFile(array $configFiles, string $requestedFile): ?string
     {
-        $tools = [
-            [
-                'name' => 'ENV Editor',
-                'description' => 'Edit environment variables with syntax highlighting',
-                'icon' => 'ri-file-settings-line',
-                'route' => 'app.masters.laravel-tools.env',
-                'color' => 'primary',
-            ],
-            [
-                'name' => 'Artisan Runner',
-                'description' => 'Execute safe artisan commands',
-                'icon' => 'ri-terminal-box-line',
-                'route' => 'app.masters.laravel-tools.artisan',
-                'color' => 'warning',
-            ],
-            [
-                'name' => 'Config Browser',
-                'description' => 'Browse all configuration values',
-                'icon' => 'ri-settings-3-line',
-                'route' => 'app.masters.laravel-tools.config',
-                'color' => 'info',
-            ],
-            [
-                'name' => 'Log Viewer',
-                'description' => 'View and search Laravel logs',
-                'icon' => 'ri-file-list-3-line',
-                'route' => 'app.masters.laravel-tools.logs',
-                'color' => 'danger',
-            ],
-            [
-                'name' => 'Laravel Queue',
-                'description' => 'Monitor queue jobs and manage failed jobs',
-                'icon' => 'ri-stack-line',
-                'route' => 'app.masters.laravel-tools.queue',
-                'color' => 'info',
-            ],
-            [
-                'name' => 'Route List',
-                'description' => 'Browse all registered routes',
-                'icon' => 'ri-route-line',
-                'route' => 'app.masters.laravel-tools.routes',
-                'color' => 'primary',
-            ],
-            [
-                'name' => 'Queue Monitor',
-                'description' => 'Monitor queue jobs and manage failed jobs',
-                'icon' => 'ri-stack-line',
-                'route' => 'app.masters.queue-monitor.index',
-                'color' => 'info',
-            ],
-            [
-                'name' => 'PHP Diagnostics',
-                'description' => 'Inspect PHP runtime, ini settings, and loaded extensions',
-                'icon' => 'ri-bug-line',
-                'route' => 'app.masters.laravel-tools.php',
-                'color' => 'secondary',
-            ],
-        ];
+        $availableFiles = collect($configFiles)->pluck('name')->all();
 
-        return array_values(array_filter($tools, fn (array $tool): bool => Route::has($tool['route'])));
+        if ($requestedFile !== '' && in_array($requestedFile, $availableFiles, true)) {
+            return $requestedFile;
+        }
+
+        return $configFiles[0]['name'] ?? null;
     }
 }

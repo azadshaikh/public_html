@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { AppFooter } from '@/components/app-footer';
 import AppHead from '@/components/app-head';
 import { AppPageHeader } from '@/components/app-page-header';
 import { AppTopbar } from '@/components/app-topbar';
@@ -48,17 +49,20 @@ export function AppContent({
                 <ImpersonationBanner />
 
                 <div className="flex-1 overflow-y-scroll [scrollbar-gutter:stable]">
-                    <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-8 px-4 py-6 sm:px-6 lg:px-8">
-                        {pageHeader}
+                    <div className="flex min-h-full flex-col">
+                        <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-8 px-4 py-6 sm:px-6 lg:px-8">
+                            {pageHeader}
 
-                        <div
-                            className={cn(
-                                'flex flex-1 flex-col gap-6',
-                                contentClassName,
-                            )}
-                        >
-                            {children}
+                            <div
+                                className={cn(
+                                    'flex flex-1 flex-col gap-6',
+                                    contentClassName,
+                                )}
+                            >
+                                {children}
+                            </div>
                         </div>
+                        <AppFooter />
                     </div>
                 </div>
             </SidebarInset>
@@ -80,6 +84,7 @@ export function AppContent({
             <div className={cn('flex flex-1 flex-col gap-6', contentClassName)}>
                 {children}
             </div>
+            <AppFooter />
         </main>
     );
 }

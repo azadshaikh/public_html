@@ -7,6 +7,7 @@ use App\Inertia\Properties\UserAvatar;
 use App\Models\User;
 use App\Modules\ModuleManager;
 use App\Support\Auth\SuperUserAccess;
+use Composer\InstalledVersions;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -55,6 +56,13 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'appName' => config('app.name'),
+            'appVersion' => InstalledVersions::getRootPackage()['pretty_version'] ?? 'dev-main',
+            'branding' => [
+                'name' => (string) config('astero.branding.name', ''),
+                'website' => (string) config('astero.branding.website', ''),
+                'logo' => (string) config('astero.branding.logo', ''),
+                'icon' => (string) config('astero.branding.icon', ''),
+            ],
             'auth' => [
                 'user' => fn (): ?array => $request->user()
                     ? [

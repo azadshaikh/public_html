@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Enums\Status;
 use App\Models\Role;
 use App\Models\User;
+use Composer\InstalledVersions;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -74,6 +75,38 @@ class DashboardTest extends TestCase
                 ->has('recentUsers')
                 ->has('recentActivities')
                 ->where('summary.totalUsers', 1));
+    }
+
+    public function test_dashboard_includes_shared_app_and_branding_details(): void
+    {
+        config()->set('app.name', 'Control Center');
+        config()->set('astero.branding', [
+            'name' => 'Astero',
+            'website' => 'https://astero.test',
+            'logo' => 'https://cdn.example.test/logo.svg',
+            'icon' => 'https://cdn.example.test/icon.svg',
+        ]);
+
+        $user = User::factory()->create([
+            'first_name' => 'Admin',
+            'last_name' => 'User',
+            'status' => Status::ACTIVE,
+        ]);
+        $user->assignRole(Role::findByName('administrator', 'web'));
+
+        $this->actingAs($user)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->component('dashboard')
+                ->where('appName', 'Control Center')
+                ->where('appVersion', InstalledVersions::getRootPackage()['pretty_version'] ?? 'dev-main')
+                ->has('branding', fn (Assert $branding): Assert => $branding
+                    ->where('name', 'Astero')
+                    ->where('website', 'https://astero.test')
+                    ->where('logo', 'https://cdn.example.test/logo.svg')
+                    ->where('icon', 'https://cdn.example.test/icon.svg')
+                ));
     }
 
     public function test_super_users_can_see_master_navigation_on_the_dashboard(): void

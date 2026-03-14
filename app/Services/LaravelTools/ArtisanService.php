@@ -22,7 +22,6 @@ class ArtisanService
         'optimize:clear' => 'Clear all cached files',
         'optimize' => 'Cache the framework bootstrap files',
         'storage:link' => 'Create symbolic link from public/storage to storage/app/public',
-        'queue:restart' => 'Restart queue worker daemons',
         'schedule:list' => 'List all scheduled tasks',
         'about' => 'Display basic information about your application',
     ];

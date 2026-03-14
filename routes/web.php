@@ -386,21 +386,8 @@ Route::prefix($adminPrefix)->group(function (): void {
                     Route::get('/config', [LaravelToolsController::class, 'configBrowser'])->name('config');
                     Route::get('/config/values', [LaravelToolsController::class, 'getConfigValues'])->name('config.values');
 
-                    // Log Viewer
-                    Route::get('/logs', [LaravelToolsController::class, 'logViewer'])->name('logs');
-                    Route::get('/logs/entries', [LaravelToolsController::class, 'getLogEntries'])->name('logs.entries');
-                    Route::delete('/logs/{filename}', [LaravelToolsController::class, 'deleteLog'])->name('logs.delete');
-
-                    // Laravel Queue
-                    Route::get('/queue', [LaravelToolsController::class, 'queueMonitor'])->name('queue');
-                    Route::get('/queue/data', [LaravelToolsController::class, 'getQueueData'])->name('queue.data');
-                    Route::post('/queue/retry/{monitor}', [LaravelToolsController::class, 'retryQueueJob'])->name('queue.retry');
-                    Route::delete('/queue/{monitor}', [LaravelToolsController::class, 'deleteQueueJob'])->name('queue.delete');
-                    Route::delete('/queue/purge', [LaravelToolsController::class, 'purgeQueueJobs'])->name('queue.purge');
-
                     // Route List
                     Route::get('/routes', [LaravelToolsController::class, 'routeList'])->name('routes');
-                    Route::get('/routes/list', [LaravelToolsController::class, 'getRoutes'])->name('routes.list');
 
                     // PHP Diagnostics
                     Route::get('/php', [LaravelToolsController::class, 'phpDiagnostics'])->name('php');

@@ -1,15 +1,23 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/react-starter-kit",
+    "name": "asterodigital/astero",
+    "version": "1.0.46",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
+    "description": "Astero is an all-in-one, white-label website building platform designed for digital agencies and developers. It provides a complete toolkit to create, manage, and scale client websites under their own brand—without complex maintenance or DevOps overhead.",
     "keywords": [
+        "astero",
+        "cms",
+        "saas",
         "laravel",
-        "framework"
+        "tailwindcss",
+        "inertia",
+        "react",
+        "twig",
+        "api"
     ],
-    "license": "MIT",
+    "license": "proprietary",
     "require": {
-        "php": "^8.2",
+        "php": "^8.4",
         "chillerlan/php-qrcode": "^5.0",
         "geoip2/geoip2": "^3.3",
         "inertiajs/inertia-laravel": "^3.0.0-beta",

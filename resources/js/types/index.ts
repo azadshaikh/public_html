@@ -4,6 +4,7 @@ export type * from './auth';
 export type * from './module';
 export type * from './navigation';
 export type * from './pagination';
+export type * from './laravel-tools';
 export type * from './queue-monitor';
 export type * from './role';
 export type * from './settings';

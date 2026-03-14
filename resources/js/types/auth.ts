@@ -72,6 +72,13 @@ export type FlashData = {
 
 export type SharedData = {
     appName: string;
+    appVersion: string;
+    branding: {
+        name: string;
+        website: string;
+        logo: string;
+        icon: string;
+    };
     auth: Auth;
     navigation: NavigationByArea;
     modules: {
