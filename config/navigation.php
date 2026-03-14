@@ -354,7 +354,6 @@ return [
                     'label' => 'Laravel Tools',
                     'route' => 'app.masters.laravel-tools.index',
                     'icon' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="m7 9 3 3-3 3"></path><path d="M13 15h4"></path></svg>',
-                    'hard_reload' => true,
                     'active_patterns' => ['app.masters.laravel-tools.*'],
                     'badge' => [
                         'type' => 'static',

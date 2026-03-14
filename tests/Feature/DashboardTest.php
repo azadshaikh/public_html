@@ -126,7 +126,10 @@ class DashboardTest extends TestCase
                 ->has('navigation.modules', 2)
                 ->where('navigation.modules.1.label', 'Masters')
                 ->where('navigation.modules.1.items.0.label', 'Modules')
-                ->where('navigation.modules.1.items.0.url', route('app.masters.modules.index')));
+                ->where('navigation.modules.1.items.0.url', route('app.masters.modules.index'))
+                ->where('navigation.modules.1.items.6.label', 'Laravel Tools')
+                ->where('navigation.modules.1.items.6.url', route('app.masters.laravel-tools.index'))
+                ->where('navigation.modules.1.items.6.hard_reload', false));
     }
 
     public function test_dashboard_navigation_is_filtered_by_permission(): void
