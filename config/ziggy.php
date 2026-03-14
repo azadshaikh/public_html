@@ -93,12 +93,11 @@ return [
 
         /*
         |----------------------------------------------------------------------
-        | Masters — settings, groups, addresses, email, laravel-tools, queue
+        | Masters — settings, addresses, email, laravel-tools, queue
         |----------------------------------------------------------------------
         */
         'masters' => [
             'app.masters.settings.*',
-            'app.masters.groups.*',
             'app.masters.addresses.*',
             'app.masters.email.*',
             'app.masters.laravel-tools.*',

@@ -2,7 +2,6 @@
 
 namespace App\Http\Resources\Api\V1;
 
-use App\Models\Group;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -38,16 +37,13 @@ class WebsiteResource extends JsonResource
                 'owner_email' => $owner?->email,
             ];
 
-            $agency_group_id = Group::query()->where('slug', 'agency')->value('id');
-            if ($agency_group_id) {
-                // Look for agency admin credentials in secrets
-                $secretRelation = $website->secrets()->where('key', 'agency_admin')->first();
-                if ($secretRelation instanceof Secret) {
-                    $agency_data['agency_admin'] = [
-                        'username' => $secretRelation->getMetadata('username'),
-                        'password' => $secretRelation->getAttribute('decrypted_value'),
-                    ];
-                }
+            // Look for agency admin credentials in secrets
+            $secretRelation = $website->secrets()->where('key', 'agency_admin')->first();
+            if ($secretRelation instanceof Secret) {
+                $agency_data['agency_admin'] = [
+                    'username' => $secretRelation->getMetadata('username'),
+                    'password' => $secretRelation->getAttribute('decrypted_value'),
+                ];
             }
 
             $response_data['agency'] = $agency_data;

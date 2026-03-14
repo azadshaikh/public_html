@@ -302,13 +302,6 @@ return [
                         'color' => 'success',
                     ],
                 ],
-                'groups' => [
-                    'label' => 'Groups',
-                    'route' => 'app.masters.groups.index',
-                    'icon' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>',
-                    'permission' => 'view_groups',
-                    'active_patterns' => ['app.masters.groups.*'],
-                ],
                 'addresses' => [
                     'label' => 'Addresses',
                     'route' => 'app.masters.addresses.index',

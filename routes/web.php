@@ -13,8 +13,6 @@ use App\Http\Controllers\Masters\AddressController;
 use App\Http\Controllers\Masters\EmailLogController;
 use App\Http\Controllers\Masters\EmailProviderController;
 use App\Http\Controllers\Masters\EmailTemplateController;
-use App\Http\Controllers\Masters\GroupController;
-use App\Http\Controllers\Masters\GroupItemController;
 use App\Http\Controllers\Masters\LaravelToolsController;
 use App\Http\Controllers\Masters\SettingsController as MastersSettingsController;
 use App\Http\Controllers\MediaController;
@@ -269,48 +267,6 @@ Route::prefix($adminPrefix)->group(function (): void {
                 Route::group(['prefix' => 'masters/modules', 'as' => 'masters.modules.'], function (): void {
                     Route::get('/', [ModuleController::class, 'index'])->name('index');
                     Route::patch('/', [ModuleController::class, 'update'])->name('update');
-                });
-            });
-
-            // --- Masters: Groups Management ---
-            Route::group(['prefix' => 'masters/groups', 'as' => 'masters.groups.'], function (): void {
-                // Bulk actions (non-parameterized route first)
-                Route::post('/bulk-action', [GroupController::class, 'bulkAction'])->name('bulk-action');
-
-                // Create routes
-                Route::get('/create', [GroupController::class, 'create'])->name('create');
-                Route::post('/', [GroupController::class, 'store'])->name('store');
-
-                // Specific item routes (use {id} parameter)
-                Route::get('/{id}', [GroupController::class, 'show'])->name('show')->where('id', '[0-9]+');
-                Route::get('/{id}/edit', [GroupController::class, 'edit'])->name('edit');
-                Route::put('/{id}', [GroupController::class, 'update'])->name('update');
-                Route::delete('/{id}', [GroupController::class, 'destroy'])->name('destroy');
-                Route::delete('/{id}/force-delete', [GroupController::class, 'forceDelete'])->name('force-delete');
-                Route::patch('/{id}/restore', [GroupController::class, 'restore'])->name('restore');
-
-                // Index with status filter (catch-all, must come last)
-                Route::get('/{status?}', [GroupController::class, 'index'])->name('index')->where('status', '^(all|active|inactive|trash)$');
-
-                // Group Items (nested routes)
-                Route::group(['prefix' => '{group}/items', 'as' => 'items.'], function (): void {
-                    // Bulk actions
-                    Route::post('/bulk-action', [GroupItemController::class, 'bulkAction'])->name('bulk-action');
-
-                    // Create routes
-                    Route::get('/create', [GroupItemController::class, 'create'])->name('create');
-                    Route::post('/', [GroupItemController::class, 'store'])->name('store');
-
-                    // Specific item routes (use {id} parameter)
-                    Route::get('/{id}', [GroupItemController::class, 'show'])->name('show')->where('id', '[0-9]+');
-                    Route::get('/{id}/edit', [GroupItemController::class, 'edit'])->name('edit');
-                    Route::put('/{id}', [GroupItemController::class, 'update'])->name('update');
-                    Route::delete('/{id}', [GroupItemController::class, 'destroy'])->name('destroy');
-                    Route::delete('/{id}/force-delete', [GroupItemController::class, 'forceDelete'])->name('force-delete');
-                    Route::patch('/{id}/restore', [GroupItemController::class, 'restore'])->name('restore');
-
-                    // Index with status filter (catch-all, must come last)
-                    Route::get('/{status?}', [GroupItemController::class, 'index'])->name('index')->where('status', '^(all|active|inactive|trash)$');
                 });
             });
 
