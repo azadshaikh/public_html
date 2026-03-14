@@ -104,6 +104,8 @@ export function DatagridToolbar({
     const searchFilters = filters.filter(
         (filter): filter is DatagridSearchFilter => filter.type === 'search',
     );
+    const primarySearchFilter = searchFilters[0] ?? null;
+    const advancedSearchFilters = searchFilters.slice(1);
     const selectFilters = filters.filter(
         (filter): filter is DatagridSelectFilter => filter.type === 'select',
     );
@@ -122,12 +124,14 @@ export function DatagridToolbar({
     );
 
     const sheetFilterCount =
+        advancedSearchFilters.length +
         selectFilters.length +
         dateRangeFilters.length +
         booleanFilters.length +
         numberFilters.length;
 
     const activeSheetFilterCount =
+        advancedSearchFilters.filter((filter) => filter.value !== '').length +
         selectFilters.filter(
             (filter) => filter.value !== getFilterDefaultValue(filter),
         ).length +
@@ -177,8 +181,11 @@ export function DatagridToolbar({
     const handleResetFilters = () => {
         onFilterSubmit({
             ...sharedParams,
+            ...(primarySearchFilter
+                ? { [primarySearchFilter.name]: primarySearchFilter.value }
+                : {}),
             ...Object.fromEntries(
-                searchFilters.map((filter) => [filter.name, filter.value]),
+                advancedSearchFilters.map((filter) => [filter.name, '']),
             ),
             ...Object.fromEntries(
                 selectFilters.map((filter) => [
@@ -256,6 +263,14 @@ export function DatagridToolbar({
                                     params={{
                                         ...sharedParams,
                                         ...Object.fromEntries(
+                                            advancedSearchFilters.map(
+                                                (filter) => [
+                                                    filter.name,
+                                                    filter.value,
+                                                ],
+                                            ),
+                                        ),
+                                        ...Object.fromEntries(
                                             selectFilters.map((filter) => [
                                                 filter.name,
                                                 filter.value,
@@ -264,12 +279,12 @@ export function DatagridToolbar({
                                     }}
                                 />
 
-                                {searchFilters.map((filter) => (
+                                {primarySearchFilter ? (
                                     <InputGroup
-                                        key={filter.name}
+                                        key={primarySearchFilter.name}
                                         size="comfortable"
                                         className={cn(
-                                            filter.className,
+                                            primarySearchFilter.className,
                                             'w-full min-w-0 md:flex-1 md:basis-0 xl:flex-none xl:basis-auto xl:w-[14.5rem] xl:min-w-[14.5rem] 2xl:w-[15.5rem] 2xl:min-w-[15.5rem]',
                                         )}
                                     >
@@ -278,13 +293,17 @@ export function DatagridToolbar({
                                         </InputGroupAddon>
                                         <InputGroupInput
                                             ref={searchInputRef}
-                                            name={filter.name}
-                                            defaultValue={filter.value}
-                                            placeholder={filter.placeholder}
+                                            name={primarySearchFilter.name}
+                                            defaultValue={
+                                                primarySearchFilter.value
+                                            }
+                                            placeholder={
+                                                primarySearchFilter.placeholder
+                                            }
                                             onChange={onSearchChange}
                                         />
                                     </InputGroup>
-                                ))}
+                                ) : null}
                             </form>
                         ) : null}
 
@@ -334,16 +353,45 @@ export function DatagridToolbar({
                                             <DatagridHiddenInputs
                                                 params={{
                                                     ...sharedParams,
-                                                    ...Object.fromEntries(
-                                                        searchFilters.map(
-                                                            (filter) => [
-                                                                filter.name,
-                                                                filter.value,
-                                                            ],
-                                                        ),
-                                                    ),
+                                                    ...(primarySearchFilter
+                                                        ? {
+                                                              [primarySearchFilter.name]:
+                                                                  primarySearchFilter.value,
+                                                          }
+                                                        : {}),
                                                 }}
                                             />
+
+                                            {advancedSearchFilters.map(
+                                                (filter) => (
+                                                    <div
+                                                        key={filter.name}
+                                                        className="space-y-2"
+                                                    >
+                                                        <div className="text-sm font-medium text-foreground">
+                                                            {filter.placeholder}
+                                                        </div>
+                                                        <InputGroup
+                                                            size="comfortable"
+                                                        >
+                                                            <InputGroupAddon>
+                                                                <SearchIcon />
+                                                            </InputGroupAddon>
+                                                            <InputGroupInput
+                                                                name={
+                                                                    filter.name
+                                                                }
+                                                                defaultValue={
+                                                                    filter.value
+                                                                }
+                                                                placeholder={
+                                                                    filter.placeholder
+                                                                }
+                                                            />
+                                                        </InputGroup>
+                                                    </div>
+                                                ),
+                                            )}
 
                                             {selectFilters.map((filter) => (
                                                 <DatagridSelectFilterField
