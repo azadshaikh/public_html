@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use RuntimeException;
+use Spatie\Permission\Models\Permission as SpatiePermission;
 
 /**
  * Role Service - Handles role management logic
@@ -177,14 +178,14 @@ class RoleService implements ScaffoldServiceInterface
         $rolePermissions = $role->permissions;
 
         return $rolePermissions
-            ->groupBy(fn (Permission $p): string => $p->module_slug ?? 'general')
+            ->groupBy(fn (SpatiePermission $permission): string => (string) ($permission->getAttribute('module_slug') ?? 'general'))
             ->map(fn (Collection $perms, string $slug): array => [
                 'group' => $slug,
                 'label' => ucwords(str_replace('_', ' ', $slug)),
-                'permissions' => $perms->map(fn (Permission $p): array => [
-                    'id' => $p->id,
-                    'name' => $p->name,
-                    'display_name' => $p->display_name,
+                'permissions' => $perms->map(fn (SpatiePermission $permission): array => [
+                    'id' => (int) $permission->getKey(),
+                    'name' => (string) $permission->name,
+                    'display_name' => (string) ($permission->getAttribute('display_name') ?? $permission->name),
                 ])->values()->all(),
             ])
             ->sortKeys()
