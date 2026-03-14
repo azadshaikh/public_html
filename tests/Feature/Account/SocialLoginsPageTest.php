@@ -55,7 +55,11 @@ class SocialLoginsPageTest extends TestCase
         config()->set('services.google.enabled', false);
         config()->set('services.github.enabled', false);
 
-        $user = User::factory()->create();
+        $user = User::factory()->create([
+            'first_name' => 'Social',
+            'last_name' => 'User',
+            'name' => 'Social User',
+        ]);
 
         $this->actingAs($user)
             ->get(route('app.profile.security.social-logins'))

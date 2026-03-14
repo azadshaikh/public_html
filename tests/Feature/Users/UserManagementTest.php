@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\Feature;
+namespace Tests\Feature\Users;
 
 use App\Enums\NoteType;
 use App\Enums\NoteVisibility;
@@ -11,12 +11,11 @@ use App\Models\Note;
 use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
-use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
-class UserControllerTest extends TestCase
+class UserManagementTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -25,8 +24,6 @@ class UserControllerTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-
-        $this->withoutMiddleware(ValidateCsrfToken::class);
 
         $this->seed(RolesAndPermissionsSeeder::class);
 

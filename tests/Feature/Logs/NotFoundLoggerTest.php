@@ -1,9 +1,11 @@
 <?php
 
-namespace Tests\Feature;
+namespace Tests\Feature\Logs;
 
 use App\Models\NotFoundLog;
+use App\Services\NotFoundLogger;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Mockery\MockInterface;
 use Tests\TestCase;
 
 class NotFoundLoggerTest extends TestCase
@@ -31,9 +33,13 @@ class NotFoundLoggerTest extends TestCase
 
     public function test_json_404_responses_are_not_recorded_in_not_found_logs(): void
     {
+        config()->set('app.debug', false);
+
+        $this->mock(NotFoundLogger::class, function (MockInterface $mock): void {
+            $mock->shouldNotReceive('log');
+        });
+
         $this->getJson('/missing-json-page')
             ->assertNotFound();
-
-        $this->assertDatabaseCount('not_found_logs', 0);
     }
 }

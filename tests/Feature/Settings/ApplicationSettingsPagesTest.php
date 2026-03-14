@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\Feature;
+namespace Tests\Feature\Settings;
 
 use App\Enums\Status;
 use App\Models\Role;
@@ -12,7 +12,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
-class SettingsControllerTest extends TestCase
+class ApplicationSettingsPagesTest extends TestCase
 {
     use RefreshDatabase;
 

@@ -1,12 +1,12 @@
 <?php
 
-namespace Tests\Feature;
+namespace Tests\Feature\Roles;
 
 use App\Http\Controllers\RoleController;
 use Illuminate\Routing\Route;
 use Tests\TestCase;
 
-class RoleControllerRouteRegistrationTest extends TestCase
+class RoleRouteRegistrationTest extends TestCase
 {
     public function test_role_routes_are_bound_to_the_singular_role_controller(): void
     {

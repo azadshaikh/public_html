@@ -64,7 +64,7 @@ final class TestEnvironmentRestorer
         /** @var Kernel $kernel */
         $kernel = $app->make(Kernel::class);
 
-        $kernel->call('migrate', ['--force' => true, '--no-interaction' => true]);
+        $kernel->call('migrate:fresh', ['--force' => true, '--no-interaction' => true]);
         $kernel->call('db:seed', ['--force' => true, '--no-interaction' => true]);
         $kernel->call('optimize:clear', ['--no-interaction' => true]);
         $kernel->terminate(new ArgvInput, 0);
@@ -79,7 +79,7 @@ final class TestEnvironmentRestorer
         $artisan = \escapeshellarg($artisanPath);
 
         return \implode(' && ', [
-            sprintf('APP_ENV=local %s %s migrate --force --no-interaction', $php, $artisan),
+            sprintf('APP_ENV=local %s %s migrate:fresh --force --no-interaction', $php, $artisan),
             sprintf('APP_ENV=local %s %s db:seed --force --no-interaction', $php, $artisan),
             sprintf('APP_ENV=local %s %s optimize:clear --no-interaction', $php, $artisan),
         ]);
