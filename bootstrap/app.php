@@ -3,6 +3,7 @@
 use App\Http\Middleware\CdnCacheHeadersMiddleware;
 use App\Http\Middleware\CheckRegistrationEnabled;
 use App\Http\Middleware\CheckUserStatusMiddleware;
+use App\Http\Middleware\EnableDebugbarForSuperUser;
 use App\Http\Middleware\EnsureEmailVerificationIsSatisfied;
 use App\Http\Middleware\EnsureModuleIsEnabled;
 use App\Http\Middleware\EnsureProfileCompletionIsSatisfied;
@@ -58,6 +59,7 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleAppearance::class,
             LanguageMiddleware::class,
             JsonRedirectMiddleware::class,
+            EnableDebugbarForSuperUser::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
         ]);

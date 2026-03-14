@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Http\Middleware\EnableDebugbarForSuperUser;
+use Illuminate\Http\Request;
+
 return [
 
     /*
@@ -248,7 +251,10 @@ return [
     */
     'storage' => [
         'enabled' => env('DEBUGBAR_STORAGE_ENABLED', true),
-        'open' => env('DEBUGBAR_OPEN_STORAGE', true), // bool/callback.
+        'open' => static fn (Request $request): bool => (bool) env('DEBUGBAR_OPEN_STORAGE', false)
+            && (bool) config('debugbar.enabled')
+            && (bool) config('app.debug')
+            && $request->user()?->isSuperUser(), // bool/callback.
         'driver' => env('DEBUGBAR_STORAGE_DRIVER', 'file'), // file, sqlite, pdo, custom
         'path' => env('DEBUGBAR_STORAGE_PATH', storage_path('debugbar')), // For file driver
         'connection' => env('DEBUGBAR_STORAGE_CONNECTION'), // Leave null for default connection (Redis/PDO)
@@ -334,7 +340,7 @@ return [
      |
      | Additional middleware to run on the Debugbar routes
      */
-    'route_middleware' => [],
+    'route_middleware' => ['web', EnableDebugbarForSuperUser::class],
 
     /*
      |--------------------------------------------------------------------------

@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace Tests\Feature\Masters;
 
 use App\Enums\Status;
+use App\Http\Middleware\EnableDebugbarForSuperUser;
 use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
+use Fruitcake\LaravelDebugbar\Facades\Debugbar;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Request;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -433,5 +436,78 @@ class SettingsControllerTest extends TestCase
             ])
             ->assertSessionHasNoErrors()
             ->assertRedirect();
+    }
+
+    public function test_debugbar_middleware_is_registered_on_web_routes(): void
+    {
+        $webMiddleware = app('router')->getMiddlewareGroups()['web'] ?? [];
+
+        $this->assertContains(
+            EnableDebugbarForSuperUser::class,
+            $webMiddleware,
+        );
+    }
+
+    public function test_debugbar_middleware_enables_debugbar_for_super_users(): void
+    {
+        config(['debugbar.enabled' => true]);
+
+        Debugbar::shouldReceive('enable')->once();
+        Debugbar::shouldReceive('disable')->never();
+
+        $request = Request::create('/admin');
+        $request->setUserResolver(fn (): User => $this->superUser);
+
+        $response = app(EnableDebugbarForSuperUser::class)->handle(
+            $request,
+            fn () => response('ok'),
+        );
+
+        $this->assertSame(200, $response->getStatusCode());
+    }
+
+    public function test_debugbar_middleware_disables_debugbar_for_non_super_users(): void
+    {
+        config(['debugbar.enabled' => true]);
+
+        Debugbar::shouldReceive('disable')->once();
+        Debugbar::shouldReceive('enable')->never();
+
+        $request = Request::create('/admin');
+        $request->setUserResolver(fn (): User => $this->admin);
+
+        $response = app(EnableDebugbarForSuperUser::class)->handle(
+            $request,
+            fn () => response('ok'),
+        );
+
+        $this->assertSame(200, $response->getStatusCode());
+    }
+
+    public function test_debugbar_open_storage_callback_only_allows_super_users(): void
+    {
+        putenv('DEBUGBAR_OPEN_STORAGE=true');
+        $_ENV['DEBUGBAR_OPEN_STORAGE'] = 'true';
+        $_SERVER['DEBUGBAR_OPEN_STORAGE'] = 'true';
+
+        config([
+            'app.debug' => true,
+            'debugbar.enabled' => true,
+        ]);
+
+        $callback = config('debugbar.storage.open');
+
+        $this->assertIsCallable($callback);
+
+        $superUserRequest = Request::create('/_debugbar/open');
+        $superUserRequest->setUserResolver(fn (): User => $this->superUser);
+        $this->assertTrue($callback($superUserRequest));
+
+        $adminRequest = Request::create('/_debugbar/open');
+        $adminRequest->setUserResolver(fn (): User => $this->admin);
+        $this->assertFalse($callback($adminRequest));
+
+        putenv('DEBUGBAR_OPEN_STORAGE');
+        unset($_ENV['DEBUGBAR_OPEN_STORAGE'], $_SERVER['DEBUGBAR_OPEN_STORAGE']);
     }
 }
