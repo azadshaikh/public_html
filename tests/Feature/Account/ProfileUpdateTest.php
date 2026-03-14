@@ -2,10 +2,13 @@
 
 namespace Tests\Feature\Account;
 
+use App\Enums\Status;
 use App\Models\User;
 use App\Modules\ModuleManager;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -145,6 +148,40 @@ class ProfileUpdateTest extends TestCase
 
         $this->assertSame($originalEmail, $user->email);
         $this->assertSame($originalVerificationTimestamp?->toISOString(), $user->email_verified_at?->toISOString());
+    }
+
+    public function test_profile_avatar_upload_uses_the_configured_storage_root_folder(): void
+    {
+        Storage::fake('public');
+
+        config()->set('media-library.disk_name', 'public');
+        config()->set('media.media_storage_root', 'media-root');
+
+        $user = User::factory()->create([
+            'first_name' => 'Super',
+            'last_name' => 'User',
+            'name' => 'Super User',
+            'status' => Status::ACTIVE,
+        ]);
+
+        $response = $this
+            ->actingAs($user)
+            ->patch(route('app.profile.update'), [
+                'first_name' => 'Updated',
+                'last_name' => 'User',
+                'phone' => '9999999999',
+                'avatar' => UploadedFile::fake()->image('avatar.jpg'),
+            ]);
+
+        $response
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('app.profile'));
+
+        $user->refresh();
+
+        $this->assertIsString($user->avatar);
+        $this->assertStringStartsWith('media-root/avatars/', $user->avatar);
+        Storage::disk('public')->assertExists($user->avatar);
     }
 
     public function test_user_can_delete_their_account(): void

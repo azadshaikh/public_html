@@ -57,11 +57,10 @@ class SocialLoginService
     public function storeMediaFromUrl($url, string $directory, string $extension = 'jpg'): ?string
     {
         try {
-            $rootFolder = get_storage_root_folder();
             $disk = get_storage_disk();
 
             // Generate a unique filename inside root folder
-            $filename = trim($rootFolder.'/'.$directory, '/').'/'.Str::uuid().'.'.$extension;
+            $filename = apply_storage_root_folder($directory).'/'.Str::uuid().'.'.$extension;
 
             // Get the file content from the URL
             $fileContent = file_get_contents($url);

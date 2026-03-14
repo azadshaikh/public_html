@@ -343,7 +343,7 @@ class ProfileController extends Controller
 
             // Handle avatar file upload
             if ($request->hasFile('avatar')) {
-                $data['avatar'] = $request->file('avatar')->store('avatars', get_storage_disk());
+                $data['avatar'] = store_uploaded_file_on_media_disk($request->file('avatar'), 'avatars');
             } else {
                 // Keep existing avatar if no new file uploaded
                 $data['avatar'] = $user->avatar;

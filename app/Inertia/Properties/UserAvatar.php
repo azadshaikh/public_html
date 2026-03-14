@@ -3,7 +3,6 @@
 namespace App\Inertia\Properties;
 
 use App\Models\User;
-use Illuminate\Support\Facades\Storage;
 use Inertia\PropertyContext;
 use Inertia\ProvidesInertiaProperty;
 
@@ -23,7 +22,7 @@ class UserAvatar implements ProvidesInertiaProperty
                 return $avatar;
             }
 
-            return Storage::disk('public')->url($avatar);
+            return (string) get_media_url($avatar, get_storage_disk(), false);
         }
 
         return sprintf(

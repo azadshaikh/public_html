@@ -8,6 +8,7 @@
  */
 use App\Models\CustomMedia;
 use App\Services\MediaVariationService;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
@@ -137,6 +138,37 @@ if (! function_exists('get_storage_root_folder')) {
         }
 
         return setting('storage.root_folder', '');
+    }
+}
+
+if (! function_exists('apply_storage_root_folder')) {
+    /**
+     * Prefix a relative path with the configured storage root folder.
+     */
+    function apply_storage_root_folder(string $path = ''): string
+    {
+        $rootFolder = trim(get_storage_root_folder(), '/');
+        $normalizedPath = trim($path, '/');
+
+        if ($rootFolder === '') {
+            return $normalizedPath;
+        }
+
+        if ($normalizedPath === '' || $normalizedPath === $rootFolder || str_starts_with($normalizedPath, $rootFolder.'/')) {
+            return $normalizedPath;
+        }
+
+        return $rootFolder.'/'.$normalizedPath;
+    }
+}
+
+if (! function_exists('store_uploaded_file_on_media_disk')) {
+    /**
+     * Store an uploaded file on the configured storage disk using the shared root folder.
+     */
+    function store_uploaded_file_on_media_disk(UploadedFile $file, string $directory = '', ?string $disk = null): string|false
+    {
+        return $file->store(apply_storage_root_folder($directory), $disk ?? get_storage_disk());
     }
 }
 
