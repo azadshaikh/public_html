@@ -11,6 +11,7 @@ use App\Services\LaravelTools\EnvService;
 use App\Services\LaravelTools\LogService;
 use App\Services\LaravelTools\PhpService;
 use App\Services\LaravelTools\RouteService;
+use App\Support\Auth\SuperUserAccess;
 use App\Traits\ActivityTrait;
 use App\Traits\HasAlerts;
 use Exception;
@@ -571,7 +572,7 @@ class LaravelToolsController extends Controller
      */
     protected function authorizeAccess(): void
     {
-        abort_unless(auth()->user()?->isSuperUser(), 403);
+        abort_unless(SuperUserAccess::allows(auth()->user()), 403);
     }
 
     /**

@@ -27,6 +27,7 @@ use App\Http\Controllers\RevisionsController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\UserController;
+use App\Http\Middleware\EnsureSuperUserAccess;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Support\Facades\Route;
 
@@ -141,8 +142,8 @@ Route::prefix($adminPrefix)->group(function (): void {
                 Route::delete('/delete-all-read', [NotificationController::class, 'deleteAllRead'])->name('delete-all-read');
                 Route::post('/toggle-enabled', [NotificationController::class, 'toggleEnabled'])->name('toggle-enabled');
 
-                // Broadcast (Super Admin only) - MUST be before {notification} wildcard
-                Route::middleware('role:super_user')->prefix('broadcast')->name('broadcast.')->group(function (): void {
+                // Broadcast (Super User only) - MUST be before {notification} wildcard
+                Route::middleware(EnsureSuperUserAccess::class)->prefix('broadcast')->name('broadcast.')->group(function (): void {
                     Route::get('/', [BroadcastNotificationController::class, 'index'])->name('index');
                     Route::get('/create', [BroadcastNotificationController::class, 'create'])->name('create');
                     Route::post('/', [BroadcastNotificationController::class, 'store'])->name('store');

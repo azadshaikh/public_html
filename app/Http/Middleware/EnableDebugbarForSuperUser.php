@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\Auth\SuperUserAccess;
 use Closure;
 use Fruitcake\LaravelDebugbar\Facades\Debugbar;
 use Illuminate\Http\Request;
@@ -27,7 +28,7 @@ class EnableDebugbarForSuperUser
 
             if (! $configuredEnabled) {
                 $debugbarFacade::disable();
-            } elseif ($request->user()?->isSuperUser()) {
+            } elseif (SuperUserAccess::allowsRequest($request)) {
                 $debugbarFacade::enable();
             } else {
                 $debugbarFacade::disable();

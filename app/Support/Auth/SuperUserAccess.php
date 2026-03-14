@@ -14,7 +14,9 @@ class SuperUserAccess
      */
     public static function allows(?Authenticatable $user): bool
     {
-        return method_exists($user, 'isSuperUser') && $user->isSuperUser();
+        return $user !== null
+            && method_exists($user, 'isSuperUser')
+            && $user->isSuperUser();
     }
 
     /**

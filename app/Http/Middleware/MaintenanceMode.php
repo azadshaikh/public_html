@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\Auth\SuperUserAccess;
 use Closure;
 use Exception;
 use Illuminate\Http\RedirectResponse;
@@ -32,7 +33,7 @@ class MaintenanceMode
                 $isFrontendRequest = ! $isBackendRequest;
 
                 // Check if user is super user (bypass backend maintenance)
-                $isSuperUser = Auth::check() && Auth::user()->hasRole('super_user');
+                $isSuperUser = SuperUserAccess::allows(Auth::user());
 
                 // Determine if maintenance should be applied
                 $shouldApplyMaintenance = false;

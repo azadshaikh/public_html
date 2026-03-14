@@ -43,7 +43,7 @@ Schedule::command('media:clean-temp --older-than=2')
     ->withoutOverlapping()
     ->runInBackground();
 
-// Check for queue failure bursts and alert super admins.
+// Check for queue failure bursts and alert super users.
 Schedule::command('app:queue-monitor:check-failures')
     ->everyFiveMinutes()
     ->withoutOverlapping()

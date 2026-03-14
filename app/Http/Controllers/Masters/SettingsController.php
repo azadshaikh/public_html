@@ -10,6 +10,7 @@ use App\Jobs\RecacheApplication;
 use App\Mail\TestEmail;
 use App\Models\Settings;
 use App\Services\SettingsCacheService;
+use App\Support\Auth\SuperUserAccess;
 use App\Traits\ActivityTrait;
 use App\Traits\HasAlerts;
 use Exception;
@@ -435,7 +436,7 @@ class SettingsController extends Controller
      */
     private function authorizeSettingsAccess(): void
     {
-        abort_unless(Auth::user()?->isSuperUser(), 403);
+        abort_unless(SuperUserAccess::allows(auth()->user()), 403);
     }
 
     /**

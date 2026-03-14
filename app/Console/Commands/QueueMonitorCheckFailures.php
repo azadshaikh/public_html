@@ -23,7 +23,7 @@ class QueueMonitorCheckFailures extends Command
 {
     protected $signature = 'app:queue-monitor:check-failures';
 
-    protected $description = 'Check for queue failure bursts and notify super admins.';
+    protected $description = 'Check for queue failure bursts and notify super users.';
 
     public function handle(): int
     {
