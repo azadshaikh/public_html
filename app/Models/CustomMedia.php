@@ -45,7 +45,8 @@ class CustomMedia extends Media
      */
     public function getStorageRootFolder(): string
     {
-        // Null = not set, use config default; empty string = intentionally no prefix (local disk)
+        // Null = not set, use config default. Existing rows may still contain an
+        // empty string from the legacy local-disk behavior, which we preserve.
         return $this->media_storage_root ?? config('media.media_storage_root', 'media');
     }
 
@@ -435,29 +436,25 @@ class CustomMedia extends Media
             // Time-prefixed for natural creation-order sorting in folder listings
             $model->uuid = strtolower((string) Str::ulid());
 
-            // Determine disk type once
-            $diskDriver = config(sprintf('filesystems.disks.%s.driver', $model->disk), 'local');
-            $isLocalDisk = $diskDriver === 'local';
-
-            // Set media_storage_root based on disk type
+            // Apply the configured storage root to all newly-created media so
+            // local and remote uploads share the same base folder convention.
             if (empty($model->media_storage_root)) {
-                if ($isLocalDisk) {
-                    // Local disk: no prefix needed (disk URL already includes /storage)
-                    $model->media_storage_root = '';
-                } else {
-                    // Remote disks: use configured root folder for namespacing
-                    $model->media_storage_root = config('media.media_storage_root', 'media');
-                }
+                $model->media_storage_root = config('media.media_storage_root', 'media');
             }
 
-            // Ensure media_storage_root is always relative (no leading slash, no absolute path)
+            // Ensure media_storage_root is always relative and normalized.
             if (! empty($model->media_storage_root)) {
-                $model->media_storage_root = ltrim(str_replace(public_path(), '', $model->media_storage_root), '/');
+                $model->media_storage_root = trim(
+                    str_replace(public_path(), '', $model->media_storage_root),
+                    '/'
+                );
             }
 
             // Snapshot CDN base URL for remote disks only
             // Preserves correct URLs even if CDN provider or URL changes later
             // Local-disk media skips this (URLs adapt to domain changes via config)
+            $diskDriver = config(sprintf('filesystems.disks.%s.driver', $model->disk), 'local');
+            $isLocalDisk = $diskDriver === 'local';
             if (empty($model->cdn_base_url) && ! $isLocalDisk) {
                 $diskUrl = config(sprintf('filesystems.disks.%s.url', $model->disk));
                 if (! empty($diskUrl)) {
