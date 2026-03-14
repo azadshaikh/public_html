@@ -350,9 +350,15 @@ class SettingsControllerTest extends TestCase
             ->get(route('app.settings.localization'))
             ->assertOk()
             ->assertInertia(fn (Assert $page): Assert => $page
+                ->has('settingsNav', 8)
                 ->has('settingsNav.0', fn (Assert $item): Assert => $item
-                    ->has('slug')
-                    ->has('label')
+                    ->where('slug', 'general')
+                    ->where('label', 'General')
+                    ->has('href')
+                )
+                ->has('settingsNav.7', fn (Assert $item): Assert => $item
+                    ->where('slug', 'development')
+                    ->where('label', 'Development Mode')
                     ->has('href')
                 )
             );
@@ -365,7 +371,7 @@ class SettingsControllerTest extends TestCase
     public function test_guests_cannot_update_settings(): void
     {
         $this->put(route('app.settings.update', 'general'), [
-            
+
             'site_title' => 'Test Title',
         ])->assertRedirect(route('login'));
     }
@@ -374,7 +380,7 @@ class SettingsControllerTest extends TestCase
     {
         $this->actingAs($this->regularUser)
             ->put(route('app.settings.update', 'general'), [
-                
+
                 'site_title' => 'Test Title',
             ])
             ->assertStatus(401);
@@ -384,7 +390,7 @@ class SettingsControllerTest extends TestCase
     {
         $this->actingAs($this->admin)
             ->put(route('app.settings.update', 'general'), [
-                
+
                 'site_title' => '',
             ])
             ->assertSessionHasErrors('site_title');
@@ -394,7 +400,7 @@ class SettingsControllerTest extends TestCase
     {
         $this->actingAs($this->admin)
             ->put(route('app.settings.update', 'general'), [
-                
+
                 'site_title' => 'Updated Site Title',
                 'tagline' => 'Updated Tagline',
             ])
@@ -410,7 +416,7 @@ class SettingsControllerTest extends TestCase
     {
         $this->actingAs($this->admin)
             ->put(route('app.settings.update', 'localization'), [
-                
+
                 'language' => 'en',
                 'date_format' => 'd M Y',
                 'time_format' => 'g:i a',
@@ -428,7 +434,7 @@ class SettingsControllerTest extends TestCase
     {
         $this->actingAs($this->admin)
             ->put(route('app.settings.update', 'registration'), [
-                
+
                 'enable_registration' => true,
                 'default_role' => '2',
                 'require_email_verification' => false,
@@ -446,7 +452,7 @@ class SettingsControllerTest extends TestCase
     {
         $this->actingAs($this->admin)
             ->put(route('app.settings.update', 'maintenance'), [
-                
+
                 'mode_enabled' => false,
                 'maintenance_mode_type' => 'frontend',
                 'title' => 'Under Maintenance',
@@ -464,7 +470,7 @@ class SettingsControllerTest extends TestCase
     {
         $this->actingAs($this->admin)
             ->put(route('app.settings.update', 'coming_soon'), [
-                
+
                 'enabled' => false,
                 'description' => 'Coming soon!',
             ])
@@ -480,7 +486,7 @@ class SettingsControllerTest extends TestCase
     {
         $this->actingAs($this->admin)
             ->put(route('app.settings.update', 'development'), [
-                
+
                 'mode_enabled' => false,
             ])
             ->assertSessionHasNoErrors()

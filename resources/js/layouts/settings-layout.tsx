@@ -30,11 +30,24 @@ export default function SettingsLayout({
         })?.slug ?? settingsNav[0]?.slug;
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs} title={title} description={description}>
-            <Tabs value={activeSlug} orientation="vertical" className="flex w-full flex-col md:flex-row md:items-start gap-6">
-                <TabsList className="w-full shrink-0 md:w-48 lg:w-56">
+        <AppLayout
+            breadcrumbs={breadcrumbs}
+            title={title}
+            description={description}
+        >
+            <Tabs
+                value={activeSlug}
+                orientation="vertical"
+                className="flex w-full flex-col gap-6 md:flex-row md:items-start md:gap-8"
+            >
+                <TabsList className="w-full shrink-0 p-1.5 md:w-60 lg:w-72">
                     {settingsNav.map((item) => (
-                        <TabsTrigger key={item.slug} value={item.slug} asChild>
+                        <TabsTrigger
+                            key={item.slug}
+                            value={item.slug}
+                            asChild
+                            className="px-4 py-2.5 text-[15px] leading-6 md:px-4 md:py-3"
+                        >
                             <Link href={item.href} preserveScroll>
                                 {item.label}
                             </Link>
@@ -42,7 +55,7 @@ export default function SettingsLayout({
                     ))}
                 </TabsList>
 
-                <div className="min-w-0 flex-1 w-full">{children}</div>
+                <div className="w-full min-w-0 flex-1">{children}</div>
             </Tabs>
         </AppLayout>
     );
