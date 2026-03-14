@@ -30,7 +30,7 @@ CMS_ONLY_MODULES='{
 }'
 
 # Required tools
-REQUIRED_TOOLS=(npm composer zip rsync jq sha256sum curl)
+REQUIRED_TOOLS=(pnpm composer zip rsync jq sha256sum curl)
 
 # -----------------------------------------------------------------------------
 # Colors & Logging
@@ -202,7 +202,7 @@ check_requirements() {
     local tools_to_check=("${REQUIRED_TOOLS[@]}")
     if [[ "$LOCAL_ONLY" == true ]]; then
         # Remove curl from requirements for local builds
-        tools_to_check=(npm composer zip rsync jq sha256sum)
+        tools_to_check=(pnpm composer zip rsync jq sha256sum)
     fi
 
     for tool in "${tools_to_check[@]}"; do
@@ -284,12 +284,12 @@ run_quiet() {
 
 # Build assets in project root BEFORE copying (faster - no need to copy node_modules)
 build_assets() {
-    log "Installing node dependencies from lockfile (npm ci)..."
-    (cd "$PROJECT_ROOT" && run_quiet "npm ci" npm ci --no-audit --no-fund)
+    log "Installing node dependencies from lockfile (pnpm install --frozen-lockfile)..."
+    (cd "$PROJECT_ROOT" && run_quiet "pnpm install --frozen-lockfile" pnpm install --frozen-lockfile)
     log_success "Node dependencies installed"
 
-    log "Running npm build..."
-    (cd "$PROJECT_ROOT" && run_quiet "npm build" npm run build)
+    log "Running pnpm build:prod..."
+    (cd "$PROJECT_ROOT" && run_quiet "pnpm build:prod" pnpm run build:prod)
     log_success "Assets built"
 }
 
@@ -555,8 +555,8 @@ main() {
         echo "Steps that would execute:"
         echo "  1. Check requirements"
         echo "  2. Update composer.json version to $NEW_VERSION"
-        echo "  3. Run npm ci"
-        echo "  4. Run npm build"
+        echo "  3. Run pnpm install --frozen-lockfile"
+        echo "  4. Run pnpm build:prod"
         echo "  5. Copy project to temp directory"
         echo "  6. Configure CMS-only modules"
         echo "  7. Install composer dependencies (no-dev)"

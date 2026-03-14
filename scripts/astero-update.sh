@@ -35,7 +35,7 @@ run_step() {
 }
 
 check_requirements() {
-    local required_tools=(php composer npm)
+    local required_tools=(php composer pnpm)
 
     for tool in "${required_tools[@]}"; do
         if ! command -v "$tool" >/dev/null 2>&1; then
@@ -83,10 +83,10 @@ main() {
         php artisan migrate --force --no-interaction
 
     run_step "Installing Node dependencies (lockfile)" \
-        npm ci --no-audit --no-fund
+        pnpm install --frozen-lockfile
 
     run_step "Building frontend assets" \
-        npm run build
+        pnpm run build:prod
 
     run_step "Rebuilding Astero caches" \
         php artisan astero:recache --no-interaction

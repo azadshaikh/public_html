@@ -4,7 +4,9 @@
     "packageManager": "pnpm@10.32.0",
     "type": "module",
     "scripts": {
-        "build": "vite build",
+        "astero:update": "bash ./scripts/astero-update.sh",
+        "build": "VITE_REACT_COMPILER=false vite build",
+        "build:prod": "VITE_REACT_COMPILER=true vite build",
         "dev": "vite",
         "format": "prettier --write resources/ modules/",
         "format:check": "prettier --check resources/ modules/",

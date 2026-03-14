@@ -8,6 +8,9 @@ import { defineConfig, loadEnv } from 'vite';
 
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, process.cwd(), '');
+    const useReactCompiler =
+        env.VITE_REACT_COMPILER === undefined ||
+        env.VITE_REACT_COMPILER === 'true';
     const appUrl = new URL(env.APP_URL || 'http://localhost');
     const devServerHost = env.VITE_DEV_SERVER_HOST || appUrl.hostname;
     const devServerPort = Number(env.VITE_DEV_SERVER_PORT || 5173);
@@ -43,9 +46,11 @@ export default defineConfig(({ mode }) => {
             }),
             ...(useHttps && !hasLocalSslCertificates ? [basicSsl()] : []),
             react({
-                babel: {
-                    plugins: ['babel-plugin-react-compiler'],
-                },
+                babel: useReactCompiler
+                    ? {
+                          plugins: ['babel-plugin-react-compiler'],
+                      }
+                    : undefined,
             }),
             tailwindcss(),
         ],
