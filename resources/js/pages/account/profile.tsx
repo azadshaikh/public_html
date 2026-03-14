@@ -1,7 +1,6 @@
 import { SaveIcon, UploadIcon } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
-import ProfileController from '@/actions/App/Http/Controllers/Profile/ProfileController';
 import { FormErrorSummary } from '@/components/forms/form-error-summary';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -20,13 +19,12 @@ import { useInitials } from '@/hooks/use-initials';
 import AppLayout from '@/layouts/app-layout';
 import { formValidators } from '@/lib/forms';
 import type { FormValidationRules } from '@/lib/forms';
-import { profile as profileRoute } from '@/routes/app';
 import type { BreadcrumbItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Profile',
-        href: profileRoute(),
+        href: route('app.profile'),
     },
 ];
 
@@ -133,7 +131,7 @@ export default function Profile({ profile, showUsername }: ProfilePageProps) {
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
-        form.submit(ProfileController.update(), {
+        form.submit('patch', route('app.profile.update'), {
             preserveScroll: true,
             setDefaultsOnSuccess: true,
             successToast: {

@@ -12,7 +12,6 @@ import AppHead from '@/components/app-head';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import AuthLayout from '@/layouts/auth-layout';
-import { dashboard, login, logout } from '@/routes/index';
 import type { SharedData } from '@/types';
 
 type ButtonVariant = NonNullable<ComponentProps<typeof Button>['variant']>;
@@ -76,13 +75,13 @@ export default function AuthErrorPage({
     const primaryAction: ErrorLinkAction = auth.user
         ? {
               label: 'Go to dashboard',
-              href: dashboard(),
+              href: route('dashboard'),
               icon: LayoutDashboard,
               variant: 'default',
           }
         : {
               label: 'Go to login',
-              href: login(),
+              href: route('login'),
               icon: LogIn,
               variant: 'default',
           };
@@ -163,7 +162,7 @@ export default function AuthErrorPage({
                         {showLogoutButton && auth.user ? (
                             <ErrorLinkButton
                                 label="Log out"
-                                href={logout()}
+                                href={route('logout')}
                                 method="post"
                                 icon={LogOut}
                                 variant="destructive"

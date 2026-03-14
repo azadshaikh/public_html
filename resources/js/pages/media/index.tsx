@@ -12,10 +12,6 @@ import {
     Trash2Icon,
 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import {
-    index as mediaLibraryIndex,
-    bulkAction,
-} from '@/actions/App/Http/Controllers/MediaLibraryController';
 import { Datagrid } from '@/components/datagrid/datagrid';
 import type {
     DatagridAction,
@@ -29,13 +25,12 @@ import { MediaUploadDropzone } from '@/components/media/media-upload-dropzone';
 import { ResourceFeedbackAlerts } from '@/components/resource/resource-feedback-alerts';
 import { Badge } from '@/components/ui/badge';
 import AppLayout from '@/layouts/app-layout';
-import { dashboard } from '@/routes/index';
 import type { BreadcrumbItem } from '@/types';
 import type { MediaIndexPageProps, MediaListItem } from '@/types/media';
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Dashboard', href: dashboard() },
-    { title: 'Media Library', href: mediaLibraryIndex() },
+    { title: 'Dashboard', href: route('dashboard') },
+    { title: 'Media Library', href: route('app.media-library.index') },
 ];
 
 // =========================================================================
@@ -148,7 +143,7 @@ export default function MediaIndex({
             if (selectedItems.length === 0) return;
 
             router.post(
-                bulkAction().url,
+                route('app.media-library.bulk-action'),
                 {
                     action,
                     ids: selectedItems.map((item) => item.id),
@@ -166,7 +161,7 @@ export default function MediaIndex({
     const handleSingleAction = useCallback(
         (action: string, item: MediaListItem) => {
             router.post(
-                bulkAction().url,
+                route('app.media-library.bulk-action'),
                 { action, ids: [item.id] },
                 { preserveScroll: true },
             );
@@ -431,7 +426,7 @@ export default function MediaIndex({
 
                 {/* Datagrid */}
                 <Datagrid
-                    action={mediaLibraryIndex().url}
+                    action={route('app.media-library.index')}
                     rows={media}
                     columns={columns}
                     filters={gridFilters}

@@ -1,6 +1,5 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { wayfinder } from '@laravel/vite-plugin-wayfinder';
 import tailwindcss from '@tailwindcss/vite';
 import basicSsl from '@vitejs/plugin-basic-ssl';
 import react from '@vitejs/plugin-react';
@@ -25,9 +24,9 @@ export default defineConfig(({ mode }) => {
     const httpsConfig = useHttps
         ? hasLocalSslCertificates
             ? {
-                  cert: fs.readFileSync(sslCertificatePath),
-                  key: fs.readFileSync(sslKeyPath),
-              }
+                cert: fs.readFileSync(sslCertificatePath),
+                key: fs.readFileSync(sslKeyPath),
+            }
             : {}
         : undefined;
 
@@ -49,9 +48,6 @@ export default defineConfig(({ mode }) => {
                 },
             }),
             tailwindcss(),
-            wayfinder({
-                formVariants: true,
-            }),
         ],
         server: {
             host: '0.0.0.0',

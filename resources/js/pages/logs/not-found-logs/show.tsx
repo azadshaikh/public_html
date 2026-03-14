@@ -12,7 +12,6 @@ import {
     Trash2Icon,
     UserIcon,
 } from 'lucide-react';
-import NotFoundLogController from '@/actions/App/Http/Controllers/Logs/NotFoundLogController';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -23,7 +22,6 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
-import { dashboard } from '@/routes/index';
 import type { BreadcrumbItem } from '@/types';
 import type { NotFoundLogsShowPageProps } from '@/types/not-found-log';
 
@@ -58,8 +56,8 @@ export default function NotFoundLogShow({
     recentIpStats,
 }: NotFoundLogsShowPageProps) {
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Dashboard', href: dashboard() },
-        { title: '404 Logs', href: NotFoundLogController.index() },
+        { title: 'Dashboard', href: route('dashboard') },
+        { title: '404 Logs', href: route('app.logs.not-found-logs.index') },
         { title: notFoundLog.url.substring(0, 40), href: '#' },
     ];
 
@@ -150,7 +148,7 @@ export default function NotFoundLogShow({
 
             <div className="mb-6">
                 <Button variant="ghost" size="sm" asChild>
-                    <Link href={NotFoundLogController.index()}>
+                    <Link href={route('app.logs.not-found-logs.index')}>
                         <ArrowLeftIcon className="mr-2 size-4" />
                         Back to 404 Logs
                     </Link>
@@ -324,13 +322,11 @@ export default function NotFoundLogShow({
                                         )
                                     ) {
                                         router.delete(
-                                            NotFoundLogController.destroy({
-                                                notFoundLog: notFoundLog.id,
-                                            }).url,
+                                            route('app.logs.not-found-logs.destroy', notFoundLog.id),
                                             {
                                                 onSuccess: () =>
                                                     router.visit(
-                                                        NotFoundLogController.index(),
+                                                        route('app.logs.not-found-logs.index'),
                                                     ),
                                             },
                                         );

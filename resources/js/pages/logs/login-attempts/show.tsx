@@ -12,7 +12,6 @@ import {
     UserIcon,
     XCircleIcon,
 } from 'lucide-react';
-import LoginAttemptController from '@/actions/App/Http/Controllers/Logs/LoginAttemptController';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -23,7 +22,6 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
-import { dashboard } from '@/routes/index';
 import type { BreadcrumbItem } from '@/types';
 import type { LoginAttemptsShowPageProps } from '@/types/login-attempt';
 
@@ -49,8 +47,8 @@ export default function LoginAttemptShow({
     recentIpStats,
 }: LoginAttemptsShowPageProps) {
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Dashboard', href: dashboard() },
-        { title: 'Login Attempts', href: LoginAttemptController.index() },
+        { title: 'Dashboard', href: route('dashboard') },
+        { title: 'Login Attempts', href: route('app.logs.login-attempts.index') },
         { title: loginAttempt.email, href: '#' },
     ];
 
@@ -127,7 +125,7 @@ export default function LoginAttemptShow({
 
             <div className="mb-6">
                 <Button variant="ghost" size="sm" asChild>
-                    <Link href={LoginAttemptController.index()}>
+                    <Link href={route('app.logs.login-attempts.index')}>
                         <ArrowLeftIcon className="mr-2 size-4" />
                         Back to Login Attempts
                     </Link>
@@ -319,13 +317,11 @@ export default function LoginAttemptShow({
                                         )
                                     ) {
                                         router.delete(
-                                            LoginAttemptController.destroy({
-                                                loginAttempt: loginAttempt.id,
-                                            }).url,
+                                            route('app.logs.login-attempts.destroy', loginAttempt.id),
                                             {
                                                 onSuccess: () =>
                                                     router.visit(
-                                                        LoginAttemptController.index(),
+                                                        route('app.logs.login-attempts.index'),
                                                     ),
                                             },
                                         );

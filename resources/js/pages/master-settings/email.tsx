@@ -1,7 +1,6 @@
 import { SaveIcon, SendIcon } from 'lucide-react';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
-import MasterSettingsController from '@/actions/App/Http/Controllers/Masters/SettingsController';
 import { FormErrorSummary } from '@/components/forms/form-error-summary';
 import { showAppToast } from '@/components/forms/form-success-toast';
 import { Button } from '@/components/ui/button';
@@ -17,8 +16,8 @@ import { formValidators } from '@/lib/forms';
 import type { BreadcrumbItem, SelectOption, SettingsNavItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Master Settings', href: MasterSettingsController.index() },
-    { title: 'Email', href: MasterSettingsController.email() },
+    { title: 'Master Settings', href: route('app.masters.settings.index') },
+    { title: 'Email', href: route('app.masters.settings.email') },
 ];
 
 type EmailPageProps = {
@@ -76,7 +75,7 @@ export default function Email({ settings, options, settingsNav }: EmailPageProps
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
-        form.submit(MasterSettingsController.update('email'), {
+        form.submit('put', route('app.masters.settings.update', 'email'), {
             preserveScroll: true,
             setDefaultsOnSuccess: true,
             successToast: {
@@ -99,7 +98,7 @@ export default function Email({ settings, options, settingsNav }: EmailPageProps
         setIsSendingTest(true);
 
         try {
-            const response = await fetch(MasterSettingsController.sendTestMail.url(), {
+            const response = await fetch(route('app.masters.settings.send-test-mail'), {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content ?? '',

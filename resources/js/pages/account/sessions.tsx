@@ -45,14 +45,6 @@ import {
 import { Spinner } from '@/components/ui/spinner';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
-import { dashboard } from '@/routes';
-import { profile as profileRoute } from '@/routes/app';
-import { security as securityRoute } from '@/routes/app/profile';
-import { sessions as sessionsRoute } from '@/routes/app/profile/security';
-import {
-    deleteMethod as deleteSessionRoute,
-    deleteOthers as deleteOtherSessionsRoute,
-} from '@/routes/app/profile/sessions';
 import type { BreadcrumbItem } from '@/types';
 
 type SessionItem = {
@@ -79,19 +71,19 @@ type SessionActionResponse = {
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Dashboard',
-        href: dashboard(),
+        href: route('dashboard'),
     },
     {
         title: 'Profile',
-        href: profileRoute(),
+        href: route('app.profile'),
     },
     {
         title: 'Security',
-        href: securityRoute(),
+        href: route('app.profile.security'),
     },
     {
         title: 'Active Sessions',
-        href: sessionsRoute(),
+        href: route('app.profile.security.sessions'),
     },
 ];
 
@@ -199,7 +191,7 @@ export default function Sessions({
 
         try {
             const payload = await deleteJson(
-                deleteSessionRoute.url({ sessionId }),
+                route('app.profile.sessions.delete', { session: sessionId }),
             );
 
             setSessions((currentSessions) =>
@@ -226,7 +218,7 @@ export default function Sessions({
         setPendingAction('others');
 
         try {
-            const payload = await deleteJson(deleteOtherSessionsRoute.url());
+            const payload = await deleteJson(route('app.profile.sessions.delete-others'));
 
             setSessions((currentSessions) =>
                 currentSessions.filter((session) => session.is_current),
@@ -255,7 +247,7 @@ export default function Sessions({
             description="Review signed-in devices and revoke sessions you no longer use."
             headerActions={
                 <Button asChild variant="outline">
-                    <Link href={securityRoute()}>
+                    <Link href={route('app.profile.security')}>
                         <ArrowLeftIcon data-icon="inline-start" />
                         Back
                     </Link>

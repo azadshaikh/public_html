@@ -8,29 +8,20 @@ import {
 } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
-import { dashboard } from '@/routes';
-import { profile as profileRoute } from '@/routes/app';
-import { security as securityRoute } from '@/routes/app/profile';
-import {
-    password as passwordRoute,
-    sessions as sessionsRoute,
-    socialLogins as socialLoginsRoute,
-    twoFactor as twoFactorRoute,
-} from '@/routes/app/profile/security';
 import type { BreadcrumbItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Dashboard',
-        href: dashboard(),
+        href: route('dashboard'),
     },
     {
         title: 'Profile',
-        href: profileRoute(),
+        href: route('app.profile'),
     },
     {
         title: 'Security',
-        href: securityRoute(),
+        href: route('app.profile.security'),
     },
 ];
 
@@ -125,14 +116,14 @@ export default function Security({
             description: hasPassword
                 ? 'Strengthen your account by using a strong password.'
                 : 'Set a password to secure your account and sign-in options.',
-            href: passwordRoute().url,
+            href: route('app.profile.security.password'),
             icon: LockKeyholeIcon,
         },
         {
             title: 'Two-Factor Authentication (2FA)',
             description:
                 'Manage two-factor authentication and recovery codes.',
-            href: twoFactorRoute().url,
+            href: route('app.profile.security.two-factor'),
             icon: ShieldCheckIcon,
             status: twoFactorEnabled
                 ? {
@@ -158,7 +149,7 @@ export default function Security({
         securityCards.push({
             title: 'Social Login',
             description: 'Manage social providers connected to your account.',
-            href: socialLoginsRoute().url,
+            href: route('app.profile.security.social-logins'),
             icon: Link2Icon,
             status: {
                 label: `${connectedProviderCount} connected`,
@@ -173,7 +164,7 @@ export default function Security({
         description: sessionManagementSupported
             ? 'Review and revoke active devices signed into your account.'
             : 'Session management is limited for your current driver.',
-        href: sessionsRoute().url,
+        href: route('app.profile.security.sessions'),
         icon: SmartphoneIcon,
         status: sessionManagementSupported
             ? {

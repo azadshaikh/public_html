@@ -1,5 +1,4 @@
 import AppLayout from '@/layouts/app-layout';
-import { dashboard } from '@/routes/index';
 import type { BreadcrumbItem } from '@/types';
 import CmsPageForm from '../../components/cms-page-form';
 import type { CmsPageFormValues } from '../../components/cms-page-form';
@@ -30,7 +29,7 @@ export default function CmsEdit({
     options,
 }: CmsEditPageProps) {
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Dashboard', href: dashboard() },
+        { title: 'Dashboard', href: route('dashboard') },
         { title: module.name, href: '/cms' },
         { title: page.title, href: `/cms/${page.id}/edit` },
     ];

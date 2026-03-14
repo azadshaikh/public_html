@@ -1,6 +1,5 @@
 import { SaveIcon } from 'lucide-react';
 import type { FormEvent } from 'react';
-import SettingsController from '@/actions/App/Http/Controllers/SettingsController';
 import { FormErrorSummary } from '@/components/forms/form-error-summary';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,8 +13,8 @@ import SettingsLayout from '@/layouts/settings-layout';
 import type { BreadcrumbItem, SettingsNavItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Settings', href: SettingsController.index() },
-    { title: 'Social Authentication', href: SettingsController.socialAuthentication() },
+    { title: 'Settings', href: route('app.settings.index') },
+    { title: 'Social Authentication', href: route('app.settings.social-authentication') },
 ];
 
 type SocialAuthPageProps = {
@@ -59,7 +58,7 @@ export default function SocialAuthentication({ settings, settingsNav }: SocialAu
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
-        form.submit(SettingsController.update('social_authentication'), {
+        form.submit('put', route('app.settings.update', 'social_authentication'), {
             preserveScroll: true,
             setDefaultsOnSuccess: true,
             successToast: {

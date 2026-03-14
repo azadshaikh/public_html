@@ -9,7 +9,6 @@ import {
     Trash2Icon,
     XCircleIcon,
 } from 'lucide-react';
-import LoginAttemptController from '@/actions/App/Http/Controllers/Logs/LoginAttemptController';
 import { Datagrid } from '@/components/datagrid/datagrid';
 import type {
     DatagridAction,
@@ -22,7 +21,6 @@ import { ResourceFeedbackAlerts } from '@/components/resource/resource-feedback-
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
-import { dashboard } from '@/routes/index';
 import type { BreadcrumbItem } from '@/types';
 import type {
     LoginAttemptListItem,
@@ -30,8 +28,8 @@ import type {
 } from '@/types/login-attempt';
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Dashboard', href: dashboard() },
-    { title: 'Login Attempts', href: LoginAttemptController.index() },
+    { title: 'Dashboard', href: route('dashboard') },
+    { title: 'Login Attempts', href: route('app.logs.login-attempts.index') },
 ];
 
 const STATUS_BADGE_VARIANT: Record<string, string> = {
@@ -58,7 +56,7 @@ export default function LoginAttemptsIndex({
         if (selectedItems.length === 0) return;
 
         router.post(
-            LoginAttemptController.bulkAction().url,
+            route('app.logs.login-attempts.bulk-action'),
             {
                 action,
                 ids: selectedItems.map((item) => item.id),
@@ -342,7 +340,7 @@ export default function LoginAttemptsIndex({
                 </div>
 
                 <Datagrid
-                    action={LoginAttemptController.index().url}
+                    action={route('app.logs.login-attempts.index')}
                     rows={loginAttempts}
                     columns={columns}
                     filters={gridFilters}

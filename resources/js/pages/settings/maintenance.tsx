@@ -1,6 +1,5 @@
 import { SaveIcon } from 'lucide-react';
 import type { FormEvent } from 'react';
-import SettingsController from '@/actions/App/Http/Controllers/SettingsController';
 import { FormErrorSummary } from '@/components/forms/form-error-summary';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,8 +14,8 @@ import SettingsLayout from '@/layouts/settings-layout';
 import type { BreadcrumbItem, SettingsNavItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Settings', href: SettingsController.index() },
-    { title: 'Maintenance Mode', href: SettingsController.maintenance() },
+    { title: 'Settings', href: route('app.settings.index') },
+    { title: 'Maintenance Mode', href: route('app.settings.maintenance') },
 ];
 
 type MaintenancePageProps = {
@@ -56,7 +55,7 @@ export default function Maintenance({ settings, settingsNav }: MaintenancePagePr
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
-        form.submit(SettingsController.update('maintenance'), {
+        form.submit('put', route('app.settings.update', 'maintenance'), {
             preserveScroll: true,
             setDefaultsOnSuccess: true,
             successToast: {

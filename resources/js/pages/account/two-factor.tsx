@@ -46,16 +46,6 @@ import { useClipboard } from '@/hooks/use-clipboard';
 import AppLayout from '@/layouts/app-layout';
 import { formValidators } from '@/lib/forms';
 import type { FormValidationRules } from '@/lib/forms';
-import { dashboard } from '@/routes';
-import { profile as profileRoute } from '@/routes/app';
-import { security as securityRoute } from '@/routes/app/profile';
-import { twoFactor as twoFactorRoute } from '@/routes/app/profile/security';
-import {
-    confirm as confirmTwoFactor,
-    destroy as destroyTwoFactor,
-    store as startTwoFactorSetup,
-} from '@/routes/app/profile/two-factor';
-import { regenerate as regenerateRecoveryCodes } from '@/routes/app/profile/two-factor/recovery-codes';
 import type { BreadcrumbItem } from '@/types';
 
 type TwoFactorPageProps = {
@@ -79,19 +69,19 @@ type PasswordAction = 'disable' | 'regenerate' | null;
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Dashboard',
-        href: dashboard(),
+        href: route('dashboard'),
     },
     {
         title: 'Profile',
-        href: profileRoute(),
+        href: route('app.profile'),
     },
     {
         title: 'Security',
-        href: securityRoute(),
+        href: route('app.profile.security'),
     },
     {
         title: 'Two-Factor Authentication (2FA)',
-        href: twoFactorRoute(),
+        href: route('app.profile.security.two-factor'),
     },
 ];
 
@@ -385,7 +375,7 @@ export default function TwoFactor({
     );
 
     const handleStartSetup = () => {
-        router.post(startTwoFactorSetup(), undefined, {
+        router.post(route('app.profile.two-factor.store'), undefined, {
             preserveScroll: true,
             onStart: () => setStartingSetup(true),
             onSuccess: () => {
@@ -403,7 +393,7 @@ export default function TwoFactor({
     const handleConfirmSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
-        confirmForm.submit(confirmTwoFactor(), {
+        confirmForm.submit('post', route('app.profile.two-factor.confirm'), {
             successToast: {
                 title: 'Two-factor enabled',
                 description:
@@ -423,9 +413,10 @@ export default function TwoFactor({
         }
 
         passwordActionForm.submit(
+            passwordAction === 'disable' ? 'delete' : 'post',
             passwordAction === 'disable'
-                ? destroyTwoFactor()
-                : regenerateRecoveryCodes(),
+                ? route('app.profile.two-factor.destroy')
+                : route('app.profile.two-factor.recovery-codes.regenerate'),
             {
                 successToast:
                     passwordAction === 'disable'
@@ -459,7 +450,7 @@ export default function TwoFactor({
             description="Set up and manage your authenticator app and recovery codes."
             headerActions={
                 <Button variant="outline" asChild>
-                    <Link href={securityRoute()}>
+                    <Link href={route('app.profile.security')}>
                         <ArrowLeftIcon data-icon="inline-start" />
                         Back
                     </Link>

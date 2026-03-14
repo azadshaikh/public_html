@@ -1,7 +1,6 @@
 import { SaveIcon, WifiIcon } from 'lucide-react';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
-import MasterSettingsController from '@/actions/App/Http/Controllers/Masters/SettingsController';
 import { FormErrorSummary } from '@/components/forms/form-error-summary';
 import { showAppToast } from '@/components/forms/form-success-toast';
 import { Button } from '@/components/ui/button';
@@ -16,8 +15,8 @@ import SettingsLayout from '@/layouts/settings-layout';
 import type { BreadcrumbItem, SelectOption, SettingsNavItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Master Settings', href: MasterSettingsController.index() },
-    { title: 'Storage', href: MasterSettingsController.storage() },
+    { title: 'Master Settings', href: route('app.masters.settings.index') },
+    { title: 'Storage', href: route('app.masters.settings.storage') },
 ];
 
 type StoragePageProps = {
@@ -102,7 +101,7 @@ export default function Storage({ settings, options, settingsNav }: StoragePageP
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
-        form.submit(MasterSettingsController.update('storage'), {
+        form.submit('put', route('app.masters.settings.update', 'storage'), {
             preserveScroll: true,
             setDefaultsOnSuccess: true,
             successToast: {
@@ -116,7 +115,7 @@ export default function Storage({ settings, options, settingsNav }: StoragePageP
         setIsTesting(true);
 
         try {
-            const response = await fetch(MasterSettingsController.testStorageConnection.url(), {
+            const response = await fetch(route('app.masters.settings.test-storage-connection'), {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content ?? '',

@@ -1,5 +1,4 @@
 import AppLayout from '@/layouts/app-layout';
-import { dashboard } from '@/routes/index';
 import type { BreadcrumbItem } from '@/types';
 import CmsPageForm from '../../components/cms-page-form';
 import type { CmsPageFormValues } from '../../components/cms-page-form';
@@ -27,7 +26,7 @@ export default function CmsCreate({
     options,
 }: CmsCreatePageProps) {
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Dashboard', href: dashboard() },
+        { title: 'Dashboard', href: route('dashboard') },
         { title: module.name, href: '/cms' },
         { title: 'Create page', href: '/cms/create' },
     ];

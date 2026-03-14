@@ -34,7 +34,6 @@ import { NavigationIcon } from '@/components/navigation-icon';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
-import { dashboard } from '@/routes/index';
 import type { BreadcrumbItem, ManagedModule } from '@/types';
 
 type ModuleManagementPageProps = {
@@ -68,7 +67,7 @@ export default function ModulesIndex({
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: 'Dashboard',
-            href: dashboard(),
+            href: route('dashboard'),
         },
         {
             title: 'Modules',
@@ -191,7 +190,7 @@ export default function ModulesIndex({
             headerActions={
                 <div className="flex flex-wrap gap-3">
                     <Button asChild variant="outline">
-                        <Link href={dashboard()}>
+                        <Link href={route('dashboard')}>
                             <ArrowLeftIcon data-icon="inline-start" />
                             Back to dashboard
                         </Link>

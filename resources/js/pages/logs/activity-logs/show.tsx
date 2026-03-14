@@ -10,13 +10,11 @@ import {
     UserIcon,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
-import ActivityLogController from '@/actions/App/Http/Controllers/Logs/ActivityLogController';
 import { ResourceFeedbackAlerts } from '@/components/resource/resource-feedback-alerts';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
-import { dashboard } from '@/routes/index';
 import type { BreadcrumbItem } from '@/types';
 import type { ActivityLogsShowPageProps } from '@/types/activity-log';
 
@@ -53,20 +51,20 @@ export default function ActivityLogsShow({
     error,
 }: ActivityLogsShowPageProps) {
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Dashboard', href: dashboard() },
+        { title: 'Dashboard', href: route('dashboard') },
         {
             title: 'Activity Logs',
-            href: ActivityLogController.index(),
+            href: route('app.logs.activity-logs.index'),
         },
         {
             title: 'Log Details',
-            href: ActivityLogController.show(activityLog.id),
+            href: route('app.logs.activity-logs.show', activityLog.id),
         },
     ];
 
     const handleDelete = () => {
         if (!window.confirm('Move this activity log to trash?')) return;
-        router.delete(ActivityLogController.destroy(activityLog.id).url, {
+        router.delete(route('app.logs.activity-logs.destroy', activityLog.id), {
             preserveScroll: true,
         });
     };
@@ -91,7 +89,7 @@ export default function ActivityLogsShow({
             headerActions={
                 <div className="flex items-center gap-2">
                     <Button variant="outline" asChild>
-                        <Link href={ActivityLogController.index()}>
+                        <Link href={route('app.logs.activity-logs.index')}>
                             <ArrowLeftIcon data-icon="inline-start" />
                             Back
                         </Link>

@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import AuthLayout from '@/layouts/auth-layout';
-import { store } from '@/routes/profile/complete';
 
 type Props = {
     user: {
@@ -39,7 +38,8 @@ export default function ProfileComplete({ user }: Props) {
                 </div>
 
                 <Form
-                    {...store.form()}
+                    action={route('profile.complete.store')}
+                    method="post"
                     className="flex flex-col gap-6"
                     resetOnSuccess={[]}
                 >

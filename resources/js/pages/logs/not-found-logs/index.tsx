@@ -10,7 +10,6 @@ import {
     Trash2Icon,
     UserIcon,
 } from 'lucide-react';
-import NotFoundLogController from '@/actions/App/Http/Controllers/Logs/NotFoundLogController';
 import { Datagrid } from '@/components/datagrid/datagrid';
 import type {
     DatagridAction,
@@ -23,7 +22,6 @@ import { ResourceFeedbackAlerts } from '@/components/resource/resource-feedback-
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
-import { dashboard } from '@/routes/index';
 import type { BreadcrumbItem } from '@/types';
 import type {
     NotFoundLogListItem,
@@ -31,8 +29,8 @@ import type {
 } from '@/types/not-found-log';
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Dashboard', href: dashboard() },
-    { title: '404 Logs', href: NotFoundLogController.index() },
+    { title: 'Dashboard', href: route('dashboard') },
+    { title: '404 Logs', href: route('app.logs.not-found-logs.index') },
 ];
 
 const STATUS_BADGE_VARIANT: Record<string, string> = {
@@ -58,7 +56,7 @@ export default function NotFoundLogsIndex({
         if (selectedItems.length === 0) return;
 
         router.post(
-            NotFoundLogController.bulkAction().url,
+            route('app.logs.not-found-logs.bulk-action'),
             {
                 action,
                 ids: selectedItems.map((item) => item.id),
@@ -342,7 +340,7 @@ export default function NotFoundLogsIndex({
                 </div>
 
                 <Datagrid
-                    action={NotFoundLogController.index().url}
+                    action={route('app.logs.not-found-logs.index')}
                     rows={notFoundLogs}
                     columns={columns}
                     filters={gridFilters}

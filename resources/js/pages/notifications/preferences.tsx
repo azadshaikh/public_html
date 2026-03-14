@@ -13,7 +13,6 @@ import {
     UserIcon,
 } from 'lucide-react';
 import type { FormEvent, ReactNode } from 'react';
-import NotificationController from '@/actions/App/Http/Controllers/NotificationController';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -28,7 +27,6 @@ import { Switch } from '@/components/ui/switch';
 import { useAppForm } from '@/hooks/use-app-form';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
-import { dashboard } from '@/routes';
 import type { BreadcrumbItem } from '@/types';
 import type {
     NotificationPreferenceOption,
@@ -44,11 +42,11 @@ type NotificationPreferencesFormData = {
 };
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Dashboard', href: dashboard() },
-    { title: 'Notifications', href: NotificationController.index() },
+    { title: 'Dashboard', href: route('dashboard') },
+    { title: 'Notifications', href: route('app.notifications.index') },
     {
         title: 'Preferences',
-        href: NotificationController.preferences(),
+        href: route('app.notifications.preferences'),
     },
 ];
 
@@ -201,7 +199,7 @@ export default function NotificationsPreferences({
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
-        form.submit(NotificationController.updatePreferences(), {
+        form.submit('put', route('app.notifications.preferences.update'), {
             preserveScroll: true,
             setDefaultsOnSuccess: true,
             successToast: {
@@ -233,7 +231,7 @@ export default function NotificationsPreferences({
             description="Choose which alerts reach you and how much signal you want from your inbox."
             headerActions={
                 <Button variant="outline" asChild>
-                    <Link href={NotificationController.index()}>
+                    <Link href={route('app.notifications.index')}>
                         <ArrowLeftIcon data-icon="inline-start" />
                         Back
                     </Link>

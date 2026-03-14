@@ -2,7 +2,7 @@ import type {
     FormDataErrors,
     FormDataKeys,
     FormDataType,
-    UrlMethodPair,
+    Method,
     UseFormSubmitOptions,
 } from '@inertiajs/core';
 import { router, useForm } from '@inertiajs/react';
@@ -23,9 +23,9 @@ import type {
 type DirtyGuardOptions =
     | boolean
     | {
-          enabled?: boolean;
-          message?: string;
-      };
+        enabled?: boolean;
+        message?: string;
+    };
 
 type UseAppFormOptions<T extends FormDataType<T>> = {
     defaults: T;
@@ -273,7 +273,7 @@ export function useAppForm<T extends FormDataType<T>>({
     );
 
     const submit = useCallback(
-        (action: UrlMethodPair, options: AppFormSubmitOptions = {}) => {
+        (method: Method, url: string, options: AppFormSubmitOptions = {}) => {
             if (!validate()) {
                 return false;
             }
@@ -288,7 +288,7 @@ export function useAppForm<T extends FormDataType<T>>({
 
             isSubmittingRef.current = true;
 
-            inertiaForm.submit(action, {
+            inertiaForm.submit(method, url, {
                 preserveScroll: true,
                 ...submitOptions,
                 onSuccess: (...args) => {

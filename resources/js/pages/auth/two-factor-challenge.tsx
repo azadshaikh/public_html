@@ -11,8 +11,6 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp
 import { Spinner } from '@/components/ui/spinner';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AuthLayout from '@/layouts/auth-layout';
-import { login } from '@/routes/index';
-import { store } from '@/routes/two-factor/challenge';
 
 type Props = {
     email?: string | null;
@@ -40,7 +38,7 @@ export default function TwoFactorChallenge({ email }: Props) {
                 method === 'authenticator' ? data.code : data.recovery_code,
         }));
 
-        form.post(store().url, {
+        form.post(route('two-factor.challenge.store'), {
             onFinish: () => {
                 form.transform((data) => data);
             },
@@ -174,7 +172,7 @@ export default function TwoFactorChallenge({ email }: Props) {
 
                     <div className="text-center text-sm text-muted-foreground">
                         Need to start over?{' '}
-                        <TextLink href={login()}>
+                        <TextLink href={route('login')}>
                             Back to log in
                         </TextLink>
                     </div>

@@ -1,6 +1,5 @@
 import { SaveIcon } from 'lucide-react';
 import type { FormEvent } from 'react';
-import MasterSettingsController from '@/actions/App/Http/Controllers/Masters/SettingsController';
 import { FormErrorSummary } from '@/components/forms/form-error-summary';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,8 +11,8 @@ import SettingsLayout from '@/layouts/settings-layout';
 import type { BreadcrumbItem, SettingsNavItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Master Settings', href: MasterSettingsController.index() },
-    { title: 'Debug', href: MasterSettingsController.debug() },
+    { title: 'Master Settings', href: route('app.masters.settings.index') },
+    { title: 'Debug', href: route('app.masters.settings.debug') },
 ];
 
 type DebugPageProps = {
@@ -45,7 +44,7 @@ export default function Debug({ settings, settingsNav }: DebugPageProps) {
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
-        form.submit(MasterSettingsController.update('debug'), {
+        form.submit('put', route('app.masters.settings.update', 'debug'), {
             preserveScroll: true,
             setDefaultsOnSuccess: true,
             successToast: {

@@ -3,8 +3,6 @@ import AppHead from '@/components/app-head';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import AuthLayout from '@/layouts/auth-layout';
-import { logout } from '@/routes/index';
-import { send } from '@/routes/verification';
 
 export default function VerifyEmail({ status }: { status?: string }) {
     return (
@@ -37,7 +35,7 @@ export default function VerifyEmail({ status }: { status?: string }) {
                     a new one below.
                 </p>
 
-                <Form {...send.form()} className="space-y-4">
+                <Form action={route('verification.send')} method="post" className="space-y-4">
                     {({ processing }) => (
                         <Button
                             className="w-full"
@@ -50,7 +48,7 @@ export default function VerifyEmail({ status }: { status?: string }) {
                     )}
                 </Form>
 
-                <Form {...logout.form()} className="w-full">
+                <Form action={route('logout')} method="post" className="w-full">
                     {({ processing }) => (
                         <Button
                             type="submit"

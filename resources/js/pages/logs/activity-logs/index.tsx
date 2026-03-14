@@ -9,7 +9,6 @@ import {
     RefreshCwIcon,
     Trash2Icon,
 } from 'lucide-react';
-import ActivityLogController from '@/actions/App/Http/Controllers/Logs/ActivityLogController';
 import { Datagrid } from '@/components/datagrid/datagrid';
 import type {
     DatagridAction,
@@ -22,7 +21,6 @@ import { ResourceFeedbackAlerts } from '@/components/resource/resource-feedback-
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
-import { dashboard } from '@/routes/index';
 import type { BreadcrumbItem } from '@/types';
 import type {
     ActivityLogListItem,
@@ -30,8 +28,8 @@ import type {
 } from '@/types/activity-log';
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Dashboard', href: dashboard() },
-    { title: 'Activity Logs', href: ActivityLogController.index() },
+    { title: 'Dashboard', href: route('dashboard') },
+    { title: 'Activity Logs', href: route('app.logs.activity-logs.index') },
 ];
 
 const EVENT_BADGE_VARIANT: Record<string, string> = {
@@ -67,7 +65,7 @@ export default function ActivityLogsIndex({
         if (selectedItems.length === 0) return;
 
         router.post(
-            ActivityLogController.bulkAction().url,
+            route('app.logs.activity-logs.bulk-action'),
             {
                 action,
                 ids: selectedItems.map((item) => item.id),
@@ -329,7 +327,7 @@ export default function ActivityLogsIndex({
                 </div>
 
                 <Datagrid
-                    action={ActivityLogController.index().url}
+                    action={route('app.logs.activity-logs.index')}
                     rows={logs}
                     columns={columns}
                     filters={gridFilters}

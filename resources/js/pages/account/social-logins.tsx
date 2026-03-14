@@ -22,14 +22,6 @@ import {
 import { Spinner } from '@/components/ui/spinner';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
-import { dashboard } from '@/routes';
-import { profile as profileRoute } from '@/routes/app';
-import { security as securityRoute } from '@/routes/app/profile';
-import { socialLogins as socialLoginsRoute } from '@/routes/app/profile/security';
-import {
-    connect as connectSocialLogin,
-    disconnect as disconnectSocialLogin,
-} from '@/routes/app/profile/security/social-logins';
 import type { BreadcrumbItem } from '@/types';
 
 type ConnectedProvider = {
@@ -52,19 +44,19 @@ type SocialLoginsPageProps = {
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Dashboard',
-        href: dashboard(),
+        href: route('dashboard'),
     },
     {
         title: 'Profile',
-        href: profileRoute(),
+        href: route('app.profile'),
     },
     {
         title: 'Security',
-        href: securityRoute(),
+        href: route('app.profile.security'),
     },
     {
         title: 'Social Login',
-        href: socialLoginsRoute(),
+        href: route('app.profile.security.social-logins'),
     },
 ];
 
@@ -155,13 +147,13 @@ export default function SocialLogins({
 
     const handleConnect = (provider: string) => {
         setConnectingProvider(provider);
-        window.location.assign(connectSocialLogin.url({ provider }));
+        window.location.assign(route('app.profile.security.social-logins.connect', { provider }));
     };
 
     const handleDisconnect = (provider: string) => {
         setDisconnectingProvider(provider);
 
-        router.delete(disconnectSocialLogin.url({ provider }), {
+        router.delete(route('app.profile.security.social-logins.disconnect', { provider }), {
             preserveScroll: true,
             onFinish: () => setDisconnectingProvider(null),
         });
@@ -174,7 +166,7 @@ export default function SocialLogins({
             description="Connect trusted sign-in providers and remove ones you no longer use."
             headerActions={
                 <Button asChild variant="outline">
-                    <Link href={securityRoute()}>
+                    <Link href={route('app.profile.security')}>
                         <ArrowLeftIcon data-icon="inline-start" />
                         Back
                     </Link>

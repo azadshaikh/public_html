@@ -1,6 +1,5 @@
 import { SaveIcon } from 'lucide-react';
 import type { FormEvent } from 'react';
-import MasterSettingsController from '@/actions/App/Http/Controllers/Masters/SettingsController';
 import { FormErrorSummary } from '@/components/forms/form-error-summary';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,8 +13,8 @@ import { formValidators } from '@/lib/forms';
 import type { BreadcrumbItem, SettingsNavItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Master Settings', href: MasterSettingsController.index() },
-    { title: 'Login Security', href: MasterSettingsController.loginSecurity() },
+    { title: 'Master Settings', href: route('app.masters.settings.index') },
+    { title: 'Login Security', href: route('app.masters.settings.login-security') },
 ];
 
 type LoginSecurityPageProps = {
@@ -53,7 +52,7 @@ export default function LoginSecurity({ settings, settingsNav }: LoginSecurityPa
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
-        form.submit(MasterSettingsController.update('login_security'), {
+        form.submit('put', route('app.masters.settings.update', 'login_security'), {
             preserveScroll: true,
             setDefaultsOnSuccess: true,
             successToast: {

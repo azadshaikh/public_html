@@ -23,8 +23,6 @@ import {
     useSidebar,
 } from '@/components/ui/sidebar';
 import { useInitials } from '@/hooks/use-initials';
-import { profile as profileRoute } from '@/routes/app';
-import { logout } from '@/routes/index';
 
 export function NavUser({
     user,
@@ -98,7 +96,7 @@ export function NavUser({
                         <DropdownMenuGroup>
                             <DropdownMenuItem asChild>
                                 <Link
-                                    href={profileRoute()}
+                                    href={route('app.profile')}
                                     className="w-full cursor-pointer"
                                 >
                                     <BadgeCheckIcon />
@@ -117,7 +115,7 @@ export function NavUser({
                         <DropdownMenuSeparator />
                         <DropdownMenuItem asChild>
                             <Link
-                                href={logout()}
+                                href={route('logout')}
                                 as="button"
                                 className="w-full cursor-pointer"
                             >

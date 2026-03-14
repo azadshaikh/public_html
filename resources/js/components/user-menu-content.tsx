@@ -8,8 +8,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { UserInfo } from '@/components/user-info';
 import { useMobileNavigation } from '@/hooks/use-mobile-navigation';
-import { profile as profileRoute } from '@/routes/app';
-import { logout } from '@/routes/index';
 import type { User } from '@/types';
 
 type Props = {
@@ -36,7 +34,7 @@ export function UserMenuContent({ user }: Props) {
                 <DropdownMenuItem asChild>
                     <Link
                         className="block w-full cursor-pointer"
-                        href={profileRoute()}
+                        href={route('app.profile')}
                         prefetch
                         onClick={cleanup}
                     >
@@ -49,7 +47,7 @@ export function UserMenuContent({ user }: Props) {
             <DropdownMenuItem asChild>
                 <Link
                     className="block w-full cursor-pointer"
-                    href={logout()}
+                    href={route('logout')}
                     as="button"
                     onClick={handleLogout}
                     data-test="logout-button"

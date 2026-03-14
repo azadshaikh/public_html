@@ -16,7 +16,6 @@ import {
     UsersIcon,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
-import RoleController from '@/actions/App/Http/Controllers/RoleController';
 import { ResourceFeedbackAlerts } from '@/components/resource/resource-feedback-alerts';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -24,7 +23,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
-import { dashboard } from '@/routes/index';
 import type { BreadcrumbItem } from '@/types';
 import type { PermissionGroup, RolesShowPageProps } from '@/types/role';
 
@@ -121,16 +119,16 @@ export default function RolesShow({
     error,
 }: RolesShowPageProps) {
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Dashboard', href: dashboard() },
-        { title: 'Roles', href: RoleController.index() },
-        { title: role.display_name, href: RoleController.show(role.id) },
+        { title: 'Dashboard', href: route('dashboard') },
+        { title: 'Roles', href: route('app.roles.index') },
+        { title: role.display_name, href: route('app.roles.show', role.id) },
     ];
 
     const handleRestore = () => {
         if (!window.confirm(`Restore "${role.display_name}"?`)) return;
 
         router.patch(
-            RoleController.restore(role.id).url,
+            route('app.roles.restore', role.id),
             {},
             {
                 preserveScroll: true,
@@ -143,7 +141,7 @@ export default function RolesShow({
 
         if (!window.confirm(`Move "${role.display_name}" to trash?`)) return;
 
-        router.delete(RoleController.destroy(role.id).url, {
+        router.delete(route('app.roles.destroy', role.id), {
             preserveScroll: true,
         });
     };
@@ -158,7 +156,7 @@ export default function RolesShow({
         )
             return;
 
-        router.delete(RoleController.forceDelete(role.id).url, {
+        router.delete(route('app.roles.force-delete', role.id), {
             preserveScroll: true,
         });
     };
@@ -171,7 +169,7 @@ export default function RolesShow({
             headerActions={
                 <div className="flex items-center gap-2">
                     <Button variant="outline" asChild>
-                        <Link href={RoleController.index()}>
+                        <Link href={route('app.roles.index')}>
                             <ArrowLeftIcon data-icon="inline-start" />
                             Back
                         </Link>
@@ -179,7 +177,7 @@ export default function RolesShow({
 
                     {!role.is_trashed && (
                         <Button asChild>
-                            <Link href={RoleController.edit(role.id)}>
+                            <Link href={route('app.roles.edit', role.id)}>
                                 <PencilIcon data-icon="inline-start" />
                                 Edit
                             </Link>

@@ -1,6 +1,5 @@
 import { SaveIcon } from 'lucide-react';
 import type { FormEvent } from 'react';
-import SettingsController from '@/actions/App/Http/Controllers/SettingsController';
 import { FormErrorSummary } from '@/components/forms/form-error-summary';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,8 +12,8 @@ import { formValidators } from '@/lib/forms';
 import type { BreadcrumbItem, SettingsNavItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Settings', href: SettingsController.index() },
-    { title: 'General', href: SettingsController.general() },
+    { title: 'Settings', href: route('app.settings.index') },
+    { title: 'General', href: route('app.settings.general') },
 ];
 
 type GeneralPageProps = {
@@ -46,7 +45,7 @@ export default function General({ settings, settingsNav }: GeneralPageProps) {
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
-        form.submit(SettingsController.update('general'), {
+        form.submit('put', route('app.settings.update', 'general'), {
             preserveScroll: true,
             setDefaultsOnSuccess: true,
             successToast: {

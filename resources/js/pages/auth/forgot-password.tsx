@@ -7,8 +7,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import AuthLayout from '@/layouts/auth-layout';
-import { login } from '@/routes/index';
-import { email } from '@/routes/password';
 
 export default function ForgotPassword({ status }: { status?: string }) {
     return (
@@ -29,7 +27,8 @@ export default function ForgotPassword({ status }: { status?: string }) {
 
             <div className="space-y-6">
                 <Form
-                    {...email.form()}
+                    action={route('password.email')}
+                    method="post"
                     disableWhileProcessing
                     className="flex flex-col gap-6 inert:pointer-events-none inert:opacity-60"
                 >
@@ -62,7 +61,7 @@ export default function ForgotPassword({ status }: { status?: string }) {
 
                 <div className="text-center text-sm text-muted-foreground">
                     <span>Remembered your password? </span>
-                    <TextLink href={login()}>Back to log in</TextLink>
+                    <TextLink href={route('login')}>Back to log in</TextLink>
                 </div>
             </div>
         </AuthLayout>

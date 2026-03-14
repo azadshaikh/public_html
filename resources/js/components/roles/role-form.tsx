@@ -1,7 +1,6 @@
 import { Link, useForm } from '@inertiajs/react';
 import { ArrowLeftIcon, SaveIcon, ShieldCheckIcon } from 'lucide-react';
 import type { FormEvent } from 'react';
-import RoleController from '@/actions/App/Http/Controllers/RoleController';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -40,15 +39,16 @@ export default function RoleForm({
     permissionGroups,
 }: RoleFormProps) {
     const form = useForm<RoleFormValues>(initialValues);
-    const submitAction = role
-        ? RoleController.update(role.id)
-        : RoleController.store();
+    const submitMethod = role ? 'put' : 'post';
+    const submitUrl = role
+        ? route('app.roles.update', role.id)
+        : route('app.roles.store');
     const submitLabel = mode === 'create' ? 'Create role' : 'Save changes';
 
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
-        form.submit(submitAction, {
+        form.submit(submitMethod, submitUrl, {
             preserveScroll: true,
         });
     };
@@ -299,7 +299,7 @@ export default function RoleForm({
 
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card px-4 py-3">
                 <Button asChild variant="outline">
-                    <Link href={RoleController.index()}>
+                    <Link href={route('app.roles.index')}>
                         <ArrowLeftIcon data-icon="inline-start" />
                         Back to roles
                     </Link>

@@ -1,21 +1,19 @@
-import RoleController from '@/actions/App/Http/Controllers/RoleController';
 import RoleForm from '@/components/roles/role-form';
 import AppLayout from '@/layouts/app-layout';
-import { dashboard } from '@/routes/index';
 import type { BreadcrumbItem, RoleFormPageProps } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Dashboard',
-        href: dashboard(),
+        href: route('dashboard'),
     },
     {
         title: 'Roles',
-        href: RoleController.index(),
+        href: route('app.roles.index'),
     },
     {
         title: 'New role',
-        href: RoleController.create(),
+        href: route('app.roles.create'),
     },
 ];
 

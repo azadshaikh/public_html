@@ -1,6 +1,5 @@
 import { SaveIcon } from 'lucide-react';
 import type { FormEvent } from 'react';
-import SettingsController from '@/actions/App/Http/Controllers/SettingsController';
 import { FormErrorSummary } from '@/components/forms/form-error-summary';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,8 +12,8 @@ import SettingsLayout from '@/layouts/settings-layout';
 import type { BreadcrumbItem, SettingsNavItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Settings', href: SettingsController.index() },
-    { title: 'Coming Soon Mode', href: SettingsController.comingSoon() },
+    { title: 'Settings', href: route('app.settings.index') },
+    { title: 'Coming Soon Mode', href: route('app.settings.coming-soon') },
 ];
 
 type ComingSoonPageProps = {
@@ -43,7 +42,7 @@ export default function ComingSoon({ settings, settingsNav }: ComingSoonPageProp
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
-        form.submit(SettingsController.update('coming_soon'), {
+        form.submit('put', route('app.settings.update', 'coming_soon'), {
             preserveScroll: true,
             setDefaultsOnSuccess: true,
             successToast: {

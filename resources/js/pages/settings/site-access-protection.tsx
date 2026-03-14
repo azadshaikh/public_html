@@ -1,6 +1,5 @@
 import { SaveIcon } from 'lucide-react';
 import type { FormEvent } from 'react';
-import SettingsController from '@/actions/App/Http/Controllers/SettingsController';
 import { FormErrorSummary } from '@/components/forms/form-error-summary';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,8 +13,8 @@ import SettingsLayout from '@/layouts/settings-layout';
 import type { BreadcrumbItem, SettingsNavItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Settings', href: SettingsController.index() },
-    { title: 'Site Access Protection', href: SettingsController.siteAccessProtection() },
+    { title: 'Settings', href: route('app.settings.index') },
+    { title: 'Site Access Protection', href: route('app.settings.site-access-protection') },
 ];
 
 type SiteAccessProtectionPageProps = {
@@ -47,7 +46,7 @@ export default function SiteAccessProtection({ settings, settingsNav }: SiteAcce
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
-        form.submit(SettingsController.update('site_access_protection'), {
+        form.submit('put', route('app.settings.update', 'site_access_protection'), {
             preserveScroll: true,
             setDefaultsOnSuccess: true,
             successToast: {

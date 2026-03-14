@@ -36,7 +36,6 @@ import {
     NativeSelectOption,
 } from '@/components/ui/native-select';
 import AppLayout from '@/layouts/app-layout';
-import { dashboard } from '@/routes/index';
 import type { BreadcrumbItem } from '@/types';
 
 type Option = { value: string; label: string };
@@ -96,7 +95,7 @@ export default function TodosIndex({
     const todosDestroyUrl = (id: number) => `/todos/${id}`;
 
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Dashboard', href: dashboard() },
+        { title: 'Dashboard', href: route('dashboard') },
         { title: module.name, href: todosIndexUrl },
     ];
 
@@ -118,7 +117,7 @@ export default function TodosIndex({
             headerActions={
                 <div className="flex flex-wrap gap-3">
                     <Button asChild variant="outline">
-                        <Link href={dashboard()}>
+                        <Link href={route('dashboard')}>
                             <LayoutDashboardIcon />
                             Back to dashboard
                         </Link>

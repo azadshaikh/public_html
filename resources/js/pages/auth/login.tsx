@@ -9,10 +9,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import AuthLayout from '@/layouts/auth-layout';
-import { register } from '@/routes/index';
-import { store } from '@/routes/login';
-import { request } from '@/routes/password';
-import { login as socialLogin } from '@/routes/social';
 
 type Props = {
     status?: string;
@@ -38,7 +34,7 @@ export default function Login({
 
     const handleSocialLogin = (provider: 'google' | 'github') => {
         setLoadingProvider(provider);
-        window.location.assign(socialLogin.url(provider));
+        window.location.assign(route('social.login', { provider }));
     };
 
     return (
@@ -58,7 +54,8 @@ export default function Login({
             )}
 
             <Form
-                {...store.form()}
+                action={route('login.store')}
+                method="post"
                 resetOnSuccess={['password']}
                 disableWhileProcessing
                 className="flex flex-col gap-6 inert:pointer-events-none inert:opacity-60"
@@ -86,7 +83,7 @@ export default function Login({
                                     <Label htmlFor="password">Password</Label>
                                     {canResetPassword && (
                                         <TextLink
-                                            href={request()}
+                                            href={route('password.request')}
                                             className="ml-auto text-sm"
                                             tabIndex={5}
                                         >
@@ -222,7 +219,7 @@ export default function Login({
                         {canRegister && (
                             <div className="text-center text-sm text-muted-foreground">
                                 Don't have an account?{' '}
-                                <TextLink href={register()} tabIndex={5}>
+                                <TextLink href={route('register')} tabIndex={5}>
                                     Sign up
                                 </TextLink>
                             </div>

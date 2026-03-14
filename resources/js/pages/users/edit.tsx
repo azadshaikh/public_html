@@ -1,7 +1,5 @@
-import UserController from '@/actions/App/Http/Controllers/UserController';
 import ManagedUserForm from '@/components/users/managed-user-form';
 import AppLayout from '@/layouts/app-layout';
-import { dashboard } from '@/routes/index';
 import type { BreadcrumbItem } from '@/types';
 import type { UserEditPageProps } from '@/types/user-management';
 
@@ -13,15 +11,15 @@ export default function UsersEdit({
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: 'Dashboard',
-            href: dashboard(),
+            href: route('dashboard'),
         },
         {
             title: 'Users',
-            href: UserController.index(),
+            href: route('app.users.index'),
         },
         {
             title: user.name,
-            href: UserController.edit(user.id),
+            href: route('app.users.edit', user.id),
         },
     ];
 

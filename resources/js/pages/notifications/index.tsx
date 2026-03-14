@@ -12,7 +12,6 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
-import NotificationController from '@/actions/App/Http/Controllers/NotificationController';
 import { Datagrid } from '@/components/datagrid/datagrid';
 import type {
     DatagridAction,
@@ -44,7 +43,6 @@ import {
 } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
-import { dashboard } from '@/routes/index';
 import type { BreadcrumbItem } from '@/types';
 import type {
     NotificationListItem,
@@ -52,8 +50,8 @@ import type {
 } from '@/types/notification';
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Dashboard', href: dashboard() },
-    { title: 'Notifications', href: NotificationController.index() },
+    { title: 'Dashboard', href: route('dashboard') },
+    { title: 'Notifications', href: route('app.notifications.index') },
 ];
 
 const PRIORITY_VARIANT: Record<string, string> = {
@@ -130,7 +128,7 @@ export default function NotificationsIndex({
         }
 
         router.post(
-            NotificationController.markMultipleAsRead().url,
+            route('app.notifications.mark-multiple-read'),
             { ids: selectedItems.map((item) => item.id) },
             {
                 preserveScroll: true,
@@ -148,7 +146,7 @@ export default function NotificationsIndex({
         }
 
         router.post(
-            NotificationController.deleteMultiple().url,
+            route('app.notifications.delete-multiple'),
             { ids: selectedItems.map((item) => item.id) },
             {
                 preserveScroll: true,
@@ -291,7 +289,7 @@ export default function NotificationsIndex({
         if (notification.url) {
             actions.push({
                 label: 'Open',
-                href: NotificationController.show(notification.id).url,
+                href: route('app.notifications.show', notification.id),
                 icon: <MailOpenIcon />,
             });
         }
@@ -302,8 +300,7 @@ export default function NotificationsIndex({
                 icon: <MailIcon />,
                 onSelect: () => {
                     router.post(
-                        NotificationController.markAsUnread(notification.id)
-                            .url,
+                        route('app.notifications.mark-unread', notification.id),
                         {},
                         { preserveScroll: true },
                     );
@@ -315,7 +312,7 @@ export default function NotificationsIndex({
                 icon: <MailOpenIcon />,
                 onSelect: () => {
                     router.post(
-                        NotificationController.markAsRead(notification.id).url,
+                        route('app.notifications.mark-read', notification.id),
                         {},
                         { preserveScroll: true },
                     );
@@ -328,7 +325,7 @@ export default function NotificationsIndex({
             icon: <Trash2Icon />,
             variant: 'destructive',
             confirm: 'Delete this notification permanently?',
-            href: NotificationController.destroy(notification.id).url,
+            href: route('app.notifications.destroy', notification.id),
             method: 'DELETE',
         });
 
@@ -362,7 +359,7 @@ export default function NotificationsIndex({
             description="Review alerts, activity, and messages from one inbox."
             headerActions={
                 <Button asChild variant="outline">
-                    <Link href={NotificationController.preferences()}>
+                    <Link href={route('app.notifications.preferences')}>
                         <Settings2Icon data-icon="inline-start" />
                         Preferences
                     </Link>
@@ -467,7 +464,7 @@ export default function NotificationsIndex({
                     />
 
                     <Datagrid
-                        action={NotificationController.index().url}
+                        action={route('app.notifications.index')}
                         rows={notifications}
                         columns={columns}
                         filters={gridFilters}
@@ -588,8 +585,7 @@ export default function NotificationsIndex({
                             onClick={() => {
                                 if (dialog === 'delete-read') {
                                     router.delete(
-                                        NotificationController.deleteAllRead()
-                                            .url,
+                                        route('app.notifications.delete-all-read'),
                                         {
                                             preserveScroll: true,
                                         },
@@ -598,8 +594,7 @@ export default function NotificationsIndex({
 
                                 if (dialog === 'mark-all-read') {
                                     router.post(
-                                        NotificationController.markAllAsRead()
-                                            .url,
+                                        route('app.notifications.mark-all-read'),
                                         {},
                                         {
                                             preserveScroll: true,

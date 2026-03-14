@@ -9,9 +9,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import AuthLayout from '@/layouts/auth-layout';
-import { login } from '@/routes/index';
-import { store } from '@/routes/register';
-import { login as socialLogin } from '@/routes/social';
 
 type Props = {
     status?: string;
@@ -31,7 +28,7 @@ export default function Register({ status, canLogin, socialProviders }: Props) {
 
     const handleSocialLogin = (provider: 'google' | 'github') => {
         setLoadingProvider(provider);
-        window.location.assign(socialLogin.url(provider));
+        window.location.assign(route('social.login', { provider }));
     };
 
     return (
@@ -51,7 +48,8 @@ export default function Register({ status, canLogin, socialProviders }: Props) {
             )}
 
             <Form
-                {...store.form()}
+                action={route('register.store')}
+                method="post"
                 resetOnSuccess={['password', 'password_confirmation']}
                 disableWhileProcessing
                 className="flex flex-col gap-6 inert:pointer-events-none inert:opacity-60"
@@ -247,7 +245,7 @@ export default function Register({ status, canLogin, socialProviders }: Props) {
                         {canLogin && (
                             <div className="text-center text-sm text-muted-foreground">
                                 Already have an account?{' '}
-                                <TextLink href={login()} tabIndex={6}>
+                                <TextLink href={route('login')} tabIndex={6}>
                                     Log in
                                 </TextLink>
                             </div>

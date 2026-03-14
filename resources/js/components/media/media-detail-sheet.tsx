@@ -7,11 +7,6 @@ import {
     SaveIcon,
 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
-import {
-    getConversionStatus,
-    getMediaDetails,
-    updateDetails,
-} from '@/actions/App/Http/Controllers/MediaController';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -60,7 +55,7 @@ export function MediaDetailSheet({
     const fetchDetails = useCallback(async (id: number) => {
         setLoading(true);
         try {
-            const res = await fetch(getMediaDetails(id).url, {
+            const res = await fetch(route('app.media.details', id), {
                 headers: { Accept: 'application/json' },
             });
             const json = await res.json();
@@ -99,7 +94,7 @@ export function MediaDetailSheet({
         setConversionPolling(true);
         const interval = setInterval(async () => {
             try {
-                const res = await fetch(getConversionStatus(detailId).url, {
+                const res = await fetch(route('app.media.conversion-status', detailId), {
                     headers: { Accept: 'application/json' },
                 });
                 const json = await res.json();
@@ -156,7 +151,7 @@ export function MediaDetailSheet({
             formData.append('media_description', description);
             formData.append('media_tags', tags);
 
-            const res = await fetch(updateDetails().url, {
+            const res = await fetch(route('app.media.detail.update'), {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': csrfToken,

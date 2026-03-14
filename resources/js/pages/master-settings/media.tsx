@@ -1,6 +1,5 @@
 import { SaveIcon } from 'lucide-react';
 import type { FormEvent } from 'react';
-import MasterSettingsController from '@/actions/App/Http/Controllers/Masters/SettingsController';
 import { FormErrorSummary } from '@/components/forms/form-error-summary';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,8 +13,8 @@ import SettingsLayout from '@/layouts/settings-layout';
 import type { BreadcrumbItem, SettingsNavItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Master Settings', href: MasterSettingsController.index() },
-    { title: 'Media', href: MasterSettingsController.media() },
+    { title: 'Master Settings', href: route('app.masters.settings.index') },
+    { title: 'Media', href: route('app.masters.settings.media') },
 ];
 
 type MediaPageProps = {
@@ -74,7 +73,7 @@ export default function Media({ settings, settingsNav }: MediaPageProps) {
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
-        form.submit(MasterSettingsController.update('media'), {
+        form.submit('put', route('app.masters.settings.update', 'media'), {
             preserveScroll: true,
             setDefaultsOnSuccess: true,
             successToast: {

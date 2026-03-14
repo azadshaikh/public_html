@@ -1,5 +1,4 @@
 import AppLayout from '@/layouts/app-layout';
-import { dashboard } from '@/routes/index';
 import type { BreadcrumbItem } from '@/types';
 import PromptTemplateForm from '../../components/prompt-template-form';
 import type { PromptTemplateFormValues } from '../../components/prompt-template-form';
@@ -28,7 +27,7 @@ export default function ChatBotCreate({
     options,
 }: ChatBotCreatePageProps) {
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Dashboard', href: dashboard() },
+        { title: 'Dashboard', href: route('dashboard') },
         { title: module.name, href: '/chatbot' },
         { title: 'Create prompt', href: '/chatbot/create' },
     ];

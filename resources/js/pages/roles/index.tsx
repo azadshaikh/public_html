@@ -13,7 +13,6 @@ import {
     Trash2Icon,
     UsersIcon,
 } from 'lucide-react';
-import RoleController from '@/actions/App/Http/Controllers/RoleController';
 import { Datagrid } from '@/components/datagrid/datagrid';
 import type {
     DatagridAction,
@@ -26,13 +25,12 @@ import { ResourceFeedbackAlerts } from '@/components/resource/resource-feedback-
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
-import { dashboard } from '@/routes/index';
 import type { BreadcrumbItem } from '@/types';
 import type { RoleListItem, RolesIndexPageProps } from '@/types/role';
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Dashboard', href: dashboard() },
-    { title: 'Roles', href: RoleController.index() },
+    { title: 'Dashboard', href: route('dashboard') },
+    { title: 'Roles', href: route('app.roles.index') },
 ];
 
 export default function RolesIndex({
@@ -54,7 +52,7 @@ export default function RolesIndex({
         }
 
         router.post(
-            RoleController.bulkAction().url,
+            route('app.roles.bulk-action'),
             {
                 action,
                 ids: selectedRoles.map((role) => role.id),
@@ -189,14 +187,14 @@ export default function RolesIndex({
                 {
                     label: 'Restore',
                     icon: <RefreshCwIcon />,
-                    href: RoleController.restore(role.id).url,
+                    href: route('app.roles.restore', role.id),
                     method: 'PATCH',
                     confirm: `Restore "${role.display_name}"?`,
                 },
                 {
                     label: 'Delete Permanently',
                     icon: <Trash2Icon />,
-                    href: RoleController.forceDelete(role.id).url,
+                    href: route('app.roles.force-delete', role.id),
                     method: 'DELETE',
                     confirm: `⚠️ Permanently delete "${role.display_name}"? This cannot be undone!`,
                     variant: 'destructive',
@@ -215,7 +213,7 @@ export default function RolesIndex({
             },
             {
                 label: 'Edit',
-                href: RoleController.edit(role.id).url,
+                href: route('app.roles.edit', role.id),
                 icon: <PencilIcon />,
             },
             {
@@ -224,7 +222,7 @@ export default function RolesIndex({
                     if (
                         window.confirm(`Move "${role.display_name}" to trash?`)
                     ) {
-                        router.delete(RoleController.destroy(role.id).url, {
+                        router.delete(route('app.roles.destroy', role.id), {
                             preserveScroll: true,
                         });
                     }
@@ -283,7 +281,7 @@ export default function RolesIndex({
             description="Manage user roles and permissions"
             headerActions={
                 <Button asChild>
-                    <Link href={RoleController.create()}>
+                    <Link href={route('app.roles.create')}>
                         <PlusIcon data-icon="inline-start" />
                         Add Role
                     </Link>
@@ -299,7 +297,7 @@ export default function RolesIndex({
                 />
 
                 <Datagrid
-                    action={RoleController.index().url}
+                    action={route('app.roles.index')}
                     rows={roles}
                     columns={columns}
                     filters={gridFilters}

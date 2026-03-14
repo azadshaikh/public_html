@@ -36,7 +36,6 @@ import {
     NativeSelectOption,
 } from '@/components/ui/native-select';
 import AppLayout from '@/layouts/app-layout';
-import { dashboard } from '@/routes/index';
 import type { BreadcrumbItem } from '@/types';
 
 type Option = {
@@ -105,7 +104,7 @@ export default function CmsIndex({
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: 'Dashboard',
-            href: dashboard(),
+            href: route('dashboard'),
         },
         {
             title: module.name,
@@ -131,7 +130,7 @@ export default function CmsIndex({
             headerActions={
                 <div className="flex flex-wrap gap-3">
                     <Button asChild variant="outline">
-                        <Link href={dashboard()}>
+                        <Link href={route('dashboard')}>
                             <LayoutDashboardIcon />
                             Back to dashboard
                         </Link>

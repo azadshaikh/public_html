@@ -18,7 +18,6 @@ import {
     UserIcon,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
-import UserController from '@/actions/App/Http/Controllers/UserController';
 import { ResourceFeedbackAlerts } from '@/components/resource/resource-feedback-alerts';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -33,7 +32,6 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useInitials } from '@/hooks/use-initials';
 import AppLayout from '@/layouts/app-layout';
-import { dashboard } from '@/routes/index';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
 import type { UsersShowPageProps } from '@/types/user-management';
 
@@ -103,9 +101,9 @@ export default function UsersShow({
     const isTrashed = user.deleted_at !== null;
 
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Dashboard', href: dashboard() },
-        { title: 'Users', href: UserController.index() },
-        { title: user.name, href: UserController.show(user.id) },
+        { title: 'Dashboard', href: route('dashboard') },
+        { title: 'Users', href: route('app.users.index') },
+        { title: user.name, href: route('app.users.show', user.id) },
     ];
 
     const handleAction = (
@@ -152,7 +150,7 @@ export default function UsersShow({
             headerActions={
                 <div className="flex items-center gap-2">
                     <Button variant="outline" asChild>
-                        <Link href={UserController.index()}>
+                        <Link href={route('app.users.index')}>
                             <ArrowLeftIcon data-icon="inline-start" />
                             Back
                         </Link>

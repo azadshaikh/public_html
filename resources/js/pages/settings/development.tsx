@@ -1,6 +1,5 @@
 import { SaveIcon } from 'lucide-react';
 import type { FormEvent } from 'react';
-import SettingsController from '@/actions/App/Http/Controllers/SettingsController';
 import { FormErrorSummary } from '@/components/forms/form-error-summary';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,8 +11,8 @@ import SettingsLayout from '@/layouts/settings-layout';
 import type { BreadcrumbItem, SettingsNavItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Settings', href: SettingsController.index() },
-    { title: 'Development Mode', href: SettingsController.development() },
+    { title: 'Settings', href: route('app.settings.index') },
+    { title: 'Development Mode', href: route('app.settings.development') },
 ];
 
 type DevelopmentPageProps = {
@@ -39,7 +38,7 @@ export default function Development({ settings, settingsNav }: DevelopmentPagePr
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
-        form.submit(SettingsController.update('development'), {
+        form.submit('put', route('app.settings.update', 'development'), {
             preserveScroll: true,
             setDefaultsOnSuccess: true,
             successToast: {

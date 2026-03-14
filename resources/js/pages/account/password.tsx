@@ -7,7 +7,6 @@ import {
 } from 'lucide-react';
 import { useMemo, useRef } from 'react';
 import type { FormEvent } from 'react';
-import ProfileController from '@/actions/App/Http/Controllers/Profile/ProfileController';
 import { FormErrorSummary } from '@/components/forms/form-error-summary';
 import PasswordInput from '@/components/password-input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -18,10 +17,6 @@ import { useAppForm } from '@/hooks/use-app-form';
 import AppLayout from '@/layouts/app-layout';
 import { formValidators } from '@/lib/forms';
 import type { FormValidationRules } from '@/lib/forms';
-import { dashboard } from '@/routes';
-import { profile as profileRoute } from '@/routes/app';
-import { security as securityRoute } from '@/routes/app/profile';
-import { password as passwordRoute } from '@/routes/app/profile/security';
 import type { BreadcrumbItem } from '@/types';
 
 type PasswordPageProps = {
@@ -59,19 +54,19 @@ export default function Password({ hasPassword }: PasswordPageProps) {
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: 'Dashboard',
-            href: dashboard(),
+            href: route('dashboard'),
         },
         {
             title: 'Profile',
-            href: profileRoute(),
+            href: route('app.profile'),
         },
         {
             title: 'Security',
-            href: securityRoute(),
+            href: route('app.profile.security'),
         },
         {
             title: passwordTitle,
-            href: passwordRoute(),
+            href: route('app.profile.security.password'),
         },
     ];
 
@@ -116,7 +111,7 @@ export default function Password({ hasPassword }: PasswordPageProps) {
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
-        form.submit(ProfileController.updatePassword(), {
+        form.submit('patch', route('app.profile.password.update'), {
             successToast: {
                 title: hasPassword ? 'Password updated' : 'Password set',
                 description: hasPassword
@@ -147,7 +142,7 @@ export default function Password({ hasPassword }: PasswordPageProps) {
             description={passwordDescription}
             headerActions={
                 <Button variant="outline" asChild>
-                    <Link href={securityRoute()}>
+                    <Link href={route('app.profile.security')}>
                         <ArrowLeftIcon data-icon="inline-start" />
                         Back
                     </Link>

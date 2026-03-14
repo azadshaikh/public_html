@@ -1,5 +1,4 @@
 import AppLayout from '@/layouts/app-layout';
-import { dashboard } from '@/routes/index';
 import type { BreadcrumbItem } from '@/types';
 import TodoTaskForm from '../../components/todo-task-form';
 import type { TodoTaskFormValues } from '../../components/todo-task-form';
@@ -31,7 +30,7 @@ export default function TodosEdit({
     options,
 }: TodosEditPageProps) {
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Dashboard', href: dashboard() },
+        { title: 'Dashboard', href: route('dashboard') },
         { title: module.name, href: '/todos' },
         { title: task.title, href: `/todos/${task.id}/edit` },
     ];

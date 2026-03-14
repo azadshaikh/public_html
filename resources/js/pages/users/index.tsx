@@ -14,7 +14,6 @@ import {
     UserCogIcon,
     UsersIcon,
 } from 'lucide-react';
-import UserController from '@/actions/App/Http/Controllers/UserController';
 import { Datagrid } from '@/components/datagrid/datagrid';
 import type {
     DatagridAction,
@@ -29,7 +28,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useInitials } from '@/hooks/use-initials';
 import AppLayout from '@/layouts/app-layout';
-import { dashboard } from '@/routes/index';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
 import type {
     UserListItem,
@@ -42,8 +40,8 @@ import type {
 // =========================================================================
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Dashboard', href: dashboard() },
-    { title: 'Users', href: UserController.index() },
+    { title: 'Dashboard', href: route('dashboard') },
+    { title: 'Users', href: route('app.users.index') },
 ];
 
 const ICON_MAP: Record<string, React.ReactNode> = {
@@ -332,7 +330,7 @@ export default function UsersIndex({
         }
 
         router.post(
-            UserController.bulkAction().url,
+            route('app.users.bulk-action'),
             {
                 action,
                 ids: selectedUsers.map((u) => u.id),
@@ -415,7 +413,7 @@ export default function UsersIndex({
             headerActions={
                 canAddUsers ? (
                     <Button asChild>
-                        <Link href={UserController.create()}>
+                        <Link href={route('app.users.create')}>
                             <PlusIcon data-icon="inline-start" />
                             New user
                         </Link>
@@ -432,7 +430,7 @@ export default function UsersIndex({
                 />
 
                 <Datagrid
-                    action={UserController.index().url}
+                    action={route('app.users.index')}
                     rows={users}
                     columns={columns}
                     filters={gridFilters}

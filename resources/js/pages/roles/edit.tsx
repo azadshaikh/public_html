@@ -1,7 +1,5 @@
-import RoleController from '@/actions/App/Http/Controllers/RoleController';
 import RoleForm from '@/components/roles/role-form';
 import AppLayout from '@/layouts/app-layout';
-import { dashboard } from '@/routes/index';
 import type { BreadcrumbItem, RoleEditPageProps } from '@/types';
 
 export default function RolesEdit({
@@ -12,15 +10,15 @@ export default function RolesEdit({
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: 'Dashboard',
-            href: dashboard(),
+            href: route('dashboard'),
         },
         {
             title: 'Roles',
-            href: RoleController.index(),
+            href: route('app.roles.index'),
         },
         {
             title: role.display_name,
-            href: RoleController.edit(role.id),
+            href: route('app.roles.edit', role.id),
         },
     ];
 
