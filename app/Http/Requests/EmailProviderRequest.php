@@ -25,7 +25,7 @@ class EmailProviderRequest extends ScaffoldRequest
             'smtp_host' => ['required', 'string', 'max:255'],
             'smtp_user' => ['required', 'string', 'max:255'],
             'smtp_port' => ['required', 'string', 'max:10'],
-            'smtp_encryption' => ['required', 'string', 'max:10'],
+            'smtp_encryption' => ['required', 'string', 'in:tls,ssl,none'],
 
             // Password - required on create, optional on update
             'smtp_password' => $this->isUpdate()

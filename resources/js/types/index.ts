@@ -1,8 +1,10 @@
 export type * from './address';
+export type * from './email';
 export type * from './auth';
 export type * from './module';
 export type * from './navigation';
 export type * from './pagination';
+export type * from './queue-monitor';
 export type * from './role';
 export type * from './settings';
 export type * from './ui';

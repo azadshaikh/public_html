@@ -219,6 +219,72 @@ class PermissionSeeder extends Seeder
                 'group' => 'addresses',
                 'module_slug' => 'application',
             ],
+            [
+                'name' => 'view_email_providers',
+                'display_name' => 'View Email Providers',
+                'group' => 'email_providers',
+                'module_slug' => 'application',
+            ],
+            [
+                'name' => 'add_email_providers',
+                'display_name' => 'Add Email Providers',
+                'group' => 'email_providers',
+                'module_slug' => 'application',
+            ],
+            [
+                'name' => 'edit_email_providers',
+                'display_name' => 'Edit Email Providers',
+                'group' => 'email_providers',
+                'module_slug' => 'application',
+            ],
+            [
+                'name' => 'delete_email_providers',
+                'display_name' => 'Delete Email Providers',
+                'group' => 'email_providers',
+                'module_slug' => 'application',
+            ],
+            [
+                'name' => 'restore_email_providers',
+                'display_name' => 'Restore Email Providers',
+                'group' => 'email_providers',
+                'module_slug' => 'application',
+            ],
+            [
+                'name' => 'view_email_templates',
+                'display_name' => 'View Email Templates',
+                'group' => 'email_templates',
+                'module_slug' => 'application',
+            ],
+            [
+                'name' => 'add_email_templates',
+                'display_name' => 'Add Email Templates',
+                'group' => 'email_templates',
+                'module_slug' => 'application',
+            ],
+            [
+                'name' => 'edit_email_templates',
+                'display_name' => 'Edit Email Templates',
+                'group' => 'email_templates',
+                'module_slug' => 'application',
+            ],
+            [
+                'name' => 'delete_email_templates',
+                'display_name' => 'Delete Email Templates',
+                'group' => 'email_templates',
+                'module_slug' => 'application',
+            ],
+            [
+                'name' => 'restore_email_templates',
+                'display_name' => 'Restore Email Templates',
+                'group' => 'email_templates',
+                'module_slug' => 'application',
+            ],
+            [
+                'name' => 'view_email_logs',
+                'display_name' => 'View Email Logs',
+                'group' => 'email_logs',
+                'module_slug' => 'application',
+            ],
         ];
 
         foreach ($permissions as $permissionData) {

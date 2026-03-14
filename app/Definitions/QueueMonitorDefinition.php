@@ -40,15 +40,6 @@ class QueueMonitorDefinition extends ScaffoldDefinition
     }
 
     // ================================================================
-    // VIEW RESOLUTION
-    // ================================================================
-
-    public function getIndexView(): string
-    {
-        return 'queue-monitor::jobs';
-    }
-
-    // ================================================================
     // MIDDLEWARE (role-based, not permission-based)
     // ================================================================
 
@@ -75,28 +66,35 @@ class QueueMonitorDefinition extends ScaffoldDefinition
             Column::make('status')
                 ->label('Status')
                 ->badge()
+                ->sortable()
                 ->width(100),
 
             Column::make('name')
                 ->label('Job')
+                ->sortable()
                 ->searchable(),
 
             Column::make('queue')
                 ->label('Queue')
+                ->sortable()
                 ->searchable(),
 
             Column::make('attempt')
                 ->label('Attempt')
+                ->sortable()
                 ->center(),
 
             Column::make('duration')
-                ->label('Duration'),
+                ->label('Duration')
+                ->sortable(),
 
             Column::make('wait')
-                ->label('Wait'),
+                ->label('Wait')
+                ->sortable(),
 
             Column::make('started_at')
-                ->label('Started'),
+                ->label('Started')
+                ->sortable('started_at_exact'),
 
             Column::make('exception_message')
                 ->label('Error')
@@ -157,6 +155,11 @@ class QueueMonitorDefinition extends ScaffoldDefinition
             StatusTab::make('queued')
                 ->label('Queued')
                 ->icon('ri-time-line')
+                ->color('secondary'),
+
+            StatusTab::make('stale')
+                ->label('Stale')
+                ->icon('ri-alarm-warning-line')
                 ->color('secondary'),
         ];
     }

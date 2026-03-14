@@ -34,11 +34,23 @@ class EmailTemplateService implements ScaffoldServiceInterface
         ];
     }
 
+    public function getPaginatedEmailTemplates(Request $request): array
+    {
+        $query = $this->buildListQuery($request);
+        $paginator = $query->paginate($this->getPerPage($request))->onEachSide(1);
+        $paginatedArray = $paginator->toArray();
+
+        $paginatedArray['data'] = EmailTemplateResource::collection($paginator->items())
+            ->resolve(request());
+
+        return $paginatedArray;
+    }
+
     public function getStatusOptions(): array
     {
         return [
-            'active' => 'Active',
-            'inactive' => 'Inactive',
+            ['value' => 'active', 'label' => 'Active'],
+            ['value' => 'inactive', 'label' => 'Inactive'],
         ];
     }
 
@@ -91,14 +103,22 @@ class EmailTemplateService implements ScaffoldServiceInterface
 
     protected function applyFilters(Builder $query, Request $request): void
     {
-        $currentStatus = $request->input('status') ?? $request->route('status') ?? 'all';
-
-        if ($currentStatus !== 'trash' && $request->filled('filter_status')) {
-            $query->where('status', $request->input('filter_status'));
+        if ($request->filled('provider_id')) {
+            $query->where('provider_id', $request->input('provider_id'));
         }
 
-        if ($request->filled('filter_provider_id')) {
-            $query->where('provider_id', $request->input('filter_provider_id'));
+        if ($createdAt = $request->input('created_at')) {
+            $dates = explode(',', $createdAt, 2);
+
+            if (! empty($dates[0])) {
+                $query->whereDate('created_at', '>=', $dates[0]);
+            }
+
+            if (! empty($dates[1])) {
+                $query->whereDate('created_at', '<=', $dates[1]);
+            }
+
+            return;
         }
 
         if ($from = $request->input('created_at_from')) {

@@ -22,6 +22,7 @@ use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
+use RuntimeException;
 
 class QueueMonitorController extends ScaffoldController implements HasMiddleware
 {
@@ -57,8 +58,9 @@ class QueueMonitorController extends ScaffoldController implements HasMiddleware
     {
         $this->enforcePermission('view');
 
-        $metrics = config('queue-monitor.ui.show_metrics') ? $this->collectMetrics() : null;
-        $data = $this->service()->getData($request);
+        $status = (string) ($request->input('status') ?? $request->route('status') ?? 'all');
+        $perPage = $this->service()->getScaffoldDefinition()->getPerPage();
+        $metrics = config('queue-monitor.ui.show_metrics') ? $this->collectMetrics()->all() : null;
         $queueStats = $this->service()->getQueueStats();
         $chartData = config('queue-monitor.snapshots.enabled', true)
             ? $this->service()->getChartData((int) (config('queue-monitor.snapshots.chart_hours', 24)))
@@ -68,11 +70,39 @@ class QueueMonitorController extends ScaffoldController implements HasMiddleware
             : null;
 
         return Inertia::render($this->inertiaPage().'/index', [
-            ...$data,
+            'monitors' => $this->service()->getPaginatedMonitors($request),
+            'statistics' => $this->service()->getStatistics(),
+            'filters' => [
+                'search' => (string) $request->input('search', ''),
+                'queue' => (string) $request->input('queue', ''),
+                'metadata_key' => (string) $request->input('metadata_key', ''),
+                'metadata_value' => (string) $request->input('metadata_value', ''),
+                'status' => $status,
+                'sort' => (string) ($request->input('sort') ?? $request->input('sort_column') ?? 'started_at'),
+                'direction' => (string) ($request->input('direction') ?? $request->input('sort_direction') ?? 'desc'),
+                'per_page' => (int) $request->input('per_page', $perPage),
+                'view' => (string) $request->input('view', 'table'),
+            ],
             'metrics' => $metrics,
             'queueStats' => $queueStats,
             'chartData' => $chartData,
             'workerStats' => $workerStats,
+            'queueOptions' => collect($queueStats)
+                ->pluck('queue')
+                ->values()
+                ->map(fn (string $queue): array => ['value' => $queue, 'label' => $queue])
+                ->all(),
+            'ui' => [
+                'refreshInterval' => config('queue-monitor.ui.refresh_interval'),
+                'metricsTimeFrame' => (int) config('queue-monitor.ui.metrics_time_frame', 14),
+                'chartHours' => (int) config('queue-monitor.snapshots.chart_hours', 24),
+                'workerRefreshInterval' => config('queue-monitor.workers.worker_refresh_interval'),
+                'allowRetry' => (bool) config('queue-monitor.ui.allow_retry', true),
+                'allowDeletion' => (bool) config('queue-monitor.ui.allow_deletion', true),
+                'allowPurge' => (bool) config('queue-monitor.ui.allow_purge', true),
+            ],
+            'status' => session('status'),
+            'error' => session('error'),
         ]);
     }
 
@@ -87,6 +117,34 @@ class QueueMonitorController extends ScaffoldController implements HasMiddleware
         $stats = $this->workerMonitorService->getWorkerStats();
 
         return response()->json($stats);
+    }
+
+    public function bulkAction(Request $request): RedirectResponse
+    {
+        $rules = [
+            'action' => ['required', 'string'],
+            'select_all' => ['nullable', 'boolean'],
+        ];
+
+        if ($request->input('action') !== 'purge') {
+            $rules['ids'] = ['required_without:select_all', 'array'];
+            $rules['ids.*'] = ['required'];
+        }
+
+        $request->validate($rules);
+
+        try {
+            $result = $this->service()->handleBulkAction($request);
+        } catch (RuntimeException $runtimeException) {
+            return back()->with('error', $runtimeException->getMessage());
+        }
+
+        $this->handleBulkActionSideEffects(
+            (string) $request->input('action'),
+            $request->boolean('select_all') ? [] : $request->input('ids', [])
+        );
+
+        return back()->with('status', $result['message']);
     }
 
     // =========================================================================
@@ -106,20 +164,20 @@ class QueueMonitorController extends ScaffoldController implements HasMiddleware
     // RETRY — Custom action (not part of standard CRUD)
     // =========================================================================
 
-    public function retry(Request $request, int $id): JsonResponse
+    public function retry(int $id): RedirectResponse
     {
         $monitor = Monitor::query()->findOrFail($id);
 
         if (! $monitor->canBeRetried()) {
-            return response()->json(['status' => 'error', 'message' => 'Job cannot be retried.'], 400);
+            return back()->with('error', 'Job cannot be retried.');
         }
 
         try {
             $monitor->retry();
 
-            return response()->json(['status' => 'success', 'message' => 'Job queued for retry.']);
+            return back()->with('status', 'Job queued for retry.');
         } catch (Exception $exception) {
-            return response()->json(['status' => 'error', 'message' => $exception->getMessage()], 500);
+            return back()->with('error', $exception->getMessage());
         }
     }
 

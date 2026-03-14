@@ -11,6 +11,7 @@ use App\Http\Resources\QueueMonitorResource;
 use App\Models\Monitor;
 use App\Scaffold\ScaffoldDefinition;
 use App\Traits\Scaffoldable;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Date;
@@ -34,6 +35,21 @@ class QueueMonitorService implements ScaffoldServiceInterface
     protected function getResourceClass(): ?string
     {
         return QueueMonitorResource::class;
+    }
+
+    /**
+     * Returns a standard paginator payload for the React datagrid.
+     *
+     * @return array<string, mixed>
+     */
+    public function getPaginatedMonitors(Request $request): array
+    {
+        $paginator = $this->getMonitorPaginator($request);
+        $paginatedArray = $paginator->toArray();
+        $paginatedArray['data'] = QueueMonitorResource::collection($paginator->items())
+            ->resolve(request());
+
+        return $paginatedArray;
     }
 
     // ================================================================
@@ -87,6 +103,44 @@ class QueueMonitorService implements ScaffoldServiceInterface
         if ($queue = $request->input('queue')) {
             $query->where('queue', $queue);
         }
+    }
+
+    protected function applySorting(Builder $query, Request $request): void
+    {
+        $sortBy = (string) ($request->input('sort') ?? $request->input('sort_column') ?? $this->scaffold()->getDefaultSort());
+        $sortOrder = strtolower((string) ($request->input('direction') ?? $request->input('sort_direction') ?? $this->scaffold()->getDefaultSortDirection())) === 'asc'
+            ? 'asc'
+            : 'desc';
+
+        if ($sortBy === 'duration') {
+            $query->orderByRaw(
+                sprintf(
+                    'EXTRACT(EPOCH FROM (COALESCE(finished_at, now()) - COALESCE(started_at, now()))) %s',
+                    $sortOrder
+                )
+            );
+
+            return;
+        }
+
+        if ($sortBy === 'wait') {
+            $query->orderByRaw(
+                sprintf(
+                    'CASE WHEN queued_at IS NOT NULL AND started_at IS NOT NULL THEN EXTRACT(EPOCH FROM (started_at - queued_at)) ELSE NULL END %s NULLS LAST',
+                    $sortOrder
+                )
+            );
+
+            return;
+        }
+
+        $sortableColumns = $this->scaffold()->getSortableColumns();
+        if (! in_array($sortBy, $sortableColumns, true)) {
+            $sortBy = (string) $this->scaffold()->getDefaultSort();
+        }
+
+        $actualSortColumn = $this->scaffold()->getActualSortColumn($sortBy) ?? $sortBy;
+        $query->orderBy($actualSortColumn, $sortOrder);
     }
 
     // ================================================================
@@ -246,5 +300,12 @@ class QueueMonitorService implements ScaffoldServiceInterface
         }
 
         return $this->traitHandleBulkAction($request);
+    }
+
+    private function getMonitorPaginator(Request $request): LengthAwarePaginator
+    {
+        return $this->buildListQuery($request)
+            ->paginate($this->getPerPage($request))
+            ->onEachSide(1);
     }
 }

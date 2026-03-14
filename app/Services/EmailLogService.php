@@ -42,6 +42,18 @@ class EmailLogService implements ScaffoldServiceInterface
         ];
     }
 
+    public function getPaginatedEmailLogs(Request $request): array
+    {
+        $query = $this->buildListQuery($request);
+        $paginator = $query->paginate($this->getPerPage($request))->onEachSide(1);
+        $paginatedArray = $paginator->toArray();
+
+        $paginatedArray['data'] = EmailLogResource::collection($paginator->items())
+            ->resolve(request());
+
+        return $paginatedArray;
+    }
+
     // ================================================================
     // CUSTOM OPTIONS (for form filters)
     // ================================================================
@@ -150,7 +162,20 @@ class EmailLogService implements ScaffoldServiceInterface
             $query->where('email_template_id', $templateId);
         }
 
-        // Date range filter
+        if ($sentAt = $request->input('sent_at')) {
+            $dates = explode(',', $sentAt, 2);
+
+            if (! empty($dates[0])) {
+                $query->whereDate('sent_at', '>=', $dates[0]);
+            }
+
+            if (! empty($dates[1])) {
+                $query->whereDate('sent_at', '<=', $dates[1]);
+            }
+
+            return;
+        }
+
         if ($from = $request->input('sent_at_from')) {
             $query->whereDate('sent_at', '>=', $from);
         }

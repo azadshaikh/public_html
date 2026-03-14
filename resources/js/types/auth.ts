@@ -33,6 +33,17 @@ export type Auth = {
         editAddresses: boolean;
         deleteAddresses: boolean;
         restoreAddresses: boolean;
+        viewEmailProviders: boolean;
+        addEmailProviders: boolean;
+        editEmailProviders: boolean;
+        deleteEmailProviders: boolean;
+        restoreEmailProviders: boolean;
+        viewEmailTemplates: boolean;
+        addEmailTemplates: boolean;
+        editEmailTemplates: boolean;
+        deleteEmailTemplates: boolean;
+        restoreEmailTemplates: boolean;
+        viewEmailLogs: boolean;
     };
     impersonation: {
         active: true;

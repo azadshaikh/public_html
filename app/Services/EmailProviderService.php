@@ -40,6 +40,18 @@ class EmailProviderService implements ScaffoldServiceInterface
         ];
     }
 
+    public function getPaginatedEmailProviders(Request $request): array
+    {
+        $query = $this->buildListQuery($request);
+        $paginator = $query->paginate($this->getPerPage($request))->onEachSide(1);
+        $paginatedArray = $paginator->toArray();
+
+        $paginatedArray['data'] = EmailProviderResource::collection($paginator->items())
+            ->resolve(request());
+
+        return $paginatedArray;
+    }
+
     // ================================================================
     // CUSTOM OPTIONS (for forms)
     // ================================================================
@@ -47,17 +59,17 @@ class EmailProviderService implements ScaffoldServiceInterface
     public function getStatusOptions(): array
     {
         return [
-            'active' => 'Active',
-            'inactive' => 'Inactive',
+            ['value' => 'active', 'label' => 'Active'],
+            ['value' => 'inactive', 'label' => 'Inactive'],
         ];
     }
 
     public function getEncryptionOptions(): array
     {
         return [
-            'tls' => 'TLS',
-            'ssl' => 'SSL',
-            '' => 'None',
+            ['value' => 'tls', 'label' => 'TLS'],
+            ['value' => 'ssl', 'label' => 'SSL'],
+            ['value' => 'none', 'label' => 'None'],
         ];
     }
 
@@ -103,6 +115,31 @@ class EmailProviderService implements ScaffoldServiceInterface
         }
     }
 
+    protected function applyFilters(Builder $query, Request $request): void
+    {
+        if ($createdAt = $request->input('created_at')) {
+            $dates = explode(',', $createdAt, 2);
+
+            if (! empty($dates[0])) {
+                $query->whereDate('created_at', '>=', $dates[0]);
+            }
+
+            if (! empty($dates[1])) {
+                $query->whereDate('created_at', '<=', $dates[1]);
+            }
+
+            return;
+        }
+
+        if ($from = $request->input('created_at_from')) {
+            $query->whereDate('created_at', '>=', $from);
+        }
+
+        if ($to = $request->input('created_at_to')) {
+            $query->whereDate('created_at', '<=', $to);
+        }
+    }
+
     // ================================================================
     // DATA PREPARATION
     // ================================================================
@@ -112,6 +149,9 @@ class EmailProviderService implements ScaffoldServiceInterface
         // Set defaults
         $data['status'] ??= 'active';
         $data['order'] ??= 0;
+        $data['smtp_encryption'] = ($data['smtp_encryption'] ?? 'none') === 'none'
+            ? null
+            : $data['smtp_encryption'];
 
         return $data;
     }
@@ -121,6 +161,12 @@ class EmailProviderService implements ScaffoldServiceInterface
         // Only update password if provided
         if (empty($data['smtp_password'])) {
             unset($data['smtp_password']);
+        }
+
+        if (array_key_exists('smtp_encryption', $data)) {
+            $data['smtp_encryption'] = $data['smtp_encryption'] === 'none'
+                ? null
+                : $data['smtp_encryption'];
         }
 
         return $data;

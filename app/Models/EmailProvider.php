@@ -86,6 +86,10 @@ class EmailProvider extends Model
         'status_class',
     ];
 
+    protected $hidden = [
+        'smtp_password',
+    ];
+
     // =========================================================================
     // STATIC HELPERS
     // =========================================================================
