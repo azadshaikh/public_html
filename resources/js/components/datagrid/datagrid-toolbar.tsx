@@ -203,20 +203,27 @@ export function DatagridToolbar({
 
     return (
         <div className="flex flex-col gap-3 lg:gap-4">
-            <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+            <div className="flex min-w-0 flex-col gap-3 xl:flex-row xl:items-start xl:gap-4">
                 {tabs ? (
                     <Tabs
                         value={activeTabValue}
                         size="comfortable"
-                        className="w-full md:w-auto"
+                        className="min-w-0 flex-1"
                         orientation={isMobile ? 'vertical' : 'horizontal'}
                         onValueChange={onTabChange}
                     >
-                        <TabsList>
+                        <TabsList
+                            className={cn(
+                                'w-full',
+                                !isMobile &&
+                                    'min-w-0 justify-start overflow-x-auto pr-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
+                            )}
+                        >
                             {tabs.items.map((item) => (
                                 <TabsTrigger
                                     key={item.value}
                                     value={item.value}
+                                    className={cn(!isMobile && 'shrink-0')}
                                 >
                                     {item.icon}
                                     <span>{item.label}</span>
@@ -239,11 +246,11 @@ export function DatagridToolbar({
                 )}
 
                 {hasVisibleFilters ? (
-                    <div className="flex w-full flex-col gap-3 lg:w-auto lg:max-w-[42rem] lg:min-w-[24rem] lg:flex-row lg:items-center lg:justify-end">
+                    <div className="flex w-full min-w-0 flex-col gap-3 md:flex-row md:items-center md:justify-end xl:w-auto xl:max-w-[29rem] xl:flex-none">
                         {searchFilters.length > 0 ? (
                             <form
                                 onSubmit={handleSearchSubmit}
-                                className="flex w-full flex-col gap-3 lg:min-w-[21rem] lg:flex-row lg:items-center"
+                                className="flex min-w-0 flex-1 flex-col gap-3 md:flex-row md:items-center md:justify-end"
                             >
                                 <DatagridHiddenInputs
                                     params={{
@@ -262,8 +269,8 @@ export function DatagridToolbar({
                                         key={filter.name}
                                         size="comfortable"
                                         className={cn(
-                                            'w-full lg:min-w-[21rem]',
                                             filter.className,
+                                            'w-full min-w-0 md:flex-1 md:basis-0 xl:flex-none xl:basis-auto xl:w-[14.5rem] xl:min-w-[14.5rem] 2xl:w-[15.5rem] 2xl:min-w-[15.5rem]',
                                         )}
                                     >
                                         <InputGroupAddon>
