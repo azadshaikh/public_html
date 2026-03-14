@@ -86,16 +86,6 @@ class ZiggyRouteFilterTest extends TestCase
         $this->assertContains('roles', $groups);
     }
 
-    public function test_user_with_manage_modules_permission_gets_modules_group(): void
-    {
-        $user = User::factory()->create(['status' => Status::ACTIVE]);
-        $user->givePermissionTo('manage_modules');
-
-        $groups = $this->filter->resolveGroups($user);
-
-        $this->assertContains('modules', $groups);
-    }
-
     public function test_user_without_permissions_does_not_get_restricted_groups(): void
     {
         $user = User::factory()->create(['status' => Status::ACTIVE]);
@@ -104,7 +94,6 @@ class ZiggyRouteFilterTest extends TestCase
 
         $this->assertNotContains('users', $groups);
         $this->assertNotContains('roles', $groups);
-        $this->assertNotContains('modules', $groups);
         $this->assertNotContains('masters', $groups);
         $this->assertNotContains('logs', $groups);
         $this->assertNotContains('broadcast', $groups);
@@ -194,12 +183,14 @@ class ZiggyRouteFilterTest extends TestCase
 
         // Dashboard should be present (authenticated group).
         $this->assertStringContainsString('dashboard', $output);
+        $this->assertStringContainsString('cms.index', $output);
 
         // Users group should be present (has permission).
         $this->assertStringContainsString('app.users.index', $output);
 
         // Masters/logs should be absent (super user only).
         $this->assertStringNotContainsString('app.masters.settings.index', $output);
+        $this->assertStringNotContainsString('app.masters.modules.index', $output);
         $this->assertStringNotContainsString('app.logs.activity-logs.index', $output);
     }
 

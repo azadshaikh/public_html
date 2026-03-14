@@ -552,6 +552,10 @@ abstract class ScaffoldController extends Controller
      */
     protected function enforcePermission(string $ability): void
     {
+        if ($this->scaffold()->requiresSuperUserAccess()) {
+            return;
+        }
+
         $prefix = $this->scaffold()->getPermissionPrefix();
 
         if ($prefix === '') {

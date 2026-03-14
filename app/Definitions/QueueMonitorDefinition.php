@@ -26,6 +26,8 @@ class QueueMonitorDefinition extends ScaffoldDefinition
 
     protected string $entityPlural = 'Monitor Entries';
 
+    protected bool $requiresSuperUserAccess = true;
+
     /**
      * No permission-based status filter — integer status handled in service.
      */

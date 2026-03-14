@@ -22,6 +22,8 @@ class EmailTemplateDefinition extends ScaffoldDefinition
 
     protected string $permissionPrefix = 'email_templates';
 
+    protected bool $requiresSuperUserAccess = true;
+
     protected ?string $statusField = 'status';
 
     public function getModelClass(): string

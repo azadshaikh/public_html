@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Scaffold;
 
+use App\Http\Middleware\EnsureSuperUserAccess;
 use Illuminate\Routing\Controllers\Middleware;
 
 /**
@@ -50,6 +51,11 @@ abstract class ScaffoldDefinition
      * Permission prefix for authorization
      */
     protected string $permissionPrefix = '';
+
+    /**
+     * Whether this scaffold is restricted to super users only.
+     */
+    protected bool $requiresSuperUserAccess = false;
 
     /**
      * Default items per page
@@ -307,6 +313,14 @@ abstract class ScaffoldDefinition
     }
 
     /**
+     * Determine whether this scaffold is restricted to super users.
+     */
+    public function requiresSuperUserAccess(): bool
+    {
+        return $this->requiresSuperUserAccess;
+    }
+
+    /**
      * Get items per page
      */
     public function getPerPage(): int
@@ -440,6 +454,13 @@ abstract class ScaffoldDefinition
      */
     public function getMiddleware(): array
     {
+        if ($this->requiresSuperUserAccess()) {
+            return [
+                new Middleware(EnsureSuperUserAccess::class),
+                new Middleware('throttle:30,1', only: ['bulkAction', 'forceDelete']),
+            ];
+        }
+
         $prefix = $this->getPermissionPrefix();
 
         return [
@@ -508,59 +529,78 @@ abstract class ScaffoldDefinition
 
         return [
             // Row-only: View/Show
-            Action::make('show')
-                ->label('View')
-                ->icon('ri-eye-line')
-                ->route($routePrefix.'.show')
-                ->permission('view_'.$prefix)
-                ->forRow(),
+            $this->withOptionalPermission(
+                Action::make('show')
+                    ->label('View')
+                    ->icon('ri-eye-line')
+                    ->route($routePrefix.'.show')
+                    ->forRow(),
+                'view_'.$prefix,
+            ),
 
             // Row-only: Edit
-            Action::make('edit')
-                ->label('Edit')
-                ->icon('ri-pencil-line')
-                ->route($routePrefix.'.edit')
-                ->permission('edit_'.$prefix)
-                ->forRow(),
+            $this->withOptionalPermission(
+                Action::make('edit')
+                    ->label('Edit')
+                    ->icon('ri-pencil-line')
+                    ->route($routePrefix.'.edit')
+                    ->forRow(),
+                'edit_'.$prefix,
+            ),
 
             // Both row and bulk: Delete (move to trash)
-            Action::make('delete')
-                ->label('Move to Trash')
-                ->icon('ri-delete-bin-line')
-                ->danger()
-                ->route($routePrefix.'.destroy')
-                ->method('DELETE')
-                ->confirm('Are you sure you want to move this item to trash?')
-                ->confirmBulk('Move {count} items to trash?')
-                ->permission('delete_'.$prefix)
-                ->hideOnStatus('trash')
-                ->forBoth(),
+            $this->withOptionalPermission(
+                Action::make('delete')
+                    ->label('Move to Trash')
+                    ->icon('ri-delete-bin-line')
+                    ->danger()
+                    ->route($routePrefix.'.destroy')
+                    ->method('DELETE')
+                    ->confirm('Are you sure you want to move this item to trash?')
+                    ->confirmBulk('Move {count} items to trash?')
+                    ->hideOnStatus('trash')
+                    ->forBoth(),
+                'delete_'.$prefix,
+            ),
 
             // Both row and bulk: Restore (only on trash)
-            Action::make('restore')
-                ->label('Restore')
-                ->icon('ri-refresh-line')
-                ->success()
-                ->route($routePrefix.'.restore')
-                ->method('PATCH')
-                ->confirm('Are you sure you want to restore this item?')
-                ->confirmBulk('Restore {count} items?')
-                ->permission('restore_'.$prefix)
-                ->showOnStatus('trash')
-                ->forBoth(),
+            $this->withOptionalPermission(
+                Action::make('restore')
+                    ->label('Restore')
+                    ->icon('ri-refresh-line')
+                    ->success()
+                    ->route($routePrefix.'.restore')
+                    ->method('PATCH')
+                    ->confirm('Are you sure you want to restore this item?')
+                    ->confirmBulk('Restore {count} items?')
+                    ->showOnStatus('trash')
+                    ->forBoth(),
+                'restore_'.$prefix,
+            ),
 
             // Both row and bulk: Force delete (only on trash)
-            Action::make('force_delete')
-                ->label('Delete Permanently')
-                ->icon('ri-delete-bin-fill')
-                ->danger()
-                ->route($routePrefix.'.force-delete')
-                ->method('DELETE')
-                ->confirm('⚠️ This cannot be undone!')
-                ->confirmBulk('⚠️ Permanently delete {count} items? This cannot be undone!')
-                ->permission('delete_'.$prefix)
-                ->showOnStatus('trash')
-                ->forBoth(),
+            $this->withOptionalPermission(
+                Action::make('force_delete')
+                    ->label('Delete Permanently')
+                    ->icon('ri-delete-bin-fill')
+                    ->danger()
+                    ->route($routePrefix.'.force-delete')
+                    ->method('DELETE')
+                    ->confirm('⚠️ This cannot be undone!')
+                    ->confirmBulk('⚠️ Permanently delete {count} items? This cannot be undone!')
+                    ->showOnStatus('trash')
+                    ->forBoth(),
+                'delete_'.$prefix,
+            ),
         ];
+    }
+
+    protected function withOptionalPermission(Action $action, string $permission): Action
+    {
+        if ($this->requiresSuperUserAccess()) {
+            return $action;
+        }
+
+        return $action->permission($permission);
     }
 }

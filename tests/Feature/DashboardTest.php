@@ -58,7 +58,7 @@ class DashboardTest extends TestCase
                 ->has('summary')
                 ->has('navigation.top', 1)
                 ->has('navigation.cms', 2)
-                ->has('navigation.modules', 2)
+                ->has('navigation.modules', 1)
                 ->where('navigation.top.0.items.0.label', 'Dashboard')
                 ->where('navigation.cms.0.label', 'Manage')
                 ->where('navigation.cms.1.label', 'CMS')
@@ -67,8 +67,6 @@ class DashboardTest extends TestCase
                 ->where('navigation.modules.0.label', 'Todos')
                 ->where('navigation.modules.0.items.0.label', 'Tasks')
                 ->where('navigation.modules.0.items.0.url', route('todos.index'))
-                ->where('navigation.modules.1.items.0.label', 'Modules')
-                ->where('navigation.modules.1.items.0.url', route('app.masters.modules.index'))
                 ->where('navigation.top.0.items.0.active', true)
                 ->where('navigation.top.0.items.0.icon', fn (string $icon): bool => str_starts_with($icon, '<svg'))
                 ->where('navigation.cms.1.items.0.icon', fn (string $icon): bool => str_starts_with($icon, '<svg'))
@@ -76,6 +74,26 @@ class DashboardTest extends TestCase
                 ->has('recentUsers')
                 ->has('recentActivities')
                 ->where('summary.totalUsers', 1));
+    }
+
+    public function test_super_users_can_see_master_navigation_on_the_dashboard(): void
+    {
+        $user = User::factory()->create([
+            'first_name' => 'Super',
+            'last_name' => 'User',
+            'status' => Status::ACTIVE,
+        ]);
+        $user->assignRole(Role::findByName('super_user', 'web'));
+
+        $this->actingAs($user)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->component('dashboard')
+                ->has('navigation.modules', 2)
+                ->where('navigation.modules.1.label', 'Masters')
+                ->where('navigation.modules.1.items.0.label', 'Modules')
+                ->where('navigation.modules.1.items.0.url', route('app.masters.modules.index')));
     }
 
     public function test_dashboard_navigation_is_filtered_by_permission(): void

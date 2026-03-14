@@ -289,12 +289,12 @@ return [
             'weight' => 300,
             'area' => 'modules',
             'show_label' => true,
+            'role' => 'super_user',
             'items' => [
                 'modules' => [
                     'label' => 'Modules',
                     'route' => 'app.masters.modules.index',
                     'icon' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14h-2a2 2 0 1 0 0 4h2v2a2 2 0 0 1-2 2h-3v-2a2 2 0 1 0-4 0v2H7a2 2 0 0 1-2-2v-3h2a2 2 0 1 0 0-4H5V7a2 2 0 0 1 2-2h2v2a2 2 0 1 0 4 0V5h4a2 2 0 0 1 2 2z"></path></svg>',
-                    'permission' => 'manage_modules',
                     'active_patterns' => ['app.masters.modules.*'],
                     'badge' => [
                         'type' => 'static',
@@ -306,32 +306,27 @@ return [
                     'label' => 'Addresses',
                     'route' => 'app.masters.addresses.index',
                     'icon' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0"></path><circle cx="12" cy="10" r="3"></circle></svg>',
-                    'permission' => 'view_addresses',
                     'active_patterns' => ['app.masters.addresses.*'],
                 ],
                 'email' => [
                     'label' => 'Email Management',
                     'route' => 'app.masters.email.providers.index',
                     'icon' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m3 7 9 6 9-6"></path></svg>',
-                    'permission' => 'view_email_providers',
                     'active_patterns' => ['app.masters.email.*'],
                     'children' => [
                         'email_providers' => [
                             'label' => 'Email Providers',
                             'route' => 'app.masters.email.providers.index',
-                            'permission' => 'view_email_providers',
                             'active_patterns' => ['app.masters.email.providers.*'],
                         ],
                         'email_templates' => [
                             'label' => 'Email Templates',
                             'route' => 'app.masters.email.templates.index',
-                            'permission' => 'view_email_templates',
                             'active_patterns' => ['app.masters.email.templates.*'],
                         ],
                         'email_logs' => [
                             'label' => 'Email Logs',
                             'route' => ['name' => 'app.masters.email.logs.index', 'params' => ['status' => 'all']],
-                            'permission' => 'view_email_logs',
                             'active_patterns' => ['app.masters.email.logs.*'],
                         ],
                     ],
@@ -340,7 +335,6 @@ return [
                     'label' => 'Master Settings',
                     'route' => 'app.masters.settings.index',
                     'icon' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0 3 5.4l-6.4 6.4a2 2 0 1 1-2.8-2.8l6.4-6.4a4 4 0 0 0 5.4-3l-3 3-3-3 3-3z"></path><path d="M5 21l2-2"></path></svg>',
-                    'permission' => 'manage_master_settings',
                     'active_patterns' => ['app.masters.settings.*'],
                 ],
                 'laravel_log' => [
@@ -348,14 +342,12 @@ return [
                     'route' => 'log-viewer.index',
                     'icon' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13"></path><path d="M8 12h13"></path><path d="M8 18h13"></path><path d="M3 6h.01"></path><path d="M3 12h.01"></path><path d="M3 18h.01"></path></svg>',
                     'target' => '_blank',
-                    'permission' => 'view_laravel_log',
                     'active_patterns' => ['log-viewer.index'],
                 ],
                 'laravel_jobs' => [
                     'label' => 'Queue Monitor',
                     'route' => 'app.masters.queue-monitor.index',
                     'icon' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 9 5-9 5-9-5z"></path><path d="m3 12 9 5 9-5"></path><path d="m3 17 9 5 9-5"></path></svg>',
-                    'permission' => 'manage_settings',
                     'active_patterns' => ['app.masters.queue-monitor.*'],
                 ],
                 'laravel_tools' => [
@@ -363,7 +355,6 @@ return [
                     'route' => 'app.masters.laravel-tools.index',
                     'icon' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="m7 9 3 3-3 3"></path><path d="M13 15h4"></path></svg>',
                     'hard_reload' => true,
-                    'permission' => 'manage_settings',
                     'active_patterns' => ['app.masters.laravel-tools.*'],
                     'badge' => [
                         'type' => 'static',

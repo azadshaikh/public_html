@@ -27,6 +27,8 @@ class EmailLogDefinition extends ScaffoldDefinition
      */
     protected string $permissionPrefix = 'email_logs';
 
+    protected bool $requiresSuperUserAccess = true;
+
     /**
      * Status field name
      */

@@ -54,14 +54,14 @@ class ModuleManagementTest extends TestCase
             ->assertRedirect(route('login'));
     }
 
-    public function test_authenticated_users_can_view_the_module_management_page(): void
+    public function test_super_users_can_view_the_module_management_page(): void
     {
         $user = User::factory()->create([
             'email_verified_at' => now(),
             'first_name' => 'Module',
             'status' => Status::ACTIVE,
         ]);
-        $user->assignRole(Role::findByName('administrator', 'web'));
+        $user->assignRole(Role::findByName('super_user', 'web'));
 
         $this->actingAs($user)
             ->get(route('app.masters.modules.index'))
@@ -88,14 +88,14 @@ class ModuleManagementTest extends TestCase
                 ->where('managedModules.2.status', 'disabled'));
     }
 
-    public function test_authenticated_users_can_update_module_statuses(): void
+    public function test_super_users_can_update_module_statuses(): void
     {
         $user = User::factory()->create([
             'email_verified_at' => now(),
             'first_name' => 'Module',
             'status' => Status::ACTIVE,
         ]);
-        $user->assignRole(Role::findByName('administrator', 'web'));
+        $user->assignRole(Role::findByName('super_user', 'web'));
 
         $this->actingAs($user)
             ->patch(route('app.masters.modules.update'), [
@@ -115,13 +115,15 @@ class ModuleManagementTest extends TestCase
         ], json_decode((string) File::get($this->manifestPath), true, 512, JSON_THROW_ON_ERROR));
     }
 
-    public function test_authenticated_users_without_permission_cannot_view_the_module_management_page(): void
+    public function test_non_super_users_cannot_view_the_module_management_page(): void
     {
         $user = User::factory()->create([
             'email_verified_at' => now(),
             'first_name' => 'Module',
             'status' => Status::ACTIVE,
         ]);
+
+        $user->assignRole(Role::findByName('administrator', 'web'));
 
         $this->actingAs($user)
             ->get(route('app.masters.modules.index'))

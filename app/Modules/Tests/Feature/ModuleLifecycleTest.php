@@ -62,7 +62,7 @@ class ModuleLifecycleTest extends TestCase
             'first_name' => 'Module',
             'status' => Status::ACTIVE,
         ]);
-        $user->assignRole(Role::findByName('administrator', 'web'));
+        $user->assignRole(Role::findByName('super_user', 'web'));
 
         $this->actingAs($user)
             ->patch(route('app.masters.modules.update'), [
@@ -73,7 +73,7 @@ class ModuleLifecycleTest extends TestCase
                 ],
             ])
             ->assertRedirect(route('app.masters.modules.index'))
-            ->assertSessionHas('status', 'Module settings updated.');
+            ->assertSessionHas('success', 'Module settings updated.');
 
         $this->assertTrue(Schema::hasTable('todo_tasks'));
         $this->assertDatabaseCount('todo_tasks', 4);
@@ -112,7 +112,7 @@ class ModuleLifecycleTest extends TestCase
             'first_name' => 'Module',
             'status' => Status::ACTIVE,
         ]);
-        $user->assignRole(Role::findByName('administrator', 'web'));
+        $user->assignRole(Role::findByName('super_user', 'web'));
 
         $this->actingAs($user)
             ->patch(route('app.masters.modules.update'), [
@@ -123,7 +123,7 @@ class ModuleLifecycleTest extends TestCase
                 ],
             ])
             ->assertRedirect(route('app.masters.modules.index'))
-            ->assertSessionHas('status', 'Module settings updated.');
+            ->assertSessionHas('success', 'Module settings updated.');
 
         $this->assertTrue(Schema::hasTable('todo_tasks'));
         $this->assertDatabaseHas('todo_tasks', [

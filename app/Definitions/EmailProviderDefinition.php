@@ -27,6 +27,8 @@ class EmailProviderDefinition extends ScaffoldDefinition
      */
     protected string $permissionPrefix = 'email_providers';
 
+    protected bool $requiresSuperUserAccess = true;
+
     /**
      * Status field name
      */

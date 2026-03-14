@@ -33,7 +33,6 @@ export function ImpersonationBanner() {
                     <AlertAction>
                         <Button
                             asChild
-                            size="sm"
                             variant="outline"
                             className="border-amber-300 bg-white/80 text-amber-900 hover:bg-white dark:border-amber-400/30 dark:bg-amber-950/40 dark:text-amber-100 dark:hover:bg-amber-950/60"
                         >

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Masters;
 
+use App\Definitions\EmailLogDefinition;
 use App\Http\Resources\EmailLogResource;
 use App\Models\EmailLog;
 use App\Scaffold\ScaffoldController;
@@ -12,7 +13,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
-use Illuminate\Routing\Controllers\Middleware;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -28,9 +28,7 @@ class EmailLogController extends ScaffoldController implements HasMiddleware
 
     public static function middleware(): array
     {
-        return [
-            new Middleware('permission:view_email_logs', only: ['index', 'show']),
-        ];
+        return (new EmailLogDefinition)->getMiddleware();
     }
 
     // ================================================================

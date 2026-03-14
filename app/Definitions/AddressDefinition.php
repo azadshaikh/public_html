@@ -29,6 +29,8 @@ class AddressDefinition extends ScaffoldDefinition
     // Different from route prefix
     protected string $permissionPrefix = 'addresses';
 
+    protected bool $requiresSuperUserAccess = true;
+
     // Addresses don't have a status field - they use soft deletes
     protected ?string $statusField = null;
 

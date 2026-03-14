@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Modules;
 
+use App\Support\Auth\SuperUserAccess;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -12,7 +13,7 @@ class UpdateModulesRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user()?->can('manage_modules') ?? false;
+        return SuperUserAccess::allows($this->user());
     }
 
     /**

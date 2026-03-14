@@ -6,6 +6,7 @@ use App\Helpers\NavigationAggregator;
 use App\Inertia\Properties\UserAvatar;
 use App\Models\User;
 use App\Modules\ModuleManager;
+use App\Support\Auth\SuperUserAccess;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -49,6 +50,7 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         $modules = resolve(ModuleManager::class)->sharedData();
+        $hasMasterAccess = SuperUserAccess::allows($request->user());
 
         return [
             ...parent::share($request),
@@ -67,7 +69,7 @@ class HandleInertiaRequests extends Middleware
                     : null,
                 'abilities' => fn (): array => $request->user()
                     ? [
-                        'manageModules' => $request->user()->can('manage_modules'),
+                        'manageModules' => $hasMasterAccess,
                         'viewRoles' => $request->user()->can('view_roles'),
                         'addRoles' => $request->user()->can('add_roles'),
                         'editRoles' => $request->user()->can('edit_roles'),
@@ -79,22 +81,22 @@ class HandleInertiaRequests extends Middleware
                         'deleteUsers' => $request->user()->can('delete_users'),
                         'restoreUsers' => $request->user()->can('restore_users'),
                         'impersonateUsers' => $request->user()->can('impersonate_users'),
-                        'viewAddresses' => $request->user()->can('view_addresses'),
-                        'addAddresses' => $request->user()->can('add_addresses'),
-                        'editAddresses' => $request->user()->can('edit_addresses'),
-                        'deleteAddresses' => $request->user()->can('delete_addresses'),
-                        'restoreAddresses' => $request->user()->can('restore_addresses'),
-                        'viewEmailProviders' => $request->user()->can('view_email_providers'),
-                        'addEmailProviders' => $request->user()->can('add_email_providers'),
-                        'editEmailProviders' => $request->user()->can('edit_email_providers'),
-                        'deleteEmailProviders' => $request->user()->can('delete_email_providers'),
-                        'restoreEmailProviders' => $request->user()->can('restore_email_providers'),
-                        'viewEmailTemplates' => $request->user()->can('view_email_templates'),
-                        'addEmailTemplates' => $request->user()->can('add_email_templates'),
-                        'editEmailTemplates' => $request->user()->can('edit_email_templates'),
-                        'deleteEmailTemplates' => $request->user()->can('delete_email_templates'),
-                        'restoreEmailTemplates' => $request->user()->can('restore_email_templates'),
-                        'viewEmailLogs' => $request->user()->can('view_email_logs'),
+                        'viewAddresses' => $hasMasterAccess,
+                        'addAddresses' => $hasMasterAccess,
+                        'editAddresses' => $hasMasterAccess,
+                        'deleteAddresses' => $hasMasterAccess,
+                        'restoreAddresses' => $hasMasterAccess,
+                        'viewEmailProviders' => $hasMasterAccess,
+                        'addEmailProviders' => $hasMasterAccess,
+                        'editEmailProviders' => $hasMasterAccess,
+                        'deleteEmailProviders' => $hasMasterAccess,
+                        'restoreEmailProviders' => $hasMasterAccess,
+                        'viewEmailTemplates' => $hasMasterAccess,
+                        'addEmailTemplates' => $hasMasterAccess,
+                        'editEmailTemplates' => $hasMasterAccess,
+                        'deleteEmailTemplates' => $hasMasterAccess,
+                        'restoreEmailTemplates' => $hasMasterAccess,
+                        'viewEmailLogs' => $hasMasterAccess,
                     ]
                     : [
                         'manageModules' => false,

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Masters;
 
 use App\Definitions\EmailTemplateDefinition;
+use App\Http\Middleware\EnsureSuperUserAccess;
 use App\Http\Resources\EmailTemplateResource;
 use App\Models\EmailProvider;
 use App\Models\EmailTemplate;
@@ -29,7 +30,7 @@ class EmailTemplateController extends ScaffoldController implements HasMiddlewar
         return array_merge(
             (new EmailTemplateDefinition)->getMiddleware(),
             [
-                new Middleware('permission:edit_email_templates', only: ['sendTestEmail']),
+                new Middleware(EnsureSuperUserAccess::class, only: ['sendTestEmail']),
             ]
         );
     }

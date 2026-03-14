@@ -3,6 +3,7 @@
 namespace Tests\Feature\Auth;
 
 use App\Enums\Status;
+use App\Http\Middleware\EnsureSuperUserAccess;
 use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\LocalDatagridUsersSeeder;
@@ -20,9 +21,13 @@ class AuthorizationFoundationTest extends TestCase
     {
         parent::setUp();
 
-        Route::middleware(['web', 'auth', 'permission:manage_modules'])
-            ->get('/_test/authorization/manage-modules', fn () => response('ok'))
-            ->name('test.authorization.manage-modules');
+        Route::middleware(['web', 'auth', 'permission:view_users'])
+            ->get('/_test/authorization/view-users', fn () => response('ok'))
+            ->name('test.authorization.view-users');
+
+        Route::middleware(['web', 'auth', EnsureSuperUserAccess::class])
+            ->get('/_test/authorization/super-user-only', fn () => response('ok'))
+            ->name('test.authorization.super-user-only');
 
         Route::middleware(['web', 'auth', 'role:administrator'])
             ->get('/_test/authorization/admin-only', fn () => response('ok'))
@@ -39,15 +44,20 @@ class AuthorizationFoundationTest extends TestCase
         ]);
 
         $this->assertDatabaseHas('permissions', [
-            'name' => 'manage_modules',
-            'display_name' => 'Manage Modules',
-            'group' => 'system',
+            'name' => 'view_users',
+            'display_name' => 'View Users',
+            'group' => 'users',
             'module_slug' => 'application',
+        ]);
+
+        $this->assertDatabaseMissing('permissions', [
+            'name' => 'manage_modules',
+            'guard_name' => 'web',
         ]);
 
         $administrator = Role::findByName('administrator');
 
-        $this->assertTrue($administrator->hasPermissionTo('manage_modules', 'web'));
+        $this->assertTrue($administrator->hasPermissionTo('view_users', 'web'));
         $this->assertTrue($administrator->hasPermissionTo('edit_roles', 'web'));
         $this->assertTrue($administrator->hasPermissionTo('add_users', 'web'));
         $this->assertTrue($administrator->hasPermissionTo('delete_users', 'web'));
@@ -60,7 +70,7 @@ class AuthorizationFoundationTest extends TestCase
         $user = User::factory()->create();
         $user->assignRole('super_user');
 
-        $this->assertTrue($user->fresh()->can('manage_modules'));
+        $this->assertTrue($user->fresh()->can('view_users'));
         $this->assertTrue($user->fresh()->can('delete_roles'));
     }
 
@@ -71,14 +81,33 @@ class AuthorizationFoundationTest extends TestCase
         $unauthorizedUser = User::factory()->create();
 
         $this->actingAs($unauthorizedUser)
-            ->get('/_test/authorization/manage-modules')
+            ->get('/_test/authorization/view-users')
             ->assertForbidden();
 
         $authorizedUser = User::factory()->create();
         $authorizedUser->assignRole('administrator');
 
         $this->actingAs($authorizedUser)
-            ->get('/_test/authorization/manage-modules')
+            ->get('/_test/authorization/view-users')
+            ->assertOk();
+    }
+
+    public function test_super_user_only_middleware_blocks_non_super_users_and_allows_super_users(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $administrator = User::factory()->create();
+        $administrator->assignRole('administrator');
+
+        $this->actingAs($administrator)
+            ->get('/_test/authorization/super-user-only')
+            ->assertForbidden();
+
+        $superUser = User::factory()->create();
+        $superUser->assignRole('super_user');
+
+        $this->actingAs($superUser)
+            ->get('/_test/authorization/super-user-only')
             ->assertOk();
     }
 

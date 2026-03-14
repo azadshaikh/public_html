@@ -266,253 +266,253 @@ Route::prefix($adminPrefix)->group(function (): void {
                 Route::post('/store', [CommentsController::class, 'store'])->name('store');
             });
 
-            // --- Masters: Modules Management ---
-            Route::middleware('can:manage_modules')->group(function (): void {
+            Route::middleware(EnsureSuperUserAccess::class)->group(function (): void {
+                // --- Masters: Modules Management ---
                 Route::group(['prefix' => 'masters/modules', 'as' => 'masters.modules.'], function (): void {
                     Route::get('/', [ModuleController::class, 'index'])->name('index');
                     Route::patch('/', [ModuleController::class, 'update'])->name('update');
                 });
-            });
 
-            // --- Masters: Addresses Management ---
-            Route::group(['prefix' => 'masters/addresses', 'as' => 'masters.addresses.'], function (): void {
-                // Specific routes FIRST (more specific patterns)
-                Route::get('/create', [AddressController::class, 'create'])->name('create');
-                Route::get('/{address}', [AddressController::class, 'show'])->name('show')->where('address', '[0-9]+');
-                Route::get('/{address}/edit', [AddressController::class, 'edit'])->name('edit');
-                Route::post('/', [AddressController::class, 'store'])->name('store');
-                Route::put('/{address}', [AddressController::class, 'update'])->name('update');
-                Route::delete('/{address}/delete', [AddressController::class, 'destroy'])->name('destroy');
-                Route::delete('/{address}/force-delete', [AddressController::class, 'forceDelete'])->name('force-delete');
-                Route::patch('/{address}/restore', [AddressController::class, 'restore'])->name('restore');
-                Route::post('/bulk-action', [AddressController::class, 'bulkAction'])->name('bulk-action');
+                // --- Masters: Addresses Management ---
+                Route::group(['prefix' => 'masters/addresses', 'as' => 'masters.addresses.'], function (): void {
+                    // Specific routes FIRST (more specific patterns)
+                    Route::get('/create', [AddressController::class, 'create'])->name('create');
+                    Route::get('/{address}', [AddressController::class, 'show'])->name('show')->where('address', '[0-9]+');
+                    Route::get('/{address}/edit', [AddressController::class, 'edit'])->name('edit');
+                    Route::post('/', [AddressController::class, 'store'])->name('store');
+                    Route::put('/{address}', [AddressController::class, 'update'])->name('update');
+                    Route::delete('/{address}/delete', [AddressController::class, 'destroy'])->name('destroy');
+                    Route::delete('/{address}/force-delete', [AddressController::class, 'forceDelete'])->name('force-delete');
+                    Route::patch('/{address}/restore', [AddressController::class, 'restore'])->name('restore');
+                    Route::post('/bulk-action', [AddressController::class, 'bulkAction'])->name('bulk-action');
 
-                // Generic routes LAST (catch-all patterns)
-                Route::get('/{status?}', [AddressController::class, 'index'])->name('index')->where('status', '^(all|trash)$');
-            });
-
-            // --- Logs: Activity Logs Management ---
-            Route::group(['prefix' => 'logs/activity-logs', 'as' => 'logs.activity-logs.'], function (): void {
-                // Non-parameterized routes first
-                Route::post('bulk-action', [ActivityLogController::class, 'bulkAction'])->name('bulk-action');
-                Route::post('cleanup', [ActivityLogController::class, 'cleanup'])->name('cleanup');
-                Route::post('export', [ActivityLogController::class, 'export'])->name('export');
-                Route::get('statistics', [ActivityLogController::class, 'statistics'])->name('statistics');
-
-                // Parameterized routes
-                Route::get('{activityLog}', [ActivityLogController::class, 'show'])->name('show')->where('activityLog', '[0-9]+');
-                Route::delete('{activityLog}', [ActivityLogController::class, 'destroy'])->name('destroy')->where('activityLog', '[0-9]+');
-                Route::delete('{activityLog}/force-delete', [ActivityLogController::class, 'forceDelete'])->name('force-delete')->where('activityLog', '[0-9]+');
-                Route::patch('{activityLog}/restore', [ActivityLogController::class, 'restore'])->name('restore')->where('activityLog', '[0-9]+');
-
-                // Index with optional status (must be last)
-                Route::get('/{status?}', [ActivityLogController::class, 'index'])
-                    ->name('index')
-                    ->where('status', '^(all|trash)$');
-            });
-
-            // --- Logs: Login Attempts Management ---
-            Route::group(['prefix' => 'logs/login-attempts', 'as' => 'logs.login-attempts.'], function (): void {
-                // Non-parameterized routes first
-                Route::post('bulk-action', [LoginAttemptController::class, 'bulkAction'])->name('bulk-action');
-                Route::post('cleanup', [LoginAttemptController::class, 'cleanup'])->name('cleanup');
-                Route::post('clear-rate-limit', [LoginAttemptController::class, 'clearRateLimit'])->name('clear-rate-limit');
-                Route::get('blocked-ips', [LoginAttemptController::class, 'getBlockedIps'])->name('blocked-ips');
-
-                // Parameterized routes
-                Route::get('{loginAttempt}', [LoginAttemptController::class, 'show'])->name('show')->where('loginAttempt', '[0-9]+');
-                Route::delete('{loginAttempt}', [LoginAttemptController::class, 'destroy'])->name('destroy')->where('loginAttempt', '[0-9]+');
-                Route::delete('{loginAttempt}/force-delete', [LoginAttemptController::class, 'forceDelete'])->name('force-delete')->where('loginAttempt', '[0-9]+');
-                Route::patch('{loginAttempt}/restore', [LoginAttemptController::class, 'restore'])->name('restore')->where('loginAttempt', '[0-9]+');
-
-                // Index with optional status (must be last)
-                Route::get('/{status?}', [LoginAttemptController::class, 'index'])
-                    ->name('index')
-                    ->where('status', '^(all|success|failed|blocked|trash)$');
-            });
-
-            // --- Logs: 404 Logs Management ---
-            Route::group(['prefix' => 'logs/not-found-logs', 'as' => 'logs.not-found-logs.'], function (): void {
-                // Non-parameterized routes first
-                Route::post('bulk-action', [NotFoundLogController::class, 'bulkAction'])->name('bulk-action');
-                Route::post('cleanup', [NotFoundLogController::class, 'cleanup'])->name('cleanup');
-                Route::get('statistics', [NotFoundLogController::class, 'statistics'])->name('statistics');
-
-                // Parameterized routes
-                Route::get('{notFoundLog}', [NotFoundLogController::class, 'show'])->name('show')->where('notFoundLog', '[0-9]+');
-                Route::delete('{notFoundLog}', [NotFoundLogController::class, 'destroy'])->name('destroy')->where('notFoundLog', '[0-9]+');
-                Route::delete('{notFoundLog}/force-delete', [NotFoundLogController::class, 'forceDelete'])->name('force-delete')->where('notFoundLog', '[0-9]+');
-                Route::patch('{notFoundLog}/restore', [NotFoundLogController::class, 'restore'])->name('restore')->where('notFoundLog', '[0-9]+');
-
-                // Index with optional status (must be last)
-                Route::get('/{status?}', [NotFoundLogController::class, 'index'])
-                    ->name('index')
-                    ->where('status', '^(all|suspicious|bots|human|trash)$');
-            });
-
-            // --- Masters: General Settings ---
-            Route::group(['prefix' => 'masters/settings', 'as' => 'masters.settings.'], function (): void {
-                Route::get('/', [MastersSettingsController::class, 'index'])->name('index');
-
-                // Per-section pages
-                Route::get('/app', [MastersSettingsController::class, 'app'])->name('app');
-                Route::get('/branding', [MastersSettingsController::class, 'branding'])->name('branding');
-                Route::get('/login-security', [MastersSettingsController::class, 'loginSecurity'])->name('login-security');
-                Route::get('/email', [MastersSettingsController::class, 'email'])->name('email');
-                Route::get('/storage', [MastersSettingsController::class, 'storage'])->name('storage');
-                Route::get('/media', [MastersSettingsController::class, 'media'])->name('media');
-                Route::get('/debug', [MastersSettingsController::class, 'debug'])->name('debug');
-
-                // Updates + actions
-                Route::put('/{meta_group}/update', [MastersSettingsController::class, 'update'])->name('update');
-                Route::post('/email/send-test-mail', [MastersSettingsController::class, 'sendTestMail'])->name('send-test-mail');
-                Route::post('/storage/test-connection', [MastersSettingsController::class, 'testStorageConnection'])->name('test-storage-connection');
-            });
-
-            // --- Masters: Laravel Tools ---
-            Route::group(['prefix' => 'masters/laravel-tools', 'as' => 'masters.laravel-tools.'], function (): void {
-                Route::get('/', [LaravelToolsController::class, 'index'])->name('index');
-
-                // ENV Editor
-                Route::get('/env', [LaravelToolsController::class, 'envEditor'])->name('env');
-                Route::put('/env', [LaravelToolsController::class, 'updateEnv'])->name('env.update');
-                Route::post('/env/restore', [LaravelToolsController::class, 'restoreEnvBackup'])->name('env.restore');
-                Route::get('/env/backups', [LaravelToolsController::class, 'getEnvBackupsList'])->name('env.backups');
-
-                // Artisan Runner
-                Route::get('/artisan', [LaravelToolsController::class, 'artisanRunner'])->name('artisan');
-                Route::post('/artisan/run', [LaravelToolsController::class, 'runArtisan'])->name('artisan.run');
-
-                // Config Browser
-                Route::get('/config', [LaravelToolsController::class, 'configBrowser'])->name('config');
-                Route::get('/config/values', [LaravelToolsController::class, 'getConfigValues'])->name('config.values');
-
-                // Log Viewer
-                Route::get('/logs', [LaravelToolsController::class, 'logViewer'])->name('logs');
-                Route::get('/logs/entries', [LaravelToolsController::class, 'getLogEntries'])->name('logs.entries');
-                Route::delete('/logs/{filename}', [LaravelToolsController::class, 'deleteLog'])->name('logs.delete');
-
-                // Laravel Queue
-                Route::get('/queue', [LaravelToolsController::class, 'queueMonitor'])->name('queue');
-                Route::get('/queue/data', [LaravelToolsController::class, 'getQueueData'])->name('queue.data');
-                Route::post('/queue/retry/{monitor}', [LaravelToolsController::class, 'retryQueueJob'])->name('queue.retry');
-                Route::delete('/queue/{monitor}', [LaravelToolsController::class, 'deleteQueueJob'])->name('queue.delete');
-                Route::delete('/queue/purge', [LaravelToolsController::class, 'purgeQueueJobs'])->name('queue.purge');
-
-                // Route List
-                Route::get('/routes', [LaravelToolsController::class, 'routeList'])->name('routes');
-                Route::get('/routes/list', [LaravelToolsController::class, 'getRoutes'])->name('routes.list');
-
-                // PHP Diagnostics
-                Route::get('/php', [LaravelToolsController::class, 'phpDiagnostics'])->name('php');
-            });
-
-            // --- Masters: Email Management ---
-            Route::group(['prefix' => 'masters/email', 'as' => 'masters.email.'], function (): void {
-                // Email Providers
-                Route::group(['prefix' => 'providers', 'as' => 'providers.'], function (): void {
-                    // ========================================
-                    // STATIC ROUTES FIRST
-                    // ========================================
-
-                    // Bulk action
-                    Route::post('/bulk-action', [EmailProviderController::class, 'bulkAction'])->name('bulk-action');
-
-                    // Create
-                    Route::get('/create', [EmailProviderController::class, 'create'])->name('create');
-                    Route::post('/', [EmailProviderController::class, 'store'])->name('store');
-
-                    // ========================================
-                    // PARAMETERIZED ROUTES NEXT
-                    // ⚠️ Must have ->where() constraint to not catch status routes!
-                    // ========================================
-
-                    // Show (with numeric constraint)
-                    Route::get('/{emailProvider}', [EmailProviderController::class, 'show'])
-                        ->name('show')
-                        ->where('emailProvider', '[0-9]+');
-
-                    // Edit
-                    Route::get('/{emailProvider}/edit', [EmailProviderController::class, 'edit'])->name('edit');
-                    Route::put('/{emailProvider}', [EmailProviderController::class, 'update'])->name('update');
-
-                    // Delete
-                    Route::delete('/{emailProvider}', [EmailProviderController::class, 'destroy'])->name('destroy');
-                    Route::delete('/{emailProvider}/force-delete', [EmailProviderController::class, 'forceDelete'])->name('force-delete');
-                    Route::patch('/{emailProvider}/restore', [EmailProviderController::class, 'restore'])->name('restore');
-
-                    // ========================================
-                    // CATCH-ALL ROUTES LAST
-                    // ========================================
-
-                    // Index with optional status (MUST be last!)
-                    Route::get('/{status?}', [EmailProviderController::class, 'index'])
-                        ->name('index')
-                        ->where('status', '^(all|active|inactive|trash)$');
+                    // Generic routes LAST (catch-all patterns)
+                    Route::get('/{status?}', [AddressController::class, 'index'])->name('index')->where('status', '^(all|trash)$');
                 });
-                // Email Templates
-                Route::group(['prefix' => 'templates', 'as' => 'templates.'], function (): void {
-                    // ========================================
-                    // STATIC ROUTES FIRST
-                    // ========================================
 
-                    // Bulk action
-                    Route::post('/bulk-action', [EmailTemplateController::class, 'bulkAction'])->name('bulk-action');
+                // --- Logs: Activity Logs Management ---
+                Route::group(['prefix' => 'logs/activity-logs', 'as' => 'logs.activity-logs.'], function (): void {
+                    // Non-parameterized routes first
+                    Route::post('bulk-action', [ActivityLogController::class, 'bulkAction'])->name('bulk-action');
+                    Route::post('cleanup', [ActivityLogController::class, 'cleanup'])->name('cleanup');
+                    Route::post('export', [ActivityLogController::class, 'export'])->name('export');
+                    Route::get('statistics', [ActivityLogController::class, 'statistics'])->name('statistics');
 
-                    // Create
-                    Route::get('/create', [EmailTemplateController::class, 'create'])->name('create');
-                    Route::post('/', [EmailTemplateController::class, 'store'])->name('store');
+                    // Parameterized routes
+                    Route::get('{activityLog}', [ActivityLogController::class, 'show'])->name('show')->where('activityLog', '[0-9]+');
+                    Route::delete('{activityLog}', [ActivityLogController::class, 'destroy'])->name('destroy')->where('activityLog', '[0-9]+');
+                    Route::delete('{activityLog}/force-delete', [ActivityLogController::class, 'forceDelete'])->name('force-delete')->where('activityLog', '[0-9]+');
+                    Route::patch('{activityLog}/restore', [ActivityLogController::class, 'restore'])->name('restore')->where('activityLog', '[0-9]+');
 
-                    // ========================================
-                    // PARAMETERIZED ROUTES NEXT
-                    // ⚠️ Must have ->where() constraint to not catch status routes!
-                    // ========================================
-
-                    // Show (with numeric constraint)
-                    Route::get('/{emailTemplate}', [EmailTemplateController::class, 'show'])
-                        ->name('show')
-                        ->where('emailTemplate', '[0-9]+');
-
-                    // Edit
-                    Route::get('/{emailTemplate}/edit', [EmailTemplateController::class, 'edit'])->name('edit');
-                    Route::put('/{emailTemplate}', [EmailTemplateController::class, 'update'])->name('update');
-
-                    // Delete
-                    Route::delete('/{emailTemplate}', [EmailTemplateController::class, 'destroy'])->name('destroy');
-                    Route::delete('/{emailTemplate}/force-delete', [EmailTemplateController::class, 'forceDelete'])->name('force-delete');
-                    Route::patch('/{emailTemplate}/restore', [EmailTemplateController::class, 'restore'])->name('restore');
-
-                    // Send test email
-                    Route::post('/{emailTemplate}/send-test', [EmailTemplateController::class, 'sendTestEmail'])->name('send-test');
-
-                    // ========================================
-                    // CATCH-ALL ROUTES LAST
-                    // ========================================
-
-                    // Index with optional status (MUST be last!)
-                    Route::get('/{status?}', [EmailTemplateController::class, 'index'])
+                    // Index with optional status (must be last)
+                    Route::get('/{status?}', [ActivityLogController::class, 'index'])
                         ->name('index')
-                        ->where('status', '^(all|active|inactive|trash)$');
+                        ->where('status', '^(all|trash)$');
                 });
-                // Email Logs (Read-only, no create/edit)
-                Route::group(['prefix' => 'logs', 'as' => 'logs.'], function (): void {
-                    // ========================================
-                    // PARAMETERIZED ROUTES
-                    // =========================================
 
-                    // Show (with numeric constraint)
-                    Route::get('/{emailLog}', [EmailLogController::class, 'show'])
-                        ->name('show')
-                        ->where('emailLog', '[0-9]+');
+                // --- Logs: Login Attempts Management ---
+                Route::group(['prefix' => 'logs/login-attempts', 'as' => 'logs.login-attempts.'], function (): void {
+                    // Non-parameterized routes first
+                    Route::post('bulk-action', [LoginAttemptController::class, 'bulkAction'])->name('bulk-action');
+                    Route::post('cleanup', [LoginAttemptController::class, 'cleanup'])->name('cleanup');
+                    Route::post('clear-rate-limit', [LoginAttemptController::class, 'clearRateLimit'])->name('clear-rate-limit');
+                    Route::get('blocked-ips', [LoginAttemptController::class, 'getBlockedIps'])->name('blocked-ips');
 
-                    // ========================================
-                    // CATCH-ALL ROUTES LAST
-                    // ========================================
+                    // Parameterized routes
+                    Route::get('{loginAttempt}', [LoginAttemptController::class, 'show'])->name('show')->where('loginAttempt', '[0-9]+');
+                    Route::delete('{loginAttempt}', [LoginAttemptController::class, 'destroy'])->name('destroy')->where('loginAttempt', '[0-9]+');
+                    Route::delete('{loginAttempt}/force-delete', [LoginAttemptController::class, 'forceDelete'])->name('force-delete')->where('loginAttempt', '[0-9]+');
+                    Route::patch('{loginAttempt}/restore', [LoginAttemptController::class, 'restore'])->name('restore')->where('loginAttempt', '[0-9]+');
 
-                    // Index with optional status (MUST be last!)
-                    Route::get('/{status?}', [EmailLogController::class, 'index'])
+                    // Index with optional status (must be last)
+                    Route::get('/{status?}', [LoginAttemptController::class, 'index'])
                         ->name('index')
-                        ->where('status', '^(all|sent|failed|queued)$');
+                        ->where('status', '^(all|success|failed|blocked|trash)$');
+                });
+
+                // --- Logs: 404 Logs Management ---
+                Route::group(['prefix' => 'logs/not-found-logs', 'as' => 'logs.not-found-logs.'], function (): void {
+                    // Non-parameterized routes first
+                    Route::post('bulk-action', [NotFoundLogController::class, 'bulkAction'])->name('bulk-action');
+                    Route::post('cleanup', [NotFoundLogController::class, 'cleanup'])->name('cleanup');
+                    Route::get('statistics', [NotFoundLogController::class, 'statistics'])->name('statistics');
+
+                    // Parameterized routes
+                    Route::get('{notFoundLog}', [NotFoundLogController::class, 'show'])->name('show')->where('notFoundLog', '[0-9]+');
+                    Route::delete('{notFoundLog}', [NotFoundLogController::class, 'destroy'])->name('destroy')->where('notFoundLog', '[0-9]+');
+                    Route::delete('{notFoundLog}/force-delete', [NotFoundLogController::class, 'forceDelete'])->name('force-delete')->where('notFoundLog', '[0-9]+');
+                    Route::patch('{notFoundLog}/restore', [NotFoundLogController::class, 'restore'])->name('restore')->where('notFoundLog', '[0-9]+');
+
+                    // Index with optional status (must be last)
+                    Route::get('/{status?}', [NotFoundLogController::class, 'index'])
+                        ->name('index')
+                        ->where('status', '^(all|suspicious|bots|human|trash)$');
+                });
+
+                // --- Masters: General Settings ---
+                Route::group(['prefix' => 'masters/settings', 'as' => 'masters.settings.'], function (): void {
+                    Route::get('/', [MastersSettingsController::class, 'index'])->name('index');
+
+                    // Per-section pages
+                    Route::get('/app', [MastersSettingsController::class, 'app'])->name('app');
+                    Route::get('/branding', [MastersSettingsController::class, 'branding'])->name('branding');
+                    Route::get('/login-security', [MastersSettingsController::class, 'loginSecurity'])->name('login-security');
+                    Route::get('/email', [MastersSettingsController::class, 'email'])->name('email');
+                    Route::get('/storage', [MastersSettingsController::class, 'storage'])->name('storage');
+                    Route::get('/media', [MastersSettingsController::class, 'media'])->name('media');
+                    Route::get('/debug', [MastersSettingsController::class, 'debug'])->name('debug');
+
+                    // Updates + actions
+                    Route::put('/{meta_group}/update', [MastersSettingsController::class, 'update'])->name('update');
+                    Route::post('/email/send-test-mail', [MastersSettingsController::class, 'sendTestMail'])->name('send-test-mail');
+                    Route::post('/storage/test-connection', [MastersSettingsController::class, 'testStorageConnection'])->name('test-storage-connection');
+                });
+
+                // --- Masters: Laravel Tools ---
+                Route::group(['prefix' => 'masters/laravel-tools', 'as' => 'masters.laravel-tools.'], function (): void {
+                    Route::get('/', [LaravelToolsController::class, 'index'])->name('index');
+
+                    // ENV Editor
+                    Route::get('/env', [LaravelToolsController::class, 'envEditor'])->name('env');
+                    Route::put('/env', [LaravelToolsController::class, 'updateEnv'])->name('env.update');
+                    Route::post('/env/restore', [LaravelToolsController::class, 'restoreEnvBackup'])->name('env.restore');
+                    Route::get('/env/backups', [LaravelToolsController::class, 'getEnvBackupsList'])->name('env.backups');
+
+                    // Artisan Runner
+                    Route::get('/artisan', [LaravelToolsController::class, 'artisanRunner'])->name('artisan');
+                    Route::post('/artisan/run', [LaravelToolsController::class, 'runArtisan'])->name('artisan.run');
+
+                    // Config Browser
+                    Route::get('/config', [LaravelToolsController::class, 'configBrowser'])->name('config');
+                    Route::get('/config/values', [LaravelToolsController::class, 'getConfigValues'])->name('config.values');
+
+                    // Log Viewer
+                    Route::get('/logs', [LaravelToolsController::class, 'logViewer'])->name('logs');
+                    Route::get('/logs/entries', [LaravelToolsController::class, 'getLogEntries'])->name('logs.entries');
+                    Route::delete('/logs/{filename}', [LaravelToolsController::class, 'deleteLog'])->name('logs.delete');
+
+                    // Laravel Queue
+                    Route::get('/queue', [LaravelToolsController::class, 'queueMonitor'])->name('queue');
+                    Route::get('/queue/data', [LaravelToolsController::class, 'getQueueData'])->name('queue.data');
+                    Route::post('/queue/retry/{monitor}', [LaravelToolsController::class, 'retryQueueJob'])->name('queue.retry');
+                    Route::delete('/queue/{monitor}', [LaravelToolsController::class, 'deleteQueueJob'])->name('queue.delete');
+                    Route::delete('/queue/purge', [LaravelToolsController::class, 'purgeQueueJobs'])->name('queue.purge');
+
+                    // Route List
+                    Route::get('/routes', [LaravelToolsController::class, 'routeList'])->name('routes');
+                    Route::get('/routes/list', [LaravelToolsController::class, 'getRoutes'])->name('routes.list');
+
+                    // PHP Diagnostics
+                    Route::get('/php', [LaravelToolsController::class, 'phpDiagnostics'])->name('php');
+                });
+
+                // --- Masters: Email Management ---
+                Route::group(['prefix' => 'masters/email', 'as' => 'masters.email.'], function (): void {
+                    // Email Providers
+                    Route::group(['prefix' => 'providers', 'as' => 'providers.'], function (): void {
+                        // ========================================
+                        // STATIC ROUTES FIRST
+                        // ========================================
+
+                        // Bulk action
+                        Route::post('/bulk-action', [EmailProviderController::class, 'bulkAction'])->name('bulk-action');
+
+                        // Create
+                        Route::get('/create', [EmailProviderController::class, 'create'])->name('create');
+                        Route::post('/', [EmailProviderController::class, 'store'])->name('store');
+
+                        // ========================================
+                        // PARAMETERIZED ROUTES NEXT
+                        // ⚠️ Must have ->where() constraint to not catch status routes!
+                        // ========================================
+
+                        // Show (with numeric constraint)
+                        Route::get('/{emailProvider}', [EmailProviderController::class, 'show'])
+                            ->name('show')
+                            ->where('emailProvider', '[0-9]+');
+
+                        // Edit
+                        Route::get('/{emailProvider}/edit', [EmailProviderController::class, 'edit'])->name('edit');
+                        Route::put('/{emailProvider}', [EmailProviderController::class, 'update'])->name('update');
+
+                        // Delete
+                        Route::delete('/{emailProvider}', [EmailProviderController::class, 'destroy'])->name('destroy');
+                        Route::delete('/{emailProvider}/force-delete', [EmailProviderController::class, 'forceDelete'])->name('force-delete');
+                        Route::patch('/{emailProvider}/restore', [EmailProviderController::class, 'restore'])->name('restore');
+
+                        // ========================================
+                        // CATCH-ALL ROUTES LAST
+                        // ========================================
+
+                        // Index with optional status (MUST be last!)
+                        Route::get('/{status?}', [EmailProviderController::class, 'index'])
+                            ->name('index')
+                            ->where('status', '^(all|active|inactive|trash)$');
+                    });
+                    // Email Templates
+                    Route::group(['prefix' => 'templates', 'as' => 'templates.'], function (): void {
+                        // ========================================
+                        // STATIC ROUTES FIRST
+                        // ========================================
+
+                        // Bulk action
+                        Route::post('/bulk-action', [EmailTemplateController::class, 'bulkAction'])->name('bulk-action');
+
+                        // Create
+                        Route::get('/create', [EmailTemplateController::class, 'create'])->name('create');
+                        Route::post('/', [EmailTemplateController::class, 'store'])->name('store');
+
+                        // ========================================
+                        // PARAMETERIZED ROUTES NEXT
+                        // ⚠️ Must have ->where() constraint to not catch status routes!
+                        // ========================================
+
+                        // Show (with numeric constraint)
+                        Route::get('/{emailTemplate}', [EmailTemplateController::class, 'show'])
+                            ->name('show')
+                            ->where('emailTemplate', '[0-9]+');
+
+                        // Edit
+                        Route::get('/{emailTemplate}/edit', [EmailTemplateController::class, 'edit'])->name('edit');
+                        Route::put('/{emailTemplate}', [EmailTemplateController::class, 'update'])->name('update');
+
+                        // Delete
+                        Route::delete('/{emailTemplate}', [EmailTemplateController::class, 'destroy'])->name('destroy');
+                        Route::delete('/{emailTemplate}/force-delete', [EmailTemplateController::class, 'forceDelete'])->name('force-delete');
+                        Route::patch('/{emailTemplate}/restore', [EmailTemplateController::class, 'restore'])->name('restore');
+
+                        // Send test email
+                        Route::post('/{emailTemplate}/send-test', [EmailTemplateController::class, 'sendTestEmail'])->name('send-test');
+
+                        // ========================================
+                        // CATCH-ALL ROUTES LAST
+                        // ========================================
+
+                        // Index with optional status (MUST be last!)
+                        Route::get('/{status?}', [EmailTemplateController::class, 'index'])
+                            ->name('index')
+                            ->where('status', '^(all|active|inactive|trash)$');
+                    });
+                    // Email Logs (Read-only, no create/edit)
+                    Route::group(['prefix' => 'logs', 'as' => 'logs.'], function (): void {
+                        // ========================================
+                        // PARAMETERIZED ROUTES
+                        // =========================================
+
+                        // Show (with numeric constraint)
+                        Route::get('/{emailLog}', [EmailLogController::class, 'show'])
+                            ->name('show')
+                            ->where('emailLog', '[0-9]+');
+
+                        // ========================================
+                        // CATCH-ALL ROUTES LAST
+                        // ========================================
+
+                        // Index with optional status (MUST be last!)
+                        Route::get('/{status?}', [EmailLogController::class, 'index'])
+                            ->name('index')
+                            ->where('status', '^(all|sent|failed|queued)$');
+                    });
                 });
             });
 
@@ -570,7 +570,8 @@ Route::prefix($adminPrefix)->group(function (): void {
         });
 
         // --- Queue Monitor ---
-        Route::prefix('masters/queue-monitor')
+        Route::middleware(EnsureSuperUserAccess::class)
+            ->prefix('masters/queue-monitor')
             ->name('app.masters.queue-monitor.')
             ->controller(QueueMonitorController::class)
             ->group(function (): void {

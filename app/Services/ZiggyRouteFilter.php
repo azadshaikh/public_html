@@ -25,7 +25,6 @@ class ZiggyRouteFilter
     private const GROUP_PERMISSIONS = [
         'users' => 'view_users',
         'roles' => 'view_roles',
-        'modules' => 'manage_modules',
     ];
 
     /**

@@ -7,7 +7,7 @@ namespace App\Http\Resources;
 use App\Models\EmailLog;
 use App\Models\EmailProvider;
 use App\Models\EmailTemplate;
-use App\Support\Auth\PermissionMemoizer;
+use App\Support\Auth\SuperUserAccess;
 use App\Traits\DateTimeFormattingTrait;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -107,7 +107,7 @@ class EmailLogResource extends JsonResource
     {
         $actions = [];
 
-        if (PermissionMemoizer::can('view_email_logs')) {
+        if (SuperUserAccess::allows(auth()->user())) {
             $actions['view'] = [
                 'url' => route('app.masters.email.logs.show', $emailLog->getKey()),
                 'label' => 'View Details',

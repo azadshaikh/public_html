@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Modules\ModuleManager;
+use App\Support\Auth\SuperUserAccess;
 use Closure;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -22,7 +23,11 @@ class EnsureModuleIsEnabled
     public function handle(Request $request, Closure $next, string $module): Response|RedirectResponse
     {
         if (! $this->moduleManager->isEnabled($module)) {
-            return to_route('app.masters.modules.index')->with('error', 'That module is disabled.');
+            $route = SuperUserAccess::allows($request->user())
+                ? 'app.masters.modules.index'
+                : 'dashboard';
+
+            return to_route($route)->with('error', 'That module is disabled.');
         }
 
         return $next($request);

@@ -87,12 +87,6 @@ class PermissionSeeder extends Seeder
                 'group' => 'dashboard',
                 'module_slug' => 'application',
             ],
-            [
-                'name' => 'manage_modules',
-                'display_name' => 'Manage Modules',
-                'group' => 'system',
-                'module_slug' => 'application',
-            ],
             // Media Permissions
             [
                 'name' => 'view_media',
@@ -186,103 +180,6 @@ class PermissionSeeder extends Seeder
                 'name' => 'manage_not_found_logs',
                 'display_name' => 'Manage 404 Logs',
                 'group' => 'not_found_logs',
-                'module_slug' => 'application',
-            ],
-            // Address permissions
-            [
-                'name' => 'view_addresses',
-                'display_name' => 'View Addresses',
-                'group' => 'addresses',
-                'module_slug' => 'application',
-            ],
-            [
-                'name' => 'add_addresses',
-                'display_name' => 'Add Addresses',
-                'group' => 'addresses',
-                'module_slug' => 'application',
-            ],
-            [
-                'name' => 'edit_addresses',
-                'display_name' => 'Edit Addresses',
-                'group' => 'addresses',
-                'module_slug' => 'application',
-            ],
-            [
-                'name' => 'delete_addresses',
-                'display_name' => 'Delete Addresses',
-                'group' => 'addresses',
-                'module_slug' => 'application',
-            ],
-            [
-                'name' => 'restore_addresses',
-                'display_name' => 'Restore Addresses',
-                'group' => 'addresses',
-                'module_slug' => 'application',
-            ],
-            [
-                'name' => 'view_email_providers',
-                'display_name' => 'View Email Providers',
-                'group' => 'email_providers',
-                'module_slug' => 'application',
-            ],
-            [
-                'name' => 'add_email_providers',
-                'display_name' => 'Add Email Providers',
-                'group' => 'email_providers',
-                'module_slug' => 'application',
-            ],
-            [
-                'name' => 'edit_email_providers',
-                'display_name' => 'Edit Email Providers',
-                'group' => 'email_providers',
-                'module_slug' => 'application',
-            ],
-            [
-                'name' => 'delete_email_providers',
-                'display_name' => 'Delete Email Providers',
-                'group' => 'email_providers',
-                'module_slug' => 'application',
-            ],
-            [
-                'name' => 'restore_email_providers',
-                'display_name' => 'Restore Email Providers',
-                'group' => 'email_providers',
-                'module_slug' => 'application',
-            ],
-            [
-                'name' => 'view_email_templates',
-                'display_name' => 'View Email Templates',
-                'group' => 'email_templates',
-                'module_slug' => 'application',
-            ],
-            [
-                'name' => 'add_email_templates',
-                'display_name' => 'Add Email Templates',
-                'group' => 'email_templates',
-                'module_slug' => 'application',
-            ],
-            [
-                'name' => 'edit_email_templates',
-                'display_name' => 'Edit Email Templates',
-                'group' => 'email_templates',
-                'module_slug' => 'application',
-            ],
-            [
-                'name' => 'delete_email_templates',
-                'display_name' => 'Delete Email Templates',
-                'group' => 'email_templates',
-                'module_slug' => 'application',
-            ],
-            [
-                'name' => 'restore_email_templates',
-                'display_name' => 'Restore Email Templates',
-                'group' => 'email_templates',
-                'module_slug' => 'application',
-            ],
-            [
-                'name' => 'view_email_logs',
-                'display_name' => 'View Email Logs',
-                'group' => 'email_logs',
                 'module_slug' => 'application',
             ],
         ];

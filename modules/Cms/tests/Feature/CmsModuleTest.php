@@ -146,7 +146,7 @@ class CmsModuleTest extends TestCase
 
         $this->actingAs($user)
             ->get(route('cms.index'))
-            ->assertRedirect(route('app.masters.modules.index'));
+            ->assertRedirect(route('dashboard'));
 
         File::delete($manifestPath);
     }

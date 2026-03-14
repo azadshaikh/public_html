@@ -60,6 +60,7 @@ return [
             'app.notes.*',
             'app.revisions.*',
             'app.ajax.*',
+            'cms.*',
             'cache.clear',
         ],
 
@@ -83,20 +84,11 @@ return [
 
         /*
         |----------------------------------------------------------------------
-        | Modules management — requires manage_modules permission
-        |----------------------------------------------------------------------
-        */
-        'modules' => [
-            'app.masters.modules.*',
-            'cms.*',
-        ],
-
-        /*
-        |----------------------------------------------------------------------
-        | Masters — settings, addresses, email, laravel-tools, queue
+        | Masters — modules, settings, addresses, email, laravel-tools, queue
         |----------------------------------------------------------------------
         */
         'masters' => [
+            'app.masters.modules.*',
             'app.masters.settings.*',
             'app.masters.addresses.*',
             'app.masters.email.*',
