@@ -23,6 +23,7 @@ use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 class UserController extends ScaffoldController implements HasMiddleware
 {
@@ -271,9 +272,17 @@ class UserController extends ScaffoldController implements HasMiddleware
     /**
      * Impersonate a user.
      */
-    public function impersonate(int $id): RedirectResponse
+    public function impersonate(int $id): RedirectResponse|HttpResponse
     {
         try {
+            if (session()->has('impersonator_id')) {
+                return to_route('dashboard')
+                    ->with('info', [
+                        'title' => 'Impersonation Already Active',
+                        'message' => 'Stop the current impersonation session before starting another one.',
+                    ]);
+            }
+
             $user = User::query()->where('id', $id)->withTrashed()->first();
 
             if (! $user) {
@@ -281,6 +290,14 @@ class UserController extends ScaffoldController implements HasMiddleware
                     ->with('error', [
                         'title' => 'User Not Found',
                         'message' => 'The user you are trying to impersonate does not exist.',
+                    ]);
+            }
+
+            if ((int) Auth::id() === $user->id) {
+                return to_route('app.users.index')
+                    ->with('info', [
+                        'title' => 'Already Signed In',
+                        'message' => 'You are already signed in as this user.',
                     ]);
             }
 
@@ -304,11 +321,12 @@ class UserController extends ScaffoldController implements HasMiddleware
             // Log in as the impersonated user
             Auth::login($user);
 
-            return to_route('dashboard')
-                ->with('success', [
-                    'title' => 'Impersonation Started',
-                    'message' => 'You are now impersonating '.$user->name,
-                ]);
+            session()->flash('success', [
+                'title' => 'Impersonation Started',
+                'message' => 'You are now impersonating '.$user->name,
+            ]);
+
+            return $this->impersonationRedirect(route('dashboard'));
         } catch (Exception $exception) {
             return to_route('app.users.index')
                 ->with('error', [
@@ -321,13 +339,13 @@ class UserController extends ScaffoldController implements HasMiddleware
     /**
      * Stop impersonating a user.
      */
-    public function stopImpersonating(): RedirectResponse
+    public function stopImpersonating(): RedirectResponse|HttpResponse
     {
         try {
             $impersonatorId = session('impersonator_id');
 
             if (! $impersonatorId) {
-                return to_route('app.users.index')
+                return to_route('dashboard')
                     ->with('error', [
                         'title' => 'Not Impersonating',
                         'message' => 'You are not currently impersonating any user.',
@@ -338,7 +356,7 @@ class UserController extends ScaffoldController implements HasMiddleware
             $impersonator = User::query()->find($impersonatorId);
 
             if (! $impersonator) {
-                return to_route('app.users.index')
+                return to_route('dashboard')
                     ->with('error', [
                         'title' => 'Impersonator Not Found',
                         'message' => 'The original user account could not be found.',
@@ -369,18 +387,28 @@ class UserController extends ScaffoldController implements HasMiddleware
                 ]
             );
 
-            return to_route('app.users.index')
-                ->with('success', [
-                    'title' => 'Impersonation Stopped',
-                    'message' => 'You have stopped impersonating and are now logged in as '.$impersonator->name,
-                ]);
+            session()->flash('success', [
+                'title' => 'Impersonation Stopped',
+                'message' => 'You have stopped impersonating and are now logged in as '.$impersonator->name,
+            ]);
+
+            return $this->impersonationRedirect(route('dashboard'));
         } catch (Exception $exception) {
-            return to_route('app.users.index')
+            return to_route('dashboard')
                 ->with('error', [
                     'title' => 'Stop Impersonation Failed',
                     'message' => 'Error stopping impersonation: '.$exception->getMessage(),
                 ]);
         }
+    }
+
+    private function impersonationRedirect(string $url): RedirectResponse|HttpResponse
+    {
+        if (request()->header('X-Inertia')) {
+            return Inertia::location($url);
+        }
+
+        return redirect()->to($url);
     }
 
     // ================================================================
@@ -486,17 +514,17 @@ class UserController extends ScaffoldController implements HasMiddleware
         /** @var User $user */
         $user = $model;
 
-        // Build initialValues for the React form
         $initialValues = [
             'name' => $user->exists ? ($user->getAttribute('name') ?? '') : '',
             'email' => $user->exists ? ($user->getAttribute('email') ?? '') : '',
-            'active' => $user->exists ? ($user->getAttribute('status')?->value ?? 'active') === 'active' : true,
+            'status' => $user->exists
+                ? ($user->getAttribute('status')?->value ?? Status::ACTIVE->value)
+                : Status::ACTIVE->value,
             'roles' => $user->exists ? $user->roles()->pluck('id')->toArray() : [],
             'password' => '',
             'password_confirmation' => '',
         ];
 
-        // Build availableRoles with id, name, display_name, is_system
         $superUserRoleId = User::superUserRoleId();
         $availableRoles = Role::visibleToCurrentUser()
             ->select('id', 'name', 'display_name')
@@ -531,6 +559,31 @@ class UserController extends ScaffoldController implements HasMiddleware
         }
 
         return $data;
+    }
+
+    protected function transformModelForEdit(Model $model): array
+    {
+        /** @var User $user */
+        $user = $model;
+        $user->loadMissing('roles:id,name,display_name');
+        $status = $user->getAttribute('status');
+        $statusValue = $status instanceof Status ? $status->value : (string) ($status ?? Status::ACTIVE->value);
+
+        return [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'status' => $statusValue,
+            'email_verified_at' => $user->email_verified_at?->toISOString(),
+            'roles' => $user->roles
+                ->map(fn ($role): array => [
+                    'id' => $role->id,
+                    'name' => $role->name,
+                    'display_name' => $role->display_name ?? ucfirst((string) $role->name),
+                ])
+                ->values()
+                ->all(),
+        ];
     }
 
     // ================================================================

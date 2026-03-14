@@ -188,6 +188,37 @@ class PermissionSeeder extends Seeder
                 'group' => 'not_found_logs',
                 'module_slug' => 'application',
             ],
+            // Address permissions
+            [
+                'name' => 'view_addresses',
+                'display_name' => 'View Addresses',
+                'group' => 'addresses',
+                'module_slug' => 'application',
+            ],
+            [
+                'name' => 'add_addresses',
+                'display_name' => 'Add Addresses',
+                'group' => 'addresses',
+                'module_slug' => 'application',
+            ],
+            [
+                'name' => 'edit_addresses',
+                'display_name' => 'Edit Addresses',
+                'group' => 'addresses',
+                'module_slug' => 'application',
+            ],
+            [
+                'name' => 'delete_addresses',
+                'display_name' => 'Delete Addresses',
+                'group' => 'addresses',
+                'module_slug' => 'application',
+            ],
+            [
+                'name' => 'restore_addresses',
+                'display_name' => 'Restore Addresses',
+                'group' => 'addresses',
+                'module_slug' => 'application',
+            ],
         ];
 
         foreach ($permissions as $permissionData) {

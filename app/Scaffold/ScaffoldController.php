@@ -576,6 +576,8 @@ abstract class ScaffoldController extends Controller
             $formRequest = $requestClass::createFrom($request);
             $formRequest->setContainer(app());
             $formRequest->setRedirector(resolve(Redirector::class));
+            $formRequest->setRouteResolver($request->getRouteResolver());
+            $formRequest->setUserResolver($request->getUserResolver());
             $formRequest->validateResolved();
 
             return $formRequest->validated();

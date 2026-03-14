@@ -96,6 +96,7 @@ export type RolesShowPageProps = {
 export type RoleFormValues = {
     name: string;
     display_name: string;
+    status: 'active' | 'inactive';
     permissions: number[];
 };
 
@@ -106,8 +107,14 @@ export type RoleEditingTarget = RoleFormValues & {
     permissions_count: number;
 };
 
+export type RoleStatusOption = {
+    value: RoleFormValues['status'];
+    label: string;
+};
+
 export type RoleFormPageProps = {
     initialValues: RoleFormValues;
+    statusOptions: RoleStatusOption[];
     permissionGroups: PermissionGroup[];
 };
 

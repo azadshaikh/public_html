@@ -71,7 +71,7 @@ class RoleRequest extends ScaffoldRequest
             ]);
         }
 
-        if (! $this->has('status') || empty($this->status)) {
+        if ($this->isCreate() && (! $this->has('status') || empty($this->status))) {
             $this->merge([
                 'status' => 'active',
             ]);

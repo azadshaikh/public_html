@@ -5,6 +5,7 @@ import type { BreadcrumbItem, RoleEditPageProps } from '@/types';
 export default function RolesEdit({
     role,
     initialValues,
+    statusOptions,
     permissionGroups,
 }: RoleEditPageProps) {
     const breadcrumbs: BreadcrumbItem[] = [
@@ -32,6 +33,7 @@ export default function RolesEdit({
                 mode="edit"
                 role={role}
                 initialValues={initialValues}
+                statusOptions={statusOptions}
                 permissionGroups={permissionGroups}
             />
         </AppLayout>

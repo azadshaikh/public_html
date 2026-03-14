@@ -27,6 +27,7 @@ class UserRequest extends ScaffoldRequest
                 'max:255',
                 $this->uniqueRule('email'),
             ],
+            'name' => ['required', 'string', 'max:255'],
 
             // ================================================================
             // OPTIONAL FIELDS (but required structure if provided)
@@ -121,6 +122,7 @@ class UserRequest extends ScaffoldRequest
         return [
             'email.unique' => 'An account with this email already exists.',
             'email.required' => 'Email address is required.',
+            'name.required' => 'Name is required.',
             'username.unique' => 'This username is already taken. Please choose another.',
             'username.regex' => 'Username can only contain letters, numbers, underscores, and hyphens.',
             'password.required' => 'Password is required.',
@@ -159,6 +161,7 @@ class UserRequest extends ScaffoldRequest
     protected function prepareForValidation(): void
     {
         // Trim whitespace from string fields
+        $this->trimField('name');
         $this->trimField('first_name');
         $this->trimField('last_name');
         $this->trimField('username');

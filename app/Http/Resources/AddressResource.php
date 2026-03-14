@@ -8,20 +8,10 @@ use App\Definitions\AddressDefinition;
 use App\Models\Address;
 use App\Scaffold\ScaffoldDefinition;
 use App\Scaffold\ScaffoldResource;
+use App\Services\GeoDataService;
 use App\Traits\DateTimeFormattingTrait;
 use RuntimeException;
 
-/**
- * AddressResource - Scaffold-based JSON resource for Address
- *
- * Extends ScaffoldResource which automatically includes ALL model attributes
- * via getBaseAttributes(). Only define truly COMPUTED or TRANSFORMED fields here.
- *
- * @see ScaffoldResource::getBaseAttributes() - auto-includes: first_name, last_name,
- *      type, address1, address2, city, state, postcode, country_code, phone, email,
- *      is_primary, is_verified, is_billing, is_shipping, addressable_type/id,
- *      latitude, longitude, metadata, etc.
- */
 class AddressResource extends ScaffoldResource
 {
     use DateTimeFormattingTrait;
@@ -35,18 +25,15 @@ class AddressResource extends ScaffoldResource
     }
 
     /**
-     * Get custom/computed fields specific to Address model
-     *
-     * Note: Model attributes are auto-included by ScaffoldResource.
-     * Only define computed fields, formatted values, and badge classes here.
+     * Get custom/computed fields specific to Address model.
      */
     protected function customFields(): array
     {
         $address = $this->address();
 
         $data = [
-            // URL for row link to show page
             'show_url' => route($this->scaffold()->getRoutePrefix().'.show', $address->getKey()),
+            'edit_url' => route($this->scaffold()->getRoutePrefix().'.edit', $address->getKey()),
 
             // Computed display values
             'full_name' => $this->getFullName(),
@@ -102,7 +89,7 @@ class AddressResource extends ScaffoldResource
             $address->getAttribute('address2'),
             $address->getAttribute('city'),
             $address->getAttribute('state'),
-            $address->getAttribute('postcode'),
+            $address->getAttribute('zip'),
             $this->getCountryName(),
         ]);
 
@@ -133,7 +120,7 @@ class AddressResource extends ScaffoldResource
         $cityLine = array_filter([
             $address->getAttribute('city'),
             $address->getAttribute('state'),
-            $address->getAttribute('postcode'),
+            $address->getAttribute('zip'),
         ]);
         if ($cityLine !== []) {
             $lines[] = implode(', ', $cityLine);
@@ -147,7 +134,7 @@ class AddressResource extends ScaffoldResource
     }
 
     /**
-     * Get country name from country code
+     * Get country name from country code via GeoDataService.
      */
     protected function getCountryName(): ?string
     {
@@ -158,10 +145,9 @@ class AddressResource extends ScaffoldResource
             return null;
         }
 
-        // Use config/countries list or fallback to code
-        $countries = config('geodata.countries', []);
+        $country = app(GeoDataService::class)->getCountryByCode($countryCode);
 
-        return $countries[$countryCode] ?? $countryCode;
+        return $country['name'] ?? $countryCode;
     }
 
     /**

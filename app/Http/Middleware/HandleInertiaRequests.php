@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Helpers\NavigationAggregator;
 use App\Inertia\Properties\UserAvatar;
+use App\Models\User;
 use App\Modules\ModuleManager;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -71,10 +72,18 @@ class HandleInertiaRequests extends Middleware
                         'addRoles' => $request->user()->can('add_roles'),
                         'editRoles' => $request->user()->can('edit_roles'),
                         'deleteRoles' => $request->user()->can('delete_roles'),
+                        'restoreRoles' => $request->user()->can('restore_roles'),
                         'viewUsers' => $request->user()->can('view_users'),
                         'addUsers' => $request->user()->can('add_users'),
                         'editUsers' => $request->user()->can('edit_users'),
                         'deleteUsers' => $request->user()->can('delete_users'),
+                        'restoreUsers' => $request->user()->can('restore_users'),
+                        'impersonateUsers' => $request->user()->can('impersonate_users'),
+                        'viewAddresses' => $request->user()->can('view_addresses'),
+                        'addAddresses' => $request->user()->can('add_addresses'),
+                        'editAddresses' => $request->user()->can('edit_addresses'),
+                        'deleteAddresses' => $request->user()->can('delete_addresses'),
+                        'restoreAddresses' => $request->user()->can('restore_addresses'),
                     ]
                     : [
                         'manageModules' => false,
@@ -82,11 +91,20 @@ class HandleInertiaRequests extends Middleware
                         'addRoles' => false,
                         'editRoles' => false,
                         'deleteRoles' => false,
+                        'restoreRoles' => false,
                         'viewUsers' => false,
                         'addUsers' => false,
                         'editUsers' => false,
                         'deleteUsers' => false,
+                        'restoreUsers' => false,
+                        'impersonateUsers' => false,
+                        'viewAddresses' => false,
+                        'addAddresses' => false,
+                        'editAddresses' => false,
+                        'deleteAddresses' => false,
+                        'restoreAddresses' => false,
                     ],
+                'impersonation' => fn (): ?array => $this->resolveImpersonation($request),
             ],
             'navigation' => fn (): array => NavigationAggregator::getUnifiedByArea($request->user()),
             'modules' => $modules,
@@ -97,6 +115,39 @@ class HandleInertiaRequests extends Middleware
                 'info' => $request->session()->get('info'),
                 'status' => $request->session()->get('status'),
             ]),
+        ];
+    }
+
+    /**
+     * @return array{
+     *     active: true,
+     *     impersonator: array{id: int, name: string, email: string},
+     *     stopUrl: string
+     * }|null
+     */
+    private function resolveImpersonation(Request $request): ?array
+    {
+        if (! $request->user() || ! $request->session()->has('impersonator_id')) {
+            return null;
+        }
+
+        $impersonatorId = (int) $request->session()->get('impersonator_id');
+        $impersonator = User::query()
+            ->select(['id', 'name', 'email'])
+            ->find($impersonatorId);
+
+        if (! $impersonator) {
+            return null;
+        }
+
+        return [
+            'active' => true,
+            'impersonator' => [
+                'id' => $impersonator->id,
+                'name' => $impersonator->name,
+                'email' => $impersonator->email,
+            ],
+            'stopUrl' => route('app.users.stop-impersonating'),
         ];
     }
 }

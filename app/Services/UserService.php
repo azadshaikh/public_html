@@ -199,6 +199,10 @@ class UserService implements ScaffoldServiceInterface
             unset($data['lastName']);
         }
 
+        if (isset($data['name']) && ! isset($data['first_name'])) {
+            [$data['first_name'], $data['last_name']] = $this->splitName($data['name']);
+        }
+
         // Build name field if not provided
         if (empty($data['name'])) {
             $data['name'] = trim(($data['first_name'] ?? '').' '.($data['last_name'] ?? ''));
@@ -252,6 +256,10 @@ class UserService implements ScaffoldServiceInterface
         if ((int) $model->getKey() === 1 && isset($data['status'])) {
             $restrictedStatuses = [Status::BANNED->value, Status::SUSPENDED->value, Status::BANNED, Status::SUSPENDED];
             throw_if(in_array($data['status'], $restrictedStatuses, false), InvalidArgumentException::class, 'Cannot set super user status to banned or suspended.');
+        }
+
+        if (isset($data['name']) && ! isset($data['first_name'])) {
+            [$data['first_name'], $data['last_name']] = $this->splitName($data['name']);
         }
 
         // Separate address data and role data from user data
@@ -644,6 +652,7 @@ class UserService implements ScaffoldServiceInterface
         }
 
         return [
+            'name' => $data['name'] ?? null,
             'first_name' => $data['first_name'] ?? null,
             'last_name' => $data['last_name'] ?? null,
             'email' => $data['email'],
@@ -688,6 +697,7 @@ class UserService implements ScaffoldServiceInterface
         }
 
         $updateData = [
+            'name' => $data['name'] ?? null,
             'first_name' => $data['first_name'] ?? null,
             'last_name' => $data['last_name'] ?? null,
             'email' => $data['email'],

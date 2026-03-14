@@ -18,7 +18,6 @@ import {
     UserIcon,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { ResourceFeedbackAlerts } from '@/components/resource/resource-feedback-alerts';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -88,8 +87,6 @@ function SocialLink({ url, label }: { url: string | null; label: string }) {
 export default function UsersShow({
     user,
     userActivities,
-    status,
-    error,
 }: UsersShowPageProps) {
     const page = usePage<AuthenticatedSharedData>();
     const getInitials = useInitials();
@@ -106,19 +103,11 @@ export default function UsersShow({
         { title: user.name, href: route('app.users.show', user.id) },
     ];
 
-    const handleAction = (
-        actionKey: string,
-        options?: { fullReload?: boolean },
-    ) => {
+    const handleAction = (actionKey: string) => {
         const action = user.actions[actionKey];
         if (!action) return;
 
         if (action.confirm && !window.confirm(action.confirm)) return;
-
-        if (options?.fullReload || action.fullReload) {
-            window.location.href = action.url;
-            return;
-        }
 
         const method = action.method.toLowerCase() as
             | 'get'
@@ -168,13 +157,6 @@ export default function UsersShow({
             }
         >
             <div className="flex flex-col gap-6">
-                <ResourceFeedbackAlerts
-                    status={status}
-                    statusIcon={<ShieldCheckIcon />}
-                    error={error}
-                    errorIcon={<ShieldAlertIcon />}
-                />
-
                 {/* User identity header */}
                 <Card>
                     <CardContent className="pt-6">
@@ -237,9 +219,7 @@ export default function UsersShow({
                                         variant="outline"
                                         size="sm"
                                         onClick={() =>
-                                            handleAction('impersonate', {
-                                                fullReload: true,
-                                            })
+                                            handleAction('impersonate')
                                         }
                                     >
                                         <UserCogIcon data-icon="inline-start" />

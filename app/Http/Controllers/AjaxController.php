@@ -112,4 +112,72 @@ class AjaxController extends Controller
 
         return response()->json(['items' => $items]);
     }
+
+    /**
+     * Return all countries as JSON options for geo select components.
+     *
+     * @return JsonResponse{items: array<int, array{value: string, label: string}>}
+     */
+    public function geoCountries(): JsonResponse
+    {
+        $countries = resolve(GeoDataService::class)->getAllCountries();
+
+        $items = array_map(fn (array $c): array => [
+            'value' => $c['iso2'],
+            'label' => $c['name'],
+        ], $countries);
+
+        return response()->json(['items' => $items]);
+    }
+
+    /**
+     * Return states for a given country as JSON options for geo select components.
+     *
+     * @return JsonResponse{items: array<int, array{value: string, label: string}>}
+     */
+    public function geoStates(Request $request): JsonResponse
+    {
+        $countryCode = (string) $request->input('country_code', '');
+
+        if ($countryCode === '') {
+            return response()->json(['items' => []]);
+        }
+
+        $states = resolve(GeoDataService::class)->getStatesByCountryCode($countryCode);
+
+        $items = array_map(fn (array $s): array => [
+            'value' => (string) ($s['iso3166_2'] ?? $s['iso2'] ?? ''),
+            'label' => $s['name'],
+        ], $states);
+
+        return response()->json(['items' => $items]);
+    }
+
+    /**
+     * Return cities for a given state as JSON options for geo select components.
+     *
+     * @return JsonResponse{items: array<int, array{value: string, label: string}>}
+     */
+    public function geoCities(Request $request): JsonResponse
+    {
+        $stateCode = (string) $request->input('state_code', '');
+        $countryCode = (string) $request->input('country_code', '');
+
+        if ($stateCode === '' && $countryCode === '') {
+            return response()->json(['items' => []]);
+        }
+
+        $geoDataService = resolve(GeoDataService::class);
+
+        $cities = $stateCode !== ''
+            ? $geoDataService->getCitiesByStateCode($stateCode)
+            : $geoDataService->getCitiesByCountryCode($countryCode);
+
+        $items = array_map(fn (array $c): array => [
+            'value' => (string) ($c['id'] ?? $c['name']),
+            'label' => $c['name'],
+        ], $cities);
+
+        return response()->json(['items' => $items]);
+    }
 }

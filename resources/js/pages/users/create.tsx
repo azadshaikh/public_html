@@ -21,6 +21,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 export default function UsersCreate({
     initialValues,
     availableRoles,
+    statusOptions,
 }: UserCreatePageProps) {
     return (
         <AppLayout
@@ -32,6 +33,7 @@ export default function UsersCreate({
                 mode="create"
                 initialValues={initialValues}
                 availableRoles={availableRoles}
+                statusOptions={statusOptions}
             />
         </AppLayout>
     );

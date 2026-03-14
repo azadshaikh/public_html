@@ -22,7 +22,6 @@ import type {
     DatagridFilter,
     DatagridTab,
 } from '@/components/datagrid/datagrid';
-import { ResourceFeedbackAlerts } from '@/components/resource/resource-feedback-alerts';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -62,18 +61,8 @@ const ICON_MAP: Record<string, React.ReactNode> = {
 
 function mapBackendAction(action: UserRowAction): DatagridAction {
     const icon = ICON_MAP[action.icon];
-    const isDestructive = action.method === 'DELETE' || action.label === 'Ban';
-
-    // Full page reloads (e.g. impersonate) — use onSelect with location change
-    if (action.fullReload) {
-        return {
-            label: action.label,
-            icon,
-            onSelect: () => {
-                window.location.href = action.url;
-            },
-        };
-    }
+    const isDestructive =
+        action.method === 'DELETE' || action.label === 'Ban';
 
     // Navigation actions (GET without side effects)
     if (action.method === 'GET') {
@@ -105,13 +94,14 @@ export default function UsersIndex({
     statistics,
     roles,
     showPendingTab,
-    status,
-    error,
 }: UsersIndexPageProps) {
     const page = usePage<AuthenticatedSharedData>();
     const getInitials = useInitials();
 
     const canAddUsers = page.props.auth.abilities.addUsers;
+    const canEditUsers = page.props.auth.abilities.editUsers;
+    const canDeleteUsers = page.props.auth.abilities.deleteUsers;
+    const canRestoreUsers = page.props.auth.abilities.restoreUsers;
     const currentUserId = page.props.auth.user.id;
 
     // ----- Filters -----
@@ -321,7 +311,6 @@ export default function UsersIndex({
 
     const handleBulkAction = (
         action: string,
-        confirmMessage: string,
         selectedUsers: UserListItem[],
         clearSelection: () => void,
     ) => {
@@ -343,64 +332,91 @@ export default function UsersIndex({
     };
 
     const bulkActions: DatagridBulkAction<UserListItem>[] = [
-        {
-            key: 'bulk-delete',
-            label: 'Move to Trash',
-            icon: <Trash2Icon />,
-            variant: 'destructive',
-            confirm: 'Move selected users to trash?',
-            onSelect: (rows, clear) =>
-                handleBulkAction('delete', 'Move to trash?', rows, clear),
-        },
-        {
-            key: 'bulk-suspend',
-            label: 'Suspend',
-            icon: <PauseCircleIcon />,
-            confirm: 'Suspend selected users? They will be unable to log in.',
-            onSelect: (rows, clear) =>
-                handleBulkAction('suspend', 'Suspend?', rows, clear),
-            hidden: filters.status === 'trash',
-        },
-        {
-            key: 'bulk-ban',
-            label: 'Ban',
-            icon: <BanIcon />,
-            variant: 'destructive',
-            confirm:
-                'Ban selected users? They will be permanently blocked from logging in.',
-            onSelect: (rows, clear) =>
-                handleBulkAction('ban', 'Ban?', rows, clear),
-            hidden: filters.status === 'trash',
-        },
-        {
-            key: 'bulk-unban',
-            label: 'Unban',
-            icon: <CheckCircleIcon />,
-            confirm: 'Unban selected users?',
-            onSelect: (rows, clear) =>
-                handleBulkAction('unban', 'Unban?', rows, clear),
-            hidden: filters.status !== 'banned',
-        },
-        {
-            key: 'bulk-restore',
-            label: 'Restore',
-            icon: <RefreshCwIcon />,
-            confirm: 'Restore selected users from trash?',
-            onSelect: (rows, clear) =>
-                handleBulkAction('restore', 'Restore?', rows, clear),
-            hidden: filters.status !== 'trash',
-        },
-        {
-            key: 'bulk-force-delete',
-            label: 'Delete Permanently',
-            icon: <Trash2Icon />,
-            variant: 'destructive',
-            confirm:
-                '⚠️ Permanently delete selected users? This cannot be undone!',
-            onSelect: (rows, clear) =>
-                handleBulkAction('force_delete', 'Force delete?', rows, clear),
-            hidden: filters.status !== 'trash',
-        },
+        ...(canDeleteUsers
+            ? [
+                  {
+                      key: 'bulk-delete',
+                      label: 'Move to Trash',
+                      icon: <Trash2Icon />,
+                      variant: 'destructive' as const,
+                      confirm: 'Move selected users to trash?',
+                      onSelect: (rows: UserListItem[], clear: () => void) =>
+                          handleBulkAction('delete', rows, clear),
+                  },
+              ]
+            : []),
+        ...(canEditUsers
+            ? [
+                  {
+                      key: 'bulk-suspend',
+                      label: 'Suspend',
+                      icon: <PauseCircleIcon />,
+                      confirm:
+                          'Suspend selected users? They will be unable to log in.',
+                      onSelect: (
+                          rows: UserListItem[],
+                          clear: () => void,
+                      ) => handleBulkAction('suspend', rows, clear),
+                      hidden: filters.status === 'trash',
+                  },
+                  {
+                      key: 'bulk-ban',
+                      label: 'Ban',
+                      icon: <BanIcon />,
+                      variant: 'destructive' as const,
+                      confirm:
+                          'Ban selected users? They will be permanently blocked from logging in.',
+                      onSelect: (
+                          rows: UserListItem[],
+                          clear: () => void,
+                      ) => handleBulkAction('ban', rows, clear),
+                      hidden: filters.status === 'trash',
+                  },
+                  {
+                      key: 'bulk-unban',
+                      label: 'Unban',
+                      icon: <CheckCircleIcon />,
+                      confirm: 'Unban selected users?',
+                      onSelect: (
+                          rows: UserListItem[],
+                          clear: () => void,
+                      ) => handleBulkAction('unban', rows, clear),
+                      hidden: filters.status !== 'banned',
+                  },
+              ]
+            : []),
+        ...(canRestoreUsers
+            ? [
+                  {
+                      key: 'bulk-restore',
+                      label: 'Restore',
+                      icon: <RefreshCwIcon />,
+                      confirm: 'Restore selected users from trash?',
+                      onSelect: (
+                          rows: UserListItem[],
+                          clear: () => void,
+                      ) => handleBulkAction('restore', rows, clear),
+                      hidden: filters.status !== 'trash',
+                  },
+              ]
+            : []),
+        ...(canDeleteUsers
+            ? [
+                  {
+                      key: 'bulk-force-delete',
+                      label: 'Delete Permanently',
+                      icon: <Trash2Icon />,
+                      variant: 'destructive' as const,
+                      confirm:
+                          '⚠️ Permanently delete selected users? This cannot be undone!',
+                      onSelect: (
+                          rows: UserListItem[],
+                          clear: () => void,
+                      ) => handleBulkAction('force_delete', rows, clear),
+                      hidden: filters.status !== 'trash',
+                  },
+              ]
+            : []),
     ].filter((action) => !action.hidden);
 
     // ----- Render -----
@@ -422,13 +438,6 @@ export default function UsersIndex({
             }
         >
             <div className="flex flex-col gap-6">
-                <ResourceFeedbackAlerts
-                    status={status}
-                    statusIcon={<ShieldCheckIcon />}
-                    error={error}
-                    errorIcon={<ShieldAlertIcon />}
-                />
-
                 <Datagrid
                     action={route('app.users.index')}
                     rows={users}
@@ -441,7 +450,9 @@ export default function UsersIndex({
                     getRowKey={(user) => user.id}
                     rowActions={rowActions}
                     bulkActions={bulkActions}
-                    isRowSelectable={(user) => user.id !== currentUserId}
+                    isRowSelectable={(user) =>
+                        bulkActions.length > 0 && user.id !== currentUserId
+                    }
                     sorting={{
                         sort: filters.sort,
                         direction: filters.direction,

@@ -1,4 +1,4 @@
-import { Link, router } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import {
     AlertTriangleIcon,
     ArrowLeftIcon,
@@ -16,14 +16,13 @@ import {
     UsersIcon,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { ResourceFeedbackAlerts } from '@/components/resource/resource-feedback-alerts';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
-import type { BreadcrumbItem } from '@/types';
+import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
 import type { PermissionGroup, RolesShowPageProps } from '@/types/role';
 
 // =========================================================================
@@ -115,9 +114,11 @@ function PermissionGroupCard({ group }: { group: PermissionGroup }) {
 export default function RolesShow({
     role,
     permissionGroups,
-    status,
-    error,
 }: RolesShowPageProps) {
+    const page = usePage<AuthenticatedSharedData>();
+    const canEditRoles = page.props.auth.abilities.editRoles;
+    const canDeleteRoles = page.props.auth.abilities.deleteRoles;
+    const canRestoreRoles = page.props.auth.abilities.restoreRoles;
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: route('dashboard') },
         { title: 'Roles', href: route('app.roles.index') },
@@ -175,7 +176,7 @@ export default function RolesShow({
                         </Link>
                     </Button>
 
-                    {!role.is_trashed && (
+                    {!role.is_trashed && canEditRoles && (
                         <Button asChild>
                             <Link href={route('app.roles.edit', role.id)}>
                                 <PencilIcon data-icon="inline-start" />
@@ -187,13 +188,6 @@ export default function RolesShow({
             }
         >
             <div className="flex flex-col gap-6">
-                <ResourceFeedbackAlerts
-                    status={status}
-                    statusIcon={<ShieldCheckIcon />}
-                    error={error}
-                    errorIcon={<ShieldAlertIcon />}
-                />
-
                 {/* Role identity header */}
                 <Card>
                     <CardContent className="pt-6">
@@ -231,7 +225,7 @@ export default function RolesShow({
 
                             {/* Action buttons */}
                             <div className="flex flex-wrap gap-2">
-                                {role.is_trashed && (
+                                {role.is_trashed && canRestoreRoles && (
                                     <>
                                         <Button
                                             variant="outline"
@@ -241,7 +235,7 @@ export default function RolesShow({
                                             <RefreshCwIcon data-icon="inline-start" />
                                             Restore
                                         </Button>
-                                        {!role.is_system && (
+                                        {!role.is_system && canDeleteRoles && (
                                             <Button
                                                 variant="destructive"
                                                 size="sm"
@@ -254,7 +248,9 @@ export default function RolesShow({
                                     </>
                                 )}
 
-                                {!role.is_trashed && !role.is_system && (
+                                {!role.is_trashed &&
+                                    !role.is_system &&
+                                    canDeleteRoles && (
                                     <Button
                                         variant="destructive"
                                         size="sm"

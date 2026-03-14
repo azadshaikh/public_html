@@ -165,8 +165,8 @@ class UserResource extends ScaffoldResource
                     'url' => route($routePrefix.'.impersonate', $userId),
                     'label' => 'Impersonate',
                     'icon' => 'ri-user-settings-line',
-                    'method' => 'GET',
-                    'fullReload' => true, // Force full page reload to update session
+                    'method' => 'POST',
+                    'confirm' => 'Start an impersonation session for this user?',
                 ];
             }
 

@@ -19,6 +19,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 export default function RolesCreate({
     initialValues,
+    statusOptions,
     permissionGroups,
 }: RoleFormPageProps) {
     return (
@@ -30,6 +31,7 @@ export default function RolesCreate({
             <RoleForm
                 mode="create"
                 initialValues={initialValues}
+                statusOptions={statusOptions}
                 permissionGroups={permissionGroups}
             />
         </AppLayout>

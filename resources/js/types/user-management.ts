@@ -16,7 +16,6 @@ export type UserRowAction = {
     icon: string;
     method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
     confirm?: string;
-    fullReload?: boolean;
 };
 
 /**
@@ -141,7 +140,7 @@ export type UsersShowPageProps = {
 export type ManagedUserFormValues = {
     name: string;
     email: string;
-    active: boolean;
+    status: 'active' | 'pending' | 'suspended' | 'banned';
     roles: number[];
     password: string;
     password_confirmation: string;
@@ -151,8 +150,7 @@ export type ManagedUserListItem = {
     id: number;
     name: string;
     email: string;
-    avatar: string;
-    active: boolean;
+    status: ManagedUserFormValues['status'];
     email_verified_at: string | null;
     roles: ManagedUserRole[];
 };
@@ -167,13 +165,20 @@ export type ManagedUserRoleOption = {
     is_system: boolean;
 };
 
+export type ManagedUserStatusOption = {
+    value: ManagedUserFormValues['status'];
+    label: string;
+};
+
 export type UserEditPageProps = {
     user: ManagedUserEditingTarget;
     initialValues: ManagedUserFormValues;
     availableRoles: ManagedUserRoleOption[];
+    statusOptions: ManagedUserStatusOption[];
 };
 
 export type UserCreatePageProps = {
     initialValues: ManagedUserFormValues;
     availableRoles: ManagedUserRoleOption[];
+    statusOptions: ManagedUserStatusOption[];
 };

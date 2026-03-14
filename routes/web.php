@@ -86,6 +86,9 @@ Route::prefix($adminPrefix)->group(function (): void {
             Route::get('/ajax/states-by-country', [AjaxController::class, 'ajaxStatesByCountry'])->name('ajax.states-by-country');
             Route::get('/ajax/cities-by-state', [AjaxController::class, 'ajaxCitiesByState'])->name('ajax.cities-by-state');
             Route::get('/ajax/users', [AjaxController::class, 'users'])->name('ajax.users');
+            Route::get('/ajax/geo/countries', [AjaxController::class, 'geoCountries'])->name('ajax.geo.countries');
+            Route::get('/ajax/geo/states', [AjaxController::class, 'geoStates'])->name('ajax.geo.states');
+            Route::get('/ajax/geo/cities', [AjaxController::class, 'geoCities'])->name('ajax.geo.cities');
 
             // --- User Profile Management ---
             Route::get('/profile', [ProfileController::class, 'view'])->name('profile');
@@ -195,7 +198,7 @@ Route::prefix($adminPrefix)->group(function (): void {
                 Route::patch('/{user}/unban', [UserController::class, 'unban'])->name('unban');
 
                 // User Impersonation
-                Route::get('/{user}/impersonate', [UserController::class, 'impersonate'])->name('impersonate');
+                Route::post('/{user}/impersonate', [UserController::class, 'impersonate'])->name('impersonate');
 
                 // ========================================
                 // CATCH-ALL ROUTES LAST
@@ -220,11 +223,11 @@ Route::prefix($adminPrefix)->group(function (): void {
 
                 // Standard CRUD routes
                 Route::get('/create', [RoleController::class, 'create'])->name('create');
-                Route::post('/store', [RoleController::class, 'store'])->name('store');
-                Route::get('/{role}/show', [RoleController::class, 'show'])->name('show');
+                Route::post('/', [RoleController::class, 'store'])->name('store');
+                Route::get('/{role}', [RoleController::class, 'show'])->name('show');
                 Route::get('/{role}/edit', [RoleController::class, 'edit'])->name('edit');
                 Route::put('/{role}', [RoleController::class, 'update'])->name('update');
-                Route::delete('/{role}/delete', [RoleController::class, 'destroy'])->name('destroy');
+                Route::delete('/{role}', [RoleController::class, 'destroy'])->name('destroy');
                 Route::patch('/{role}/restore', [RoleController::class, 'restore'])->name('restore');
                 Route::delete('/{role}/force-delete', [RoleController::class, 'forceDelete'])->name('force-delete');
 

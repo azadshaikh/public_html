@@ -1,4 +1,4 @@
-import { Link, useForm } from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
 import {
     ArrowLeftIcon,
     LockKeyholeIcon,
@@ -6,6 +6,7 @@ import {
     UserCogIcon,
 } from 'lucide-react';
 import type { FormEvent } from 'react';
+import { FormErrorSummary } from '@/components/forms/form-error-summary';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,13 +23,19 @@ import {
     FieldError,
     FieldGroup,
     FieldLabel,
+    FieldLegend,
+    FieldSet,
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { Switch } from '@/components/ui/switch';
+import { Spinner } from '@/components/ui/spinner';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { useAppForm } from '@/hooks/use-app-form';
+import { formValidators } from '@/lib/forms';
 import type {
     ManagedUserEditingTarget,
     ManagedUserFormValues,
     ManagedUserRoleOption,
+    ManagedUserStatusOption,
 } from '@/types/user-management';
 
 type ManagedUserFormProps = {
@@ -36,27 +43,99 @@ type ManagedUserFormProps = {
     user?: ManagedUserEditingTarget;
     initialValues: ManagedUserFormValues;
     availableRoles: ManagedUserRoleOption[];
+    statusOptions: ManagedUserStatusOption[];
 };
+
+function resolveStatusLabel(
+    status: ManagedUserFormValues['status'],
+    options: ManagedUserStatusOption[],
+): string {
+    return options.find((option) => option.value === status)?.label ?? status;
+}
 
 export default function ManagedUserForm({
     mode,
     user,
     initialValues,
     availableRoles,
+    statusOptions,
 }: ManagedUserFormProps) {
-    const form = useForm<ManagedUserFormValues>(initialValues);
+    const form = useAppForm<ManagedUserFormValues>({
+        defaults: initialValues,
+        rememberKey:
+            mode === 'create' ? 'users.create.form' : `users.edit.${user?.id}`,
+        dirtyGuard: { enabled: true },
+        rules: {
+            name: [formValidators.required('Name')],
+            email: [
+                formValidators.required('Email address'),
+                formValidators.email(),
+            ],
+            status: [formValidators.required('Status')],
+            roles: [
+                (value) =>
+                    Array.isArray(value) && value.length > 0
+                        ? undefined
+                        : 'Select at least one role.',
+            ],
+            password:
+                mode === 'create'
+                    ? [
+                          formValidators.required('Password'),
+                          formValidators.minLength('Password', 8),
+                      ]
+                    : [
+                          (value) =>
+                              typeof value === 'string' && value.length > 0
+                                  ? formValidators.minLength<
+                                        ManagedUserFormValues,
+                                        'password'
+                                    >('Password', 8)(value)
+                                  : undefined,
+                      ],
+            password_confirmation: [
+                (value, data) => {
+                    const password = data.password.trim();
+                    const confirmation =
+                        typeof value === 'string' ? value.trim() : '';
+
+                    if (password === '') {
+                        return undefined;
+                    }
+
+                    if (confirmation === '') {
+                        return 'Password confirmation is required.';
+                    }
+
+                    return password === confirmation
+                        ? undefined
+                        : 'Password confirmation does not match.';
+                },
+            ],
+        },
+    });
     const submitMethod = mode === 'create' ? 'post' : 'put';
     const submitUrl =
         mode === 'create'
             ? route('app.users.store')
             : route('app.users.update', user!.id);
     const submitLabel = mode === 'create' ? 'Create user' : 'Save user';
+    const activeRoleCount = form.data.roles.length;
+    const selectedStatusLabel = resolveStatusLabel(form.data.status, statusOptions);
 
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
         form.submit(submitMethod, submitUrl, {
             preserveScroll: true,
+            successToast: {
+                title: mode === 'create' ? 'User created' : 'User updated',
+                description:
+                    mode === 'create'
+                        ? 'The managed account has been created successfully.'
+                        : 'The managed account has been updated successfully.',
+            },
+            setDefaultsOnSuccess: mode === 'edit',
         });
     };
 
@@ -66,12 +145,12 @@ export default function ManagedUserForm({
                 return;
             }
 
-            form.setData('roles', [...form.data.roles, roleId]);
+            form.setField('roles', [...form.data.roles, roleId]);
 
             return;
         }
 
-        form.setData(
+        form.setField(
             'roles',
             form.data.roles.filter(
                 (currentRoleId: number) => currentRoleId !== roleId,
@@ -80,23 +159,26 @@ export default function ManagedUserForm({
     };
 
     return (
-        <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
+        <form noValidate className="flex flex-col gap-6" onSubmit={handleSubmit}>
+            {form.dirtyGuardDialog}
+            <FormErrorSummary errors={form.errors} minMessages={2} />
+
             <div className="grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
                 <Card>
                     <CardHeader>
                         <div className="flex items-center gap-2">
                             <CardTitle>
-                                {mode === 'create'
-                                    ? 'Create user'
-                                    : 'Edit user'}
+                                {mode === 'create' ? 'Create user' : 'Edit user'}
                             </CardTitle>
                             {user ? (
                                 <Badge
                                     variant={
-                                        user.active ? 'secondary' : 'outline'
+                                        form.data.status === 'active'
+                                            ? 'secondary'
+                                            : 'outline'
                                     }
                                 >
-                                    {user.active ? 'Active' : 'Inactive'}
+                                    {selectedStatusLabel}
                                 </Badge>
                             ) : null}
                         </div>
@@ -108,90 +190,97 @@ export default function ManagedUserForm({
                     </CardHeader>
                     <CardContent className="grid gap-6">
                         <FieldGroup>
-                            <Field data-invalid={Boolean(form.errors.name)}>
+                            <Field data-invalid={form.invalid('name') || undefined}>
                                 <FieldLabel htmlFor="name">Name</FieldLabel>
                                 <Input
                                     id="name"
                                     value={form.data.name}
                                     onChange={(event) =>
-                                        form.setData('name', event.target.value)
+                                        form.setField('name', event.target.value)
                                     }
-                                    aria-invalid={
-                                        Boolean(form.errors.name) || undefined
-                                    }
+                                    onBlur={() => form.touch('name')}
+                                    aria-invalid={form.invalid('name') || undefined}
                                     placeholder="Full name"
                                 />
-                                <FieldError>{form.errors.name}</FieldError>
+                                <FieldError>{form.error('name')}</FieldError>
                             </Field>
 
-                            <Field data-invalid={Boolean(form.errors.email)}>
+                            <Field data-invalid={form.invalid('email') || undefined}>
                                 <FieldLabel htmlFor="email">Email</FieldLabel>
                                 <Input
                                     id="email"
                                     type="email"
                                     value={form.data.email}
                                     onChange={(event) =>
-                                        form.setData(
-                                            'email',
-                                            event.target.value,
-                                        )
+                                        form.setField('email', event.target.value)
                                     }
-                                    aria-invalid={
-                                        Boolean(form.errors.email) || undefined
-                                    }
+                                    onBlur={() => form.touch('email')}
+                                    aria-invalid={form.invalid('email') || undefined}
                                     placeholder="user@example.com"
                                 />
                                 <FieldDescription>
-                                    Changing the email resets verification so
-                                    the new address can be confirmed safely.
+                                    Changing the email resets verification so the
+                                    new address can be confirmed safely.
                                 </FieldDescription>
-                                <FieldError>{form.errors.email}</FieldError>
+                                <FieldError>{form.error('email')}</FieldError>
                             </Field>
                         </FieldGroup>
 
-                        <Field data-invalid={Boolean(form.errors.active)}>
-                            <div className="flex items-start justify-between gap-4 rounded-xl border p-4">
-                                <div>
-                                    <FieldLabel htmlFor="active">
-                                        Account status
-                                    </FieldLabel>
-                                    <FieldDescription>
-                                        Inactive users stay in the system but
-                                        can be clearly identified for follow-up
-                                        actions.
-                                    </FieldDescription>
-                                </div>
-                                <Switch
-                                    id="active"
-                                    checked={form.data.active}
-                                    onCheckedChange={(checked) =>
-                                        form.setData('active', checked === true)
-                                    }
-                                />
-                            </div>
-                            <FieldError>{form.errors.active}</FieldError>
+                        <Field data-invalid={form.invalid('status') || undefined}>
+                            <FieldSet>
+                                <FieldLegend>Status</FieldLegend>
+                                <FieldDescription>
+                                    Choose the current access state for this managed
+                                    account.
+                                </FieldDescription>
+                                <ToggleGroup
+                                    type="single"
+                                    value={form.data.status}
+                                    onValueChange={(value) => {
+                                        if (value === '') {
+                                            return;
+                                        }
+
+                                        form.setField(
+                                            'status',
+                                            value as ManagedUserFormValues['status'],
+                                        );
+                                    }}
+                                    aria-invalid={form.invalid('status') || undefined}
+                                    className="w-full flex-wrap"
+                                    variant="outline"
+                                >
+                                    {statusOptions.map((option) => (
+                                        <ToggleGroupItem
+                                            key={option.value}
+                                            value={option.value}
+                                            className="min-w-[9rem] flex-1"
+                                        >
+                                            {option.label}
+                                        </ToggleGroupItem>
+                                    ))}
+                                </ToggleGroup>
+                            </FieldSet>
+                            <FieldError>{form.error('status')}</FieldError>
                         </Field>
 
                         <FieldGroup>
-                            <Field data-invalid={Boolean(form.errors.password)}>
+                            <Field
+                                data-invalid={form.invalid('password') || undefined}
+                            >
                                 <FieldLabel htmlFor="password">
-                                    {mode === 'create'
-                                        ? 'Password'
-                                        : 'New password'}
+                                    {mode === 'create' ? 'Password' : 'New password'}
                                 </FieldLabel>
                                 <Input
                                     id="password"
                                     type="password"
                                     value={form.data.password}
                                     onChange={(event) =>
-                                        form.setData(
-                                            'password',
-                                            event.target.value,
-                                        )
+                                        form.setField('password', event.target.value)
                                     }
+                                    onBlur={() => form.touch('password')}
                                     aria-invalid={
-                                        Boolean(form.errors.password) ||
-                                        undefined
+                                        form.invalid('password') || undefined
                                     }
                                     autoComplete="new-password"
                                     placeholder={
@@ -205,13 +294,14 @@ export default function ManagedUserForm({
                                         ? 'Set the initial sign-in password for this account.'
                                         : 'Leave this empty if the current password should stay unchanged.'}
                                 </FieldDescription>
-                                <FieldError>{form.errors.password}</FieldError>
+                                <FieldError>{form.error('password')}</FieldError>
                             </Field>
 
                             <Field
-                                data-invalid={Boolean(
-                                    form.errors.password_confirmation,
-                                )}
+                                data-invalid={
+                                    form.invalid('password_confirmation') ||
+                                    undefined
+                                }
                             >
                                 <FieldLabel htmlFor="password_confirmation">
                                     Confirm password
@@ -221,25 +311,26 @@ export default function ManagedUserForm({
                                     type="password"
                                     value={form.data.password_confirmation}
                                     onChange={(event) =>
-                                        form.setData(
+                                        form.setField(
                                             'password_confirmation',
                                             event.target.value,
                                         )
                                     }
+                                    onBlur={() =>
+                                        form.touch('password_confirmation')
+                                    }
                                     aria-invalid={
-                                        Boolean(
-                                            form.errors.password_confirmation,
-                                        ) || undefined
+                                        form.invalid('password_confirmation') ||
+                                        undefined
                                     }
                                     autoComplete="new-password"
                                     placeholder="Repeat the password"
                                 />
                                 <FieldDescription>
-                                    Required whenever a new password is being
-                                    set.
+                                    Required whenever a new password is being set.
                                 </FieldDescription>
                                 <FieldError>
-                                    {form.errors.password_confirmation}
+                                    {form.error('password_confirmation')}
                                 </FieldError>
                             </Field>
                         </FieldGroup>
@@ -247,7 +338,7 @@ export default function ManagedUserForm({
                         {user ? (
                             <div className="rounded-xl border border-dashed bg-muted/20 p-4 text-sm text-muted-foreground">
                                 <div className="flex items-center gap-2 font-medium text-foreground">
-                                    <UserCogIcon className="size-4" />
+                                    <UserCogIcon />
                                     Account summary
                                 </div>
                                 <div className="mt-3 grid gap-2 sm:grid-cols-2">
@@ -256,9 +347,7 @@ export default function ManagedUserForm({
                                             Verified email
                                         </span>
                                         <div className="mt-1 text-sm font-medium text-foreground">
-                                            {user.email_verified_at
-                                                ? 'Yes'
-                                                : 'No'}
+                                            {user.email_verified_at ? 'Yes' : 'No'}
                                         </div>
                                     </div>
                                     <div>
@@ -266,7 +355,7 @@ export default function ManagedUserForm({
                                             Assigned roles
                                         </span>
                                         <div className="mt-1 text-sm font-medium text-foreground">
-                                            {form.data.roles.length}
+                                            {activeRoleCount}
                                         </div>
                                     </div>
                                 </div>
@@ -274,14 +363,13 @@ export default function ManagedUserForm({
                         ) : (
                             <div className="rounded-xl border border-dashed bg-muted/20 p-4 text-sm text-muted-foreground">
                                 <div className="flex items-center gap-2 font-medium text-foreground">
-                                    <LockKeyholeIcon className="size-4" />
+                                    <LockKeyholeIcon />
                                     Provisioning note
                                 </div>
                                 <p className="mt-3">
                                     New accounts start with an unverified email.
-                                    Verification is triggered again
-                                    automatically if the address is changed
-                                    later.
+                                    Verification is triggered again automatically if
+                                    the address is changed later.
                                 </p>
                             </div>
                         )}
@@ -292,60 +380,67 @@ export default function ManagedUserForm({
                     <CardHeader>
                         <CardTitle>Role assignments</CardTitle>
                         <CardDescription>
-                            Assign one or more roles. Permissions continue to
-                            flow through role bundles.
+                            Assign one or more roles. Permissions continue to flow
+                            through role bundles.
                         </CardDescription>
                     </CardHeader>
-                    <CardContent className="grid gap-3">
-                        {availableRoles.map((roleOption) => {
-                            const checked = form.data.roles.includes(
-                                roleOption.id,
-                            );
+                    <CardContent>
+                        <Field data-invalid={form.invalid('roles') || undefined}>
+                            <FieldSet>
+                                <FieldLegend>Available roles</FieldLegend>
+                                <FieldDescription>
+                                    Select the roles that should be assigned to this
+                                    account.
+                                </FieldDescription>
+                                <div className="grid gap-3">
+                                    {availableRoles.map((roleOption) => {
+                                        const checked = form.data.roles.includes(
+                                            roleOption.id,
+                                        );
 
-                            return (
-                                <label
-                                    key={roleOption.id}
-                                    className="flex gap-3 rounded-xl border p-4 transition-colors hover:bg-muted/30"
-                                >
-                                    <Checkbox
-                                        checked={checked}
-                                        onCheckedChange={(value) =>
-                                            toggleRole(
-                                                roleOption.id,
-                                                value === true,
-                                            )
-                                        }
-                                        className="mt-0.5"
-                                    />
-                                    <div className="min-w-0 flex-1">
-                                        <div className="flex flex-wrap items-center gap-2">
-                                            <span className="font-medium text-foreground">
-                                                {roleOption.display_name}
-                                            </span>
-                                            {roleOption.is_system ? (
-                                                <Badge variant="secondary">
-                                                    System
-                                                </Badge>
-                                            ) : null}
-                                        </div>
-                                        <div className="text-xs text-muted-foreground">
-                                            {roleOption.name}
-                                        </div>
-                                    </div>
-                                </label>
-                            );
-                        })}
-
-                        <FieldError>
-                            {form.errors.roles ?? form.errors['roles.0']}
-                        </FieldError>
-
-                        {form.data.roles.length === 0 ? (
-                            <div className="rounded-xl border border-dashed p-4 text-sm text-destructive">
-                                At least one role must remain assigned to this
-                                user.
-                            </div>
-                        ) : null}
+                                        return (
+                                            <label
+                                                key={roleOption.id}
+                                                className="flex gap-3 rounded-xl border p-4 transition-colors hover:bg-muted/30"
+                                            >
+                                                <Checkbox
+                                                    checked={checked}
+                                                    onCheckedChange={(value) =>
+                                                        toggleRole(
+                                                            roleOption.id,
+                                                            value === true,
+                                                        )
+                                                    }
+                                                    className="mt-0.5"
+                                                    aria-invalid={
+                                                        form.invalid('roles') ||
+                                                        undefined
+                                                    }
+                                                />
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="flex flex-wrap items-center gap-2">
+                                                        <span className="font-medium text-foreground">
+                                                            {
+                                                                roleOption.display_name
+                                                            }
+                                                        </span>
+                                                        {roleOption.is_system ? (
+                                                            <Badge variant="secondary">
+                                                                System
+                                                            </Badge>
+                                                        ) : null}
+                                                    </div>
+                                                    <div className="text-xs text-muted-foreground">
+                                                        {roleOption.name}
+                                                    </div>
+                                                </div>
+                                            </label>
+                                        );
+                                    })}
+                                </div>
+                            </FieldSet>
+                            <FieldError>{form.error('roles')}</FieldError>
+                        </Field>
                     </CardContent>
                 </Card>
             </div>
@@ -359,8 +454,12 @@ export default function ManagedUserForm({
                 </Button>
 
                 <Button type="submit" disabled={form.processing}>
-                    <SaveIcon data-icon="inline-start" />
-                    {submitLabel}
+                    {form.processing ? (
+                        <Spinner />
+                    ) : (
+                        <SaveIcon data-icon="inline-start" />
+                    )}
+                    {form.processing ? 'Saving...' : submitLabel}
                 </Button>
             </div>
         </form>

@@ -7,6 +7,7 @@ export default function UsersEdit({
     user,
     initialValues,
     availableRoles,
+    statusOptions,
 }: UserEditPageProps) {
     const breadcrumbs: BreadcrumbItem[] = [
         {
@@ -34,6 +35,7 @@ export default function UsersEdit({
                 user={user}
                 initialValues={initialValues}
                 availableRoles={availableRoles}
+                statusOptions={statusOptions}
             />
         </AppLayout>
     );

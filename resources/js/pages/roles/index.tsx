@@ -1,4 +1,4 @@
-import { Link, router } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import {
     CheckCircleIcon,
     EyeIcon,
@@ -21,11 +21,10 @@ import type {
     DatagridFilter,
     DatagridTab,
 } from '@/components/datagrid/datagrid';
-import { ResourceFeedbackAlerts } from '@/components/resource/resource-feedback-alerts';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
-import type { BreadcrumbItem } from '@/types';
+import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
 import type { RoleListItem, RolesIndexPageProps } from '@/types/role';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -37,9 +36,13 @@ export default function RolesIndex({
     roles,
     filters,
     statistics,
-    status,
-    error,
 }: RolesIndexPageProps) {
+    const page = usePage<AuthenticatedSharedData>();
+    const canAddRoles = page.props.auth.abilities.addRoles;
+    const canEditRoles = page.props.auth.abilities.editRoles;
+    const canDeleteRoles = page.props.auth.abilities.deleteRoles;
+    const canRestoreRoles = page.props.auth.abilities.restoreRoles;
+
     // ----- Bulk action helper -----
 
     const handleBulkAction = (
@@ -184,22 +187,30 @@ export default function RolesIndex({
     const rowActions = (role: RoleListItem): DatagridAction[] => {
         if (role.is_trashed) {
             return [
-                {
-                    label: 'Restore',
-                    icon: <RefreshCwIcon />,
-                    href: route('app.roles.restore', role.id),
-                    method: 'PATCH',
-                    confirm: `Restore "${role.display_name}"?`,
-                },
-                {
-                    label: 'Delete Permanently',
-                    icon: <Trash2Icon />,
-                    href: route('app.roles.force-delete', role.id),
-                    method: 'DELETE',
-                    confirm: `⚠️ Permanently delete "${role.display_name}"? This cannot be undone!`,
-                    variant: 'destructive',
-                    disabled: role.is_system,
-                },
+                ...(canRestoreRoles
+                    ? [
+                          {
+                              label: 'Restore',
+                              icon: <RefreshCwIcon />,
+                              href: route('app.roles.restore', role.id),
+                              method: 'PATCH' as const,
+                              confirm: `Restore "${role.display_name}"?`,
+                          },
+                      ]
+                    : []),
+                ...(canDeleteRoles
+                    ? [
+                          {
+                              label: 'Delete Permanently',
+                              icon: <Trash2Icon />,
+                              href: route('app.roles.force-delete', role.id),
+                              method: 'DELETE' as const,
+                              confirm: `⚠️ Permanently delete "${role.display_name}"? This cannot be undone!`,
+                              variant: 'destructive' as const,
+                              disabled: role.is_system,
+                          },
+                      ]
+                    : []),
             ];
         }
 
@@ -211,59 +222,79 @@ export default function RolesIndex({
                 href: role.show_url,
                 icon: <EyeIcon />,
             },
-            {
-                label: 'Edit',
-                href: route('app.roles.edit', role.id),
-                icon: <PencilIcon />,
-            },
-            {
-                label: 'Move to Trash',
-                onSelect: () => {
-                    if (
-                        window.confirm(`Move "${role.display_name}" to trash?`)
-                    ) {
-                        router.delete(route('app.roles.destroy', role.id), {
-                            preserveScroll: true,
-                        });
-                    }
-                },
-                icon: <Trash2Icon />,
-                variant: 'destructive',
-                disabled: deleteDisabled,
-            },
+            ...(canEditRoles
+                ? [
+                      {
+                          label: 'Edit',
+                          href: route('app.roles.edit', role.id),
+                          icon: <PencilIcon />,
+                      },
+                  ]
+                : []),
+            ...(canDeleteRoles
+                ? [
+                      {
+                          label: 'Move to Trash',
+                          href: route('app.roles.destroy', role.id),
+                          method: 'DELETE' as const,
+                          confirm: `Move "${role.display_name}" to trash?`,
+                          icon: <Trash2Icon />,
+                          variant: 'destructive' as const,
+                          disabled: deleteDisabled,
+                      },
+                  ]
+                : []),
         ];
     };
 
     // ----- Bulk actions -----
 
     const bulkActions: DatagridBulkAction<RoleListItem>[] = [
-        {
-            key: 'bulk-delete',
-            label: 'Move to Trash',
-            icon: <Trash2Icon />,
-            variant: 'destructive' as const,
-            confirm: 'Move selected roles to trash?',
-            onSelect: (rows: RoleListItem[], clear: () => void) =>
-                handleBulkAction('delete', rows, clear),
-        },
-        {
-            key: 'bulk-restore',
-            label: 'Restore',
-            icon: <RefreshCwIcon />,
-            confirm: 'Restore selected roles from trash?',
-            onSelect: (rows: RoleListItem[], clear: () => void) =>
-                handleBulkAction('restore', rows, clear),
-        },
-        {
-            key: 'bulk-force-delete',
-            label: 'Delete Permanently',
-            icon: <Trash2Icon />,
-            variant: 'destructive' as const,
-            confirm:
-                '⚠️ Permanently delete selected roles? This cannot be undone!',
-            onSelect: (rows: RoleListItem[], clear: () => void) =>
-                handleBulkAction('force_delete', rows, clear),
-        },
+        ...(canDeleteRoles
+            ? [
+                  {
+                      key: 'bulk-delete',
+                      label: 'Move to Trash',
+                      icon: <Trash2Icon />,
+                      variant: 'destructive' as const,
+                      confirm: 'Move selected roles to trash?',
+                      onSelect: (
+                          rows: RoleListItem[],
+                          clear: () => void,
+                      ) => handleBulkAction('delete', rows, clear),
+                  },
+              ]
+            : []),
+        ...(canRestoreRoles
+            ? [
+                  {
+                      key: 'bulk-restore',
+                      label: 'Restore',
+                      icon: <RefreshCwIcon />,
+                      confirm: 'Restore selected roles from trash?',
+                      onSelect: (
+                          rows: RoleListItem[],
+                          clear: () => void,
+                      ) => handleBulkAction('restore', rows, clear),
+                  },
+              ]
+            : []),
+        ...(canDeleteRoles
+            ? [
+                  {
+                      key: 'bulk-force-delete',
+                      label: 'Delete Permanently',
+                      icon: <Trash2Icon />,
+                      variant: 'destructive' as const,
+                      confirm:
+                          '⚠️ Permanently delete selected roles? This cannot be undone!',
+                      onSelect: (
+                          rows: RoleListItem[],
+                          clear: () => void,
+                      ) => handleBulkAction('force_delete', rows, clear),
+                  },
+              ]
+            : []),
     ];
 
     // Filter bulk actions based on current tab
@@ -280,22 +311,17 @@ export default function RolesIndex({
             title="Roles"
             description="Manage user roles and permissions"
             headerActions={
-                <Button asChild>
-                    <Link href={route('app.roles.create')}>
-                        <PlusIcon data-icon="inline-start" />
-                        Add Role
-                    </Link>
-                </Button>
+                canAddRoles ? (
+                    <Button asChild>
+                        <Link href={route('app.roles.create')}>
+                            <PlusIcon data-icon="inline-start" />
+                            Add Role
+                        </Link>
+                    </Button>
+                ) : undefined
             }
         >
             <div className="flex flex-col gap-6">
-                <ResourceFeedbackAlerts
-                    status={status}
-                    statusIcon={<ShieldCheckIcon />}
-                    error={error}
-                    errorIcon={<ShieldAlertIcon />}
-                />
-
                 <Datagrid
                     action={route('app.roles.index')}
                     rows={roles}
@@ -309,7 +335,9 @@ export default function RolesIndex({
                     rowActions={rowActions}
                     bulkActions={visibleBulkActions}
                     isRowSelectable={(role) =>
-                        !role.is_system && role.users_count === 0
+                        visibleBulkActions.length > 0 &&
+                        !role.is_system &&
+                        role.users_count === 0
                     }
                     sorting={{
                         sort: filters.sort,

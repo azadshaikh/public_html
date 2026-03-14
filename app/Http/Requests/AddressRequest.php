@@ -22,65 +22,53 @@ class AddressRequest extends ScaffoldRequest
     public function rules(): array
     {
         return [
-            // Full name (first_name + last_name combined display)
             'first_name' => ['nullable', 'string', 'max:100'],
             'last_name' => ['nullable', 'string', 'max:100'],
-
-            // Address type
+            'company' => ['nullable', 'string', 'max:255'],
             'type' => ['nullable', 'string', 'max:50'],
-
-            // Address lines
             'address1' => [$this->requiredOnCreate(), 'string', 'max:255'],
             'address2' => ['nullable', 'string', 'max:255'],
-
-            // Location details
-            'city' => [$this->requiredOnCreate(), 'string', 'max:100'],
-            'state' => ['nullable', 'string', 'max:100'],
-            'postcode' => ['nullable', 'string', 'max:20'],
+            'address3' => ['nullable', 'string', 'max:255'],
+            'country' => ['nullable', 'string', 'max:100'],
             'country_code' => [$this->requiredOnCreate(), 'string', 'size:2'],
-
-            // Contact info
+            'state' => ['nullable', 'string', 'max:100'],
+            'state_code' => ['nullable', 'string', 'max:10'],
+            'city' => [$this->requiredOnCreate(), 'string', 'max:100'],
+            'city_code' => ['nullable', 'string', 'max:10'],
+            'zip' => ['nullable', 'string', 'max:20'],
             'phone' => ['nullable', 'string', 'max:30'],
-            'email' => ['nullable', 'email', 'max:255'],
-
-            // Flags
-            'is_primary' => ['nullable', 'boolean'],
-            'is_verified' => ['nullable', 'boolean'],
-            'is_billing' => ['nullable', 'boolean'],
-            'is_shipping' => ['nullable', 'boolean'],
-
-            // Polymorphic relation (optional - can be attached later)
-            'addressable_type' => ['nullable', 'string', 'max:255'],
-            'addressable_id' => ['nullable', 'integer'],
-
-            // Coordinates (optional)
+            'phone_code' => ['nullable', 'string', 'max:10'],
             'latitude' => ['nullable', 'numeric', 'between:-90,90'],
             'longitude' => ['nullable', 'numeric', 'between:-180,180'],
-
-            // Metadata
+            'is_primary' => ['nullable', 'boolean'],
+            'is_verified' => ['nullable', 'boolean'],
+            'addressable_type' => ['nullable', 'string', 'max:255'],
+            'addressable_id' => ['nullable', 'integer'],
             'metadata' => ['nullable', 'array'],
         ];
     }
 
     /**
-     * Get custom attribute names for validation messages
+     * Get custom attribute names for validation messages.
      */
     public function attributes(): array
     {
         return [
             'address1' => 'street address',
             'address2' => 'address line 2',
+            'address3' => 'address line 3',
             'country_code' => 'country',
-            'postcode' => 'postal code',
+            'state_code' => 'state code',
+            'city_code' => 'city code',
+            'zip' => 'postal code',
+            'phone_code' => 'phone code',
             'is_primary' => 'primary address',
             'is_verified' => 'verified status',
-            'is_billing' => 'billing address',
-            'is_shipping' => 'shipping address',
         ];
     }
 
     /**
-     * Get custom validation messages
+     * Get custom validation messages.
      */
     public function messages(): array
     {
@@ -92,7 +80,7 @@ class AddressRequest extends ScaffoldRequest
     }
 
     /**
-     * Get the scaffold definition
+     * Get the scaffold definition.
      */
     protected function definition(): ScaffoldDefinition
     {
@@ -100,7 +88,7 @@ class AddressRequest extends ScaffoldRequest
     }
 
     /**
-     * Get the model class for unique/exists rule generation
+     * Get the model class for unique/exists rule generation.
      */
     protected function getModelClass(): string
     {
@@ -112,26 +100,25 @@ class AddressRequest extends ScaffoldRequest
      */
     protected function prepareForValidation(): void
     {
-        // Convert string booleans to actual booleans
         $this->prepareBooleanField('is_primary');
         $this->prepareBooleanField('is_verified');
-        $this->prepareBooleanField('is_billing');
-        $this->prepareBooleanField('is_shipping');
 
-        // Uppercase country code
         if ($this->has('country_code') && $this->country_code) {
-            $this->merge([
-                'country_code' => strtoupper($this->country_code),
-            ]);
+            $this->merge(['country_code' => strtoupper((string) $this->country_code)]);
         }
 
-        // Trim whitespace from address fields
-        $this->trimField('address1');
-        $this->trimField('address2');
-        $this->trimField('city');
-        $this->trimField('state');
-        $this->trimField('postcode');
+        if ($this->has('state_code') && $this->state_code) {
+            $this->merge(['state_code' => strtoupper((string) $this->state_code)]);
+        }
+
         $this->trimField('first_name');
         $this->trimField('last_name');
+        $this->trimField('company');
+        $this->trimField('address1');
+        $this->trimField('address2');
+        $this->trimField('address3');
+        $this->trimField('city');
+        $this->trimField('state');
+        $this->trimField('zip');
     }
 }

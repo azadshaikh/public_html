@@ -8,6 +8,7 @@ use App\Enums\Status;
 use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
@@ -21,6 +22,8 @@ class UserControllerTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        $this->withoutMiddleware(ValidateCsrfToken::class);
 
         $this->seed(RolesAndPermissionsSeeder::class);
 
@@ -153,6 +156,123 @@ class UserControllerTest extends TestCase
                     ->etc()
                 )
             );
+    }
+
+    public function test_administrator_can_start_impersonation_via_post_request(): void
+    {
+        $targetUser = User::factory()->create([
+            'first_name' => 'Target',
+            'last_name' => 'User',
+            'email_verified_at' => now(),
+            'status' => Status::ACTIVE,
+        ]);
+        $targetUser->assignRole(Role::findByName('user', 'web'));
+
+        $this->actingAs($this->admin)
+            ->post(route('app.users.impersonate', $targetUser))
+            ->assertRedirect(route('dashboard'));
+
+        $this->assertAuthenticatedAs($targetUser);
+        $this->assertSame($this->admin->id, session('impersonator_id'));
+    }
+
+    public function test_inertia_impersonation_request_forces_a_full_browser_reload(): void
+    {
+        $targetUser = User::factory()->create([
+            'first_name' => 'Target',
+            'last_name' => 'User',
+            'email_verified_at' => now(),
+            'status' => Status::ACTIVE,
+        ]);
+        $targetUser->assignRole(Role::findByName('user', 'web'));
+
+        $this->actingAs($this->admin)
+            ->withHeaders([
+                'X-Inertia' => 'true',
+                'X-Requested-With' => 'XMLHttpRequest',
+            ])
+            ->post(route('app.users.impersonate', $targetUser))
+            ->assertStatus(409)
+            ->assertHeader('X-Inertia-Location', route('dashboard'));
+
+        $this->assertAuthenticatedAs($targetUser);
+        $this->assertSame($this->admin->id, session('impersonator_id'));
+    }
+
+    public function test_impersonated_sessions_share_impersonation_state_with_inertia(): void
+    {
+        $impersonator = User::factory()->create([
+            'first_name' => 'Original',
+            'last_name' => 'Admin',
+            'email_verified_at' => now(),
+            'status' => Status::ACTIVE,
+        ]);
+        $impersonator->assignRole(Role::findByName('administrator', 'web'));
+
+        $impersonatedUser = User::factory()->create([
+            'first_name' => 'Target',
+            'last_name' => 'Admin',
+            'email_verified_at' => now(),
+            'status' => Status::ACTIVE,
+        ]);
+        $impersonatedUser->assignRole(Role::findByName('administrator', 'web'));
+
+        $this->withSession(['impersonator_id' => $impersonator->id])
+            ->actingAs($impersonatedUser)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->where('auth.impersonation.active', true)
+                ->where('auth.impersonation.impersonator.id', $impersonator->id)
+                ->where('auth.impersonation.impersonator.name', $impersonator->name)
+                ->where('auth.impersonation.impersonator.email', $impersonator->email)
+                ->where('auth.impersonation.stopUrl', route('app.users.stop-impersonating'))
+            );
+    }
+
+    public function test_impersonation_can_be_stopped_via_post_request(): void
+    {
+        $targetUser = User::factory()->create([
+            'first_name' => 'Target',
+            'last_name' => 'User',
+            'email_verified_at' => now(),
+            'status' => Status::ACTIVE,
+        ]);
+        $targetUser->assignRole(Role::findByName('user', 'web'));
+
+        $this->actingAs($this->admin)
+            ->post(route('app.users.impersonate', $targetUser));
+
+        $this->post(route('app.users.stop-impersonating'))
+            ->assertRedirect(route('dashboard'));
+
+        $this->assertAuthenticatedAs($this->admin);
+        $this->assertNull(session('impersonator_id'));
+    }
+
+    public function test_stopping_impersonation_via_inertia_forces_a_full_browser_reload(): void
+    {
+        $targetUser = User::factory()->create([
+            'first_name' => 'Target',
+            'last_name' => 'User',
+            'email_verified_at' => now(),
+            'status' => Status::ACTIVE,
+        ]);
+        $targetUser->assignRole(Role::findByName('user', 'web'));
+
+        $this->actingAs($this->admin)
+            ->post(route('app.users.impersonate', $targetUser));
+
+        $this->withHeaders([
+            'X-Inertia' => 'true',
+            'X-Requested-With' => 'XMLHttpRequest',
+        ])
+            ->post(route('app.users.stop-impersonating'))
+            ->assertStatus(409)
+            ->assertHeader('X-Inertia-Location', route('dashboard'));
+
+        $this->assertAuthenticatedAs($this->admin);
+        $this->assertNull(session('impersonator_id'));
     }
 
     // =========================================================================
@@ -326,9 +446,10 @@ class UserControllerTest extends TestCase
                 ->component('users/create')
                 ->has('initialValues')
                 ->has('availableRoles')
+                ->has('statusOptions')
                 ->where('initialValues.name', '')
                 ->where('initialValues.email', '')
-                ->where('initialValues.active', true)
+                ->where('initialValues.status', 'active')
                 ->where('initialValues.roles', [])
                 ->where('initialValues.password', '')
             );
@@ -360,6 +481,7 @@ class UserControllerTest extends TestCase
                 ->component('users/edit')
                 ->has('initialValues')
                 ->has('availableRoles')
+                ->has('statusOptions')
                 ->has('user')
             );
     }

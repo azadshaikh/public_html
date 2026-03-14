@@ -110,8 +110,12 @@ class RoleController extends ScaffoldController implements HasMiddleware
             'initialValues' => [
                 'name' => $role->exists ? ($role->name ?? '') : '',
                 'display_name' => $role->exists ? ($role->display_name ?? '') : '',
+                'status' => $role->exists
+                    ? ($role->status instanceof Status ? $role->status->value : (string) ($role->status ?? Status::ACTIVE->value))
+                    : Status::ACTIVE->value,
                 'permissions' => $role->exists ? $role->permissions()->pluck('permissions.id')->toArray() : [],
             ],
+            'statusOptions' => $this->roleService->getStatusOptions(),
             'permissionGroups' => $this->roleService->getAllPermissionsGrouped(),
         ];
     }
@@ -129,6 +133,7 @@ class RoleController extends ScaffoldController implements HasMiddleware
             'id' => $role->id,
             'name' => $role->name,
             'display_name' => $role->display_name,
+            'status' => $role->status instanceof Status ? $role->status->value : (string) ($role->status ?? Status::ACTIVE->value),
             'permissions' => $role->permissions()->pluck('permissions.id')->toArray(),
             'is_system' => $role->id === (int) config('permission.super_user_role_id', 1),
             'users_count' => $role->users_count,

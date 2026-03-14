@@ -11,6 +11,7 @@ use App\Models\Address;
 use App\Models\User;
 use App\Scaffold\ScaffoldDefinition;
 use App\Traits\Scaffoldable;
+use Illuminate\Http\Request;
 
 /**
  * AddressService - Service for Address CRUD operations
@@ -26,8 +27,12 @@ class AddressService implements ScaffoldServiceInterface
 {
     use Scaffoldable;
 
+    public function __construct(
+        private readonly GeoDataService $geoDataService
+    ) {}
+
     /**
-     * Get the scaffold definition for this service
+     * Get the scaffold definition for this service.
      */
     public function getScaffoldDefinition(): ScaffoldDefinition
     {
@@ -51,38 +56,50 @@ class AddressService implements ScaffoldServiceInterface
     // Note: prepareUpdateData() not overridden - base trait returns $data unchanged
 
     /**
-     * Get available address types
+     * Get available address types as an indexed array of {value, label} objects.
+     *
+     * @return array<int, array{value: string, label: string}>
      */
     public function getTypeOptions(): array
     {
         return [
-            'home' => 'Home',
-            'work' => 'Work',
-            'billing' => 'Billing',
-            'shipping' => 'Shipping',
-            'other' => 'Other',
+            ['value' => 'home', 'label' => 'Home'],
+            ['value' => 'work', 'label' => 'Work'],
+            ['value' => 'billing', 'label' => 'Billing'],
+            ['value' => 'shipping', 'label' => 'Shipping'],
+            ['value' => 'other', 'label' => 'Other'],
         ];
     }
 
     /**
-     * Get available countries (can be extended to load from database/API)
+     * Get all countries as select options via GeoDataService.
+     *
+     * @return array<int, array{value: string, label: string}>
      */
     public function getCountryOptions(): array
     {
-        // For now, return common countries
-        // This can be extended to load from geo_countries table
-        return [
-            'US' => 'United States',
-            'CA' => 'Canada',
-            'GB' => 'United Kingdom',
-            'AU' => 'Australia',
-            'DE' => 'Germany',
-            'FR' => 'France',
-            'IN' => 'India',
-            'JP' => 'Japan',
-            'CN' => 'China',
-            'BR' => 'Brazil',
-        ];
+        $countries = $this->geoDataService->getAllCountries();
+
+        return array_map(fn (array $country): array => [
+            'value' => $country['iso2'],
+            'label' => $country['name'],
+        ], $countries);
+    }
+
+    /**
+     * Get addresses as a PaginatedData-compatible array for Inertia index pages.
+     *
+     * @return array<string, mixed>
+     */
+    public function getPaginatedAddresses(Request $request): array
+    {
+        $query = $this->buildListQuery($request);
+        $paginator = $query->paginate($this->getPerPage($request))->onEachSide(1);
+
+        $paginatedArray = $paginator->toArray();
+        $paginatedArray['data'] = AddressResource::collection($paginator->items())->resolve(request());
+
+        return $paginatedArray;
     }
 
     /**

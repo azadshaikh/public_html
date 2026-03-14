@@ -4,7 +4,7 @@ import type {
     AppToastVariant,
 } from '@/components/forms/form-success-toast';
 import { showAppToast } from '@/components/forms/form-success-toast';
-import type { FlashData } from '@/types/auth';
+import type { FlashData, FlashMessage } from '@/types/auth';
 
 /**
  * Module-level flag to suppress the next flash toast.
@@ -24,7 +24,7 @@ function showFlashToasts(flash: FlashData): void {
         return;
     }
 
-    const entries: { key: AppToastVariant; message: string }[] = [];
+    const entries: { key: AppToastVariant; message: FlashMessage }[] = [];
 
     if (flash.success) {
         entries.push({ key: 'success', message: flash.success });
@@ -50,19 +50,50 @@ function showFlashToasts(flash: FlashData): void {
     }
 
     for (const entry of entries) {
-        const options: AppToastOptions = {
-            variant: entry.key,
-            description: entry.message,
-        };
+        const options = resolveFlashToastOptions(entry.key, entry.message);
 
-        // Use description as title for short messages, keep default title for longer ones.
-        if (entry.message.length <= 40) {
-            options.title = entry.message;
-            options.description = undefined;
+        if (!options) {
+            continue;
         }
 
         showAppToast(options);
     }
+}
+
+function resolveFlashToastOptions(
+    variant: AppToastVariant,
+    message: FlashMessage,
+): AppToastOptions | null {
+    if (typeof message === 'string') {
+        const options: AppToastOptions = {
+            variant,
+            description: message,
+        };
+
+        if (message.length <= 40) {
+            options.title = message;
+            options.description = undefined;
+        }
+
+        return options;
+    }
+
+    if (!message || typeof message !== 'object') {
+        return null;
+    }
+
+    const title = message.title?.trim();
+    const description = message.message?.trim();
+
+    if (!title && !description) {
+        return null;
+    }
+
+    return {
+        variant,
+        title,
+        description,
+    };
 }
 
 /**

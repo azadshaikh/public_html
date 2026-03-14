@@ -21,18 +21,42 @@ export type Auth = {
         addRoles: boolean;
         editRoles: boolean;
         deleteRoles: boolean;
+        restoreRoles: boolean;
         viewUsers: boolean;
         addUsers: boolean;
         editUsers: boolean;
         deleteUsers: boolean;
+        restoreUsers: boolean;
+        impersonateUsers: boolean;
+        viewAddresses: boolean;
+        addAddresses: boolean;
+        editAddresses: boolean;
+        deleteAddresses: boolean;
+        restoreAddresses: boolean;
     };
+    impersonation: {
+        active: true;
+        impersonator: {
+            id: number;
+            name: string;
+            email: string;
+        };
+        stopUrl: string;
+    } | null;
 };
 
+export type FlashMessage =
+    | string
+    | {
+          title?: string;
+          message?: string;
+      };
+
 export type FlashData = {
-    success?: string;
-    error?: string;
-    info?: string;
-    status?: string;
+    success?: FlashMessage;
+    error?: FlashMessage;
+    info?: FlashMessage;
+    status?: FlashMessage;
 };
 
 export type SharedData = {

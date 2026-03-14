@@ -164,8 +164,8 @@ class UserDefinition extends ScaffoldDefinition
                 ->label('Impersonate')
                 ->icon('ri-user-settings-line')
                 ->route($this->routePrefix.'.impersonate')
+                ->method('POST')
                 ->permission('impersonate_'.$this->permissionPrefix)
-                ->fullReload() // Force full page reload to update session
                 ->hideOnStatus('trash')
                 ->forRow(),
 
