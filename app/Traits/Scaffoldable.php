@@ -759,8 +759,17 @@ trait Scaffoldable
      */
     protected function applySorting(Builder $query, Request $request): void
     {
-        $sortBy = $request->input('sort_column', $this->scaffold()->getDefaultSort());
-        $sortOrder = $request->input('sort_direction', $this->scaffold()->getDefaultSortDirection());
+        $sortBy = $request->input(
+            'sort_column',
+            $request->input('sort', $this->scaffold()->getDefaultSort()),
+        );
+        $sortOrder = $request->input(
+            'sort_direction',
+            $request->input(
+                'direction',
+                $this->scaffold()->getDefaultSortDirection(),
+            ),
+        );
 
         if (! $sortBy) {
             return;
@@ -781,6 +790,17 @@ trait Scaffoldable
             // Get the actual DB column to sort on (handles computed/virtual columns)
             $actualSortColumn = $this->scaffold()->getActualSortColumn($sortBy) ?? $sortBy;
             $query->orderBy($actualSortColumn, $sortOrder);
+
+            $modelClass = $this->getModelClass();
+            $model = new $modelClass;
+            $qualifiedKeyName = $model->qualifyColumn($model->getKeyName());
+
+            if (
+                $actualSortColumn !== $model->getKeyName()
+                && $actualSortColumn !== $qualifiedKeyName
+            ) {
+                $query->orderBy($qualifiedKeyName, $sortOrder);
+            }
         }
     }
 

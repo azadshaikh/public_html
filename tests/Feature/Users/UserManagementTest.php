@@ -385,6 +385,48 @@ class UserManagementTest extends TestCase
             );
     }
 
+    public function test_users_index_keeps_stable_default_order_after_status_updates(): void
+    {
+        $sharedCreatedAt = now()->addDay()->startOfMinute();
+
+        $earlierUser = User::factory()->create([
+            'first_name' => 'Earlier',
+            'last_name' => 'User',
+            'status' => Status::ACTIVE,
+            'created_at' => $sharedCreatedAt,
+            'updated_at' => $sharedCreatedAt,
+        ]);
+
+        $laterUser = User::factory()->create([
+            'first_name' => 'Later',
+            'last_name' => 'User',
+            'status' => Status::ACTIVE,
+            'created_at' => $sharedCreatedAt,
+            'updated_at' => $sharedCreatedAt,
+        ]);
+
+        $this->actingAs($this->admin)
+            ->get(route('app.users.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->where('users.data.0.id', $laterUser->id)
+                ->where('users.data.1.id', $earlierUser->id)
+            );
+
+        $this->actingAs($this->admin)
+            ->patch(route('app.users.suspend', $laterUser))
+            ->assertRedirect();
+
+        $this->actingAs($this->admin)
+            ->get(route('app.users.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->where('users.data.0.id', $laterUser->id)
+                ->where('users.data.1.id', $earlierUser->id)
+                ->where('users.data.0.status', Status::SUSPENDED->value)
+            );
+    }
+
     // =========================================================================
     // SHOW
     // =========================================================================
