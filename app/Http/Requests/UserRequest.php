@@ -56,7 +56,7 @@ class UserRequest extends ScaffoldRequest
             'gender' => ['nullable', 'string', 'in:male,female,other'],
             'tagline' => ['nullable', 'string', 'max:255'],
             'bio' => ['nullable', 'string', 'max:1000'],
-            'avatar' => ['nullable', 'string', 'max:500'],
+            'avatar' => ['nullable', 'image', 'mimes:jpg,jpeg,png,gif', 'max:2048'],
 
             // ================================================================
             // ADDRESS FIELDS
@@ -167,7 +167,6 @@ class UserRequest extends ScaffoldRequest
         $this->trimField('username');
         $this->trimField('tagline');
         $this->trimField('bio');
-        $this->trimField('avatar');
         $this->trimField('website_url');
         $this->trimField('twitter_url');
         $this->trimField('facebook_url');

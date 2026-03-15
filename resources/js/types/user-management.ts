@@ -52,6 +52,7 @@ export type UserListItem = {
     created_at_human: string;
     updated_at: string | null;
     updated_at_formatted: string | null;
+    updated_at_human: string | null;
     last_access: string | null;
     deleted_at: string | null;
     actions: Record<string, UserRowAction>;
@@ -130,9 +131,17 @@ export type UsersShowPageProps = {
         username: string | null;
         updated_at: string | null;
         updated_at_formatted: string | null;
+        updated_at_human: string | null;
         last_access: string | null;
         last_access_formatted: string | null;
         last_access_human: string | null;
+        email_verified_at_formatted: string | null;
+        address1: string | null;
+        address2: string | null;
+        city: string | null;
+        state: string | null;
+        country: string | null;
+        zip: string | null;
     };
     userActivities: UserActivity[];
     notes: AppNote[];
@@ -146,26 +155,55 @@ export type UsersShowPageProps = {
 // Kept for create/edit pages (unchanged)
 // ================================================================
 
+export type ManagedUserStatus = 'active' | 'pending' | 'suspended' | 'banned';
+
+export type ManagedUserGender = '' | 'male' | 'female' | 'other';
+
 export type ManagedUserFormValues = {
     name: string;
+    first_name: string;
+    last_name: string;
     email: string;
-    status: 'active' | 'pending' | 'suspended' | 'banned';
-    roles: number[];
+    username: string;
+    status: ManagedUserStatus;
     password: string;
     password_confirmation: string;
+    address1: string;
+    address2: string;
+    country: string;
+    country_code: string;
+    state: string;
+    state_code: string;
+    city: string;
+    city_code: string;
+    zip: string;
+    phone: string;
+    birth_date: string;
+    gender: ManagedUserGender;
+    tagline: string;
+    bio: string;
+    avatar: File | null;
+    website_url: string;
+    twitter_url: string;
+    facebook_url: string;
+    instagram_url: string;
+    linkedin_url: string;
+    roles: number[];
 };
 
 export type ManagedUserListItem = {
     id: number;
     name: string;
     email: string;
-    status: ManagedUserFormValues['status'];
+    status: ManagedUserStatus;
     email_verified_at: string | null;
     roles: ManagedUserRole[];
 };
 
 export type ManagedUserEditingTarget = ManagedUserListItem &
-    Omit<ManagedUserFormValues, 'password' | 'password_confirmation'>;
+    Omit<ManagedUserFormValues, 'password' | 'password_confirmation' | 'avatar'> & {
+        avatar_url: string | null;
+    };
 
 export type ManagedUserRoleOption = {
     id: number;
@@ -175,7 +213,12 @@ export type ManagedUserRoleOption = {
 };
 
 export type ManagedUserStatusOption = {
-    value: ManagedUserFormValues['status'];
+    value: ManagedUserStatus;
+    label: string;
+};
+
+export type ManagedUserGenderOption = {
+    value: ManagedUserGender;
     label: string;
 };
 
@@ -184,10 +227,12 @@ export type UserEditPageProps = {
     initialValues: ManagedUserFormValues;
     availableRoles: ManagedUserRoleOption[];
     statusOptions: ManagedUserStatusOption[];
+    genderOptions: ManagedUserGenderOption[];
 };
 
 export type UserCreatePageProps = {
     initialValues: ManagedUserFormValues;
     availableRoles: ManagedUserRoleOption[];
     statusOptions: ManagedUserStatusOption[];
+    genderOptions: ManagedUserGenderOption[];
 };

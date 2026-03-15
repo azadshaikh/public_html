@@ -8,6 +8,7 @@ export default function UsersEdit({
     initialValues,
     availableRoles,
     statusOptions,
+    genderOptions,
 }: UserEditPageProps) {
     const breadcrumbs: BreadcrumbItem[] = [
         {
@@ -36,6 +37,7 @@ export default function UsersEdit({
                 initialValues={initialValues}
                 availableRoles={availableRoles}
                 statusOptions={statusOptions}
+                genderOptions={genderOptions}
             />
         </AppLayout>
     );

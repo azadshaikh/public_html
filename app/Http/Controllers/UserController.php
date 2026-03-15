@@ -16,6 +16,7 @@ use App\Scaffold\ScaffoldController;
 use App\Services\GeoIpService;
 use App\Services\NoteService;
 use App\Services\UserService;
+use App\Support\CacheInvalidation;
 use Exception;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Database\Eloquent\Model;
@@ -51,6 +52,23 @@ class UserController extends ScaffoldController implements HasMiddleware
             // Note: stopImpersonating is NOT protected because the impersonated user may not have permissions
             new Middleware('permission:impersonate_users', only: ['impersonate']),
         ];
+    }
+
+    public function store(Request $request): RedirectResponse
+    {
+        $this->enforcePermission('add');
+
+        $validatedData = $this->prepareValidatedUserData($request);
+        $model = $this->service()->create($validatedData);
+
+        CacheInvalidation::touchForModel($model, $this->getEntityName().' created');
+
+        $this->handleCreationSideEffects($model);
+        $this->logActivity($model, ActivityAction::CREATE, $this->getEntityName().' created successfully');
+
+        return redirect()
+            ->to($this->getAfterStoreRedirectUrl($model))
+            ->with('status', $this->buildCreateSuccessMessage($model));
     }
 
     // ================================================================
@@ -150,7 +168,25 @@ class UserController extends ScaffoldController implements HasMiddleware
             }
         }
 
-        return parent::update($request, $id);
+        $this->enforcePermission('edit');
+
+        $previousValues = $this->capturePreviousValues($user);
+        $validatedData = $this->prepareValidatedUserData($request, $user);
+
+        $updatedModel = $this->service()->update($user, $validatedData);
+
+        CacheInvalidation::touchForModel($updatedModel, $this->getEntityName().' updated', $previousValues);
+
+        $this->handleUpdateSideEffectsWithPrevious($updatedModel, $previousValues);
+        $this->logActivityWithPreviousValues(
+            $updatedModel,
+            ActivityAction::UPDATE,
+            $this->getEntityName().' updated successfully',
+            $previousValues
+        );
+
+        return to_route($this->scaffold()->getEditRoute(), $updatedModel)
+            ->with('status', $this->buildUpdateSuccessMessage($updatedModel));
     }
 
     // ================================================================
@@ -518,16 +554,54 @@ class UserController extends ScaffoldController implements HasMiddleware
     {
         /** @var User $user */
         $user = $model;
+        $user->loadMissing(['roles:id', 'primaryAddress']);
+        $primaryAddress = $user->primaryAddress;
+
+        $detectedCountryCode = null;
+
+        if (! $user->exists) {
+            $location = $this->geoIpService->getLocationFromIp(request()->ip());
+            $detectedCountryCode = $location['country']['iso_code'] ?? null;
+
+            if ($detectedCountryCode === null && app()->environment('local')) {
+                $detectedCountryCode = 'IN';
+            }
+        }
 
         $initialValues = [
             'name' => $user->exists ? ($user->getAttribute('name') ?? '') : '',
+            'first_name' => $user->exists ? (string) ($user->getAttribute('first_name') ?? '') : '',
+            'last_name' => $user->exists ? (string) ($user->getAttribute('last_name') ?? '') : '',
             'email' => $user->exists ? ($user->getAttribute('email') ?? '') : '',
+            'username' => $user->exists ? (string) ($user->getAttribute('username') ?? '') : '',
             'status' => $user->exists
                 ? ($user->getAttribute('status')?->value ?? Status::ACTIVE->value)
                 : Status::ACTIVE->value,
-            'roles' => $user->exists ? $user->roles()->pluck('id')->toArray() : [],
             'password' => '',
             'password_confirmation' => '',
+            'address1' => $user->exists ? (string) ($primaryAddress?->getAttribute('address1') ?? '') : '',
+            'address2' => $user->exists ? (string) ($primaryAddress?->getAttribute('address2') ?? '') : '',
+            'country' => $user->exists ? (string) ($primaryAddress?->getAttribute('country') ?? '') : '',
+            'country_code' => $user->exists
+                ? (string) ($primaryAddress?->getAttribute('country_code') ?? '')
+                : (string) ($detectedCountryCode ?? ''),
+            'state' => $user->exists ? (string) ($primaryAddress?->getAttribute('state') ?? '') : '',
+            'state_code' => $user->exists ? (string) ($primaryAddress?->getAttribute('state_code') ?? '') : '',
+            'city' => $user->exists ? (string) ($primaryAddress?->getAttribute('city') ?? '') : '',
+            'city_code' => $user->exists ? (string) ($primaryAddress?->getAttribute('city_code') ?? '') : '',
+            'zip' => $user->exists ? (string) ($primaryAddress?->getAttribute('zip') ?? '') : '',
+            'phone' => $user->exists ? (string) ($primaryAddress?->getAttribute('phone') ?? '') : '',
+            'birth_date' => $user->exists ? (string) ($user->getBirthDate() ?? '') : '',
+            'gender' => $user->exists ? (string) ($user->getAttribute('gender') ?? '') : '',
+            'tagline' => $user->exists ? (string) ($user->getAttribute('tagline') ?? '') : '',
+            'bio' => $user->exists ? (string) ($user->getAttribute('bio') ?? '') : '',
+            'avatar' => null,
+            'website_url' => $user->exists ? (string) ($user->getWebsiteUrl() ?? '') : '',
+            'twitter_url' => $user->exists ? (string) ($user->getTwitterUrl() ?? '') : '',
+            'facebook_url' => $user->exists ? (string) ($user->getFacebookUrl() ?? '') : '',
+            'instagram_url' => $user->exists ? (string) ($user->getInstagramUrl() ?? '') : '',
+            'linkedin_url' => $user->exists ? (string) ($user->getLinkedinUrl() ?? '') : '',
+            'roles' => $user->exists ? $user->roles()->pluck('id')->toArray() : [],
         ];
 
         $superUserRoleId = User::superUserRoleId();
@@ -550,19 +624,6 @@ class UserController extends ScaffoldController implements HasMiddleware
             'genderOptions' => $this->userService->getGenderOptions(),
         ];
 
-        // Auto-detect country for new users only
-        if (! $user->exists) {
-            $location = $this->geoIpService->getLocationFromIp(request()->ip());
-            $detectedCountry = $location['country']['iso_code'] ?? null;
-
-            // Fallback for dev environments where IP is private (127.0.0.1, 192.168.x.x)
-            if ($detectedCountry === null && app()->environment('local')) {
-                $detectedCountry = 'IN'; // Default for dev
-            }
-
-            $data['detectedCountryCode'] = $detectedCountry;
-        }
-
         return $data;
     }
 
@@ -570,16 +631,20 @@ class UserController extends ScaffoldController implements HasMiddleware
     {
         /** @var User $user */
         $user = $model;
-        $user->loadMissing('roles:id,name,display_name');
+        $user->loadMissing(['roles:id,name,display_name', 'primaryAddress']);
         $status = $user->getAttribute('status');
         $statusValue = $status instanceof Status ? $status->value : (string) ($status ?? Status::ACTIVE->value);
 
         return [
             'id' => $user->id,
             'name' => $user->name,
+            'first_name' => (string) ($user->first_name ?? ''),
+            'last_name' => (string) ($user->last_name ?? ''),
             'email' => $user->email,
+            'username' => (string) ($user->username ?? ''),
             'status' => $statusValue,
             'email_verified_at' => $user->email_verified_at?->toISOString(),
+            'avatar_url' => $user->getAttribute('avatar_image'),
             'roles' => $user->roles
                 ->map(fn ($role): array => [
                     'id' => $role->id,
@@ -589,6 +654,23 @@ class UserController extends ScaffoldController implements HasMiddleware
                 ->values()
                 ->all(),
         ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function prepareValidatedUserData(Request $request, ?User $user = null): array
+    {
+        $validatedData = $this->validateRequest($request);
+
+        if ($request->hasFile('avatar')) {
+            $storedAvatar = store_uploaded_file_on_media_disk($request->file('avatar'), 'avatars');
+            $validatedData['avatar'] = $storedAvatar !== false ? $storedAvatar : null;
+        } elseif ($user !== null) {
+            $validatedData['avatar'] = $user->avatar;
+        }
+
+        return $validatedData;
     }
 
     // ================================================================

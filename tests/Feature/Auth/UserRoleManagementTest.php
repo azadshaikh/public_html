@@ -10,7 +10,9 @@ use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -82,6 +84,7 @@ class UserRoleManagementTest extends TestCase
                 ->component('users/create')
                 ->where('initialValues.status', 'active')
                 ->has('statusOptions')
+                ->has('genderOptions')
                 ->has('availableRoles'));
     }
 
@@ -108,28 +111,64 @@ class UserRoleManagementTest extends TestCase
     public function test_administrators_can_create_a_user_with_roles(): void
     {
         $administrator = $this->administrator();
+        Storage::fake('public');
+
+        config()->set('media-library.disk_name', 'public');
+        config()->set('media.media_storage_root', 'media-root');
 
         $this->actingAs($administrator)
             ->post(route('app.users.store'), [
                 'name' => 'Created User',
+                'first_name' => 'Created',
+                'last_name' => 'User',
                 'email' => 'created@gmail.com',
+                'username' => 'created-user',
                 'status' => Status::ACTIVE->value,
+                'address1' => '221B Baker Street',
+                'city' => 'London',
+                'zip' => 'NW16XE',
+                'country' => 'United Kingdom',
+                'country_code' => 'GB',
+                'phone' => '9999999999',
+                'birth_date' => '1990-05-10',
+                'gender' => 'other',
+                'tagline' => 'Team lead',
+                'bio' => 'Created from a feature test.',
+                'website_url' => 'https://example.com',
+                'twitter_url' => 'https://x.com/created-user',
                 'roles' => [
                     Role::query()->where('name', 'manager')->value('id'),
                     Role::query()->where('name', 'staff')->value('id'),
                 ],
                 'password' => 'Password123!',
                 'password_confirmation' => 'Password123!',
+                'avatar' => UploadedFile::fake()->image('avatar.jpg'),
             ])
             ->assertRedirect();
 
         $createdUser = User::query()->where('email', 'created@gmail.com')->firstOrFail();
+        $createdUser->load('primaryAddress');
 
         $this->assertSame('Created User', $createdUser->name);
+        $this->assertSame('Created', $createdUser->first_name);
+        $this->assertSame('User', $createdUser->last_name);
+        $this->assertSame('created-user', $createdUser->username);
         $this->assertSame(Status::ACTIVE, $createdUser->status);
+        $this->assertSame('Team lead', $createdUser->tagline);
+        $this->assertSame('Created from a feature test.', $createdUser->bio);
+        $this->assertSame('1990-05-10', $createdUser->getBirthDate());
+        $this->assertSame('https://example.com', $createdUser->getWebsiteUrl());
+        $this->assertSame('https://x.com/created-user', $createdUser->getTwitterUrl());
         $this->assertTrue($createdUser->hasRole('manager'));
         $this->assertTrue($createdUser->hasRole('staff'));
         $this->assertNotSame('Password123!', $createdUser->password);
+        $this->assertSame('221B Baker Street', $createdUser->primaryAddress?->address1);
+        $this->assertSame('London', $createdUser->primaryAddress?->city);
+        $this->assertSame('GB', $createdUser->primaryAddress?->country_code);
+        $this->assertSame('9999999999', $createdUser->primaryAddress?->phone);
+        $this->assertIsString($createdUser->avatar);
+        $this->assertStringStartsWith('media-root/avatars/', $createdUser->avatar);
+        Storage::disk('public')->assertExists($createdUser->avatar);
     }
 
     public function test_administrators_can_update_a_user_role_assignment_and_status(): void

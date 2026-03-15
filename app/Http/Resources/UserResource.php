@@ -41,6 +41,7 @@ class UserResource extends ScaffoldResource
         $status = $user->getAttribute('status');
         $statusValue = $status instanceof Status ? $status->value : (string) ($status ?? 'active');
         $emailVerifiedAt = $user->getAttribute('email_verified_at');
+        $lastAccess = $user->getAttribute('last_access');
         $roles = $user->relationLoaded('roles')
             ? $user->roles->pluck('name')->values()->toArray()
             : $user->roles()->pluck('name')->values()->toArray();
@@ -67,6 +68,9 @@ class UserResource extends ScaffoldResource
             'email_verified_at' => $emailVerifiedAt instanceof CarbonInterface
                 ? $emailVerifiedAt->toISOString()
                 : ($emailVerifiedAt instanceof DateTimeInterface ? $emailVerifiedAt->format(DateTimeInterface::ATOM) : null),
+            'email_verified_at_formatted' => $emailVerifiedAt instanceof CarbonInterface
+                ? $this->formatDateTime($emailVerifiedAt, 'date')
+                : null,
 
             // Personal info
             'gender' => $user->getAttribute('gender'),
@@ -88,10 +92,22 @@ class UserResource extends ScaffoldResource
             'instagram_url' => $user->getInstagramUrl(),
             'linkedin_url' => $user->getLinkedinUrl(),
 
+            // Primary address
+            'address1' => $primaryAddress?->getAttribute('address1'),
+            'address2' => $primaryAddress?->getAttribute('address2'),
+            'city' => $primaryAddress?->getAttribute('city'),
+            'state' => $primaryAddress?->getAttribute('state'),
+            'country' => $primaryAddress?->getAttribute('country'),
+            'zip' => $primaryAddress?->getAttribute('zip'),
+
+            // Last access (ISO + formatted + human)
+            'last_access' => $lastAccess instanceof CarbonInterface ? $lastAccess->toISOString() : null,
+            'last_access_formatted' => $lastAccess instanceof CarbonInterface ? $this->formatDateTime($lastAccess, 'datetime') : null,
+            'last_access_human' => $lastAccess instanceof CarbonInterface ? $lastAccess->diffForHumans() : null,
+
             // Datetime fields (will be formatted below)
             'created_at' => $user->getAttribute('created_at'),
             'updated_at' => $user->getAttribute('updated_at'),
-            'last_access' => $user->getAttribute('last_access'),
         ];
 
         // Format datetime fields using app settings (timezone + format)
@@ -99,7 +115,7 @@ class UserResource extends ScaffoldResource
             $data,
             dateFields: [],
             timeFields: [],
-            datetimeFields: ['created_at', 'updated_at', 'last_access']
+            datetimeFields: ['created_at', 'updated_at']
         );
     }
 
@@ -202,6 +218,17 @@ class UserResource extends ScaffoldResource
                         'icon' => 'ri-checkbox-circle-line',
                         'method' => 'PATCH',
                         'confirm' => 'Unban this user? They will be able to log in again.',
+                    ];
+                }
+
+                // Verify email action (only for unverified users)
+                if (! $user->hasVerifiedEmail()) {
+                    $actions['verify_email'] = [
+                        'url' => route($routePrefix.'.verify-email', $userId),
+                        'label' => 'Verify Email',
+                        'icon' => 'ri-mail-check-line',
+                        'method' => 'POST',
+                        'confirm' => "Manually mark this user's email as verified?",
                     ];
                 }
             }

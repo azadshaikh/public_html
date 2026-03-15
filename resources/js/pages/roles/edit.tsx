@@ -1,4 +1,6 @@
+import { Link } from '@inertiajs/react';
 import RoleForm from '@/components/roles/role-form';
+import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem, RoleEditPageProps } from '@/types';
 
@@ -27,7 +29,12 @@ export default function RolesEdit({
         <AppLayout
             breadcrumbs={breadcrumbs}
             title={`Edit ${role.display_name}`}
-            description="Update the role label, guidance, and permission bundle without changing module behavior accidentally."
+            description="Update role information and permissions."
+            headerActions={
+                <Button variant="outline" asChild>
+                    <Link href={route('app.roles.index')}>← Back</Link>
+                </Button>
+            }
         >
             <RoleForm
                 mode="edit"

@@ -1,4 +1,6 @@
+import { Link } from '@inertiajs/react';
 import RoleForm from '@/components/roles/role-form';
+import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem, RoleFormPageProps } from '@/types';
 
@@ -25,8 +27,13 @@ export default function RolesCreate({
     return (
         <AppLayout
             breadcrumbs={breadcrumbs}
-            title="Create role"
-            description="Add a reusable permission bundle for the workflows you are migrating next."
+            title="Create Role"
+            description="Add a new role and assign permissions to it."
+            headerActions={
+                <Button variant="outline" asChild>
+                    <Link href={route('app.roles.index')}>← Back</Link>
+                </Button>
+            }
         >
             <RoleForm
                 mode="create"
