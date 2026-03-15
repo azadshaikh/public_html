@@ -2,14 +2,15 @@ import type { ReactNode } from 'react';
 import type { DatagridColumnType } from '@/components/datagrid/types';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import type { BadgeVariant } from '@/types/ui';
 
 type CellRendererProps = {
     value: unknown;
     type: DatagridColumnType;
     /** Pre-resolved badge variant from row data (via badgeVariantKey) */
-    badgeVariant?: string;
+    badgeVariant?: BadgeVariant;
     /** Static map of value → badge variant name */
-    badgeVariants?: Record<string, string>;
+    badgeVariants?: Record<string, BadgeVariant>;
 };
 
 /**
@@ -52,8 +53,8 @@ function renderText(value: unknown): ReactNode {
 
 function renderBadge(
     value: unknown,
-    badgeVariant?: string,
-    badgeVariants?: Record<string, string>,
+    badgeVariant?: BadgeVariant,
+    badgeVariants?: Record<string, BadgeVariant>,
 ): ReactNode {
     if (value === null || value === undefined || value === '') {
         return <span className="text-muted-foreground">—</span>;
@@ -171,9 +172,9 @@ function renderDate(value: unknown): ReactNode {
  */
 function resolveBadgeVariant(
     label: string,
-    badgeVariant?: string,
-    badgeVariants?: Record<string, string>,
-): string {
+    badgeVariant?: BadgeVariant,
+    badgeVariants?: Record<string, BadgeVariant>,
+): BadgeVariant {
     // 1. Pre-resolved variant from row data (via badgeVariantKey)
     if (badgeVariant) {
         return badgeVariant;

@@ -23,6 +23,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
+import type { BadgeVariant } from '@/types/ui';
 import type {
     NotFoundLogListItem,
     NotFoundLogsIndexPageProps,
@@ -33,7 +34,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: '404 Logs', href: route('app.logs.not-found-logs.index') },
 ];
 
-const STATUS_BADGE_VARIANT: Record<string, string> = {
+const STATUS_BADGE_VARIANT: Record<string, BadgeVariant> = {
     suspicious: 'danger',
     bot: 'warning',
     human: 'success',

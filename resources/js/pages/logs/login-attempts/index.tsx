@@ -22,6 +22,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
+import type { BadgeVariant } from '@/types/ui';
 import type {
     LoginAttemptListItem,
     LoginAttemptsIndexPageProps,
@@ -32,7 +33,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Login Attempts', href: route('app.logs.login-attempts.index') },
 ];
 
-const STATUS_BADGE_VARIANT: Record<string, string> = {
+const STATUS_BADGE_VARIANT: Record<string, BadgeVariant> = {
     success: 'success',
     failed: 'danger',
     blocked: 'warning',

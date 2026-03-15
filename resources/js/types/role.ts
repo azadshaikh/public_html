@@ -1,4 +1,5 @@
 import type { PaginatedData } from '@/types/pagination';
+import type { BadgeVariant } from '@/types/ui';
 
 export type PermissionOption = {
     id: number;
@@ -21,7 +22,7 @@ export type RoleListItem = {
     guard_name: string;
     status: string;
     status_label: string;
-    status_badge: string;
+    status_badge: BadgeVariant;
     is_system: boolean;
     is_trashed: boolean;
     show_url: string;
@@ -66,7 +67,7 @@ export type RoleShowDetail = {
     guard_name: string;
     status: string;
     status_label: string;
-    status_badge: string;
+    status_badge: BadgeVariant;
     is_system: boolean;
     is_trashed: boolean;
     trashed_at: string | null;

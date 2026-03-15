@@ -1,7 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { ChevronRightIcon } from 'lucide-react';
 import * as React from 'react';
-import type { AnchorHTMLAttributes } from 'react';
+import type { AnchorHTMLAttributes, HTMLAttributes } from 'react';
 import { NavBadge } from '@/components/nav-badge';
 import { NavigationIcon } from '@/components/navigation-icon';
 import {
@@ -41,15 +41,24 @@ function buildAnchorAttributes(
     };
 }
 
+type NavigationLinkProps = Omit<HTMLAttributes<HTMLElement>, 'onClick'> & {
+    item: NavigationItem;
+    onClick?: (event: React.MouseEvent<Element>) => void;
+};
+
 const NavigationLink = React.forwardRef<
-    HTMLAnchorElement,
-    AnchorHTMLAttributes<HTMLAnchorElement> & {
-        item: NavigationItem;
-    }
+    HTMLElement,
+    NavigationLinkProps
 >(({ item, children, ...props }, ref) => {
     if (!item.url) {
         return <>{children}</>;
     }
+
+    const { onClick, ...restProps } = props;
+    const linkProps = {
+        ...restProps,
+        onClick,
+    } as React.ComponentProps<typeof Link>;
 
     const hasCustomAttributes = Object.keys(item.attributes ?? {}).length > 0;
     const shouldUseAnchor =
@@ -58,10 +67,13 @@ const NavigationLink = React.forwardRef<
     if (shouldUseAnchor) {
         return (
             <a
-                ref={ref}
+                ref={ref as React.Ref<HTMLAnchorElement>}
                 href={item.url}
                 {...buildAnchorAttributes(item)}
-                {...props}
+                {...restProps}
+                onClick={
+                    onClick as React.MouseEventHandler<HTMLAnchorElement>
+                }
             >
                 {children}
             </a>
@@ -69,7 +81,7 @@ const NavigationLink = React.forwardRef<
     }
 
     return (
-        <Link ref={ref} href={item.url} {...props}>
+        <Link ref={ref as React.Ref<unknown>} href={item.url} {...linkProps}>
             {children}
         </Link>
     );

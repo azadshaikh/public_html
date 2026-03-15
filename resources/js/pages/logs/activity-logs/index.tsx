@@ -22,6 +22,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
+import type { BadgeVariant } from '@/types/ui';
 import type {
     ActivityLogListItem,
     ActivityLogsIndexPageProps,
@@ -32,7 +33,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Activity Logs', href: route('app.logs.activity-logs.index') },
 ];
 
-const EVENT_BADGE_VARIANT: Record<string, string> = {
+const EVENT_BADGE_VARIANT: Record<string, BadgeVariant> = {
     create: 'success',
     created: 'success',
     stored: 'success',

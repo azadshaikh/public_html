@@ -1,4 +1,14 @@
-import type { ReactNode } from 'react';
+export type BadgeVariant =
+    | 'default'
+    | 'secondary'
+    | 'success'
+    | 'warning'
+    | 'info'
+    | 'danger'
+    | 'destructive'
+    | 'outline'
+    | 'ghost'
+    | 'link'; import type { ReactNode } from 'react';
 import type { BreadcrumbItem } from '@/types/navigation';
 
 export type AppLayoutProps = {

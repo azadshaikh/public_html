@@ -34,6 +34,7 @@ import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import type { BreadcrumbItem } from '@/types';
+import type { BadgeVariant } from '@/types/ui';
 import type {
     NotificationListItem,
     NotificationsIndexPageProps,
@@ -44,13 +45,13 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Notifications', href: route('app.notifications.index') },
 ];
 
-const PRIORITY_VARIANT: Record<string, string> = {
+const PRIORITY_VARIANT: Record<string, BadgeVariant> = {
     high: 'danger',
     medium: 'warning',
     low: 'secondary',
 };
 
-const CATEGORY_VARIANT: Record<string, string> = {
+const CATEGORY_VARIANT: Record<string, BadgeVariant> = {
     system: 'danger',
     website: 'info',
     user: 'success',
@@ -78,7 +79,7 @@ function SummaryCard({
     label: string;
     value: number;
     icon: ReactNode;
-    variant?: string;
+    variant?: BadgeVariant;
 }) {
     return (
         <div className="flex items-center gap-3 rounded-xl border bg-muted/20 px-4 py-3">

@@ -1,5 +1,6 @@
 import type { Key, ReactNode } from 'react';
 import type { PaginatedData } from '@/types';
+import type { BadgeVariant } from '@/types/ui';
 
 export type DatagridFilterOption = {
     value: string;
@@ -75,14 +76,14 @@ export type DatagridTab = {
     icon?: ReactNode;
     /** Badge variant for the count pill. Supports all Badge variants. */
     countVariant?:
-        | 'default'
-        | 'secondary'
-        | 'success'
-        | 'warning'
-        | 'info'
-        | 'danger'
-        | 'destructive'
-        | 'outline';
+    | 'default'
+    | 'secondary'
+    | 'success'
+    | 'warning'
+    | 'info'
+    | 'danger'
+    | 'destructive'
+    | 'outline';
 };
 
 export type DatagridColumnType =
@@ -109,7 +110,7 @@ export type DatagridColumn<T> = {
      * e.g. { active: 'success', banned: 'danger', pending: 'warning' }
      * Only used when type is 'badge'.
      */
-    badgeVariants?: Record<string, string>;
+    badgeVariants?: Record<string, BadgeVariant>;
     /**
      * Field name in the row data that holds the Badge variant.
      * e.g. 'status_badge' reads row['status_badge'] for the variant.

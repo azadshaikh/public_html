@@ -26,6 +26,7 @@ import { ResourceFeedbackAlerts } from '@/components/resource/resource-feedback-
 import { Badge } from '@/components/ui/badge';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
+import type { BadgeVariant } from '@/types/ui';
 import type { MediaIndexPageProps, MediaListItem } from '@/types/media';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -37,7 +38,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 // MIME TYPE HELPERS
 // =========================================================================
 
-const MIME_BADGE_VARIANT: Record<string, string> = {
+const MIME_BADGE_VARIANT: Record<string, BadgeVariant> = {
     image: 'success',
     video: 'info',
     audio: 'warning',
@@ -49,7 +50,7 @@ function getMimeCategory(mimeType: string): string {
     return mimeType.split('/')[0] ?? 'unknown';
 }
 
-function getMimeBadgeVariant(mimeType: string): string {
+function getMimeBadgeVariant(mimeType: string): BadgeVariant {
     return MIME_BADGE_VARIANT[getMimeCategory(mimeType)] ?? 'outline';
 }
 
@@ -119,7 +120,6 @@ export default function MediaIndex({
             pollingRef.current = setInterval(() => {
                 router.reload({
                     only: ['media', 'statistics'],
-                    preserveScroll: true,
                 });
             }, 5000);
         }

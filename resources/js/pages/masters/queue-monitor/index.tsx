@@ -150,7 +150,6 @@ export default function QueueMonitorIndex({
                     'workerStats',
                     'queueOptions',
                 ],
-                preserveScroll: true,
                 onSuccess: () => {
                     setLastUpdatedAt(Date.now());
                 },
@@ -461,7 +460,6 @@ export default function QueueMonitorIndex({
                                     'workerStats',
                                     'queueOptions',
                                 ],
-                                preserveScroll: true,
                                 onSuccess: () => {
                                     setLastUpdatedAt(Date.now());
                                 },
@@ -905,7 +903,14 @@ function buildChartSeries(chartData: QueueMonitorChartData | null): Array<{
 
     return chartData.queues.flatMap((queue, index) => {
         const color = CHART_PALETTE[index % CHART_PALETTE.length];
-        const series = [
+        const series: Array<{
+            key: string;
+            queue: string;
+            kind: 'succeeded' | 'failed';
+            label: string;
+            color: string;
+            strokeDasharray?: string;
+        }> = [
             {
                 key: `queue_${index}_succeeded`,
                 queue,

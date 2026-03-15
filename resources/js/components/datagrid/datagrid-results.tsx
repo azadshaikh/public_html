@@ -13,6 +13,7 @@ import type {
     DatagridProps,
 } from '@/components/datagrid/types';
 import { normalizeRowKey } from '@/components/datagrid/utils';
+import type { BadgeVariant } from '@/types/ui';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -385,17 +386,16 @@ export function DatagridResults<T>({
                                                               'text',
                                                           badgeVariant:
                                                               column.badgeVariantKey
-                                                                  ? String(
-                                                                        (
-                                                                            row as Record<
-                                                                                string,
-                                                                                unknown
-                                                                            >
-                                                                        )[
-                                                                            column
-                                                                                .badgeVariantKey
-                                                                        ] ?? '',
-                                                                    )
+                                                                  ? ((
+                                                                        row as Record<
+                                                                            string,
+                                                                            BadgeVariant | undefined
+                                                                        >
+                                                                    )[
+                                                                        column
+                                                                            .badgeVariantKey
+                                                                    ] ??
+                                                                    undefined)
                                                                   : undefined,
                                                           badgeVariants:
                                                               column.badgeVariants,
