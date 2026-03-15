@@ -2,7 +2,7 @@
     "name": "Todos",
     "slug": "todos",
     "version": "1.0.0",
-    "description": "Starter todos module with a task CRUD.",
+    "description": "Task management module for creating, organizing, and tracking todos and task lists.",
     "namespace": "Modules\\Todos\\",
     "provider": "Modules\\Todos\\Providers\\TodosServiceProvider"
 }

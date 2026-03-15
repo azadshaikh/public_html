@@ -1,52 +1,46 @@
+import { Link } from '@inertiajs/react';
+import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
-import TodoTaskForm from '../../components/todo-task-form';
-import type { TodoTaskFormValues } from '../../components/todo-task-form';
-
-type Option = { value: string; label: string };
-
-type TodosEditPageProps = {
-    module: {
-        name: string;
-        slug: string;
-        version: string;
-        description: string;
-    };
-    task: {
-        id: number;
-        title: string;
-    };
-    initialValues: TodoTaskFormValues;
-    options: {
-        statusOptions: Option[];
-        priorityOptions: Option[];
-    };
-};
+import TodoForm from '../../components/todo-form';
+import type { TodoEditPageProps } from '../../types/todo';
 
 export default function TodosEdit({
-    module,
-    task,
+    todo,
     initialValues,
-    options,
-}: TodosEditPageProps) {
+    statusOptions,
+    priorityOptions,
+    visibilityOptions,
+    assigneeOptions,
+}: TodoEditPageProps) {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: route('dashboard') },
-        { title: module.name, href: '/todos' },
-        { title: task.title, href: `/todos/${task.id}/edit` },
+        { title: 'Todos', href: route('app.todos.index') },
+        {
+            title: todo.title,
+            href: route('app.todos.edit', todo.id),
+        },
     ];
 
     return (
         <AppLayout
             breadcrumbs={breadcrumbs}
-            title={`Edit ${task.title}`}
-            description={module.description}
+            title={`Edit: ${todo.title}`}
+            description="Update the todo details."
+            headerActions={
+                <Button variant="outline" asChild>
+                    <Link href={route('app.todos.index')}>← Back</Link>
+                </Button>
+            }
         >
-            <TodoTaskForm
+            <TodoForm
                 mode="edit"
-                module={module}
-                task={task}
+                todo={todo}
                 initialValues={initialValues}
-                options={options}
+                statusOptions={statusOptions}
+                priorityOptions={priorityOptions}
+                visibilityOptions={visibilityOptions}
+                assigneeOptions={assigneeOptions}
             />
         </AppLayout>
     );

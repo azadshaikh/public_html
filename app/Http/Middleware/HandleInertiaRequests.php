@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Helpers\AbilityAggregator;
 use App\Helpers\NavigationAggregator;
 use App\Inertia\Properties\UserAvatar;
 use App\Models\User;
@@ -105,6 +106,7 @@ class HandleInertiaRequests extends Middleware
                         'deleteEmailTemplates' => $hasMasterAccess,
                         'restoreEmailTemplates' => $hasMasterAccess,
                         'viewEmailLogs' => $hasMasterAccess,
+                        ...AbilityAggregator::resolve($request->user()),
                     ]
                     : [
                         'manageModules' => false,
@@ -135,6 +137,7 @@ class HandleInertiaRequests extends Middleware
                         'deleteEmailTemplates' => false,
                         'restoreEmailTemplates' => false,
                         'viewEmailLogs' => false,
+                        ...AbilityAggregator::resolve(null),
                     ],
                 'impersonation' => fn (): ?array => $this->resolveImpersonation($request),
             ],

@@ -13,14 +13,25 @@ const modulePages = import.meta.glob<InertiaPageModule>(
     '../../../modules/*/resources/js/pages/**/*.tsx',
 );
 
+/**
+ * Module page path pattern — extracts the folder name (module directory name)
+ * and the relative page path from the glob key.
+ */
+const MODULE_PAGE_PATTERN =
+    /^\.\.\/\.\.\/\.\.\/modules\/([^/]+)\/resources\/js\/pages\/(.+)\.tsx$/;
+
 function normalizeApplicationPageName(path: string): string {
     return path.replace('../pages/', '').replace(/\.tsx$/, '');
 }
 
+function extractModuleDirectoryName(path: string): string | null {
+    const matches = path.match(MODULE_PAGE_PATTERN);
+
+    return matches?.[1] ?? null;
+}
+
 function normalizeModulePageName(path: string): string {
-    const matches = path.match(
-        /^\.\.\/\.\.\/\.\.\/modules\/([^/]+)\/resources\/js\/pages\/(.+)\.tsx$/,
-    );
+    const matches = path.match(MODULE_PAGE_PATTERN);
 
     if (!matches) {
         throw new Error(`Unable to normalize module page path [${path}].`);
@@ -28,6 +39,12 @@ function normalizeModulePageName(path: string): string {
 
     return matches[2];
 }
+
+/**
+ * Set of enabled module directory names (PascalCase, e.g. "Todos").
+ * Populated on first page resolution from the Inertia initial page props.
+ */
+let enabledModuleNames: Set<string> | null = null;
 
 function buildPageRegistry(): Map<string, InertiaPageResolver> {
     const registry = new Map<string, InertiaPageResolver>();
@@ -37,15 +54,52 @@ function buildPageRegistry(): Map<string, InertiaPageResolver> {
     });
 
     Object.entries(modulePages).forEach(([path, resolver]) => {
+        const directoryName = extractModuleDirectoryName(path);
+
+        // Skip pages from disabled modules. When enabledModuleNames is null
+        // (first full-page load before props are available), include all pages
+        // as a safe fallback — the server-side module.enabled middleware is
+        // the authoritative guard.
+        if (
+            enabledModuleNames !== null &&
+            directoryName !== null &&
+            !enabledModuleNames.has(directoryName)
+        ) {
+            return;
+        }
+
         registry.set(normalizeModulePageName(path), resolver);
     });
 
     return registry;
 }
 
-const pageRegistry = buildPageRegistry();
+let pageRegistry: Map<string, InertiaPageResolver> | null = null;
+
+/**
+ * Initialise the enabled-modules set from shared Inertia props.
+ * Called once during `createInertiaApp` setup so the very first page
+ * resolution already filters disabled modules.
+ */
+export function initModulePageFilter(
+    modules: { items: Array<{ name: string }> } | undefined,
+): void {
+    if (modules?.items) {
+        enabledModuleNames = new Set(
+            modules.items.map((m) => m.name),
+        );
+    }
+
+    // (Re)build the page registry with the now-known enabled set.
+    pageRegistry = buildPageRegistry();
+}
 
 export async function resolveInertiaPage(name: string): Promise<ComponentType> {
+    // Lazy-build on first call if initModulePageFilter was not called.
+    if (pageRegistry === null) {
+        pageRegistry = buildPageRegistry();
+    }
+
     const resolver = pageRegistry.get(name);
 
     if (!resolver) {

@@ -44,6 +44,8 @@ export type Auth = {
         deleteEmailTemplates: boolean;
         restoreEmailTemplates: boolean;
         viewEmailLogs: boolean;
+        /** Module-provided abilities (resolved dynamically via AbilityAggregator) */
+        [key: string]: boolean;
     };
     impersonation: {
         active: true;
@@ -59,9 +61,9 @@ export type Auth = {
 export type FlashMessage =
     | string
     | {
-          title?: string;
-          message?: string;
-      };
+        title?: string;
+        message?: string;
+    };
 
 export type FlashData = {
     success?: FlashMessage;

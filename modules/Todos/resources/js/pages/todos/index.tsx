@@ -1,388 +1,480 @@
-import { Form, Link, router } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import {
-    CheckSquareIcon,
-    LayoutDashboardIcon,
+    AlertCircleIcon,
+    CheckCircleIcon,
+    ClipboardListIcon,
+    EyeIcon,
+    ListIcon,
+    PauseCircleIcon,
     PencilIcon,
     PlusIcon,
-    SearchIcon,
-    ShieldAlertIcon,
+    RefreshCwIcon,
+    TimerIcon,
     Trash2Icon,
+    XCircleIcon,
 } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Datagrid } from '@/components/datagrid/datagrid';
+import type {
+    DatagridAction,
+    DatagridBulkAction,
+    DatagridColumn,
+    DatagridFilter,
+    DatagridTab,
+} from '@/components/datagrid/datagrid';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
-import {
-    Empty,
-    EmptyContent,
-    EmptyDescription,
-    EmptyHeader,
-    EmptyMedia,
-    EmptyTitle,
-} from '@/components/ui/empty';
-import {
-    InputGroup,
-    InputGroupAddon,
-    InputGroupInput,
-} from '@/components/ui/input-group';
-import {
-    NativeSelect,
-    NativeSelectOption,
-} from '@/components/ui/native-select';
 import AppLayout from '@/layouts/app-layout';
-import type { BreadcrumbItem } from '@/types';
+import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
+import type { TodoIndexPageProps, TodoListItem } from '../types/todo';
 
-type Option = { value: string; label: string };
-
-type ModuleMeta = {
-    name: string;
-    slug: string;
-    version: string;
-    description: string;
-};
-
-type TaskListItem = {
-    id: number;
-    title: string;
-    slug: string;
-    status: string;
-    priority: string;
-    owner: string | null;
-    due_date: string | null;
-    is_blocked: boolean;
-};
-
-type PaginatedData<T> = {
-    data: T[];
-    prev_page_url: string | null;
-    next_page_url: string | null;
-    total: number;
-    from: number | null;
-    to: number | null;
-};
-
-type TodosIndexPageProps = {
-    module: ModuleMeta;
-    filters: { search: string; status: string };
-    tasks: PaginatedData<TaskListItem>;
-    stats: {
-        total: number;
-        in_progress: number;
-        done: number;
-        blocked: number;
-    };
-    options: { statusOptions: Option[]; priorityOptions: Option[] };
-    status?: string;
-};
+const breadcrumbs: BreadcrumbItem[] = [
+    { title: 'Dashboard', href: route('dashboard') },
+    { title: 'Todos', href: route('app.todos.index') },
+];
 
 export default function TodosIndex({
-    module,
+    todos,
     filters,
-    tasks,
-    stats,
-    options,
-    status,
-}: TodosIndexPageProps) {
-    const todosIndexUrl = '/todos';
-    const todosCreateUrl = '/todos/create';
-    const todosEditUrl = (id: number) => `/todos/${id}/edit`;
-    const todosDestroyUrl = (id: number) => `/todos/${id}`;
+    statistics,
+}: TodoIndexPageProps) {
+    const page = usePage<AuthenticatedSharedData>();
+    const canAddTodos = page.props.auth.abilities.addTodos;
+    const canEditTodos = page.props.auth.abilities.editTodos;
+    const canDeleteTodos = page.props.auth.abilities.deleteTodos;
+    const canRestoreTodos = page.props.auth.abilities.restoreTodos;
 
-    const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Dashboard', href: route('dashboard') },
-        { title: module.name, href: todosIndexUrl },
-    ];
+    // ----- Bulk action helper -----
 
-    const handleDelete = (task: TaskListItem) => {
-        if (!window.confirm(`Delete ${task.title}?`)) {
+    const handleBulkAction = (
+        action: string,
+        selectedTodos: TodoListItem[],
+        clearSelection: () => void,
+    ) => {
+        if (selectedTodos.length === 0) {
             return;
         }
 
-        router.delete(todosDestroyUrl(task.id), {
-            preserveScroll: true,
-        });
+        router.post(
+            route('app.todos.bulk-action'),
+            {
+                action,
+                ids: selectedTodos.map((todo) => todo.id),
+                status: filters.status,
+            },
+            {
+                preserveScroll: true,
+                onSuccess: () => clearSelection(),
+            },
+        );
     };
+
+    // ----- Filters -----
+
+    const gridFilters: DatagridFilter[] = [
+        {
+            type: 'search',
+            name: 'search',
+            value: filters.search,
+            placeholder: 'Search todos...',
+            className: 'lg:min-w-80',
+        },
+        {
+            type: 'select',
+            name: 'priority',
+            value: filters.priority,
+            options: [
+                { value: 'low', label: 'Low' },
+                { value: 'medium', label: 'Medium' },
+                { value: 'high', label: 'High' },
+                { value: 'critical', label: 'Critical' },
+            ],
+            placeholder: 'All Priorities',
+        },
+        {
+            type: 'select',
+            name: 'visibility',
+            value: filters.visibility,
+            options: [
+                { value: 'private', label: 'Private' },
+                { value: 'public', label: 'Public' },
+            ],
+            placeholder: 'All',
+        },
+    ];
+
+    // ----- Status tabs -----
+
+    const statusTabs: DatagridTab[] = [
+        {
+            label: 'All',
+            value: 'all',
+            count: statistics.total,
+            active: filters.status === 'all',
+            icon: <ListIcon />,
+            countVariant: 'secondary',
+        },
+        {
+            label: 'Pending',
+            value: 'pending',
+            count: statistics.pending,
+            active: filters.status === 'pending',
+            icon: <TimerIcon />,
+            countVariant: 'warning',
+        },
+        {
+            label: 'In Progress',
+            value: 'in_progress',
+            count: statistics.in_progress,
+            active: filters.status === 'in_progress',
+            icon: <AlertCircleIcon />,
+            countVariant: 'info',
+        },
+        {
+            label: 'Completed',
+            value: 'completed',
+            count: statistics.completed,
+            active: filters.status === 'completed',
+            icon: <CheckCircleIcon />,
+            countVariant: 'success',
+        },
+        {
+            label: 'On Hold',
+            value: 'on_hold',
+            count: statistics.on_hold,
+            active: filters.status === 'on_hold',
+            icon: <PauseCircleIcon />,
+            countVariant: 'secondary',
+        },
+        {
+            label: 'Cancelled',
+            value: 'cancelled',
+            count: statistics.cancelled,
+            active: filters.status === 'cancelled',
+            icon: <XCircleIcon />,
+            countVariant: 'danger',
+        },
+        {
+            label: 'Trash',
+            value: 'trash',
+            count: statistics.trash,
+            active: filters.status === 'trash',
+            icon: <Trash2Icon />,
+            countVariant: 'destructive',
+        },
+    ];
+
+    // ----- Columns -----
+
+    const columns: DatagridColumn<TodoListItem>[] = [
+        {
+            key: 'title',
+            header: 'Title',
+            sortable: true,
+            cell: (todo) => (
+                <Link
+                    href={todo.show_url}
+                    className="flex min-w-0 flex-col gap-1 hover:opacity-80"
+                >
+                    <span className="font-medium text-foreground">
+                        {todo.title}
+                        {todo.is_starred && (
+                            <span
+                                className="ml-2 text-yellow-500"
+                                aria-label="Starred"
+                            >
+                                ★
+                            </span>
+                        )}
+                    </span>
+                    {todo.description_preview && (
+                        <span className="truncate text-xs text-muted-foreground">
+                            {todo.description_preview}
+                        </span>
+                    )}
+                </Link>
+            ),
+        },
+        {
+            key: 'priority_label',
+            header: 'Priority',
+            headerClassName: 'w-28 text-center',
+            cellClassName: 'w-28 text-center',
+            type: 'badge',
+            badgeVariantKey: 'priority_badge',
+            sortable: true,
+            sortKey: 'priority',
+        },
+        {
+            key: 'status_label',
+            header: 'Status',
+            headerClassName: 'w-32 text-center',
+            cellClassName: 'w-32 text-center',
+            type: 'badge',
+            badgeVariantKey: 'status_badge',
+            sortable: true,
+            sortKey: 'status',
+        },
+        {
+            key: 'assigned_to_name',
+            header: 'Assigned To',
+            headerClassName: 'w-36',
+            cellClassName: 'w-36 text-sm text-muted-foreground',
+            sortable: false,
+        },
+        {
+            key: 'due_date_formatted',
+            header: 'Due Date',
+            headerClassName: 'w-28',
+            cellClassName: 'w-28',
+            sortable: true,
+            sortKey: 'due_date',
+            cell: (todo) =>
+                todo.due_date_formatted ? (
+                    <span
+                        className={
+                            todo.is_overdue
+                                ? 'font-medium text-destructive'
+                                : 'text-muted-foreground'
+                        }
+                    >
+                        {todo.due_date_formatted}
+                        {todo.is_overdue && (
+                            <span className="ml-1 text-xs">(overdue)</span>
+                        )}
+                    </span>
+                ) : (
+                    <span className="text-muted-foreground">—</span>
+                ),
+        },
+    ];
+
+    // ----- Row actions -----
+
+    const rowActions = (todo: TodoListItem): DatagridAction[] => {
+        if (todo.is_trashed) {
+            return [
+                ...(canRestoreTodos
+                    ? [
+                          {
+                              label: 'Restore',
+                              icon: <RefreshCwIcon />,
+                              href: route('app.todos.restore', todo.id),
+                              method: 'PATCH' as const,
+                              confirm: `Restore "${todo.title}"?`,
+                          },
+                      ]
+                    : []),
+                ...(canDeleteTodos
+                    ? [
+                          {
+                              label: 'Delete Permanently',
+                              icon: <Trash2Icon />,
+                              href: route('app.todos.force-delete', todo.id),
+                              method: 'DELETE' as const,
+                              confirm: `⚠️ Permanently delete "${todo.title}"? This cannot be undone!`,
+                              variant: 'destructive' as const,
+                          },
+                      ]
+                    : []),
+            ];
+        }
+
+        return [
+            {
+                label: 'View',
+                href: todo.show_url,
+                icon: <EyeIcon />,
+            },
+            ...(canEditTodos
+                ? [
+                      {
+                          label: 'Edit',
+                          href: todo.edit_url,
+                          icon: <PencilIcon />,
+                      },
+                  ]
+                : []),
+            ...(canDeleteTodos
+                ? [
+                      {
+                          label: 'Move to Trash',
+                          href: route('app.todos.destroy', todo.id),
+                          method: 'DELETE' as const,
+                          confirm: `Move "${todo.title}" to trash?`,
+                          icon: <Trash2Icon />,
+                          variant: 'destructive' as const,
+                      },
+                  ]
+                : []),
+        ];
+    };
+
+    // ----- Bulk actions -----
+
+    const bulkActions: DatagridBulkAction<TodoListItem>[] = [
+        ...(canDeleteTodos
+            ? [
+                  {
+                      key: 'bulk-delete',
+                      label: 'Move to Trash',
+                      icon: <Trash2Icon />,
+                      variant: 'destructive' as const,
+                      confirm: 'Move selected todos to trash?',
+                      onSelect: (rows: TodoListItem[], clear: () => void) =>
+                          handleBulkAction('delete', rows, clear),
+                  },
+              ]
+            : []),
+        ...(canRestoreTodos
+            ? [
+                  {
+                      key: 'bulk-restore',
+                      label: 'Restore',
+                      icon: <RefreshCwIcon />,
+                      confirm: 'Restore selected todos from trash?',
+                      onSelect: (rows: TodoListItem[], clear: () => void) =>
+                          handleBulkAction('restore', rows, clear),
+                  },
+              ]
+            : []),
+        ...(canDeleteTodos
+            ? [
+                  {
+                      key: 'bulk-force-delete',
+                      label: 'Delete Permanently',
+                      icon: <Trash2Icon />,
+                      variant: 'destructive' as const,
+                      confirm:
+                          '⚠️ Permanently delete selected todos? This cannot be undone!',
+                      onSelect: (rows: TodoListItem[], clear: () => void) =>
+                          handleBulkAction('force_delete', rows, clear),
+                  },
+              ]
+            : []),
+    ];
+
+    const visibleBulkActions =
+        filters.status === 'trash'
+            ? bulkActions.filter((a) => a.key !== 'bulk-delete')
+            : bulkActions.filter((a) => a.key === 'bulk-delete');
+
+    // ----- Render -----
 
     return (
         <AppLayout
             breadcrumbs={breadcrumbs}
-            title={`${module.name} tasks`}
-            description="Run a lightweight task CRUD from the module runtime."
+            title="Todos"
+            description="Manage tasks and to-dos"
             headerActions={
-                <div className="flex flex-wrap gap-3">
-                    <Button asChild variant="outline">
-                        <Link href={route('dashboard')}>
-                            <LayoutDashboardIcon />
-                            Back to dashboard
-                        </Link>
-                    </Button>
+                canAddTodos ? (
                     <Button asChild>
-                        <Link href={todosCreateUrl}>
-                            <PlusIcon />
-                            Create task
+                        <Link href={route('app.todos.create')}>
+                            <PlusIcon data-icon="inline-start" />
+                            Add Todo
                         </Link>
                     </Button>
-                </div>
+                ) : undefined
             }
         >
-            <section className="grid gap-4 xl:grid-cols-[1.35fr_1fr]">
-                <Card className="border-none bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-none ring-0">
-                    <CardHeader>
-                        <Badge
-                            variant="secondary"
-                            className="w-fit bg-primary-foreground/15 text-primary-foreground hover:bg-primary-foreground/15"
-                        >
-                            Starter CRUD
-                        </Badge>
-                        <CardTitle className="mt-4 text-3xl font-semibold tracking-tight md:text-4xl">
-                            Track work with a clean task resource.
-                        </CardTitle>
-                        <CardDescription className="text-primary-foreground/75">
-                            This sample is ready for roadmap work, team views,
-                            automation rules, and lightweight planning features.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="grid gap-4 sm:grid-cols-3">
-                        <div>
-                            <div className="text-sm text-primary-foreground/70">
-                                Tasks
-                            </div>
-                            <div className="mt-1 text-xl font-semibold">
-                                {stats.total}
-                            </div>
-                        </div>
-                        <div>
-                            <div className="text-sm text-primary-foreground/70">
-                                In progress
-                            </div>
-                            <div className="mt-1 text-xl font-semibold">
-                                {stats.in_progress}
-                            </div>
-                        </div>
-                        <div>
-                            <div className="text-sm text-primary-foreground/70">
-                                Blocked
-                            </div>
-                            <div className="mt-1 text-xl font-semibold">
-                                {stats.blocked}
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Useful next steps</CardTitle>
-                        <CardDescription>
-                            Grow this starter into a real work management
-                            surface.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        {[
-                            'Add task comments, attachments, or activity logs',
-                            'Group work by project, sprint, or team',
-                            'Promote blocked items into escalation queues',
-                        ].map((item) => (
-                            <div
-                                key={item}
-                                className="rounded-xl border bg-muted/40 p-4"
+            <div className="flex flex-col gap-6">
+                <Datagrid
+                    action={route('app.todos.index')}
+                    rows={todos}
+                    columns={columns}
+                    filters={gridFilters}
+                    tabs={{
+                        name: 'status',
+                        items: statusTabs,
+                    }}
+                    getRowKey={(todo) => todo.id}
+                    rowActions={rowActions}
+                    bulkActions={visibleBulkActions}
+                    isRowSelectable={() => visibleBulkActions.length > 0}
+                    sorting={{
+                        sort: filters.sort,
+                        direction: filters.direction,
+                    }}
+                    perPage={{
+                        value: filters.per_page,
+                        options: [10, 25, 50, 100],
+                    }}
+                    view={{
+                        value: filters.view ?? 'table',
+                        storageKey: 'todos-datagrid-view',
+                    }}
+                    renderCard={(todo) => (
+                        <div className="flex flex-col gap-4">
+                            <Link
+                                href={todo.show_url}
+                                className="flex flex-col gap-1 hover:opacity-80"
                             >
-                                <div className="mb-2 flex items-center gap-2 font-medium">
-                                    <CheckSquareIcon className="size-4 text-primary" />
-                                    Starter idea
+                                <span className="font-medium text-foreground">
+                                    {todo.title}
+                                    {todo.is_starred && (
+                                        <span className="ml-2 text-yellow-500">
+                                            ★
+                                        </span>
+                                    )}
+                                </span>
+                                {todo.description_preview && (
+                                    <span className="text-xs text-muted-foreground">
+                                        {todo.description_preview}
+                                    </span>
+                                )}
+                            </Link>
+
+                            <div className="grid gap-3 sm:grid-cols-3">
+                                <div className="rounded-lg border bg-muted/30 px-3 py-2">
+                                    <div className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                                        Status
+                                    </div>
+                                    <div className="mt-1">
+                                        <Badge
+                                            variant={
+                                                (todo.status_badge as Parameters<typeof Badge>[0]['variant']) ??
+                                                'outline'
+                                            }
+                                        >
+                                            {todo.status_label}
+                                        </Badge>
+                                    </div>
                                 </div>
-                                <p className="text-sm text-muted-foreground">
-                                    {item}
-                                </p>
+                                <div className="rounded-lg border bg-muted/30 px-3 py-2">
+                                    <div className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                                        Priority
+                                    </div>
+                                    <div className="mt-1">
+                                        <Badge
+                                            variant={
+                                                (todo.priority_badge as Parameters<typeof Badge>[0]['variant']) ??
+                                                'outline'
+                                            }
+                                        >
+                                            {todo.priority_label}
+                                        </Badge>
+                                    </div>
+                                </div>
+                                <div className="rounded-lg border bg-muted/30 px-3 py-2">
+                                    <div className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                                        Assigned
+                                    </div>
+                                    <div className="mt-1 text-sm font-medium text-foreground">
+                                        {todo.assigned_to_name}
+                                    </div>
+                                </div>
                             </div>
-                        ))}
-                    </CardContent>
-                </Card>
-            </section>
-
-            {status ? (
-                <Alert className="mt-6">
-                    <CheckSquareIcon className="size-4" />
-                    <AlertTitle>Saved</AlertTitle>
-                    <AlertDescription>{status}</AlertDescription>
-                </Alert>
-            ) : null}
-
-            <Card className="mt-6">
-                <CardHeader>
-                    <CardTitle>Filter tasks</CardTitle>
-                    <CardDescription>
-                        Use the list like a lightweight queue for building more
-                        workflow features later.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <Form
-                        action={todosIndexUrl}
-                        method="get"
-                        options={{ preserveScroll: true }}
-                        className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_auto]"
-                    >
-                        <InputGroup className="w-full">
-                            <InputGroupAddon>
-                                <SearchIcon />
-                            </InputGroupAddon>
-                            <InputGroupInput
-                                name="search"
-                                defaultValue={filters.search}
-                                placeholder="Search title, slug, or owner"
-                            />
-                        </InputGroup>
-
-                        <NativeSelect
-                            className="w-full"
-                            name="status"
-                            defaultValue={filters.status}
-                        >
-                            <NativeSelectOption value="">
-                                All statuses
-                            </NativeSelectOption>
-                            {options.statusOptions.map((option) => (
-                                <NativeSelectOption
-                                    key={option.value}
-                                    value={option.value}
-                                >
-                                    {option.label}
-                                </NativeSelectOption>
-                            ))}
-                        </NativeSelect>
-
-                        <div className="flex gap-2">
-                            <Button type="submit">Apply</Button>
-                            <Button asChild type="button" variant="outline">
-                                <Link href={todosIndexUrl}>Reset</Link>
-                            </Button>
                         </div>
-                    </Form>
-                </CardContent>
-            </Card>
-
-            <section className="mt-6 grid gap-4 lg:grid-cols-2">
-                {tasks.data.length > 0 ? (
-                    tasks.data.map((task) => (
-                        <Card key={task.id}>
-                            <CardHeader>
-                                <div className="flex items-start justify-between gap-3">
-                                    <div>
-                                        <CardTitle className="text-xl">
-                                            {task.title}
-                                        </CardTitle>
-                                        <CardDescription>
-                                            {task.owner || 'Unassigned'} • /
-                                            {task.slug}
-                                        </CardDescription>
-                                    </div>
-                                    <div className="flex gap-2">
-                                        <Badge variant="outline">
-                                            {task.status}
-                                        </Badge>
-                                        <Badge variant="secondary">
-                                            {task.priority}
-                                        </Badge>
-                                        {task.is_blocked ? (
-                                            <Badge variant="destructive">
-                                                Blocked
-                                            </Badge>
-                                        ) : null}
-                                    </div>
-                                </div>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="text-sm text-muted-foreground">
-                                    {task.due_date
-                                        ? `Due ${task.due_date}`
-                                        : 'No due date set'}
-                                </div>
-                                <div className="flex flex-wrap justify-end gap-2">
-                                    <Button asChild size="sm" variant="outline">
-                                        <Link href={todosEditUrl(task.id)}>
-                                            <PencilIcon />
-                                            Edit
-                                        </Link>
-                                    </Button>
-                                    <Button
-                                        size="sm"
-                                        variant="destructive"
-                                        onClick={() => handleDelete(task)}
-                                    >
-                                        <Trash2Icon />
-                                        Delete
-                                    </Button>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    ))
-                ) : (
-                    <Card className="lg:col-span-2">
-                        <CardContent className="p-6">
-                            <Empty>
-                                <EmptyHeader>
-                                    <EmptyMedia variant="icon">
-                                        <ShieldAlertIcon />
-                                    </EmptyMedia>
-                                    <EmptyTitle>No tasks yet</EmptyTitle>
-                                    <EmptyDescription>
-                                        Create the first task to test statuses,
-                                        priorities, and owner assignment inside
-                                        the module.
-                                    </EmptyDescription>
-                                </EmptyHeader>
-                                <EmptyContent>
-                                    <Button asChild>
-                                        <Link href={todosCreateUrl}>
-                                            <PlusIcon />
-                                            Create task
-                                        </Link>
-                                    </Button>
-                                </EmptyContent>
-                            </Empty>
-                        </CardContent>
-                    </Card>
-                )}
-            </section>
-
-            {tasks.prev_page_url || tasks.next_page_url ? (
-                <div className="mt-6 flex items-center justify-between gap-4 text-sm text-muted-foreground">
-                    <span>
-                        Showing {tasks.from ?? 0} to {tasks.to ?? 0} of{' '}
-                        {tasks.total} tasks
-                    </span>
-                    <div className="flex gap-2">
-                        <Button
-                            asChild
-                            variant="outline"
-                            size="sm"
-                            disabled={!tasks.prev_page_url}
-                        >
-                            <Link href={tasks.prev_page_url ?? todosIndexUrl}>
-                                Previous
-                            </Link>
-                        </Button>
-                        <Button
-                            asChild
-                            variant="outline"
-                            size="sm"
-                            disabled={!tasks.next_page_url}
-                        >
-                            <Link href={tasks.next_page_url ?? todosIndexUrl}>
-                                Next
-                            </Link>
-                        </Button>
-                    </div>
-                </div>
-            ) : null}
+                    )}
+                    submitLabel="Filters"
+                    submitButtonVariant="outline"
+                    empty={{
+                        icon: <ClipboardListIcon />,
+                        title: 'No todos found',
+                        description:
+                            'Try a different filter or create the first todo.',
+                    }}
+                />
+            </div>
         </AppLayout>
     );
 }

@@ -6,7 +6,10 @@ import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { initializeTheme } from '@/hooks/use-appearance';
 import { initFlashToasts } from '@/hooks/use-flash-toast';
-import { resolveInertiaPage } from './lib/inertia-page-resolver';
+import {
+    initModulePageFilter,
+    resolveInertiaPage,
+} from './lib/inertia-page-resolver';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 const inertiaDefaults = {
@@ -30,6 +33,16 @@ createInertiaApp({
         if (!el) {
             return;
         }
+
+        // Initialise the module page filter from shared props so disabled
+        // module pages are excluded from the page registry before the very
+        // first Inertia page resolution.
+        const sharedProps = props.initialPage.props as Record<string, unknown>;
+        initModulePageFilter(
+            sharedProps.modules as
+                | { items: Array<{ name: string }> }
+                | undefined,
+        );
 
         const app = (
             <StrictMode>

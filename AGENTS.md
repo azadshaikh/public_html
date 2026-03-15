@@ -40,6 +40,7 @@ This project has domain-specific skills available. You MUST activate the relevan
 - `tailwindcss-development` — Styles applications using Tailwind CSS v4 utilities. Activates when adding styles, restyling components, working with gradients, spacing, layout, flex, grid, responsive design, dark mode, colors, typography, or borders; or when the user mentions CSS, styling, classes, Tailwind, restyle, hero section, cards, buttons, or any visual/UI changes.
 - `datagrid` — Builds and configures datagrid (data table) views in this project. Use when creating index pages with tables, card grids, filters, tabs, sorting, pagination, row actions, bulk actions, or custom cell/card rendering.
 - `laravel-inertia-crud-development` — Activates whenever building or expanding CRUD resources in this project. Use when creating Laravel models, migrations, factories, seeders, form requests, resource controllers, Inertia pages, Ziggy-backed forms, filtering/sorting/pagination, media uploads, sidebar links, or PHPUnit CRUD coverage.
+- `module-development` — Activates when creating new modules, adding features to existing modules, working with module config files (navigation, abilities), module service providers, module database classes (factories, seeders), or module testing. Use when any work involves the `modules/` directory.
 
 ## Conventions
 
