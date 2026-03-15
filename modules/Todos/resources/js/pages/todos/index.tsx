@@ -25,7 +25,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
-import type { TodoIndexPageProps, TodoListItem } from '../types/todo';
+import type { TodoIndexPageProps, TodoListItem } from '../../types/todo';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: route('dashboard') },
@@ -88,7 +88,6 @@ export default function TodosIndex({
                 { value: 'high', label: 'High' },
                 { value: 'critical', label: 'Critical' },
             ],
-            placeholder: 'All Priorities',
         },
         {
             type: 'select',
@@ -98,7 +97,6 @@ export default function TodosIndex({
                 { value: 'private', label: 'Private' },
                 { value: 'public', label: 'Public' },
             ],
-            placeholder: 'All',
         },
     ];
 
