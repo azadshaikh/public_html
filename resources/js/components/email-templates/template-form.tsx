@@ -343,7 +343,7 @@ export default function TemplateForm({
                                 )}
                                 <FieldDescription>
                                     {form.data.is_raw
-                                        ? 'Rich HTML mode uses the new full Plate editor for formatted email content.'
+                                        ? 'Rich HTML mode uses the built-in formatted editor for email content.'
                                         : 'Plain text mode keeps the legacy source editor for simple template bodies.'}
                                 </FieldDescription>
                                 <FieldError>{form.error('message')}</FieldError>
@@ -354,8 +354,9 @@ export default function TemplateForm({
                                     Rich HTML mode
                                 </FieldLabel>
                                 <FieldDescription>
-                                    Enable this to use the full editor. Disable
-                                    it to edit the raw/plain template source.
+                                    Enable this to use the formatted editor.
+                                    Disable it to edit the raw/plain template
+                                    source.
                                 </FieldDescription>
                                 <Switch
                                     id="is_raw"
