@@ -11,10 +11,14 @@ import {
     UndoIcon,
 } from 'lucide-react';
 
-import type { AsteroNoteController } from '@/components/editor/asteronote-types';
-import { ToolbarIconButton } from '@/components/editor/plugins/toolbar-icon-button';
+import type { AsteroNoteController } from '@/components/asteronote/asteronote-types';
+import { ToolbarIconButton } from '@/components/asteronote/plugins/toolbar-icon-button';
 
-export function UndoPluginControl({ editor }: { editor: AsteroNoteController }) {
+export function UndoPluginControl({
+    editor,
+}: {
+    editor: AsteroNoteController;
+}) {
     return (
         <ToolbarIconButton
             disabled={editor.isCodeView}
@@ -26,7 +30,11 @@ export function UndoPluginControl({ editor }: { editor: AsteroNoteController }) 
     );
 }
 
-export function RedoPluginControl({ editor }: { editor: AsteroNoteController }) {
+export function RedoPluginControl({
+    editor,
+}: {
+    editor: AsteroNoteController;
+}) {
     return (
         <ToolbarIconButton
             disabled={editor.isCodeView}
@@ -38,7 +46,11 @@ export function RedoPluginControl({ editor }: { editor: AsteroNoteController }) 
     );
 }
 
-export function BoldPluginControl({ editor }: { editor: AsteroNoteController }) {
+export function BoldPluginControl({
+    editor,
+}: {
+    editor: AsteroNoteController;
+}) {
     return (
         <ToolbarIconButton
             disabled={editor.isCodeView}
@@ -51,7 +63,11 @@ export function BoldPluginControl({ editor }: { editor: AsteroNoteController }) 
     );
 }
 
-export function ItalicPluginControl({ editor }: { editor: AsteroNoteController }) {
+export function ItalicPluginControl({
+    editor,
+}: {
+    editor: AsteroNoteController;
+}) {
     return (
         <ToolbarIconButton
             disabled={editor.isCodeView}
@@ -64,7 +80,11 @@ export function ItalicPluginControl({ editor }: { editor: AsteroNoteController }
     );
 }
 
-export function UnderlinePluginControl({ editor }: { editor: AsteroNoteController }) {
+export function UnderlinePluginControl({
+    editor,
+}: {
+    editor: AsteroNoteController;
+}) {
     return (
         <ToolbarIconButton
             disabled={editor.isCodeView}

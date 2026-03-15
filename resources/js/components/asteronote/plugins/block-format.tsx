@@ -21,7 +21,7 @@ import * as React from 'react';
 import type {
     AsteroNoteBlockTag,
     AsteroNoteController,
-} from '@/components/editor/asteronote-types';
+} from '@/components/asteronote/asteronote-types';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -119,7 +119,7 @@ export function BlockFormatDropdown({
                     {allowedBlocks.map((block) => (
                         <DropdownMenuRadioItem
                             key={block}
-                            className="pl-2 *:first:[span]:hidden"
+                            className="gap-2 pl-2 *:first:[span]:hidden"
                             value={block}
                             onSelect={(event) => {
                                 event.preventDefault();
@@ -132,8 +132,10 @@ export function BlockFormatDropdown({
                                     <CheckIcon />
                                 </DropdownMenuItemIndicator>
                             </span>
-                            {blockTagIcon(block)}
-                            {blockTagLabel(block)}
+                            <span className="flex size-5 shrink-0 items-center justify-center">
+                                {blockTagIcon(block)}
+                            </span>
+                            <span>{blockTagLabel(block)}</span>
                         </DropdownMenuRadioItem>
                     ))}
                 </ToolbarMenuGroup>

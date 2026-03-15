@@ -10,17 +10,17 @@
  * - The registry maps action names to plugin components
  */
 
-import type { AsteroNotePluginComponent } from '@/components/editor/asteronote-types';
-import { AlignPluginControl } from '@/components/editor/plugins/align';
+import type { AsteroNotePluginComponent } from '@/components/asteronote/asteronote-types';
+import { AlignPluginControl } from '@/components/asteronote/plugins/align';
 import {
     FormatBlockPluginControl,
     HeadingPluginControl,
-} from '@/components/editor/plugins/block-format';
+} from '@/components/asteronote/plugins/block-format';
 import {
     CodeViewPluginControl,
     FullscreenPluginControl,
-} from '@/components/editor/plugins/editor-mode';
-import { ImagePluginControl } from '@/components/editor/plugins/image';
+} from '@/components/asteronote/plugins/editor-mode';
+import { ImagePluginControl } from '@/components/asteronote/plugins/image';
 import {
     BoldPluginControl,
     HorizontalRulePluginControl,
@@ -30,14 +30,14 @@ import {
     StrikethroughPluginControl,
     UnderlinePluginControl,
     UndoPluginControl,
-} from '@/components/editor/plugins/inline-format';
-import { LinkPluginControl } from '@/components/editor/plugins/link';
-import { ListPluginControl } from '@/components/editor/plugins/list';
-import { TablePluginControl } from '@/components/editor/plugins/table';
-import { VideoPluginControl } from '@/components/editor/plugins/video';
+} from '@/components/asteronote/plugins/inline-format';
+import { LinkPluginControl } from '@/components/asteronote/plugins/link';
+import { ListPluginControl } from '@/components/asteronote/plugins/list';
+import { TablePluginControl } from '@/components/asteronote/plugins/table';
+import { VideoPluginControl } from '@/components/asteronote/plugins/video';
 
-export { BubbleToolbar } from '@/components/editor/plugins/bubble-toolbar';
-export { ToolbarIconButton } from '@/components/editor/plugins/toolbar-icon-button';
+export { BubbleToolbar } from '@/components/asteronote/plugins/bubble-toolbar';
+export { ToolbarIconButton } from '@/components/asteronote/plugins/toolbar-icon-button';
 
 /**
  * Null component for virtual toolbar entries

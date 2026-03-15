@@ -12,7 +12,7 @@ import * as React from 'react';
 import type {
     AsteroNoteController,
     AsteroNoteTableAction,
-} from '@/components/editor/asteronote-types';
+} from '@/components/asteronote/asteronote-types';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -60,7 +60,11 @@ const rowActions: Array<{
     { action: 'delete-table', label: 'Delete table', icon: <EraserIcon /> },
 ];
 
-export function TablePluginControl({ editor }: { editor: AsteroNoteController }) {
+export function TablePluginControl({
+    editor,
+}: {
+    editor: AsteroNoteController;
+}) {
     const [open, setOpen] = React.useState(false);
     const [rows, setRows] = React.useState('3');
     const [columns, setColumns] = React.useState('3');

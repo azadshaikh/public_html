@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 
-import type { AsteroNoteController } from '@/components/editor/asteronote-types';
+import type { AsteroNoteController } from '@/components/asteronote/asteronote-types';
 import { ToolbarButton } from '@/components/ui/toolbar';
 
 /**

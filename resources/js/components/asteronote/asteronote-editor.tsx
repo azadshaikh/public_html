@@ -23,11 +23,11 @@ import {
     sanitizeAsteroNoteHtml,
     saveSelectionRange,
     updateTableAtSelection,
-} from '@/components/editor/asteronote-dom';
+} from '@/components/asteronote/asteronote-dom';
 import {
     ASTERONOTE_FULL_TOOLBAR,
     ASTERONOTE_LITE_TOOLBAR,
-} from '@/components/editor/asteronote-types';
+} from '@/components/asteronote/asteronote-types';
 import type {
     AsteroNoteBlockTag,
     AsteroNoteBundle,
@@ -35,21 +35,24 @@ import type {
     AsteroNotePluginComponent,
     AsteroNoteTableAction,
     AsteroNoteToolbar,
-} from '@/components/editor/asteronote-types';
+} from '@/components/asteronote/asteronote-types';
 import {
     hasMeaningfulHtmlContent,
     normalizeHtmlEditorValue,
-} from '@/components/editor/html-editor-utils';
-import type { HtmlEditorProps } from '@/components/editor/html-editor-utils';
-import { asteronotePluginMap, BubbleToolbar } from '@/components/editor/plugins';
+} from '@/components/asteronote/html-editor-utils';
+import type { HtmlEditorProps } from '@/components/asteronote/html-editor-utils';
+import {
+    asteronotePluginMap,
+    BubbleToolbar,
+} from '@/components/asteronote/plugins';
 import {
     flattenToolbar,
     resolvePlugins,
-} from '@/components/editor/toolbar-utils';
+} from '@/components/asteronote/toolbar-utils';
 import {
     FullscreenProvider,
     useFullscreen,
-} from '@/components/editor/use-fullscreen';
+} from '@/components/asteronote/use-fullscreen';
 import { FixedToolbar } from '@/components/ui/fixed-toolbar';
 import { Textarea } from '@/components/ui/textarea';
 import { ToolbarGroup } from '@/components/ui/toolbar';
@@ -519,7 +522,9 @@ function AsteroNoteEditorInner({
                     }
                 }
             } else if (safeUrl) {
-                const safeTarget = target ? ` target="${escapeHtmlAttr(target)}"` : '';
+                const safeTarget = target
+                    ? ` target="${escapeHtmlAttr(target)}"`
+                    : '';
                 const safeRel = rel ? ` rel="${escapeHtmlAttr(rel)}"` : '';
                 const safeText = escapeHtmlContent(text || safeUrl);
 

@@ -3,8 +3,8 @@
 import { ImagePlusIcon } from 'lucide-react';
 import * as React from 'react';
 
-import type { AsteroNoteController } from '@/components/editor/asteronote-types';
-import { ToolbarIconButton } from '@/components/editor/plugins/toolbar-icon-button';
+import type { AsteroNoteController } from '@/components/asteronote/asteronote-types';
+import { ToolbarIconButton } from '@/components/asteronote/plugins/toolbar-icon-button';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -18,7 +18,11 @@ import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 
-export function ImagePluginControl({ editor }: { editor: AsteroNoteController }) {
+export function ImagePluginControl({
+    editor,
+}: {
+    editor: AsteroNoteController;
+}) {
     const [open, setOpen] = React.useState(false);
     const [src, setSrc] = React.useState('');
     const [alt, setAlt] = React.useState('');

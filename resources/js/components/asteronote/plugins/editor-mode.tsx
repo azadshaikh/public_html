@@ -2,10 +2,14 @@
 
 import { Code2Icon, MaximizeIcon, MinimizeIcon } from 'lucide-react';
 
-import type { AsteroNoteController } from '@/components/editor/asteronote-types';
-import { ToolbarIconButton } from '@/components/editor/plugins/toolbar-icon-button';
+import type { AsteroNoteController } from '@/components/asteronote/asteronote-types';
+import { ToolbarIconButton } from '@/components/asteronote/plugins/toolbar-icon-button';
 
-export function FullscreenPluginControl({ editor }: { editor: AsteroNoteController }) {
+export function FullscreenPluginControl({
+    editor,
+}: {
+    editor: AsteroNoteController;
+}) {
     return (
         <ToolbarIconButton
             editor={editor}
@@ -17,7 +21,11 @@ export function FullscreenPluginControl({ editor }: { editor: AsteroNoteControll
     );
 }
 
-export function CodeViewPluginControl({ editor }: { editor: AsteroNoteController }) {
+export function CodeViewPluginControl({
+    editor,
+}: {
+    editor: AsteroNoteController;
+}) {
     return (
         <ToolbarIconButton
             editor={editor}

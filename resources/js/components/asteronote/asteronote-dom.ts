@@ -6,11 +6,11 @@ import type {
     AsteroNoteListType,
     AsteroNoteTableAction,
     AsteroNoteVideoPayload,
-} from '@/components/editor/asteronote-types';
+} from '@/components/asteronote/asteronote-types';
 import {
     hasMeaningfulHtmlContent,
     normalizeHtmlEditorValue,
-} from '@/components/editor/html-editor-utils';
+} from '@/components/asteronote/html-editor-utils';
 
 const blockTags = new Set<AsteroNoteBlockTag>([
     'p',

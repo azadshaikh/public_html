@@ -13,10 +13,7 @@ export function flattenToolbar<T extends string>(toolbar: Array<T | T[]>): T[] {
     return actions;
 }
 
-export function mapActionsToPlugins<
-    TAction extends string,
-    TPlugin,
->(
+export function mapActionsToPlugins<TAction extends string, TPlugin>(
     actions: TAction[],
     pluginMap: Partial<Record<TAction, TPlugin>>,
     warnOnMissing = false,
@@ -41,10 +38,7 @@ export function mapActionsToPlugins<
     return plugins;
 }
 
-export function resolvePlugins<
-    TAction extends string,
-    TPlugin,
->(
+export function resolvePlugins<TAction extends string, TPlugin>(
     toolbar: Array<TAction | TAction[]>,
     pluginMap: Partial<Record<TAction, TPlugin>>,
     warnOnMissing = false,

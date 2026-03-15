@@ -1,5 +1,5 @@
-import { NoteEditor } from '@/components/editor/note-editor';
-import { hasMeaningfulHtmlContent } from '@/components/editor/html-editor-utils';
+import { AsteroNoteLite } from '@/components/asteronote/asteronote-lite';
+import { hasMeaningfulHtmlContent } from '@/components/asteronote/html-editor-utils';
 
 type NoteRichTextEditorProps = {
     id: string;
@@ -17,7 +17,7 @@ export function hasMeaningfulNoteContent(value: string): boolean {
 
 export function NoteRichTextEditor(props: NoteRichTextEditorProps) {
     return (
-        <NoteEditor
+        <AsteroNoteLite
             {...props}
             placeholder={
                 props.placeholder ??

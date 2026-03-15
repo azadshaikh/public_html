@@ -3,8 +3,8 @@
 import { Link2Icon } from 'lucide-react';
 import * as React from 'react';
 
-import type { AsteroNoteController } from '@/components/editor/asteronote-types';
-import { ToolbarIconButton } from '@/components/editor/plugins/toolbar-icon-button';
+import type { AsteroNoteController } from '@/components/asteronote/asteronote-types';
+import { ToolbarIconButton } from '@/components/asteronote/plugins/toolbar-icon-button';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -22,7 +22,11 @@ import {
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 
-export function LinkPluginControl({ editor }: { editor: AsteroNoteController }) {
+export function LinkPluginControl({
+    editor,
+}: {
+    editor: AsteroNoteController;
+}) {
     const [open, setOpen] = React.useState(false);
     const [url, setUrl] = React.useState('');
     const [text, setText] = React.useState('');

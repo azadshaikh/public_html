@@ -1,13 +1,9 @@
 'use client';
 
-import {
-    CheckIcon,
-    ListIcon,
-    ListOrderedIcon,
-} from 'lucide-react';
+import { CheckIcon, ListIcon, ListOrderedIcon } from 'lucide-react';
 import * as React from 'react';
 
-import type { AsteroNoteController } from '@/components/editor/asteronote-types';
+import type { AsteroNoteController } from '@/components/asteronote/asteronote-types';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -79,7 +75,11 @@ const groupedOptions = [
     },
 ];
 
-export function ListPluginControl({ editor }: { editor: AsteroNoteController }) {
+export function ListPluginControl({
+    editor,
+}: {
+    editor: AsteroNoteController;
+}) {
     const [open, setOpen] = React.useState(false);
     const currentType = editor.formatState.listType ?? 'ul';
     const currentStyle = editor.formatState.listStyleType;

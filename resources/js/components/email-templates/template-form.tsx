@@ -1,8 +1,8 @@
 import { Link } from '@inertiajs/react';
 import { ArrowLeftIcon, FileTextIcon, SaveIcon, SendIcon } from 'lucide-react';
 import type { FormEvent } from 'react';
-import { EditorFull } from '@/components/editor/editor-full';
-import { hasMeaningfulHtmlContent } from '@/components/editor/html-editor-utils';
+import { AsteroNote } from '@/components/asteronote/asteronote';
+import { hasMeaningfulHtmlContent } from '@/components/asteronote/html-editor-utils';
 import { FormErrorSummary } from '@/components/forms/form-error-summary';
 import { Button } from '@/components/ui/button';
 import {
@@ -313,7 +313,7 @@ export default function TemplateForm({
                                     Message <span aria-hidden>*</span>
                                 </FieldLabel>
                                 {form.data.is_raw ? (
-                                    <EditorFull
+                                    <AsteroNote
                                         id="message"
                                         value={form.data.message}
                                         onChange={(value) =>

@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import * as React from 'react';
 
-import type { AsteroNoteController } from '@/components/editor/asteronote-types';
+import type { AsteroNoteController } from '@/components/asteronote/asteronote-types';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -61,7 +61,11 @@ const iconMap: Record<string, React.ReactNode> = {
     justify: <AlignJustifyIcon />,
 };
 
-export function AlignPluginControl({ editor }: { editor: AsteroNoteController }) {
+export function AlignPluginControl({
+    editor,
+}: {
+    editor: AsteroNoteController;
+}) {
     const [open, setOpen] = React.useState(false);
     const align = editor.formatState.align;
 
