@@ -1,21 +1,6 @@
 'use client';
 
-import {
-    DropdownMenuItemIndicator,
-    DropdownMenuRadioItem,
-} from '@radix-ui/react-dropdown-menu';
-import {
-    CheckIcon,
-    Code2Icon,
-    Heading1Icon,
-    Heading2Icon,
-    Heading3Icon,
-    Heading4Icon,
-    Heading5Icon,
-    Heading6Icon,
-    PilcrowIcon,
-    QuoteIcon,
-} from 'lucide-react';
+import { CheckIcon } from 'lucide-react';
 import * as React from 'react';
 
 import type {
@@ -25,9 +10,12 @@ import type {
 import {
     DropdownMenu,
     DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { ToolbarButton, ToolbarMenuGroup } from '@/components/ui/toolbar';
+import { ToolbarButton } from '@/components/ui/toolbar';
 
 function blockTagLabel(tag: AsteroNoteBlockTag): string {
     const labels: Record<AsteroNoteBlockTag, string> = {
@@ -45,23 +33,49 @@ function blockTagLabel(tag: AsteroNoteBlockTag): string {
     return labels[tag];
 }
 
-function blockTagIcon(tag: AsteroNoteBlockTag): React.ReactNode {
-    const icons: Record<AsteroNoteBlockTag, React.ReactNode> = {
-        p: <PilcrowIcon />,
-        h1: <Heading1Icon />,
-        h2: <Heading2Icon />,
-        h3: <Heading3Icon />,
-        h4: <Heading4Icon />,
-        h5: <Heading5Icon />,
-        h6: <Heading6Icon />,
-        blockquote: <QuoteIcon />,
-        pre: <Code2Icon />,
+function blockTagShortLabel(tag: AsteroNoteBlockTag): string {
+    const labels: Record<AsteroNoteBlockTag, string> = {
+        p: 'P',
+        h1: 'H1',
+        h2: 'H2',
+        h3: 'H3',
+        h4: 'H4',
+        h5: 'H5',
+        h6: 'H6',
+        blockquote: '❝',
+        pre: '</>',
     };
 
-    return icons[tag];
+    return labels[tag];
+}
+
+function isHeadingBlock(tag: AsteroNoteBlockTag): boolean {
+    return tag.startsWith('h');
 }
 
 export { blockTagLabel };
+
+export const ASTERONOTE_FULL_BLOCK_FORMATS: AsteroNoteBlockTag[] = [
+    'p',
+    'h1',
+    'h2',
+    'h3',
+    'h4',
+    'h5',
+    'h6',
+    'blockquote',
+    'pre',
+];
+
+export const ASTERONOTE_LITE_BLOCK_FORMATS: AsteroNoteBlockTag[] = [
+    'p',
+    'h1',
+    'h2',
+    'h3',
+    'h4',
+    'h5',
+    'h6',
+];
 
 export function BlockFormatDropdown({
     editor,
@@ -76,6 +90,44 @@ export function BlockFormatDropdown({
     const selectedBlock = allowedBlocks.includes(editor.formatState.blockTag)
         ? editor.formatState.blockTag
         : allowedBlocks[0];
+    const headingBlocks = allowedBlocks.filter(isHeadingBlock);
+    const contentBlocks = allowedBlocks.filter(
+        (block) => !isHeadingBlock(block),
+    );
+    const triggerLabel = blockTagShortLabel(selectedBlock);
+
+    const groupedBlocks = [
+        {
+            label: 'Headings',
+            items: headingBlocks,
+        },
+        {
+            label: 'Blocks',
+            items: contentBlocks,
+        },
+    ].filter((group) => group.items.length > 0);
+
+    const renderBlockItem = (block: AsteroNoteBlockTag) => (
+        <DropdownMenuItem
+            key={block}
+            className="gap-2"
+            onSelect={(event) => {
+                event.preventDefault();
+                editor.applyBlockTag(block);
+                setOpen(false);
+            }}
+        >
+            <span className="flex min-w-8 shrink-0 items-center justify-center text-xs font-semibold tracking-wide text-foreground">
+                {blockTagShortLabel(block)}
+            </span>
+
+            <span className="truncate text-sm text-foreground">
+                {blockTagLabel(block)}
+            </span>
+
+            {selectedBlock === block ? <CheckIcon className="ml-auto" /> : null}
+        </DropdownMenuItem>
+    );
 
     return (
         <DropdownMenu
@@ -92,53 +144,34 @@ export function BlockFormatDropdown({
                 <ToolbarButton
                     disabled={editor.isCodeView}
                     isDropdown
+                    className="min-w-14"
                     onMouseDown={(event: React.MouseEvent) =>
                         event.preventDefault()
                     }
                     tooltip={labelOverride ?? blockTagLabel(selectedBlock)}
                 >
-                    {labelOverride ?? blockTagLabel(selectedBlock)}
+                    {triggerLabel}
                 </ToolbarButton>
             </DropdownMenuTrigger>
 
             <DropdownMenuContent
-                className="ignore-click-outside/toolbar min-w-[13rem]"
+                className="ignore-click-outside/toolbar min-w-52"
                 align="start"
+                sideOffset={6}
+                collisionPadding={12}
                 onCloseAutoFocus={(event) => {
                     event.preventDefault();
                 }}
             >
-                <ToolbarMenuGroup
-                    value={selectedBlock}
-                    onValueChange={(value) => {
-                        editor.applyBlockTag(value as AsteroNoteBlockTag);
-                        setOpen(false);
-                    }}
-                    label={labelOverride ?? 'Format'}
-                >
-                    {allowedBlocks.map((block) => (
-                        <DropdownMenuRadioItem
-                            key={block}
-                            className="gap-2 pl-2 *:first:[span]:hidden"
-                            value={block}
-                            onSelect={(event) => {
-                                event.preventDefault();
-                                editor.applyBlockTag(block);
-                                setOpen(false);
-                            }}
-                        >
-                            <span className="pointer-events-none absolute right-2 flex size-3.5 items-center justify-center">
-                                <DropdownMenuItemIndicator>
-                                    <CheckIcon />
-                                </DropdownMenuItemIndicator>
-                            </span>
-                            <span className="flex size-5 shrink-0 items-center justify-center">
-                                {blockTagIcon(block)}
-                            </span>
-                            <span>{blockTagLabel(block)}</span>
-                        </DropdownMenuRadioItem>
-                    ))}
-                </ToolbarMenuGroup>
+                {groupedBlocks.map((group, groupIndex) => (
+                    <React.Fragment key={group.label}>
+                        <DropdownMenuLabel>{group.label}</DropdownMenuLabel>
+                        {group.items.map(renderBlockItem)}
+                        {groupIndex < groupedBlocks.length - 1 ? (
+                            <DropdownMenuSeparator />
+                        ) : null}
+                    </React.Fragment>
+                ))}
             </DropdownMenuContent>
         </DropdownMenu>
     );
@@ -152,17 +185,7 @@ export function FormatBlockPluginControl({
     return (
         <BlockFormatDropdown
             editor={editor}
-            allowedBlocks={[
-                'p',
-                'h1',
-                'h2',
-                'h3',
-                'h4',
-                'h5',
-                'h6',
-                'blockquote',
-                'pre',
-            ]}
+            allowedBlocks={ASTERONOTE_FULL_BLOCK_FORMATS}
         />
     );
 }
@@ -175,7 +198,7 @@ export function HeadingPluginControl({
     return (
         <BlockFormatDropdown
             editor={editor}
-            allowedBlocks={['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6']}
+            allowedBlocks={ASTERONOTE_LITE_BLOCK_FORMATS}
             labelOverride="Heading"
         />
     );

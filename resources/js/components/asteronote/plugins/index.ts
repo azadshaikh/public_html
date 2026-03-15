@@ -33,6 +33,7 @@ import {
 } from '@/components/asteronote/plugins/inline-format';
 import { LinkPluginControl } from '@/components/asteronote/plugins/link';
 import { ListPluginControl } from '@/components/asteronote/plugins/list';
+import { SeparatorPluginControl } from '@/components/asteronote/plugins/separator';
 import { TablePluginControl } from '@/components/asteronote/plugins/table';
 import { VideoPluginControl } from '@/components/asteronote/plugins/video';
 
@@ -40,13 +41,9 @@ export { BubbleToolbar } from '@/components/asteronote/plugins/bubble-toolbar';
 export { ToolbarIconButton } from '@/components/asteronote/plugins/toolbar-icon-button';
 
 /**
- * Null component for virtual toolbar entries
- * (separator / bubbleToolbar that render nothing in the main toolbar).
+ * Null component for virtual toolbar entry `bubbleToolbar`
+ * that renders nothing in the fixed toolbar.
  */
-function SeparatorPluginControl() {
-    return null;
-}
-
 function BubbleToolbarPluginControl() {
     return null;
 }

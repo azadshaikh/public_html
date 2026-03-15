@@ -29,6 +29,7 @@ import {
     ASTERONOTE_LITE_TOOLBAR,
 } from '@/components/asteronote/asteronote-types';
 import type {
+    AsteroNoteAction,
     AsteroNoteBlockTag,
     AsteroNoteBundle,
     AsteroNoteController,
@@ -53,9 +54,8 @@ import {
     FullscreenProvider,
     useFullscreen,
 } from '@/components/asteronote/use-fullscreen';
+import { MonacoEditor } from '@/components/code-editor/monaco-editor';
 import { FixedToolbar } from '@/components/ui/fixed-toolbar';
-import { Textarea } from '@/components/ui/textarea';
-import { ToolbarGroup } from '@/components/ui/toolbar';
 import { cn } from '@/lib/utils';
 
 const defaultHeights: Record<AsteroNoteBundle, number> = {
@@ -95,38 +95,33 @@ const KEYBOARD_SHORTCUTS: Array<{
 ];
 
 function createGroupDefinitions(
-    actions: string[],
-    plugins: AsteroNotePluginComponent[],
+    toolbar: AsteroNoteToolbar,
+    pluginMap: Record<string, AsteroNotePluginComponent>,
 ) {
-    const groups: Array<
-        Array<{ action: string; Plugin: AsteroNotePluginComponent }>
-    > = [];
-    let currentGroup: Array<{
-        action: string;
-        Plugin: AsteroNotePluginComponent;
-    }> = [];
+    const regions = toolbar.some(Array.isArray)
+        ? toolbar.map((item) => (Array.isArray(item) ? item : [item]))
+        : [flattenToolbar(toolbar)];
 
-    actions.forEach((action, index) => {
-        const Plugin = plugins[index];
+    return regions.map((region) =>
+        region
+            .map((action) => {
+                const Plugin = pluginMap[action];
 
-        if (action === 'separator') {
-            if (currentGroup.length > 0) {
-                groups.push(currentGroup);
-                currentGroup = [];
-            }
-            return;
-        }
+                if (!Plugin) {
+                    return null;
+                }
 
-        if (Plugin) {
-            currentGroup.push({ action, Plugin });
-        }
-    });
-
-    if (currentGroup.length > 0) {
-        groups.push(currentGroup);
-    }
-
-    return groups;
+                return { action, Plugin };
+            })
+            .filter(
+                (
+                    item,
+                ): item is {
+                    action: AsteroNoteAction;
+                    Plugin: AsteroNotePluginComponent;
+                } => item !== null,
+            ),
+    );
 }
 
 function AsteroNoteEditorInner({
@@ -142,28 +137,24 @@ function AsteroNoteEditorInner({
 }: AsteroNoteEditorProps) {
     const { isFullscreen, toggleFullscreen } = useFullscreen();
     const editorRef = React.useRef<HTMLDivElement | null>(null);
+    const editorViewportRef = React.useRef<HTMLDivElement | null>(null);
     const resizerRef = React.useRef<{
         startY: number;
         startHeight: number;
     } | null>(null);
     const latestHtmlRef = React.useRef('');
     const savedRangeRef = React.useRef<Range | null>(null);
-    const toolbarActions = React.useMemo(
-        () => flattenToolbar(toolbar ?? getToolbarForBundle(bundle)),
+    const toolbarConfig = React.useMemo(
+        () => toolbar ?? getToolbarForBundle(bundle),
         [bundle, toolbar],
     );
-    const toolbarPlugins = React.useMemo(
-        () =>
-            resolvePlugins(
-                toolbar ?? getToolbarForBundle(bundle),
-                asteronotePluginMap,
-                true,
-            ),
-        [bundle, toolbar],
+    const toolbarActions = React.useMemo(
+        () => flattenToolbar(toolbarConfig),
+        [toolbarConfig],
     );
     const toolbarGroups = React.useMemo(
-        () => createGroupDefinitions(toolbarActions, toolbarPlugins),
-        [toolbarActions, toolbarPlugins],
+        () => createGroupDefinitions(toolbarConfig, asteronotePluginMap),
+        [toolbarConfig],
     );
     const floatingToolbarEnabled = toolbarActions.includes('bubbleToolbar');
 
@@ -271,15 +262,52 @@ function AsteroNoteEditorInner({
         }
 
         const rect = getSelectionRect(root);
+        const viewport = editorViewportRef.current;
 
-        if (!rect) {
+        if (!rect || !viewport) {
             setFloatingPosition(null);
             return;
         }
 
+        const viewportRect = viewport.getBoundingClientRect();
+        const toolbarHeight = 44;
+        const edgePadding = 12;
+        const verticalOffset = 8;
+        const centeredLeft =
+            rect.left -
+            viewportRect.left +
+            viewport.scrollLeft +
+            rect.width / 2;
+        const preferredTop =
+            rect.top -
+            viewportRect.top +
+            viewport.scrollTop -
+            toolbarHeight -
+            verticalOffset;
+        const fallbackTop =
+            rect.bottom -
+            viewportRect.top +
+            viewport.scrollTop +
+            verticalOffset;
+        const minLeft = viewport.scrollLeft + edgePadding;
+        const maxLeft =
+            viewport.scrollLeft + viewport.clientWidth - edgePadding;
+        const minTop = viewport.scrollTop + edgePadding;
+        const maxTop =
+            viewport.scrollTop +
+            viewport.clientHeight -
+            toolbarHeight -
+            edgePadding;
+
         setFloatingPosition({
-            left: rect.left + rect.width / 2,
-            top: rect.top - 12,
+            left: Math.min(Math.max(centeredLeft, minLeft), maxLeft),
+            top: Math.min(
+                Math.max(
+                    preferredTop >= minTop ? preferredTop : fallbackTop,
+                    minTop,
+                ),
+                Math.max(minTop, maxTop),
+            ),
         });
     }, [floatingToolbarEnabled, isCodeView]);
 
@@ -823,6 +851,7 @@ function AsteroNoteEditorInner({
     const controller: AsteroNoteController = React.useMemo(
         () => ({
             id,
+            bundle,
             isCodeView,
             isFullscreen,
             floatingToolbarEnabled,
@@ -849,6 +878,7 @@ function AsteroNoteEditorInner({
         }),
         [
             id,
+            bundle,
             isCodeView,
             isFullscreen,
             floatingToolbarEnabled,
@@ -884,17 +914,43 @@ function AsteroNoteEditorInner({
                 className,
             )}
         >
-            <FixedToolbar className="justify-start rounded-t-[inherit] bg-background">
-                {toolbarGroups.map((group, groupIndex) => (
-                    <ToolbarGroup key={groupIndex}>
-                        {group.map(({ action, Plugin }, index) => (
+            <FixedToolbar className="rounded-t-[inherit] bg-background">
+                <div className="w-full overflow-x-auto">
+                    <div className="flex min-w-max items-center gap-2 pr-1">
+                        {toolbarGroups[0]?.map(({ action, Plugin }, index) => (
                             <Plugin
-                                key={`${action}-${index}`}
+                                key={`left-${action}-${index}`}
                                 editor={controller}
                             />
                         ))}
-                    </ToolbarGroup>
-                ))}
+
+                        {toolbarGroups[1]?.length ? (
+                            <div className="flex items-center gap-2 px-1">
+                                {toolbarGroups[1].map(
+                                    ({ action, Plugin }, index) => (
+                                        <Plugin
+                                            key={`center-${action}-${index}`}
+                                            editor={controller}
+                                        />
+                                    ),
+                                )}
+                            </div>
+                        ) : null}
+
+                        {toolbarGroups[2]?.length ? (
+                            <div className="flex items-center gap-2 pl-1">
+                                {toolbarGroups[2].map(
+                                    ({ action, Plugin }, index) => (
+                                        <Plugin
+                                            key={`right-${action}-${index}`}
+                                            editor={controller}
+                                        />
+                                    ),
+                                )}
+                            </div>
+                        ) : null}
+                    </div>
+                </div>
             </FixedToolbar>
 
             <div
@@ -912,28 +968,37 @@ function AsteroNoteEditorInner({
                 ) : null}
 
                 {isCodeView ? (
-                    <Textarea
-                        id={id}
-                        rows={12}
+                    <MonacoEditor
                         value={codeViewValue}
-                        onChange={(event) => {
-                            setCodeViewValue(event.target.value);
-                            onChange(event.target.value);
+                        onChange={(value) => {
+                            setCodeViewValue(value);
+                            onChange(value);
                         }}
                         onBlur={() => {
                             commitCodeView();
                             onBlur?.();
                         }}
+                        language="html"
+                        height={height}
+                        placeholder={placeholderText}
                         className={cn(
-                            'min-h-0 rounded-none border-0 font-mono text-sm shadow-none focus-visible:ring-0',
-                            isFullscreen && 'flex-1 resize-none',
+                            'min-h-0 rounded-none border-0 shadow-none',
+                            isFullscreen && 'flex-1',
                         )}
-                        style={{ height }}
+                        editorClassName="h-full rounded-none border-0 bg-[#0f111a]"
+                        textareaClassName="min-h-0 rounded-none border-0 font-mono text-sm shadow-none focus-visible:ring-0"
+                        options={{
+                            wordWrap: 'on',
+                            lineNumbers: 'on',
+                            renderLineHighlight: 'line',
+                            scrollBeyondLastLine: false,
+                        }}
                     />
                 ) : (
                     <div
+                        ref={editorViewportRef}
                         className={cn(
-                            'relative cursor-text overflow-auto px-4 py-4',
+                            'relative cursor-text scroll-py-14 overflow-auto px-4 py-4',
                             isFullscreen && 'min-h-0 flex-1',
                         )}
                         style={{ height }}
@@ -942,7 +1007,12 @@ function AsteroNoteEditorInner({
                                 editorRef.current?.focus();
                             }
                         }}
+                        onScroll={refreshState}
                     >
+                        {floatingToolbarEnabled ? (
+                            <BubbleToolbar editor={controller} />
+                        ) : null}
+
                         <div
                             id={id}
                             ref={editorRef}
@@ -995,10 +1065,6 @@ function AsteroNoteEditorInner({
             >
                 <span className="h-1 w-8 rounded-full bg-border" />
             </button>
-
-            {floatingToolbarEnabled ? (
-                <BubbleToolbar editor={controller} />
-            ) : null}
         </div>
     );
 }

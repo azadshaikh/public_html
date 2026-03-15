@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils';
 export type MonacoEditorProps = {
     value: string;
     onChange: (value: string) => void;
+    onBlur?: () => void;
     language?: string;
     height?: number | string;
     name?: string;
@@ -37,6 +38,7 @@ function normalizeHeight(height: MonacoEditorProps['height']): string {
 export function MonacoEditor({
     value,
     onChange,
+    onBlur,
     language = 'shell',
     height = '34rem',
     name,
@@ -97,11 +99,12 @@ export function MonacoEditor({
     );
     const editorRef = useRef<MonacoStandaloneEditor | null>(null);
     const lastValueRef = useRef(value);
-    const creationOptionsRef = useRef<MonacoEditorConstructionOptions>(mergedOptions);
+    const creationOptionsRef =
+        useRef<MonacoEditorConstructionOptions>(mergedOptions);
     const shouldFocusEditorRef = useRef(false);
-    const [loaderState, setLoaderState] = useState<'loading' | 'ready' | 'fallback'>(
-        'loading',
-    );
+    const [loaderState, setLoaderState] = useState<
+        'loading' | 'ready' | 'fallback'
+    >('loading');
 
     useEffect(() => {
         lastValueRef.current = value;
@@ -166,6 +169,10 @@ export function MonacoEditor({
             onChange(nextValue);
         });
 
+        const blurSubscription = editor.onDidBlurEditorText?.(() => {
+            onBlur?.();
+        });
+
         const stopEnterPropagation = (event: KeyboardEvent) => {
             const activeElement = document.activeElement;
 
@@ -187,7 +194,10 @@ export function MonacoEditor({
         requestAnimationFrame(() => {
             editor.layout();
 
-            if (shouldFocusEditorRef.current && typeof editor.focus === 'function') {
+            if (
+                shouldFocusEditorRef.current &&
+                typeof editor.focus === 'function'
+            ) {
                 editor.focus();
                 shouldFocusEditorRef.current = false;
             }
@@ -195,12 +205,13 @@ export function MonacoEditor({
 
         return () => {
             changeSubscription.dispose();
+            blurSubscription?.dispose();
             window.removeEventListener('keydown', stopEnterPropagation, true);
             window.removeEventListener('keyup', stopEnterPropagation, true);
             editor.dispose();
             editorRef.current = null;
         };
-    }, [loaderState, onChange]);
+    }, [loaderState, onBlur, onChange]);
 
     useEffect(() => {
         const editor = editorRef.current;
@@ -249,7 +260,7 @@ export function MonacoEditor({
                 )}
                 style={{ minHeight: resolvedHeight }}
             />
-            <div className="pointer-events-none absolute right-3 top-3 flex items-center gap-2 rounded-md border bg-background/95 px-2 py-1 text-xs text-muted-foreground shadow-sm">
+            <div className="pointer-events-none absolute top-3 right-3 flex items-center gap-2 rounded-md border bg-background/95 px-2 py-1 text-xs text-muted-foreground shadow-sm">
                 {loaderState === 'loading' ? (
                     <>
                         <Spinner className="size-3.5" />
@@ -263,7 +274,10 @@ export function MonacoEditor({
     );
 
     return (
-        <div className={cn('relative', className)} style={{ height: resolvedHeight }}>
+        <div
+            className={cn('relative', className)}
+            style={{ height: resolvedHeight }}
+        >
             {loaderState === 'ready' ? (
                 <>
                     {name ? (

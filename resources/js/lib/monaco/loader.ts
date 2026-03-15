@@ -48,6 +48,7 @@ export type MonacoStandaloneEditor = {
     getModel: () => MonacoEditorModel | null;
     updateOptions: (options: Partial<MonacoEditorConstructionOptions>) => void;
     onDidChangeModelContent: (listener: () => void) => MonacoSubscription;
+    onDidBlurEditorText?: (listener: () => void) => MonacoSubscription;
     layout: () => void;
     focus?: () => void;
     dispose: () => void;
@@ -66,7 +67,10 @@ export type MonacoModule = {
             container: HTMLElement,
             options: MonacoEditorConstructionOptions,
         ) => MonacoStandaloneEditor;
-        defineTheme: (themeName: string, themeData: MonacoThemeDefinition) => void;
+        defineTheme: (
+            themeName: string,
+            themeData: MonacoThemeDefinition,
+        ) => void;
         setTheme: (themeName: string) => void;
         setModelLanguage: (model: MonacoEditorModel, language: string) => void;
     };
@@ -78,9 +82,7 @@ type AmdRequire = {
         onLoad: () => void,
         onError?: (error: unknown) => void,
     ): void;
-    config: (config: {
-        paths: Record<string, string>;
-    }) => void;
+    config: (config: { paths: Record<string, string> }) => void;
 };
 
 declare global {

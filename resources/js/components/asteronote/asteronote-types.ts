@@ -22,6 +22,10 @@ export type AsteroNoteAction =
     | 'separator'
     | 'bubbleToolbar';
 
+/**
+ * Nested arrays represent toolbar regions, e.g. left / center / right.
+ * Flat strings inside a region are rendered in order.
+ */
 export type AsteroNoteToolbar = Array<AsteroNoteAction | AsteroNoteAction[]>;
 
 export type AsteroNoteBundle = 'full' | 'lite';
@@ -96,6 +100,7 @@ export type AsteroNoteTableAction =
 
 export interface AsteroNoteController {
     id: string;
+    bundle: AsteroNoteBundle;
     isCodeView: boolean;
     isFullscreen: boolean;
     floatingToolbarEnabled: boolean;
@@ -136,39 +141,41 @@ export type AsteroNotePluginComponent = React.ComponentType<{
 }>;
 
 export const ASTERONOTE_FULL_TOOLBAR: AsteroNoteToolbar = [
-    'undo',
-    'redo',
-    'separator',
-    'formatblock',
-    'list',
-    'table',
-    'separator',
-    'bold',
-    'italic',
-    'underline',
-    'strikethrough',
-    'align',
-    'separator',
-    'hr',
-    'link',
-    'image',
-    'video',
-    'separator',
-    'removeFormat',
-    'codeview',
-    'fullscreen',
-    'bubbleToolbar',
+    [
+        'undo',
+        'redo',
+        'separator',
+        'formatblock',
+        'list',
+        'table',
+        'separator',
+        'bold',
+        'italic',
+        'underline',
+        'strikethrough',
+        'align',
+        'separator',
+        'hr',
+        'link',
+        'image',
+        'video',
+    ],
+    ['removeFormat'],
+    ['codeview', 'fullscreen', 'bubbleToolbar'],
 ];
 
 export const ASTERONOTE_LITE_TOOLBAR: AsteroNoteToolbar = [
-    'heading',
-    'list',
-    'separator',
-    'bold',
-    'italic',
-    'underline',
-    'strikethrough',
-    'separator',
-    'link',
-    'bubbleToolbar',
+    [
+        'heading',
+        'separator',
+        'list',
+        'separator',
+        'bold',
+        'italic',
+        'underline',
+        'strikethrough',
+        'separator',
+        'link',
+        'bubbleToolbar',
+    ],
 ];
