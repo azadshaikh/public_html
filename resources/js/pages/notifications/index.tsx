@@ -21,17 +21,6 @@ import type {
     DatagridTab,
 } from '@/components/datagrid/datagrid';
 import { ResourceFeedbackAlerts } from '@/components/resource/resource-feedback-alerts';
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogMedia,
-    AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -41,6 +30,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import type { BreadcrumbItem } from '@/types';
@@ -546,76 +536,64 @@ export default function NotificationsIndex({
                 </div>
             </div>
 
-            <AlertDialog
+            <ConfirmationDialog
                 open={dialog !== null}
                 onOpenChange={(open) => {
                     if (!open) {
                         setDialog(null);
                     }
                 }}
-            >
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogMedia>
-                            {dialog === 'delete-read' ? (
-                                <Trash2Icon />
-                            ) : (
-                                <CheckCheckIcon />
-                            )}
-                        </AlertDialogMedia>
-                        <AlertDialogTitle>
-                            {dialog === 'delete-read'
-                                ? 'Delete all read notifications?'
-                                : 'Mark every notification as read?'}
-                        </AlertDialogTitle>
-                        <AlertDialogDescription>
-                            {dialog === 'delete-read'
-                                ? 'This removes only notifications you have already read. Unread notifications stay in your inbox.'
-                                : 'Unread notifications will move into your read archive so your inbox looks clean again.'}
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                            variant={
-                                dialog === 'delete-read'
-                                    ? 'destructive'
-                                    : 'default'
-                            }
-                            onClick={() => {
-                                if (dialog === 'delete-read') {
-                                    router.delete(
-                                        route(
-                                            'app.notifications.delete-all-read',
-                                        ),
-                                        {
-                                            preserveScroll: true,
-                                        },
-                                    );
-                                }
+                title={
+                    dialog === 'delete-read'
+                        ? 'Delete read notifications'
+                        : 'Mark all as read'
+                }
+                description={
+                    dialog === 'delete-read'
+                        ? 'This removes only notifications you have already read. Unread notifications stay in your inbox.'
+                        : 'Unread notifications will move into your read archive so your inbox looks clean again.'
+                }
+                confirmLabel={
+                    dialog === 'delete-read'
+                        ? 'Delete read notifications'
+                        : 'Mark all as read'
+                }
+                icon={
+                    dialog === 'delete-read' ? (
+                        <Trash2Icon className="size-4.5" />
+                    ) : (
+                        <CheckCheckIcon className="size-4.5" />
+                    )
+                }
+                tone={dialog === 'delete-read' ? 'destructive' : 'default'}
+                onConfirm={() => {
+                    if (dialog === 'delete-read') {
+                        router.delete(
+                            route('app.notifications.delete-all-read'),
+                            {
+                                preserveScroll: true,
+                            },
+                        );
+                    }
 
-                                if (dialog === 'mark-all-read') {
-                                    router.post(
-                                        route(
-                                            'app.notifications.mark-all-read',
-                                        ),
-                                        {},
-                                        {
-                                            preserveScroll: true,
-                                        },
-                                    );
-                                }
+                    if (dialog === 'mark-all-read') {
+                        router.post(
+                            route('app.notifications.mark-all-read'),
+                            {},
+                            {
+                                preserveScroll: true,
+                            },
+                        );
+                    }
 
-                                setDialog(null);
-                            }}
-                        >
-                            {dialog === 'delete-read'
-                                ? 'Delete read notifications'
-                                : 'Mark all as read'}
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+                    setDialog(null);
+                }}
+                confirmClassName={
+                    dialog === 'delete-read'
+                        ? 'bg-destructive text-white hover:bg-destructive/90'
+                        : undefined
+                }
+            />
         </AppLayout>
     );
 }

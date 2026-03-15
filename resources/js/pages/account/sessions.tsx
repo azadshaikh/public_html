@@ -14,17 +14,6 @@ import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { showAppToast } from '@/components/forms/form-success-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogMedia,
-    AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -35,6 +24,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import {
     Empty,
     EmptyDescription,
@@ -436,88 +426,49 @@ export default function Sessions({
                 </SectionCard>
             </div>
 
-            <AlertDialog
+            <ConfirmationDialog
                 open={showRevokeOthersDialog}
                 onOpenChange={setShowRevokeOthersDialog}
-            >
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogMedia>
-                            <LogOutIcon />
-                        </AlertDialogMedia>
-                        <AlertDialogTitle>
-                            Log out other sessions?
-                        </AlertDialogTitle>
-                        <AlertDialogDescription>
-                            Every device except this one will be signed out
-                            immediately and must log in again.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel disabled={pendingAction !== null}>
-                            Cancel
-                        </AlertDialogCancel>
-                        <AlertDialogAction
-                            variant="destructive"
-                            disabled={pendingAction !== null}
-                            onClick={() => void handleRevokeOtherSessions()}
-                        >
-                            {pendingAction === 'others' ? (
-                                <Spinner />
-                            ) : (
-                                'Log out others'
-                            )}
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+                title="Log out other sessions"
+                description="Every device except this one will be signed out immediately and must log in again."
+                confirmLabel={
+                    pendingAction === 'others' ? <Spinner /> : 'Log out others'
+                }
+                icon={<LogOutIcon className="size-4.5" />}
+                confirmDisabled={pendingAction !== null}
+                cancelDisabled={pendingAction !== null}
+                onConfirm={() => void handleRevokeOtherSessions()}
+                confirmClassName="bg-destructive text-white hover:bg-destructive/90"
+            />
 
-            <AlertDialog
+            <ConfirmationDialog
                 open={revokeSessionId !== null}
                 onOpenChange={(open) => {
                     if (!open) {
                         setRevokeSessionId(null);
                     }
                 }}
-            >
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogMedia>
-                            <LogOutIcon />
-                        </AlertDialogMedia>
-                        <AlertDialogTitle>
-                            Revoke this session?
-                        </AlertDialogTitle>
-                        <AlertDialogDescription>
-                            The selected device will be signed out immediately.
-                            Use this if you no longer recognize or trust it.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel disabled={pendingAction !== null}>
-                            Cancel
-                        </AlertDialogCancel>
-                        <AlertDialogAction
-                            variant="destructive"
-                            disabled={
-                                revokeSessionId === null ||
-                                pendingAction !== null
-                            }
-                            onClick={() => {
-                                if (revokeSessionId) {
-                                    void handleRevokeSession(revokeSessionId);
-                                }
-                            }}
-                        >
-                            {pendingAction === revokeSessionId ? (
-                                <Spinner />
-                            ) : (
-                                'Revoke session'
-                            )}
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+                title="Revoke this session"
+                description="The selected device will be signed out immediately. Use this if you no longer recognize or trust it."
+                confirmLabel={
+                    pendingAction === revokeSessionId ? (
+                        <Spinner />
+                    ) : (
+                        'Revoke session'
+                    )
+                }
+                icon={<LogOutIcon className="size-4.5" />}
+                confirmDisabled={
+                    revokeSessionId === null || pendingAction !== null
+                }
+                cancelDisabled={pendingAction !== null}
+                onConfirm={() => {
+                    if (revokeSessionId) {
+                        void handleRevokeSession(revokeSessionId);
+                    }
+                }}
+                confirmClassName="bg-destructive text-white hover:bg-destructive/90"
+            />
         </AppLayout>
     );
 }

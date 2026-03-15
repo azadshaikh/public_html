@@ -3,17 +3,7 @@ import { router } from '@inertiajs/react';
 import { AlertTriangleIcon } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogMedia,
-    AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 
 type UseDirtyFormGuardOptions = {
     enabled: boolean;
@@ -118,32 +108,19 @@ export function useDirtyFormGuard({
 
     const dialog = useMemo(
         () => (
-            <AlertDialog open={open} onOpenChange={setOpen}>
-                <AlertDialogContent size="comfortable">
-                    <AlertDialogHeader>
-                        <AlertDialogMedia className="bg-destructive/10 text-destructive">
-                            <AlertTriangleIcon />
-                        </AlertDialogMedia>
-                        <AlertDialogTitle>
-                            Discard unsaved changes?
-                        </AlertDialogTitle>
-                        <AlertDialogDescription>
-                            {message}
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel onClick={handleCancel}>
-                            Stay on page
-                        </AlertDialogCancel>
-                        <AlertDialogAction
-                            variant="destructive"
-                            onClick={handleConfirm}
-                        >
-                            Leave page
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            <ConfirmationDialog
+                open={open}
+                onOpenChange={setOpen}
+                title="Discard unsaved changes?"
+                description={message}
+                cancelLabel="Stay on page"
+                confirmLabel="Leave page"
+                icon={<AlertTriangleIcon className="size-4.5" />}
+                onConfirm={handleConfirm}
+                onCancel={handleCancel}
+                cancelClassName="hover:bg-muted/60"
+                confirmClassName="bg-destructive text-white hover:bg-destructive/90"
+            />
         ),
         [handleCancel, handleConfirm, message, open],
     );

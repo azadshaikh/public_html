@@ -13,16 +13,6 @@ import type {
     DatagridProps,
 } from '@/components/datagrid/types';
 import { normalizeRowKey } from '@/components/datagrid/utils';
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -39,6 +29,7 @@ import {
     ComboboxTrigger,
     ComboboxValue,
 } from '@/components/ui/combobox';
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import {
     Empty,
     EmptyDescription,
@@ -183,40 +174,27 @@ export function DatagridResults<T>({
                     </div>
                 ) : null}
 
-                <AlertDialog
+                <ConfirmationDialog
                     open={!!confirmBulkAction}
                     onOpenChange={(open) => !open && setConfirmBulkAction(null)}
-                >
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                                {confirmBulkAction?.confirm}
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                                variant={
-                                    confirmBulkAction?.variant === 'destructive'
-                                        ? 'destructive'
-                                        : 'default'
-                                }
-                                onClick={() => {
-                                    if (confirmBulkAction) {
-                                        confirmBulkAction.onSelect(
-                                            selectedRows,
-                                            clearSelection,
-                                        );
-                                    }
-                                    setConfirmBulkAction(null);
-                                }}
-                            >
-                                Confirm
-                            </AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
+                    title={confirmBulkAction?.label ?? 'Confirm action'}
+                    description={confirmBulkAction?.confirm}
+                    confirmLabel={confirmBulkAction?.label ?? 'Continue'}
+                    tone={
+                        confirmBulkAction?.variant === 'destructive'
+                            ? 'destructive'
+                            : 'default'
+                    }
+                    onConfirm={() => {
+                        if (confirmBulkAction) {
+                            confirmBulkAction.onSelect(
+                                selectedRows,
+                                clearSelection,
+                            );
+                        }
+                        setConfirmBulkAction(null);
+                    }}
+                />
 
                 {rows.data.length === 0 ? (
                     <div className="p-4">

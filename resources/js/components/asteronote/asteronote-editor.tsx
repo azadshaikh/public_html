@@ -48,7 +48,6 @@ import {
 } from '@/components/asteronote/plugins';
 import {
     flattenToolbar,
-    resolvePlugins,
 } from '@/components/asteronote/toolbar-utils';
 import {
     FullscreenProvider,
@@ -143,7 +142,9 @@ function AsteroNoteEditorInner({
         startHeight: number;
     } | null>(null);
     const latestHtmlRef = React.useRef('');
+    const codeViewValueRef = React.useRef(normalizeHtmlEditorValue(value));
     const savedRangeRef = React.useRef<Range | null>(null);
+    const shouldHydrateVisualEditorRef = React.useRef(false);
     const toolbarConfig = React.useMemo(
         () => toolbar ?? getToolbarForBundle(bundle),
         [bundle, toolbar],
@@ -202,6 +203,7 @@ function AsteroNoteEditorInner({
         (nextValue: string) => {
             const normalized = normalizeHtmlEditorValue(nextValue);
             latestHtmlRef.current = normalized;
+            codeViewValueRef.current = normalized;
             setHtmlState(normalized);
             setCodeViewValue(normalized);
 
@@ -221,11 +223,20 @@ function AsteroNoteEditorInner({
 
     React.useEffect(() => {
         const normalized = normalizeHtmlEditorValue(value);
+        const currentEditorValue = editorRef.current
+            ? sanitizeAsteroNoteHtml(editorRef.current.innerHTML)
+            : null;
+        const nextEditorValue = sanitizeAsteroNoteHtml(normalized);
 
-        if (normalized !== latestHtmlRef.current) {
+        if (
+            normalized !== latestHtmlRef.current ||
+            (!isCodeView &&
+                currentEditorValue !== null &&
+                currentEditorValue !== nextEditorValue)
+        ) {
             syncEditorDom(value);
         }
-    }, [syncEditorDom, value]);
+    }, [isCodeView, syncEditorDom, value]);
 
     React.useEffect(() => {
         if (!isFullscreen) {
@@ -312,6 +323,20 @@ function AsteroNoteEditorInner({
     }, [floatingToolbarEnabled, isCodeView]);
 
     React.useEffect(() => {
+        if (
+            isCodeView ||
+            !shouldHydrateVisualEditorRef.current ||
+            !editorRef.current
+        ) {
+            return;
+        }
+
+        editorRef.current.innerHTML = htmlState;
+        shouldHydrateVisualEditorRef.current = false;
+        refreshState();
+    }, [htmlState, isCodeView, refreshState]);
+
+    React.useEffect(() => {
         const handleSelectionChange = () => {
             refreshState();
         };
@@ -341,6 +366,7 @@ function AsteroNoteEditorInner({
         const normalized = normalizeHtmlEditorValue(meaningfulHtml);
 
         latestHtmlRef.current = normalized;
+        codeViewValueRef.current = normalized;
         setHtmlState(normalized);
         setCodeViewValue(normalized);
         onChange(meaningfulHtml);
@@ -357,6 +383,7 @@ function AsteroNoteEditorInner({
         const normalized = normalizeHtmlEditorValue(nextHtml);
 
         latestHtmlRef.current = normalized;
+        codeViewValueRef.current = normalized;
         setHtmlState(normalized);
         setCodeViewValue(normalized);
         onChange(nextHtml);
@@ -365,11 +392,12 @@ function AsteroNoteEditorInner({
 
     const commitCodeView = React.useCallback(
         (nextValue?: string) => {
-            const nextHtml = nextValue ?? codeViewValue;
+            const nextHtml = nextValue ?? codeViewValueRef.current;
             const normalized = normalizeEditorOutput(nextHtml);
             const visualValue = normalizeHtmlEditorValue(normalized);
 
             latestHtmlRef.current = visualValue;
+            codeViewValueRef.current = visualValue;
             setHtmlState(visualValue);
             setCodeViewValue(visualValue);
             onChange(normalized);
@@ -380,7 +408,7 @@ function AsteroNoteEditorInner({
 
             refreshState();
         },
-        [codeViewValue, onChange, refreshState],
+        [onChange, refreshState],
     );
 
     const applyInlineCommand = React.useCallback(
@@ -665,6 +693,7 @@ function AsteroNoteEditorInner({
                     const nextValue = sanitizeAsteroNoteHtml(
                         editorRef.current.innerHTML,
                     );
+                    codeViewValueRef.current = nextValue;
                     setCodeViewValue(nextValue);
                 }
                 setIsCodeView(true);
@@ -673,6 +702,7 @@ function AsteroNoteEditorInner({
             }
 
             commitCodeView();
+            shouldHydrateVisualEditorRef.current = true;
             setIsCodeView(false);
             requestAnimationFrame(() => {
                 focus();
@@ -971,6 +1001,7 @@ function AsteroNoteEditorInner({
                     <MonacoEditor
                         value={codeViewValue}
                         onChange={(value) => {
+                            codeViewValueRef.current = value;
                             setCodeViewValue(value);
                             onChange(value);
                         }}
@@ -987,12 +1018,6 @@ function AsteroNoteEditorInner({
                         )}
                         editorClassName="h-full rounded-none border-0 bg-[#0f111a]"
                         textareaClassName="min-h-0 rounded-none border-0 font-mono text-sm shadow-none focus-visible:ring-0"
-                        options={{
-                            wordWrap: 'on',
-                            lineNumbers: 'on',
-                            renderLineHighlight: 'line',
-                            scrollBeyondLastLine: false,
-                        }}
                     />
                 ) : (
                     <div

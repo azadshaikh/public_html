@@ -2,17 +2,8 @@ import { Link, router } from '@inertiajs/react';
 import { EllipsisVerticalIcon } from 'lucide-react';
 import { useState } from 'react';
 import type { DatagridAction } from '@/components/datagrid/types';
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -109,37 +100,24 @@ export function DatagridActionMenu({ actions }: { actions: DatagridAction[] }) {
                 </DropdownMenuContent>
             </DropdownMenu>
 
-            <AlertDialog
+            <ConfirmationDialog
                 open={!!confirmAction}
                 onOpenChange={(open) => !open && setConfirmAction(null)}
-            >
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            {confirmAction?.confirm}
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                            variant={
-                                confirmAction?.variant === 'destructive'
-                                    ? 'destructive'
-                                    : 'default'
-                            }
-                            onClick={() => {
-                                if (confirmAction) {
-                                    executeAction(confirmAction);
-                                }
-                                setConfirmAction(null);
-                            }}
-                        >
-                            Confirm
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+                title={confirmAction?.label ?? 'Confirm action'}
+                description={confirmAction?.confirm}
+                confirmLabel={confirmAction?.label ?? 'Continue'}
+                tone={
+                    confirmAction?.variant === 'destructive'
+                        ? 'destructive'
+                        : 'default'
+                }
+                onConfirm={() => {
+                    if (confirmAction) {
+                        executeAction(confirmAction);
+                    }
+                    setConfirmAction(null);
+                }}
+            />
         </>
     );
 }
