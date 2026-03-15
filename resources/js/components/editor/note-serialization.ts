@@ -43,40 +43,35 @@ export async function serializeNoteValue(value: Value): Promise<string> {
 }
 
 /**
- * Simple HTML prettifier for human-readable source editing.
+ * Simple HTML prettifier for human-readable source debugging.
  *
  * Inserts line-breaks around block-level elements and applies basic
- * indentation so the source view in Monaco is easier to read.
+ * indentation so source view output is easier to read when needed.
  */
 export function prettifyHtml(html: string): string {
     let result = html.trim();
 
-    // Normalise any existing whitespace between tags to a single space
     result = result.replace(/>\s+</g, '><');
 
-    // Insert newlines before opening block tags
     result = result.replace(
         /(<(?:p|h[1-6]|blockquote|ul|ol|li|hr|pre|div|section|article|table|thead|tbody|tr|td|th)[\s>/])/gi,
         '\n$1',
     );
 
-    // Insert newline after closing block tags
     result = result.replace(
         /(<\/(?:p|h[1-6]|blockquote|ul|ol|li|pre|div|section|article|table|thead|tbody|tr|td|th)>)/gi,
         '$1\n',
     );
 
-    // Basic indentation pass
     const lines = result
         .split('\n')
-        .map((l) => l.trim())
-        .filter((l) => l.length > 0);
+        .map((line) => line.trim())
+        .filter((line) => line.length > 0);
 
     const indented: string[] = [];
     let depth = 0;
 
     for (const line of lines) {
-        // Check for closing tag at start of line
         const closes = /^<\//.test(line);
 
         if (closes && depth > 0) {
@@ -85,7 +80,6 @@ export function prettifyHtml(html: string): string {
 
         indented.push('  '.repeat(depth) + line);
 
-        // Increase depth for opening block tags that don't self-close and aren't void
         const opens =
             /^<(?:ul|ol|li|blockquote|div|section|article|table|thead|tbody|tr)[\s>]/i.test(
                 line,

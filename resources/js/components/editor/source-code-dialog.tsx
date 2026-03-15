@@ -35,7 +35,6 @@ export function SourceCodeDialog({
     const [draft, setDraft] = useState(value);
     const [openState, setOpenState] = useState(false);
 
-    // Sync the draft whenever the dialog opens with a new value
     if (open && !openState) {
         setDraft(value);
         setOpenState(true);
