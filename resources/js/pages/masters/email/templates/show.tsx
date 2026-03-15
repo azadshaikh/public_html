@@ -151,7 +151,7 @@ export default function EmailTemplatesShow({
                                     </Badge>
                                     <Badge variant="secondary">
                                         {emailTemplate.is_raw
-                                            ? 'Raw HTML'
+                                            ? 'Rich HTML'
                                             : 'Plain text'}
                                     </Badge>
                                     {emailTemplate.is_trashed ? (
@@ -224,11 +224,20 @@ export default function EmailTemplatesShow({
                                 <CardTitle>Message body</CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <div className="rounded-lg border bg-muted/20 p-4">
-                                    <pre className="font-sans text-sm break-words whitespace-pre-wrap text-foreground">
-                                        {emailTemplate.message}
-                                    </pre>
-                                </div>
+                                {emailTemplate.is_raw ? (
+                                    <div
+                                        className="rounded-lg border bg-background p-4 text-sm leading-6 text-foreground"
+                                        dangerouslySetInnerHTML={{
+                                            __html: emailTemplate.message,
+                                        }}
+                                    />
+                                ) : (
+                                    <div className="rounded-lg border bg-muted/20 p-4">
+                                        <pre className="font-sans text-sm break-words whitespace-pre-wrap text-foreground">
+                                            {emailTemplate.message}
+                                        </pre>
+                                    </div>
+                                )}
                             </CardContent>
                         </Card>
                     </div>
@@ -305,7 +314,7 @@ export default function EmailTemplatesShow({
                                         <p>{emailTemplate.template_info}</p>
                                         <p>
                                             {emailTemplate.is_raw
-                                                ? 'This template stores raw HTML content.'
+                                                ? 'This template stores formatted HTML content from the full editor.'
                                                 : 'This template stores plain text content.'}
                                         </p>
                                     </div>

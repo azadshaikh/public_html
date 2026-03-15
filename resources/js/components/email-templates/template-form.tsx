@@ -1,6 +1,8 @@
 import { Link } from '@inertiajs/react';
 import { ArrowLeftIcon, FileTextIcon, SaveIcon, SendIcon } from 'lucide-react';
 import type { FormEvent } from 'react';
+import { EditorFull } from '@/components/editor/editor-full';
+import { hasMeaningfulHtmlContent } from '@/components/editor/html-editor-utils';
 import { FormErrorSummary } from '@/components/forms/form-error-summary';
 import { Button } from '@/components/ui/button';
 import {
@@ -61,7 +63,20 @@ export default function TemplateForm({
         rules: {
             name: [formValidators.required('Template name')],
             subject: [formValidators.required('Subject')],
-            message: [formValidators.required('Message')],
+            message: [
+                (value, data) => {
+                    if (
+                        data.is_raw &&
+                        typeof value === 'string' &&
+                        !hasMeaningfulHtmlContent(value)
+                    ) {
+                        return 'Message is required.';
+                    }
+
+                    return undefined;
+                },
+                formValidators.required('Message'),
+            ],
             provider_id: [formValidators.required('Provider')],
             status: [formValidators.required('Status')],
         },
@@ -297,36 +312,50 @@ export default function TemplateForm({
                                 <FieldLabel htmlFor="message">
                                     Message <span aria-hidden>*</span>
                                 </FieldLabel>
-                                <Textarea
-                                    id="message"
-                                    rows={16}
-                                    value={form.data.message}
-                                    onChange={(event) =>
-                                        form.setField(
-                                            'message',
-                                            event.target.value,
-                                        )
-                                    }
-                                    onBlur={() => form.touch('message')}
-                                    aria-invalid={
-                                        form.invalid('message') || undefined
-                                    }
-                                    className="font-mono text-sm"
-                                />
+                                {form.data.is_raw ? (
+                                    <EditorFull
+                                        id="message"
+                                        value={form.data.message}
+                                        onChange={(value) =>
+                                            form.setField('message', value)
+                                        }
+                                        onBlur={() => form.touch('message')}
+                                        invalid={form.invalid('message')}
+                                        placeholder="Compose the formatted email body that will be sent to recipients."
+                                    />
+                                ) : (
+                                    <Textarea
+                                        id="message"
+                                        rows={16}
+                                        value={form.data.message}
+                                        onChange={(event) =>
+                                            form.setField(
+                                                'message',
+                                                event.target.value,
+                                            )
+                                        }
+                                        onBlur={() => form.touch('message')}
+                                        aria-invalid={
+                                            form.invalid('message') || undefined
+                                        }
+                                        className="font-mono text-sm"
+                                    />
+                                )}
                                 <FieldDescription>
-                                    Use plain text or HTML depending on the raw
-                                    mode toggle below.
+                                    {form.data.is_raw
+                                        ? 'Rich HTML mode uses the new full Plate editor for formatted email content.'
+                                        : 'Plain text mode keeps the legacy source editor for simple template bodies.'}
                                 </FieldDescription>
                                 <FieldError>{form.error('message')}</FieldError>
                             </Field>
 
                             <Field orientation="horizontal">
                                 <FieldLabel htmlFor="is_raw">
-                                    Raw HTML mode
+                                    Rich HTML mode
                                 </FieldLabel>
                                 <FieldDescription>
-                                    Enable this when the message body already
-                                    contains full HTML markup.
+                                    Enable this to use the full editor. Disable
+                                    it to edit the raw/plain template source.
                                 </FieldDescription>
                                 <Switch
                                     id="is_raw"

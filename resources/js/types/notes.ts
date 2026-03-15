@@ -25,6 +25,7 @@ export type NoteVisibilityOption = {
 export type AppNote = {
     id: number;
     content: string;
+    content_html: string;
     excerpt: string;
     is_pinned: boolean;
     is_system: boolean;

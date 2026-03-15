@@ -29,6 +29,7 @@ class NoteResource extends JsonResource
         return $this->formatDateTimeFields([
             'id' => (int) $note->getKey(),
             'content' => (string) $note->content,
+            'content_html' => (string) $note->content_html,
             'excerpt' => $note->excerpt,
             'is_pinned' => (bool) $note->is_pinned,
             'is_system' => $note->isSystem(),

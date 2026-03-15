@@ -27,7 +27,6 @@
         "laravel/socialite": "^5.24",
         "league/flysystem-aws-s3-v3": "^3.31",
         "league/flysystem-ftp": "^3.31",
-        "mews/purifier": "^3.4",
         "opcodesio/log-viewer": "^3.21",
         "phpseclib/phpseclib": "^3.0",
         "spatie/laravel-activitylog": "^4.10",

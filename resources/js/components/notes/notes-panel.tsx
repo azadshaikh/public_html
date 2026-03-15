@@ -37,7 +37,10 @@ import {
     FieldLegend,
     FieldSet,
 } from '@/components/ui/field';
-import { Textarea } from '@/components/ui/textarea';
+import {
+    NoteRichTextEditor,
+    hasMeaningfulNoteContent,
+} from '@/components/notes/note-rich-text-editor';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useAppForm } from '@/hooks/use-app-form';
 import { useInitials } from '@/hooks/use-initials';
@@ -156,7 +159,8 @@ function CreateNoteForm({
         rules: {
             content: [
                 (value) =>
-                    typeof value === 'string' && value.trim().length > 0
+                    typeof value === 'string' &&
+                    hasMeaningfulNoteContent(value)
                         ? undefined
                         : 'Please enter a note.',
             ],
@@ -193,16 +197,15 @@ function CreateNoteForm({
                         <FieldLabel htmlFor={`note-content-${noteTarget.id}`}>
                             Note
                         </FieldLabel>
-                        <Textarea
+                        <NoteRichTextEditor
                             id={`note-content-${noteTarget.id}`}
                             value={form.data.content}
-                            onChange={(event) =>
-                                form.setField('content', event.target.value)
+                            onChange={(nextValue) =>
+                                form.setField('content', nextValue)
                             }
                             onBlur={() => form.touch('content')}
-                            aria-invalid={form.invalid('content') || undefined}
+                            invalid={form.invalid('content')}
                             placeholder="Add context, follow-up details, or an internal reminder."
-                            rows={5}
                         />
                         <FieldDescription>
                             Notes stay attached to the record for future staff context.
@@ -248,7 +251,8 @@ function EditNoteForm({
         rules: {
             content: [
                 (value) =>
-                    typeof value === 'string' && value.trim().length > 0
+                    typeof value === 'string' &&
+                    hasMeaningfulNoteContent(value)
                         ? undefined
                         : 'Please enter a note.',
             ],
@@ -276,15 +280,12 @@ function EditNoteForm({
                 <FieldLabel htmlFor={`note-edit-content-${note.id}`}>
                     Edit note
                 </FieldLabel>
-                <Textarea
+                <NoteRichTextEditor
                     id={`note-edit-content-${note.id}`}
                     value={form.data.content}
-                    onChange={(event) =>
-                        form.setField('content', event.target.value)
-                    }
+                    onChange={(nextValue) => form.setField('content', nextValue)}
                     onBlur={() => form.touch('content')}
-                    aria-invalid={form.invalid('content') || undefined}
-                    rows={5}
+                    invalid={form.invalid('content')}
                 />
                 <FieldError>{form.error('content')}</FieldError>
             </Field>
@@ -459,8 +460,13 @@ function NoteCard({
                             ) : null}
                         </div>
 
-                        <div className="rounded-xl border bg-background/80 px-4 py-3 text-sm leading-6 whitespace-pre-wrap text-foreground">
-                            {note.content}
+                        <div className="rounded-xl border bg-background/80 px-4 py-3 text-sm text-foreground">
+                            <div
+                                className="leading-6 [&_blockquote]:my-2 [&_blockquote]:border-l-2 [&_blockquote]:pl-4 [&_blockquote]:italic [&_h1]:mt-4 [&_h1]:text-2xl [&_h1]:font-semibold [&_h2]:mt-3 [&_h2]:text-xl [&_h2]:font-semibold [&_h3]:mt-3 [&_h3]:text-lg [&_h3]:font-semibold [&_p]:my-2 [&_p:first-child]:mt-0 [&_p:last-child]:mb-0 [&_strong]:font-semibold [&_u]:underline"
+                                dangerouslySetInnerHTML={{
+                                    __html: note.content_html,
+                                }}
+                            />
                         </div>
                     </div>
                 )}

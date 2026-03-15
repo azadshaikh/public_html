@@ -193,6 +193,41 @@ class Note extends Model
         $this->metadata = $metadata;
     }
 
+    public static function sanitizeContent(string $content): string
+    {
+        $trimmedContent = trim($content);
+
+        if ($trimmedContent === '') {
+            return '';
+        }
+
+        if (! self::containsHtml($trimmedContent)) {
+            return $trimmedContent;
+        }
+
+        // Remove dangerous elements and their content before stripping tags
+        $cleaned = preg_replace('/<(script|style|iframe|object|embed|form|input|textarea|select|button)\b[^>]*>.*?<\/\1>/is', '', $trimmedContent) ?? $trimmedContent;
+        $cleaned = preg_replace('/<(script|style|iframe|object|embed|form|input|textarea|select|button)\b[^>]*\/?>/is', '', $cleaned);
+
+        return trim(strip_tags(
+            $cleaned,
+            '<a><blockquote><br><em><h1><h2><h3><hr><i><li><ol><p><pre><strong><u><ul>',
+        ));
+    }
+
+    public static function contentHasText(string $content): bool
+    {
+        $plainText = html_entity_decode(
+            strip_tags(self::contentHtmlFromRaw($content)),
+            ENT_QUOTES | ENT_HTML5,
+            'UTF-8',
+        );
+        $plainText = str_replace("\xc2\xa0", ' ', $plainText);
+        $normalizedText = preg_replace('/\s+/u', ' ', $plainText) ?? $plainText;
+
+        return trim($normalizedText) !== '';
+    }
+
     /**
      * Get the attributes that should be cast.
      */
@@ -298,6 +333,11 @@ class Note extends Model
         return Str::limit(strip_tags($this->content ?? ''), 100);
     }
 
+    protected function getContentHtmlAttribute(): string
+    {
+        return self::contentHtmlFromRaw((string) ($this->content ?? ''));
+    }
+
     /**
      * Check if current user can edit this note.
      */
@@ -316,5 +356,55 @@ class Note extends Model
         }
 
         return (bool) auth()->user()?->can('delete_any_notes');
+    }
+
+    private static function contentHtmlFromRaw(string $content): string
+    {
+        $sanitizedContent = self::sanitizeContent($content);
+
+        if ($sanitizedContent === '') {
+            return '';
+        }
+
+        if (! self::containsHtml($sanitizedContent)) {
+            return self::plainTextToHtml($sanitizedContent);
+        }
+
+        // Inline-only HTML (e.g. legacy content with <strong> but no <p> wrapper)
+        // must be wrapped in a block element for proper rendering.
+        if (! self::hasBlockElement($sanitizedContent)) {
+            return '<p>'.$sanitizedContent.'</p>';
+        }
+
+        return $sanitizedContent;
+    }
+
+    private static function hasBlockElement(string $content): bool
+    {
+        return (bool) preg_match('/<(p|h[1-6]|blockquote|div|ul|ol|li|hr|pre|table)[\/\s>]/i', $content);
+    }
+
+    private static function containsHtml(string $content): bool
+    {
+        return preg_match('/<[^>]+>/', $content) === 1;
+    }
+
+    private static function plainTextToHtml(string $content): string
+    {
+        $paragraphs = preg_split('/\R{2,}/', trim($content)) ?: [];
+        $htmlParagraphs = array_values(array_filter(array_map(
+            static function (string $paragraph): string {
+                $escapedParagraph = e(trim($paragraph));
+
+                if ($escapedParagraph === '') {
+                    return '';
+                }
+
+                return '<p>'.str_replace(["\r\n", "\r", "\n"], '<br />', $escapedParagraph).'</p>';
+            },
+            $paragraphs,
+        )));
+
+        return implode('', $htmlParagraphs);
     }
 }

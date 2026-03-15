@@ -8,6 +8,7 @@ use App\Http\Resources\NoteResource;
 use App\Models\Note;
 use App\Services\NoteService;
 use App\Traits\ActivityTrait;
+use Closure;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
@@ -31,7 +32,7 @@ class NotesController extends Controller
     public function store(Request $request): JsonResponse|RedirectResponse
     {
         $validated = $request->validate([
-            'content' => ['required', 'string'],
+            'content' => $this->noteContentRules(),
             'noteable_type' => ['required', 'string'],
             'noteable_id' => ['required', 'integer'],
             'visibility' => ['nullable', 'string', 'in:private,team,customer'],
@@ -73,7 +74,7 @@ class NotesController extends Controller
     public function update(Request $request, Note $note): JsonResponse|RedirectResponse
     {
         $validated = $request->validate([
-            'content' => ['required', 'string'],
+            'content' => $this->noteContentRules(),
             'visibility' => ['nullable', 'string', 'in:private,team,customer'],
         ]);
 
@@ -221,5 +222,18 @@ class NotesController extends Controller
         }
 
         return $noteable;
+    }
+
+    private function noteContentRules(): array
+    {
+        return [
+            'required',
+            'string',
+            function (string $attribute, mixed $value, Closure $fail): void {
+                if (! Note::contentHasText((string) $value)) {
+                    $fail('Please enter a note.');
+                }
+            },
+        ];
     }
 }

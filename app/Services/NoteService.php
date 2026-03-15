@@ -38,7 +38,7 @@ class NoteService
         $note = Note::query()->create([
             'noteable_type' => $noteable::class,
             'noteable_id' => $noteable->getKey(),
-            'content' => $data['content'],
+            'content' => Note::sanitizeContent((string) $data['content']),
             'type' => $data['type'] ?? NoteType::Note,
             'visibility' => $data['visibility'] ?? NoteVisibility::Team,
             'metadata' => $data['metadata'] ?? null,
@@ -60,7 +60,9 @@ class NoteService
     public function update(Note $note, array $data): Note
     {
         $note->update([
-            'content' => $data['content'] ?? $note->content,
+            'content' => array_key_exists('content', $data)
+                ? Note::sanitizeContent((string) $data['content'])
+                : $note->content,
             'visibility' => $data['visibility'] ?? $note->visibility,
             'metadata' => $data['metadata'] ?? $note->metadata,
             'updated_by' => auth()->id(),
