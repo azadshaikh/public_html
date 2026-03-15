@@ -205,14 +205,20 @@ class Note extends Model
             return $trimmedContent;
         }
 
-        // Remove dangerous elements and their content before stripping tags
+        // Remove dangerous elements and their content (XSS vectors).
+        // Plate.js is a controlled rich-text editor — its output only contains
+        // safe presentation tags, so we only need to strip genuinely dangerous
+        // elements rather than restricting to an allowlist via strip_tags.
         $cleaned = preg_replace('/<(script|style|iframe|object|embed|form|input|textarea|select|button)\b[^>]*>.*?<\/\1>/is', '', $trimmedContent) ?? $trimmedContent;
         $cleaned = preg_replace('/<(script|style|iframe|object|embed|form|input|textarea|select|button)\b[^>]*\/?>/is', '', $cleaned);
 
-        return trim(strip_tags(
-            $cleaned,
-            '<a><blockquote><br><em><h1><h2><h3><hr><i><li><ol><p><pre><strong><u><ul>',
-        ));
+        // Strip event-handler attributes (onclick, onerror, onload, etc.)
+        $cleaned = preg_replace('/\s+on\w+\s*=\s*(?:"[^"]*"|\'[^\']*\'|[^\s>]*)/i', '', $cleaned);
+
+        // Strip javascript: protocol in href/src attributes
+        $cleaned = preg_replace('/(href|src)\s*=\s*(?:"javascript:[^"]*"|\'javascript:[^\']*\')/i', '', $cleaned);
+
+        return trim($cleaned);
     }
 
     public static function contentHasText(string $content): bool

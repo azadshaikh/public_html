@@ -28,13 +28,17 @@ async function serializeFullValue(value: Value): Promise<string> {
         value,
     });
 
-    const html = await serializeHtml(editor, {
+    let html = await serializeHtml(editor, {
         editorComponent: EditorStatic,
         props: {
             className: 'px-0 py-0',
             variant: 'none',
         },
     });
+
+    // Convert soft-break newlines (\n from Shift+Enter) to <br> tags so
+    // line breaks persist when rendered as standard HTML.
+    html = html.replace(/\n/g, '<br>');
 
     return hasMeaningfulHtmlContent(html) ? html.trim() : '';
 }

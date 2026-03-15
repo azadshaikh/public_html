@@ -9,6 +9,7 @@ import { DropdownMenuItemIndicator } from '@radix-ui/react-dropdown-menu';
 import {
     BoldIcon,
     CheckIcon,
+    CodeXmlIcon,
     Heading2Icon,
     Heading3Icon,
     ItalicIcon,
@@ -23,6 +24,11 @@ import {
 import { KEYS } from 'platejs';
 import { useEditorReadOnly, useEditorRef, useSelectionFragmentProp } from 'platejs/react';
 
+import {
+    prettifyHtml,
+    serializeNoteValue,
+} from '@/components/editor/note-serialization';
+import { SourceCodeDialog } from '@/components/editor/source-code-dialog';
 import { useFullscreen } from '@/components/editor/use-fullscreen';
 import {
     getBlockType,
@@ -131,6 +137,50 @@ function NoteTurnIntoButton(props: DropdownMenuProps) {
     );
 }
 
+function SourceCodeButton() {
+    const editor = useEditorRef();
+    const [open, setOpen] = React.useState(false);
+    const [html, setHtml] = React.useState('');
+    const [serializing, setSerializing] = React.useState(false);
+
+    const handleOpen = React.useCallback(async () => {
+        setSerializing(true);
+
+        try {
+            const serialized = await serializeNoteValue(editor.children);
+            setHtml(prettifyHtml(serialized));
+            setOpen(true);
+        } finally {
+            setSerializing(false);
+        }
+    }, [editor]);
+
+    const handleApply = React.useCallback(
+        (newHtml: string) => {
+            editor.tf.setValue(newHtml);
+        },
+        [editor],
+    );
+
+    return (
+        <>
+            <ToolbarButton
+                onClick={handleOpen}
+                disabled={serializing}
+                tooltip="Source code"
+            >
+                <CodeXmlIcon />
+            </ToolbarButton>
+            <SourceCodeDialog
+                open={open}
+                onOpenChange={setOpen}
+                value={html}
+                onApply={handleApply}
+            />
+        </>
+    );
+}
+
 export function NoteToolbarButtons() {
     const readOnly = useEditorReadOnly();
     const { isFullscreen, toggleFullscreen } = useFullscreen();
@@ -177,6 +227,7 @@ export function NoteToolbarButtons() {
             <div className="grow" />
 
             <ToolbarGroup>
+                {!readOnly && <SourceCodeButton />}
                 <ToolbarButton
                     onClick={toggleFullscreen}
                     tooltip={isFullscreen ? 'Exit fullscreen (Esc)' : 'Fullscreen'}

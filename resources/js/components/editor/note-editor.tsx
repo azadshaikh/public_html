@@ -1,50 +1,19 @@
 'use client';
 
-import { createSlateEditor } from 'platejs';
 import type { Value } from 'platejs';
-import { serializeHtml } from 'platejs/static';
 import { Plate, usePlateEditor } from 'platejs/react';
 import { useCallback, useEffect, useRef } from 'react';
 
-import {
-    hasMeaningfulHtmlContent,
-    normalizeHtmlEditorValue,
-    type HtmlEditorProps,
-} from '@/components/editor/html-editor-utils';
+import type { HtmlEditorProps } from '@/components/editor/html-editor-utils';
+import { normalizeHtmlEditorValue } from '@/components/editor/html-editor-utils';
 import { NoteEditorKit } from '@/components/editor/note-editor-kit';
-import { BaseBasicBlocksKit } from '@/components/editor/plugins/basic-blocks-base-kit';
-import { BaseBasicMarksKit } from '@/components/editor/plugins/basic-marks-base-kit';
-import { BaseListKit } from '@/components/editor/plugins/list-base-kit';
+import { serializeNoteValue } from '@/components/editor/note-serialization';
 import {
     FullscreenProvider,
     useFullscreen,
 } from '@/components/editor/use-fullscreen';
-import { EditorStatic } from '@/components/ui/editor-static';
 import { Editor, EditorContainer } from '@/components/ui/editor';
 import { cn } from '@/lib/utils';
-
-const NoteBaseKit = [
-    ...BaseBasicBlocksKit,
-    ...BaseBasicMarksKit,
-    ...BaseListKit,
-];
-
-async function serializeNoteValue(value: Value): Promise<string> {
-    const editor = createSlateEditor({
-        plugins: NoteBaseKit,
-        value,
-    });
-
-    const html = await serializeHtml(editor, {
-        editorComponent: EditorStatic,
-        props: {
-            className: 'px-0 py-0',
-            variant: 'none',
-        },
-    });
-
-    return hasMeaningfulHtmlContent(html) ? html.trim() : '';
-}
 
 export function NoteEditor(props: HtmlEditorProps) {
     return (
@@ -125,17 +94,17 @@ function NoteEditorInner({
             <Plate editor={editor} onChange={handleChange}>
                 <EditorContainer
                     className={cn(
-                        'min-h-[300px] rounded-b-[inherit] bg-background',
+                        'min-h-[200px] rounded-b-[inherit] bg-background',
                         isFullscreen && 'min-h-0 flex-1 overflow-y-auto',
                     )}
                 >
                     <Editor
                         id={id}
                         aria-invalid={invalid || undefined}
-                        className="px-4 py-4"
+                        className="min-h-[inherit] px-4 py-4"
                         onBlur={onBlur}
                         placeholder={placeholder}
-                        variant="fullWidth"
+                        variant="none"
                     />
                 </EditorContainer>
             </Plate>
