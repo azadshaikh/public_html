@@ -58,6 +58,7 @@ export default function RolesIndex({
             {
                 action,
                 ids: selectedRoles.map((role) => role.id),
+                status: filters.status,
             },
             {
                 preserveScroll: true,

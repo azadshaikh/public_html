@@ -46,7 +46,7 @@ class UserController extends ScaffoldController implements HasMiddleware
             new Middleware('permission:view_users', only: ['index', 'show']),
             new Middleware('permission:add_users', only: ['create', 'store']),
             new Middleware('permission:edit_users', only: ['edit', 'update', 'verifyEmail', 'approve', 'suspend', 'ban', 'unban']),
-            new Middleware('permission:delete_users', only: ['destroy', 'bulkAction', 'forceDelete']),
+            new Middleware('permission:delete_users', only: ['destroy', 'forceDelete']),
             new Middleware('permission:restore_users', only: ['restore']),
             // Note: stopImpersonating is NOT protected because the impersonated user may not have permissions
             new Middleware('permission:impersonate_users', only: ['impersonate']),
@@ -448,12 +448,7 @@ class UserController extends ScaffoldController implements HasMiddleware
         }
 
         try {
-            // Handle custom user actions
-            if (in_array($action, ['suspend', 'ban', 'unban'])) {
-                $result = $this->userService->handleCustomBulkAction($action, $ids);
-            } else {
-                $result = $this->service()->handleBulkAction($request);
-            }
+            $result = $this->service()->handleBulkAction($request);
 
             $activityAction = match ($action) {
                 'delete' => ActivityAction::BULK_DELETE,

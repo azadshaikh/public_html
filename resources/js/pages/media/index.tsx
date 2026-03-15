@@ -147,6 +147,7 @@ export default function MediaIndex({
                 {
                     action,
                     ids: selectedItems.map((item) => item.id),
+                    status: filters.status,
                 },
                 {
                     preserveScroll: true,
@@ -154,7 +155,7 @@ export default function MediaIndex({
                 },
             );
         },
-        [],
+        [filters.status],
     );
 
     // Single-item actions via bulkAction endpoint for Inertia redirect consistency
@@ -162,11 +163,11 @@ export default function MediaIndex({
         (action: string, item: MediaListItem) => {
             router.post(
                 route('app.media-library.bulk-action'),
-                { action, ids: [item.id] },
+                { action, ids: [item.id], status: filters.status },
                 { preserveScroll: true },
             );
         },
-        [],
+        [filters.status],
     );
 
     // ----- Filters -----

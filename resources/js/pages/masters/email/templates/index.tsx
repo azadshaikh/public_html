@@ -63,6 +63,7 @@ export default function EmailTemplatesIndex({
             {
                 action,
                 ids: selectedRows.map((template) => template.id),
+                status: filters.status,
             },
             {
                 preserveScroll: true,

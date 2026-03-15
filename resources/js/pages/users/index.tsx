@@ -321,6 +321,7 @@ export default function UsersIndex({
             {
                 action,
                 ids: selectedUsers.map((u) => u.id),
+                status: filters.status,
             },
             {
                 preserveScroll: true,

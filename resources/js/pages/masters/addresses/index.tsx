@@ -55,6 +55,7 @@ export default function AddressesIndex({
             {
                 action,
                 ids: selectedAddresses.map((a) => a.id),
+                status: filters.status,
             },
             {
                 preserveScroll: true,

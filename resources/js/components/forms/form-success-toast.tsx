@@ -75,6 +75,17 @@ function AppToastContent({
 }) {
     const styles = VARIANT_STYLES[variant];
 
+    const dismissToast = (
+        event:
+            | React.PointerEvent<HTMLButtonElement>
+            | React.MouseEvent<HTMLButtonElement>,
+    ) => {
+        event.preventDefault();
+        event.stopPropagation();
+
+        toast.dismiss(toastId);
+    };
+
     return (
         <div
             className={`pointer-events-auto flex w-[min(24rem,calc(100vw-2rem))] items-start gap-3 rounded-2xl border bg-background/95 p-3 shadow-lg ring-1 ring-foreground/5 backdrop-blur-sm dark:bg-popover/95 dark:ring-white/5 ${styles.border}`}
@@ -96,8 +107,12 @@ function AppToastContent({
 
             <button
                 type="button"
-                onClick={() => toast.dismiss(toastId)}
-                className="mt-0.5 inline-flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+                onPointerDown={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }}
+                onClick={dismissToast}
+                className="pointer-events-auto mt-0.5 inline-flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
                 aria-label="Dismiss notification"
             >
                 <XIcon className="size-4" />
@@ -114,14 +129,16 @@ export function showAppToast({
     duration = 4000,
 }: AppToastOptions = {}) {
     const defaults = VARIANT_DEFAULTS[variant];
+    const toastTitle = title ?? defaults.title;
+    const toastDescription = description ?? defaults.description;
 
     return toast.custom(
         (toastId) => (
             <AppToastContent
                 toastId={toastId}
                 variant={variant}
-                title={title ?? defaults.title}
-                description={description ?? defaults.description}
+                title={toastTitle}
+                description={toastDescription}
             />
         ),
         {

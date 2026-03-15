@@ -63,6 +63,7 @@ export default function EmailProvidersIndex({
             {
                 action,
                 ids: selectedRows.map((provider) => provider.id),
+                status: filters.status,
             },
             {
                 preserveScroll: true,

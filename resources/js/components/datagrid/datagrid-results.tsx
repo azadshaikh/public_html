@@ -177,9 +177,9 @@ export function DatagridResults<T>({
                 <ConfirmationDialog
                     open={!!confirmBulkAction}
                     onOpenChange={(open) => !open && setConfirmBulkAction(null)}
-                    title={confirmBulkAction?.label ?? 'Confirm action'}
+                    title={confirmBulkAction?.label}
                     description={confirmBulkAction?.confirm}
-                    confirmLabel={confirmBulkAction?.label ?? 'Continue'}
+                    confirmLabel={confirmBulkAction?.label}
                     tone={
                         confirmBulkAction?.variant === 'destructive'
                             ? 'destructive'
@@ -192,7 +192,6 @@ export function DatagridResults<T>({
                                 clearSelection,
                             );
                         }
-                        setConfirmBulkAction(null);
                     }}
                 />
 

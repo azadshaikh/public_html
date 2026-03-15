@@ -13,6 +13,7 @@ use App\Models\User;
 use App\Scaffold\ScaffoldDefinition;
 use App\Traits\Scaffoldable;
 use Exception;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
@@ -395,6 +396,33 @@ class UserService implements ScaffoldServiceInterface
             'errors' => $errors,
             'message' => sprintf('%s of %d users %s successfully.', $successCount, $totalCount, $actionLabel),
         ];
+    }
+
+    /**
+     * @throws AuthorizationException
+     */
+    protected function authorizeCustomBulkAction(string $action): void
+    {
+        $requiredPermission = match ($action) {
+            'suspend', 'ban', 'unban' => 'edit_'.$this->getScaffoldDefinition()->getPermissionPrefix(),
+            default => null,
+        };
+
+        if ($requiredPermission === null) {
+            throw_unless(
+                auth()->check(),
+                AuthorizationException::class,
+                'You must be authenticated to perform this action.',
+            );
+
+            return;
+        }
+
+        throw_if(
+            ! auth()->check() || ! auth()->user()->can($requiredPermission),
+            AuthorizationException::class,
+            sprintf("You do not have permission to perform the '%s' action.", $action),
+        );
     }
 
     /**

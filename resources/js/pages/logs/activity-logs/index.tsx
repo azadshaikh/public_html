@@ -69,6 +69,7 @@ export default function ActivityLogsIndex({
             {
                 action,
                 ids: selectedItems.map((item) => item.id),
+                status: filters.status,
             },
             {
                 preserveScroll: true,

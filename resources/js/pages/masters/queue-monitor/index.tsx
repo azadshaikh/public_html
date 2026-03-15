@@ -20,7 +20,6 @@ import {
 import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Line, LineChart, CartesianGrid, XAxis, YAxis } from 'recharts';
-import { toast } from 'sonner';
 import { Datagrid } from '@/components/datagrid/datagrid';
 import type {
     DatagridAction,
@@ -29,6 +28,7 @@ import type {
     DatagridFilter,
     DatagridTab,
 } from '@/components/datagrid/datagrid';
+import { showAppToast } from '@/components/forms/form-success-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -1330,7 +1330,9 @@ function ExceptionDialog({
                             }
 
                             await navigator.clipboard.writeText(exception);
-                            toast.success('Error copied to clipboard.');
+                            showAppToast({
+                                description: 'Error copied to clipboard.',
+                            });
                         }}
                     >
                         <CopyIcon data-icon="inline-start" />

@@ -14,6 +14,39 @@ import type { FlashData, FlashMessage } from '@/types/auth';
  * backend also sends a flash message on the same request.
  */
 let _suppressCount = 0;
+const _recentFlashToastTimestamps = new Map<string, number>();
+
+function cleanupRecentFlashToastTimestamps(now: number): void {
+    for (const [signature, timestamp] of _recentFlashToastTimestamps) {
+        if (now - timestamp > 1500) {
+            _recentFlashToastTimestamps.delete(signature);
+        }
+    }
+}
+
+function buildFlashToastSignature(options: AppToastOptions): string {
+    return JSON.stringify({
+        variant: options.variant ?? 'success',
+        title: options.title ?? '',
+        description: options.description ?? '',
+    });
+}
+
+function shouldSkipFlashToast(options: AppToastOptions): boolean {
+    const now = Date.now();
+    const signature = buildFlashToastSignature(options);
+    const previousTimestamp = _recentFlashToastTimestamps.get(signature);
+
+    cleanupRecentFlashToastTimestamps(now);
+
+    if (previousTimestamp !== undefined && now - previousTimestamp <= 1500) {
+        return true;
+    }
+
+    _recentFlashToastTimestamps.set(signature, now);
+
+    return false;
+}
 
 export function suppressNextFlashToast(): void {
     _suppressCount++;
@@ -56,6 +89,10 @@ function showFlashToasts(flash: FlashData): void {
             continue;
         }
 
+        if (shouldSkipFlashToast(options)) {
+            continue;
+        }
+
         showAppToast(options);
     }
 }
@@ -65,17 +102,11 @@ function resolveFlashToastOptions(
     message: FlashMessage,
 ): AppToastOptions | null {
     if (typeof message === 'string') {
-        const options: AppToastOptions = {
+        return {
+            id: `flash:${variant}:${message}`,
             variant,
             description: message,
         };
-
-        if (message.length <= 40) {
-            options.title = message;
-            options.description = undefined;
-        }
-
-        return options;
     }
 
     if (!message || typeof message !== 'object') {
@@ -90,6 +121,7 @@ function resolveFlashToastOptions(
     }
 
     return {
+        id: `flash:${variant}:${title ?? ''}:${description ?? ''}`,
         variant,
         title,
         description,
@@ -103,7 +135,7 @@ function resolveFlashToastOptions(
  * Call once at app bootstrap — no React context required.
  */
 export function initFlashToasts(): void {
-    router.on('navigate', (event) => {
+    router.on('success', (event) => {
         const flash = event.detail?.page?.props?.flash as FlashData | undefined;
 
         if (flash) {

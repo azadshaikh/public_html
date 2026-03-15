@@ -3,12 +3,11 @@ import * as React from "react"
 
 import {
   AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
 type ConfirmationDialogTone = "default" | "destructive"
@@ -16,21 +15,34 @@ type ConfirmationDialogTone = "default" | "destructive"
 type ConfirmationDialogProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
-  title: React.ReactNode
+  title?: React.ReactNode
   description?: React.ReactNode
-  confirmLabel: React.ReactNode
+  confirmLabel?: React.ReactNode
   cancelLabel?: React.ReactNode
   onConfirm?: () => void
   onCancel?: () => void
   icon?: React.ReactNode
   tone?: ConfirmationDialogTone
-  confirmVariant?: React.ComponentProps<typeof AlertDialogAction>["variant"]
+  confirmVariant?: React.ComponentProps<typeof Button>["variant"]
   confirmDisabled?: boolean
   cancelDisabled?: boolean
   contentClassName?: string
   confirmClassName?: string
   cancelClassName?: string
 }
+
+type ConfirmationDialogSnapshot = Pick<
+  ConfirmationDialogProps,
+  | "title"
+  | "description"
+  | "confirmLabel"
+  | "cancelLabel"
+  | "icon"
+  | "tone"
+  | "confirmVariant"
+  | "confirmClassName"
+  | "cancelClassName"
+>
 
 const toneClassNames: Record<ConfirmationDialogTone, string> = {
   default: "bg-primary/10 text-primary",
@@ -55,6 +67,73 @@ function ConfirmationDialog({
   confirmClassName,
   cancelClassName,
 }: ConfirmationDialogProps) {
+  const [snapshot, setSnapshot] = React.useState<ConfirmationDialogSnapshot>({
+    title,
+    description,
+    confirmLabel,
+    cancelLabel,
+    icon,
+    tone,
+    confirmVariant,
+    confirmClassName,
+    cancelClassName,
+  })
+
+  React.useEffect(() => {
+    if (!open) {
+      return
+    }
+
+    setSnapshot({
+      title,
+      description,
+      confirmLabel,
+      cancelLabel,
+      icon,
+      tone,
+      confirmVariant,
+      confirmClassName,
+      cancelClassName,
+    })
+  }, [
+    cancelClassName,
+    cancelLabel,
+    confirmClassName,
+    confirmLabel,
+    confirmVariant,
+    description,
+    icon,
+    open,
+    title,
+    tone,
+  ])
+
+  const resolvedTitle = open ? title : snapshot.title
+  const resolvedDescription = open ? description : snapshot.description
+  const resolvedConfirmLabel = open ? confirmLabel : snapshot.confirmLabel
+  const resolvedCancelLabel = open ? cancelLabel : snapshot.cancelLabel
+  const resolvedIcon = open ? icon : snapshot.icon
+  const resolvedTone = open ? tone : snapshot.tone
+  const resolvedConfirmVariant = open
+    ? confirmVariant
+    : snapshot.confirmVariant
+  const resolvedConfirmClassName = open
+    ? confirmClassName
+    : snapshot.confirmClassName
+  const resolvedCancelClassName = open
+    ? cancelClassName
+    : snapshot.cancelClassName
+
+  const handleCancel = React.useCallback(() => {
+    onOpenChange(false)
+    onCancel?.()
+  }, [onCancel, onOpenChange])
+
+  const handleConfirm = React.useCallback(() => {
+    onOpenChange(false)
+    onConfirm?.()
+  }, [onConfirm, onOpenChange])
+
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent
@@ -70,48 +149,50 @@ function ConfirmationDialog({
               <div
                 className={cn(
                   "flex size-7 shrink-0 items-center justify-center rounded-full",
-                  toneClassNames[tone]
+                  toneClassNames[resolvedTone ?? "destructive"]
                 )}
               >
-                {icon ?? <AlertTriangleIcon className="size-4 " />}
+                {resolvedIcon ?? <AlertTriangleIcon className="size-4" />}
               </div>
               <AlertDialogTitle className="pt-0.5 text-[1.7rem] leading-none font-semibold tracking-tight">
-                {title}
+                {resolvedTitle}
               </AlertDialogTitle>
             </div>
-            {description ? (
+            {resolvedDescription ? (
               <AlertDialogDescription className="mt-3 w-full max-w-none text-[1.02rem] leading-6 text-muted-foreground text-pretty">
-                {description}
+                {resolvedDescription}
               </AlertDialogDescription>
             ) : null}
           </div>
         </div>
 
         <div className="grid grid-cols-2 border-t">
-          <AlertDialogCancel
+          <Button
+            type="button"
             variant="ghost"
             size="comfortable"
             disabled={cancelDisabled}
-            onClick={onCancel}
+            onClick={handleCancel}
             className={cn(
               "h-[2.875rem] rounded-none border-0 border-r px-5 text-[0.95rem] font-medium shadow-none hover:bg-muted/50",
-              cancelClassName
+              resolvedCancelClassName
             )}
           >
-            {cancelLabel}
-          </AlertDialogCancel>
-          <AlertDialogAction
-            variant={confirmVariant}
+            {resolvedCancelLabel ?? "Cancel"}
+          </Button>
+          <Button
+            type="button"
+            variant={resolvedConfirmVariant ?? "default"}
             size="comfortable"
             disabled={confirmDisabled}
-            onClick={onConfirm}
+            onClick={handleConfirm}
             className={cn(
               "h-[2.875rem] rounded-none px-5 text-[0.95rem] font-medium shadow-none",
-              confirmClassName
+              resolvedConfirmClassName
             )}
           >
-            {confirmLabel}
-          </AlertDialogAction>
+            {resolvedConfirmLabel ?? "Confirm"}
+          </Button>
         </div>
       </AlertDialogContent>
     </AlertDialog>

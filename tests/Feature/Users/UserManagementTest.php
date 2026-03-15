@@ -770,6 +770,45 @@ class UserManagementTest extends TestCase
         $this->assertSoftDeleted('users', ['id' => $user2->id]);
     }
 
+    public function test_user_with_restore_permission_can_bulk_restore_users_without_delete_permission(): void
+    {
+        $trashedUser = User::factory()->create(['status' => Status::ACTIVE]);
+        $trashedUser->delete();
+
+        $restorer = User::factory()->create(['status' => Status::ACTIVE]);
+        $restorer->givePermissionTo('restore_users');
+
+        $this->actingAs($restorer)
+            ->post(route('app.users.bulk-action'), [
+                'action' => 'restore',
+                'ids' => [$trashedUser->id],
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('status');
+
+        $trashedUser->refresh();
+        $this->assertNull($trashedUser->deleted_at);
+    }
+
+    public function test_user_with_edit_permission_can_bulk_suspend_users_without_delete_permission(): void
+    {
+        $targetUser = User::factory()->create(['status' => Status::ACTIVE]);
+
+        $editor = User::factory()->create(['status' => Status::ACTIVE]);
+        $editor->givePermissionTo('edit_users');
+
+        $this->actingAs($editor)
+            ->post(route('app.users.bulk-action'), [
+                'action' => 'suspend',
+                'ids' => [$targetUser->id],
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('status');
+
+        $targetUser->refresh();
+        $this->assertEquals(Status::SUSPENDED, $targetUser->status);
+    }
+
     public function test_admin_can_bulk_suspend_users(): void
     {
         $user1 = User::factory()->create(['status' => Status::ACTIVE]);

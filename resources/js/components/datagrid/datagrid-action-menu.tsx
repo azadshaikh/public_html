@@ -103,9 +103,9 @@ export function DatagridActionMenu({ actions }: { actions: DatagridAction[] }) {
             <ConfirmationDialog
                 open={!!confirmAction}
                 onOpenChange={(open) => !open && setConfirmAction(null)}
-                title={confirmAction?.label ?? 'Confirm action'}
+                title={confirmAction?.label}
                 description={confirmAction?.confirm}
-                confirmLabel={confirmAction?.label ?? 'Continue'}
+                confirmLabel={confirmAction?.label}
                 tone={
                     confirmAction?.variant === 'destructive'
                         ? 'destructive'
@@ -115,7 +115,6 @@ export function DatagridActionMenu({ actions }: { actions: DatagridAction[] }) {
                     if (confirmAction) {
                         executeAction(confirmAction);
                     }
-                    setConfirmAction(null);
                 }}
             />
         </>
