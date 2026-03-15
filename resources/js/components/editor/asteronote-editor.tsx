@@ -8,6 +8,8 @@ import {
     convertListRoot,
     createTableHtml,
     defaultAsteroNoteFormatState,
+    escapeHtmlAttr,
+    escapeHtmlContent,
     getClosestLink,
     getClosestListRoot,
     getCurrentFormatState,
@@ -497,6 +499,10 @@ function AsteroNoteEditorInner({
                 selection.rangeCount > 0 &&
                 !selection.getRangeAt(0).collapsed
             ) {
+                if (!safeUrl) {
+                    return;
+                }
+
                 document.execCommand('createLink', false, safeUrl);
                 const createdLink = getClosestLink(editorRef.current);
 
@@ -513,9 +519,13 @@ function AsteroNoteEditorInner({
                     }
                 }
             } else if (safeUrl) {
+                const safeTarget = target ? ` target="${escapeHtmlAttr(target)}"` : '';
+                const safeRel = rel ? ` rel="${escapeHtmlAttr(rel)}"` : '';
+                const safeText = escapeHtmlContent(text || safeUrl);
+
                 insertHtmlAtSelection(
                     editorRef.current,
-                    `<a href="${safeUrl}"${target ? ` target="${target}"` : ''}${rel ? ` rel="${rel}"` : ''}>${text || safeUrl}</a>`,
+                    `<a href="${escapeHtmlAttr(safeUrl)}"${safeTarget}${safeRel}>${safeText}</a>`,
                 );
             }
 

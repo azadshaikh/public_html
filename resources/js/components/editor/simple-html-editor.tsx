@@ -11,7 +11,6 @@ type EditorMode = 'note' | 'full';
 
 type SimpleHtmlEditorProps = HtmlEditorProps & {
     mode: EditorMode;
-    floatingToolbar?: boolean;
 };
 
 export function SimpleHtmlEditor({ mode, ...props }: SimpleHtmlEditorProps) {

@@ -140,6 +140,7 @@ export function LinkPluginControl({ editor }: { editor: AsteroNoteController }) 
                             Cancel
                         </Button>
                         <Button
+                            disabled={!url.trim()}
                             onClick={() => {
                                 editor.insertLink({ text, url, target, rel });
                                 setOpen(false);

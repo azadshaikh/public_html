@@ -29,7 +29,6 @@ const allowedTags = new Set([
     'blockquote',
     'br',
     'code',
-    'div',
     'em',
     'figcaption',
     'figure',
@@ -128,12 +127,24 @@ export const defaultAsteroNoteFormatState: AsteroNoteFormatState = {
     inTable: false,
 };
 
-function escapeAttribute(value: string): string {
+export function escapeHtmlAttr(value: string): string {
     return value
         .replaceAll('&', '&amp;')
         .replaceAll('"', '&quot;')
         .replaceAll('<', '&lt;')
         .replaceAll('>', '&gt;');
+}
+
+export function escapeHtmlContent(value: string): string {
+    return value
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;');
+}
+
+/** @deprecated Use escapeHtmlAttr instead */
+function escapeAttribute(value: string): string {
+    return escapeHtmlAttr(value);
 }
 
 function sanitizeStyle(value: string): string {
@@ -279,14 +290,17 @@ export function sanitizeAsteroNoteHtml(html: string): string {
         }
 
         let element = node as HTMLElement;
-        const tag = element.tagName.toLowerCase();
+        let tag = element.tagName.toLowerCase();
 
         if (tag === 'b') {
             element = renameElement(element, 'strong');
+            tag = 'strong';
         } else if (tag === 'i') {
             element = renameElement(element, 'em');
+            tag = 'em';
         } else if (tag === 'strike') {
             element = renameElement(element, 's');
+            tag = 's';
         }
 
         if (tag === 'span' || tag === 'font') {
@@ -691,7 +705,7 @@ export function buildVideoHtml(payload: AsteroNoteVideoPayload): string | null {
         );
 
     if (youtubeMatch) {
-        return `<div><iframe src="https://www.youtube.com/embed/${escapeAttribute(youtubeMatch[1])}" title="Embedded video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen width="560" height="315"></iframe></div>`;
+        return `<iframe src="https://www.youtube.com/embed/${escapeAttribute(youtubeMatch[1])}" title="Embedded video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen width="560" height="315"></iframe>`;
     }
 
     const vimeoMatch =
@@ -700,14 +714,14 @@ export function buildVideoHtml(payload: AsteroNoteVideoPayload): string | null {
         );
 
     if (vimeoMatch) {
-        return `<div><iframe src="https://player.vimeo.com/video/${escapeAttribute(vimeoMatch[1])}" title="Embedded video" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen width="560" height="315"></iframe></div>`;
+        return `<iframe src="https://player.vimeo.com/video/${escapeAttribute(vimeoMatch[1])}" title="Embedded video" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen width="560" height="315"></iframe>`;
     }
 
     const dailyMotionMatch =
         /(?:dailymotion\.com\/video\/|dai\.ly\/)([A-Za-z0-9]+)/i.exec(url);
 
     if (dailyMotionMatch) {
-        return `<div><iframe src="https://www.dailymotion.com/embed/video/${escapeAttribute(dailyMotionMatch[1])}" title="Embedded video" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen width="560" height="315"></iframe></div>`;
+        return `<iframe src="https://www.dailymotion.com/embed/video/${escapeAttribute(dailyMotionMatch[1])}" title="Embedded video" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen width="560" height="315"></iframe>`;
     }
 
     if (/\.(mp4|webm|ogg)(\?.*)?$/i.test(url) && isSafeUrl(url)) {

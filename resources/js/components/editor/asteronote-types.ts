@@ -170,4 +170,5 @@ export const ASTERONOTE_LITE_TOOLBAR: AsteroNoteToolbar = [
     'strikethrough',
     'separator',
     'link',
+    'bubbleToolbar',
 ];

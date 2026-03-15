@@ -13,7 +13,7 @@ import {
     UnderlinePluginControl,
 } from '@/components/editor/plugins/inline-format';
 import { LinkPluginControl } from '@/components/editor/plugins/link';
-import { ToolbarGroup } from '@/components/ui/toolbar';
+import { Toolbar, ToolbarGroup } from '@/components/ui/toolbar';
 
 export function BubbleToolbar({ editor }: { editor: AsteroNoteController }) {
     if (!editor.floatingToolbarEnabled || !editor.floatingPosition) {
@@ -21,7 +21,7 @@ export function BubbleToolbar({ editor }: { editor: AsteroNoteController }) {
     }
 
     return (
-        <div
+        <Toolbar
             className="fixed z-50 -translate-x-1/2 -translate-y-full overflow-hidden rounded-lg border bg-popover p-1 shadow-lg"
             style={{
                 left: editor.floatingPosition.left,
@@ -50,6 +50,6 @@ export function BubbleToolbar({ editor }: { editor: AsteroNoteController }) {
                     )}
                 />
             </ToolbarGroup>
-        </div>
+        </Toolbar>
     );
 }
