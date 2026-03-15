@@ -140,7 +140,8 @@ export default function ModulesIndex({
         {
             label: 'Enabled',
             value: enabledCount,
-            valueClassName: 'text-emerald-600 dark:text-emerald-400',
+            valueClassName:
+                'text-[var(--success-foreground)] dark:text-[var(--success-dark-foreground)]',
         },
         {
             label: 'Disabled',
@@ -329,7 +330,7 @@ export default function ModulesIndex({
                                             }
                                             className={cn(
                                                 module.enabled
-                                                    ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300'
+                                                    ? 'border-[var(--success-border)] bg-[var(--success-bg)] text-[var(--success-foreground)] dark:border-[var(--success-dark-border)] dark:bg-[var(--success-dark-bg)] dark:text-[var(--success-dark-foreground)]'
                                                     : 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300',
                                             )}
                                         >

@@ -500,21 +500,21 @@ export default function TwoFactor({
 
                                         <ul className="space-y-2 text-sm text-foreground">
                                             <li className="flex items-start gap-2">
-                                                <CheckIcon className="mt-0.5 size-4 shrink-0 text-emerald-600" />
+                                                <CheckIcon className="mt-0.5 size-4 shrink-0 text-[var(--success-foreground)] dark:text-[var(--success-dark-foreground)]" />
                                                 <span>
                                                     Extra protection for
                                                     password-based sign in.
                                                 </span>
                                             </li>
                                             <li className="flex items-start gap-2">
-                                                <CheckIcon className="mt-0.5 size-4 shrink-0 text-emerald-600" />
+                                                <CheckIcon className="mt-0.5 size-4 shrink-0 text-[var(--success-foreground)] dark:text-[var(--success-dark-foreground)]" />
                                                 <span>
                                                     Works with 1Password, Google
                                                     Authenticator, and Authy.
                                                 </span>
                                             </li>
                                             <li className="flex items-start gap-2">
-                                                <CheckIcon className="mt-0.5 size-4 shrink-0 text-emerald-600" />
+                                                <CheckIcon className="mt-0.5 size-4 shrink-0 text-[var(--success-foreground)] dark:text-[var(--success-dark-foreground)]" />
                                                 <span>
                                                     Setup usually takes less
                                                     than a minute.
@@ -779,7 +779,7 @@ export default function TwoFactor({
                         >
                             <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-muted/15 px-4 py-3">
                                 <div className="flex items-start gap-3">
-                                    <div className="flex size-10 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300">
+                                    <div className="flex size-10 items-center justify-center rounded-full bg-[var(--success-bg)] text-[var(--success-foreground)] dark:bg-[var(--success-dark-bg)] dark:text-[var(--success-dark-foreground)]">
                                         <SmartphoneIcon className="size-4.5" />
                                     </div>
                                     <div>

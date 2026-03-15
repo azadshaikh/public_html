@@ -128,7 +128,7 @@ export default function Security({
                 ? {
                       label: 'Enabled',
                       className:
-                          'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300',
+                          'bg-[var(--success-bg)] text-[var(--success-foreground)] dark:bg-[var(--success-dark-bg)] dark:text-[var(--success-dark-foreground)]',
                   }
                 : twoFactorPending
                   ? {

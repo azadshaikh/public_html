@@ -22,7 +22,7 @@ export default function VerifyEmail({ status }: { status?: string }) {
             )}
 
             {status === 'verification-link-sent' && (
-                <div className="rounded-md border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-center text-sm font-medium text-emerald-700 dark:text-emerald-400">
+                <div className="rounded-md border border-[var(--success-border)] bg-[var(--success-bg)] px-4 py-3 text-center text-sm font-medium text-[var(--success-foreground)] dark:border-[var(--success-dark-border)] dark:bg-[var(--success-dark-bg)] dark:text-[var(--success-dark-foreground)]">
                     A new verification link has been sent to the email address
                     you provided during registration.
                 </div>

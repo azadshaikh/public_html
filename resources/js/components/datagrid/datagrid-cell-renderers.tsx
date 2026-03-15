@@ -77,7 +77,9 @@ function renderBoolean(value: unknown): ReactNode {
         <span
             className={cn(
                 'inline-flex size-2.5 rounded-full',
-                isTruthy ? 'bg-emerald-500' : 'bg-muted-foreground/30',
+                isTruthy
+                    ? 'bg-[var(--success-foreground)] dark:bg-[var(--success-dark-foreground)]'
+                    : 'bg-muted-foreground/30',
             )}
             aria-label={isTruthy ? 'Yes' : 'No'}
         />

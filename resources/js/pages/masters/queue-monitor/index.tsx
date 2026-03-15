@@ -1002,7 +1002,7 @@ function MetricCard({
                         className={
                             hasChanged
                                 ? hasIncreased
-                                    ? 'text-emerald-600 dark:text-emerald-400'
+                                    ? 'text-[var(--success-foreground)] dark:text-[var(--success-dark-foreground)]'
                                     : 'text-amber-700 dark:text-amber-300'
                                 : undefined
                         }
@@ -1284,7 +1284,7 @@ function CompactStatCard({
                 <span
                     className={`size-2 rounded-full ${
                         variant === 'success'
-                            ? 'bg-emerald-500'
+                            ? 'bg-[var(--success-foreground)] dark:bg-[var(--success-dark-foreground)]'
                             : variant === 'warning'
                               ? 'bg-amber-500'
                               : 'bg-muted-foreground/40'

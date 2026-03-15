@@ -25,8 +25,8 @@ const VARIANT_STYLES: Record<
     { border: string; bg: string; text: string; icon: ReactNode }
 > = {
     success: {
-        border: 'border-emerald-200/70 dark:border-emerald-500/20',
-        bg: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300',
+        border: 'border-[var(--success-border)] dark:border-[var(--success-dark-border)]',
+        bg: 'bg-[var(--success-bg)] text-[var(--success-foreground)] dark:bg-[var(--success-dark-bg)] dark:text-[var(--success-dark-foreground)]',
         text: '',
         icon: <CircleCheckBigIcon className="size-4.5" />,
     },

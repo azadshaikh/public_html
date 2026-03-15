@@ -1,7 +1,8 @@
+import type { ComponentProps } from 'react';
 import { Badge } from '@/components/ui/badge';
 import type { NavigationBadge } from '@/types';
 
-type BadgeVariant = 'default' | 'secondary' | 'destructive' | 'outline';
+type BadgeVariant = ComponentProps<typeof Badge>['variant'];
 
 type BadgeColorConfig = {
     variant: BadgeVariant;
@@ -10,9 +11,7 @@ type BadgeColorConfig = {
 
 const colorMap: Record<string, BadgeColorConfig> = {
     success: {
-        variant: 'outline',
-        className:
-            'border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400',
+        variant: 'success',
     },
     primary: { variant: 'default' },
     warning: {
