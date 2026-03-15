@@ -82,7 +82,15 @@ class ActivityLogController extends ScaffoldController implements HasMiddleware
         $activityLog = $this->findModel((int) $id);
 
         $data = [
-            'activityLog' => $activityLog->toArray(),
+            'activityLog' => array_merge($activityLog->toArray(), [
+                'causer_name' => $activityLog->causer_name,
+                'subject_display' => $activityLog->subject_display,
+                'ip_address' => $activityLog->ip_address,
+                'browser' => $activityLog->browser,
+                'request_url' => $activityLog->request_url,
+                'time_ago' => $activityLog->time_ago,
+                'created_at_formatted' => app_date_time_format($activityLog->created_at, 'datetime'),
+            ]),
         ];
 
         if ($activityLog->hasTrackedChanges()) {
