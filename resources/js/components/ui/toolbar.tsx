@@ -168,12 +168,26 @@ export const ToolbarButton = withTooltip(function ToolbarButton({
           size,
           variant,
         }),
-        isDropdown && 'pr-1',
+        isDropdown && 'justify-between gap-1 pr-1',
         className
       )}
       {...props}
     >
-      {children}
+      {isDropdown ? (
+        <>
+          <div className="flex flex-1 items-center gap-2 whitespace-nowrap">
+            {children}
+          </div>
+          <div>
+            <ChevronDown
+              className="size-3.5 text-muted-foreground"
+              data-icon
+            />
+          </div>
+        </>
+      ) : (
+        children
+      )}
     </ToolbarPrimitive.Button>
   );
 });

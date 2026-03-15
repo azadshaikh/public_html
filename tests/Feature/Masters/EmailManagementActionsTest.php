@@ -100,11 +100,18 @@ class EmailManagementActionsTest extends TestCase
             'status' => Status::ACTIVE,
         ]);
 
+        $richMessage = <<<'HTML'
+<h2>Updated</h2>
+<p><strong>Formatted</strong> body with an <a href="https://example.com" target="_blank" rel="noopener nofollow">external link</a>.</p>
+<table><thead><tr><th scope="col">Plan</th><th scope="col">Status</th></tr></thead><tbody><tr><td>Launch</td><td>Ready</td></tr></tbody></table>
+<figure><img src="https://cdn.example.com/banner.jpg" alt="Launch banner" loading="lazy" /></figure>
+HTML;
+
         $this->actingAs($this->superUser)
             ->put(route('app.masters.email.templates.update', $template), [
                 'name' => 'Updated Welcome',
                 'subject' => 'Updated Subject',
-                'message' => '<p>Updated</p>',
+                'message' => $richMessage,
                 'send_to' => 'one@example.com,two@example.com',
                 'provider_id' => $provider->id,
                 'is_raw' => true,
@@ -117,6 +124,7 @@ class EmailManagementActionsTest extends TestCase
             'id' => $template->id,
             'name' => 'Updated Welcome',
             'subject' => 'Updated Subject',
+            'message' => $richMessage,
             'send_to' => 'one@example.com,two@example.com',
             'is_raw' => true,
         ]);
