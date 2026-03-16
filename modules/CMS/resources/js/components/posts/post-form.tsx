@@ -2,9 +2,7 @@
 
 import { Link, router } from '@inertiajs/react';
 import {
-    ArrowUpRightIcon,
     ExternalLinkIcon,
-    ImageIcon,
     SaveIcon,
     Settings2Icon,
     ShieldIcon,
@@ -15,6 +13,7 @@ import type { FormEvent } from 'react';
 import { AsteroNote } from '@/components/asteronote/asteronote';
 import { MonacoEditor } from '@/components/code-editor/monaco-editor';
 import { FormErrorSummary } from '@/components/forms/form-error-summary';
+import { MediaPickerField } from '@/components/media/media-picker-field';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -49,6 +48,7 @@ import { formValidators } from '@/lib/forms';
 import { cn } from '@/lib/utils';
 import type {
     CmsOption,
+    MediaPickerPageProps,
     PostEditDetail,
     PostFormValues,
 } from '../../types/cms';
@@ -66,7 +66,7 @@ type PostFormProps = {
     preSlug: string;
     baseUrl: string;
     post?: PostEditDetail;
-};
+} & MediaPickerPageProps;
 
 const emptyValues: PostFormValues = {
     title: '',
@@ -149,6 +149,9 @@ export default function PostForm({
     preSlug,
     baseUrl,
     post,
+    pickerMedia,
+    pickerFilters,
+    uploadSettings,
 }: PostFormProps) {
     const form = useAppForm<PostFormValues>({
         defaults: initialValues || emptyValues,
@@ -527,67 +530,36 @@ export default function PostForm({
                         <CardHeader>
                             <CardTitle>Featured image</CardTitle>
                             <CardDescription>
-                                Reference a media item ID from the media library.
+                                Choose an image from the media library or upload a new one.
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="flex flex-col gap-4">
-                            {post?.featured_image_url ? (
-                                <div className="overflow-hidden rounded-lg border bg-muted/30">
-                                    <img
-                                        src={post.featured_image_url}
-                                        alt="Featured preview"
-                                        className="aspect-video w-full object-cover"
-                                    />
-                                </div>
-                            ) : (
-                                <div className="flex aspect-video items-center justify-center rounded-lg border border-dashed text-sm text-muted-foreground">
-                                    <ImageIcon className="mr-2 size-4" />
-                                    No featured image selected
-                                </div>
-                            )}
-
-                            <Field data-invalid={form.invalid('feature_image') || undefined}>
-                                <FieldLabel htmlFor="feature_image">Media ID</FieldLabel>
-                                <Input
-                                    id="feature_image"
-                                    type="number"
-                                    min={1}
-                                    value={form.data.feature_image}
-                                    onChange={(event) =>
-                                        form.setField(
-                                            'feature_image',
-                                            event.target.value === ''
-                                                ? ''
-                                                : Number.parseInt(
-                                                      event.target.value,
-                                                      10,
-                                                  ),
-                                        )
-                                    }
-                                    onBlur={() => form.touch('feature_image')}
-                                    aria-invalid={
-                                        form.invalid('feature_image') || undefined
-                                    }
-                                    placeholder="Enter media item ID"
-                                />
-                                <FieldDescription>
-                                    Open the media library in a new tab to copy the media ID.
-                                </FieldDescription>
-                                <FieldError>{form.error('feature_image')}</FieldError>
-                            </Field>
+                            <MediaPickerField
+                                value={form.data.feature_image || null}
+                                previewUrl={post?.featured_image_url}
+                                onChange={(item) => {
+                                    form.setField(
+                                        'feature_image',
+                                        item ? item.id : '',
+                                    );
+                                    form.touch('feature_image');
+                                }}
+                                dialogTitle="Select featured image"
+                                selectLabel="Select featured image"
+                                aria-invalid={
+                                    form.invalid('feature_image') || undefined
+                                }
+                                pickerMedia={pickerMedia}
+                                pickerFilters={pickerFilters}
+                                uploadSettings={uploadSettings}
+                                pickerAction={
+                                    mode === 'create'
+                                        ? route('cms.posts.create')
+                                        : route('cms.posts.edit', post!.id)
+                                }
+                            />
+                            <FieldError>{form.error('feature_image')}</FieldError>
                         </CardContent>
-                        <CardFooter>
-                            <Button variant="outline" asChild className="w-full">
-                                <a
-                                    href={route('app.media-library.index')}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                >
-                                    <ArrowUpRightIcon data-icon="inline-start" />
-                                    Open media library
-                                </a>
-                            </Button>
-                        </CardFooter>
                     </Card>
 
                     <Card>

@@ -1,4 +1,5 @@
 import type { PaginatedData } from '@/types/pagination';
+import type { MediaListItem, MediaPickerFilters, UploadSettings } from '@/types/media';
 
 // ================================================================
 // Common types
@@ -132,6 +133,20 @@ export type PostFormValues = {
     tags: number[];
 };
 
+// ================================================================
+// Media picker (shared by any form page using HasMediaPicker trait)
+// ================================================================
+
+export type MediaPickerPageProps = {
+    pickerMedia: PaginatedData<MediaListItem> | null;
+    pickerFilters: MediaPickerFilters | null;
+    uploadSettings: UploadSettings | null;
+};
+
+// ================================================================
+// Post form options
+// ================================================================
+
 export type PostFormOptions = {
     initialValues?: PostFormValues;
     categoryOptions: CmsOption[];
@@ -144,7 +159,7 @@ export type PostFormOptions = {
     preSlug: string;
     baseUrl: string;
     defaults: Record<string, string>;
-};
+} & MediaPickerPageProps;
 
 export type PostIndexPageProps = ScaffoldIndexPageProps<PostListItem>;
 

@@ -6,6 +6,7 @@ namespace Modules\CMS\Http\Controllers;
 
 use App\Scaffold\ScaffoldController;
 use App\Support\CacheInvalidation;
+use App\Traits\HasMediaPicker;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
@@ -17,6 +18,8 @@ use Modules\CMS\Services\PostService;
 
 class PostsController extends ScaffoldController implements HasMiddleware
 {
+    use HasMediaPicker;
+
     public function __construct(private readonly PostService $postService) {}
 
     public static function middleware(): array
@@ -75,6 +78,7 @@ class PostsController extends ScaffoldController implements HasMiddleware
             'preSlug' => '/',
             'baseUrl' => rtrim(url('/'), '/'),
             'defaults' => ['status' => 'draft'],
+            ...$this->getMediaPickerProps(),
         ];
     }
 

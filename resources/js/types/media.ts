@@ -58,6 +58,20 @@ export type UploadSettings = {
     upload_route: string;
 };
 
+// =========================================================================
+// Media picker filters (shared by dialog + pages using HasMediaPicker)
+// =========================================================================
+
+export type MediaPickerFilters = {
+    search: string;
+    sort: string;
+    direction: 'asc' | 'desc';
+    per_page: number;
+    mime_type_category: string;
+    picker: string;
+    view: 'table' | 'cards';
+};
+
 export type StorageData = {
     used_size_bytes: number;
     used_size_readable: string;
