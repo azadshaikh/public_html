@@ -21,7 +21,7 @@ set -euo pipefail
 # Configuration
 GEOIP_DIR="/usr/local/hestia/data/astero/geoip"
 DEFAULT_EDITION="GeoLite2-City"
-DEFAULT_LICENSE_KEY="YOUR_MAXMIND_LICENSE_KEY_HERE"  # Replace with your actual license key
+DEFAULT_LICENSE_KEY="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"
 MAXMIND_DOWNLOAD_URL="https://download.maxmind.com/app/geoip_download"
 
 # Parse arguments (can override defaults)
