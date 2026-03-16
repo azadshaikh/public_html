@@ -19,7 +19,7 @@ function PanelTabsList({
     return (
         <TabsList
             className={cn(
-                'h-auto w-full gap-0.5 bg-transparent p-0',
+                'peer h-auto w-full gap-0.5 bg-transparent p-0',
                 className,
             )}
             {...props}
@@ -34,7 +34,7 @@ function PanelTabsTrigger({
     return (
         <TabsTrigger
             className={cn(
-                'overflow-hidden rounded-b-none border-0 bg-transparent py-2 data-[state=active]:z-10 data-[state=active]:bg-muted data-[state=active]:shadow-none after:hidden',
+                'overflow-hidden rounded-b-none border-0 bg-transparent py-2 !shadow-none data-[state=active]:z-10 data-[state=active]:bg-muted data-[state=active]:ring-0 data-[state=active]:outline-none after:hidden',
                 className,
             )}
             {...props}
@@ -48,7 +48,12 @@ function PanelTabsContent({
 }: React.ComponentProps<typeof TabsContent>) {
     return (
         <TabsContent
-            className={cn('-mt-px rounded-b-lg bg-muted p-4', className)}
+            className={cn(
+                '-mt-px rounded-lg bg-muted p-4 pt-6',
+                'peer-has-[[data-state=active]:first-child]:rounded-tl-none',
+                'peer-has-[[data-state=active]:last-child]:rounded-tr-none',
+                className,
+            )}
             {...props}
         />
     );

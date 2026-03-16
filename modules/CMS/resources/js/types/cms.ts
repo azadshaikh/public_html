@@ -28,6 +28,67 @@ export type DefaultPagesPageProps = {
     publishedPageCount: number;
 };
 
+export type IntegrationSectionKey =
+    | 'webmaster_tools'
+    | 'google_analytics'
+    | 'google_tags'
+    | 'meta_pixel'
+    | 'microsoft_clarity'
+    | 'google_adsense'
+    | 'other';
+
+export type WebmasterToolsSettings = {
+    google_search_console: string;
+    bing_webmaster: string;
+    baidu_webmaster: string;
+    yandex_verification: string;
+    pinterest_verification: string;
+    norton_verification: string;
+    custom_meta_tags: string;
+};
+
+export type GoogleAnalyticsSettings = {
+    google_analytics: string;
+};
+
+export type GoogleTagsSettings = {
+    google_tags: string;
+};
+
+export type MetaPixelSettings = {
+    meta_pixel: string;
+};
+
+export type MicrosoftClaritySettings = {
+    ms_clarity: string;
+};
+
+export type GoogleAdsenseSettings = {
+    google_adsense_enabled: boolean;
+    google_adsense_code: string;
+    google_adsense_hide_for_logged_in: boolean;
+    google_adsense_hide_on_homepage: boolean;
+    google_adsense_ads_txt: string;
+};
+
+export type OtherIntegrationSettings = {
+    other: string;
+};
+
+export type IntegrationsPageProps = {
+    activeSection: IntegrationSectionKey;
+    statuses: Record<IntegrationSectionKey, boolean>;
+    settings: {
+        webmaster_tools: WebmasterToolsSettings;
+        google_analytics: GoogleAnalyticsSettings;
+        google_tags: GoogleTagsSettings;
+        meta_pixel: MetaPixelSettings;
+        microsoft_clarity: MicrosoftClaritySettings;
+        google_adsense: GoogleAdsenseSettings;
+        other: OtherIntegrationSettings;
+    };
+};
+
 // ================================================================
 // Shared scaffold filter state (from collectRequestFilters)
 // ================================================================

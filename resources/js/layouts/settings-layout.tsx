@@ -29,6 +29,8 @@ type SettingsLayoutProps = {
     breadcrumbs: BreadcrumbItem[];
     title?: string;
     description?: string;
+    railLabel?: string;
+    activeSlug?: string;
 };
 
 const settingsIcons: Record<string, LucideIcon> = {
@@ -55,18 +57,21 @@ export default function SettingsLayout({
     breadcrumbs,
     title,
     description,
+    railLabel,
+    activeSlug,
 }: SettingsLayoutProps) {
     const { url } = usePage();
     const pathname = url.split('?')[0];
-    const activeSlug =
+    const resolvedActiveSlug =
+        activeSlug ??
         settingsNav.find((item) => {
             const itemPath = item.href.replace(/^https?:\/\/[^/]+/, '');
             return pathname === itemPath || pathname.startsWith(`${itemPath}/`);
         })?.slug ?? settingsNav[0]?.slug;
 
-    const railLabel = pathname.includes('/master-settings/')
+    const resolvedRailLabel = railLabel ?? (pathname.includes('/master-settings/')
         ? 'Platform settings'
-        : 'Application settings';
+        : 'Application settings');
 
     return (
         <AppLayout
@@ -79,11 +84,11 @@ export default function SettingsLayout({
                     <div className="rounded-xl border border-border/70 bg-muted/60 p-2.5">
                         <div className="px-2.5 pt-1.5 pb-2.5">
                             <p className="text-[10px] font-medium tracking-[0.12em] text-muted-foreground/70 uppercase">
-                                {railLabel}
+                                {resolvedRailLabel}
                             </p>
                         </div>
 
-                        <nav className="grid gap-1" aria-label={railLabel}>
+                        <nav className="grid gap-1" aria-label={resolvedRailLabel}>
                             {settingsNav.map((item) => {
                                 const Icon =
                                     settingsIcons[item.slug] ?? BellRingIcon;
@@ -96,7 +101,7 @@ export default function SettingsLayout({
                                         asChild
                                         className={cn(
                                             'h-auto w-full min-w-0 rounded-[min(var(--radius-md),12px)] justify-start px-2.5 py-2 text-sm leading-5 text-foreground/70 hover:bg-background/80 hover:text-foreground',
-                                            item.slug === activeSlug &&
+                                            item.slug === resolvedActiveSlug &&
                                                 'bg-background text-foreground font-medium shadow-xs',
                                         )}
                                     >
@@ -104,7 +109,7 @@ export default function SettingsLayout({
                                             <Icon
                                                 className={cn(
                                                     'size-4 text-foreground/65',
-                                                    item.slug === activeSlug &&
+                                                    item.slug === resolvedActiveSlug &&
                                                         'text-foreground',
                                                 )}
                                             />

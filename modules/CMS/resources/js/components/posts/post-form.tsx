@@ -118,10 +118,16 @@ function slugify(value: string): string {
 }
 
 function normalizeOptionValue(value: CmsOption['value']): number {
-    return typeof value === 'number' ? value : Number.parseInt(String(value), 10);
+    return typeof value === 'number'
+        ? value
+        : Number.parseInt(String(value), 10);
 }
 
-function buildPermalink(baseUrl: string, preSlug: string, slug: string): string {
+function buildPermalink(
+    baseUrl: string,
+    preSlug: string,
+    slug: string,
+): string {
     const base = baseUrl.replace(/\/$/, '');
     const cleanedSlug = slug.trim() === '' ? 'your-slug-here' : slug.trim();
 
@@ -158,44 +164,33 @@ function PostSingleSelectCombobox({
     id,
     value,
     options,
-    placeholder,
-    searchable = false,
-    searchPlaceholder = 'Search...',
-    emptyMessage = 'No results found.',
-    onValueChange,
+    onChange,
     onBlur,
-    invalid,
-}: {
-    id: string;
-    value: string;
-    options: PostSelectOption[];
-    placeholder: string;
-    searchable?: boolean;
-    searchPlaceholder?: string;
-    emptyMessage?: string;
-    onValueChange: (value: string) => void;
-    onBlur?: () => void;
-    invalid?: boolean;
-}) {
-    const selectedOption =
-        options.find((option) => option.value === value) ?? null;
+    placeholder = 'Select an option...',
+    invalid = false,
+    searchable = false,
+    clearable = false,
+    disabled = false,
+    className,
+}: PostSingleSelectComboboxProps) {
+    const selectedOption = React.useMemo(
+        () => options.find((option) => option.value === value),
+        [options, value],
+    );
 
     return (
         <Combobox
-            items={options}
-            value={selectedOption}
-            autoHighlight
-            itemToStringLabel={(item) => item?.label ?? ''}
-            itemToStringValue={(item) =>
-                item ? `${item.label} ${item.value}`.trim() : ''
-            }
-            onValueChange={(item) => {
-                onValueChange(item?.value ?? '');
+            type="single"
+            value={value}
+            disabled={disabled}
+            onValueChange={(newValue) => {
+                onChange(newValue);
                 onBlur?.();
             }}
         >
             <ComboboxTrigger
                 id={id}
+                className={className}
                 aria-invalid={invalid || undefined}
                 onBlur={onBlur}
                 render={
@@ -206,7 +201,9 @@ function PostSingleSelectCombobox({
                         className="w-full justify-between font-normal"
                     />
                 }
-                className={!selectedOption ? 'text-muted-foreground' : undefined}
+                className={
+                    !selectedOption ? 'text-muted-foreground' : undefined
+                }
             >
                 <span className="truncate">
                     {selectedOption?.label ?? placeholder}
@@ -257,7 +254,9 @@ export default function PostForm({
     const form = useAppForm<PostFormValues>({
         defaults: initialValues || emptyValues,
         rememberKey:
-            mode === 'create' ? 'cms.posts.create.form' : `cms.posts.edit.${post?.id}`,
+            mode === 'create'
+                ? 'cms.posts.create.form'
+                : `cms.posts.edit.${post?.id}`,
         dirtyGuard: { enabled: true },
         rules: {
             title: [formValidators.required('Title')],
@@ -316,7 +315,9 @@ export default function PostForm({
                 value: normalizeOptionValue(option.value),
                 label: option.label,
                 disabled: option.disabled,
-                description: option.disabled ? unpublishedCategoryHint : undefined,
+                description: option.disabled
+                    ? unpublishedCategoryHint
+                    : undefined,
             })),
         [categoryOptions],
     );
@@ -331,15 +332,14 @@ export default function PostForm({
         [tagOptions],
     );
     const authorSelectOptions = useMemo(
-        () =>
-            [
-                { value: '', label: 'Select author' },
-                ...authorOptions.map((option) => ({
-                    value: String(option.value),
-                    label: option.label,
-                    disabled: option.disabled,
-                })),
-            ],
+        () => [
+            { value: '', label: 'Select author' },
+            ...authorOptions.map((option) => ({
+                value: String(option.value),
+                label: option.label,
+                disabled: option.disabled,
+            })),
+        ],
         [authorOptions],
     );
     const metaRobotsSelectOptions = useMemo(
@@ -410,7 +410,11 @@ export default function PostForm({
     };
 
     return (
-        <form className="flex flex-col gap-6" onSubmit={handleSubmit} noValidate>
+        <form
+            className="flex flex-col gap-6"
+            onSubmit={handleSubmit}
+            noValidate
+        >
             {form.dirtyGuardDialog}
             <FormErrorSummary errors={form.errors} minMessages={2} />
 
@@ -421,7 +425,9 @@ export default function PostForm({
                         <Input
                             id="title"
                             value={form.data.title}
-                            onChange={(event) => form.setField('title', event.target.value)}
+                            onChange={(event) =>
+                                form.setField('title', event.target.value)
+                            }
                             onBlur={() => form.touch('title')}
                             aria-invalid={form.invalid('title') || undefined}
                             placeholder="Enter post title"
@@ -431,48 +437,78 @@ export default function PostForm({
 
                     <PanelTabs defaultValue="content">
                         <PanelTabsList>
-                            <PanelTabsTrigger value="content">Content</PanelTabsTrigger>
+                            <PanelTabsTrigger value="content">
+                                Content
+                            </PanelTabsTrigger>
                             <PanelTabsTrigger value="seo">SEO</PanelTabsTrigger>
-                            <PanelTabsTrigger value="social">Social</PanelTabsTrigger>
-                            <PanelTabsTrigger value="schema">Schema</PanelTabsTrigger>
+                            <PanelTabsTrigger value="social">
+                                Social
+                            </PanelTabsTrigger>
+                            <PanelTabsTrigger value="schema">
+                                Schema
+                            </PanelTabsTrigger>
                         </PanelTabsList>
 
-                        <PanelTabsContent value="content" className="flex flex-col gap-6">
-                            <Field data-invalid={form.invalid('content') || undefined}>
-                                <FieldLabel htmlFor="content">Content</FieldLabel>
+                        <PanelTabsContent
+                            value="content"
+                            className="flex flex-col gap-6"
+                        >
+                            <Field
+                                data-invalid={
+                                    form.invalid('content') || undefined
+                                }
+                            >
                                 <AsteroNote
                                     id="content"
                                     value={form.data.content}
-                                    onChange={(value) => form.setField('content', value)}
+                                    onChange={(value) =>
+                                        form.setField('content', value)
+                                    }
                                     onBlur={() => form.touch('content')}
                                     placeholder="Write the full post content"
-                                    invalid={form.invalid('content') || undefined}
+                                    invalid={
+                                        form.invalid('content') || undefined
+                                    }
                                 />
                                 <FieldError>{form.error('content')}</FieldError>
                             </Field>
 
-                            <Field data-invalid={form.invalid('excerpt') || undefined}>
-                                <FieldLabel htmlFor="excerpt">Excerpt</FieldLabel>
+                            <Field
+                                data-invalid={
+                                    form.invalid('excerpt') || undefined
+                                }
+                            >
+                                <FieldLabel htmlFor="excerpt">
+                                    Excerpt
+                                </FieldLabel>
                                 <Textarea
                                     id="excerpt"
+                                    className="bg-background"
                                     rows={4}
                                     value={form.data.excerpt}
                                     onChange={(event) =>
-                                        form.setField('excerpt', event.target.value)
+                                        form.setField(
+                                            'excerpt',
+                                            event.target.value,
+                                        )
                                     }
                                     onBlur={() => form.touch('excerpt')}
-                                    aria-invalid={form.invalid('excerpt') || undefined}
+                                    aria-invalid={
+                                        form.invalid('excerpt') || undefined
+                                    }
                                     placeholder="Enter a short excerpt"
                                 />
                                 <FieldDescription>
-                                    Used in listings, previews, and search snippets.
+                                    Used in listings, previews, and search
+                                    snippets.
                                 </FieldDescription>
                                 <FieldError>{form.error('excerpt')}</FieldError>
                             </Field>
 
                             {post ? (
                                 <div className="text-sm text-muted-foreground">
-                                    Last updated {post.updated_at_human ?? 'recently'}
+                                    Last updated{' '}
+                                    {post.updated_at_human ?? 'recently'}
                                     {post.updated_at_formatted
                                         ? ` (${post.updated_at_formatted})`
                                         : ''}
@@ -480,139 +516,250 @@ export default function PostForm({
                             ) : null}
                         </PanelTabsContent>
 
-                        <PanelTabsContent value="seo" className="flex flex-col gap-6">
-                            <Field data-invalid={form.invalid('meta_title') || undefined}>
-                                <FieldLabel htmlFor="meta_title">Meta title</FieldLabel>
+                        <PanelTabsContent
+                            value="seo"
+                            className="flex flex-col gap-6"
+                        >
+                            <Field
+                                data-invalid={
+                                    form.invalid('meta_title') || undefined
+                                }
+                            >
+                                <FieldLabel htmlFor="meta_title">
+                                    Meta title
+                                </FieldLabel>
                                 <Input
                                     id="meta_title"
+                                    className="bg-background"
                                     value={form.data.meta_title}
                                     onChange={(event) =>
-                                        form.setField('meta_title', event.target.value)
+                                        form.setField(
+                                            'meta_title',
+                                            event.target.value,
+                                        )
                                     }
                                     onBlur={() => form.touch('meta_title')}
-                                    aria-invalid={form.invalid('meta_title') || undefined}
+                                    aria-invalid={
+                                        form.invalid('meta_title') || undefined
+                                    }
                                     placeholder="Enter meta title"
                                 />
                                 <FieldDescription>
                                     Recommended length: 50–60 characters.
                                 </FieldDescription>
-                                <FieldError>{form.error('meta_title')}</FieldError>
+                                <FieldError>
+                                    {form.error('meta_title')}
+                                </FieldError>
                             </Field>
 
-                            <Field data-invalid={form.invalid('meta_description') || undefined}>
+                            <Field
+                                data-invalid={
+                                    form.invalid('meta_description') ||
+                                    undefined
+                                }
+                            >
                                 <FieldLabel htmlFor="meta_description">
                                     Meta description
                                 </FieldLabel>
                                 <Textarea
                                     id="meta_description"
+                                    className="bg-background"
                                     rows={4}
                                     value={form.data.meta_description}
                                     onChange={(event) =>
-                                        form.setField('meta_description', event.target.value)
+                                        form.setField(
+                                            'meta_description',
+                                            event.target.value,
+                                        )
                                     }
-                                    onBlur={() => form.touch('meta_description')}
+                                    onBlur={() =>
+                                        form.touch('meta_description')
+                                    }
                                     aria-invalid={
-                                        form.invalid('meta_description') || undefined
+                                        form.invalid('meta_description') ||
+                                        undefined
                                     }
                                     placeholder="Enter meta description"
                                 />
-                                <FieldError>{form.error('meta_description')}</FieldError>
+                                <FieldError>
+                                    {form.error('meta_description')}
+                                </FieldError>
                             </Field>
 
-                            <Field data-invalid={form.invalid('meta_robots') || undefined}>
-                                <FieldLabel htmlFor="meta_robots">Meta robots</FieldLabel>
+                            <Field
+                                data-invalid={
+                                    form.invalid('meta_robots') || undefined
+                                }
+                            >
+                                <FieldLabel htmlFor="meta_robots">
+                                    Meta robots
+                                </FieldLabel>
                                 <PostSingleSelectCombobox
                                     id="meta_robots"
                                     value={form.data.meta_robots}
                                     options={metaRobotsSelectOptions}
-                                    onValueChange={(value) => form.setField('meta_robots', value)}
+                                    onValueChange={(value) =>
+                                        form.setField('meta_robots', value)
+                                    }
                                     onBlur={() => form.touch('meta_robots')}
                                     placeholder="Select meta robots"
-                                    invalid={form.invalid('meta_robots') || undefined}
+                                    invalid={
+                                        form.invalid('meta_robots') || undefined
+                                    }
                                 />
-                                <FieldError>{form.error('meta_robots')}</FieldError>
+                                <FieldError>
+                                    {form.error('meta_robots')}
+                                </FieldError>
                             </Field>
                         </PanelTabsContent>
 
-                        <PanelTabsContent value="social" className="flex flex-col gap-6">
-                            <Field data-invalid={form.invalid('og_title') || undefined}>
-                                <FieldLabel htmlFor="og_title">Open Graph title</FieldLabel>
+                        <PanelTabsContent
+                            value="social"
+                            className="flex flex-col gap-6"
+                        >
+                            <Field
+                                data-invalid={
+                                    form.invalid('og_title') || undefined
+                                }
+                            >
+                                <FieldLabel htmlFor="og_title">
+                                    Open Graph title
+                                </FieldLabel>
                                 <Input
                                     id="og_title"
+                                    className="bg-background"
                                     value={form.data.og_title}
                                     onChange={(event) =>
-                                        form.setField('og_title', event.target.value)
+                                        form.setField(
+                                            'og_title',
+                                            event.target.value,
+                                        )
                                     }
                                     onBlur={() => form.touch('og_title')}
-                                    aria-invalid={form.invalid('og_title') || undefined}
+                                    aria-invalid={
+                                        form.invalid('og_title') || undefined
+                                    }
                                     placeholder="Enter Open Graph title"
                                 />
-                                <FieldError>{form.error('og_title')}</FieldError>
+                                <FieldError>
+                                    {form.error('og_title')}
+                                </FieldError>
                             </Field>
 
-                            <Field data-invalid={form.invalid('og_description') || undefined}>
+                            <Field
+                                data-invalid={
+                                    form.invalid('og_description') || undefined
+                                }
+                            >
                                 <FieldLabel htmlFor="og_description">
                                     Open Graph description
                                 </FieldLabel>
                                 <Textarea
                                     id="og_description"
+                                    className="bg-background"
                                     rows={4}
                                     value={form.data.og_description}
                                     onChange={(event) =>
-                                        form.setField('og_description', event.target.value)
+                                        form.setField(
+                                            'og_description',
+                                            event.target.value,
+                                        )
                                     }
                                     onBlur={() => form.touch('og_description')}
-                                    aria-invalid={form.invalid('og_description') || undefined}
+                                    aria-invalid={
+                                        form.invalid('og_description') ||
+                                        undefined
+                                    }
                                     placeholder="Enter Open Graph description"
                                 />
-                                <FieldError>{form.error('og_description')}</FieldError>
+                                <FieldError>
+                                    {form.error('og_description')}
+                                </FieldError>
                             </Field>
 
-                            <Field data-invalid={form.invalid('og_image') || undefined}>
-                                <FieldLabel htmlFor="og_image">Open Graph image</FieldLabel>
+                            <Field
+                                data-invalid={
+                                    form.invalid('og_image') || undefined
+                                }
+                            >
+                                <FieldLabel htmlFor="og_image">
+                                    Open Graph image
+                                </FieldLabel>
                                 <Input
                                     id="og_image"
+                                    className="bg-background"
                                     type="url"
                                     value={form.data.og_image}
                                     onChange={(event) =>
-                                        form.setField('og_image', event.target.value)
+                                        form.setField(
+                                            'og_image',
+                                            event.target.value,
+                                        )
                                     }
                                     onBlur={() => form.touch('og_image')}
-                                    aria-invalid={form.invalid('og_image') || undefined}
+                                    aria-invalid={
+                                        form.invalid('og_image') || undefined
+                                    }
                                     placeholder="https://example.com/social-image.jpg"
                                 />
                                 <FieldDescription>
-                                    Paste an image URL or choose one from the media library.
+                                    Paste an image URL or choose one from the
+                                    media library.
                                 </FieldDescription>
-                                <FieldError>{form.error('og_image')}</FieldError>
+                                <FieldError>
+                                    {form.error('og_image')}
+                                </FieldError>
                             </Field>
 
-                            <Field data-invalid={form.invalid('og_url') || undefined}>
-                                <FieldLabel htmlFor="og_url">Open Graph URL</FieldLabel>
+                            <Field
+                                data-invalid={
+                                    form.invalid('og_url') || undefined
+                                }
+                            >
+                                <FieldLabel htmlFor="og_url">
+                                    Open Graph URL
+                                </FieldLabel>
                                 <Input
                                     id="og_url"
+                                    className="bg-background"
                                     type="url"
                                     value={form.data.og_url}
                                     onChange={(event) =>
-                                        form.setField('og_url', event.target.value)
+                                        form.setField(
+                                            'og_url',
+                                            event.target.value,
+                                        )
                                     }
                                     onBlur={() => form.touch('og_url')}
-                                    aria-invalid={form.invalid('og_url') || undefined}
+                                    aria-invalid={
+                                        form.invalid('og_url') || undefined
+                                    }
                                     placeholder="https://example.com/your-post"
                                 />
                                 <FieldError>{form.error('og_url')}</FieldError>
                             </Field>
                         </PanelTabsContent>
 
-                        <PanelTabsContent value="schema" className="flex flex-col gap-4">
-                            <Field data-invalid={form.invalid('schema') || undefined}>
-                                <FieldLabel htmlFor="schema">Schema markup</FieldLabel>
+                        <PanelTabsContent
+                            value="schema"
+                            className="flex flex-col gap-4"
+                        >
+                            <Field
+                                data-invalid={
+                                    form.invalid('schema') || undefined
+                                }
+                            >
+                                <FieldLabel htmlFor="schema">
+                                    Schema markup
+                                </FieldLabel>
                                 <MonacoEditor
                                     name="schema"
                                     language="html"
                                     height={360}
                                     value={form.data.schema}
-                                    onChange={(value) => form.setField('schema', value)}
+                                    onChange={(value) =>
+                                        form.setField('schema', value)
+                                    }
                                     onBlur={() => form.touch('schema')}
                                     placeholder="Add custom schema markup"
                                 />
@@ -658,7 +805,9 @@ export default function PostForm({
                                         : route('cms.posts.edit', post!.id)
                                 }
                             />
-                            <FieldError>{form.error('feature_image')}</FieldError>
+                            <FieldError>
+                                {form.error('feature_image')}
+                            </FieldError>
                         </CardContent>
                     </Card>
 
@@ -674,8 +823,14 @@ export default function PostForm({
                         </CardHeader>
                         <CardContent className="flex flex-col gap-6">
                             <FieldGroup className="md:grid md:grid-cols-2 md:gap-4">
-                                <Field data-invalid={form.invalid('status') || undefined}>
-                                    <RequiredLabel htmlFor="status">Status</RequiredLabel>
+                                <Field
+                                    data-invalid={
+                                        form.invalid('status') || undefined
+                                    }
+                                >
+                                    <RequiredLabel htmlFor="status">
+                                        Status
+                                    </RequiredLabel>
                                     <PostSingleSelectCombobox
                                         id="status"
                                         value={form.data.status}
@@ -688,52 +843,92 @@ export default function PostForm({
                                                 nextStatus !== 'published' &&
                                                 nextStatus !== 'scheduled'
                                             ) {
-                                                form.setField('published_at', '');
+                                                form.setField(
+                                                    'published_at',
+                                                    '',
+                                                );
                                             }
                                         }}
                                         onBlur={() => form.touch('status')}
                                         placeholder="Select status"
-                                        invalid={form.invalid('status') || undefined}
+                                        invalid={
+                                            form.invalid('status') || undefined
+                                        }
                                     />
-                                    <FieldError>{form.error('status')}</FieldError>
+                                    <FieldError>
+                                        {form.error('status')}
+                                    </FieldError>
                                 </Field>
 
-                                <Field data-invalid={form.invalid('visibility') || undefined}>
-                                    <FieldLabel htmlFor="visibility">Visibility</FieldLabel>
+                                <Field
+                                    data-invalid={
+                                        form.invalid('visibility') || undefined
+                                    }
+                                >
+                                    <FieldLabel htmlFor="visibility">
+                                        Visibility
+                                    </FieldLabel>
                                     <PostSingleSelectCombobox
                                         id="visibility"
                                         value={form.data.visibility}
                                         options={visibilitySelectOptions}
                                         onValueChange={(value) => {
                                             const nextVisibility = value;
-                                            form.setField('visibility', nextVisibility);
+                                            form.setField(
+                                                'visibility',
+                                                nextVisibility,
+                                            );
 
                                             if (nextVisibility !== 'password') {
-                                                form.setField('post_password', '');
-                                                form.setField('password_hint', '');
+                                                form.setField(
+                                                    'post_password',
+                                                    '',
+                                                );
+                                                form.setField(
+                                                    'password_hint',
+                                                    '',
+                                                );
                                             }
                                         }}
                                         onBlur={() => form.touch('visibility')}
                                         placeholder="Select visibility"
-                                        invalid={form.invalid('visibility') || undefined}
+                                        invalid={
+                                            form.invalid('visibility') ||
+                                            undefined
+                                        }
                                     />
-                                    <FieldError>{form.error('visibility')}</FieldError>
+                                    <FieldError>
+                                        {form.error('visibility')}
+                                    </FieldError>
                                 </Field>
                             </FieldGroup>
 
                             {showPublishAt ? (
-                                <Field data-invalid={form.invalid('published_at') || undefined}>
-                                    <FieldLabel htmlFor="published_at">Publish at</FieldLabel>
+                                <Field
+                                    data-invalid={
+                                        form.invalid('published_at') ||
+                                        undefined
+                                    }
+                                >
+                                    <FieldLabel htmlFor="published_at">
+                                        Publish at
+                                    </FieldLabel>
                                     <Input
                                         id="published_at"
                                         type="datetime-local"
                                         value={form.data.published_at}
                                         onChange={(event) =>
-                                            form.setField('published_at', event.target.value)
+                                            form.setField(
+                                                'published_at',
+                                                event.target.value,
+                                            )
                                         }
-                                        onBlur={() => form.touch('published_at')}
+                                        onBlur={() =>
+                                            form.touch('published_at')
+                                        }
                                         aria-invalid={
-                                            form.invalid('published_at') || undefined
+                                            form.invalid('published_at') ||
+                                            undefined
                                         }
                                     />
                                     <FieldDescription>
@@ -741,12 +936,20 @@ export default function PostForm({
                                             ? 'Choose a future date and time for scheduling.'
                                             : 'Choose the publish date and time.'}
                                     </FieldDescription>
-                                    <FieldError>{form.error('published_at')}</FieldError>
+                                    <FieldError>
+                                        {form.error('published_at')}
+                                    </FieldError>
                                 </Field>
                             ) : null}
 
-                            <Field data-invalid={form.invalid('categories') || undefined}>
-                                <RequiredLabel htmlFor="categories">Categories</RequiredLabel>
+                            <Field
+                                data-invalid={
+                                    form.invalid('categories') || undefined
+                                }
+                            >
+                                <RequiredLabel htmlFor="categories">
+                                    Categories
+                                </RequiredLabel>
                                 <FieldDescription>
                                     Select at least one category for this post.
                                 </FieldDescription>
@@ -761,28 +964,41 @@ export default function PostForm({
                                     placeholder="Select categories"
                                     emptyMessage="No categories found."
                                     size="comfortable"
-                                    aria-invalid={form.invalid('categories') || undefined}
+                                    aria-invalid={
+                                        form.invalid('categories') || undefined
+                                    }
                                 />
-                                <FieldError>{getArrayFieldError('categories')}</FieldError>
+                                <FieldError>
+                                    {getArrayFieldError('categories')}
+                                </FieldError>
                             </Field>
 
-                            <Field data-invalid={form.invalid('tags') || undefined}>
+                            <Field
+                                data-invalid={form.invalid('tags') || undefined}
+                            >
                                 <FieldLabel htmlFor="tags">Tags</FieldLabel>
                                 <FieldDescription>
-                                    Tags are optional and help organize related content.
+                                    Tags are optional and help organize related
+                                    content.
                                 </FieldDescription>
                                 <MultiSelectCombobox
                                     id="tags"
                                     value={form.data.tags}
                                     options={tagSelectOptions}
-                                    onValueChange={(value) => form.setField('tags', value)}
+                                    onValueChange={(value) =>
+                                        form.setField('tags', value)
+                                    }
                                     onBlur={() => form.touch('tags')}
                                     placeholder="Select tags"
                                     emptyMessage="No tags found."
                                     size="comfortable"
-                                    aria-invalid={form.invalid('tags') || undefined}
+                                    aria-invalid={
+                                        form.invalid('tags') || undefined
+                                    }
                                 />
-                                <FieldError>{getArrayFieldError('tags')}</FieldError>
+                                <FieldError>
+                                    {getArrayFieldError('tags')}
+                                </FieldError>
                             </Field>
                         </CardContent>
                     </Card>
@@ -794,7 +1010,8 @@ export default function PostForm({
                                 <CardTitle>More options</CardTitle>
                             </div>
                             <CardDescription>
-                                Fine-tune permalink, author, templates, and password access.
+                                Fine-tune permalink, author, templates, and
+                                password access.
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="flex flex-col gap-6">
@@ -810,13 +1027,18 @@ export default function PostForm({
                                         Featured post
                                     </FieldLabel>
                                     <FieldDescription>
-                                        Featured posts stay pinned above other posts.
+                                        Featured posts stay pinned above other
+                                        posts.
                                     </FieldDescription>
                                 </div>
                             </Field>
 
-                            <Field data-invalid={form.invalid('slug') || undefined}>
-                                <FieldLabel htmlFor="slug">Permalink</FieldLabel>
+                            <Field
+                                data-invalid={form.invalid('slug') || undefined}
+                            >
+                                <FieldLabel htmlFor="slug">
+                                    Permalink
+                                </FieldLabel>
                                 <div className="flex items-center rounded-lg border bg-muted/20 pl-3">
                                     <span className="shrink-0 text-sm text-muted-foreground">
                                         {preSlug}
@@ -827,10 +1049,15 @@ export default function PostForm({
                                         value={form.data.slug}
                                         onChange={(event) => {
                                             setSlugTouched(true);
-                                            form.setField('slug', slugify(event.target.value));
+                                            form.setField(
+                                                'slug',
+                                                slugify(event.target.value),
+                                            );
                                         }}
                                         onBlur={() => form.touch('slug')}
-                                        aria-invalid={form.invalid('slug') || undefined}
+                                        aria-invalid={
+                                            form.invalid('slug') || undefined
+                                        }
                                         placeholder="auto-generated-from-title"
                                     />
                                 </div>
@@ -841,17 +1068,27 @@ export default function PostForm({
                                         rel="noopener noreferrer"
                                         className="inline-flex items-center gap-1 text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
                                     >
-                                        <span className="truncate">{permalinkPreview}</span>
+                                        <span className="truncate">
+                                            {permalinkPreview}
+                                        </span>
                                         <ExternalLinkIcon className="size-3.5 shrink-0" />
                                     </a>
                                 ) : (
-                                    <FieldDescription>{permalinkPreview}</FieldDescription>
+                                    <FieldDescription>
+                                        {permalinkPreview}
+                                    </FieldDescription>
                                 )}
                                 <FieldError>{form.error('slug')}</FieldError>
                             </Field>
 
-                            <Field data-invalid={form.invalid('author_id') || undefined}>
-                                <RequiredLabel htmlFor="author_id">Author</RequiredLabel>
+                            <Field
+                                data-invalid={
+                                    form.invalid('author_id') || undefined
+                                }
+                            >
+                                <RequiredLabel htmlFor="author_id">
+                                    Author
+                                </RequiredLabel>
                                 <PostSingleSelectCombobox
                                     id="author_id"
                                     value={String(form.data.author_id)}
@@ -861,7 +1098,10 @@ export default function PostForm({
                                             'author_id',
                                             value === ''
                                                 ? ''
-                                                : Number.parseInt(String(value), 10),
+                                                : Number.parseInt(
+                                                    String(value),
+                                                    10,
+                                                ),
                                         )
                                     }
                                     onBlur={() => form.touch('author_id')}
@@ -869,27 +1109,45 @@ export default function PostForm({
                                     searchable
                                     searchPlaceholder="Search authors..."
                                     emptyMessage="No author found."
-                                    invalid={form.invalid('author_id') || undefined}
+                                    invalid={
+                                        form.invalid('author_id') || undefined
+                                    }
                                 />
-                                <FieldError>{form.error('author_id')}</FieldError>
+                                <FieldError>
+                                    {form.error('author_id')}
+                                </FieldError>
                             </Field>
 
                             {showTemplateField ? (
-                                <Field data-invalid={form.invalid('template') || undefined}>
-                                    <FieldLabel htmlFor="template">Template</FieldLabel>
+                                <Field
+                                    data-invalid={
+                                        form.invalid('template') || undefined
+                                    }
+                                >
+                                    <FieldLabel htmlFor="template">
+                                        Template
+                                    </FieldLabel>
                                     <PostSingleSelectCombobox
                                         id="template"
                                         value={form.data.template}
                                         options={templateSelectOptions}
-                                        onValueChange={(value) => form.setField('template', value)}
+                                        onValueChange={(value) =>
+                                            form.setField('template', value)
+                                        }
                                         onBlur={() => form.touch('template')}
                                         placeholder="Select template"
-                                        invalid={form.invalid('template') || undefined}
+                                        invalid={
+                                            form.invalid('template') ||
+                                            undefined
+                                        }
                                     />
                                     <FieldDescription>
-                                        Choose a different presentation template for this post.
+                                        Choose a different presentation template
+                                        for this post.
                                     </FieldDescription>
-                                    <FieldError>{form.error('template')}</FieldError>
+                                    <FieldError>
+                                        {form.error('template')}
+                                    </FieldError>
                                 </Field>
                             ) : null}
 
@@ -897,7 +1155,8 @@ export default function PostForm({
                                 <>
                                     <Field
                                         data-invalid={
-                                            form.invalid('post_password') || undefined
+                                            form.invalid('post_password') ||
+                                            undefined
                                         }
                                     >
                                         <FieldLabel htmlFor="post_password">
@@ -913,9 +1172,12 @@ export default function PostForm({
                                                     event.target.value,
                                                 )
                                             }
-                                            onBlur={() => form.touch('post_password')}
+                                            onBlur={() =>
+                                                form.touch('post_password')
+                                            }
                                             aria-invalid={
-                                                form.invalid('post_password') || undefined
+                                                form.invalid('post_password') ||
+                                                undefined
                                             }
                                             placeholder={
                                                 post?.is_password_protected
@@ -935,7 +1197,8 @@ export default function PostForm({
 
                                     <Field
                                         data-invalid={
-                                            form.invalid('password_hint') || undefined
+                                            form.invalid('password_hint') ||
+                                            undefined
                                         }
                                     >
                                         <FieldLabel htmlFor="password_hint">
@@ -950,9 +1213,12 @@ export default function PostForm({
                                                     event.target.value,
                                                 )
                                             }
-                                            onBlur={() => form.touch('password_hint')}
+                                            onBlur={() =>
+                                                form.touch('password_hint')
+                                            }
                                             aria-invalid={
-                                                form.invalid('password_hint') || undefined
+                                                form.invalid('password_hint') ||
+                                                undefined
                                             }
                                             placeholder="Optional hint for visitors"
                                         />
@@ -973,7 +1239,11 @@ export default function PostForm({
                             </CardDescription>
                         </CardHeader>
                         <CardFooter className="flex-col gap-3">
-                            <Button type="submit" className="w-full" disabled={form.processing}>
+                            <Button
+                                type="submit"
+                                className="w-full"
+                                disabled={form.processing}
+                            >
                                 {form.processing ? (
                                     <Spinner className="size-4" />
                                 ) : (
@@ -981,8 +1251,15 @@ export default function PostForm({
                                 )}
                                 {submitLabel}
                             </Button>
-                            <Button type="button" variant="outline" className="w-full" asChild>
-                                <Link href={route('cms.posts.index')}>Back to Posts</Link>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                className="w-full"
+                                asChild
+                            >
+                                <Link href={route('cms.posts.index')}>
+                                    Back to Posts
+                                </Link>
                             </Button>
                         </CardFooter>
                     </Card>
@@ -992,8 +1269,8 @@ export default function PostForm({
                             <CardHeader>
                                 <CardTitle>Danger zone</CardTitle>
                                 <CardDescription>
-                                    Move this post to trash. You can restore it later from the
-                                    trash tab.
+                                    Move this post to trash. You can restore it
+                                    later from the trash tab.
                                 </CardDescription>
                             </CardHeader>
                             <CardFooter>

@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
 use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 use Modules\CMS\Http\Requests\UpdateSeoSettingsRequest;
 use Modules\CMS\Services\SeoSettingService;
 use Modules\CMS\Services\SitemapService;
@@ -73,7 +75,7 @@ class SeoSettingController extends Controller
     /**
      * Display SEO settings page
      */
-    public function index(string $masterGroup, string $fileName): View
+    public function index(Request $request, string $masterGroup, string $fileName): View|Response
     {
         // Determine permission module (cms for titlesmeta)
         // Map route master_group to actual seeded permission names
@@ -99,6 +101,10 @@ class SeoSettingController extends Controller
         }
 
         $data = $this->getViewData('settings', $masterGroup, $fileName);
+
+        if ($masterGroup === 'integrations' && $fileName === 'integrations') {
+            return Inertia::render('cms/integrations/index', $this->getIntegrationsPageData($request, $data['settings_data']));
+        }
 
         // Add sitemap status data for sitemap settings page
         if ($fileName === 'sitemap') {
@@ -517,6 +523,109 @@ class SeoSettingController extends Controller
         }
 
         return $data;
+    }
+
+    /**
+     * @param  array<string, mixed>  $settingsData
+     * @return array<string, mixed>
+     */
+    private function getIntegrationsPageData(Request $request, array $settingsData): array
+    {
+        $sections = [
+            'webmaster_tools',
+            'google_analytics',
+            'google_tags',
+            'meta_pixel',
+            'microsoft_clarity',
+            'google_adsense',
+            'other',
+        ];
+
+        $activeSection = (string) $request->query('section', 'webmaster_tools');
+
+        if (! in_array($activeSection, $sections, true)) {
+            $activeSection = 'webmaster_tools';
+        }
+
+        $adsTxtPath = public_path('ads.txt');
+
+        return [
+            'activeSection' => $activeSection,
+            'statuses' => [
+                'webmaster_tools' => $this->resolveWebmasterToolsStatus($settingsData),
+                'google_analytics' => $this->filledSetting($settingsData, 'seo_integrations_google_analytics'),
+                'google_tags' => $this->filledSetting($settingsData, 'seo_integrations_google_tags'),
+                'meta_pixel' => $this->filledSetting($settingsData, 'seo_integrations_meta_pixel'),
+                'microsoft_clarity' => $this->filledSetting($settingsData, 'seo_integrations_ms_clarity'),
+                'google_adsense' => filter_var($settingsData['seo_integrations_google_adsense_enabled'] ?? false, FILTER_VALIDATE_BOOLEAN),
+                'other' => $this->filledSetting($settingsData, 'seo_integrations_other'),
+            ],
+            'settings' => [
+                'webmaster_tools' => [
+                    'google_search_console' => (string) ($settingsData['seo_integrations_google_search_console'] ?? ''),
+                    'bing_webmaster' => (string) ($settingsData['seo_integrations_bing_webmaster'] ?? ''),
+                    'baidu_webmaster' => (string) ($settingsData['seo_integrations_baidu_webmaster'] ?? ''),
+                    'yandex_verification' => (string) ($settingsData['seo_integrations_yandex_verification'] ?? ''),
+                    'pinterest_verification' => (string) ($settingsData['seo_integrations_pinterest_verification'] ?? ''),
+                    'norton_verification' => (string) ($settingsData['seo_integrations_norton_verification'] ?? ''),
+                    'custom_meta_tags' => (string) ($settingsData['seo_integrations_custom_meta_tags'] ?? ''),
+                ],
+                'google_analytics' => [
+                    'google_analytics' => (string) ($settingsData['seo_integrations_google_analytics'] ?? ''),
+                ],
+                'google_tags' => [
+                    'google_tags' => (string) ($settingsData['seo_integrations_google_tags'] ?? ''),
+                ],
+                'meta_pixel' => [
+                    'meta_pixel' => (string) ($settingsData['seo_integrations_meta_pixel'] ?? ''),
+                ],
+                'microsoft_clarity' => [
+                    'ms_clarity' => (string) ($settingsData['seo_integrations_ms_clarity'] ?? ''),
+                ],
+                'google_adsense' => [
+                    'google_adsense_enabled' => filter_var($settingsData['seo_integrations_google_adsense_enabled'] ?? false, FILTER_VALIDATE_BOOLEAN),
+                    'google_adsense_code' => (string) ($settingsData['seo_integrations_google_adsense_code'] ?? ''),
+                    'google_adsense_hide_for_logged_in' => filter_var($settingsData['seo_integrations_google_adsense_hide_for_logged_in'] ?? false, FILTER_VALIDATE_BOOLEAN),
+                    'google_adsense_hide_on_homepage' => filter_var($settingsData['seo_integrations_google_adsense_hide_on_homepage'] ?? false, FILTER_VALIDATE_BOOLEAN),
+                    'google_adsense_ads_txt' => File::exists($adsTxtPath) ? (string) File::get($adsTxtPath) : '',
+                ],
+                'other' => [
+                    'other' => (string) ($settingsData['seo_integrations_other'] ?? ''),
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $settingsData
+     */
+    private function resolveWebmasterToolsStatus(array $settingsData): bool
+    {
+        foreach ([
+            'seo_integrations_google_search_console',
+            'seo_integrations_bing_webmaster',
+            'seo_integrations_baidu_webmaster',
+            'seo_integrations_yandex_verification',
+            'seo_integrations_pinterest_verification',
+            'seo_integrations_norton_verification',
+            'seo_integrations_custom_meta_tags',
+        ] as $key) {
+            if ($this->filledSetting($settingsData, $key)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param  array<string, mixed>  $settingsData
+     */
+    private function filledSetting(array $settingsData, string $key): bool
+    {
+        $value = $settingsData[$key] ?? null;
+
+        return is_string($value) ? trim($value) !== '' : ! empty($value);
     }
 
     // =============================================================================

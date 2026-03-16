@@ -58,13 +58,13 @@ import { FixedToolbar } from '@/components/ui/fixed-toolbar';
 import { cn } from '@/lib/utils';
 
 const defaultHeights: Record<AsteroNoteBundle, number> = {
-    full: 360,
-    lite: 220,
+    full: 550,
+    lite: 275,
 };
 
 const defaultMinHeights: Record<AsteroNoteBundle, number> = {
-    full: 320,
-    lite: 180,
+    full: 400,
+    lite: 225,
 };
 
 export type AsteroNoteEditorProps = HtmlEditorProps & {
@@ -87,11 +87,11 @@ const KEYBOARD_SHORTCUTS: Array<{
     key: string;
     command: Parameters<AsteroNoteController['applyInlineCommand']>[0];
 }> = [
-    { ctrl: true, key: 'b', command: 'bold' },
-    { ctrl: true, key: 'i', command: 'italic' },
-    { ctrl: true, key: 'u', command: 'underline' },
-    { ctrl: true, shift: true, key: 's', command: 'strikeThrough' },
-];
+        { ctrl: true, key: 'b', command: 'bold' },
+        { ctrl: true, key: 'i', command: 'italic' },
+        { ctrl: true, key: 'u', command: 'underline' },
+        { ctrl: true, shift: true, key: 's', command: 'strikeThrough' },
+    ];
 
 function createGroupDefinitions(
     toolbar: AsteroNoteToolbar,
@@ -940,7 +940,7 @@ function AsteroNoteEditorInner({
                 'overflow-hidden rounded-lg border border-border bg-background',
                 invalid && 'border-destructive ring-1 ring-destructive/20',
                 isFullscreen &&
-                    'fixed inset-0 z-50 flex flex-col rounded-none border-0',
+                'fixed inset-0 z-50 flex flex-col rounded-none border-0',
                 className,
             )}
         >
@@ -990,8 +990,8 @@ function AsteroNoteEditorInner({
                 )}
             >
                 {!isCodeView &&
-                !isFocused &&
-                !hasMeaningfulHtmlContent(htmlState) ? (
+                    !isFocused &&
+                    !hasMeaningfulHtmlContent(htmlState) ? (
                     <div className="pointer-events-none absolute inset-x-4 top-4 text-sm text-muted-foreground/80">
                         {placeholderText}
                     </div>
