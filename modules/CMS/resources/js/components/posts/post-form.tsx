@@ -23,29 +23,35 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
+import {
+    Combobox,
+    ComboboxContent,
+    ComboboxEmpty,
+    ComboboxInput,
+    ComboboxItem,
+    ComboboxList,
+    ComboboxTrigger,
+} from '@/components/ui/combobox';
 import {
     Field,
     FieldDescription,
     FieldError,
     FieldGroup,
     FieldLabel,
-    FieldLegend,
-    FieldSet,
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import { MultiSelectCombobox } from '@/components/ui/multi-select-combobox';
 import {
-    NativeSelect,
-    NativeSelectOption,
-} from '@/components/ui/native-select';
-import { ScrollArea } from '@/components/ui/scroll-area';
+    PanelTabs,
+    PanelTabsContent,
+    PanelTabsList,
+    PanelTabsTrigger,
+} from '@/components/ui/panel-tabs';
 import { Spinner } from '@/components/ui/spinner';
 import { Switch } from '@/components/ui/switch';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { useAppForm } from '@/hooks/use-app-form';
 import { formValidators } from '@/lib/forms';
-import { cn } from '@/lib/utils';
 import type {
     CmsOption,
     MediaPickerPageProps,
@@ -67,6 +73,12 @@ type PostFormProps = {
     baseUrl: string;
     post?: PostEditDetail;
 } & MediaPickerPageProps;
+
+const unpublishedCategoryHint =
+    'Unpublished categories stay selected but cannot be newly assigned.';
+
+const unpublishedTagHint =
+    'Unpublished tags stay selected but cannot be newly assigned.';
 
 const emptyValues: PostFormValues = {
     title: '',
@@ -133,6 +145,95 @@ function RequiredLabel({
         <FieldLabel htmlFor={htmlFor}>
             {children} <span className="text-destructive">*</span>
         </FieldLabel>
+    );
+}
+
+type PostSelectOption = {
+    value: string;
+    label: string;
+    disabled?: boolean;
+};
+
+function PostSingleSelectCombobox({
+    id,
+    value,
+    options,
+    placeholder,
+    searchable = false,
+    searchPlaceholder = 'Search...',
+    emptyMessage = 'No results found.',
+    onValueChange,
+    onBlur,
+    invalid,
+}: {
+    id: string;
+    value: string;
+    options: PostSelectOption[];
+    placeholder: string;
+    searchable?: boolean;
+    searchPlaceholder?: string;
+    emptyMessage?: string;
+    onValueChange: (value: string) => void;
+    onBlur?: () => void;
+    invalid?: boolean;
+}) {
+    const selectedOption =
+        options.find((option) => option.value === value) ?? null;
+
+    return (
+        <Combobox
+            items={options}
+            value={selectedOption}
+            autoHighlight
+            itemToStringLabel={(item) => item?.label ?? ''}
+            itemToStringValue={(item) =>
+                item ? `${item.label} ${item.value}`.trim() : ''
+            }
+            onValueChange={(item) => {
+                onValueChange(item?.value ?? '');
+                onBlur?.();
+            }}
+        >
+            <ComboboxTrigger
+                id={id}
+                aria-invalid={invalid || undefined}
+                onBlur={onBlur}
+                render={
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="comfortable"
+                        className="w-full justify-between font-normal"
+                    />
+                }
+                className={!selectedOption ? 'text-muted-foreground' : undefined}
+            >
+                <span className="truncate">
+                    {selectedOption?.label ?? placeholder}
+                </span>
+            </ComboboxTrigger>
+            <ComboboxContent>
+                {searchable ? (
+                    <ComboboxInput
+                        placeholder={searchPlaceholder}
+                        showTrigger={false}
+                        onBlur={onBlur}
+                    />
+                ) : null}
+                <ComboboxEmpty>{emptyMessage}</ComboboxEmpty>
+                <ComboboxList>
+                    {(option: PostSelectOption) => (
+                        <ComboboxItem
+                            key={`${id}-${option.value || 'empty'}`}
+                            value={option}
+                            disabled={option.disabled}
+                        >
+                            {option.label}
+                        </ComboboxItem>
+                    )}
+                </ComboboxList>
+            </ComboboxContent>
+        </Combobox>
     );
 }
 
@@ -209,15 +310,74 @@ export default function PostForm({
         );
     };
 
-    const toggleSelection = (field: 'categories' | 'tags', value: number) => {
-        const currentValues = form.data[field];
-        const nextValues = currentValues.includes(value)
-            ? currentValues.filter((currentValue) => currentValue !== value)
-            : [...currentValues, value];
-
-        form.setField(field, nextValues);
-        form.touch(field);
-    };
+    const categorySelectOptions = useMemo(
+        () =>
+            categoryOptions.map((option) => ({
+                value: normalizeOptionValue(option.value),
+                label: option.label,
+                disabled: option.disabled,
+                description: option.disabled ? unpublishedCategoryHint : undefined,
+            })),
+        [categoryOptions],
+    );
+    const tagSelectOptions = useMemo(
+        () =>
+            tagOptions.map((option) => ({
+                value: normalizeOptionValue(option.value),
+                label: option.label,
+                disabled: option.disabled,
+                description: option.disabled ? unpublishedTagHint : undefined,
+            })),
+        [tagOptions],
+    );
+    const authorSelectOptions = useMemo(
+        () =>
+            [
+                { value: '', label: 'Select author' },
+                ...authorOptions.map((option) => ({
+                    value: String(option.value),
+                    label: option.label,
+                    disabled: option.disabled,
+                })),
+            ],
+        [authorOptions],
+    );
+    const metaRobotsSelectOptions = useMemo(
+        () =>
+            metaRobotsOptions.map((option) => ({
+                value: String(option.value),
+                label: option.label,
+                disabled: option.disabled,
+            })),
+        [metaRobotsOptions],
+    );
+    const statusSelectOptions = useMemo(
+        () =>
+            statusOptions.map((option) => ({
+                value: String(option.value),
+                label: option.label,
+                disabled: option.disabled,
+            })),
+        [statusOptions],
+    );
+    const visibilitySelectOptions = useMemo(
+        () =>
+            visibilityOptions.map((option) => ({
+                value: String(option.value),
+                label: option.label,
+                disabled: option.disabled,
+            })),
+        [visibilityOptions],
+    );
+    const templateSelectOptions = useMemo(
+        () =>
+            templateOptions.map((option) => ({
+                value: String(option.value),
+                label: option.label,
+                disabled: option.disabled,
+            })),
+        [templateOptions],
+    );
 
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -256,273 +416,213 @@ export default function PostForm({
 
             <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
                 <div className="flex flex-col gap-6">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Post content</CardTitle>
-                            <CardDescription>
-                                Write the main content, summary, and SEO metadata for this
-                                post.
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="flex flex-col gap-6">
-                            <Field data-invalid={form.invalid('title') || undefined}>
-                                <RequiredLabel htmlFor="title">Title</RequiredLabel>
-                                <Input
-                                    id="title"
-                                    value={form.data.title}
-                                    onChange={(event) =>
-                                        form.setField('title', event.target.value)
-                                    }
-                                    onBlur={() => form.touch('title')}
-                                    aria-invalid={form.invalid('title') || undefined}
-                                    placeholder="Enter post title"
+                    <Field data-invalid={form.invalid('title') || undefined}>
+                        <RequiredLabel htmlFor="title">Title</RequiredLabel>
+                        <Input
+                            id="title"
+                            value={form.data.title}
+                            onChange={(event) => form.setField('title', event.target.value)}
+                            onBlur={() => form.touch('title')}
+                            aria-invalid={form.invalid('title') || undefined}
+                            placeholder="Enter post title"
+                        />
+                        <FieldError>{form.error('title')}</FieldError>
+                    </Field>
+
+                    <PanelTabs defaultValue="content">
+                        <PanelTabsList>
+                            <PanelTabsTrigger value="content">Content</PanelTabsTrigger>
+                            <PanelTabsTrigger value="seo">SEO</PanelTabsTrigger>
+                            <PanelTabsTrigger value="social">Social</PanelTabsTrigger>
+                            <PanelTabsTrigger value="schema">Schema</PanelTabsTrigger>
+                        </PanelTabsList>
+
+                        <PanelTabsContent value="content" className="flex flex-col gap-6">
+                            <Field data-invalid={form.invalid('content') || undefined}>
+                                <FieldLabel htmlFor="content">Content</FieldLabel>
+                                <AsteroNote
+                                    id="content"
+                                    value={form.data.content}
+                                    onChange={(value) => form.setField('content', value)}
+                                    onBlur={() => form.touch('content')}
+                                    placeholder="Write the full post content"
+                                    invalid={form.invalid('content') || undefined}
                                 />
-                                <FieldError>{form.error('title')}</FieldError>
+                                <FieldError>{form.error('content')}</FieldError>
                             </Field>
 
-                            <Tabs defaultValue="content" size="comfortable" className="gap-4">
-                                <TabsList variant="line">
-                                    <TabsTrigger value="content">Content</TabsTrigger>
-                                    <TabsTrigger value="seo">SEO</TabsTrigger>
-                                    <TabsTrigger value="social">Social</TabsTrigger>
-                                    <TabsTrigger value="schema">Schema</TabsTrigger>
-                                </TabsList>
+                            <Field data-invalid={form.invalid('excerpt') || undefined}>
+                                <FieldLabel htmlFor="excerpt">Excerpt</FieldLabel>
+                                <Textarea
+                                    id="excerpt"
+                                    rows={4}
+                                    value={form.data.excerpt}
+                                    onChange={(event) =>
+                                        form.setField('excerpt', event.target.value)
+                                    }
+                                    onBlur={() => form.touch('excerpt')}
+                                    aria-invalid={form.invalid('excerpt') || undefined}
+                                    placeholder="Enter a short excerpt"
+                                />
+                                <FieldDescription>
+                                    Used in listings, previews, and search snippets.
+                                </FieldDescription>
+                                <FieldError>{form.error('excerpt')}</FieldError>
+                            </Field>
 
-                                <TabsContent value="content" className="flex flex-col gap-6">
-                                    <Field data-invalid={form.invalid('content') || undefined}>
-                                        <FieldLabel htmlFor="content">Content</FieldLabel>
-                                        <AsteroNote
-                                            id="content"
-                                            value={form.data.content}
-                                            onChange={(value) =>
-                                                form.setField('content', value)
-                                            }
-                                            onBlur={() => form.touch('content')}
-                                            placeholder="Write the full post content"
-                                            invalid={form.invalid('content') || undefined}
-                                        />
-                                        <FieldError>{form.error('content')}</FieldError>
-                                    </Field>
+                            {post ? (
+                                <div className="text-sm text-muted-foreground">
+                                    Last updated {post.updated_at_human ?? 'recently'}
+                                    {post.updated_at_formatted
+                                        ? ` (${post.updated_at_formatted})`
+                                        : ''}
+                                </div>
+                            ) : null}
+                        </PanelTabsContent>
 
-                                    <Field data-invalid={form.invalid('excerpt') || undefined}>
-                                        <FieldLabel htmlFor="excerpt">Excerpt</FieldLabel>
-                                        <Textarea
-                                            id="excerpt"
-                                            rows={4}
-                                            value={form.data.excerpt}
-                                            onChange={(event) =>
-                                                form.setField('excerpt', event.target.value)
-                                            }
-                                            onBlur={() => form.touch('excerpt')}
-                                            aria-invalid={
-                                                form.invalid('excerpt') || undefined
-                                            }
-                                            placeholder="Enter a short excerpt"
-                                        />
-                                        <FieldDescription>
-                                            Used in listings, previews, and search snippets.
-                                        </FieldDescription>
-                                        <FieldError>{form.error('excerpt')}</FieldError>
-                                    </Field>
+                        <PanelTabsContent value="seo" className="flex flex-col gap-6">
+                            <Field data-invalid={form.invalid('meta_title') || undefined}>
+                                <FieldLabel htmlFor="meta_title">Meta title</FieldLabel>
+                                <Input
+                                    id="meta_title"
+                                    value={form.data.meta_title}
+                                    onChange={(event) =>
+                                        form.setField('meta_title', event.target.value)
+                                    }
+                                    onBlur={() => form.touch('meta_title')}
+                                    aria-invalid={form.invalid('meta_title') || undefined}
+                                    placeholder="Enter meta title"
+                                />
+                                <FieldDescription>
+                                    Recommended length: 50–60 characters.
+                                </FieldDescription>
+                                <FieldError>{form.error('meta_title')}</FieldError>
+                            </Field>
 
-                                    {post ? (
-                                        <div className="text-sm text-muted-foreground">
-                                            Last updated {post.updated_at_human ?? 'recently'}
-                                            {post.updated_at_formatted
-                                                ? ` (${post.updated_at_formatted})`
-                                                : ''}
-                                        </div>
-                                    ) : null}
-                                </TabsContent>
+                            <Field data-invalid={form.invalid('meta_description') || undefined}>
+                                <FieldLabel htmlFor="meta_description">
+                                    Meta description
+                                </FieldLabel>
+                                <Textarea
+                                    id="meta_description"
+                                    rows={4}
+                                    value={form.data.meta_description}
+                                    onChange={(event) =>
+                                        form.setField('meta_description', event.target.value)
+                                    }
+                                    onBlur={() => form.touch('meta_description')}
+                                    aria-invalid={
+                                        form.invalid('meta_description') || undefined
+                                    }
+                                    placeholder="Enter meta description"
+                                />
+                                <FieldError>{form.error('meta_description')}</FieldError>
+                            </Field>
 
-                                <TabsContent value="seo" className="flex flex-col gap-6">
-                                    <Field data-invalid={form.invalid('meta_title') || undefined}>
-                                        <FieldLabel htmlFor="meta_title">Meta title</FieldLabel>
-                                        <Input
-                                            id="meta_title"
-                                            value={form.data.meta_title}
-                                            onChange={(event) =>
-                                                form.setField('meta_title', event.target.value)
-                                            }
-                                            onBlur={() => form.touch('meta_title')}
-                                            aria-invalid={
-                                                form.invalid('meta_title') || undefined
-                                            }
-                                            placeholder="Enter meta title"
-                                        />
-                                        <FieldDescription>
-                                            Recommended length: 50–60 characters.
-                                        </FieldDescription>
-                                        <FieldError>{form.error('meta_title')}</FieldError>
-                                    </Field>
+                            <Field data-invalid={form.invalid('meta_robots') || undefined}>
+                                <FieldLabel htmlFor="meta_robots">Meta robots</FieldLabel>
+                                <PostSingleSelectCombobox
+                                    id="meta_robots"
+                                    value={form.data.meta_robots}
+                                    options={metaRobotsSelectOptions}
+                                    onValueChange={(value) => form.setField('meta_robots', value)}
+                                    onBlur={() => form.touch('meta_robots')}
+                                    placeholder="Select meta robots"
+                                    invalid={form.invalid('meta_robots') || undefined}
+                                />
+                                <FieldError>{form.error('meta_robots')}</FieldError>
+                            </Field>
+                        </PanelTabsContent>
 
-                                    <Field
-                                        data-invalid={
-                                            form.invalid('meta_description') || undefined
-                                        }
-                                    >
-                                        <FieldLabel htmlFor="meta_description">
-                                            Meta description
-                                        </FieldLabel>
-                                        <Textarea
-                                            id="meta_description"
-                                            rows={4}
-                                            value={form.data.meta_description}
-                                            onChange={(event) =>
-                                                form.setField(
-                                                    'meta_description',
-                                                    event.target.value,
-                                                )
-                                            }
-                                            onBlur={() =>
-                                                form.touch('meta_description')
-                                            }
-                                            aria-invalid={
-                                                form.invalid('meta_description') ||
-                                                undefined
-                                            }
-                                            placeholder="Enter meta description"
-                                        />
-                                        <FieldError>
-                                            {form.error('meta_description')}
-                                        </FieldError>
-                                    </Field>
+                        <PanelTabsContent value="social" className="flex flex-col gap-6">
+                            <Field data-invalid={form.invalid('og_title') || undefined}>
+                                <FieldLabel htmlFor="og_title">Open Graph title</FieldLabel>
+                                <Input
+                                    id="og_title"
+                                    value={form.data.og_title}
+                                    onChange={(event) =>
+                                        form.setField('og_title', event.target.value)
+                                    }
+                                    onBlur={() => form.touch('og_title')}
+                                    aria-invalid={form.invalid('og_title') || undefined}
+                                    placeholder="Enter Open Graph title"
+                                />
+                                <FieldError>{form.error('og_title')}</FieldError>
+                            </Field>
 
-                                    <Field data-invalid={form.invalid('meta_robots') || undefined}>
-                                        <FieldLabel htmlFor="meta_robots">Meta robots</FieldLabel>
-                                        <NativeSelect
-                                            id="meta_robots"
-                                            className="w-full"
-                                            value={form.data.meta_robots}
-                                            onChange={(event) =>
-                                                form.setField('meta_robots', event.target.value)
-                                            }
-                                            onBlur={() => form.touch('meta_robots')}
-                                            aria-invalid={
-                                                form.invalid('meta_robots') || undefined
-                                            }
-                                        >
-                                            {metaRobotsOptions.map((option) => (
-                                                <NativeSelectOption
-                                                    key={String(option.value)}
-                                                    value={String(option.value)}
-                                                >
-                                                    {option.label}
-                                                </NativeSelectOption>
-                                            ))}
-                                        </NativeSelect>
-                                        <FieldError>{form.error('meta_robots')}</FieldError>
-                                    </Field>
-                                </TabsContent>
+                            <Field data-invalid={form.invalid('og_description') || undefined}>
+                                <FieldLabel htmlFor="og_description">
+                                    Open Graph description
+                                </FieldLabel>
+                                <Textarea
+                                    id="og_description"
+                                    rows={4}
+                                    value={form.data.og_description}
+                                    onChange={(event) =>
+                                        form.setField('og_description', event.target.value)
+                                    }
+                                    onBlur={() => form.touch('og_description')}
+                                    aria-invalid={form.invalid('og_description') || undefined}
+                                    placeholder="Enter Open Graph description"
+                                />
+                                <FieldError>{form.error('og_description')}</FieldError>
+                            </Field>
 
-                                <TabsContent value="social" className="flex flex-col gap-6">
-                                    <Field data-invalid={form.invalid('og_title') || undefined}>
-                                        <FieldLabel htmlFor="og_title">
-                                            Open Graph title
-                                        </FieldLabel>
-                                        <Input
-                                            id="og_title"
-                                            value={form.data.og_title}
-                                            onChange={(event) =>
-                                                form.setField('og_title', event.target.value)
-                                            }
-                                            onBlur={() => form.touch('og_title')}
-                                            aria-invalid={
-                                                form.invalid('og_title') || undefined
-                                            }
-                                            placeholder="Enter Open Graph title"
-                                        />
-                                        <FieldError>{form.error('og_title')}</FieldError>
-                                    </Field>
+                            <Field data-invalid={form.invalid('og_image') || undefined}>
+                                <FieldLabel htmlFor="og_image">Open Graph image</FieldLabel>
+                                <Input
+                                    id="og_image"
+                                    type="url"
+                                    value={form.data.og_image}
+                                    onChange={(event) =>
+                                        form.setField('og_image', event.target.value)
+                                    }
+                                    onBlur={() => form.touch('og_image')}
+                                    aria-invalid={form.invalid('og_image') || undefined}
+                                    placeholder="https://example.com/social-image.jpg"
+                                />
+                                <FieldDescription>
+                                    Paste an image URL or choose one from the media library.
+                                </FieldDescription>
+                                <FieldError>{form.error('og_image')}</FieldError>
+                            </Field>
 
-                                    <Field data-invalid={form.invalid('og_description') || undefined}>
-                                        <FieldLabel htmlFor="og_description">
-                                            Open Graph description
-                                        </FieldLabel>
-                                        <Textarea
-                                            id="og_description"
-                                            rows={4}
-                                            value={form.data.og_description}
-                                            onChange={(event) =>
-                                                form.setField(
-                                                    'og_description',
-                                                    event.target.value,
-                                                )
-                                            }
-                                            onBlur={() => form.touch('og_description')}
-                                            aria-invalid={
-                                                form.invalid('og_description') || undefined
-                                            }
-                                            placeholder="Enter Open Graph description"
-                                        />
-                                        <FieldError>
-                                            {form.error('og_description')}
-                                        </FieldError>
-                                    </Field>
+                            <Field data-invalid={form.invalid('og_url') || undefined}>
+                                <FieldLabel htmlFor="og_url">Open Graph URL</FieldLabel>
+                                <Input
+                                    id="og_url"
+                                    type="url"
+                                    value={form.data.og_url}
+                                    onChange={(event) =>
+                                        form.setField('og_url', event.target.value)
+                                    }
+                                    onBlur={() => form.touch('og_url')}
+                                    aria-invalid={form.invalid('og_url') || undefined}
+                                    placeholder="https://example.com/your-post"
+                                />
+                                <FieldError>{form.error('og_url')}</FieldError>
+                            </Field>
+                        </PanelTabsContent>
 
-                                    <Field data-invalid={form.invalid('og_image') || undefined}>
-                                        <FieldLabel htmlFor="og_image">Open Graph image</FieldLabel>
-                                        <Input
-                                            id="og_image"
-                                            type="url"
-                                            value={form.data.og_image}
-                                            onChange={(event) =>
-                                                form.setField('og_image', event.target.value)
-                                            }
-                                            onBlur={() => form.touch('og_image')}
-                                            aria-invalid={
-                                                form.invalid('og_image') || undefined
-                                            }
-                                            placeholder="https://example.com/social-image.jpg"
-                                        />
-                                        <FieldDescription>
-                                            Paste an image URL or choose one from the media library.
-                                        </FieldDescription>
-                                        <FieldError>{form.error('og_image')}</FieldError>
-                                    </Field>
-
-                                    <Field data-invalid={form.invalid('og_url') || undefined}>
-                                        <FieldLabel htmlFor="og_url">Open Graph URL</FieldLabel>
-                                        <Input
-                                            id="og_url"
-                                            type="url"
-                                            value={form.data.og_url}
-                                            onChange={(event) =>
-                                                form.setField('og_url', event.target.value)
-                                            }
-                                            onBlur={() => form.touch('og_url')}
-                                            aria-invalid={
-                                                form.invalid('og_url') || undefined
-                                            }
-                                            placeholder="https://example.com/your-post"
-                                        />
-                                        <FieldError>{form.error('og_url')}</FieldError>
-                                    </Field>
-                                </TabsContent>
-
-                                <TabsContent value="schema" className="flex flex-col gap-4">
-                                    <Field data-invalid={form.invalid('schema') || undefined}>
-                                        <FieldLabel htmlFor="schema">Schema markup</FieldLabel>
-                                        <MonacoEditor
-                                            name="schema"
-                                            language="html"
-                                            height={360}
-                                            value={form.data.schema}
-                                            onChange={(value) =>
-                                                form.setField('schema', value)
-                                            }
-                                            onBlur={() => form.touch('schema')}
-                                            placeholder="Add custom schema markup"
-                                        />
-                                        <FieldDescription>
-                                            Optional structured data for search engines.
-                                        </FieldDescription>
-                                        <FieldError>{form.error('schema')}</FieldError>
-                                    </Field>
-                                </TabsContent>
-                            </Tabs>
-                        </CardContent>
-                    </Card>
+                        <PanelTabsContent value="schema" className="flex flex-col gap-4">
+                            <Field data-invalid={form.invalid('schema') || undefined}>
+                                <FieldLabel htmlFor="schema">Schema markup</FieldLabel>
+                                <MonacoEditor
+                                    name="schema"
+                                    language="html"
+                                    height={360}
+                                    value={form.data.schema}
+                                    onChange={(value) => form.setField('schema', value)}
+                                    onBlur={() => form.touch('schema')}
+                                    placeholder="Add custom schema markup"
+                                />
+                                <FieldDescription>
+                                    Optional structured data for search engines.
+                                </FieldDescription>
+                                <FieldError>{form.error('schema')}</FieldError>
+                            </Field>
+                        </PanelTabsContent>
+                    </PanelTabs>
                 </div>
 
                 <div className="flex flex-col gap-4">
@@ -576,12 +676,12 @@ export default function PostForm({
                             <FieldGroup className="md:grid md:grid-cols-2 md:gap-4">
                                 <Field data-invalid={form.invalid('status') || undefined}>
                                     <RequiredLabel htmlFor="status">Status</RequiredLabel>
-                                    <NativeSelect
+                                    <PostSingleSelectCombobox
                                         id="status"
-                                        className="w-full"
                                         value={form.data.status}
-                                        onChange={(event) => {
-                                            const nextStatus = event.target.value;
+                                        options={statusSelectOptions}
+                                        onValueChange={(value) => {
+                                            const nextStatus = value;
                                             form.setField('status', nextStatus);
 
                                             if (
@@ -592,30 +692,20 @@ export default function PostForm({
                                             }
                                         }}
                                         onBlur={() => form.touch('status')}
-                                        aria-invalid={
-                                            form.invalid('status') || undefined
-                                        }
-                                    >
-                                        {statusOptions.map((option) => (
-                                            <NativeSelectOption
-                                                key={String(option.value)}
-                                                value={String(option.value)}
-                                            >
-                                                {option.label}
-                                            </NativeSelectOption>
-                                        ))}
-                                    </NativeSelect>
+                                        placeholder="Select status"
+                                        invalid={form.invalid('status') || undefined}
+                                    />
                                     <FieldError>{form.error('status')}</FieldError>
                                 </Field>
 
                                 <Field data-invalid={form.invalid('visibility') || undefined}>
                                     <FieldLabel htmlFor="visibility">Visibility</FieldLabel>
-                                    <NativeSelect
+                                    <PostSingleSelectCombobox
                                         id="visibility"
-                                        className="w-full"
                                         value={form.data.visibility}
-                                        onChange={(event) => {
-                                            const nextVisibility = event.target.value;
+                                        options={visibilitySelectOptions}
+                                        onValueChange={(value) => {
+                                            const nextVisibility = value;
                                             form.setField('visibility', nextVisibility);
 
                                             if (nextVisibility !== 'password') {
@@ -624,19 +714,9 @@ export default function PostForm({
                                             }
                                         }}
                                         onBlur={() => form.touch('visibility')}
-                                        aria-invalid={
-                                            form.invalid('visibility') || undefined
-                                        }
-                                    >
-                                        {visibilityOptions.map((option) => (
-                                            <NativeSelectOption
-                                                key={String(option.value)}
-                                                value={String(option.value)}
-                                            >
-                                                {option.label}
-                                            </NativeSelectOption>
-                                        ))}
-                                    </NativeSelect>
+                                        placeholder="Select visibility"
+                                        invalid={form.invalid('visibility') || undefined}
+                                    />
                                     <FieldError>{form.error('visibility')}</FieldError>
                                 </Field>
                             </FieldGroup>
@@ -665,115 +745,45 @@ export default function PostForm({
                                 </Field>
                             ) : null}
 
-                            <FieldSet>
-                                <FieldLegend>Categories</FieldLegend>
+                            <Field data-invalid={form.invalid('categories') || undefined}>
+                                <RequiredLabel htmlFor="categories">Categories</RequiredLabel>
                                 <FieldDescription>
                                     Select at least one category for this post.
                                 </FieldDescription>
-                                <ScrollArea className="max-h-56 rounded-lg border">
-                                    <div className="flex flex-col gap-3 p-3">
-                                        {categoryOptions.map((option) => {
-                                            const value = normalizeOptionValue(option.value);
-                                            const checked = form.data.categories.includes(value);
-
-                                            return (
-                                                <label
-                                                    key={`category-${value}`}
-                                                    className={cn(
-                                                        'flex items-start gap-3 rounded-lg border p-3 text-sm',
-                                                        checked
-                                                            ? 'border-primary/30 bg-primary/5'
-                                                            : 'border-border',
-                                                        option.disabled
-                                                            ? 'opacity-60'
-                                                            : 'cursor-pointer',
-                                                    )}
-                                                >
-                                                    <Checkbox
-                                                        checked={checked}
-                                                        disabled={option.disabled}
-                                                        onCheckedChange={() =>
-                                                            toggleSelection(
-                                                                'categories',
-                                                                value,
-                                                            )
-                                                        }
-                                                        aria-invalid={
-                                                            form.invalid('categories') ||
-                                                            undefined
-                                                        }
-                                                    />
-                                                    <div className="flex flex-col gap-1">
-                                                        <span className="font-medium">
-                                                            {option.label}
-                                                        </span>
-                                                        {option.disabled ? (
-                                                            <span className="text-xs text-muted-foreground">
-                                                                Unpublished categories stay selected but
-                                                                cannot be newly assigned.
-                                                            </span>
-                                                        ) : null}
-                                                    </div>
-                                                </label>
-                                            );
-                                        })}
-                                    </div>
-                                </ScrollArea>
+                                <MultiSelectCombobox
+                                    id="categories"
+                                    value={form.data.categories}
+                                    options={categorySelectOptions}
+                                    onValueChange={(value) =>
+                                        form.setField('categories', value)
+                                    }
+                                    onBlur={() => form.touch('categories')}
+                                    placeholder="Select categories"
+                                    emptyMessage="No categories found."
+                                    size="comfortable"
+                                    aria-invalid={form.invalid('categories') || undefined}
+                                />
                                 <FieldError>{getArrayFieldError('categories')}</FieldError>
-                            </FieldSet>
+                            </Field>
 
-                            <FieldSet>
-                                <FieldLegend>Tags</FieldLegend>
+                            <Field data-invalid={form.invalid('tags') || undefined}>
+                                <FieldLabel htmlFor="tags">Tags</FieldLabel>
                                 <FieldDescription>
                                     Tags are optional and help organize related content.
                                 </FieldDescription>
-                                <ScrollArea className="max-h-56 rounded-lg border">
-                                    <div className="flex flex-col gap-3 p-3">
-                                        {tagOptions.map((option) => {
-                                            const value = normalizeOptionValue(option.value);
-                                            const checked = form.data.tags.includes(value);
-
-                                            return (
-                                                <label
-                                                    key={`tag-${value}`}
-                                                    className={cn(
-                                                        'flex items-start gap-3 rounded-lg border p-3 text-sm',
-                                                        checked
-                                                            ? 'border-primary/30 bg-primary/5'
-                                                            : 'border-border',
-                                                        option.disabled
-                                                            ? 'opacity-60'
-                                                            : 'cursor-pointer',
-                                                    )}
-                                                >
-                                                    <Checkbox
-                                                        checked={checked}
-                                                        disabled={option.disabled}
-                                                        onCheckedChange={() =>
-                                                            toggleSelection('tags', value)
-                                                        }
-                                                        aria-invalid={
-                                                            form.invalid('tags') || undefined
-                                                        }
-                                                    />
-                                                    <div className="flex flex-col gap-1">
-                                                        <span className="font-medium">
-                                                            {option.label}
-                                                        </span>
-                                                        {option.disabled ? (
-                                                            <span className="text-xs text-muted-foreground">
-                                                                Unpublished tags stay selected but cannot
-                                                                be newly assigned.
-                                                            </span>
-                                                        ) : null}
-                                                    </div>
-                                                </label>
-                                            );
-                                        })}
-                                    </div>
-                                </ScrollArea>
+                                <MultiSelectCombobox
+                                    id="tags"
+                                    value={form.data.tags}
+                                    options={tagSelectOptions}
+                                    onValueChange={(value) => form.setField('tags', value)}
+                                    onBlur={() => form.touch('tags')}
+                                    placeholder="Select tags"
+                                    emptyMessage="No tags found."
+                                    size="comfortable"
+                                    aria-invalid={form.invalid('tags') || undefined}
+                                />
                                 <FieldError>{getArrayFieldError('tags')}</FieldError>
-                            </FieldSet>
+                            </Field>
                         </CardContent>
                     </Card>
 
@@ -842,63 +852,40 @@ export default function PostForm({
 
                             <Field data-invalid={form.invalid('author_id') || undefined}>
                                 <RequiredLabel htmlFor="author_id">Author</RequiredLabel>
-                                <NativeSelect
+                                <PostSingleSelectCombobox
                                     id="author_id"
-                                    className="w-full"
                                     value={String(form.data.author_id)}
-                                    onChange={(event) =>
+                                    options={authorSelectOptions}
+                                    onValueChange={(value) =>
                                         form.setField(
                                             'author_id',
-                                            event.target.value === ''
+                                            value === ''
                                                 ? ''
-                                                : Number.parseInt(
-                                                      event.target.value,
-                                                      10,
-                                                  ),
+                                                : Number.parseInt(String(value), 10),
                                         )
                                     }
                                     onBlur={() => form.touch('author_id')}
-                                    aria-invalid={form.invalid('author_id') || undefined}
-                                >
-                                    <NativeSelectOption value="">
-                                        Select author
-                                    </NativeSelectOption>
-                                    {authorOptions.map((option) => (
-                                        <NativeSelectOption
-                                            key={String(option.value)}
-                                            value={String(option.value)}
-                                        >
-                                            {option.label}
-                                        </NativeSelectOption>
-                                    ))}
-                                </NativeSelect>
+                                    placeholder="Select author"
+                                    searchable
+                                    searchPlaceholder="Search authors..."
+                                    emptyMessage="No author found."
+                                    invalid={form.invalid('author_id') || undefined}
+                                />
                                 <FieldError>{form.error('author_id')}</FieldError>
                             </Field>
 
                             {showTemplateField ? (
                                 <Field data-invalid={form.invalid('template') || undefined}>
                                     <FieldLabel htmlFor="template">Template</FieldLabel>
-                                    <NativeSelect
+                                    <PostSingleSelectCombobox
                                         id="template"
-                                        className="w-full"
                                         value={form.data.template}
-                                        onChange={(event) =>
-                                            form.setField('template', event.target.value)
-                                        }
+                                        options={templateSelectOptions}
+                                        onValueChange={(value) => form.setField('template', value)}
                                         onBlur={() => form.touch('template')}
-                                        aria-invalid={
-                                            form.invalid('template') || undefined
-                                        }
-                                    >
-                                        {templateOptions.map((option) => (
-                                            <NativeSelectOption
-                                                key={String(option.value)}
-                                                value={String(option.value)}
-                                            >
-                                                {option.label}
-                                            </NativeSelectOption>
-                                        ))}
-                                    </NativeSelect>
+                                        placeholder="Select template"
+                                        invalid={form.invalid('template') || undefined}
+                                    />
                                     <FieldDescription>
                                         Choose a different presentation template for this post.
                                     </FieldDescription>

@@ -76,6 +76,10 @@ class PostCrudMigrationTest extends TestCase
                 ->has('categoryOptions')
                 ->has('tagOptions')
                 ->has('authorOptions')
+                ->has('statusOptions')
+                ->has('visibilityOptions')
+                ->has('metaRobotsOptions')
+                ->has('templateOptions')
                 ->where('categoryOptions.0.value', $category->id)
                 ->where('tagOptions.0.value', $tag->id)
             );
@@ -98,6 +102,20 @@ class PostCrudMigrationTest extends TestCase
                 ->where('post.title', $post->title)
                 ->where('initialValues.title', $post->title)
                 ->where('initialValues.slug', $post->slug)
+                ->where('initialValues.content', $post->content)
+                ->where('initialValues.excerpt', $post->excerpt)
+                ->where('initialValues.meta_title', $post->meta_title)
+                ->where('initialValues.meta_description', $post->meta_description)
+                ->where('initialValues.og_title', $post->og_title)
+                ->where('initialValues.schema', $post->schema)
+                ->has('categoryOptions')
+                ->has('tagOptions')
+                ->has('authorOptions')
+                ->where('authorOptions.0.value', $this->admin->id)
+                ->has('statusOptions')
+                ->has('visibilityOptions')
+                ->has('metaRobotsOptions')
+                ->has('templateOptions')
                 ->where('initialValues.categories.0', $category->id)
                 ->where('initialValues.tags.0', $tag->id)
                 ->where('initialValues.author_id', $this->admin->id)
@@ -222,6 +240,10 @@ class PostCrudMigrationTest extends TestCase
             'updated_by' => $this->admin->id,
             'content' => '<p>Original content</p>',
             'excerpt' => 'Original excerpt',
+            'meta_title' => 'Original meta title',
+            'meta_description' => 'Original meta description',
+            'og_title' => 'Original OG title',
+            'schema' => '<script type="application/ld+json">{"@type":"Article"}</script>',
         ]);
     }
 }

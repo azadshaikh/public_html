@@ -210,34 +210,54 @@ export type PageFormValues = {
     slug: string;
     content: string;
     excerpt: string;
+    feature_image: number | '';
     status: string;
     visibility: string;
-    featured_image: File | null;
-    template: string;
+    post_password: string;
+    password_hint: string;
+    author_id: number | '';
+    published_at: string;
     parent_id: string;
+    template: string;
     meta_title: string;
     meta_description: string;
     meta_robots: string;
-    published_at: string;
+    og_title: string;
+    og_description: string;
+    og_image: string;
+    og_url: string;
+    schema: string;
 };
 
 export type PageFormOptions = {
     initialValues?: PageFormValues;
     parentPageOptions: CmsOption[];
+    authorOptions: CmsOption[];
     metaRobotsOptions: CmsOption[];
     statusOptions: CmsOption[];
     visibilityOptions: CmsOption[];
     templateOptions: CmsOption[];
     preSlug: string;
+    baseUrl: string;
     defaults: Record<string, string>;
-};
+} & MediaPickerPageProps;
 
 export type PageIndexPageProps = ScaffoldIndexPageProps<PageListItem>;
 
 export type PageCreatePageProps = PageFormOptions;
 
+export type PageEditDetail = {
+    id: number;
+    title: string;
+    permalink_url: string | null;
+    featured_image_url: string | null;
+    is_password_protected: boolean;
+    updated_at_formatted: string;
+    updated_at_human: string | null;
+};
+
 export type PageEditPageProps = PageFormOptions & {
-    page: PageListItem & Record<string, unknown>;
+    page: PageEditDetail;
 };
 
 // ================================================================
@@ -496,27 +516,45 @@ export type DesignBlockListItem = {
 export type DesignBlockFormValues = {
     title: string;
     slug: string;
-    content: string;
-    status: string;
+    description: string;
+    html: string;
+    css: string;
+    scripts: string;
+    preview_image_url: string;
     design_type: string;
     block_type: string;
     design_system: string;
     category_id: string;
-    version: number;
+    status: string;
 };
 
 export type DesignBlockFormOptions = {
     initialValues?: DesignBlockFormValues;
     statusOptions: CmsOption[];
+    designTypeOptions: CmsOption[];
+    blockTypeOptions: CmsOption[];
+    categoryOptions: CmsOption[];
+    designSystemOptions: CmsOption[];
     defaults: Record<string, string | number>;
 };
 
-export type DesignBlockIndexPageProps = ScaffoldIndexPageProps<DesignBlockListItem>;
+export type DesignBlockEditDetail = {
+    id: number;
+    title: string;
+    updated_at_formatted: string;
+    updated_at_human: string | null;
+};
+
+export type DesignBlockIndexPageProps = ScaffoldIndexPageProps<DesignBlockListItem> & {
+    designTypeOptions: CmsOption[];
+    categoryOptions: CmsOption[];
+    designSystemOptions: CmsOption[];
+};
 
 export type DesignBlockCreatePageProps = DesignBlockFormOptions;
 
 export type DesignBlockEditPageProps = DesignBlockFormOptions & {
-    designBlock: DesignBlockListItem & Record<string, unknown>;
+    designBlock: DesignBlockEditDetail;
 };
 
 // ================================================================

@@ -29,6 +29,7 @@ class PageRequest extends ScaffoldRequest
             'slug' => $this->getSlugRules($id),
 
             'content' => ['nullable', 'string'],
+            'excerpt' => ['nullable', 'string', 'max:500'],
             'feature_image' => ['nullable', 'integer'],
             'status' => ['required', 'string', 'in:'.implode(',', array_keys(config('cms.post_status', [])))],
             'visibility' => ['nullable', 'string', 'in:public,private,password'],
@@ -79,6 +80,11 @@ class PageRequest extends ScaffoldRequest
             'meta_title' => ['nullable', 'string', 'max:255'],
             'meta_description' => ['nullable', 'string', 'max:500'],
             'meta_robots' => ['nullable', 'string'],
+            'og_title' => ['nullable', 'string', 'max:255'],
+            'og_description' => ['nullable', 'string', 'max:500'],
+            'og_image' => ['nullable', 'string', 'max:500'],
+            'og_url' => ['nullable', 'string', 'max:500'],
+            'schema' => ['nullable', 'string'],
             'template' => ['nullable', 'string', 'max:100'],
         ];
     }

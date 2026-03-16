@@ -11,6 +11,7 @@ import {
 import { useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import { AsteroNote } from '@/components/asteronote/asteronote';
+import { MonacoEditor } from '@/components/code-editor/monaco-editor';
 import { FormErrorSummary } from '@/components/forms/form-error-summary';
 import { MediaPickerField } from '@/components/media/media-picker-field';
 import { Button } from '@/components/ui/button';
@@ -47,32 +48,46 @@ import { formValidators } from '@/lib/forms';
 import type {
     CmsOption,
     MediaPickerPageProps,
-    TagEditDetail,
-    TagFormValues,
+    PageEditDetail,
+    PageFormValues,
 } from '../../types/cms';
 
-type TagFormProps = {
+type PageFormProps = {
     mode: 'create' | 'edit';
-    initialValues?: TagFormValues;
-    statusOptions: CmsOption[];
+    initialValues?: PageFormValues;
+    parentPageOptions: CmsOption[];
+    authorOptions: CmsOption[];
     metaRobotsOptions: CmsOption[];
+    statusOptions: CmsOption[];
+    visibilityOptions: CmsOption[];
     templateOptions: CmsOption[];
     preSlug: string;
     baseUrl: string;
-    tag?: TagEditDetail;
+    page?: PageEditDetail;
 } & MediaPickerPageProps;
 
-const emptyValues: TagFormValues = {
+const emptyValues: PageFormValues = {
     title: '',
     slug: '',
     content: '',
     excerpt: '',
     feature_image: '',
     status: 'draft',
+    visibility: 'public',
+    post_password: '',
+    password_hint: '',
+    author_id: '',
+    published_at: '',
+    parent_id: '',
     template: '',
     meta_title: '',
     meta_description: '',
     meta_robots: '',
+    og_title: '',
+    og_description: '',
+    og_image: '',
+    og_url: '',
+    schema: '',
 };
 
 function slugify(value: string): string {
@@ -113,27 +128,31 @@ function RequiredLabel({
     );
 }
 
-export default function TagForm({
+export default function PageForm({
     mode,
     initialValues,
-    statusOptions,
+    parentPageOptions,
+    authorOptions,
     metaRobotsOptions,
+    statusOptions,
+    visibilityOptions,
     templateOptions,
     preSlug,
     baseUrl,
-    tag,
+    page,
     pickerMedia,
     pickerFilters,
     uploadSettings,
-}: TagFormProps) {
-    const form = useAppForm<TagFormValues>({
+}: PageFormProps) {
+    const form = useAppForm<PageFormValues>({
         defaults: initialValues || emptyValues,
         rememberKey:
-            mode === 'create' ? 'cms.tags.create.form' : `cms.tags.edit.${tag?.id}`,
+            mode === 'create' ? 'cms.pages.create.form' : `cms.pages.edit.${page?.id}`,
         dirtyGuard: { enabled: true },
         rules: {
             title: [formValidators.required('Title')],
             status: [formValidators.required('Status')],
+            author_id: [formValidators.required('Author')],
         },
     });
     const { data, setField } = form;
@@ -159,15 +178,19 @@ export default function TagForm({
         [baseUrl, form.data.slug, preSlug],
     );
 
+    const showPublishAt =
+        form.data.status === 'published' || form.data.status === 'scheduled';
+    const showPasswordFields = form.data.visibility === 'password';
+    const showParentPageField = parentPageOptions.length > 1;
     const showTemplateField = templateOptions.length > 1;
 
     const submitMethod = mode === 'create' ? 'post' : 'put';
     const submitUrl =
         mode === 'create'
-            ? route('cms.tags.store')
-            : route('cms.tags.update', tag!.id);
+            ? route('cms.pages.store')
+            : route('cms.pages.update', page!.id);
 
-    const submitLabel = mode === 'create' ? 'Create Tag' : 'Save Changes';
+    const submitLabel = mode === 'create' ? 'Create Page' : 'Save Changes';
 
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -176,25 +199,25 @@ export default function TagForm({
             preserveScroll: true,
             setDefaultsOnSuccess: mode === 'edit',
             successToast: {
-                title: mode === 'create' ? 'Tag created' : 'Tag updated',
+                title: mode === 'create' ? 'Page created' : 'Page updated',
                 description:
                     mode === 'create'
-                        ? 'The tag has been created successfully.'
-                        : 'The tag has been updated successfully.',
+                        ? 'The page has been created successfully.'
+                        : 'The page has been updated successfully.',
             },
         });
     };
 
     const handleDelete = () => {
-        if (!tag) {
+        if (!page) {
             return;
         }
 
-        if (!window.confirm(`Move "${tag.title}" to trash?`)) {
+        if (!window.confirm(`Move "${page.title}" to trash?`)) {
             return;
         }
 
-        router.delete(route('cms.tags.destroy', tag.id), {
+        router.delete(route('cms.pages.destroy', page.id), {
             preserveScroll: true,
         });
     };
@@ -208,9 +231,10 @@ export default function TagForm({
                 <div className="flex flex-col gap-6">
                     <Card>
                         <CardHeader>
-                            <CardTitle>Tag content</CardTitle>
+                            <CardTitle>Page content</CardTitle>
                             <CardDescription>
-                                Write the description, summary, and SEO metadata for this tag.
+                                Write the main content, summary, and SEO metadata for this
+                                page.
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="flex flex-col gap-6">
@@ -224,7 +248,7 @@ export default function TagForm({
                                     }
                                     onBlur={() => form.touch('title')}
                                     aria-invalid={form.invalid('title') || undefined}
-                                    placeholder="Enter tag title"
+                                    placeholder="Enter page title"
                                 />
                                 <FieldError>{form.error('title')}</FieldError>
                             </Field>
@@ -233,11 +257,13 @@ export default function TagForm({
                                 <TabsList variant="line">
                                     <TabsTrigger value="content">Content</TabsTrigger>
                                     <TabsTrigger value="seo">SEO</TabsTrigger>
+                                    <TabsTrigger value="social">Social</TabsTrigger>
+                                    <TabsTrigger value="schema">Schema</TabsTrigger>
                                 </TabsList>
 
                                 <TabsContent value="content" className="flex flex-col gap-6">
                                     <Field data-invalid={form.invalid('content') || undefined}>
-                                        <FieldLabel htmlFor="content">Description</FieldLabel>
+                                        <FieldLabel htmlFor="content">Content</FieldLabel>
                                         <AsteroNote
                                             id="content"
                                             value={form.data.content}
@@ -245,7 +271,7 @@ export default function TagForm({
                                                 form.setField('content', value)
                                             }
                                             onBlur={() => form.touch('content')}
-                                            placeholder="Write the tag description"
+                                            placeholder="Write the full page content"
                                             invalid={form.invalid('content') || undefined}
                                         />
                                         <FieldError>{form.error('content')}</FieldError>
@@ -272,11 +298,11 @@ export default function TagForm({
                                         <FieldError>{form.error('excerpt')}</FieldError>
                                     </Field>
 
-                                    {tag ? (
+                                    {page ? (
                                         <div className="text-sm text-muted-foreground">
-                                            Last updated {tag.updated_at_human ?? 'recently'}
-                                            {tag.updated_at_formatted
-                                                ? ` (${tag.updated_at_formatted})`
+                                            Last updated {page.updated_at_human ?? 'recently'}
+                                            {page.updated_at_formatted
+                                                ? ` (${page.updated_at_formatted})`
                                                 : ''}
                                         </div>
                                     ) : null}
@@ -361,6 +387,112 @@ export default function TagForm({
                                         <FieldError>{form.error('meta_robots')}</FieldError>
                                     </Field>
                                 </TabsContent>
+
+                                <TabsContent value="social" className="flex flex-col gap-6">
+                                    <Field data-invalid={form.invalid('og_title') || undefined}>
+                                        <FieldLabel htmlFor="og_title">
+                                            Open Graph title
+                                        </FieldLabel>
+                                        <Input
+                                            id="og_title"
+                                            value={form.data.og_title}
+                                            onChange={(event) =>
+                                                form.setField('og_title', event.target.value)
+                                            }
+                                            onBlur={() => form.touch('og_title')}
+                                            aria-invalid={
+                                                form.invalid('og_title') || undefined
+                                            }
+                                            placeholder="Enter Open Graph title"
+                                        />
+                                        <FieldError>{form.error('og_title')}</FieldError>
+                                    </Field>
+
+                                    <Field data-invalid={form.invalid('og_description') || undefined}>
+                                        <FieldLabel htmlFor="og_description">
+                                            Open Graph description
+                                        </FieldLabel>
+                                        <Textarea
+                                            id="og_description"
+                                            rows={4}
+                                            value={form.data.og_description}
+                                            onChange={(event) =>
+                                                form.setField(
+                                                    'og_description',
+                                                    event.target.value,
+                                                )
+                                            }
+                                            onBlur={() => form.touch('og_description')}
+                                            aria-invalid={
+                                                form.invalid('og_description') || undefined
+                                            }
+                                            placeholder="Enter Open Graph description"
+                                        />
+                                        <FieldError>
+                                            {form.error('og_description')}
+                                        </FieldError>
+                                    </Field>
+
+                                    <Field data-invalid={form.invalid('og_image') || undefined}>
+                                        <FieldLabel htmlFor="og_image">Open Graph image</FieldLabel>
+                                        <Input
+                                            id="og_image"
+                                            type="url"
+                                            value={form.data.og_image}
+                                            onChange={(event) =>
+                                                form.setField('og_image', event.target.value)
+                                            }
+                                            onBlur={() => form.touch('og_image')}
+                                            aria-invalid={
+                                                form.invalid('og_image') || undefined
+                                            }
+                                            placeholder="https://example.com/social-image.jpg"
+                                        />
+                                        <FieldDescription>
+                                            Paste an image URL or choose one from the media library.
+                                        </FieldDescription>
+                                        <FieldError>{form.error('og_image')}</FieldError>
+                                    </Field>
+
+                                    <Field data-invalid={form.invalid('og_url') || undefined}>
+                                        <FieldLabel htmlFor="og_url">Open Graph URL</FieldLabel>
+                                        <Input
+                                            id="og_url"
+                                            type="url"
+                                            value={form.data.og_url}
+                                            onChange={(event) =>
+                                                form.setField('og_url', event.target.value)
+                                            }
+                                            onBlur={() => form.touch('og_url')}
+                                            aria-invalid={
+                                                form.invalid('og_url') || undefined
+                                            }
+                                            placeholder="https://example.com/your-page"
+                                        />
+                                        <FieldError>{form.error('og_url')}</FieldError>
+                                    </Field>
+                                </TabsContent>
+
+                                <TabsContent value="schema" className="flex flex-col gap-4">
+                                    <Field data-invalid={form.invalid('schema') || undefined}>
+                                        <FieldLabel htmlFor="schema">Schema markup</FieldLabel>
+                                        <MonacoEditor
+                                            name="schema"
+                                            language="html"
+                                            height={360}
+                                            value={form.data.schema}
+                                            onChange={(value) =>
+                                                form.setField('schema', value)
+                                            }
+                                            onBlur={() => form.touch('schema')}
+                                            placeholder="Add custom schema markup"
+                                        />
+                                        <FieldDescription>
+                                            Optional structured data for search engines.
+                                        </FieldDescription>
+                                        <FieldError>{form.error('schema')}</FieldError>
+                                    </Field>
+                                </TabsContent>
                             </Tabs>
                         </CardContent>
                     </Card>
@@ -377,7 +509,7 @@ export default function TagForm({
                         <CardContent className="flex flex-col gap-4">
                             <MediaPickerField
                                 value={form.data.feature_image || null}
-                                previewUrl={tag?.featured_image_url}
+                                previewUrl={page?.featured_image_url}
                                 onChange={(item) => {
                                     form.setField(
                                         'feature_image',
@@ -395,8 +527,8 @@ export default function TagForm({
                                 uploadSettings={uploadSettings}
                                 pickerAction={
                                     mode === 'create'
-                                        ? route('cms.tags.create')
-                                        : route('cms.tags.edit', tag!.id)
+                                        ? route('cms.pages.create')
+                                        : route('cms.pages.edit', page!.id)
                                 }
                             />
                             <FieldError>{form.error('feature_image')}</FieldError>
@@ -407,23 +539,31 @@ export default function TagForm({
                         <CardHeader>
                             <div className="flex items-center gap-2">
                                 <Settings2Icon className="size-4 text-muted-foreground" />
-                                <CardTitle>Settings</CardTitle>
+                                <CardTitle>Publish settings</CardTitle>
                             </div>
                             <CardDescription>
-                                Control publishing for this tag.
+                                Control publishing, parent page, and visibility.
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="flex flex-col gap-6">
-                            <FieldGroup>
+                            <FieldGroup className="md:grid md:grid-cols-2 md:gap-4">
                                 <Field data-invalid={form.invalid('status') || undefined}>
                                     <RequiredLabel htmlFor="status">Status</RequiredLabel>
                                     <NativeSelect
                                         id="status"
                                         className="w-full"
                                         value={form.data.status}
-                                        onChange={(event) =>
-                                            form.setField('status', event.target.value)
-                                        }
+                                        onChange={(event) => {
+                                            const nextStatus = event.target.value;
+                                            form.setField('status', nextStatus);
+
+                                            if (
+                                                nextStatus !== 'published' &&
+                                                nextStatus !== 'scheduled'
+                                            ) {
+                                                form.setField('published_at', '');
+                                            }
+                                        }}
                                         onBlur={() => form.touch('status')}
                                         aria-invalid={
                                             form.invalid('status') || undefined
@@ -440,7 +580,161 @@ export default function TagForm({
                                     </NativeSelect>
                                     <FieldError>{form.error('status')}</FieldError>
                                 </Field>
+
+                                <Field data-invalid={form.invalid('visibility') || undefined}>
+                                    <FieldLabel htmlFor="visibility">Visibility</FieldLabel>
+                                    <NativeSelect
+                                        id="visibility"
+                                        className="w-full"
+                                        value={form.data.visibility}
+                                        onChange={(event) => {
+                                            const nextVisibility = event.target.value;
+                                            form.setField('visibility', nextVisibility);
+
+                                            if (nextVisibility !== 'password') {
+                                                form.setField('post_password', '');
+                                                form.setField('password_hint', '');
+                                            }
+                                        }}
+                                        onBlur={() => form.touch('visibility')}
+                                        aria-invalid={
+                                            form.invalid('visibility') || undefined
+                                        }
+                                    >
+                                        {visibilityOptions.map((option) => (
+                                            <NativeSelectOption
+                                                key={String(option.value)}
+                                                value={String(option.value)}
+                                            >
+                                                {option.label}
+                                            </NativeSelectOption>
+                                        ))}
+                                    </NativeSelect>
+                                    <FieldError>{form.error('visibility')}</FieldError>
+                                </Field>
                             </FieldGroup>
+
+                            {showParentPageField ? (
+                                <Field data-invalid={form.invalid('parent_id') || undefined}>
+                                    <FieldLabel htmlFor="parent_id">Parent page</FieldLabel>
+                                    <NativeSelect
+                                        id="parent_id"
+                                        className="w-full"
+                                        value={form.data.parent_id}
+                                        onChange={(event) =>
+                                            form.setField('parent_id', event.target.value)
+                                        }
+                                        onBlur={() => form.touch('parent_id')}
+                                        aria-invalid={
+                                            form.invalid('parent_id') || undefined
+                                        }
+                                    >
+                                        {parentPageOptions.map((option) => (
+                                            <NativeSelectOption
+                                                key={String(option.value)}
+                                                value={String(option.value)}
+                                            >
+                                                {option.label}
+                                            </NativeSelectOption>
+                                        ))}
+                                    </NativeSelect>
+                                    <FieldError>{form.error('parent_id')}</FieldError>
+                                </Field>
+                            ) : null}
+
+                            {showPublishAt ? (
+                                <Field data-invalid={form.invalid('published_at') || undefined}>
+                                    <FieldLabel htmlFor="published_at">Publish at</FieldLabel>
+                                    <Input
+                                        id="published_at"
+                                        type="datetime-local"
+                                        value={form.data.published_at}
+                                        onChange={(event) =>
+                                            form.setField('published_at', event.target.value)
+                                        }
+                                        onBlur={() => form.touch('published_at')}
+                                        aria-invalid={
+                                            form.invalid('published_at') || undefined
+                                        }
+                                    />
+                                    <FieldDescription>
+                                        {form.data.status === 'scheduled'
+                                            ? 'Choose a future date and time for scheduling.'
+                                            : 'Choose the publish date and time.'}
+                                    </FieldDescription>
+                                    <FieldError>{form.error('published_at')}</FieldError>
+                                </Field>
+                            ) : null}
+
+                            {showPasswordFields ? (
+                                <>
+                                    <Field
+                                        data-invalid={
+                                            form.invalid('post_password') || undefined
+                                        }
+                                    >
+                                        <FieldLabel htmlFor="post_password">
+                                            Password
+                                        </FieldLabel>
+                                        <Input
+                                            id="post_password"
+                                            type="password"
+                                            value={form.data.post_password}
+                                            onChange={(event) =>
+                                                form.setField(
+                                                    'post_password',
+                                                    event.target.value,
+                                                )
+                                            }
+                                            onBlur={() => form.touch('post_password')}
+                                            aria-invalid={
+                                                form.invalid('post_password') || undefined
+                                            }
+                                            placeholder={
+                                                page?.is_password_protected
+                                                    ? 'Leave blank to keep the current password'
+                                                    : 'Enter password'
+                                            }
+                                        />
+                                        <FieldDescription>
+                                            {page?.is_password_protected
+                                                ? 'Leave blank to keep the current password, or enter a new one to change it.'
+                                                : 'Visitors must enter this password to view the content.'}
+                                        </FieldDescription>
+                                        <FieldError>
+                                            {form.error('post_password')}
+                                        </FieldError>
+                                    </Field>
+
+                                    <Field
+                                        data-invalid={
+                                            form.invalid('password_hint') || undefined
+                                        }
+                                    >
+                                        <FieldLabel htmlFor="password_hint">
+                                            Password hint
+                                        </FieldLabel>
+                                        <Input
+                                            id="password_hint"
+                                            value={form.data.password_hint}
+                                            onChange={(event) =>
+                                                form.setField(
+                                                    'password_hint',
+                                                    event.target.value,
+                                                )
+                                            }
+                                            onBlur={() => form.touch('password_hint')}
+                                            aria-invalid={
+                                                form.invalid('password_hint') || undefined
+                                            }
+                                            placeholder="Optional hint for visitors"
+                                        />
+                                        <FieldError>
+                                            {form.error('password_hint')}
+                                        </FieldError>
+                                    </Field>
+                                </>
+                            ) : null}
                         </CardContent>
                     </Card>
 
@@ -451,7 +745,7 @@ export default function TagForm({
                                 <CardTitle>More options</CardTitle>
                             </div>
                             <CardDescription>
-                                Fine-tune the permalink and template.
+                                Fine-tune permalink, author, and template.
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="flex flex-col gap-6">
@@ -474,7 +768,7 @@ export default function TagForm({
                                         placeholder="auto-generated-from-title"
                                     />
                                 </div>
-                                {tag?.permalink_url ? (
+                                {page?.permalink_url ? (
                                     <a
                                         href={permalinkPreview}
                                         target="_blank"
@@ -488,6 +782,41 @@ export default function TagForm({
                                     <FieldDescription>{permalinkPreview}</FieldDescription>
                                 )}
                                 <FieldError>{form.error('slug')}</FieldError>
+                            </Field>
+
+                            <Field data-invalid={form.invalid('author_id') || undefined}>
+                                <RequiredLabel htmlFor="author_id">Author</RequiredLabel>
+                                <NativeSelect
+                                    id="author_id"
+                                    className="w-full"
+                                    value={String(form.data.author_id)}
+                                    onChange={(event) =>
+                                        form.setField(
+                                            'author_id',
+                                            event.target.value === ''
+                                                ? ''
+                                                : Number.parseInt(
+                                                      event.target.value,
+                                                      10,
+                                                  ),
+                                        )
+                                    }
+                                    onBlur={() => form.touch('author_id')}
+                                    aria-invalid={form.invalid('author_id') || undefined}
+                                >
+                                    <NativeSelectOption value="">
+                                        Select author
+                                    </NativeSelectOption>
+                                    {authorOptions.map((option) => (
+                                        <NativeSelectOption
+                                            key={String(option.value)}
+                                            value={String(option.value)}
+                                        >
+                                            {option.label}
+                                        </NativeSelectOption>
+                                    ))}
+                                </NativeSelect>
+                                <FieldError>{form.error('author_id')}</FieldError>
                             </Field>
 
                             {showTemplateField ? (
@@ -515,7 +844,7 @@ export default function TagForm({
                                         ))}
                                     </NativeSelect>
                                     <FieldDescription>
-                                        Choose a different presentation template for this tag.
+                                        Choose a different presentation template for this page.
                                     </FieldDescription>
                                     <FieldError>{form.error('template')}</FieldError>
                                 </Field>
@@ -527,7 +856,7 @@ export default function TagForm({
                         <CardHeader>
                             <CardTitle>{submitLabel}</CardTitle>
                             <CardDescription>
-                                Save this tag and return to the editor.
+                                Save this page and return to the editor.
                             </CardDescription>
                         </CardHeader>
                         <CardFooter className="flex-col gap-3">
@@ -540,17 +869,17 @@ export default function TagForm({
                                 {submitLabel}
                             </Button>
                             <Button type="button" variant="outline" className="w-full" asChild>
-                                <Link href={route('cms.tags.index')}>Back to Tags</Link>
+                                <Link href={route('cms.pages.index')}>Back to Pages</Link>
                             </Button>
                         </CardFooter>
                     </Card>
 
-                    {mode === 'edit' && tag ? (
+                    {mode === 'edit' && page ? (
                         <Card className="border-destructive/30">
                             <CardHeader>
                                 <CardTitle>Danger zone</CardTitle>
                                 <CardDescription>
-                                    Move this tag to trash. You can restore it later from the
+                                    Move this page to trash. You can restore it later from the
                                     trash tab.
                                 </CardDescription>
                             </CardHeader>

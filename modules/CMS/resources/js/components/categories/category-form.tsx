@@ -35,7 +35,12 @@ import {
     NativeSelectOption,
 } from '@/components/ui/native-select';
 import { Spinner } from '@/components/ui/spinner';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+    Tabs,
+    TabsContent,
+    TabsList,
+    TabsTrigger,
+} from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { useAppForm } from '@/hooks/use-app-form';
 import { formValidators } from '@/lib/forms';
@@ -228,7 +233,7 @@ export default function CategoryForm({
                                 <FieldError>{form.error('title')}</FieldError>
                             </Field>
 
-                            <Tabs defaultValue="content" size="comfortable" className="gap-4">
+                            <Tabs defaultValue="content">
                                 <TabsList variant="line">
                                     <TabsTrigger value="content">Content</TabsTrigger>
                                     <TabsTrigger value="seo">SEO</TabsTrigger>

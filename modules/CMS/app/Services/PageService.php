@@ -142,6 +142,19 @@ class PageService implements ScaffoldServiceInterface
         return Theme::getAvailableTemplates('page');
     }
 
+    public function getAuthorOptions(): array
+    {
+        return User::visibleToCurrentUser()
+            ->where('status', 'active')
+            ->whereDoesntHave('roles', function ($q): void {
+                $q->where('roles.id', User::superUserRoleId());
+            })
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->map(fn (User $u): array => ['value' => $u->id, 'label' => $u->name])
+            ->toArray();
+    }
+
     /**
      * Duplicate a page with all its content
      */

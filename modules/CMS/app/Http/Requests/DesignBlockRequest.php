@@ -50,6 +50,8 @@ class DesignBlockRequest extends ScaffoldRequest
             'design_system' => ['required', 'string', 'max:50'],
 
             'html' => ['nullable', 'string'],
+            'css' => ['nullable', 'string'],
+            'scripts' => ['nullable', 'string'],
             'preview_image_url' => ['nullable', 'string', 'max:500'],
 
             'status' => ['required', 'string', Rule::in(['draft', 'published'])],

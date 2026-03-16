@@ -12,6 +12,7 @@ import type {
     DatagridBulkAction,
     DatagridColumn,
     DatagridFilter,
+    DatagridFilterOption,
     DatagridTab,
 } from '@/components/datagrid/datagrid';
 import { Button } from '@/components/ui/button';
@@ -25,7 +26,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Design Blocks', href: route('cms.designblock.index') },
 ];
 
-export default function DesignBlocksIndex({ config, rows, filters, statistics }: DesignBlockIndexPageProps) {
+export default function DesignBlocksIndex({ config, rows, filters, statistics, designTypeOptions, categoryOptions, designSystemOptions }: DesignBlockIndexPageProps) {
     const page = usePage<AuthenticatedSharedData>();
     const canAddDesignBlocks = page.props.auth.abilities.addDesignBlocks;
     const canEditDesignBlocks = page.props.auth.abilities.editDesignBlocks;
@@ -39,6 +40,9 @@ export default function DesignBlocksIndex({ config, rows, filters, statistics }:
 
     const gridFilters: DatagridFilter[] = [
         { type: 'search', name: 'search', value: filters.search, placeholder: 'Search design blocks...', className: 'lg:min-w-80' },
+        { type: 'select', name: 'design_type', value: (filters.design_type as string) ?? '', options: designTypeOptions as DatagridFilterOption[] },
+        { type: 'select', name: 'category_id', value: (filters.category_id as string) ?? '', options: categoryOptions as DatagridFilterOption[] },
+        { type: 'select', name: 'design_system', value: (filters.design_system as string) ?? '', options: designSystemOptions as DatagridFilterOption[] },
     ];
 
     const statusTabs: DatagridTab[] = config.statusTabs.map((tab) => mapStatusTab(tab, statistics, filters.status));
