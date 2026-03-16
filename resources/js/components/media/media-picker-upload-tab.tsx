@@ -46,6 +46,7 @@ type MediaPickerUploadTabProps = {
     stageFiles: (files: FileList | File[]) => void;
     removeUploadFile: (id: string) => void;
     clearAllStaged: () => void;
+    clearCompleted: () => void;
     startUpload: () => void;
 };
 
@@ -68,6 +69,7 @@ export function MediaPickerUploadTab({
     stageFiles,
     removeUploadFile,
     clearAllStaged,
+    clearCompleted,
     startUpload,
 }: MediaPickerUploadTabProps) {
     return (
@@ -84,7 +86,7 @@ export function MediaPickerUploadTab({
                     isDragOver
                         ? 'border-primary bg-primary/5'
                         : 'border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/50',
-                    (isUploading || activeFiles.length > 0) && 'hidden',
+                    isUploading && 'opacity-50 pointer-events-none',
                 )}
             >
                 <UploadCloudIcon
@@ -194,21 +196,39 @@ export function MediaPickerUploadTab({
             {/* Upload Progress (during/after upload) */}
             {(isUploading || activeFiles.length > 0) && (
                 <div className="flex min-h-0 flex-1 flex-col rounded-lg border bg-card p-4">
-                    {/* Overall progress */}
-                    {hasActiveUploads && (
-                        <div className="mb-3 space-y-1.5">
-                            <div className="flex items-center justify-between text-sm">
+                    {/* Overall progress / Actions */}
+                    <div className="mb-3 space-y-1.5">
+                        <div className="flex items-center justify-between text-sm">
+                            {isUploading ? (
                                 <span className="font-medium text-foreground">
                                     Uploading... {totalProgress}%
                                 </span>
+                            ) : (
+                                <span className="font-medium text-foreground">
+                                    Uploads finished
+                                </span>
+                            )}
+                            <div className="flex items-center gap-3">
                                 <span className="text-muted-foreground">
                                     {activeFiles.filter((f) => f.status === 'success').length} /{' '}
                                     {activeFiles.length} complete
                                 </span>
+                                {!isUploading && activeFiles.length > 0 && (
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-7 px-2 text-xs"
+                                        onClick={clearCompleted}
+                                    >
+                                        Dismiss
+                                    </Button>
+                                )}
                             </div>
-                            <Progress value={totalProgress} className="h-2" />
                         </div>
-                    )}
+                        {isUploading && (
+                            <Progress value={totalProgress} className="h-2" />
+                        )}
+                    </div>
 
                     {/* File List */}
                     <ScrollArea className="min-h-0 flex-1">
@@ -219,9 +239,9 @@ export function MediaPickerUploadTab({
                                     className={cn(
                                         'flex items-center gap-3 rounded-lg border p-2.5',
                                         uf.status === 'success' &&
-                                            'border-green-200 bg-green-50/50 dark:border-green-900 dark:bg-green-950/30',
+                                        'border-green-200 bg-green-50/50 dark:border-green-900 dark:bg-green-950/30',
                                         uf.status === 'error' &&
-                                            'border-destructive/30 bg-destructive/5',
+                                        'border-destructive/30 bg-destructive/5',
                                     )}
                                 >
                                     {/* Preview */}

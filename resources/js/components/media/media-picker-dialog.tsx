@@ -446,6 +446,17 @@ export function MediaPickerDialog({
         });
     }, []);
 
+    const clearCompleted = useCallback(() => {
+        setUploadFiles((prev) => {
+            prev.forEach((f) => {
+                if ((f.status === 'success' || f.status === 'error') && f.previewUrl) {
+                    URL.revokeObjectURL(f.previewUrl);
+                }
+            });
+            return prev.filter((f) => f.status !== 'success' && f.status !== 'error');
+        });
+    }, []);
+
     const removeUploadFile = useCallback((id: string) => {
         setUploadFiles((prev) => {
             const file = prev.find((f) => f.id === id);
@@ -516,6 +527,7 @@ export function MediaPickerDialog({
                             stageFiles={stageFiles}
                             removeUploadFile={removeUploadFile}
                             clearAllStaged={clearAllStaged}
+                            clearCompleted={clearCompleted}
                             startUpload={startUpload}
                         />
                     </TabsContent>

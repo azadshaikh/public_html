@@ -35,7 +35,12 @@ export function useDirtyFormGuard({
     message = DEFAULT_MESSAGE,
     onDiscard,
     shouldPrompt = () => true,
-    shouldPromptForVisit = (visit) => visit.method === 'get',
+    shouldPromptForVisit = (visit) => {
+        if (visit.preserveState === true) {
+            return false;
+        }
+        return visit.method === 'get';
+    },
 }: UseDirtyFormGuardOptions): UseDirtyFormGuardResult {
     const [pendingVisit, setPendingVisit] = useState<PendingVisit | null>(null);
     const [open, setOpen] = useState(false);
