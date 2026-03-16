@@ -178,6 +178,7 @@ export function MediaPickerField({
                                 type="button"
                                 variant="destructive"
                                 size="sm"
+                                className="bg-destructive text-white hover:bg-destructive/90 hover:text-white [&_svg]:text-white"
                                 onClick={handleClear}
                                 disabled={disabled}
                             >
