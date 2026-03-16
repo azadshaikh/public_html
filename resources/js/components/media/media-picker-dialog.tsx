@@ -2,6 +2,8 @@
 
 import { router } from '@inertiajs/react';
 import {
+    AlertCircleIcon,
+    CheckCircleIcon,
     CheckIcon,
     FileAudioIcon,
     FileIcon,
@@ -10,6 +12,8 @@ import {
     FileVideoIcon,
     ImageIcon,
     Loader2Icon,
+    LoaderIcon,
+    Trash2Icon,
     UploadCloudIcon,
     XIcon,
 } from 'lucide-react';
@@ -33,6 +37,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
@@ -87,7 +92,7 @@ type UploadingFile = {
     name: string;
     size: number;
     progress: number;
-    status: 'pending' | 'uploading' | 'success' | 'error';
+    status: 'staged' | 'pending' | 'uploading' | 'success' | 'error';
     error?: string;
     previewUrl?: string;
     result?: MediaPickerItem;
@@ -319,7 +324,7 @@ export function MediaPickerDialog({
                     name: file.name,
                     size: file.size,
                     progress: 0,
-                    status: batchError || error ? 'error' : 'pending',
+                    status: batchError || error ? 'error' : 'staged',
                     error: batchError ?? error ?? undefined,
                     previewUrl: file.type.startsWith('image/')
                         ? URL.createObjectURL(file)
@@ -327,7 +332,12 @@ export function MediaPickerDialog({
                 };
             });
 
-            setUploadFiles((prev) => [...prev, ...newFiles]);
+            setUploadFiles((prev) => {
+                const kept = prev.filter(
+                    (f) => f.status !== 'success' && f.status !== 'error',
+                );
+                return [...kept, ...newFiles];
+            });
         },
         [uploadSettings, validateFile, batchLimitMessage],
     );
@@ -385,11 +395,11 @@ export function MediaPickerDialog({
                             prev.map((f) =>
                                 f.id === uf.id
                                     ? {
-                                          ...f,
-                                          progress: 100,
-                                          status: 'success',
-                                          result: resultItem,
-                                      }
+                                        ...f,
+                                        progress: 100,
+                                        status: 'success',
+                                        result: resultItem,
+                                    }
                                     : f,
                             ),
                         );
@@ -398,10 +408,10 @@ export function MediaPickerDialog({
                             prev.map((f) =>
                                 f.id === uf.id
                                     ? {
-                                          ...f,
-                                          status: 'error',
-                                          error: response.error || 'Upload failed',
-                                      }
+                                        ...f,
+                                        status: 'error',
+                                        error: response.error || 'Upload failed',
+                                    }
                                     : f,
                             ),
                         );
@@ -411,10 +421,10 @@ export function MediaPickerDialog({
                         prev.map((f) =>
                             f.id === uf.id
                                 ? {
-                                      ...f,
-                                      status: 'error',
-                                      error: 'Invalid server response',
-                                  }
+                                    ...f,
+                                    status: 'error',
+                                    error: 'Invalid server response',
+                                }
                                 : f,
                         ),
                     );
@@ -548,11 +558,45 @@ export function MediaPickerDialog({
         });
     }, []);
 
+    const clearAllStaged = useCallback(() => {
+        setUploadFiles((prev) => {
+            prev.filter((f) => f.previewUrl && f.status === 'staged').forEach((f) =>
+                URL.revokeObjectURL(f.previewUrl!),
+            );
+            return prev.filter((f) => f.status !== 'staged');
+        });
+    }, []);
+
+    const startUpload = useCallback(() => {
+        setUploadFiles((prev) => {
+            return prev.map((f) =>
+                f.status === 'staged' ? { ...f, status: 'pending' } : f,
+            );
+        });
+    }, []);
+
     // ── Derived state ────────────────────────────────────────────
+
+    const stagedFiles = uploadFiles.filter((f) => f.status === 'staged');
+    const totalStagedSize = stagedFiles.reduce((sum, f) => sum + f.size, 0);
+
+    const activeFiles = uploadFiles.filter((f) =>
+        ['pending', 'uploading', 'success', 'error'].includes(f.status),
+    );
 
     const hasActiveUploads = uploadFiles.some(
         (f) => f.status === 'pending' || f.status === 'uploading',
     );
+
+    const isUploading = hasActiveUploads;
+
+    const totalProgress =
+        activeFiles.length > 0
+            ? Math.round(
+                activeFiles.reduce((sum, f) => sum + f.progress, 0) /
+                activeFiles.length,
+            )
+            : 0;
 
     const selectedPreview = useMemo(() => {
         if (selected.size === 0) return null;
@@ -767,99 +811,201 @@ export function MediaPickerDialog({
                             />
                         </div>
 
-                        {/* Upload file list */}
-                        {uploadFiles.length > 0 && (
-                            <ScrollArea className="min-h-0 flex-1">
-                                <div className="space-y-2">
-                                    {uploadFiles.map((uf) => (
+                        {/* Staged Files Preview (before upload) */}
+                        {stagedFiles.length > 0 && !isUploading && (
+                            <div className="rounded-lg border bg-card p-4">
+                                {/* Thumbnail Grid */}
+                                <div className="flex flex-wrap gap-3">
+                                    {stagedFiles.map((f) => (
                                         <div
-                                            key={uf.id}
-                                            className={cn(
-                                                'flex items-center gap-3 rounded-lg border p-2.5',
-                                                uf.status === 'success' &&
-                                                    'border-green-200 bg-green-50/50 dark:border-green-900 dark:bg-green-950/30',
-                                                uf.status === 'error' &&
-                                                    'border-destructive/30 bg-destructive/5',
-                                            )}
+                                            key={f.id}
+                                            className="group relative w-24 shrink-0"
                                         >
-                                            {/* Preview */}
-                                            <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded bg-muted">
-                                                {uf.previewUrl ? (
+                                            {/* Remove button */}
+                                            <button
+                                                type="button"
+                                                onClick={() => removeUploadFile(f.id)}
+                                                className="absolute -top-1.5 -right-1.5 z-10 flex size-5 items-center justify-center rounded-full bg-destructive text-white shadow-sm"
+                                            >
+                                                <XIcon className="size-3 stroke-[3]" />
+                                            </button>
+
+                                            {/* Thumbnail */}
+                                            <div className="aspect-square overflow-hidden rounded-lg border bg-muted">
+                                                {f.previewUrl ? (
                                                     <img
-                                                        src={uf.previewUrl}
-                                                        alt={uf.name}
-                                                        className="size-10 object-cover"
+                                                        src={f.previewUrl}
+                                                        alt={f.name}
+                                                        className="size-full object-cover"
                                                     />
                                                 ) : (
-                                                    <FileIcon className="size-4 text-muted-foreground" />
-                                                )}
-                                            </div>
-
-                                            {/* Info */}
-                                            <div className="min-w-0 flex-1">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="truncate text-sm font-medium">
-                                                        {uf.name}
-                                                    </span>
-                                                    <span className="shrink-0 text-xs text-muted-foreground">
-                                                        {formatSize(uf.size)}
-                                                    </span>
-                                                </div>
-                                                {uf.status === 'uploading' && (
-                                                    <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-muted">
-                                                        <div
-                                                            className="h-full rounded-full bg-primary transition-all"
-                                                            style={{
-                                                                width: `${uf.progress}%`,
-                                                            }}
-                                                        />
+                                                    <div className="flex size-full items-center justify-center">
+                                                        <FileIcon className="size-8 text-muted-foreground/50" />
                                                     </div>
                                                 )}
-                                                {uf.status === 'error' && (
-                                                    <p className="mt-0.5 text-xs text-destructive">
-                                                        {uf.error}
-                                                    </p>
+                                                {f.status === 'error' && (
+                                                    <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-destructive/10">
+                                                        <AlertCircleIcon className="size-5 text-destructive" />
+                                                    </div>
                                                 )}
                                             </div>
 
-                                            {/* Status / actions */}
-                                            <div className="flex shrink-0 items-center gap-1">
-                                                {(uf.status === 'pending' ||
-                                                    uf.status ===
-                                                        'uploading') && (
-                                                    <Loader2Icon className="size-4 animate-spin text-primary" />
-                                                )}
-                                                {uf.status === 'success' && (
-                                                    <Badge
-                                                        variant="outline"
-                                                        className="border-green-300 text-green-700 dark:border-green-700 dark:text-green-400"
-                                                    >
-                                                        <CheckIcon data-icon="inline-start" />
-                                                        Done
-                                                    </Badge>
-                                                )}
-                                                {uf.status === 'error' && (
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon-sm"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            removeUploadFile(
-                                                                uf.id,
-                                                            );
-                                                        }}
-                                                    >
-                                                        <XIcon />
-                                                        <span className="sr-only">
-                                                            Remove
-                                                        </span>
-                                                    </Button>
-                                                )}
-                                            </div>
+                                            {/* File name & size */}
+                                            <p className="mt-1 truncate text-xs font-medium text-foreground">
+                                                {f.name}
+                                            </p>
+                                            <p className="text-xs text-muted-foreground">
+                                                {formatSize(f.size)}
+                                            </p>
                                         </div>
                                     ))}
                                 </div>
-                            </ScrollArea>
+
+                                {/* Actions */}
+                                <div className="mt-4 flex items-center justify-between border-t pt-4">
+                                    <p className="text-sm font-medium text-foreground">
+                                        {stagedFiles.length} file
+                                        {stagedFiles.length !== 1 ? 's' : ''} ready to
+                                        upload
+                                        <span className="ml-1.5 text-muted-foreground">
+                                            {formatSize(totalStagedSize)}
+                                        </span>
+                                    </p>
+                                    <div className="flex items-center gap-2">
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={clearAllStaged}
+                                        >
+                                            <Trash2Icon className="mr-1.5 size-3.5" />
+                                            Clear
+                                        </Button>
+                                        <Button size="sm" onClick={startUpload}>
+                                            <UploadCloudIcon className="mr-1.5 size-3.5" />
+                                            Upload {stagedFiles.length} File
+                                            {stagedFiles.length !== 1 ? 's' : ''}
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Upload Progress (during/after upload) */}
+                        {(isUploading || activeFiles.length > 0) && (
+                            <div className="rounded-lg border bg-card p-4 flex-1 flex flex-col min-h-0">
+                                {/* Overall progress */}
+                                {hasActiveUploads && (
+                                    <div className="mb-3 space-y-1.5">
+                                        <div className="flex items-center justify-between text-sm">
+                                            <span className="font-medium text-foreground">
+                                                Uploading... {totalProgress}%
+                                            </span>
+                                            <span className="text-muted-foreground">
+                                                {
+                                                    activeFiles.filter(
+                                                        (f) => f.status === 'success',
+                                                    ).length
+                                                }{' '}
+                                                / {activeFiles.length} complete
+                                            </span>
+                                        </div>
+                                        <Progress value={totalProgress} className="h-2" />
+                                    </div>
+                                )}
+
+                                {/* File List */}
+                                <ScrollArea className="min-h-0 flex-1">
+                                    <div className="space-y-2 pr-4">
+                                        {activeFiles.map((uf) => (
+                                            <div
+                                                key={uf.id}
+                                                className={cn(
+                                                    'flex items-center gap-3 rounded-lg border p-2.5',
+                                                    uf.status === 'success' &&
+                                                    'border-green-200 bg-green-50/50 dark:border-green-900 dark:bg-green-950/30',
+                                                    uf.status === 'error' &&
+                                                    'border-destructive/30 bg-destructive/5',
+                                                )}
+                                            >
+                                                {/* Preview */}
+                                                <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded bg-muted">
+                                                    {uf.previewUrl ? (
+                                                        <img
+                                                            src={uf.previewUrl}
+                                                            alt={uf.name}
+                                                            className="size-10 object-cover"
+                                                        />
+                                                    ) : (
+                                                        <FileIcon className="size-4 text-muted-foreground" />
+                                                    )}
+                                                </div>
+
+                                                {/* Info */}
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="truncate text-sm font-medium">
+                                                            {uf.name}
+                                                        </span>
+                                                        <span className="shrink-0 text-xs text-muted-foreground">
+                                                            {formatSize(uf.size)}
+                                                        </span>
+                                                    </div>
+                                                    {uf.status === 'uploading' && (
+                                                        <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-muted">
+                                                            <div
+                                                                className="h-full rounded-full bg-primary transition-all"
+                                                                style={{
+                                                                    width: `${uf.progress}%`,
+                                                                }}
+                                                            />
+                                                        </div>
+                                                    )}
+                                                    {uf.status === 'error' && (
+                                                        <p className="mt-0.5 text-xs text-destructive">
+                                                            {uf.error}
+                                                        </p>
+                                                    )}
+                                                </div>
+
+                                                {/* Status / actions */}
+                                                <div className="flex shrink-0 items-center gap-1">
+                                                    {(uf.status === 'pending' ||
+                                                        uf.status ===
+                                                        'uploading') && (
+                                                            <Loader2Icon className="size-4 animate-spin text-primary" />
+                                                        )}
+                                                    {uf.status === 'success' && (
+                                                        <Badge
+                                                            variant="outline"
+                                                            className="border-green-300 text-green-700 dark:border-green-700 dark:text-green-400"
+                                                        >
+                                                            <CheckIcon data-icon="inline-start" />
+                                                            Done
+                                                        </Badge>
+                                                    )}
+                                                    {uf.status === 'error' && (
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon-sm"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                removeUploadFile(
+                                                                    uf.id,
+                                                                );
+                                                            }}
+                                                        >
+                                                            <XIcon />
+                                                            <span className="sr-only">
+                                                                Remove
+                                                            </span>
+                                                        </Button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </ScrollArea>
+                            </div>
                         )}
                     </TabsContent>
 

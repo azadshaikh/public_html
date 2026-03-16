@@ -49,8 +49,24 @@ class SeoSettingsPageTest extends TestCase
 
     public function test_guests_are_redirected_from_seo_settings_pages(): void
     {
+        $this->get(route('seo.dashboard'))
+            ->assertRedirect(route('login'));
+
         $this->get(route('seo.settings.titlesmeta'))
             ->assertRedirect(route('login'));
+    }
+
+    public function test_admin_can_view_seo_dashboard(): void
+    {
+        $this->actingAs($this->admin)
+            ->get(route('seo.dashboard'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->component('seo/dashboard')
+                ->where('titlesMetaHref', route('seo.settings.titlesmeta', ['section' => 'general']))
+                ->has('stats.robots_txt_exists')
+                ->has('quickLinks', 6)
+            );
     }
 
     public function test_admin_can_view_react_seo_settings_pages(): void

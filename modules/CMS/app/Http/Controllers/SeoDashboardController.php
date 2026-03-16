@@ -3,7 +3,8 @@
 namespace Modules\CMS\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 use Modules\CMS\Services\SitemapService;
 
 /**
@@ -20,7 +21,7 @@ class SeoDashboardController extends Controller
     /**
      * Display the SEO Dashboard
      */
-    public function index(): View
+    public function index(): Response
     {
         // Check permission
         abort_if(! auth()->user()->can('manage_cms_seo_settings') && ! auth()->user()->can('manage_seo_settings'), 401);
@@ -45,58 +46,49 @@ class SeoDashboardController extends Controller
         // Quick links for the dashboard
         $quickLinks = [
             [
+                'key' => 'titlesmeta',
                 'label' => 'Titles & Meta',
                 'description' => 'Configure SEO titles and meta descriptions for all content types',
-                'route' => 'seo.settings.titlesmeta',
-                'icon' => 'ri-file-text-line',
-                'color' => 'primary',
+                'href' => route('seo.settings.titlesmeta'),
             ],
             [
+                'key' => 'localseo',
                 'label' => 'Local SEO',
                 'description' => 'Set up your business information for local search',
-                'route' => 'seo.settings.localseo',
-                'icon' => 'ri-map-pin-line',
-                'color' => 'success',
+                'href' => route('seo.settings.localseo'),
             ],
             [
+                'key' => 'socialmedia',
                 'label' => 'Social Media',
                 'description' => 'Configure Open Graph and Twitter Card settings',
-                'route' => 'seo.settings.socialmedia',
-                'icon' => 'ri-share-line',
-                'color' => 'info',
+                'href' => route('seo.settings.socialmedia'),
             ],
             [
+                'key' => 'sitemap',
                 'label' => 'Sitemap',
                 'description' => 'Manage XML sitemap generation and settings',
-                'route' => 'seo.settings.sitemap',
-                'icon' => 'ri-node-tree',
-                'color' => 'warning',
+                'href' => route('seo.settings.sitemap'),
             ],
             [
+                'key' => 'robots',
                 'label' => 'Robots.txt',
                 'description' => 'Edit your robots.txt file for crawler control',
-                'route' => 'seo.settings.robots',
-                'icon' => 'ri-robot-2-line',
-                'color' => 'secondary',
+                'href' => route('seo.settings.robots'),
             ],
             [
+                'key' => 'schema',
                 'label' => 'Schema Markup',
                 'description' => 'Configure structured data for rich search results',
-                'route' => 'seo.settings.schema',
-                'icon' => 'ri-code-s-slash-line',
-                'color' => 'dark',
+                'href' => route('seo.settings.schema'),
             ],
         ];
 
-        /** @var view-string $view */
-        $view = 'seo::dashboard';
-
-        return view($view, [
-            'page_title' => 'SEO Dashboard',
+        return Inertia::render('seo/dashboard', [
             'searchEngineEnabled' => $searchEngineEnabled,
             'sitemapStatus' => $sitemapStatus,
             'stats' => $stats,
             'quickLinks' => $quickLinks,
+            'titlesMetaHref' => route('seo.settings.titlesmeta', ['section' => 'general']),
         ]);
     }
 }

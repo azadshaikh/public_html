@@ -458,8 +458,7 @@ export default function MediaIndex({
                             className="group relative aspect-square w-full overflow-hidden bg-muted"
                         >
                             {/* Thumbnail / file icon */}
-                            {item.thumbnail_url &&
-                            isImageMimeType(item.mime_type) ? (
+                            {isImageMimeType(item.mime_type) && item.thumbnail_url ? (
                                 <img
                                     src={item.thumbnail_url}
                                     alt={item.alt_text || item.name}

@@ -157,3 +157,30 @@ export type RobotsPageProps = {
 export type ImportExportPageProps = {
     seoGroups: string[];
 };
+
+export type SeoDashboardQuickLinkKey =
+    | 'titlesmeta'
+    | 'localseo'
+    | 'socialmedia'
+    | 'sitemap'
+    | 'robots'
+    | 'schema';
+
+export type SeoDashboardPageProps = {
+    searchEngineEnabled: boolean;
+    sitemapStatus: {
+        total_urls: number;
+    };
+    stats: {
+        robots_txt_exists: boolean;
+        sitemap_exists: boolean;
+        sitemap_last_generated: string | null;
+    };
+    quickLinks: Array<{
+        key: SeoDashboardQuickLinkKey;
+        label: string;
+        description: string;
+        href: string;
+    }>;
+    titlesMetaHref: string;
+};
