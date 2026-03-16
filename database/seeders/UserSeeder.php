@@ -2,19 +2,20 @@
 
 namespace Database\Seeders;
 
+use App\Models\Role;
+use App\Models\User;
+use App\Services\UserService;
+use Exception;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 
 class UserSeeder extends Seeder
 {
     /**
      * Run the database seeds.
      */
-    public function run(): void
+    public function run(UserService $UserService): void
     {
         $commonPassword = 'PassWord@1234';
-        $now = now();
 
         // Always create Super User
         $users = [
@@ -113,57 +114,45 @@ class UserSeeder extends Seeder
         }
 
         foreach ($users as $userData) {
-            $existingUserId = DB::table('users')
-                ->where('email', $userData['email'])
-                ->orWhere('username', $userData['username'])
-                ->value('id');
+            try {
+                // Check if user already exists
+                $existingUser = User::query()->where('email', $userData['email'])
+                    ->orWhere('username', $userData['username'])
+                    ->first();
 
-            $payload = [
-                'name' => $userData['name'],
-                'first_name' => $userData['first_name'],
-                'last_name' => $userData['last_name'],
-                'username' => $userData['username'],
-                'email' => $userData['email'],
-                'password' => Hash::make($userData['password']),
-                'status' => $userData['status'],
-                'email_verified_at' => $userData['email_verified'] ? $now : null,
-                'notifications_enabled' => true,
-                'updated_at' => $now,
-            ];
+                if ($existingUser) {
+                    // Update existing user's roles
+                    $roleIds = array_map(intval(...), $userData['roles']);
+                    $roles = Role::query()->whereIn('id', $roleIds)->get();
+                    $existingUser->syncRoles($roles);
 
-            if ($existingUserId) {
-                DB::table('users')->where('id', $existingUserId)->update($payload);
-                $userId = (int) $existingUserId;
-                $action = 'Updated';
-            } else {
-                $userId = (int) DB::table('users')->insertGetId([
-                    ...$payload,
-                    'created_at' => $now,
-                ]);
-                $action = 'Created';
+                    $updateData = [
+                        'username' => $userData['username'],
+                        'email' => $userData['email'], // Ensure email is updated
+                        'status' => $userData['status'],
+                        'name' => $userData['name'],
+                        'first_name' => $userData['first_name'],
+                        'last_name' => $userData['last_name'],
+                    ];
+
+                    // Seed data always marks these users as verified.
+                    $updateData['email_verified_at'] = now();
+
+                    $existingUser->update($updateData);
+
+                    $roleNames = $existingUser->roles->pluck('name')->implode(', ');
+                    $this->command->info(sprintf('Updated existing user: %s (%s) with roles: %s', $userData['email'], $userData['name'], $roleNames));
+                } else {
+                    // Create new user
+                    $user = $UserService->createUser($userData);
+                    $roleNames = $user->roles->pluck('name')->implode(', ');
+                    $this->command->info(sprintf('Created user: %s (%s) with roles: %s', $userData['email'], $userData['name'], $roleNames));
+                }
+            } catch (Exception $e) {
+                // $this->command->error("Failed to process user {$userData['email']}: {$e->getMessage()}");
+                // Fallback to error logging if command is not available (e.g. if run outside console, though Seeder is usually console)
+                $this->command->error(sprintf('Failed to process user %s: %s', $userData['email'], $e->getMessage()));
             }
-
-            DB::table('model_has_roles')
-                ->where('model_type', 'App\\Models\\User')
-                ->where('model_id', $userId)
-                ->delete();
-
-            $pivotRows = collect($userData['roles'])
-                ->map(fn ($roleId): array => [
-                    'role_id' => (int) $roleId,
-                    'model_type' => 'App\\Models\\User',
-                    'model_id' => $userId,
-                ])
-                ->all();
-
-            DB::table('model_has_roles')->insert($pivotRows);
-
-            $roleNames = DB::table('roles')
-                ->whereIn('id', $userData['roles'])
-                ->pluck('name')
-                ->implode(', ');
-
-            $this->command->info(sprintf('%s user: %s (%s) with roles: %s', $action, $userData['email'], $userData['name'], $roleNames));
         }
 
         $this->command->info('User seeding completed successfully!');

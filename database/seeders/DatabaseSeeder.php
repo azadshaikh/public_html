@@ -18,22 +18,16 @@ class DatabaseSeeder extends Seeder
      */
     public function getSeeders(): array
     {
-        $isLocalEnvironment = $this->command?->getLaravel()->environment('local')
-            ?? app()->environment('local');
 
         $seeders = [
             RolesAndPermissionsSeeder::class,
+            UserSeeder::class,
             SettingSeeder::class,
             RegistrationSettingsSeeder::class,
             MediaSettingSeeder::class,
             EmailProviderSeeder::class,
             EmailTemplateSeeder::class,
         ];
-
-        if ($isLocalEnvironment) {
-            array_splice($seeders, 1, 0, [LocalUserSeeder::class]);
-            $seeders[] = LocalDatagridUsersSeeder::class;
-        }
 
         return $seeders;
     }
