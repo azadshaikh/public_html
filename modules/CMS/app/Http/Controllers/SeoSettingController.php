@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Jobs\RecacheApplication;
 use App\Models\Settings;
 use App\Traits\ActivityTrait;
+use App\Traits\HasMediaPicker;
 use BadMethodCallException;
 use Exception;
 use Illuminate\Http\JsonResponse;
@@ -37,6 +38,7 @@ use Modules\CMS\Services\SitemapService;
 class SeoSettingController extends Controller
 {
     use ActivityTrait;
+    use HasMediaPicker;
 
     // =============================================================================
     // CONSTANTS
@@ -118,6 +120,11 @@ class SeoSettingController extends Controller
         if ($fileName === 'sitemap') {
             $sitemapService = resolve(SitemapService::class);
             $data['sitemapStatus'] = $sitemapService->getStatus();
+        }
+
+        $inertiaPage = $this->resolveSeoInertiaPage($request, $data, $masterGroup, $fileName);
+        if ($inertiaPage !== null) {
+            return Inertia::render($inertiaPage['component'], $inertiaPage['props']);
         }
 
         // Map logical master_group to view folder (e.g., 'common' → 'settings')
@@ -283,25 +290,14 @@ class SeoSettingController extends Controller
     /**
      * Display the import/export page for SEO settings
      */
-    public function importExport(): View
+    public function importExport(): View|Response
     {
         // Check permissions
         abort_unless(Auth::user()->can('manage_seo_settings'), 403);
 
-        $data = [
-            'module_title' => __('seo::seo.seo'),
-            'module_name' => __('seo::seo.seo'),
-            'module_path' => self::MODULE_PATH,
-            'parent_module' => __('seo::seo.seo'),
-            'action' => 'import_export',
-            'page_title' => __('seo::seo.import_export'),
-            'seo_groups' => $this->getSeoGroups(),
-        ];
-
-        /** @var view-string $view */
-        $view = 'seo::settings.import_export';
-
-        return view($view, $data);
+        return Inertia::render('seo/settings/import-export', [
+            'seoGroups' => $this->getSeoGroups(),
+        ]);
     }
 
     /**
@@ -541,7 +537,7 @@ class SeoSettingController extends Controller
                 'billing-support' => 'Billing Support',
             ];
             // Get business types from config and format for select component
-            $businessTypes = config('cms::seo.business_types', []);
+            $businessTypes = config('cms.seo.business_types', []);
             $data['business_type_options'] = array_map(fn ($key, $item): array => [
                 'value' => $key,
                 'label' => $item['label'],
@@ -612,6 +608,359 @@ class SeoSettingController extends Controller
                 ],
             ],
         ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array{component: string, props: array<string, mixed>}|null
+     */
+    private function resolveSeoInertiaPage(Request $request, array $data, string $masterGroup, string $fileName): ?array
+    {
+        return match (true) {
+            ($masterGroup === 'settings' && $fileName === 'titlesmeta') || $masterGroup === 'titlesmeta' => [
+                'component' => 'seo/settings/titles-meta',
+                'props' => $this->getTitlesMetaPageData($request, $data),
+            ],
+            $masterGroup === 'common' && $fileName === 'local_seo' => [
+                'component' => 'seo/settings/local-seo',
+                'props' => $this->getLocalSeoPageData($data),
+            ],
+            $masterGroup === 'common' && $fileName === 'social_media' => [
+                'component' => 'seo/settings/social-media',
+                'props' => $this->getSocialMediaPageData($data),
+            ],
+            $masterGroup === 'common' && $fileName === 'schema' => [
+                'component' => 'seo/settings/schema',
+                'props' => $this->getSchemaPageData($data),
+            ],
+            $masterGroup === 'common' && $fileName === 'sitemap' => [
+                'component' => 'seo/settings/sitemap',
+                'props' => $this->getSitemapPageData($data),
+            ],
+            $masterGroup === 'common' && $fileName === 'robots' => [
+                'component' => 'seo/settings/robots',
+                'props' => $this->getRobotsPageData($data),
+            ],
+            default => null,
+        };
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function getTitlesMetaPageData(Request $request, array $data): array
+    {
+        $settingsData = $data['settings_data'] ?? [];
+        $activeSection = (string) $request->query('section', 'general');
+
+        if (! in_array($activeSection, ['general', 'posts', 'pages', 'categories', 'tags', 'authors', 'search', 'error_page'], true)) {
+            $activeSection = 'general';
+        }
+
+        return [
+            'activeSection' => $activeSection,
+            'metaRobotsOptions' => $data['meta_robots_options'] ?? [],
+            'urlExtensionOptions' => $data['url_extentions'] ?? [],
+            'searchEngineVisibility' => $this->toBoolean($settingsData['seo_search_engine_visibility'] ?? false),
+            'generalInitialValues' => [
+                'section' => 'general',
+                'separator_character' => (string) ($settingsData['seo_separator_character'] ?? ''),
+                'secondary_separator_character' => (string) ($settingsData['seo_secondary_separator_character'] ?? ''),
+                'cms_base' => (string) ($settingsData['seo_cms_base'] ?? ''),
+                'url_extension' => (string) ($settingsData['seo_url_extension'] ?? ''),
+                'search_engine_visibility' => $this->toBoolean($settingsData['seo_search_engine_visibility'] ?? false),
+            ],
+            'sections' => [
+                $this->buildTitlesMetaSectionConfig(
+                    key: 'posts',
+                    title: 'Posts',
+                    description: 'Define URL structure, title templates, and archive crawl defaults for blog posts.',
+                    helperText: 'Recommended variables: %title%, %site_title%, %separator%, %category%, %author%, and %excerpt%.',
+                    settingsPrefix: 'seo_posts_',
+                    supportsPermalinkBase: true,
+                    supportsPermalinkStructure: true,
+                    supportsMultipleCategories: true,
+                    supportsPaginationIndexing: true,
+                    previewPattern: 'Example: /blog/sample-post',
+                ),
+                $this->buildTitlesMetaSectionConfig(
+                    key: 'pages',
+                    title: 'Pages',
+                    description: 'Set title and robots defaults for static pages and landing pages.',
+                    helperText: 'Page templates usually work best with %title%, %separator%, and %site_title%.',
+                    settingsPrefix: 'seo_pages_',
+                    supportsPermalinkBase: false,
+                    supportsPermalinkStructure: false,
+                    supportsMultipleCategories: false,
+                    supportsPaginationIndexing: false,
+                    previewPattern: null,
+                ),
+                $this->buildTitlesMetaSectionConfig(
+                    key: 'categories',
+                    title: 'Categories',
+                    description: 'Control SEO defaults for category archives and taxonomy listings.',
+                    helperText: 'Category pages often benefit from %title%, %description%, and %site_title% variables.',
+                    settingsPrefix: 'seo_categories_',
+                    supportsPermalinkBase: true,
+                    supportsPermalinkStructure: false,
+                    supportsMultipleCategories: false,
+                    supportsPaginationIndexing: true,
+                    previewPattern: 'Example: /category/technology',
+                ),
+                $this->buildTitlesMetaSectionConfig(
+                    key: 'tags',
+                    title: 'Tags',
+                    description: 'Manage tag archive prefixes, metadata templates, and pagination indexing.',
+                    helperText: 'Tag archives should stay descriptive and concise to avoid thin-search snippets.',
+                    settingsPrefix: 'seo_tags_',
+                    supportsPermalinkBase: true,
+                    supportsPermalinkStructure: false,
+                    supportsMultipleCategories: false,
+                    supportsPaginationIndexing: true,
+                    previewPattern: 'Example: /tag/design-systems',
+                ),
+                $this->buildTitlesMetaSectionConfig(
+                    key: 'authors',
+                    title: 'Authors',
+                    description: 'Define archive naming and indexing rules for author profile pages.',
+                    helperText: 'Use author-aware variables when you want profile archives to rank for personal names.',
+                    settingsPrefix: 'seo_authors_',
+                    supportsPermalinkBase: true,
+                    supportsPermalinkStructure: false,
+                    supportsMultipleCategories: false,
+                    supportsPaginationIndexing: true,
+                    previewPattern: 'Example: /author/jane-doe',
+                ),
+                $this->buildTitlesMetaSectionConfig(
+                    key: 'search',
+                    title: 'Search',
+                    description: 'Set the metadata shown on internal search results pages.',
+                    helperText: 'Search pages often use noindex and include %query% to reflect the visitor search.',
+                    settingsPrefix: 'seo_search_cms_',
+                    supportsPermalinkBase: false,
+                    supportsPermalinkStructure: false,
+                    supportsMultipleCategories: false,
+                    supportsPaginationIndexing: false,
+                    previewPattern: null,
+                ),
+                $this->buildTitlesMetaSectionConfig(
+                    key: 'error_page',
+                    title: 'Error Pages',
+                    description: 'Control how 404 pages appear in browsers and search engines.',
+                    helperText: '404 pages should usually be noindex and keep their copy reassuring and short.',
+                    settingsPrefix: 'seo_error_page_',
+                    supportsPermalinkBase: false,
+                    supportsPermalinkStructure: false,
+                    supportsMultipleCategories: false,
+                    supportsPaginationIndexing: false,
+                    previewPattern: null,
+                ),
+            ],
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function getLocalSeoPageData(array $data): array
+    {
+        $settingsData = $data['settings_data'] ?? [];
+        $logoImage = $settingsData['seo_local_seo_logo_image'] ?? null;
+
+        return [
+            'initialValues' => [
+                'is_schema' => $this->toBoolean($settingsData['seo_local_seo_is_schema'] ?? false),
+                'type' => (string) ($settingsData['seo_local_seo_type'] ?? 'Organization'),
+                'business_type' => (string) ($settingsData['seo_local_seo_business_type'] ?? 'LocalBusiness'),
+                'name' => (string) ($settingsData['seo_local_seo_name'] ?? ''),
+                'description' => (string) ($settingsData['seo_local_seo_description'] ?? ''),
+                'street_address' => (string) ($settingsData['seo_local_seo_street_address'] ?? ''),
+                'locality' => (string) ($settingsData['seo_local_seo_locality'] ?? ''),
+                'region' => (string) ($settingsData['seo_local_seo_region'] ?? ''),
+                'postal_code' => (string) ($settingsData['seo_local_seo_postal_code'] ?? ''),
+                'country_code' => (string) ($settingsData['seo_local_seo_country_code'] ?? ''),
+                'phone' => (string) ($settingsData['seo_local_seo_phone'] ?? ''),
+                'email' => (string) ($settingsData['seo_local_seo_email'] ?? ''),
+                'logo_image' => is_numeric($logoImage) ? (int) $logoImage : '',
+                'url' => (string) ($settingsData['seo_local_seo_url'] ?? ''),
+                'is_opening_hour_24_7' => $this->toBoolean($settingsData['seo_local_seo_is_opening_hour_24_7'] ?? false),
+                'opening_hour_day' => $this->decodeStringArray($settingsData['seo_local_seo_opening_hour_day'] ?? []),
+                'opening_hours' => $this->decodeStringArray($settingsData['seo_local_seo_opening_hours'] ?? []),
+                'closing_hours' => $this->decodeStringArray($settingsData['seo_local_seo_closing_hours'] ?? []),
+                'price_range' => (string) ($settingsData['seo_local_seo_price_range'] ?? ''),
+                'geo_coordinates_latitude' => (string) ($settingsData['seo_local_seo_geo_coordinates_latitude'] ?? ''),
+                'geo_coordinates_longitude' => (string) ($settingsData['seo_local_seo_geo_coordinates_longitude'] ?? ''),
+                'facebook_url' => (string) ($settingsData['seo_local_seo_facebook_url'] ?? ''),
+                'twitter_url' => (string) ($settingsData['seo_local_seo_twitter_url'] ?? ''),
+                'linkedin_url' => (string) ($settingsData['seo_local_seo_linkedin_url'] ?? ''),
+                'instagram_url' => (string) ($settingsData['seo_local_seo_instagram_url'] ?? ''),
+                'youtube_url' => (string) ($settingsData['seo_local_seo_youtube_url'] ?? ''),
+                'founding_date' => (string) ($settingsData['seo_local_seo_founding_date'] ?? ''),
+            ],
+            'businessTypeOptions' => collect(config('cms.seo.business_types', []))
+                ->map(fn (array $option): array => [
+                    'value' => (string) ($option['value'] ?? ''),
+                    'label' => (string) ($option['label'] ?? ''),
+                ])
+                ->all(),
+            'openingDayOptions' => collect($data['openingDaysArray'] ?? [])
+                ->map(fn (string $day): array => ['value' => $day, 'label' => $day])
+                ->all(),
+            'logoImageUrl' => ! empty($logoImage) ? get_media_url($logoImage) : null,
+            ...$this->getMediaPickerProps(),
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function getSocialMediaPageData(array $data): array
+    {
+        $settingsData = $data['settings_data'] ?? [];
+        $openGraphImage = $settingsData['seo_social_media_open_graph_image'] ?? null;
+
+        return [
+            'initialValues' => [
+                'facebook_page_url' => (string) ($settingsData['seo_social_media_facebook_page_url'] ?? ''),
+                'facebook_authorship' => (string) ($settingsData['seo_social_media_facebook_authorship'] ?? ''),
+                'facebook_admin' => (string) ($settingsData['seo_social_media_facebook_admin'] ?? ''),
+                'facebook_app' => (string) ($settingsData['seo_social_media_facebook_app'] ?? ''),
+                'facebook_secret' => (string) ($settingsData['seo_social_media_facebook_secret'] ?? ''),
+                'twitter_username' => (string) ($settingsData['seo_social_media_twitter_username'] ?? ''),
+                'open_graph_image' => is_numeric($openGraphImage) ? (int) $openGraphImage : '',
+                'twitter_card_type' => (string) ($settingsData['seo_social_media_twitter_card_type'] ?? 'summary_large_image'),
+            ],
+            'twitterCardOptions' => [
+                ['value' => 'summary_large_image', 'label' => 'Summary card with large image'],
+                ['value' => 'summary', 'label' => 'Summary card'],
+            ],
+            'openGraphImageUrl' => ! empty($openGraphImage) ? get_media_url($openGraphImage) : null,
+            ...$this->getMediaPickerProps(),
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function getSchemaPageData(array $data): array
+    {
+        $settingsData = $data['settings_data'] ?? [];
+
+        return [
+            'initialValues' => [
+                'enable_article_schema' => $this->toBoolean($settingsData['seo_enable_article_schema'] ?? false),
+                'enable_breadcrumb_schema' => $this->toBoolean($settingsData['seo_enable_breadcrumb_schema'] ?? false),
+            ],
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function getSitemapPageData(array $data): array
+    {
+        $sitemapStatus = $data['sitemapStatus'] ?? resolve(SitemapService::class)->getStatus();
+
+        return [
+            'initialValues' => [
+                'enabled' => (bool) ($sitemapStatus['enabled'] ?? false),
+                'posts_enabled' => (bool) ($sitemapStatus['types']['posts']['enabled'] ?? false),
+                'pages_enabled' => (bool) ($sitemapStatus['types']['pages']['enabled'] ?? false),
+                'categories_enabled' => (bool) ($sitemapStatus['types']['categories']['enabled'] ?? false),
+                'tags_enabled' => (bool) ($sitemapStatus['types']['tags']['enabled'] ?? false),
+                'authors_enabled' => (bool) ($sitemapStatus['types']['authors']['enabled'] ?? false),
+                'auto_regenerate' => (bool) setting('seo.sitemap.auto_regenerate', true),
+                'links_per_file' => (int) setting('seo.sitemap.links_per_file', 1000),
+            ],
+            'sitemapStatus' => $sitemapStatus,
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function getRobotsPageData(array $data): array
+    {
+        return [
+            'initialValues' => [
+                'robots_txt' => (string) ($data['robots_txt'] ?? ''),
+            ],
+            'robotsUrl' => url('/robots.txt'),
+            'sitemapUrl' => url('/sitemap.xml'),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function buildTitlesMetaSectionConfig(
+        string $key,
+        string $title,
+        string $description,
+        string $helperText,
+        string $settingsPrefix,
+        bool $supportsPermalinkBase,
+        bool $supportsPermalinkStructure,
+        bool $supportsMultipleCategories,
+        bool $supportsPaginationIndexing,
+        ?string $previewPattern,
+    ): array {
+        $settingsData = $this->getDecodedSettings();
+
+        return [
+            'key' => $key,
+            'title' => $title,
+            'description' => $description,
+            'helperText' => $helperText,
+            'supportsPermalinkBase' => $supportsPermalinkBase,
+            'supportsPermalinkStructure' => $supportsPermalinkStructure,
+            'supportsMultipleCategories' => $supportsMultipleCategories,
+            'supportsPaginationIndexing' => $supportsPaginationIndexing,
+            'previewPattern' => $previewPattern,
+            'initialValues' => [
+                'section' => $key,
+                'permalink_base' => (string) ($settingsData[$settingsPrefix.'permalink_base'] ?? ''),
+                'title_template' => (string) ($settingsData[$settingsPrefix.'title_template'] ?? ''),
+                'description_template' => (string) ($settingsData[$settingsPrefix.'description_template'] ?? ''),
+                'robots_default' => (string) ($settingsData[$settingsPrefix.'robots_default'] ?? ''),
+                'permalink_structure' => (string) ($settingsData[$settingsPrefix.'permalink_structure'] ?? '%postname%'),
+                'enable_multiple_categories' => $this->toBoolean($settingsData[$settingsPrefix.'enable_multiple_categories'] ?? false),
+                'enable_pagination_indexing' => $this->toBoolean($settingsData[$settingsPrefix.'enable_pagination_indexing'] ?? false),
+            ],
+        ];
+    }
+
+    private function toBoolean(mixed $value): bool
+    {
+        return filter_var($value, FILTER_VALIDATE_BOOLEAN);
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function decodeStringArray(mixed $value): array
+    {
+        if (is_array($value)) {
+            return array_values(array_map(static fn (mixed $item): string => (string) $item, $value));
+        }
+
+        if (! is_string($value) || trim($value) === '') {
+            return [''];
+        }
+
+        $decoded = json_decode($value, true);
+
+        if (! is_array($decoded)) {
+            return [''];
+        }
+
+        return array_values(array_map(static fn (mixed $item): string => (string) $item, $decoded));
     }
 
     /**

@@ -32,6 +32,11 @@ class FormController extends ScaffoldController implements HasMiddleware
         return 'cms/forms';
     }
 
+    protected function getAfterStoreRedirectUrl(Model $model): string
+    {
+        return route('cms.form.edit', $model);
+    }
+
     protected function getFormViewData(Model $model): array
     {
         return [

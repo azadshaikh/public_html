@@ -33,6 +33,7 @@ import type {
     AsteroNoteBlockTag,
     AsteroNoteBundle,
     AsteroNoteController,
+    AsteroNoteFloatingPosition,
     AsteroNotePluginComponent,
     AsteroNoteTableAction,
     AsteroNoteToolbar,
@@ -167,10 +168,7 @@ function AsteroNoteEditorInner({
     );
     const [isCodeView, setIsCodeView] = React.useState(false);
     const [isFocused, setIsFocused] = React.useState(false);
-    const [floatingPosition, setFloatingPosition] = React.useState<{
-        left: number;
-        top: number;
-    } | null>(null);
+    const [floatingPosition, setFloatingPosition] = React.useState<AsteroNoteFloatingPosition | null>(null);
     const [formatState, setFormatState] = React.useState(
         defaultAsteroNoteFormatState,
     );
@@ -282,43 +280,43 @@ function AsteroNoteEditorInner({
 
         const viewportRect = viewport.getBoundingClientRect();
         const toolbarHeight = 44;
+        const toolbarWidth = 280; // Estimated width of the compact bubble toolbar
         const edgePadding = 12;
         const verticalOffset = 8;
-        const centeredLeft =
-            rect.left -
-            viewportRect.left +
-            viewport.scrollLeft +
-            rect.width / 2;
-        const preferredTop =
-            rect.top -
-            viewportRect.top +
-            viewport.scrollTop -
-            toolbarHeight -
-            verticalOffset;
-        const fallbackTop =
-            rect.bottom -
-            viewportRect.top +
-            viewport.scrollTop +
-            verticalOffset;
-        const minLeft = viewport.scrollLeft + edgePadding;
-        const maxLeft =
-            viewport.scrollLeft + viewport.clientWidth - edgePadding;
-        const minTop = viewport.scrollTop + edgePadding;
-        const maxTop =
-            viewport.scrollTop +
-            viewport.clientHeight -
-            toolbarHeight -
-            edgePadding;
+
+        // Relative to the viewport container that the `absolute` toolbar sits in.
+        // `rect` is relative to viewport. `viewportRect` is relative to viewport.
+        // The difference + scroll position gives the absolute position inside the scroll container.
+        const relativeLeft = rect.left - viewportRect.left + viewport.scrollLeft;
+        const relativeTop = rect.top - viewportRect.top + viewport.scrollTop;
+        const relativeBottom = rect.bottom - viewportRect.top + viewport.scrollTop;
+
+        // Center of the selection
+        const selectionCenterX = relativeLeft + rect.width / 2;
+
+        // Determine vertical placement
+        const minTop = viewport.scrollTop + toolbarHeight + edgePadding;
+        const placement = relativeTop >= minTop ? 'top' : 'bottom';
+        const finalTop = placement === 'top' ? relativeTop : relativeBottom + verticalOffset;
+
+        // Calculate horizontal position with bounds checking
+        // The toolbar uses translateX(-50%) so we position it at the selection center
+        const halfToolbarWidth = toolbarWidth / 2;
+        const minLeft = viewport.scrollLeft + halfToolbarWidth + edgePadding;
+        const maxLeft = viewport.scrollLeft + viewport.clientWidth - halfToolbarWidth - edgePadding;
+
+        // Clamp the toolbar position to stay within bounds
+        const boundedCenterX = Math.min(Math.max(selectionCenterX, minLeft), maxLeft);
+
+        // Calculate arrow offset from toolbar center (50%)
+        // If toolbar had to shift, arrow needs to point back to the actual selection center
+        const arrowOffset = selectionCenterX - boundedCenterX;
 
         setFloatingPosition({
-            left: Math.min(Math.max(centeredLeft, minLeft), maxLeft),
-            top: Math.min(
-                Math.max(
-                    preferredTop >= minTop ? preferredTop : fallbackTop,
-                    minTop,
-                ),
-                Math.max(minTop, maxTop),
-            ),
+            left: boundedCenterX,
+            top: finalTop,
+            placement,
+            arrowOffset,
         });
     }, [floatingToolbarEnabled, isCodeView]);
 

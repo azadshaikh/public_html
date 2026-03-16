@@ -28,6 +28,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { ToolbarButton } from '@/components/ui/toolbar';
 
 export function LinkPluginControl({
     editor,
@@ -55,7 +56,8 @@ export function LinkPluginControl({
         setUrl(link?.getAttribute('href') ?? '');
         setText(link?.textContent ?? selectedText);
         setTarget(link?.getAttribute('target') ?? '_blank');
-        setRel(link?.getAttribute('rel') ?? 'noopener noreferrer');
+        const relAttr = link?.getAttribute('rel');
+        setRel(relAttr || 'none');
     }, [editor]);
 
     const isEditing = Boolean(editor.formatState.link);
@@ -64,7 +66,12 @@ export function LinkPluginControl({
         e.preventDefault();
         if (!url.trim()) return;
 
-        editor.insertLink({ text, url, target, rel });
+        editor.insertLink({
+            text,
+            url,
+            target,
+            rel: rel === 'none' ? undefined : rel
+        });
         setOpen(false);
     };
 
@@ -82,15 +89,18 @@ export function LinkPluginControl({
                 }}
             />
             {isEditing && (
-                <ToolbarIconButton
+                <ToolbarButton
                     disabled={editor.isCodeView}
-                    editor={editor}
-                    icon={<UnlinkIcon />}
                     tooltip="Remove link"
-                    onPress={() => {
+                    onMouseDown={(event: React.MouseEvent) => {
+                        event.preventDefault();
+                        editor.captureSelection();
                         editor.removeLink();
+                        editor.refreshState();
                     }}
-                />
+                >
+                    <UnlinkIcon />
+                </ToolbarButton>
             )}
             <Dialog open={open} onOpenChange={setOpen}>
                 <DialogContent className="sm:max-w-[425px]">
@@ -163,7 +173,7 @@ export function LinkPluginControl({
                                                 <SelectValue placeholder="Select relation" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="">None</SelectItem>
+                                                <SelectItem value="none">None</SelectItem>
                                                 <SelectItem value="noopener noreferrer">noopener noreferrer</SelectItem>
                                                 <SelectItem value="nofollow">nofollow</SelectItem>
                                                 <SelectItem value="noopener noreferrer nofollow">All three</SelectItem>

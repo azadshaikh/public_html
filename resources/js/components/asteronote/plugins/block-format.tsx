@@ -110,14 +110,14 @@ export function BlockFormatDropdown({
     const renderBlockItem = (block: AsteroNoteBlockTag) => (
         <DropdownMenuItem
             key={block}
-            className="gap-2"
+            className="gap-2 py-1.5"
             onSelect={(event) => {
                 event.preventDefault();
                 editor.applyBlockTag(block);
                 setOpen(false);
             }}
         >
-            <span className="flex min-w-8 shrink-0 items-center justify-center text-xs font-semibold tracking-wide text-foreground">
+            <span className="flex min-w-6 shrink-0 items-center justify-center text-xs font-semibold tracking-wide text-muted-foreground">
                 {blockTagShortLabel(block)}
             </span>
 
@@ -125,7 +125,7 @@ export function BlockFormatDropdown({
                 {blockTagLabel(block)}
             </span>
 
-            {selectedBlock === block ? <CheckIcon className="ml-auto" /> : null}
+            {selectedBlock === block ? <CheckIcon className="ml-auto size-4" /> : null}
         </DropdownMenuItem>
     );
 
@@ -144,7 +144,7 @@ export function BlockFormatDropdown({
                 <ToolbarButton
                     disabled={editor.isCodeView}
                     isDropdown
-                    className="min-w-14"
+                    className="min-w-12"
                     onMouseDown={(event: React.MouseEvent) =>
                         event.preventDefault()
                     }
@@ -155,7 +155,7 @@ export function BlockFormatDropdown({
             </DropdownMenuTrigger>
 
             <DropdownMenuContent
-                className="ignore-click-outside/toolbar min-w-52"
+                className="ignore-click-outside/toolbar min-w-44 p-1"
                 align="start"
                 sideOffset={6}
                 collisionPadding={12}
@@ -163,15 +163,7 @@ export function BlockFormatDropdown({
                     event.preventDefault();
                 }}
             >
-                {groupedBlocks.map((group, groupIndex) => (
-                    <React.Fragment key={group.label}>
-                        <DropdownMenuLabel>{group.label}</DropdownMenuLabel>
-                        {group.items.map(renderBlockItem)}
-                        {groupIndex < groupedBlocks.length - 1 ? (
-                            <DropdownMenuSeparator />
-                        ) : null}
-                    </React.Fragment>
-                ))}
+                {allowedBlocks.map(renderBlockItem)}
             </DropdownMenuContent>
         </DropdownMenu>
     );

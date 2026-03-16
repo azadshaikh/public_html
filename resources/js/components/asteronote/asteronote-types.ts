@@ -48,6 +48,8 @@ export type AsteroNoteAlign = 'left' | 'center' | 'right' | 'justify';
 export type AsteroNoteFloatingPosition = {
     left: number;
     top: number;
+    placement: 'top' | 'bottom';
+    arrowOffset: number;
 };
 
 export type AsteroNoteFormatState = {
