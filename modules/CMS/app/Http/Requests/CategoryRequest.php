@@ -22,6 +22,7 @@ class CategoryRequest extends ScaffoldRequest
             'title' => ['required', 'string', 'max:255'],
             'slug' => $this->getSlugRules($id),
             'content' => ['nullable', 'string'],
+            'excerpt' => ['nullable', 'string', 'max:500'],
             'feature_image' => ['nullable', 'integer'],
             'status' => ['required', 'string', 'in:published,draft'],
             'parent_id' => [
@@ -30,6 +31,9 @@ class CategoryRequest extends ScaffoldRequest
                 Rule::exists('cms_posts', 'id')->where('type', 'category'),
             ],
             'template' => ['nullable', 'string', 'max:100'],
+            'meta_title' => ['nullable', 'string', 'max:255'],
+            'meta_description' => ['nullable', 'string', 'max:500'],
+            'meta_robots' => ['nullable', 'string'],
         ];
     }
 

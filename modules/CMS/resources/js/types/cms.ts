@@ -271,7 +271,7 @@ export type CategoryFormValues = {
     excerpt: string;
     status: string;
     parent_id: string;
-    featured_image: File | null;
+    feature_image: number | '';
     template: string;
     meta_title: string;
     meta_description: string;
@@ -285,15 +285,25 @@ export type CategoryFormOptions = {
     metaRobotsOptions: CmsOption[];
     templateOptions: CmsOption[];
     preSlug: string;
+    baseUrl: string;
     defaults: Record<string, string>;
-};
+} & MediaPickerPageProps;
 
 export type CategoryIndexPageProps = ScaffoldIndexPageProps<CategoryListItem>;
 
 export type CategoryCreatePageProps = CategoryFormOptions;
 
+export type CategoryEditDetail = {
+    id: number;
+    title: string;
+    permalink_url: string | null;
+    featured_image_url: string | null;
+    updated_at_formatted: string;
+    updated_at_human: string | null;
+};
+
 export type CategoryEditPageProps = CategoryFormOptions & {
-    category: CategoryListItem & Record<string, unknown>;
+    category: CategoryEditDetail;
 };
 
 // ================================================================
@@ -324,6 +334,8 @@ export type TagFormValues = {
     content: string;
     excerpt: string;
     status: string;
+    feature_image: number | '';
+    template: string;
     meta_title: string;
     meta_description: string;
     meta_robots: string;
@@ -335,15 +347,25 @@ export type TagFormOptions = {
     metaRobotsOptions: CmsOption[];
     templateOptions: CmsOption[];
     preSlug: string;
+    baseUrl: string;
     defaults: Record<string, string>;
-};
+} & MediaPickerPageProps;
 
 export type TagIndexPageProps = ScaffoldIndexPageProps<TagListItem>;
 
 export type TagCreatePageProps = TagFormOptions;
 
+export type TagEditDetail = {
+    id: number;
+    title: string;
+    permalink_url: string | null;
+    featured_image_url: string | null;
+    updated_at_formatted: string;
+    updated_at_human: string | null;
+};
+
 export type TagEditPageProps = TagFormOptions & {
-    tag: TagListItem & Record<string, unknown>;
+    tag: TagEditDetail;
 };
 
 // ================================================================
