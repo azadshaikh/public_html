@@ -112,6 +112,15 @@ class FormCrudTest extends TestCase
             );
     }
 
+    public function test_form_show_route_redirects_to_edit_page(): void
+    {
+        $form = $this->createForm();
+
+        $this->actingAs($this->admin)
+            ->get(route('cms.form.show', $form))
+            ->assertRedirect(route('cms.form.edit', $form));
+    }
+
     public function test_admin_can_store_a_form(): void
     {
         $response = $this->actingAs($this->admin)

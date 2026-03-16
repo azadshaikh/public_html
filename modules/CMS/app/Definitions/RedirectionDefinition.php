@@ -162,19 +162,4 @@ class RedirectionDefinition extends ScaffoldDefinition
             StatusTab::make('trash')->label('Trash')->icon('ri-delete-bin-line')->color('danger'),
         ];
     }
-
-    public function getIndexView(): string
-    {
-        return 'cms::redirections.index';
-    }
-
-    public function getCreateView(): string
-    {
-        return 'cms::redirections.create';
-    }
-
-    public function getEditView(): string
-    {
-        return 'cms::redirections.edit';
-    }
 }

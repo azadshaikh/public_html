@@ -16,7 +16,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
-use Illuminate\View\View;
 use Inertia\Inertia;
 use Inertia\Response;
 use Modules\CMS\Http\Requests\UpdateSeoSettingsRequest;
@@ -77,7 +76,7 @@ class SeoSettingController extends Controller
     /**
      * Display SEO settings page
      */
-    public function index(Request $request, string $masterGroup, string $fileName): View|Response
+    public function index(Request $request, string $masterGroup, string $fileName): Response
     {
         // Determine permission module (cms for titlesmeta)
         // Map route master_group to actual seeded permission names
@@ -127,15 +126,7 @@ class SeoSettingController extends Controller
             return Inertia::render($inertiaPage['component'], $inertiaPage['props']);
         }
 
-        // Map logical master_group to view folder (e.g., 'common' → 'settings')
-        $viewFolder = $masterGroup === 'common' ? 'settings' : $masterGroup;
-
-        // Resolve view name
-        $viewName = $masterGroup === 'titlesmeta' || ($masterGroup === 'settings' && $fileName === 'titlesmeta')
-            ? 'seo::settings.titlesmeta.titlesmeta'
-            : sprintf('seo::%s.%s', $viewFolder, $fileName);
-
-        return view($viewName, $data);
+        abort(404);
     }
 
     // =============================================================================

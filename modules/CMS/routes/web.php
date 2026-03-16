@@ -124,7 +124,7 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
             Route::delete('/{form}', [FormController::class, 'destroy'])->name('destroy')->where('form', '[0-9]+');
             Route::delete('/{form}/force-delete', [FormController::class, 'forceDelete'])->name('force-delete')->where('form', '[0-9]+');
             Route::patch('/{form}/restore', [FormController::class, 'restore'])->name('restore')->where('form', '[0-9]+');
-            Route::get('/{form}', [FormController::class, 'show'])->name('show')->where('form', '[0-9]+');
+            Route::get('/{form}', [FormController::class, 'redirectToEdit'])->name('show')->where('form', '[0-9]+');
 
             Route::get('/{status?}', [FormController::class, 'index'])
                 ->name('index')

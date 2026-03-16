@@ -6,6 +6,7 @@ namespace Modules\CMS\Http\Controllers;
 
 use App\Scaffold\ScaffoldController;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Modules\CMS\Definitions\FormDefinition;
 use Modules\CMS\Models\Form;
@@ -35,6 +36,11 @@ class FormController extends ScaffoldController implements HasMiddleware
     protected function getAfterStoreRedirectUrl(Model $model): string
     {
         return route('cms.form.edit', $model);
+    }
+
+    public function redirectToEdit(int|string $id): RedirectResponse
+    {
+        return redirect()->route('cms.form.edit', $id);
     }
 
     protected function getFormViewData(Model $model): array

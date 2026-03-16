@@ -39,8 +39,8 @@ class SeoDashboardController extends Controller
         // Get quick stats
         $stats = [
             'robots_txt_exists' => file_exists(public_path('robots.txt')),
-            'sitemap_exists' => $sitemapStatus['exists'] ?? false,
-            'sitemap_last_generated' => $sitemapStatus['last_generated'] ?? null,
+            'sitemap_exists' => ($sitemapStatus['total_urls'] ?? 0) > 0,
+            'sitemap_last_generated' => $sitemapStatus['last_generated_at'] ?? null,
         ];
 
         // Quick links for the dashboard

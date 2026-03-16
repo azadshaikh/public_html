@@ -3,7 +3,6 @@
 import { router } from '@inertiajs/react';
 import {
     AlertCircleIcon,
-    CheckCircleIcon,
     CheckIcon,
     FileAudioIcon,
     FileIcon,
@@ -12,7 +11,6 @@ import {
     FileVideoIcon,
     ImageIcon,
     Loader2Icon,
-    LoaderIcon,
     Trash2Icon,
     UploadCloudIcon,
     XIcon,
@@ -32,8 +30,6 @@ import { Button } from '@/components/ui/button';
 import {
     Dialog,
     DialogContent,
-    DialogDescription,
-    DialogFooter,
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
@@ -65,8 +61,6 @@ export type MediaPickerItem = {
 };
 
 type MediaPickerSelection = 'single' | 'multiple';
-
-
 
 type MediaPickerDialogProps = {
     open: boolean;
@@ -176,8 +170,6 @@ export function MediaPickerDialog({
     open,
     onOpenChange,
     onSelect,
-    selection = 'single',
-    maxSelections = 1,
     title = 'Select Media',
     defaultTab = 'upload',
     pickerMedia,
@@ -186,7 +178,7 @@ export function MediaPickerDialog({
     pickerAction,
 }: MediaPickerDialogProps) {
     const [tab, setTab] = useState<'upload' | 'library'>(defaultTab);
-    const [selected, setSelected] = useState<Map<number, MediaPickerItem>>(new Map());
+    const [activeMediaId, setActiveMediaId] = useState<number | null>(null);
     const initialLoadTriggeredRef = useRef(false);
 
     // Upload state
@@ -197,19 +189,32 @@ export function MediaPickerDialog({
     const uploadedIdsRef = useRef<Set<string>>(new Set());
     const refreshedAfterUploadRef = useRef(false);
 
-    // ── Reset on open/close ──────────────────────────────────────
+    const resetDialogState = useCallback(() => {
+        setTab(defaultTab);
+        setActiveMediaId(null);
+        setUploadFiles((previousFiles) => {
+            previousFiles.forEach((file) => {
+                if (file.previewUrl) {
+                    URL.revokeObjectURL(file.previewUrl);
+                }
+            });
 
-    useEffect(() => {
-        if (open) {
-            setSelected(new Map());
-            setTab(defaultTab);
-            setUploadFiles([]);
-            uploadedIdsRef.current.clear();
-            refreshedAfterUploadRef.current = false;
-        } else {
-            initialLoadTriggeredRef.current = false;
+            return [];
+        });
+        setIsDragOver(false);
+        dragCounterRef.current = 0;
+        uploadedIdsRef.current.clear();
+        refreshedAfterUploadRef.current = false;
+        initialLoadTriggeredRef.current = false;
+    }, [defaultTab]);
+
+    const handleDialogOpenChange = useCallback((nextOpen: boolean) => {
+        if (!nextOpen) {
+            resetDialogState();
         }
-    }, [open, defaultTab]);
+
+        onOpenChange(nextOpen);
+    }, [onOpenChange, resetDialogState]);
 
     // ── Trigger initial load ─────────────────────────────────────
 
@@ -239,38 +244,28 @@ export function MediaPickerDialog({
 
     // ── Selection logic ──────────────────────────────────────────
 
-    const toggleSelect = useCallback(
+    const handleMediaClick = useCallback(
         (item: MediaListItem) => {
-            setSelected((prev) => {
-                const next = new Map(prev);
-                if (next.has(item.id)) {
-                    next.delete(item.id);
-                } else {
-                    if (selection === 'single') {
-                        next.clear();
-                    }
-                    if (
-                        selection === 'multiple' &&
-                        maxSelections > 0 &&
-                        next.size >= maxSelections
-                    ) {
-                        return prev;
-                    }
-                    next.set(item.id, toPickerItem(item));
-                }
-                return next;
-            });
+            // Set as active to show details
+            setActiveMediaId(item.id);
         },
-        [selection, maxSelections],
+        [],
     );
 
-    const handleConfirm = useCallback(() => {
-        const selectedItems = Array.from(selected.values());
-        if (selectedItems.length > 0) {
-            onSelect(selectedItems);
-            onOpenChange(false);
-        }
-    }, [selected, onSelect, onOpenChange]);
+    const handleSelectMedia = useCallback(() => {
+        if (!activeMediaId) return;
+        const activeMedia = pickerMedia?.data.find((m) => m.id === activeMediaId);
+        if (!activeMedia) return;
+
+        // Close dialog after selection
+        onSelect([toPickerItem(activeMedia)]);
+        onOpenChange(false);
+    }, [activeMediaId, pickerMedia, onSelect, onOpenChange]);
+
+    const activeMedia = useMemo(() => {
+        if (!activeMediaId || !pickerMedia) return null;
+        return pickerMedia.data.find((m) => m.id === activeMediaId) || null;
+    }, [activeMediaId, pickerMedia]);
 
     // ── Upload logic ─────────────────────────────────────────────
 
@@ -301,7 +296,6 @@ export function MediaPickerDialog({
         if (!uploadSettings) {
             return 'Upload settings not loaded';
         }
-
         return `You can upload up to ${uploadSettings.max_files_per_upload} files at once`;
     }, [uploadSettings]);
 
@@ -318,11 +312,13 @@ export function MediaPickerDialog({
                         ? batchLimitMessage()
                         : null;
                 const error = validateFile(file);
+
                 return {
                     id: crypto.randomUUID(),
                     file,
                     name: file.name,
                     size: file.size,
+                    type: file.type,
                     progress: 0,
                     status: batchError || error ? 'error' : 'staged',
                     error: batchError ?? error ?? undefined,
@@ -482,23 +478,10 @@ export function MediaPickerDialog({
         );
         if (!allDone || refreshedAfterUploadRef.current) return;
 
-        refreshedAfterUploadRef.current = true;
+        // Check if there are any errors
+        const hasErrors = uploadFiles.some((f) => f.status === 'error');
 
-        // Auto-select newly uploaded items
-        setSelected((prev) => {
-            const next = new Map(prev);
-            for (const uf of successfulUploads) {
-                if (!uf.result) continue;
-                if (selection === 'single') {
-                    next.clear();
-                    next.set(uf.result.id, uf.result);
-                    break;
-                }
-                if (maxSelections > 0 && next.size >= maxSelections) break;
-                next.set(uf.result.id, uf.result);
-            }
-            return next;
-        });
+        refreshedAfterUploadRef.current = true;
 
         // Refresh library data so new uploads appear in the grid
         router.get(
@@ -514,9 +497,15 @@ export function MediaPickerDialog({
                 preserveState: true,
                 preserveScroll: true,
                 replace: true,
+                onSuccess: () => {
+                    // Switch to library tab only if all uploads succeeded without errors
+                    if (!hasErrors) {
+                        setTab('library');
+                    }
+                },
             },
         );
-    }, [successfulUploads, uploadFiles, selection, maxSelections, pickerAction, pickerFilters]);
+    }, [successfulUploads, uploadFiles, pickerAction, pickerFilters]);
 
     // Drag events
     const handleDragEnter = useCallback((e: React.DragEvent) => {
@@ -598,11 +587,6 @@ export function MediaPickerDialog({
             )
             : 0;
 
-    const selectedPreview = useMemo(() => {
-        if (selected.size === 0) return null;
-        return Array.from(selected.values())[0];
-    }, [selected]);
-
     const canChooseMultipleFiles = uploadSettings
         ? uploadSettings.max_files_per_upload > 1
         : true;
@@ -617,46 +601,35 @@ export function MediaPickerDialog({
                 key: 'file_name',
                 header: 'File Name',
                 sortable: true,
-                cell: (item: MediaListItem) => {
-                    const isItemSelected = selected.has(item.id);
-                    return (
-                        <button
-                            type="button"
-                            onClick={() => toggleSelect(item)}
-                            className="flex min-w-0 items-center gap-3 text-left hover:opacity-80"
-                        >
-                            <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded bg-muted">
-                                {item.thumbnail_url ? (
-                                    <img
-                                        src={item.thumbnail_url}
-                                        alt={item.alt_text || item.name}
-                                        className="size-10 object-cover"
-                                    />
-                                ) : (
-                                    getFileTypeIcon(item.mime_type, 'size-5 text-muted-foreground')
-                                )}
-                            </div>
-                            <div className="min-w-0 flex-1">
-                                <span className={cn(
-                                    'block truncate text-sm font-medium',
-                                    isItemSelected && 'text-primary',
-                                )}>
-                                    {item.file_name}
-                                </span>
-                                {item.name !== item.file_name && (
-                                    <span className="block truncate text-xs text-muted-foreground">
-                                        {item.name}
-                                    </span>
-                                )}
-                            </div>
-                            {isItemSelected && (
-                                <div className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                                    <CheckIcon className="size-3 stroke-[3]" />
-                                </div>
+                cell: (item: MediaListItem) => (
+                    <button
+                        type="button"
+                        onClick={() => handleMediaClick(item)}
+                        className="flex min-w-0 items-center gap-3 text-left hover:opacity-80"
+                    >
+                        <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded bg-muted">
+                            {isImageMime(item.mime_type) && item.thumbnail_url ? (
+                                <img
+                                    src={item.thumbnail_url}
+                                    alt={item.alt_text || item.name}
+                                    className="size-10 object-cover"
+                                />
+                            ) : (
+                                getFileTypeIcon(item.mime_type, 'size-5 text-muted-foreground')
                             )}
-                        </button>
-                    );
-                },
+                        </div>
+                        <div className="min-w-0 flex-1">
+                            <span className="block truncate text-sm font-medium">
+                                {item.file_name}
+                            </span>
+                            {item.name !== item.file_name && (
+                                <span className="block truncate text-xs text-muted-foreground">
+                                    {item.name}
+                                </span>
+                            )}
+                        </div>
+                    </button>
+                ),
             },
             {
                 key: 'mime_type',
@@ -686,7 +659,7 @@ export function MediaPickerDialog({
                 sortable: true,
             },
         ],
-        [selected, toggleSelect],
+        [handleMediaClick],
     );
 
     const gridFilters: DatagridFilter[] = useMemo(
@@ -722,7 +695,7 @@ export function MediaPickerDialog({
     // ── Render ───────────────────────────────────────────────────
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
+        <Dialog open={open} onOpenChange={handleDialogOpenChange}>
             <DialogContent
                 className="flex h-[calc(100vh-2rem)] max-h-[calc(100vh-2rem)] flex-col p-3 sm:w-[min(calc(100vw-2rem),80rem)] sm:max-w-7xl sm:p-4"
                 showCloseButton
@@ -732,11 +705,6 @@ export function MediaPickerDialog({
                         <ImageIcon className="size-5 text-primary" />
                         {title}
                     </DialogTitle>
-                    <DialogDescription>
-                        {selection === 'single'
-                            ? 'Choose one file from your library or upload new files.'
-                            : `Select up to ${maxSelections > 0 ? maxSelections : '∞'} files.`}
-                    </DialogDescription>
                 </DialogHeader>
 
                 <Tabs
@@ -1012,7 +980,7 @@ export function MediaPickerDialog({
                     {/* ── Library tab ──────────────────────────── */}
                     <TabsContent
                         value="library"
-                        className="flex min-h-0 flex-1 flex-col overflow-auto"
+                        className="flex min-h-0 flex-1 gap-4 overflow-hidden"
                     >
                         {isLoading ? (
                             <div className="flex flex-1 items-center justify-center py-16">
@@ -1022,125 +990,162 @@ export function MediaPickerDialog({
                                 </div>
                             </div>
                         ) : (
-                            <Datagrid
-                                action={pickerAction}
-                                rows={pickerMedia ?? emptyPaginatedData}
-                                columns={gridColumns}
-                                filters={gridFilters}
-                                getRowKey={(item) => item.id}
-                                view={{
-                                    value: pickerFilters?.view ?? 'cards',
-                                    storageKey: 'media-picker-view',
-                                }}
-                                cardGridClassName="grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 p-3"
-                                renderCard={(item) => {
-                                    const isItemSelected = selected.has(item.id);
-                                    return (
-                                        <button
-                                            type="button"
-                                            onClick={() => toggleSelect(item)}
-                                            className={cn(
-                                                'group relative aspect-square w-full overflow-hidden',
-                                                isItemSelected && 'ring-2 ring-primary ring-offset-2',
-                                            )}
-                                        >
-                                            {/* Thumbnail or file icon */}
-                                            {item.thumbnail_url && isImageMime(item.mime_type) ? (
-                                                <img
-                                                    src={item.thumbnail_url}
-                                                    alt={item.alt_text || item.name}
-                                                    className="size-full object-cover transition-transform duration-200 group-hover:scale-105"
-                                                    loading="lazy"
-                                                />
-                                            ) : (
-                                                <div className="flex size-full items-center justify-center bg-muted">
-                                                    {getFileTypeIcon(item.mime_type, 'size-10 text-muted-foreground/40')}
+                            <>
+                                {/* Left: Media Grid */}
+                                <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+                                    {/* Datagrid */}
+                                    <div className="flex-1 overflow-hidden p-2">
+                                        <Datagrid
+                                            action={pickerAction}
+                                            rows={pickerMedia ?? emptyPaginatedData}
+                                            columns={gridColumns}
+                                            filters={gridFilters}
+                                            getRowKey={(item) => item.id}
+                                            view={{
+                                                value: pickerFilters?.view ?? 'cards',
+                                                storageKey: 'media-picker-view',
+                                            }}
+                                            cardGridClassName="grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-3 p-3"
+                                            renderCard={(item) => {
+                                                const isActive = activeMediaId === item.id;
+                                                return (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleMediaClick(item)}
+                                                        className={cn(
+                                                            'group relative aspect-square w-full overflow-hidden bg-muted',
+                                                            isActive && 'ring-2 ring-primary ring-offset-2',
+                                                        )}
+                                                    >
+                                                        {/* Thumbnail or file icon */}
+                                                        {isImageMime(item.mime_type) && item.thumbnail_url ? (
+                                                            <img
+                                                                src={item.thumbnail_url}
+                                                                alt={item.alt_text || item.name}
+                                                                className="size-full object-cover transition-transform duration-200 group-hover:scale-105"
+                                                                loading="lazy"
+                                                            />
+                                                        ) : (
+                                                            <div className="flex size-full items-center justify-center">
+                                                                {getFileTypeIcon(item.mime_type, 'size-10 text-muted-foreground/40')}
+                                                            </div>
+                                                        )}
+
+                                                        {/* Extension badge */}
+                                                        <div className="absolute bottom-0 left-0">
+                                                            <span className="inline-block rounded-tr-md bg-black/60 px-1.5 py-0.5 text-[10px] font-bold uppercase text-white">
+                                                                {getFileExtension(item.file_name)}
+                                                            </span>
+                                                        </div>
+                                                    </button>
+                                                );
+                                            }}
+                                            sorting={{
+                                                sort: pickerFilters?.sort ?? 'created_at',
+                                                direction: pickerFilters?.direction ?? 'desc',
+                                            }}
+                                            perPage={{
+                                                value: pickerFilters?.per_page ?? 24,
+                                                options: [24, 48, 96],
+                                            }}
+                                            empty={{
+                                                icon: <ImageIcon />,
+                                                title: 'No media files found',
+                                                description: 'Upload files to get started.',
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Right: Media Details Panel */}
+                                <div className="flex w-80 flex-col border-l">
+                                    <div className="border-b px-4 py-3">
+                                        <h3 className="text-sm font-semibold">Media Details</h3>
+                                    </div>
+
+                                    {!activeMedia ? (
+                                        /* Empty State */
+                                        <div className="flex flex-1 flex-col items-center justify-center gap-3 px-4 text-center">
+                                            <ImageIcon className="size-12 text-muted-foreground/40" />
+                                            <p className="text-sm text-muted-foreground">
+                                                Select a file to view details
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        /* Details Content */
+                                        <ScrollArea className="flex-1">
+                                            <div className="space-y-4 p-4">
+                                                {/* Preview */}
+                                                <div className="relative h-48 w-full overflow-hidden rounded-lg border bg-muted p-2">
+                                                    {isImageMime(activeMedia.mime_type) && activeMedia.thumbnail_url ? (
+                                                        <img
+                                                            src={activeMedia.thumbnail_url}
+                                                            alt={activeMedia.alt_text || activeMedia.name}
+                                                            className="absolute inset-0 m-auto max-h-[calc(100%-1rem)] max-w-[calc(100%-1rem)] object-contain"
+                                                        />
+                                                    ) : (
+                                                        <div className="absolute inset-0 flex items-center justify-center">
+                                                            {getFileTypeIcon(activeMedia.mime_type, 'size-16 text-muted-foreground/40')}
+                                                        </div>
+                                                    )}
                                                 </div>
-                                            )}
 
-                                            {/* Selection overlay */}
-                                            {isItemSelected && (
-                                                <div className="absolute inset-0 bg-primary/10" />
-                                            )}
-
-                                            {/* Check badge */}
-                                            {isItemSelected && (
-                                                <div className="absolute top-1.5 right-1.5 flex size-5 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm">
-                                                    <CheckIcon className="size-3 stroke-[3]" />
+                                                {/* File Type */}
+                                                <div>
+                                                    <p className="text-xs text-muted-foreground">.{getFileExtension(activeMedia.file_name)}</p>
                                                 </div>
-                                            )}
 
-                                            {/* Extension badge */}
-                                            <div className="absolute bottom-0 left-0">
-                                                <span className="inline-block rounded-tr-md bg-black/60 px-1.5 py-0.5 text-[10px] font-bold text-white uppercase">
-                                                    {getFileExtension(item.file_name)}
-                                                </span>
-                                            </div>
+                                                {/* Alt Text */}
+                                                <div className="space-y-1.5">
+                                                    <label className="text-xs font-medium">Alt Text</label>
+                                                    <p className="text-sm text-muted-foreground">
+                                                        {activeMedia.alt_text || 'No alt text added.'}
+                                                    </p>
+                                                </div>
 
-                                            {/* Hover details */}
-                                            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-1.5 opacity-0 transition-opacity group-hover:opacity-100">
-                                                <p className="truncate text-[10px] font-medium text-white">
-                                                    {item.name}
-                                                </p>
-                                                <p className="text-[9px] text-white/70">
-                                                    {item.human_readable_size}
-                                                </p>
+                                                {/* Title */}
+                                                <div className="space-y-1.5">
+                                                    <label className="text-xs font-medium">Title</label>
+                                                    <p className="text-sm text-muted-foreground">
+                                                        {activeMedia.name || 'Untitled media item'}
+                                                    </p>
+                                                </div>
+
+                                                {/* Caption */}
+                                                <div className="space-y-1.5">
+                                                    <label className="text-xs font-medium">Caption</label>
+                                                    <p className="text-sm text-muted-foreground">
+                                                        {activeMedia.caption || 'No caption added.'}
+                                                    </p>
+                                                </div>
+
+                                                {/* File URL */}
+                                                <div className="space-y-1.5">
+                                                    <label className="text-xs font-medium">File URL</label>
+                                                    <p className="truncate text-xs text-muted-foreground">
+                                                        {activeMedia.original_url}
+                                                    </p>
+                                                </div>
                                             </div>
-                                        </button>
-                                    );
-                                }}
-                                sorting={{
-                                    sort: pickerFilters?.sort ?? 'created_at',
-                                    direction: pickerFilters?.direction ?? 'desc',
-                                }}
-                                perPage={{
-                                    value: pickerFilters?.per_page ?? 24,
-                                    options: [24, 48, 96],
-                                }}
-                                empty={{
-                                    icon: <ImageIcon />,
-                                    title: 'No media files found',
-                                    description: 'Upload files to get started.',
-                                }}
-                            />
+                                        </ScrollArea>
+                                    )}
+
+                                    {/* Action Button */}
+                                    {activeMedia && (
+                                        <div className="border-t p-4">
+                                            <Button
+                                                className="w-full"
+                                                onClick={handleSelectMedia}
+                                            >
+                                                Select
+                                            </Button>
+                                        </div>
+                                    )}
+                                </div>
+                            </>
                         )}
                     </TabsContent>
                 </Tabs>
-
-                {/* ── Footer with selection info + confirm ─── */}
-                <DialogFooter>
-                    {selected.size > 0 && selectedPreview && (
-                        <div className="mr-auto flex items-center gap-2">
-                            {isImageMime(selectedPreview.mime_type) &&
-                                selectedPreview.thumbnail_url && (
-                                    <img
-                                        src={selectedPreview.thumbnail_url}
-                                        alt=""
-                                        className="size-8 rounded border object-cover"
-                                    />
-                                )}
-                            <span className="text-sm text-muted-foreground">
-                                {selected.size === 1
-                                    ? selectedPreview.name
-                                    : `${selected.size} files selected`}
-                            </span>
-                        </div>
-                    )}
-                    <Button
-                        variant="outline"
-                        onClick={() => onOpenChange(false)}
-                    >
-                        Cancel
-                    </Button>
-                    <Button
-                        onClick={handleConfirm}
-                        disabled={selected.size === 0 || hasActiveUploads}
-                    >
-                        {selection === 'single'
-                            ? 'Select'
-                            : `Select (${selected.size})`}
-                    </Button>
-                </DialogFooter>
             </DialogContent>
         </Dialog>
     );

@@ -107,19 +107,4 @@ class DesignBlockDefinition extends ScaffoldDefinition
             StatusTab::make('trash')->label('Trash')->icon('ri-delete-bin-line')->color('danger'),
         ];
     }
-
-    public function getIndexView(): string
-    {
-        return 'cms::designblocks.index';
-    }
-
-    public function getCreateView(): string
-    {
-        return 'cms::designblocks.create';
-    }
-
-    public function getEditView(): string
-    {
-        return 'cms::designblocks.edit';
-    }
 }

@@ -111,7 +111,7 @@ class MenuDefinition extends ScaffoldDefinition
             Action::make('edit')
                 ->label('Edit')
                 ->icon('ri-pencil-line')
-                ->route($this->routePrefix.'.edit')
+                ->route("{$this->routePrefix}.edit")
                 ->permission('edit_'.$this->permissionPrefix)
                 ->forRow(),
 
@@ -119,7 +119,7 @@ class MenuDefinition extends ScaffoldDefinition
             Action::make('duplicate')
                 ->label('Duplicate')
                 ->icon('ri-file-copy-line')
-                ->route($this->routePrefix.'.duplicate')
+                ->route("{$this->routePrefix}.duplicate")
                 ->method('POST')
                 ->permission('add_'.$this->permissionPrefix)
                 ->confirm('Create a copy of this menu (without location assignment)?')
@@ -130,7 +130,7 @@ class MenuDefinition extends ScaffoldDefinition
             Action::make('delete')
                 ->label('Move to Trash')
                 ->icon('ri-delete-bin-line')
-                ->route($this->routePrefix.'.destroy')
+                ->route("{$this->routePrefix}.destroy")
                 ->method('DELETE')
                 ->permission('delete_'.$this->permissionPrefix)
                 ->confirm('Are you sure you want to move this menu to trash?')
@@ -141,7 +141,7 @@ class MenuDefinition extends ScaffoldDefinition
             Action::make('restore')
                 ->label('Restore')
                 ->icon('ri-loop-right-line')
-                ->route($this->routePrefix.'.restore')
+                ->route("{$this->routePrefix}.restore")
                 ->method('PATCH')
                 ->permission('restore_'.$this->permissionPrefix)
                 ->confirm('Are you sure you want to restore this menu?')
@@ -152,7 +152,7 @@ class MenuDefinition extends ScaffoldDefinition
             Action::make('force_delete')
                 ->label('Delete Permanently')
                 ->icon('ri-delete-bin-line')
-                ->route($this->routePrefix.'.force-delete')
+                ->route("{$this->routePrefix}.force-delete")
                 ->method('DELETE')
                 ->permission('delete_'.$this->permissionPrefix)
                 ->danger()
@@ -219,25 +219,4 @@ class MenuDefinition extends ScaffoldDefinition
                 ->color('danger'),
         ];
     }
-
-    // ================================================================
-    // VIEW PATHS - Custom for Menu
-    // ================================================================
-
-    public function getIndexView(): string
-    {
-        return 'cms::menus.index';
-    }
-
-    public function getCreateView(): string
-    {
-        return 'cms::menus.create';
-    }
-
-    public function getEditView(): string
-    {
-        return 'cms::menus.edit';
-    }
-
-    // Note: Menu doesn't have a show view - edit serves as the detail view
 }

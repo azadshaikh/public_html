@@ -40,7 +40,7 @@ class FormResource extends ScaffoldResource
         $isActive = (bool) ($this->resource->is_active ?? false);
 
         return [
-            'show_url' => route($this->scaffold()->getRoutePrefix().'.show', $this->resource->getKey()),
+            'show_url' => route($this->scaffold()->getRoutePrefix().'.edit', $this->resource->getKey()),
 
             'created_at' => $this->resource->created_at
                 ? app_date_time_format($this->resource->created_at, 'date')
