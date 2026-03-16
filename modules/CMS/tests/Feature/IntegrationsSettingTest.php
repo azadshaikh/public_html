@@ -73,13 +73,20 @@ class IntegrationsSettingTest extends TestCase
             ->assertRedirect(route('login'));
     }
 
+    public function test_integrations_index_redirects_to_webmaster_tools_route(): void
+    {
+        $this->actingAs($this->admin)
+            ->get(route('cms.integrations.index'))
+            ->assertRedirect(route('cms.integrations.webmastertools'));
+    }
+
     public function test_admin_can_view_integrations_settings(): void
     {
         $this->saveSetting('google_analytics', '<script>window.dataLayer = [];</script>');
         $this->saveSetting('google_adsense_enabled', 'true', 'boolean');
 
         $this->actingAs($this->admin)
-            ->get(route('cms.integrations.index', ['section' => 'google_adsense']))
+            ->get(route('cms.integrations.googleadsense'))
             ->assertOk()
             ->assertInertia(fn (Assert $page): Assert => $page
                 ->component('cms/integrations/index')
@@ -96,13 +103,13 @@ class IntegrationsSettingTest extends TestCase
         $snippet = '<script async src="https://www.googletagmanager.com/gtag/js?id=G-123456"></script>';
 
         $response = $this->actingAs($this->admin)
-            ->from(route('cms.integrations.index'))
+            ->from(route('cms.integrations.googleanalytics'))
             ->post(route('cms.integrations.googleanalytics.update'), [
                 'google_analytics' => $snippet,
                 'section' => 'google_analytics',
             ]);
 
-        $response->assertRedirect(route('cms.integrations.index', ['section' => 'google_analytics']));
+        $response->assertRedirect(route('cms.integrations.googleanalytics'));
         $response->assertSessionHas('success');
 
         $this->assertDatabaseHas('settings', [
@@ -118,7 +125,7 @@ class IntegrationsSettingTest extends TestCase
         $snippet = '<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1234567890"></script>';
 
         $response = $this->actingAs($this->admin)
-            ->from(route('cms.integrations.index'))
+            ->from(route('cms.integrations.googleadsense'))
             ->post(route('cms.integrations.googleadsense.update'), [
                 'google_adsense_enabled' => true,
                 'google_adsense_code' => $snippet,
@@ -128,7 +135,7 @@ class IntegrationsSettingTest extends TestCase
                 'section' => 'google_adsense',
             ]);
 
-        $response->assertRedirect(route('cms.integrations.index', ['section' => 'google_adsense']));
+        $response->assertRedirect(route('cms.integrations.googleadsense'));
         $response->assertSessionHas('success');
 
         $this->assertDatabaseHas('settings', [
@@ -164,7 +171,7 @@ class IntegrationsSettingTest extends TestCase
         ]);
 
         $this->actingAs($user)
-            ->get(route('cms.integrations.index'))
+            ->get(route('cms.integrations.webmastertools'))
             ->assertForbidden();
     }
 

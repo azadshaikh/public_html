@@ -102,8 +102,16 @@ class SeoSettingController extends Controller
 
         $data = $this->getViewData('settings', $masterGroup, $fileName);
 
-        if ($masterGroup === 'integrations' && $fileName === 'integrations') {
-            return Inertia::render('cms/integrations/index', $this->getIntegrationsPageData($request, $data['settings_data']));
+        if ($masterGroup === 'integrations' && in_array($fileName, [
+            'webmaster_tools',
+            'google_analytics',
+            'google_tags',
+            'meta_pixel',
+            'microsoft_clarity',
+            'google_adsense',
+            'other',
+        ], true)) {
+            return Inertia::render('cms/integrations/index', $this->getIntegrationsPageData($data['settings_data'], $fileName));
         }
 
         // Add sitemap status data for sitemap settings page
@@ -171,6 +179,32 @@ class SeoSettingController extends Controller
 
             // Log with detailed change information
             $this->logSettingsUpdateWithChanges($masterGroup, $fileName, $oldValues, $newValues);
+
+            if ($masterGroup === 'integrations') {
+                $routeName = match ($fileName) {
+                    'webmaster_tools' => 'cms.integrations.webmastertools',
+                    'google_analytics' => 'cms.integrations.googleanalytics',
+                    'google_tags' => 'cms.integrations.googletags',
+                    'meta_pixel' => 'cms.integrations.metapixel',
+                    'microsoft_clarity' => 'cms.integrations.microsoftclarity',
+                    'google_adsense' => 'cms.integrations.googleadsense',
+                    'other' => 'cms.integrations.other',
+                    default => 'cms.integrations.index',
+                };
+
+                // Check for integration validation warnings
+                $integrationWarnings = $this->seoSettingService->getIntegrationWarnings();
+
+                if ($integrationWarnings !== []) {
+                    $warningMessages = array_map(fn (array $w): string => '<strong>'.$w['field'].':</strong> '.$w['message'], $integrationWarnings);
+
+                    return to_route($routeName)
+                        ->with('success', $changeSummary)
+                        ->with('error', 'Some invalid HTML was removed:<br>'.implode('<br>', $warningMessages));
+                }
+
+                return to_route($routeName)->with('success', $changeSummary);
+            }
 
             // Preserve the section parameter when redirecting
             $redirectUrl = url()->previous();
@@ -529,24 +563,8 @@ class SeoSettingController extends Controller
      * @param  array<string, mixed>  $settingsData
      * @return array<string, mixed>
      */
-    private function getIntegrationsPageData(Request $request, array $settingsData): array
+    private function getIntegrationsPageData(array $settingsData, string $activeSection): array
     {
-        $sections = [
-            'webmaster_tools',
-            'google_analytics',
-            'google_tags',
-            'meta_pixel',
-            'microsoft_clarity',
-            'google_adsense',
-            'other',
-        ];
-
-        $activeSection = (string) $request->query('section', 'webmaster_tools');
-
-        if (! in_array($activeSection, $sections, true)) {
-            $activeSection = 'webmaster_tools';
-        }
-
         $adsTxtPath = public_path('ads.txt');
 
         return [

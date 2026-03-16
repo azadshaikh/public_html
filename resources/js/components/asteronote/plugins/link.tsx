@@ -1,6 +1,6 @@
 'use client';
 
-import { Link2Icon } from 'lucide-react';
+import { Link2Icon, UnlinkIcon } from 'lucide-react';
 import * as React from 'react';
 
 import type { AsteroNoteController } from '@/components/asteronote/asteronote-types';
@@ -21,6 +21,13 @@ import {
     FieldLabel,
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 
 export function LinkPluginControl({
     editor,
@@ -31,7 +38,7 @@ export function LinkPluginControl({
     const [url, setUrl] = React.useState('');
     const [text, setText] = React.useState('');
     const [target, setTarget] = React.useState('_blank');
-    const [rel, setRel] = React.useState('noopener nofollow');
+    const [rel, setRel] = React.useState('noopener noreferrer');
 
     const syncFromSelection = React.useCallback(() => {
         editor.captureSelection();
@@ -41,15 +48,25 @@ export function LinkPluginControl({
         const selectedText = selection?.toString() ?? '';
         const link = document.getSelection()?.anchorNode
             ? (document
-                  .getSelection()
-                  ?.anchorNode?.parentElement?.closest('a') ?? null)
+                .getSelection()
+                ?.anchorNode?.parentElement?.closest('a') ?? null)
             : null;
 
         setUrl(link?.getAttribute('href') ?? '');
         setText(link?.textContent ?? selectedText);
         setTarget(link?.getAttribute('target') ?? '_blank');
-        setRel(link?.getAttribute('rel') ?? 'noopener nofollow');
+        setRel(link?.getAttribute('rel') ?? 'noopener noreferrer');
     }, [editor]);
+
+    const isEditing = Boolean(editor.formatState.link);
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!url.trim()) return;
+
+        editor.insertLink({ text, url, target, rel });
+        setOpen(false);
+    };
 
     return (
         <>
@@ -58,101 +75,120 @@ export function LinkPluginControl({
                 editor={editor}
                 icon={<Link2Icon />}
                 pressed={editor.formatState.link}
-                tooltip="Insert or edit link"
+                tooltip={isEditing ? "Edit link" : "Insert link"}
                 onPress={() => {
                     syncFromSelection();
                     setOpen(true);
                 }}
             />
+            {isEditing && (
+                <ToolbarIconButton
+                    disabled={editor.isCodeView}
+                    editor={editor}
+                    icon={<UnlinkIcon />}
+                    tooltip="Remove link"
+                    onPress={() => {
+                        editor.removeLink();
+                    }}
+                />
+            )}
             <Dialog open={open} onOpenChange={setOpen}>
-                <DialogContent className="max-w-lg">
-                    <DialogHeader>
-                        <DialogTitle>Insert or edit link</DialogTitle>
-                        <DialogDescription>
-                            Add a URL, optional link text, and advanced target
-                            attributes.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <FieldGroup>
-                        <Field>
-                            <FieldLabel htmlFor={`${editor.id}-link-url`}>
-                                URL
-                            </FieldLabel>
-                            <Input
-                                id={`${editor.id}-link-url`}
-                                value={url}
-                                onChange={(event) => setUrl(event.target.value)}
-                                placeholder="https://example.com"
-                            />
-                        </Field>
-                        <Field>
-                            <FieldLabel htmlFor={`${editor.id}-link-text`}>
-                                Text
-                            </FieldLabel>
-                            <Input
-                                id={`${editor.id}-link-text`}
-                                value={text}
-                                onChange={(event) =>
-                                    setText(event.target.value)
-                                }
-                                placeholder="Link text"
-                            />
-                            <FieldDescription>
-                                Leave this empty to keep the current selection
-                                text.
-                            </FieldDescription>
-                        </Field>
-                        <Field>
-                            <FieldLabel htmlFor={`${editor.id}-link-target`}>
-                                Target
-                            </FieldLabel>
-                            <Input
-                                id={`${editor.id}-link-target`}
-                                value={target}
-                                onChange={(event) =>
-                                    setTarget(event.target.value)
-                                }
-                                placeholder="_blank"
-                            />
-                        </Field>
-                        <Field>
-                            <FieldLabel htmlFor={`${editor.id}-link-rel`}>
-                                rel
-                            </FieldLabel>
-                            <Input
-                                id={`${editor.id}-link-rel`}
-                                value={rel}
-                                onChange={(event) => setRel(event.target.value)}
-                                placeholder="noopener nofollow"
-                            />
-                        </Field>
-                    </FieldGroup>
-                    <DialogFooter>
-                        <Button
-                            variant="outline"
-                            onClick={() => {
-                                editor.removeLink();
-                                setOpen(false);
-                            }}
-                        >
-                            Remove link
-                        </Button>
-                        <Button
-                            variant="outline"
-                            onClick={() => setOpen(false)}
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            disabled={!url.trim()}
-                            onClick={() => {
-                                editor.insertLink({ text, url, target, rel });
-                                setOpen(false);
-                            }}
-                        >
-                            Apply link
-                        </Button>
-                    </DialogFooter>
+                <DialogContent className="sm:max-w-[425px]">
+                    <form onSubmit={handleSubmit}>
+                        <DialogHeader>
+                            <DialogTitle>{isEditing ? 'Edit Link' : 'Insert Link'}</DialogTitle>
+                            <DialogDescription>
+                                Add a destination URL and optional text to display.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="grid gap-4 py-4">
+                            <FieldGroup>
+                                <Field>
+                                    <FieldLabel htmlFor={`${editor.id}-link-url`}>
+                                        URL
+                                    </FieldLabel>
+                                    <Input
+                                        id={`${editor.id}-link-url`}
+                                        type="url"
+                                        value={url}
+                                        onChange={(event) => setUrl(event.target.value)}
+                                        placeholder="https://example.com"
+                                        autoFocus
+                                        required
+                                    />
+                                </Field>
+                                <Field>
+                                    <FieldLabel htmlFor={`${editor.id}-link-text`}>
+                                        Text to display
+                                    </FieldLabel>
+                                    <Input
+                                        id={`${editor.id}-link-text`}
+                                        value={text}
+                                        onChange={(event) =>
+                                            setText(event.target.value)
+                                        }
+                                        placeholder="Link text"
+                                    />
+                                    <FieldDescription>
+                                        Leave empty to keep the current selection.
+                                    </FieldDescription>
+                                </Field>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <Field>
+                                        <FieldLabel htmlFor={`${editor.id}-link-target`}>
+                                            Open in
+                                        </FieldLabel>
+                                        <Select
+                                            value={target}
+                                            onValueChange={setTarget}
+                                        >
+                                            <SelectTrigger id={`${editor.id}-link-target`}>
+                                                <SelectValue placeholder="Select target" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="_self">Current tab</SelectItem>
+                                                <SelectItem value="_blank">New tab (_blank)</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </Field>
+                                    <Field>
+                                        <FieldLabel htmlFor={`${editor.id}-link-rel`}>
+                                            Rel attribute
+                                        </FieldLabel>
+                                        <Select
+                                            value={rel}
+                                            onValueChange={setRel}
+                                        >
+                                            <SelectTrigger id={`${editor.id}-link-rel`}>
+                                                <SelectValue placeholder="Select relation" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="">None</SelectItem>
+                                                <SelectItem value="noopener noreferrer">noopener noreferrer</SelectItem>
+                                                <SelectItem value="nofollow">nofollow</SelectItem>
+                                                <SelectItem value="noopener noreferrer nofollow">All three</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </Field>
+                                </div>
+                            </FieldGroup>
+                        </div>
+                        <DialogFooter className="gap-2 sm:gap-0">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setOpen(false)}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                type="submit"
+                                disabled={!url.trim()}
+                            >
+                                {isEditing ? 'Update link' : 'Insert link'}
+                            </Button>
+                        </DialogFooter>
+                    </form>
                 </DialogContent>
             </Dialog>
         </>

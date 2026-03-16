@@ -29,10 +29,11 @@ class FormService implements ScaffoldServiceInterface
 
     public function getTemplateOptions(): array
     {
-        return collect(config('cms::forms.templates', []))
+        return collect(config('cms.forms.templates', []))
             ->map(fn (array $template): array => [
                 'value' => $template['value'] ?? null,
                 'label' => $template['label'] ?? ucfirst((string) ($template['value'] ?? '')),
+                'description' => $template['description'] ?? null,
             ])
             ->reject(fn (array $option): bool => empty($option['value']))
             ->values()
@@ -41,10 +42,11 @@ class FormService implements ScaffoldServiceInterface
 
     public function getFormTypeOptions(): array
     {
-        return collect(config('cms::forms.form_types', []))
+        return collect(config('cms.forms.form_types', []))
             ->map(fn (array $type): array => [
                 'value' => $type['value'] ?? null,
                 'label' => $type['label'] ?? ucfirst((string) ($type['value'] ?? '')),
+                'description' => $type['description'] ?? null,
             ])
             ->reject(fn (array $option): bool => empty($option['value']))
             ->values()

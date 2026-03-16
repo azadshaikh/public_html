@@ -3,103 +3,57 @@
 import * as React from 'react';
 
 import type { AsteroNoteController } from '@/components/asteronote/asteronote-types';
-import {
-    ASTERONOTE_FULL_BLOCK_FORMATS,
-    ASTERONOTE_LITE_BLOCK_FORMATS,
-    BlockFormatDropdown,
-} from '@/components/asteronote/plugins/block-format';
+import { AlignPluginControl } from '@/components/asteronote/plugins/align';
+import { FormatBlockPluginControl } from '@/components/asteronote/plugins/block-format';
 import {
     BoldPluginControl,
     ItalicPluginControl,
-    RemoveFormatPluginControl,
     StrikethroughPluginControl,
     UnderlinePluginControl,
 } from '@/components/asteronote/plugins/inline-format';
 import { LinkPluginControl } from '@/components/asteronote/plugins/link';
-import { Toolbar, ToolbarGroup } from '@/components/ui/toolbar';
+import { ListPluginControl } from '@/components/asteronote/plugins/list';
+import { SeparatorPluginControl } from '@/components/asteronote/plugins/separator';
 
 export function BubbleToolbar({ editor }: { editor: AsteroNoteController }) {
-    const toolbarRef = React.useRef<HTMLDivElement | null>(null);
-    const [resolvedPosition, setResolvedPosition] = React.useState<{
-        left: number;
-        top: number;
-    } | null>(null);
-
-    React.useLayoutEffect(() => {
-        const toolbar = toolbarRef.current;
-        const desiredPosition = editor.floatingPosition;
-        const viewport = toolbar?.parentElement;
-
-        if (!toolbar || !viewport || !desiredPosition) {
-            setResolvedPosition(null);
-            return;
-        }
-
-        const edgePadding = 8;
-        const minLeft = viewport.scrollLeft + edgePadding;
-        const maxLeft =
-            viewport.scrollLeft +
-            viewport.clientWidth -
-            toolbar.offsetWidth -
-            edgePadding;
-        const minTop = viewport.scrollTop + edgePadding;
-        const maxTop =
-            viewport.scrollTop +
-            viewport.clientHeight -
-            toolbar.offsetHeight -
-            edgePadding;
-
-        setResolvedPosition({
-            left: Math.min(
-                Math.max(
-                    desiredPosition.left - toolbar.offsetWidth / 2,
-                    minLeft,
-                ),
-                Math.max(minLeft, maxLeft),
-            ),
-            top: Math.min(
-                Math.max(desiredPosition.top, minTop),
-                Math.max(minTop, maxTop),
-            ),
-        });
-    }, [editor.floatingPosition, editor.formatState.blockTag]);
-
-    if (!editor.floatingToolbarEnabled || !editor.floatingPosition) {
+    if (!editor.floatingPosition || editor.isCodeView) {
         return null;
     }
 
-    const allowedBlocks =
-        editor.bundle === 'full'
-            ? ASTERONOTE_FULL_BLOCK_FORMATS
-            : ASTERONOTE_LITE_BLOCK_FORMATS;
-
     return (
         <div
-            ref={toolbarRef}
-            className="absolute z-20 w-max max-w-[min(calc(100%-1rem),26rem)]"
+            className="absolute z-50 flex items-center gap-1 rounded-lg border border-border/40 bg-popover/95 p-1.5 shadow-md backdrop-blur-md transition-all duration-150 animate-in fade-in zoom-in-95"
             style={{
-                left: resolvedPosition?.left ?? editor.floatingPosition.left,
-                top: resolvedPosition?.top ?? editor.floatingPosition.top,
+                top: editor.floatingPosition.top,
+                left: editor.floatingPosition.left,
+                transform: 'translate(-50%, -100%)',
+                marginTop: '-12px',
             }}
+            onMouseDown={(event) => event.preventDefault()}
         >
-            <Toolbar className="overflow-x-auto rounded-xl border border-border/80 bg-background/95 p-1 shadow-lg ring-1 ring-border/50 backdrop-blur supports-backdrop-blur:bg-background/85">
-                <ToolbarGroup>
-                    <BoldPluginControl editor={editor} />
-                    <ItalicPluginControl editor={editor} />
-                    <UnderlinePluginControl editor={editor} />
-                    <StrikethroughPluginControl editor={editor} />
-                </ToolbarGroup>
-                <ToolbarGroup>
-                    <LinkPluginControl editor={editor} />
-                    <RemoveFormatPluginControl editor={editor} />
-                </ToolbarGroup>
-                <ToolbarGroup>
-                    <BlockFormatDropdown
-                        editor={editor}
-                        allowedBlocks={allowedBlocks}
-                    />
-                </ToolbarGroup>
-            </Toolbar>
+            <FormatBlockPluginControl editor={editor} />
+            <SeparatorPluginControl />
+            <div className="flex items-center">
+                <BoldPluginControl editor={editor} />
+                <ItalicPluginControl editor={editor} />
+                <UnderlinePluginControl editor={editor} />
+                <StrikethroughPluginControl editor={editor} />
+            </div>
+            <SeparatorPluginControl />
+            <LinkPluginControl editor={editor} />
+            <SeparatorPluginControl />
+            <ListPluginControl editor={editor} />
+            <SeparatorPluginControl />
+            <AlignPluginControl editor={editor} />
+
+            <div
+                className="absolute left-1/2 top-full -mt-[1px] h-2 w-2 -translate-x-1/2 rotate-45 border-b border-r border-border/40 bg-popover/95"
+                aria-hidden="true"
+            />
         </div>
     );
+}
+
+export function BubbleToolbarPluginControl() {
+    return null;
 }

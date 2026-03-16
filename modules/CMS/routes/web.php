@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\FileUploadRateLimit;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Route;
 use Modules\CMS\Http\Controllers\Api\ThemeBlockController;
 use Modules\CMS\Http\Controllers\BuilderController;
@@ -264,11 +265,43 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
 
         // Integrations Routes
         Route::prefix('integrations')->name('integrations.')->group(function (): void {
-            // Main integrations page with all tabs
-            Route::get('/', [SeoSettingController::class, 'index'])
-                ->name('index')
+            Route::get('/', static fn (): RedirectResponse => to_route('cms.integrations.webmastertools'))
+                ->name('index');
+
+            Route::get('/webmaster-tools', [SeoSettingController::class, 'index'])
+                ->name('webmastertools')
                 ->defaults('master_group', 'integrations')
-                ->defaults('file_name', 'integrations');
+                ->defaults('file_name', 'webmaster_tools');
+
+            Route::get('/google-analytics', [SeoSettingController::class, 'index'])
+                ->name('googleanalytics')
+                ->defaults('master_group', 'integrations')
+                ->defaults('file_name', 'google_analytics');
+
+            Route::get('/google-tags', [SeoSettingController::class, 'index'])
+                ->name('googletags')
+                ->defaults('master_group', 'integrations')
+                ->defaults('file_name', 'google_tags');
+
+            Route::get('/meta-pixel', [SeoSettingController::class, 'index'])
+                ->name('metapixel')
+                ->defaults('master_group', 'integrations')
+                ->defaults('file_name', 'meta_pixel');
+
+            Route::get('/microsoft-clarity', [SeoSettingController::class, 'index'])
+                ->name('microsoftclarity')
+                ->defaults('master_group', 'integrations')
+                ->defaults('file_name', 'microsoft_clarity');
+
+            Route::get('/google-adsense', [SeoSettingController::class, 'index'])
+                ->name('googleadsense')
+                ->defaults('master_group', 'integrations')
+                ->defaults('file_name', 'google_adsense');
+
+            Route::get('/custom-head-code', [SeoSettingController::class, 'index'])
+                ->name('other')
+                ->defaults('master_group', 'integrations')
+                ->defaults('file_name', 'other');
 
             // Update routes for each integration
             Route::post('/googleanalytics/update', [SeoSettingController::class, 'update'])

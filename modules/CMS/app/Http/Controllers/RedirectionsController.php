@@ -13,6 +13,7 @@ use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Inertia\Inertia;
 use Inertia\Response;
+use Modules\CMS\Models\Redirection;
 use Modules\CMS\Services\RedirectionService;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -111,15 +112,64 @@ class RedirectionsController extends ScaffoldController implements HasMiddleware
     protected function getFormViewData(Model $model): array
     {
         return [
+            'initialValues' => $this->buildInitialValues($model),
             'statusOptions' => $this->redirectionService->getStatusOptions(),
             'redirectTypeOptions' => $this->redirectionService->getRedirectTypeOptions(),
             'urlTypeOptions' => $this->redirectionService->getUrlTypeOptions(),
             'matchTypeOptions' => $this->redirectionService->getMatchTypeOptions(),
+            'baseUrl' => rtrim(url('/'), '/'),
+        ];
+    }
+
+    protected function transformModelForEdit(Model $model): array
+    {
+        /** @var Redirection $model */
+        $sourceUrl = (string) $model->source_url;
+        $normalizedSourceUrl = $sourceUrl === ''
+            ? '/'
+            : (str_starts_with($sourceUrl, '/') ? $sourceUrl : '/'.$sourceUrl);
+
+        return [
+            'id' => $model->getKey(),
+            'source_url' => $sourceUrl,
+            'target_url' => (string) $model->target_url,
+            'match_type' => (string) $model->match_type,
+            'url_type' => (string) $model->url_type,
+            'hits' => (int) ($model->hits ?? 0),
+            'last_hit_at_formatted' => $model->last_hit_at
+                ? app_date_time_format($model->last_hit_at, 'datetime')
+                : null,
+            'last_hit_at_human' => $model->last_hit_at?->diffForHumans(),
+            'created_at_formatted' => $model->created_at
+                ? app_date_time_format($model->created_at, 'datetime')
+                : null,
+            'created_at_human' => $model->created_at?->diffForHumans(),
+            'preview_url' => $model->match_type === 'exact'
+                ? rtrim(url('/'), '/').$normalizedSourceUrl
+                : null,
         ];
     }
 
     protected function handleBulkActionSideEffects(string $action, array $ids): void
     {
         $this->redirectionService->flushCache();
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function buildInitialValues(Model $model): array
+    {
+        /** @var Redirection $model */
+        return [
+            'source_url' => (string) ($model->source_url ?? ''),
+            'target_url' => (string) ($model->target_url ?? ''),
+            'redirect_type' => (string) ($model->redirect_type ?? '301'),
+            'url_type' => (string) ($model->url_type ?? 'internal'),
+            'match_type' => (string) ($model->match_type ?? 'exact'),
+            'status' => (string) ($model->status ?? 'active'),
+            'notes' => (string) ($model->notes ?? ''),
+            'expires_at' => $model->expires_at?->format('Y-m-d\TH:i') ?? '',
+        ];
     }
 }

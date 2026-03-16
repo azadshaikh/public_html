@@ -1,5 +1,9 @@
+import type {
+    MediaListItem,
+    MediaPickerFilters,
+    UploadSettings,
+} from '@/types/media';
 import type { PaginatedData } from '@/types/pagination';
-import type { MediaListItem, MediaPickerFilters, UploadSettings } from '@/types/media';
 
 // ================================================================
 // Common types
@@ -9,6 +13,7 @@ export type CmsOption = {
     value: string | number;
     label: string;
     disabled?: boolean;
+    description?: string | null;
 };
 
 export type DefaultPagesSettings = {
@@ -501,6 +506,7 @@ export type RedirectionFormValues = {
     match_type: string;
     status: string;
     notes: string;
+    expires_at: string;
 };
 
 export type RedirectionFormOptions = {
@@ -509,14 +515,36 @@ export type RedirectionFormOptions = {
     redirectTypeOptions: CmsOption[];
     urlTypeOptions: CmsOption[];
     matchTypeOptions: CmsOption[];
+    baseUrl: string;
 };
 
-export type RedirectionIndexPageProps = ScaffoldIndexPageProps<RedirectionListItem>;
+export type RedirectionEditDetail = {
+    id: number;
+    source_url: string;
+    target_url: string;
+    match_type: string;
+    url_type: string;
+    hits: number;
+    last_hit_at_formatted: string | null;
+    last_hit_at_human: string | null;
+    created_at_formatted: string | null;
+    created_at_human: string | null;
+    preview_url: string | null;
+};
+
+export type RedirectionImportFormValues = {
+    file: File | null;
+    skip_duplicates: boolean;
+    update_existing: boolean;
+};
+
+export type RedirectionIndexPageProps =
+    ScaffoldIndexPageProps<RedirectionListItem>;
 
 export type RedirectionCreatePageProps = RedirectionFormOptions;
 
 export type RedirectionEditPageProps = RedirectionFormOptions & {
-    redirection: RedirectionListItem & Record<string, unknown>;
+    redirection: RedirectionEditDetail;
 };
 
 // ================================================================
@@ -547,22 +575,46 @@ export type FormListItem = {
 export type FormFormValues = {
     title: string;
     slug: string;
+    shortcode: string;
     status: string;
     template: string;
+    form_type: string;
+    html: string;
+    css: string;
+    store_in_database: boolean;
+    confirmation_type: string;
+    confirmation_message: string;
+    redirect_url: string;
     is_active: boolean;
+    published_at: string;
 };
 
 export type FormFormOptions = {
     initialValues?: FormFormValues;
     statusOptions: CmsOption[];
+    templateOptions: CmsOption[];
+    formTypeOptions: CmsOption[];
 };
 
 export type FormIndexPageProps = ScaffoldIndexPageProps<FormListItem>;
 
 export type FormCreatePageProps = FormFormOptions;
 
+export type FormEditDetail = {
+    id: number;
+    title: string;
+    slug: string;
+    shortcode: string;
+    submissions_count: number;
+    views_count: number;
+    conversion_rate_display: string;
+    published_at_formatted: string | null;
+    updated_at_formatted: string | null;
+    updated_at_human: string | null;
+};
+
 export type FormEditPageProps = FormFormOptions & {
-    form: FormListItem & Record<string, unknown>;
+    form: FormEditDetail;
 };
 
 // ================================================================
@@ -623,11 +675,12 @@ export type DesignBlockEditDetail = {
     updated_at_human: string | null;
 };
 
-export type DesignBlockIndexPageProps = ScaffoldIndexPageProps<DesignBlockListItem> & {
-    designTypeOptions: CmsOption[];
-    categoryOptions: CmsOption[];
-    designSystemOptions: CmsOption[];
-};
+export type DesignBlockIndexPageProps =
+    ScaffoldIndexPageProps<DesignBlockListItem> & {
+        designTypeOptions: CmsOption[];
+        categoryOptions: CmsOption[];
+        designSystemOptions: CmsOption[];
+    };
 
 export type DesignBlockCreatePageProps = DesignBlockFormOptions;
 
@@ -735,7 +788,15 @@ export type WidgetArea = {
 };
 
 export type WidgetSettingField = {
-    type: 'text' | 'textarea' | 'select' | 'checkbox' | 'color' | 'url' | 'email' | string;
+    type:
+    | 'text'
+    | 'textarea'
+    | 'select'
+    | 'checkbox'
+    | 'color'
+    | 'url'
+    | 'email'
+    | string;
     label: string;
     default: string | boolean | number;
     description?: string;

@@ -15,8 +15,8 @@ class FormRequest extends ScaffoldRequest
 {
     public function rules(): array
     {
-        $templateKeys = array_keys(config('cms::forms.templates', []));
-        $formTypeKeys = array_keys(config('cms::forms.form_types', []));
+        $templateKeys = array_keys(config('cms.forms.templates', []));
+        $formTypeKeys = array_keys(config('cms.forms.form_types', []));
 
         $slugRule = $this->uniqueRule('slug')->whereNull('deleted_at');
         $shortcodeRule = $this->uniqueRule('shortcode')->whereNull('deleted_at');

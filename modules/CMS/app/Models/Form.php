@@ -260,7 +260,7 @@ class Form extends Model
      */
     public function getTemplateName(): string
     {
-        $templates = config('cms::forms.templates', []);
+        $templates = config('cms.forms.templates', []);
 
         return $templates[$this->template]['label'] ?? ucfirst((string) $this->template);
     }
@@ -270,7 +270,7 @@ class Form extends Model
      */
     public function getFormTypeName(): string
     {
-        $types = config('cms::forms.form_types', []);
+        $types = config('cms.forms.form_types', []);
 
         return $types[$this->form_type]['label'] ?? ucfirst((string) $this->form_type);
     }

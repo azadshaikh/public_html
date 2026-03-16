@@ -19,7 +19,7 @@ function PanelTabsList({
     return (
         <TabsList
             className={cn(
-                'peer h-auto w-full gap-0.5 bg-transparent p-0',
+                'peer h-auto gap-2 bg-transparent p-0',
                 className,
             )}
             {...props}
@@ -34,7 +34,7 @@ function PanelTabsTrigger({
     return (
         <TabsTrigger
             className={cn(
-                'overflow-hidden rounded-b-none border-0 bg-transparent py-2 !shadow-none data-[state=active]:z-10 data-[state=active]:bg-muted data-[state=active]:ring-0 data-[state=active]:outline-none after:hidden',
+                '!h-10 rounded-t-lg !border-none bg-transparent !px-4 !py-2 text-muted-foreground !shadow-none data-[state=active]:z-10 data-[state=active]:rounded-b-none data-[state=active]:!bg-muted data-[state=active]:text-foreground data-[state=active]:ring-0 data-[state=active]:outline-none after:hidden dark:data-[state=active]:!border-none dark:data-[state=active]:!bg-muted',
                 className,
             )}
             {...props}

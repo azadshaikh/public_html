@@ -937,49 +937,49 @@ function AsteroNoteEditorInner({
     return (
         <div
             className={cn(
-                'overflow-hidden rounded-lg border border-border bg-background',
-                invalid && 'border-destructive ring-1 ring-destructive/20',
+                'group/editor overflow-hidden rounded-lg border border-border bg-background focus-within:ring-1 focus-within:ring-ring focus-within:border-ring transition-shadow',
+                invalid && 'border-destructive ring-1 ring-destructive/20 focus-within:ring-destructive focus-within:border-destructive',
                 isFullscreen &&
-                'fixed inset-0 z-50 flex flex-col rounded-none border-0',
+                'fixed inset-0 z-50 flex flex-col rounded-none border-0 ring-0 focus-within:ring-0',
                 className,
             )}
         >
-            <FixedToolbar className="rounded-t-[inherit] bg-background">
-                <div className="w-full overflow-x-auto">
-                    <div className="flex min-w-max items-center gap-2 pr-1">
+            <FixedToolbar className="rounded-t-[inherit] bg-muted/40 border-b border-border p-1 gap-1 flex-wrap overflow-y-auto max-h-[120px] scrollbar-thin">
+                <div className="flex w-full min-w-0 items-center flex-wrap gap-y-1">
+                    <div className="flex items-center flex-wrap gap-1 pr-1 border-r border-border/50">
                         {toolbarGroups[0]?.map(({ action, Plugin }, index) => (
                             <Plugin
                                 key={`left-${action}-${index}`}
                                 editor={controller}
                             />
                         ))}
-
-                        {toolbarGroups[1]?.length ? (
-                            <div className="flex items-center gap-2 px-1">
-                                {toolbarGroups[1].map(
-                                    ({ action, Plugin }, index) => (
-                                        <Plugin
-                                            key={`center-${action}-${index}`}
-                                            editor={controller}
-                                        />
-                                    ),
-                                )}
-                            </div>
-                        ) : null}
-
-                        {toolbarGroups[2]?.length ? (
-                            <div className="flex items-center gap-2 pl-1">
-                                {toolbarGroups[2].map(
-                                    ({ action, Plugin }, index) => (
-                                        <Plugin
-                                            key={`right-${action}-${index}`}
-                                            editor={controller}
-                                        />
-                                    ),
-                                )}
-                            </div>
-                        ) : null}
                     </div>
+
+                    {toolbarGroups[1]?.length ? (
+                        <div className="flex items-center flex-wrap gap-1 px-1 border-r border-border/50">
+                            {toolbarGroups[1].map(
+                                ({ action, Plugin }, index) => (
+                                    <Plugin
+                                        key={`center-${action}-${index}`}
+                                        editor={controller}
+                                    />
+                                ),
+                            )}
+                        </div>
+                    ) : null}
+
+                    {toolbarGroups[2]?.length ? (
+                        <div className="flex items-center flex-wrap gap-1 pl-1">
+                            {toolbarGroups[2].map(
+                                ({ action, Plugin }, index) => (
+                                    <Plugin
+                                        key={`right-${action}-${index}`}
+                                        editor={controller}
+                                    />
+                                ),
+                            )}
+                        </div>
+                    ) : null}
                 </div>
             </FixedToolbar>
 
@@ -1010,7 +1010,7 @@ function AsteroNoteEditorInner({
                             onBlur?.();
                         }}
                         language="html"
-                        height={height}
+                        height={isFullscreen ? '100%' : height}
                         placeholder={placeholderText}
                         className={cn(
                             'min-h-0 rounded-none border-0 shadow-none',
@@ -1026,7 +1026,7 @@ function AsteroNoteEditorInner({
                             'relative cursor-text scroll-py-14 overflow-auto px-4 py-4',
                             isFullscreen && 'min-h-0 flex-1',
                         )}
-                        style={{ height }}
+                        style={{ height: isFullscreen ? undefined : height }}
                         onMouseDown={(event) => {
                             if (event.target === event.currentTarget) {
                                 editorRef.current?.focus();

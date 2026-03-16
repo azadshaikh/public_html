@@ -67,11 +67,14 @@ export default function SettingsLayout({
         settingsNav.find((item) => {
             const itemPath = item.href.replace(/^https?:\/\/[^/]+/, '');
             return pathname === itemPath || pathname.startsWith(`${itemPath}/`);
-        })?.slug ?? settingsNav[0]?.slug;
+        })?.slug ??
+        settingsNav[0]?.slug;
 
-    const resolvedRailLabel = railLabel ?? (pathname.includes('/master-settings/')
-        ? 'Platform settings'
-        : 'Application settings');
+    const resolvedRailLabel =
+        railLabel ??
+        (pathname.includes('/master-settings/')
+            ? 'Platform settings'
+            : 'Application settings');
 
     return (
         <AppLayout
@@ -88,10 +91,15 @@ export default function SettingsLayout({
                             </p>
                         </div>
 
-                        <nav className="grid gap-1" aria-label={resolvedRailLabel}>
+                        <nav
+                            className="grid gap-1"
+                            aria-label={resolvedRailLabel}
+                        >
                             {settingsNav.map((item) => {
                                 const Icon =
-                                    settingsIcons[item.slug] ?? BellRingIcon;
+                                    item.icon ??
+                                    settingsIcons[item.slug] ??
+                                    BellRingIcon;
 
                                 return (
                                     <Button
@@ -100,16 +108,17 @@ export default function SettingsLayout({
                                         variant="ghost"
                                         asChild
                                         className={cn(
-                                            'h-auto w-full min-w-0 rounded-[min(var(--radius-md),12px)] justify-start px-2.5 py-2 text-sm leading-5 text-foreground/70 hover:bg-background/80 hover:text-foreground',
+                                            'h-auto w-full min-w-0 justify-start rounded-[min(var(--radius-md),12px)] px-2.5 py-2 text-sm leading-5 text-foreground/70 hover:bg-background/80 hover:text-foreground',
                                             item.slug === resolvedActiveSlug &&
-                                                'bg-background text-foreground font-medium shadow-xs',
+                                                'bg-background font-medium text-foreground shadow-xs',
                                         )}
                                     >
                                         <Link href={item.href} preserveScroll>
                                             <Icon
                                                 className={cn(
                                                     'size-4 text-foreground/65',
-                                                    item.slug === resolvedActiveSlug &&
+                                                    item.slug ===
+                                                        resolvedActiveSlug &&
                                                         'text-foreground',
                                                 )}
                                             />

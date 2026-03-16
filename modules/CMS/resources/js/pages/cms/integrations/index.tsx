@@ -1,20 +1,20 @@
 import type { FormDataType } from '@inertiajs/core';
 import { usePage } from '@inertiajs/react';
 import {
-    BadgeCheckIcon,
     BarChart3Icon,
     Code2Icon,
+    FingerprintIcon,
     ExternalLinkIcon,
-    FileTextIcon,
     HomeIcon,
     MegaphoneIcon,
+    ScanSearchIcon,
     SearchCheckIcon,
     SaveIcon,
     TagsIcon,
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { useMemo } from 'react';
-import type { ComponentType, FormEvent, ReactNode } from 'react';
-import { MonacoEditor } from '@/components/code-editor/monaco-editor';
+import type { FormEvent, ReactNode } from 'react';
 import { FormErrorSummary } from '@/components/forms/form-error-summary';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -39,7 +39,11 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { useAppForm } from '@/hooks/use-app-form';
 import SettingsLayout from '@/layouts/settings-layout';
-import type { AuthenticatedSharedData, BreadcrumbItem, SettingsNavItem } from '@/types';
+import type {
+    AuthenticatedSharedData,
+    BreadcrumbItem,
+    SettingsNavItem,
+} from '@/types';
 import type {
     GoogleAdsenseSettings,
     GoogleAnalyticsSettings,
@@ -63,7 +67,7 @@ type SectionMeta = {
     title: string;
     description: string;
     category: string;
-    icon: ComponentType<{ className?: string }>;
+    icon: LucideIcon;
     emptyLabel: string;
 };
 
@@ -84,7 +88,6 @@ type CodeFieldProps = {
     onChange: (value: string) => void;
     onBlur: () => void;
     placeholder?: string;
-    language?: string;
     height?: string;
 };
 
@@ -120,7 +123,8 @@ const sections: SectionMeta[] = [
     {
         key: 'webmaster_tools',
         title: 'Webmaster verification',
-        description: 'Add verification tags from search engines and webmaster platforms.',
+        description:
+            'Add verification tags from search engines and webmaster platforms.',
         category: 'Verification',
         icon: SearchCheckIcon,
         emptyLabel: 'Not set',
@@ -128,7 +132,8 @@ const sections: SectionMeta[] = [
     {
         key: 'google_analytics',
         title: 'Google Analytics',
-        description: 'Inject your Google Analytics tracking script into the site head.',
+        description:
+            'Inject your Google Analytics tracking script into the site head.',
         category: 'Analytics',
         icon: BarChart3Icon,
         emptyLabel: 'Not set',
@@ -144,23 +149,26 @@ const sections: SectionMeta[] = [
     {
         key: 'meta_pixel',
         title: 'Meta Pixel',
-        description: 'Configure Meta Pixel for ad conversion and campaign attribution.',
+        description:
+            'Configure Meta Pixel for ad conversion and campaign attribution.',
         category: 'Analytics',
-        icon: BadgeCheckIcon,
+        icon: FingerprintIcon,
         emptyLabel: 'Not set',
     },
     {
         key: 'microsoft_clarity',
         title: 'Microsoft Clarity',
-        description: 'Enable Microsoft Clarity session replay and heatmap tracking.',
+        description:
+            'Enable Microsoft Clarity session replay and heatmap tracking.',
         category: 'Analytics',
-        icon: FileTextIcon,
+        icon: ScanSearchIcon,
         emptyLabel: 'Not set',
     },
     {
         key: 'google_adsense',
         title: 'Google AdSense',
-        description: 'Control Google AdSense scripts, ads.txt content, and display rules.',
+        description:
+            'Control Google AdSense scripts, ads.txt content, and display rules.',
         category: 'Advertising',
         icon: MegaphoneIcon,
         emptyLabel: 'Disabled',
@@ -175,14 +183,21 @@ const sections: SectionMeta[] = [
     },
 ];
 
-function SectionCard({ title, description, footer, children }: SectionCardProps) {
+function SectionCard({
+    title,
+    description,
+    footer,
+    children,
+}: SectionCardProps) {
     return (
         <Card>
             <CardHeader>
                 <CardTitle>{title}</CardTitle>
                 <CardDescription>{description}</CardDescription>
             </CardHeader>
-            <CardContent className="flex flex-col gap-6">{children}</CardContent>
+            <CardContent className="flex flex-col gap-6">
+                {children}
+            </CardContent>
             {footer ? <CardFooter>{footer}</CardFooter> : null}
         </Card>
     );
@@ -198,42 +213,58 @@ function CodeField({
     onChange,
     onBlur,
     placeholder,
-    language = 'html',
     height = '22rem',
 }: CodeFieldProps) {
     return (
         <Field data-invalid={invalid || undefined}>
             <FieldLabel htmlFor={id}>{label}</FieldLabel>
             <FieldDescription>{description}</FieldDescription>
-            <MonacoEditor
-                name={id}
+            <Textarea
+                id={id}
                 value={value}
-                onChange={onChange}
+                onChange={(event) => onChange(event.target.value)}
                 onBlur={onBlur}
-                language={language}
-                height={height}
                 placeholder={placeholder}
-                className="w-full"
+                aria-invalid={invalid || undefined}
+                spellCheck={false}
+                autoCapitalize="off"
+                autoCorrect="off"
+                style={{ minHeight: height }}
+                className="w-full resize-y font-mono text-sm leading-6"
             />
             <FieldError>{error}</FieldError>
         </Field>
     );
 }
 
-export default function IntegrationsIndex({ activeSection, statuses, settings }: IntegrationsPageProps) {
+export default function IntegrationsIndex({
+    activeSection,
+    statuses,
+    settings,
+}: IntegrationsPageProps) {
     const page = usePage<AuthenticatedSharedData>();
-    const canManageIntegrations = page.props.auth.abilities.manageIntegrationsSeoSettings;
+    const canManageIntegrations =
+        page.props.auth.abilities.manageIntegrationsSeoSettings;
     const currentSection = activeSection;
 
-    const settingsNav: SettingsNavItem[] = useMemo(
-        () =>
-            sections.map((section) => ({
-                slug: section.key,
-                label: section.title,
-                href: route('cms.integrations.index', { section: section.key }),
-            })),
-        [],
-    );
+    const settingsNav: SettingsNavItem[] = useMemo(() => {
+        const sectionRoutes: Record<IntegrationSectionKey, string> = {
+            webmaster_tools: route('cms.integrations.webmastertools'),
+            google_analytics: route('cms.integrations.googleanalytics'),
+            google_tags: route('cms.integrations.googletags'),
+            meta_pixel: route('cms.integrations.metapixel'),
+            microsoft_clarity: route('cms.integrations.microsoftclarity'),
+            google_adsense: route('cms.integrations.googleadsense'),
+            other: route('cms.integrations.other'),
+        };
+
+        return sections.map((section) => ({
+            slug: section.key,
+            label: section.title,
+            href: sectionRoutes[section.key],
+            icon: section.icon,
+        }));
+    }, []);
 
     const enabledCount = useMemo(
         () => Object.values(statuses).filter(Boolean).length,
@@ -336,13 +367,26 @@ export default function IntegrationsIndex({ activeSection, statuses, settings }:
                 }
             >
                 {webmasterForm.dirtyGuardDialog}
-                <FormErrorSummary errors={webmasterForm.errors} minMessages={2} />
+                <FormErrorSummary
+                    errors={webmasterForm.errors}
+                    minMessages={2}
+                />
                 <SectionCard
                     title="Webmaster verification"
                     description="Paste the verification meta tags provided by search engines and directory services."
                     footer={
-                        <Button type="submit" disabled={webmasterForm.processing || !canManageIntegrations}>
-                            {webmasterForm.processing ? <Spinner /> : <SaveIcon data-icon="inline-start" />}
+                        <Button
+                            type="submit"
+                            disabled={
+                                webmasterForm.processing ||
+                                !canManageIntegrations
+                            }
+                        >
+                            {webmasterForm.processing ? (
+                                <Spinner />
+                            ) : (
+                                <SaveIcon data-icon="inline-start" />
+                            )}
                             Save verification tags
                         </Button>
                     }
@@ -351,7 +395,12 @@ export default function IntegrationsIndex({ activeSection, statuses, settings }:
                         <SearchCheckIcon />
                         <AlertTitle>Head-safe tags only</AlertTitle>
                         <AlertDescription>
-                            Only valid head tags such as <code>&lt;meta&gt;</code>, <code>&lt;script&gt;</code>, <code>&lt;link&gt;</code>, <code>&lt;style&gt;</code>, and <code>&lt;noscript&gt;</code> are kept on save.
+                            Only valid head tags such as{' '}
+                            <code>&lt;meta&gt;</code>,{' '}
+                            <code>&lt;script&gt;</code>,{' '}
+                            <code>&lt;link&gt;</code>,{' '}
+                            <code>&lt;style&gt;</code>, and{' '}
+                            <code>&lt;noscript&gt;</code> are kept on save.
                         </AlertDescription>
                     </Alert>
                     <FieldGroup>
@@ -361,11 +410,22 @@ export default function IntegrationsIndex({ activeSection, statuses, settings }:
                             description="Paste the full verification meta tag from Google Search Console."
                             value={webmasterForm.data.google_search_console}
                             error={webmasterForm.error('google_search_console')}
-                            invalid={webmasterForm.invalid('google_search_console')}
-                            onChange={(value) => webmasterForm.setField('google_search_console', value)}
-                            onBlur={() => webmasterForm.touch('google_search_console')}
+                            invalid={webmasterForm.invalid(
+                                'google_search_console',
+                            )}
+                            onChange={(value) =>
+                                webmasterForm.setField(
+                                    'google_search_console',
+                                    value,
+                                )
+                            }
+                            onBlur={() =>
+                                webmasterForm.touch('google_search_console')
+                            }
                             height="8rem"
-                            placeholder={'<meta name="google-site-verification" content="your-code" />'}
+                            placeholder={
+                                '<meta name="google-site-verification" content="your-code" />'
+                            }
                         />
                         <CodeField
                             id="bing_webmaster"
@@ -374,10 +434,14 @@ export default function IntegrationsIndex({ activeSection, statuses, settings }:
                             value={webmasterForm.data.bing_webmaster}
                             error={webmasterForm.error('bing_webmaster')}
                             invalid={webmasterForm.invalid('bing_webmaster')}
-                            onChange={(value) => webmasterForm.setField('bing_webmaster', value)}
+                            onChange={(value) =>
+                                webmasterForm.setField('bing_webmaster', value)
+                            }
                             onBlur={() => webmasterForm.touch('bing_webmaster')}
                             height="8rem"
-                            placeholder={'<meta name="msvalidate.01" content="your-code" />'}
+                            placeholder={
+                                '<meta name="msvalidate.01" content="your-code" />'
+                            }
                         />
                         <CodeField
                             id="baidu_webmaster"
@@ -386,10 +450,16 @@ export default function IntegrationsIndex({ activeSection, statuses, settings }:
                             value={webmasterForm.data.baidu_webmaster}
                             error={webmasterForm.error('baidu_webmaster')}
                             invalid={webmasterForm.invalid('baidu_webmaster')}
-                            onChange={(value) => webmasterForm.setField('baidu_webmaster', value)}
-                            onBlur={() => webmasterForm.touch('baidu_webmaster')}
+                            onChange={(value) =>
+                                webmasterForm.setField('baidu_webmaster', value)
+                            }
+                            onBlur={() =>
+                                webmasterForm.touch('baidu_webmaster')
+                            }
                             height="8rem"
-                            placeholder={'<meta name="baidu-site-verification" content="your-code" />'}
+                            placeholder={
+                                '<meta name="baidu-site-verification" content="your-code" />'
+                            }
                         />
                         <CodeField
                             id="yandex_verification"
@@ -397,23 +467,47 @@ export default function IntegrationsIndex({ activeSection, statuses, settings }:
                             description="Paste the verification meta tag from Yandex Webmaster."
                             value={webmasterForm.data.yandex_verification}
                             error={webmasterForm.error('yandex_verification')}
-                            invalid={webmasterForm.invalid('yandex_verification')}
-                            onChange={(value) => webmasterForm.setField('yandex_verification', value)}
-                            onBlur={() => webmasterForm.touch('yandex_verification')}
+                            invalid={webmasterForm.invalid(
+                                'yandex_verification',
+                            )}
+                            onChange={(value) =>
+                                webmasterForm.setField(
+                                    'yandex_verification',
+                                    value,
+                                )
+                            }
+                            onBlur={() =>
+                                webmasterForm.touch('yandex_verification')
+                            }
                             height="8rem"
-                            placeholder={'<meta name="yandex-verification" content="your-code" />'}
+                            placeholder={
+                                '<meta name="yandex-verification" content="your-code" />'
+                            }
                         />
                         <CodeField
                             id="pinterest_verification"
                             label="Pinterest"
                             description="Paste the verification meta tag from Pinterest."
                             value={webmasterForm.data.pinterest_verification}
-                            error={webmasterForm.error('pinterest_verification')}
-                            invalid={webmasterForm.invalid('pinterest_verification')}
-                            onChange={(value) => webmasterForm.setField('pinterest_verification', value)}
-                            onBlur={() => webmasterForm.touch('pinterest_verification')}
+                            error={webmasterForm.error(
+                                'pinterest_verification',
+                            )}
+                            invalid={webmasterForm.invalid(
+                                'pinterest_verification',
+                            )}
+                            onChange={(value) =>
+                                webmasterForm.setField(
+                                    'pinterest_verification',
+                                    value,
+                                )
+                            }
+                            onBlur={() =>
+                                webmasterForm.touch('pinterest_verification')
+                            }
                             height="8rem"
-                            placeholder={'<meta name="p:domain_verify" content="your-code" />'}
+                            placeholder={
+                                '<meta name="p:domain_verify" content="your-code" />'
+                            }
                         />
                         <CodeField
                             id="norton_verification"
@@ -421,11 +515,22 @@ export default function IntegrationsIndex({ activeSection, statuses, settings }:
                             description="Paste the verification meta tag from Norton Safe Web."
                             value={webmasterForm.data.norton_verification}
                             error={webmasterForm.error('norton_verification')}
-                            invalid={webmasterForm.invalid('norton_verification')}
-                            onChange={(value) => webmasterForm.setField('norton_verification', value)}
-                            onBlur={() => webmasterForm.touch('norton_verification')}
+                            invalid={webmasterForm.invalid(
+                                'norton_verification',
+                            )}
+                            onChange={(value) =>
+                                webmasterForm.setField(
+                                    'norton_verification',
+                                    value,
+                                )
+                            }
+                            onBlur={() =>
+                                webmasterForm.touch('norton_verification')
+                            }
                             height="8rem"
-                            placeholder={'<meta name="norton-safeweb-site-verification" content="your-code" />'}
+                            placeholder={
+                                '<meta name="norton-safeweb-site-verification" content="your-code" />'
+                            }
                         />
                         <CodeField
                             id="custom_meta_tags"
@@ -434,10 +539,19 @@ export default function IntegrationsIndex({ activeSection, statuses, settings }:
                             value={webmasterForm.data.custom_meta_tags}
                             error={webmasterForm.error('custom_meta_tags')}
                             invalid={webmasterForm.invalid('custom_meta_tags')}
-                            onChange={(value) => webmasterForm.setField('custom_meta_tags', value)}
-                            onBlur={() => webmasterForm.touch('custom_meta_tags')}
+                            onChange={(value) =>
+                                webmasterForm.setField(
+                                    'custom_meta_tags',
+                                    value,
+                                )
+                            }
+                            onBlur={() =>
+                                webmasterForm.touch('custom_meta_tags')
+                            }
                             height="12rem"
-                            placeholder={'<meta name="example" content="value" />'}
+                            placeholder={
+                                '<meta name="example" content="value" />'
+                            }
                         />
                     </FieldGroup>
                 </SectionCard>
@@ -457,13 +571,26 @@ export default function IntegrationsIndex({ activeSection, statuses, settings }:
                 }
             >
                 {googleAnalyticsForm.dirtyGuardDialog}
-                <FormErrorSummary errors={googleAnalyticsForm.errors} minMessages={2} />
+                <FormErrorSummary
+                    errors={googleAnalyticsForm.errors}
+                    minMessages={2}
+                />
                 <SectionCard
                     title="Google Analytics"
                     description="Paste the Google Analytics tracking script you want injected into the document head."
                     footer={
-                        <Button type="submit" disabled={googleAnalyticsForm.processing || !canManageIntegrations}>
-                            {googleAnalyticsForm.processing ? <Spinner /> : <SaveIcon data-icon="inline-start" />}
+                        <Button
+                            type="submit"
+                            disabled={
+                                googleAnalyticsForm.processing ||
+                                !canManageIntegrations
+                            }
+                        >
+                            {googleAnalyticsForm.processing ? (
+                                <Spinner />
+                            ) : (
+                                <SaveIcon data-icon="inline-start" />
+                            )}
                             Save Google Analytics
                         </Button>
                     }
@@ -474,10 +601,21 @@ export default function IntegrationsIndex({ activeSection, statuses, settings }:
                         description="Paste the full analytics script snippet from Google Analytics."
                         value={googleAnalyticsForm.data.google_analytics}
                         error={googleAnalyticsForm.error('google_analytics')}
-                        invalid={googleAnalyticsForm.invalid('google_analytics')}
-                        onChange={(value) => googleAnalyticsForm.setField('google_analytics', value)}
-                        onBlur={() => googleAnalyticsForm.touch('google_analytics')}
-                        placeholder={'<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXX"></script>'}
+                        invalid={googleAnalyticsForm.invalid(
+                            'google_analytics',
+                        )}
+                        onChange={(value) =>
+                            googleAnalyticsForm.setField(
+                                'google_analytics',
+                                value,
+                            )
+                        }
+                        onBlur={() =>
+                            googleAnalyticsForm.touch('google_analytics')
+                        }
+                        placeholder={
+                            '<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXX"></script>'
+                        }
                     />
                 </SectionCard>
             </form>
@@ -496,13 +634,26 @@ export default function IntegrationsIndex({ activeSection, statuses, settings }:
                 }
             >
                 {googleTagsForm.dirtyGuardDialog}
-                <FormErrorSummary errors={googleTagsForm.errors} minMessages={2} />
+                <FormErrorSummary
+                    errors={googleTagsForm.errors}
+                    minMessages={2}
+                />
                 <SectionCard
                     title="Google Tag Manager"
                     description="Add the script snippet provided by Google Tag Manager."
                     footer={
-                        <Button type="submit" disabled={googleTagsForm.processing || !canManageIntegrations}>
-                            {googleTagsForm.processing ? <Spinner /> : <SaveIcon data-icon="inline-start" />}
+                        <Button
+                            type="submit"
+                            disabled={
+                                googleTagsForm.processing ||
+                                !canManageIntegrations
+                            }
+                        >
+                            {googleTagsForm.processing ? (
+                                <Spinner />
+                            ) : (
+                                <SaveIcon data-icon="inline-start" />
+                            )}
                             Save Tag Manager
                         </Button>
                     }
@@ -514,7 +665,9 @@ export default function IntegrationsIndex({ activeSection, statuses, settings }:
                         value={googleTagsForm.data.google_tags}
                         error={googleTagsForm.error('google_tags')}
                         invalid={googleTagsForm.invalid('google_tags')}
-                        onChange={(value) => googleTagsForm.setField('google_tags', value)}
+                        onChange={(value) =>
+                            googleTagsForm.setField('google_tags', value)
+                        }
                         onBlur={() => googleTagsForm.touch('google_tags')}
                         placeholder="<script>(function(w,d,s,l,i){...})(window,document,'script','dataLayer','GTM-XXXX');</script>"
                     />
@@ -535,13 +688,26 @@ export default function IntegrationsIndex({ activeSection, statuses, settings }:
                 }
             >
                 {metaPixelForm.dirtyGuardDialog}
-                <FormErrorSummary errors={metaPixelForm.errors} minMessages={2} />
+                <FormErrorSummary
+                    errors={metaPixelForm.errors}
+                    minMessages={2}
+                />
                 <SectionCard
                     title="Meta Pixel"
                     description="Add the Meta Pixel script used for conversion and audience tracking."
                     footer={
-                        <Button type="submit" disabled={metaPixelForm.processing || !canManageIntegrations}>
-                            {metaPixelForm.processing ? <Spinner /> : <SaveIcon data-icon="inline-start" />}
+                        <Button
+                            type="submit"
+                            disabled={
+                                metaPixelForm.processing ||
+                                !canManageIntegrations
+                            }
+                        >
+                            {metaPixelForm.processing ? (
+                                <Spinner />
+                            ) : (
+                                <SaveIcon data-icon="inline-start" />
+                            )}
                             Save Meta Pixel
                         </Button>
                     }
@@ -553,7 +719,9 @@ export default function IntegrationsIndex({ activeSection, statuses, settings }:
                         value={metaPixelForm.data.meta_pixel}
                         error={metaPixelForm.error('meta_pixel')}
                         invalid={metaPixelForm.invalid('meta_pixel')}
-                        onChange={(value) => metaPixelForm.setField('meta_pixel', value)}
+                        onChange={(value) =>
+                            metaPixelForm.setField('meta_pixel', value)
+                        }
                         onBlur={() => metaPixelForm.touch('meta_pixel')}
                         placeholder="<script>!function(f,b,e,v,n,t,s){...}</script>"
                     />
@@ -574,13 +742,26 @@ export default function IntegrationsIndex({ activeSection, statuses, settings }:
                 }
             >
                 {microsoftClarityForm.dirtyGuardDialog}
-                <FormErrorSummary errors={microsoftClarityForm.errors} minMessages={2} />
+                <FormErrorSummary
+                    errors={microsoftClarityForm.errors}
+                    minMessages={2}
+                />
                 <SectionCard
                     title="Microsoft Clarity"
                     description="Inject the Clarity tag to enable heatmaps and session replays."
                     footer={
-                        <Button type="submit" disabled={microsoftClarityForm.processing || !canManageIntegrations}>
-                            {microsoftClarityForm.processing ? <Spinner /> : <SaveIcon data-icon="inline-start" />}
+                        <Button
+                            type="submit"
+                            disabled={
+                                microsoftClarityForm.processing ||
+                                !canManageIntegrations
+                            }
+                        >
+                            {microsoftClarityForm.processing ? (
+                                <Spinner />
+                            ) : (
+                                <SaveIcon data-icon="inline-start" />
+                            )}
                             Save Clarity
                         </Button>
                     }
@@ -592,9 +773,13 @@ export default function IntegrationsIndex({ activeSection, statuses, settings }:
                         value={microsoftClarityForm.data.ms_clarity}
                         error={microsoftClarityForm.error('ms_clarity')}
                         invalid={microsoftClarityForm.invalid('ms_clarity')}
-                        onChange={(value) => microsoftClarityForm.setField('ms_clarity', value)}
+                        onChange={(value) =>
+                            microsoftClarityForm.setField('ms_clarity', value)
+                        }
                         onBlur={() => microsoftClarityForm.touch('ms_clarity')}
-                        placeholder={'<script type="text/javascript">(function(c,l,a,r,i,t,y){...}</script>'}
+                        placeholder={
+                            '<script type="text/javascript">(function(c,l,a,r,i,t,y){...}</script>'
+                        }
                     />
                 </SectionCard>
             </form>
@@ -613,13 +798,26 @@ export default function IntegrationsIndex({ activeSection, statuses, settings }:
                 }
             >
                 {googleAdsenseForm.dirtyGuardDialog}
-                <FormErrorSummary errors={googleAdsenseForm.errors} minMessages={2} />
+                <FormErrorSummary
+                    errors={googleAdsenseForm.errors}
+                    minMessages={2}
+                />
                 <SectionCard
                     title="Google AdSense"
                     description="Enable AdSense, manage the injected script, and control where ads appear."
                     footer={
-                        <Button type="submit" disabled={googleAdsenseForm.processing || !canManageIntegrations}>
-                            {googleAdsenseForm.processing ? <Spinner /> : <SaveIcon data-icon="inline-start" />}
+                        <Button
+                            type="submit"
+                            disabled={
+                                googleAdsenseForm.processing ||
+                                !canManageIntegrations
+                            }
+                        >
+                            {googleAdsenseForm.processing ? (
+                                <Spinner />
+                            ) : (
+                                <SaveIcon data-icon="inline-start" />
+                            )}
                             Save AdSense settings
                         </Button>
                     }
@@ -627,15 +825,23 @@ export default function IntegrationsIndex({ activeSection, statuses, settings }:
                     <Field orientation="horizontal">
                         <Switch
                             id="google_adsense_enabled"
-                            checked={googleAdsenseForm.data.google_adsense_enabled}
+                            checked={
+                                googleAdsenseForm.data.google_adsense_enabled
+                            }
                             onCheckedChange={(checked) =>
-                                googleAdsenseForm.setField('google_adsense_enabled', checked === true)
+                                googleAdsenseForm.setField(
+                                    'google_adsense_enabled',
+                                    checked === true,
+                                )
                             }
                         />
                         <div className="flex flex-col gap-1">
-                            <FieldLabel htmlFor="google_adsense_enabled">Enable Google AdSense</FieldLabel>
+                            <FieldLabel htmlFor="google_adsense_enabled">
+                                Enable Google AdSense
+                            </FieldLabel>
                             <FieldDescription>
-                                Turn AdSense on globally before configuring ads.txt or display rules.
+                                Turn AdSense on globally before configuring
+                                ads.txt or display rules.
                             </FieldDescription>
                         </div>
                     </Field>
@@ -643,17 +849,30 @@ export default function IntegrationsIndex({ activeSection, statuses, settings }:
                     {googleAdsenseForm.data.google_adsense_enabled ? (
                         <>
                             <Field>
-                                <FieldLabel htmlFor="google_adsense_ads_txt">ads.txt content</FieldLabel>
+                                <FieldLabel htmlFor="google_adsense_ads_txt">
+                                    ads.txt content
+                                </FieldLabel>
                                 <FieldDescription>
-                                    This content is written to the public ads.txt file.
+                                    This content is written to the public
+                                    ads.txt file.
                                 </FieldDescription>
                                 <Textarea
                                     id="google_adsense_ads_txt"
-                                    value={googleAdsenseForm.data.google_adsense_ads_txt}
-                                    onChange={(event) =>
-                                        googleAdsenseForm.setField('google_adsense_ads_txt', event.target.value)
+                                    value={
+                                        googleAdsenseForm.data
+                                            .google_adsense_ads_txt
                                     }
-                                    onBlur={() => googleAdsenseForm.touch('google_adsense_ads_txt')}
+                                    onChange={(event) =>
+                                        googleAdsenseForm.setField(
+                                            'google_adsense_ads_txt',
+                                            event.target.value,
+                                        )
+                                    }
+                                    onBlur={() =>
+                                        googleAdsenseForm.touch(
+                                            'google_adsense_ads_txt',
+                                        )
+                                    }
                                     rows={8}
                                     placeholder="google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0"
                                 />
@@ -663,27 +882,53 @@ export default function IntegrationsIndex({ activeSection, statuses, settings }:
                                 id="google_adsense_code"
                                 label="AdSense head script"
                                 description="Paste the AdSense script snippet to inject into your pages."
-                                value={googleAdsenseForm.data.google_adsense_code}
-                                error={googleAdsenseForm.error('google_adsense_code')}
-                                invalid={googleAdsenseForm.invalid('google_adsense_code')}
-                                onChange={(value) => googleAdsenseForm.setField('google_adsense_code', value)}
-                                onBlur={() => googleAdsenseForm.touch('google_adsense_code')}
-                                placeholder={'<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-xxxx"></script>'}
+                                value={
+                                    googleAdsenseForm.data.google_adsense_code
+                                }
+                                error={googleAdsenseForm.error(
+                                    'google_adsense_code',
+                                )}
+                                invalid={googleAdsenseForm.invalid(
+                                    'google_adsense_code',
+                                )}
+                                onChange={(value) =>
+                                    googleAdsenseForm.setField(
+                                        'google_adsense_code',
+                                        value,
+                                    )
+                                }
+                                onBlur={() =>
+                                    googleAdsenseForm.touch(
+                                        'google_adsense_code',
+                                    )
+                                }
+                                placeholder={
+                                    '<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-xxxx"></script>'
+                                }
                             />
 
                             <FieldGroup>
                                 <Field orientation="horizontal">
                                     <Switch
                                         id="google_adsense_hide_for_logged_in"
-                                        checked={googleAdsenseForm.data.google_adsense_hide_for_logged_in}
+                                        checked={
+                                            googleAdsenseForm.data
+                                                .google_adsense_hide_for_logged_in
+                                        }
                                         onCheckedChange={(checked) =>
-                                            googleAdsenseForm.setField('google_adsense_hide_for_logged_in', checked === true)
+                                            googleAdsenseForm.setField(
+                                                'google_adsense_hide_for_logged_in',
+                                                checked === true,
+                                            )
                                         }
                                     />
                                     <div className="flex flex-col gap-1">
-                                        <FieldLabel htmlFor="google_adsense_hide_for_logged_in">Hide ads for logged-in users</FieldLabel>
+                                        <FieldLabel htmlFor="google_adsense_hide_for_logged_in">
+                                            Hide ads for logged-in users
+                                        </FieldLabel>
                                         <FieldDescription>
-                                            Useful for member areas, editors, or private dashboards.
+                                            Useful for member areas, editors, or
+                                            private dashboards.
                                         </FieldDescription>
                                     </div>
                                 </Field>
@@ -691,15 +936,25 @@ export default function IntegrationsIndex({ activeSection, statuses, settings }:
                                 <Field orientation="horizontal">
                                     <Switch
                                         id="google_adsense_hide_on_homepage"
-                                        checked={googleAdsenseForm.data.google_adsense_hide_on_homepage}
+                                        checked={
+                                            googleAdsenseForm.data
+                                                .google_adsense_hide_on_homepage
+                                        }
                                         onCheckedChange={(checked) =>
-                                            googleAdsenseForm.setField('google_adsense_hide_on_homepage', checked === true)
+                                            googleAdsenseForm.setField(
+                                                'google_adsense_hide_on_homepage',
+                                                checked === true,
+                                            )
                                         }
                                     />
                                     <div className="flex flex-col gap-1">
-                                        <FieldLabel htmlFor="google_adsense_hide_on_homepage">Hide ads on homepage</FieldLabel>
+                                        <FieldLabel htmlFor="google_adsense_hide_on_homepage">
+                                            Hide ads on homepage
+                                        </FieldLabel>
                                         <FieldDescription>
-                                            Keep the front page ad-free while still serving ads deeper in the site.
+                                            Keep the front page ad-free while
+                                            still serving ads deeper in the
+                                            site.
                                         </FieldDescription>
                                     </div>
                                 </Field>
@@ -708,9 +963,12 @@ export default function IntegrationsIndex({ activeSection, statuses, settings }:
                     ) : (
                         <Alert>
                             <HomeIcon />
-                            <AlertTitle>AdSense is currently disabled</AlertTitle>
+                            <AlertTitle>
+                                AdSense is currently disabled
+                            </AlertTitle>
                             <AlertDescription>
-                                Enable AdSense to reveal the script, ads.txt, and display option fields.
+                                Enable AdSense to reveal the script, ads.txt,
+                                and display option fields.
                             </AlertDescription>
                         </Alert>
                     )}
@@ -736,8 +994,17 @@ export default function IntegrationsIndex({ activeSection, statuses, settings }:
                     title="Custom head code"
                     description="Add custom scripts, styles, meta tags, or other allowed head markup."
                     footer={
-                        <Button type="submit" disabled={otherForm.processing || !canManageIntegrations}>
-                            {otherForm.processing ? <Spinner /> : <SaveIcon data-icon="inline-start" />}
+                        <Button
+                            type="submit"
+                            disabled={
+                                otherForm.processing || !canManageIntegrations
+                            }
+                        >
+                            {otherForm.processing ? (
+                                <Spinner />
+                            ) : (
+                                <SaveIcon data-icon="inline-start" />
+                            )}
                             Save custom code
                         </Button>
                     }
@@ -758,7 +1025,9 @@ export default function IntegrationsIndex({ activeSection, statuses, settings }:
         ),
     };
 
-    const currentMeta = sections.find((section) => section.key === currentSection) ?? sections[0];
+    const currentMeta =
+        sections.find((section) => section.key === currentSection) ??
+        sections[0];
 
     return (
         <SettingsLayout
@@ -773,12 +1042,24 @@ export default function IntegrationsIndex({ activeSection, statuses, settings }:
                 <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="flex flex-wrap items-center gap-3">
                         <Badge variant="secondary">{enabledCount} active</Badge>
-                        <Badge variant={statuses[currentSection] ? 'success' : 'secondary'}>
-                            {statuses[currentSection] ? 'Configured' : currentMeta.emptyLabel}
+                        <Badge
+                            variant={
+                                statuses[currentSection]
+                                    ? 'success'
+                                    : 'secondary'
+                            }
+                        >
+                            {statuses[currentSection]
+                                ? 'Configured'
+                                : currentMeta.emptyLabel}
                         </Badge>
                     </div>
                     <Button variant="outline" asChild>
-                        <a href="https://developers.google.com/search/docs/monitor-debug/search-console/get-started" target="_blank" rel="noreferrer">
+                        <a
+                            href="https://developers.google.com/search/docs/monitor-debug/search-console/get-started"
+                            target="_blank"
+                            rel="noreferrer"
+                        >
                             <ExternalLinkIcon data-icon="inline-start" />
                             Integration docs
                         </a>
@@ -788,20 +1069,35 @@ export default function IntegrationsIndex({ activeSection, statuses, settings }:
                 <Card>
                     <CardHeader>
                         <CardTitle>{currentMeta.title}</CardTitle>
-                        <CardDescription>{currentMeta.description}</CardDescription>
+                        <CardDescription>
+                            {currentMeta.description}
+                        </CardDescription>
                     </CardHeader>
                     <CardContent className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                         <div className="rounded-xl border bg-muted/30 px-4 py-3">
-                            <p className="text-sm font-medium">Active integrations</p>
-                            <p className="text-sm text-muted-foreground">{enabledCount} of {sections.length} sections configured.</p>
+                            <p className="text-sm font-medium">
+                                Active integrations
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                                {enabledCount} of {sections.length} sections
+                                configured.
+                            </p>
                         </div>
                         <div className="rounded-xl border bg-muted/30 px-4 py-3">
-                            <p className="text-sm font-medium">Sanitized on save</p>
-                            <p className="text-sm text-muted-foreground">Only head-safe tags are kept after validation.</p>
+                            <p className="text-sm font-medium">
+                                Sanitized on save
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                                Only head-safe tags are kept after validation.
+                            </p>
                         </div>
                         <div className="rounded-xl border bg-muted/30 px-4 py-3">
-                            <p className="text-sm font-medium">AdSense support</p>
-                            <p className="text-sm text-muted-foreground">Includes ads.txt editing and display conditions.</p>
+                            <p className="text-sm font-medium">
+                                AdSense support
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                                Includes ads.txt editing and display conditions.
+                            </p>
                         </div>
                     </CardContent>
                 </Card>

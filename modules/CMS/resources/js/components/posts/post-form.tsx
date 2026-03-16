@@ -11,7 +11,6 @@ import {
 import { useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import { AsteroNote } from '@/components/asteronote/asteronote';
-import { MonacoEditor } from '@/components/code-editor/monaco-editor';
 import { FormErrorSummary } from '@/components/forms/form-error-summary';
 import { MediaPickerField } from '@/components/media/media-picker-field';
 import { Button } from '@/components/ui/button';
@@ -160,6 +159,22 @@ type PostSelectOption = {
     disabled?: boolean;
 };
 
+type PostSingleSelectComboboxProps = {
+    id?: string;
+    value: string | null;
+    options: PostSelectOption[];
+    onChange: (value: string | null) => void;
+    onBlur?: () => void;
+    placeholder?: string;
+    invalid?: boolean;
+    searchable?: boolean;
+    clearable?: boolean;
+    disabled?: boolean;
+    className?: string;
+    emptyMessage?: string;
+    searchPlaceholder?: string;
+};
+
 function PostSingleSelectCombobox({
     id,
     value,
@@ -172,6 +187,8 @@ function PostSingleSelectCombobox({
     clearable = false,
     disabled = false,
     className,
+    emptyMessage = 'No results found.',
+    searchPlaceholder = 'Search...',
 }: PostSingleSelectComboboxProps) {
     const selectedOption = React.useMemo(
         () => options.find((option) => option.value === value),
@@ -180,7 +197,6 @@ function PostSingleSelectCombobox({
 
     return (
         <Combobox
-            type="single"
             value={value}
             disabled={disabled}
             onValueChange={(newValue) => {
@@ -598,8 +614,8 @@ export default function PostForm({
                                     id="meta_robots"
                                     value={form.data.meta_robots}
                                     options={metaRobotsSelectOptions}
-                                    onValueChange={(value) =>
-                                        form.setField('meta_robots', value)
+                                    onChange={(value) =>
+                                        form.setField('meta_robots', value ?? '')
                                     }
                                     onBlur={() => form.touch('meta_robots')}
                                     placeholder="Select meta robots"
@@ -752,16 +768,19 @@ export default function PostForm({
                                 <FieldLabel htmlFor="schema">
                                     Schema markup
                                 </FieldLabel>
-                                <MonacoEditor
-                                    name="schema"
-                                    language="html"
-                                    height={360}
+                                <Textarea
+                                    id="schema"
+                                    className="bg-background font-mono text-sm"
+                                    rows={12}
                                     value={form.data.schema}
-                                    onChange={(value) =>
-                                        form.setField('schema', value)
+                                    onChange={(event) =>
+                                        form.setField('schema', event.target.value)
                                     }
                                     onBlur={() => form.touch('schema')}
-                                    placeholder="Add custom schema markup"
+                                    aria-invalid={
+                                        form.invalid('schema') || undefined
+                                    }
+                                    placeholder="Add custom schema markup (JSON-LD or other structured data)"
                                 />
                                 <FieldDescription>
                                     Optional structured data for search engines.
@@ -835,8 +854,8 @@ export default function PostForm({
                                         id="status"
                                         value={form.data.status}
                                         options={statusSelectOptions}
-                                        onValueChange={(value) => {
-                                            const nextStatus = value;
+                                        onChange={(value) => {
+                                            const nextStatus = value ?? '';
                                             form.setField('status', nextStatus);
 
                                             if (
@@ -872,8 +891,8 @@ export default function PostForm({
                                         id="visibility"
                                         value={form.data.visibility}
                                         options={visibilitySelectOptions}
-                                        onValueChange={(value) => {
-                                            const nextVisibility = value;
+                                        onChange={(value) => {
+                                            const nextVisibility = value ?? '';
                                             form.setField(
                                                 'visibility',
                                                 nextVisibility,
@@ -1093,7 +1112,7 @@ export default function PostForm({
                                     id="author_id"
                                     value={String(form.data.author_id)}
                                     options={authorSelectOptions}
-                                    onValueChange={(value) =>
+                                    onChange={(value) =>
                                         form.setField(
                                             'author_id',
                                             value === ''
@@ -1131,8 +1150,8 @@ export default function PostForm({
                                         id="template"
                                         value={form.data.template}
                                         options={templateSelectOptions}
-                                        onValueChange={(value) =>
-                                            form.setField('template', value)
+                                        onChange={(value) =>
+                                            form.setField('template', value ?? '')
                                         }
                                         onBlur={() => form.touch('template')}
                                         placeholder="Select template"

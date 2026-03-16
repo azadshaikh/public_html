@@ -47,7 +47,7 @@ export default function FormsIndex({ config, rows, filters, statistics }: FormIn
         {
             key: 'title', header: 'Form', sortable: true,
             cell: (form) => (
-                <Link href={form.show_url} className="font-medium text-foreground hover:opacity-80">
+                <Link href={route('cms.form.edit', form.id)} className="font-medium text-foreground hover:opacity-80">
                     {form.title}
                 </Link>
             ),

@@ -19,19 +19,19 @@ const groupedOptions = [
         label: 'Bulleted list',
         items: [
             {
-                icon: <ListIcon />,
+                icon: <ListIcon className="mr-2 size-4" />,
                 label: 'Bullet (•)',
                 style: 'disc',
                 type: 'ul' as const,
             },
             {
-                icon: <ListIcon />,
+                icon: <ListIcon className="mr-2 size-4" />,
                 label: 'Circle (○)',
                 style: 'circle',
                 type: 'ul' as const,
             },
             {
-                icon: <ListIcon />,
+                icon: <ListIcon className="mr-2 size-4" />,
                 label: 'Square (■)',
                 style: 'square',
                 type: 'ul' as const,
@@ -42,31 +42,31 @@ const groupedOptions = [
         label: 'Numbered list',
         items: [
             {
-                icon: <ListOrderedIcon />,
+                icon: <ListOrderedIcon className="mr-2 size-4" />,
                 label: 'Decimal (1, 2, 3)',
                 style: 'decimal',
                 type: 'ol' as const,
             },
             {
-                icon: <ListOrderedIcon />,
+                icon: <ListOrderedIcon className="mr-2 size-4" />,
                 label: 'Lower alpha (a, b, c)',
                 style: 'lower-alpha',
                 type: 'ol' as const,
             },
             {
-                icon: <ListOrderedIcon />,
+                icon: <ListOrderedIcon className="mr-2 size-4" />,
                 label: 'Upper alpha (A, B, C)',
                 style: 'upper-alpha',
                 type: 'ol' as const,
             },
             {
-                icon: <ListOrderedIcon />,
+                icon: <ListOrderedIcon className="mr-2 size-4" />,
                 label: 'Lower roman (i, ii, iii)',
                 style: 'lower-roman',
                 type: 'ol' as const,
             },
             {
-                icon: <ListOrderedIcon />,
+                icon: <ListOrderedIcon className="mr-2 size-4" />,
                 label: 'Upper roman (I, II, III)',
                 style: 'upper-roman',
                 type: 'ol' as const,
@@ -104,18 +104,18 @@ export function ListPluginControl({
                     onMouseDown={(event: React.MouseEvent) =>
                         event.preventDefault()
                     }
-                    pressed={open}
+                    pressed={open || editor.formatState.listType !== null}
                     tooltip={label}
                 >
-                    <span className="flex items-center gap-2">{icon}</span>
+                    {icon}
                 </ToolbarButton>
             </DropdownMenuTrigger>
             <DropdownMenuContent
-                className="ignore-click-outside/toolbar min-w-[16rem]"
+                className="ignore-click-outside/toolbar min-w-[200px]"
                 align="start"
                 onCloseAutoFocus={(event) => event.preventDefault()}
             >
-                {groupedOptions.map((group) => (
+                {groupedOptions.map((group, groupIdx) => (
                     <React.Fragment key={group.label}>
                         <DropdownMenuLabel>{group.label}</DropdownMenuLabel>
                         {group.items.map((item) => {
@@ -139,12 +139,12 @@ export function ListPluginControl({
                                     {item.icon}
                                     {item.label}
                                     {active ? (
-                                        <CheckIcon className="ml-auto" />
+                                        <CheckIcon className="ml-auto size-4" />
                                     ) : null}
                                 </DropdownMenuItem>
                             );
                         })}
-                        <DropdownMenuSeparator />
+                        {groupIdx < groupedOptions.length - 1 && <DropdownMenuSeparator />}
                     </React.Fragment>
                 ))}
             </DropdownMenuContent>

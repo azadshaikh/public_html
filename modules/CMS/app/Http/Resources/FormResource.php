@@ -33,7 +33,7 @@ class FormResource extends ScaffoldResource
             };
 
         $template = (string) ($this->resource->template ?? 'default');
-        $templateConfig = config('cms::forms.templates.'.$template, []);
+        $templateConfig = config('cms.forms.templates.'.$template, []);
         $templateLabel = $templateConfig['label'] ?? ucfirst(str_replace('_', ' ', $template));
         $templateClass = $this->mapTemplateClass($template);
 

@@ -444,7 +444,7 @@ export default function PageForm({
                                         </FieldLabel>
                                         <NativeSelect
                                             id="meta_robots"
-                                            className="w-full"
+                                            className="w-full bg-background"
                                             value={form.data.meta_robots}
                                             onChange={(event) =>
                                                 form.setField(
@@ -1039,9 +1039,9 @@ export default function PageForm({
                                             event.target.value === ''
                                                 ? ''
                                                 : Number.parseInt(
-                                                      event.target.value,
-                                                      10,
-                                                  ),
+                                                    event.target.value,
+                                                    10,
+                                                ),
                                         )
                                     }
                                     onBlur={() => form.touch('author_id')}

@@ -14,7 +14,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
+import { Field, FieldGroup, FieldLabel, FieldDescription } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 
@@ -40,6 +40,21 @@ export function ImagePluginControl({
         setHeight('');
     }, []);
 
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!src.trim()) return;
+
+        editor.insertImage({
+            src,
+            alt,
+            srcset,
+            sizes,
+            width,
+            height,
+        });
+        setOpen(false);
+    };
+
     return (
         <>
             <ToolbarIconButton
@@ -54,120 +69,136 @@ export function ImagePluginControl({
                 }}
             />
             <Dialog open={open} onOpenChange={setOpen}>
-                <DialogContent className="max-w-2xl">
-                    <DialogHeader>
-                        <DialogTitle>Insert image</DialogTitle>
-                        <DialogDescription>
-                            Add an image URL or CDN asset and optional
-                            responsive attributes.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <FieldGroup>
-                        <Field>
-                            <FieldLabel htmlFor={`${editor.id}-image-src`}>
-                                Image URL
-                            </FieldLabel>
-                            <Input
-                                id={`${editor.id}-image-src`}
-                                value={src}
-                                onChange={(event) => setSrc(event.target.value)}
-                                placeholder="https://cdn.example.com/hero.jpg"
-                            />
-                        </Field>
-                        <Field>
-                            <FieldLabel htmlFor={`${editor.id}-image-alt`}>
-                                Alt text
-                            </FieldLabel>
-                            <Input
-                                id={`${editor.id}-image-alt`}
-                                value={alt}
-                                onChange={(event) => setAlt(event.target.value)}
-                                placeholder="Describe the image"
-                            />
-                        </Field>
-                        <Field>
-                            <FieldLabel htmlFor={`${editor.id}-image-srcset`}>
-                                srcset
-                            </FieldLabel>
-                            <Textarea
-                                id={`${editor.id}-image-srcset`}
-                                rows={3}
-                                value={srcset}
-                                onChange={(event) =>
-                                    setSrcset(event.target.value)
-                                }
-                                placeholder="https://... 640w, https://... 1280w"
-                            />
-                        </Field>
-                        <Field>
-                            <FieldLabel htmlFor={`${editor.id}-image-sizes`}>
-                                sizes
-                            </FieldLabel>
-                            <Input
-                                id={`${editor.id}-image-sizes`}
-                                value={sizes}
-                                onChange={(event) =>
-                                    setSizes(event.target.value)
-                                }
-                                placeholder="(max-width: 768px) 100vw, 768px"
-                            />
-                        </Field>
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                            <Field>
-                                <FieldLabel
-                                    htmlFor={`${editor.id}-image-width`}
-                                >
-                                    Width
-                                </FieldLabel>
-                                <Input
-                                    id={`${editor.id}-image-width`}
-                                    value={width}
-                                    onChange={(event) =>
-                                        setWidth(event.target.value)
-                                    }
-                                    placeholder="1200"
-                                />
-                            </Field>
-                            <Field>
-                                <FieldLabel
-                                    htmlFor={`${editor.id}-image-height`}
-                                >
-                                    Height
-                                </FieldLabel>
-                                <Input
-                                    id={`${editor.id}-image-height`}
-                                    value={height}
-                                    onChange={(event) =>
-                                        setHeight(event.target.value)
-                                    }
-                                    placeholder="800"
-                                />
-                            </Field>
+                <DialogContent className="sm:max-w-[500px]">
+                    <form onSubmit={handleSubmit}>
+                        <DialogHeader>
+                            <DialogTitle>Insert Image</DialogTitle>
+                            <DialogDescription>
+                                Add an image URL and optional responsive attributes.
+                            </DialogDescription>
+                        </DialogHeader>
+
+                        <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto px-1">
+                            {src && (
+                                <div className="rounded-md border bg-muted/30 p-2 flex justify-center items-center mb-2 h-32 overflow-hidden relative">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img
+                                        src={src}
+                                        alt={alt || "Preview"}
+                                        className="max-h-full max-w-full object-contain"
+                                        onError={(e) => {
+                                            (e.target as HTMLImageElement).style.display = 'none';
+                                            e.currentTarget.parentElement!.innerHTML = '<span class="text-sm text-muted-foreground">Invalid image URL</span>';
+                                        }}
+                                    />
+                                </div>
+                            )}
+
+                            <FieldGroup>
+                                <Field>
+                                    <FieldLabel htmlFor={`${editor.id}-image-src`}>
+                                        Image URL <span className="text-destructive">*</span>
+                                    </FieldLabel>
+                                    <Input
+                                        id={`${editor.id}-image-src`}
+                                        type="url"
+                                        value={src}
+                                        onChange={(event) => setSrc(event.target.value)}
+                                        placeholder="https://example.com/image.jpg"
+                                        autoFocus
+                                        required
+                                    />
+                                </Field>
+                                <Field>
+                                    <FieldLabel htmlFor={`${editor.id}-image-alt`}>
+                                        Alt text
+                                    </FieldLabel>
+                                    <Input
+                                        id={`${editor.id}-image-alt`}
+                                        value={alt}
+                                        onChange={(event) => setAlt(event.target.value)}
+                                        placeholder="Describe the image for screen readers"
+                                    />
+                                </Field>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <Field>
+                                        <FieldLabel htmlFor={`${editor.id}-image-width`}>
+                                            Width
+                                        </FieldLabel>
+                                        <Input
+                                            id={`${editor.id}-image-width`}
+                                            value={width}
+                                            onChange={(event) => setWidth(event.target.value)}
+                                            placeholder="e.g. 800"
+                                        />
+                                    </Field>
+                                    <Field>
+                                        <FieldLabel htmlFor={`${editor.id}-image-height`}>
+                                            Height
+                                        </FieldLabel>
+                                        <Input
+                                            id={`${editor.id}-image-height`}
+                                            value={height}
+                                            onChange={(event) => setHeight(event.target.value)}
+                                            placeholder="e.g. 600"
+                                        />
+                                    </Field>
+                                </div>
+
+                                <details className="group [&_summary::-webkit-details-marker]:hidden">
+                                    <summary className="flex cursor-pointer items-center text-sm font-medium text-muted-foreground outline-none hover:text-foreground">
+                                        <span className="mr-2 transition-transform group-open:rotate-90">
+                                            ▶
+                                        </span>
+                                        Advanced responsive attributes
+                                    </summary>
+                                    <div className="mt-4 flex flex-col gap-4 pl-4 border-l-2 border-muted">
+                                        <Field>
+                                            <FieldLabel htmlFor={`${editor.id}-image-srcset`}>
+                                                srcset
+                                            </FieldLabel>
+                                            <Textarea
+                                                id={`${editor.id}-image-srcset`}
+                                                rows={2}
+                                                value={srcset}
+                                                onChange={(event) => setSrcset(event.target.value)}
+                                                placeholder="image-320w.jpg 320w, image-480w.jpg 480w"
+                                            />
+                                            <FieldDescription>Multiple resolutions for different screen sizes</FieldDescription>
+                                        </Field>
+                                        <Field>
+                                            <FieldLabel htmlFor={`${editor.id}-image-sizes`}>
+                                                sizes
+                                            </FieldLabel>
+                                            <Input
+                                                id={`${editor.id}-image-sizes`}
+                                                value={sizes}
+                                                onChange={(event) => setSizes(event.target.value)}
+                                                placeholder="(max-width: 320px) 280px, 800px"
+                                            />
+                                            <FieldDescription>Media conditions indicating image layout width</FieldDescription>
+                                        </Field>
+                                    </div>
+                                </details>
+                            </FieldGroup>
                         </div>
-                    </FieldGroup>
-                    <DialogFooter>
-                        <Button
-                            variant="outline"
-                            onClick={() => setOpen(false)}
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            onClick={() => {
-                                editor.insertImage({
-                                    src,
-                                    alt,
-                                    srcset,
-                                    sizes,
-                                    width,
-                                    height,
-                                });
-                                setOpen(false);
-                            }}
-                        >
-                            Insert image
-                        </Button>
-                    </DialogFooter>
+                        <DialogFooter className="gap-2 sm:gap-0 mt-2">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setOpen(false)}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                type="submit"
+                                disabled={!src.trim()}
+                            >
+                                Insert Image
+                            </Button>
+                        </DialogFooter>
+                    </form>
                 </DialogContent>
             </Dialog>
         </>
