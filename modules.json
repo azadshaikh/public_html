@@ -1,5 +1,6 @@
 {
     "CMS": "enabled",
     "ChatBot": "enabled",
+    "ReleaseManager": "enabled",
     "Todos": "enabled"
 }

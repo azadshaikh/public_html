@@ -43,5 +43,36 @@
         "name": "Footer Area 3",
         "id": "footer-3",
         "description": "Third footer widget area"
-    }
+    },
+    "widgets_sidebar-main": [
+        {
+            "id": "widget-1773690524866-kzfebi",
+            "type": "banner",
+            "title": "Banner Widget",
+            "settings": {
+                "title": null,
+                "banner_title": "Your Banner Title",
+                "text": "Banner description text",
+                "button_text": "Learn More",
+                "button_url": "#",
+                "background_color": "#007bff",
+                "text_color": "#ffffff",
+                "button_style": "primary",
+                "banner_size": "medium"
+            },
+            "position": 0
+        },
+        {
+            "id": "widget-1773690527895-y6inpg",
+            "type": "popularposts",
+            "title": "Popular Posts",
+            "settings": {
+                "title": "Popular Posts",
+                "icon": "ri-history-line",
+                "posts_limit": 3,
+                "background_style": "secondary"
+            },
+            "position": 1
+        }
+    ]
 }

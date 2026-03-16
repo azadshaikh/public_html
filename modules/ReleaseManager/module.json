@@ -1,0 +1,8 @@
+{
+    "name": "ReleaseManager",
+    "slug": "releasemanager",
+    "version": "1.0.0",
+    "description": "Release management module for handling software releases, version control, and deployment management",
+    "namespace": "Modules\\ReleaseManager\\",
+    "provider": "Modules\\ReleaseManager\\Providers\\ReleaseManagerServiceProvider"
+}

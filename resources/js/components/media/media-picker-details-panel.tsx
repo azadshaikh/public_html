@@ -43,10 +43,10 @@ export function MediaPickerDetailsPanel({
                 </div>
             ) : (
                 /* Details Content */
-                <ScrollArea className="flex-1">
-                    <div className="space-y-4 p-4">
+                <ScrollArea className="flex-1 w-full" type="auto">
+                    <div className="flex w-full flex-col space-y-4 p-4">
                         {/* Preview */}
-                        <div className="flex h-48 w-full items-center justify-center overflow-hidden rounded-lg border bg-muted p-2">
+                        <div className="flex h-48 items-center justify-center overflow-hidden rounded-lg border bg-muted p-2">
                             {isImageMime(activeMedia.mime_type) && activeMedia.thumbnail_url ? (
                                 <img
                                     src={activeMedia.thumbnail_url}
