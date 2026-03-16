@@ -133,11 +133,6 @@ class MenuController extends ScaffoldController implements HasMiddleware
 
         $menu = Menu::query()->containers()->findOrFail($id);
 
-        $menu->load(['allItems' => function ($query): void {
-            $query->orderBy('sort_order')->with(['parent', 'page']);
-        },
-        ]);
-
         $pagesql = CmsPost::query()->published()->where('type', 'page');
 
         $not_ids = [];
@@ -155,6 +150,7 @@ class MenuController extends ScaffoldController implements HasMiddleware
 
         $pages = $pagesql->orderBy('title', 'ASC')->get();
         $categories = CmsPost::query()->published()->where('type', 'category')->orderBy('title', 'ASC')->get();
+        $tags = CmsPost::query()->published()->where('type', 'tag')->orderBy('title', 'ASC')->get();
 
         $itemTypes = Menu::getAvailableTypes();
         $itemTargets = Menu::getAvailableTargets();
@@ -162,14 +158,71 @@ class MenuController extends ScaffoldController implements HasMiddleware
         $menuSettings = Menu::getThemeMenuSettings();
 
         return Inertia::render($this->inertiaPage().'/edit', [
-            'menu' => $menu,
-            'pages' => $pages,
-            'categories' => $categories,
+            'menu' => [
+                'id' => $menu->id,
+                'name' => $menu->name,
+                'slug' => $menu->slug,
+                'location' => $menu->location ?? '',
+                'description' => $menu->description ?? '',
+                'is_active' => $menu->is_active,
+                'all_items' => $this->getAllMenuItemsFlat($menu),
+            ],
+            'pages' => $pages->map(fn ($p) => ['id' => $p->id, 'title' => $p->title, 'slug' => $p->slug])->values()->all(),
+            'categories' => $categories->map(fn ($c) => ['id' => $c->id, 'title' => $c->title, 'slug' => $c->slug])->values()->all(),
+            'tags' => $tags->map(fn ($t) => ['id' => $t->id, 'title' => $t->title, 'slug' => $t->slug])->values()->all(),
             'itemTypes' => $itemTypes,
             'itemTargets' => $itemTargets,
             'locations' => $locations,
             'menuSettings' => $menuSettings,
+            'statusOptions' => $this->menuService->getStatusOptions(),
+            'locationOptions' => $this->menuService->getLocationOptions(),
         ]);
+    }
+
+    /**
+     * Get all menu items as a flat list using a PostgreSQL recursive CTE (supports any depth).
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function getAllMenuItemsFlat(Menu $menu): array
+    {
+        $results = DB::select("
+            WITH RECURSIVE menu_tree AS (
+                SELECT id, parent_id, title, COALESCE(url, '') AS url, type,
+                       COALESCE(target, '_self') AS target, COALESCE(icon, '') AS icon,
+                       COALESCE(css_classes, '') AS css_classes, COALESCE(link_title, '') AS link_title,
+                       COALESCE(link_rel, '') AS link_rel, COALESCE(description, '') AS description,
+                       object_id, sort_order, is_active
+                FROM cms_menus
+                WHERE parent_id = :menuId AND type != 'container' AND deleted_at IS NULL
+                UNION ALL
+                SELECT m.id, m.parent_id, m.title, COALESCE(m.url, ''), m.type,
+                       COALESCE(m.target, '_self'), COALESCE(m.icon, ''), COALESCE(m.css_classes, ''),
+                       COALESCE(m.link_title, ''), COALESCE(m.link_rel, ''), COALESCE(m.description, ''),
+                       m.object_id, m.sort_order, m.is_active
+                FROM cms_menus m
+                INNER JOIN menu_tree mt ON m.parent_id = mt.id
+                WHERE m.type != 'container' AND m.deleted_at IS NULL
+            )
+            SELECT * FROM menu_tree ORDER BY sort_order
+        ", ['menuId' => $menu->id]);
+
+        return collect($results)->map(fn ($item) => [
+            'id' => $item->id,
+            'parent_id' => $item->parent_id,
+            'title' => $item->title,
+            'url' => $item->url,
+            'type' => $item->type,
+            'target' => $item->target,
+            'icon' => $item->icon,
+            'css_classes' => $item->css_classes,
+            'link_title' => $item->link_title,
+            'link_rel' => $item->link_rel,
+            'description' => $item->description,
+            'object_id' => $item->object_id,
+            'sort_order' => $item->sort_order,
+            'is_active' => (bool) $item->is_active,
+        ])->all();
     }
 
     // =============================================================================

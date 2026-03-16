@@ -600,7 +600,6 @@ export type MenuItem = {
     object_id: number | null;
     sort_order: number;
     is_active: boolean;
-    children?: MenuItem[];
 };
 
 export type MenuDetail = {
@@ -638,8 +637,11 @@ export type MenuEditPageProps = {
     menu: MenuDetail;
     pages: { id: number; title: string; slug: string }[];
     categories: { id: number; title: string; slug: string }[];
+    tags: { id: number; title: string; slug: string }[];
     itemTypes: Record<string, string>;
     itemTargets: Record<string, string>;
     locations: Record<string, string>;
     menuSettings: Record<string, unknown>;
+    statusOptions: CmsOption[];
+    locationOptions: CmsOption[];
 };

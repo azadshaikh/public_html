@@ -70,6 +70,10 @@ class CustomMedia extends Media
             return $url;
         }
 
+        if (! is_string($this->disk) || trim($this->disk) === '') {
+            $this->setAttribute('disk', get_storage_disk());
+        }
+
         return parent::getUrl($conversionName);
     }
 
