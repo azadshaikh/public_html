@@ -84,7 +84,7 @@ class TagsController extends ScaffoldController implements HasMiddleware
     protected function transformModelForEdit(Model $model): array
     {
         /** @var CmsPost $model */
-        $model->loadMissing(['featuredImage:id']);
+        $model->loadMissing(['featuredImage']);
 
         return [
             'id' => $model->getKey(),

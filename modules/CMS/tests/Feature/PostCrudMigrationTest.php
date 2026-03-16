@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Modules\CMS\Tests\Feature;
 
 use App\Enums\Status;
+use App\Models\CustomMedia;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
@@ -90,8 +91,10 @@ class PostCrudMigrationTest extends TestCase
         $category = $this->createTerm(CmsPostType::CATEGORY, 'Guides');
         $tag = $this->createTerm(CmsPostType::TAG, 'Laravel');
         $post = $this->createPost('Migration Ready Post');
+        $featuredImage = $this->createMediaForPost($post, 'featured-image.jpg');
         $post->categories()->attach($category->id, ['term_type' => CmsPostType::CATEGORY->value]);
         $post->tags()->attach($tag->id, ['term_type' => CmsPostType::TAG->value]);
+        $post->forceFill(['feature_image_id' => $featuredImage->id])->save();
 
         $this->actingAs($this->admin)
             ->get(route('cms.posts.edit', $post))
@@ -100,6 +103,10 @@ class PostCrudMigrationTest extends TestCase
                 ->component('cms/posts/edit')
                 ->where('post.id', $post->id)
                 ->where('post.title', $post->title)
+                ->where(
+                    'post.featured_image_url',
+                    get_media_url($featuredImage, 'thumbnail', usePlaceholder: false),
+                )
                 ->where('initialValues.title', $post->title)
                 ->where('initialValues.slug', $post->slug)
                 ->where('initialValues.content', $post->content)
@@ -244,6 +251,28 @@ class PostCrudMigrationTest extends TestCase
             'meta_description' => 'Original meta description',
             'og_title' => 'Original OG title',
             'schema' => '<script type="application/ld+json">{"@type":"Article"}</script>',
+        ]);
+    }
+
+    private function createMediaForPost(CmsPost $post, string $fileName): CustomMedia
+    {
+        return CustomMedia::query()->create([
+            'model_type' => CmsPost::class,
+            'model_id' => $post->id,
+            'uuid' => (string) Str::uuid(),
+            'collection_name' => 'default',
+            'name' => pathinfo($fileName, PATHINFO_FILENAME),
+            'file_name' => $fileName,
+            'mime_type' => 'image/jpeg',
+            'disk' => 'public',
+            'size' => 1024,
+            'manipulations' => [],
+            'custom_properties' => [],
+            'generated_conversions' => [],
+            'responsive_images' => [],
+            'status' => 'active',
+            'created_by' => $this->admin->id,
+            'updated_by' => $this->admin->id,
         ]);
     }
 }

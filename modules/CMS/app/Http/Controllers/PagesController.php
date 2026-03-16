@@ -60,7 +60,7 @@ class PagesController extends ScaffoldController implements HasMiddleware
     {
         /** @var CmsPost $model */
         if ($model->exists) {
-            $model->load(['featuredImage:id']);
+            $model->load(['featuredImage']);
         }
 
         return [
@@ -81,7 +81,7 @@ class PagesController extends ScaffoldController implements HasMiddleware
     protected function transformModelForEdit(Model $model): array
     {
         /** @var CmsPost $model */
-        $model->loadMissing(['featuredImage:id']);
+        $model->loadMissing(['featuredImage']);
 
         return [
             'id' => $model->getKey(),

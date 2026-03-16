@@ -60,7 +60,7 @@ class PostsController extends ScaffoldController implements HasMiddleware
     {
         /** @var CmsPost $model */
         if ($model->exists) {
-            $model->load(['categories:id', 'tags:id', 'createdBy:id,name', 'featuredImage:id']);
+            $model->load(['categories:id', 'tags:id', 'createdBy:id,name', 'featuredImage']);
         }
 
         $selectedCategoryIds = $model->exists ? $model->categories->pluck('id')->all() : [];
@@ -85,7 +85,7 @@ class PostsController extends ScaffoldController implements HasMiddleware
     protected function transformModelForEdit(Model $model): array
     {
         /** @var CmsPost $model */
-        $model->loadMissing(['featuredImage:id']);
+        $model->loadMissing(['featuredImage']);
 
         return [
             'id' => $model->getKey(),
