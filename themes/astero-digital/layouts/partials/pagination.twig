@@ -1,0 +1,90 @@
+{% if paginator.hasPages() %}
+    <nav class="pb-md-4 mt-2 pt-4" aria-label="Pagination">
+        <ul class="pagination pagination-lg mb-1" style="box-shadow: none;">
+            {# Previous Page Link #}
+            {% if paginator.onFirstPage() %}
+                <li class="paginate_button page-item disabled" aria-disabled="true">
+                    <span class="page-link" aria-hidden="true">Previous</span>
+                </li>
+            {% else %}
+                <li class="paginate_button page-item">
+                    <a class="page-link" href="{{ paginator.previousPageUrl() }}" rel="prev">
+                        Previous
+                    </a>
+                </li>
+            {% endif %}
+
+            {# Page Numbers #}
+            {% set current_page = paginator.currentPage() %}
+            {% set last_page = paginator.lastPage() %}
+
+            {% if last_page > 6 %}
+                {% if current_page >= 3 %}
+                    <li class="paginate_button page-item">
+                        <a class="page-link" href="{{ paginator.url(1) }}">1</a>
+                    </li>
+                {% endif %}
+
+                {% if current_page >= 4 %}
+                    <li class="paginate_button page-item">
+                        <a class="page-link" href="{{ paginator.url(2) }}">2</a>
+                    </li>
+                    <li class="paginate_button page-item disabled" aria-disabled="true">
+                        <span class="page-link">...</span>
+                    </li>
+                {% endif %}
+            {% endif %}
+
+            {% for i in 1..last_page %}
+                {% set show_page = false %}
+
+                {% if i >= current_page - 1 and i <= current_page + 1 %}
+                    {% set show_page = true %}
+                {% elseif current_page == 1 and i <= current_page + 3 %}
+                    {% set show_page = true %}
+                {% elseif current_page == 2 and i <= current_page + 2 %}
+                    {% set show_page = true %}
+                {% elseif last_page <= 6 %}
+                    {% set show_page = true %}
+                {% endif %}
+
+                {% if show_page %}
+                    {% if i == current_page %}
+                        <li class="paginate_button page-item active" aria-current="page">
+                            <span class="page-link">{{ i }}</span>
+                        </li>
+                    {% else %}
+                        <li class="paginate_button page-item">
+                            <a class="page-link" href="{{ paginator.url(i) }}">{{ i }}</a>
+                        </li>
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+
+            {% if last_page > 6 %}
+                {% if current_page < last_page - 2 %}
+                    <li class="paginate_button page-item disabled" aria-disabled="true">
+                        <span class="page-link">...</span>
+                    </li>
+                    <li class="paginate_button page-item">
+                        <a class="page-link" href="{{ paginator.url(last_page - 1) }}">{{ last_page - 1 }}</a>
+                    </li>
+                    <li class="paginate_button page-item">
+                        <a class="page-link" href="{{ paginator.url(last_page) }}">{{ last_page }}</a>
+                    </li>
+                {% endif %}
+            {% endif %}
+
+            {# Next Page Link #}
+            {% if paginator.hasMorePages() %}
+                <li class="paginate_button page-item">
+                    <a class="page-link" href="{{ paginator.nextPageUrl() }}" rel="next">Next</a>
+                </li>
+            {% else %}
+                <li class="paginate_button page-item disabled" aria-disabled="true">
+                    <span class="page-link" aria-hidden="true">Next</span>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+{% endif %}

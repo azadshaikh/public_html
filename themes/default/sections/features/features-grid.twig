@@ -1,0 +1,57 @@
+{# Features Grid Section - 3 column layout #}
+{# Use |default() for all variables so template works without JSON #}
+
+{% set section_title = section_title|default('Why Choose Us') %}
+{% set section_subtitle = section_subtitle|default('Everything you need to build amazing websites') %}
+
+{% set feature_1_icon = feature_1_icon|default('ri-speed-line') %}
+{% set feature_1_title = feature_1_title|default('Lightning Fast') %}
+{% set feature_1_desc = feature_1_desc|default('Optimized for speed with blazing fast load times.') %}
+
+{% set feature_2_icon = feature_2_icon|default('ri-shield-check-line') %}
+{% set feature_2_title = feature_2_title|default('Secure by Default') %}
+{% set feature_2_desc = feature_2_desc|default('Enterprise-grade security built into every layer.') %}
+
+{% set feature_3_icon = feature_3_icon|default('ri-customer-service-2-line') %}
+{% set feature_3_title = feature_3_title|default('24/7 Support') %}
+{% set feature_3_desc = feature_3_desc|default('Our team is always here to help you succeed.') %}
+
+<section class="py-5 py-lg-6 bg-white" title="Features Grid">
+    <div class="container">
+        <div class="row justify-content-center mb-5">
+            <div class="col-lg-7 text-center">
+                <h2 class="display-6 fw-bold mb-3">{{ section_title }}</h2>
+                <p class="lead text-muted">{{ section_subtitle }}</p>
+            </div>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="text-center p-4">
+                    <div class="feature-icon bg-primary bg-gradient text-white rounded-3 mb-3 d-inline-flex align-items-center justify-content-center" style="width: 4rem; height: 4rem;">
+                        <i class="{{ feature_1_icon }} fs-3"></i>
+                    </div>
+                    <h4 class="fw-semibold mb-2">{{ feature_1_title }}</h4>
+                    <p class="text-muted mb-0">{{ feature_1_desc }}</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-center p-4">
+                    <div class="feature-icon bg-primary bg-gradient text-white rounded-3 mb-3 d-inline-flex align-items-center justify-content-center" style="width: 4rem; height: 4rem;">
+                        <i class="{{ feature_2_icon }} fs-3"></i>
+                    </div>
+                    <h4 class="fw-semibold mb-2">{{ feature_2_title }}</h4>
+                    <p class="text-muted mb-0">{{ feature_2_desc }}</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-center p-4">
+                    <div class="feature-icon bg-primary bg-gradient text-white rounded-3 mb-3 d-inline-flex align-items-center justify-content-center" style="width: 4rem; height: 4rem;">
+                        <i class="{{ feature_3_icon }} fs-3"></i>
+                    </div>
+                    <h4 class="fw-semibold mb-2">{{ feature_3_title }}</h4>
+                    <p class="text-muted mb-0">{{ feature_3_desc }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

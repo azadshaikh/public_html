@@ -1,0 +1,33 @@
+{# Hero Centered Section #}
+{# Use |default() for all variables so template works without JSON #}
+
+{% set background_color = background_color|default('#f8f9fa') %}
+{% set headline = headline|default('Build Something Amazing Today') %}
+{% set subheadline = subheadline|default('Create stunning websites with our powerful and easy-to-use builder platform.') %}
+{% set primary_cta_text = primary_cta_text|default('Get Started') %}
+{% set primary_cta_url = primary_cta_url|default('#') %}
+{% set secondary_cta_text = secondary_cta_text|default('Watch Demo') %}
+{% set secondary_cta_url = secondary_cta_url|default('#') %}
+
+<section class="py-5 py-lg-7" style="background-color: {{ background_color }};" title="Hero">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 col-xl-7 text-center">
+                <h1 class="display-4 fw-bold mb-4 text-dark">{{ headline }}</h1>
+                <p class="lead text-muted mb-5">{{ subheadline }}</p>
+                <div class="d-flex flex-column flex-sm-row justify-content-center gap-3">
+                    {% if primary_cta_text %}
+                    <a href="{{ primary_cta_url }}" class="btn btn-primary btn-lg px-5">
+                        {{ primary_cta_text }}
+                    </a>
+                    {% endif %}
+                    {% if secondary_cta_text %}
+                    <a href="{{ secondary_cta_url }}" class="btn btn-outline-dark btn-lg px-5">
+                        <i class="ri-play-circle-line me-2"></i>{{ secondary_cta_text }}
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

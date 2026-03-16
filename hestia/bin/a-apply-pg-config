@@ -1,0 +1,235 @@
+#!/bin/bash
+#
+# Script: a-apply-pg-config
+#
+# Description: Applies PostgreSQL configuration by editing postgresql.conf directly.
+#              Creates a timestamped backup before making changes.
+#              Restarts PostgreSQL if any restart-required setting is changed,
+#              otherwise reloads configuration.
+#
+# Usage: a-apply-pg-config '<json_settings>'
+#
+# Arguments:
+#   $1 - JSON object of settings to apply, e.g.:
+#        '{"shared_buffers":"2GB","work_mem":"20MB","max_connections":"200"}'
+#
+# Output (JSON):
+# {
+#   "applied": ["shared_buffers", "work_mem"],
+#   "failed": [],
+#   "restart_required": true,
+#   "restarted": true,
+#   "message": "Applied 2 settings. PostgreSQL restarted."
+# }
+#
+# Exit Codes:
+#   0 - Success (all settings applied)
+#   1 - PostgreSQL not found or not running
+#   2 - No settings provided
+#   3 - Partial failure (some settings failed)
+
+# --- Configuration ---
+HESTIA=${HESTIA:-/usr/local/hestia}
+
+# Settings that require a full PostgreSQL restart (not just reload)
+RESTART_SETTINGS="max_connections shared_buffers huge_pages max_worker_processes wal_log_hints shared_preload_libraries"
+
+# Allowed settings whitelist
+ALLOWED_SETTINGS="shared_buffers effective_cache_size work_mem maintenance_work_mem wal_buffers max_connections random_page_cost effective_io_concurrency max_worker_processes max_parallel_workers_per_gather max_parallel_workers max_parallel_maintenance_workers huge_pages min_wal_size max_wal_size checkpoint_completion_target default_statistics_target wal_compression wal_log_hints checkpoint_timeout log_checkpoints log_temp_files log_lock_waits idle_in_transaction_session_timeout shared_preload_libraries"
+
+# --- Functions ---
+
+is_allowed_setting() {
+    local setting="$1"
+    for allowed in $ALLOWED_SETTINGS; do
+        if [ "$setting" = "$allowed" ]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+needs_restart() {
+    local setting="$1"
+    for rs in $RESTART_SETTINGS; do
+        if [ "$setting" = "$rs" ]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+# Validate setting value — only allow safe characters
+is_valid_value() {
+    local value="$1"
+    # Allow digits, letters, dots, spaces, and common PG units (kB, MB, GB, TB)
+    if [[ "$value" =~ ^[a-zA-Z0-9._\ -]+$ ]]; then
+        return 0
+    fi
+    return 1
+}
+
+# Update or append a setting in postgresql.conf
+# Handles: commented lines (#setting = value), active lines (setting = value), or missing lines
+apply_setting_to_conf() {
+    local conf_file="$1"
+    local setting="$2"
+    local value="$3"
+
+    # Check if setting exists (active or commented out)
+    if grep -qE "^[[:space:]]*#?[[:space:]]*${setting}[[:space:]]*=" "$conf_file"; then
+        # Replace existing line (whether commented or active)
+        sudo sed -i "s|^[[:space:]]*#\?[[:space:]]*${setting}[[:space:]]*=.*|${setting} = '${value}'|" "$conf_file"
+    else
+        # Append to end of file with a comment
+        echo "" | sudo tee -a "$conf_file" > /dev/null
+        echo "# Added by Astero optimization tool" | sudo tee -a "$conf_file" > /dev/null
+        echo "${setting} = '${value}'" | sudo tee -a "$conf_file" > /dev/null
+    fi
+}
+
+# --- Main Logic ---
+
+# Check arguments
+if [ -z "$1" ]; then
+    echo '{"applied":[],"failed":[],"restart_required":false,"restarted":false,"message":"No settings provided"}'
+    exit 2
+fi
+
+SETTINGS_JSON="$1"
+
+# Check if jq is available
+if ! command -v jq &>/dev/null; then
+    echo '{"applied":[],"failed":[],"restart_required":false,"restarted":false,"message":"jq is required but not installed"}'
+    exit 1
+fi
+
+# Check if PostgreSQL is available
+if ! command -v psql &>/dev/null; then
+    echo '{"applied":[],"failed":[],"restart_required":false,"restarted":false,"message":"PostgreSQL client (psql) not found"}'
+    exit 1
+fi
+
+# Check if PostgreSQL is running
+if ! sudo -u postgres psql -c "SELECT 1;" &>/dev/null; then
+    echo '{"applied":[],"failed":[],"restart_required":false,"restarted":false,"message":"PostgreSQL is not running or not accessible"}'
+    exit 1
+fi
+
+# Find postgresql.conf path
+PG_CONF=$(sudo -u postgres psql -t -A -c "SHOW config_file;" 2>/dev/null | tr -d ' ')
+if [ -z "$PG_CONF" ] || [ ! -f "$PG_CONF" ]; then
+    echo '{"applied":[],"failed":[],"restart_required":false,"restarted":false,"message":"Could not locate postgresql.conf"}'
+    exit 1
+fi
+
+# Parse settings
+KEYS=$(echo "$SETTINGS_JSON" | jq -r 'keys[]' 2>/dev/null)
+if [ -z "$KEYS" ]; then
+    echo '{"applied":[],"failed":[],"restart_required":false,"restarted":false,"message":"Invalid JSON or no settings found"}'
+    exit 2
+fi
+
+# Create timestamped backup of postgresql.conf
+BACKUP_FILE="${PG_CONF}.backup.$(date +%Y%m%d_%H%M%S)"
+sudo cp "$PG_CONF" "$BACKUP_FILE"
+
+applied=()
+failed=()
+restart_required=false
+
+for key in $KEYS; do
+    value=$(echo "$SETTINGS_JSON" | jq -r ".\"$key\"" 2>/dev/null)
+
+    # Validate setting name
+    if ! is_allowed_setting "$key"; then
+        failed+=("$key")
+        continue
+    fi
+
+    # Validate value
+    if ! is_valid_value "$value"; then
+        failed+=("$key")
+        continue
+    fi
+
+    # Apply setting to postgresql.conf
+    if apply_setting_to_conf "$PG_CONF" "$key" "$value"; then
+        applied+=("$key")
+        if needs_restart "$key"; then
+            restart_required=true
+        fi
+    else
+        failed+=("$key")
+    fi
+done
+
+# Also clear any conflicting entries from postgresql.auto.conf
+# to prevent ALTER SYSTEM overrides from taking precedence
+PG_AUTO_CONF="$(dirname "$PG_CONF")/postgresql.auto.conf"
+if [ -f "$PG_AUTO_CONF" ]; then
+    for key in "${applied[@]}"; do
+        sudo sed -i "/^${key}[[:space:]]*=/d" "$PG_AUTO_CONF" 2>/dev/null
+    done
+fi
+
+# Restart or reload PostgreSQL
+restarted=false
+if [ ${#applied[@]} -gt 0 ]; then
+    if [ "$restart_required" = true ]; then
+        # Full restart needed for some settings
+        if sudo systemctl restart postgresql &>/dev/null; then
+            restarted=true
+        fi
+    else
+        # Reload is sufficient
+        sudo -u postgres psql -c "SELECT pg_reload_conf();" &>/dev/null
+    fi
+fi
+
+# Build JSON arrays
+if [ ${#applied[@]} -gt 0 ]; then
+    applied_json=$(printf '"%s",' "${applied[@]}" | sed 's/,$//')
+else
+    applied_json=""
+fi
+if [ ${#failed[@]} -gt 0 ]; then
+    failed_json=$(printf '"%s",' "${failed[@]}" | sed 's/,$//')
+else
+    failed_json=""
+fi
+
+# Build message
+applied_count=${#applied[@]}
+failed_count=${#failed[@]}
+if [ $failed_count -eq 0 ]; then
+    if [ "$restart_required" = true ] && [ "$restarted" = true ]; then
+        message="Applied ${applied_count} settings. PostgreSQL restarted."
+    elif [ "$restart_required" = true ]; then
+        message="Applied ${applied_count} settings. PostgreSQL restart required but failed."
+    else
+        message="Applied ${applied_count} settings. PostgreSQL configuration reloaded."
+    fi
+else
+    message="Applied ${applied_count} settings, ${failed_count} failed."
+fi
+
+# Determine exit code
+exit_code=0
+if [ $failed_count -gt 0 ] && [ $applied_count -gt 0 ]; then
+    exit_code=3
+elif [ $failed_count -gt 0 ] && [ $applied_count -eq 0 ]; then
+    exit_code=1
+fi
+
+cat << EOF
+{
+  "applied": [${applied_json}],
+  "failed": [${failed_json}],
+  "restart_required": ${restart_required},
+  "restarted": ${restarted},
+  "message": "${message}"
+}
+EOF
+
+exit ${exit_code}

@@ -1,0 +1,64 @@
+{#
+    Archive Filters Component
+
+    Displays post count and sort/filter options for archive pages.
+
+    @see docs/astero-modules-system/DATA_CONTRACT.md
+
+    @param posts - The paginator object (LengthAwarePaginator)
+    @param show_count - Whether to show results count (default: true)
+    @param show_filters - Whether to show filter dropdown (default: true)
+    @param class - Additional CSS classes
+#}
+
+{% set show_count = show_count ?? true %}
+{% set show_filters = show_filters ?? theme_option('show_archive_filters', true) %}
+
+{% if posts is defined and posts|length > 0 %}
+    <div class="archive-meta mb-4 {{ class ?? '' }}">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            {# Results Count #}
+            {% if show_count %}
+                <div class="results-info">
+                    <span class="text-muted">
+                        Showing
+                        {{ posts.firstItem()|default(1) }}-{{ posts.lastItem()|default(posts|length) }} of
+                        {{ posts.total() }} posts
+                    </span>
+                </div>
+            {% endif %}
+
+            {# Sort Dropdown #}
+            {% if show_filters %}
+                <div class="archive-filters">
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle btn-sm"
+                            id="sortDropdown"
+                            data-bs-toggle="dropdown"
+                            type="button"
+                            aria-expanded="false">
+                            <i class="ri-sort-desc me-1"></i>Sort by
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="sortDropdown">
+                            <li>
+                                <a class="dropdown-item" href="?sort=latest">
+                                    <i class="ri-time-line me-2"></i>Newest First
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="?sort=oldest">
+                                    <i class="ri-history-line me-2"></i>Oldest First
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="?sort=title">
+                                    <i class="ri-sort-alphabet-asc me-2"></i>Title A-Z
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endif %}

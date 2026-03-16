@@ -1,0 +1,191 @@
+{% extends 'layouts/layout.twig' %}
+
+{% if category %}
+    {% set category_class = 'archive ' ~ category.type ~ ' ' ~ category.type ~ '-' ~ category.slug %}
+    {% block body_class %}{{ category_class }}{% endblock %}
+{% else %}
+    {% block body_class %}archive{% endblock %}
+{% endif %}
+
+{% block content %}
+
+    {# Page header section #}
+    <section class="position-relative text-light text-center" data-aos="fade-down" data-aos-duration="800"
+        style="height: 400px;">
+        {# Image #}
+        {% if category and category.feature_image_id %}
+            {{ responsive_image(category.feature_image_id, {'class': 'w-100 h-100 object-fit-cover position-absolute start-0 top-0', 'alt': category.title, 'style': 'z-index:1;object-fit:cover;'}) }}
+        {% else %}
+            <img class="w-100 h-100 object-fit-cover position-absolute start-0 top-0"
+                src="{{ theme_asset('img/default-feature-image.jpg') }}" style="z-index:1;object-fit:cover;">
+        {% endif %}
+        {# Overlay #}
+        <div class="position-absolute w-100 h-100 bg-dark start-0 top-0 opacity-50" style="z-index:2;"></div>
+        {# Content #}
+        <div class="position-relative d-flex flex-column justify-content-center h-100 px-3" style="z-index:3;">
+            <div class="row">
+                <div class="col-lg-6 offset-lg-3">
+                    {% if category %}
+                        <h1 class="display-4 fw-semibold aos-init aos-animate mb-2" data-aos="fade-up"
+                            data-aos-duration="1600">{{ category.title }}</h1>
+                        {% if category.excerpt %}
+                            <p class="fs-4 aos-init aos-animate mb-2" data-aos="fade-up" data-aos-delay="200"
+                                data-aos-duration="1600">
+                                {{ category.excerpt }}
+                            </p>
+                        {% endif %}
+                    {% else %}
+                        <h1 class="display-4 fw-semibold aos-init aos-animate mb-2" data-aos="fade-up"
+                            data-aos-duration="1600">Read our latest articles and tips</h1>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {# Blogs Section #}
+    <section class="bg-body py-5">
+        <div class="container">
+            <div class="row">
+                <div class="{% if theme_option('show_sidebar_on_archive', true) %}col-lg-8{% else %}col-lg-8 offset-lg-2{% endif %}">
+
+                    {% if category %}
+                        <div class="page-content" data-v-post-content data-astero-enabled>
+                            {% if category.content %}
+                                {{ category.content|raw }}
+                            {% endif %}
+                        </div>
+                    {% endif %}
+
+                    {% if posts is defined and posts|length > 0 %}
+                        {# Posts Count and Filters #}
+                        <div class="archive-meta mb-4">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                                <div class="results-info">
+                                    <span class="text-muted">
+                                        Showing
+                                        {{ posts.firstItem()|default(1) }}-{{ posts.lastItem()|default(posts|length) }} of
+                                        {{ posts.total() }} posts
+                                    </span>
+                                </div>
+
+                                {% if theme_option('show_archive_filters', true) %}
+                                    <div class="archive-filters">
+                                        <div class="dropdown">
+                                            <button class="btn btn-outline-secondary dropdown-toggle btn-sm"
+                                                id="sortDropdown" data-bs-toggle="dropdown" type="button">
+                                                <i class="ri-sort-desc"></i> Sort by
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                <li><a class="dropdown-item" href="#">Newest First</a></li>
+                                                <li><a class="dropdown-item" href="#">Oldest First</a></li>
+                                                <li><a class="dropdown-item" href="#">Title A-Z</a></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    {# Posts Grid #}
+                    {% if posts is defined and posts|length > 0 %}
+                        {% for post in posts %}
+                            <article class="post-card card bg-secondary-subtle mb-4 p-0" data-aos="fade-in"
+                                data-aos-duration="800">
+                                {% if post['featuredImage'] %}
+                                    {{ responsive_image(post['featuredImage'].id, {'class': 'card-img-top', 'alt': post['featuredImage'].alt_text|default(post.title), 'style': 'max-height: 400px; object-fit: cover;'}) }}
+                                {% else %}
+                                    <img class="card-img-top" src="{{ post['featuredImage']_thumbnail_url }}"
+                                        alt="{{ post.title }}" style="max-height: 400px; object-fit: cover;" />
+                                {% endif %}
+                                <div class="card-body p-3">
+                                    <div
+                                        class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between mb-2">
+                                        {% if post['categories'] and post['categories']|length > 0 %}
+                                            <div class="post-categories d-flex flex-wrap gap-2">
+                                                {% for cat in post['categories'] %}
+                                                    <span
+                                                            class="badge text-body bg-secondary-pale fs-6 mb-sm-0 mb-2">{{ cat.title }}</span>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+
+                                        <span class="d-flex text-muted gap-3">
+                                            {% if post['author'] %}
+                                                {% set author_base = setting('seo_authors_permalink_base', 'author') %}
+                                                <a class="text-decoration-none text-muted"
+                                                    href="{{ route('cms.view', [author_base, post['author'].username]) }}">
+                                                    <i class="ri-user-line me-1"></i>{{ post['author'].name }}
+                                                </a>
+                                            {% endif %}
+                                            <span><i
+                                                    class="ri-calendar-line-event me-1"></i>{{ post.published_date }}</span>
+                                            {% set word_count = post.content|striptags|split(' ')|length %}
+                                            {% set read_time = ((word_count / 200)|round(0, 'ceil')) %}
+                                            {% if read_time < 1 %}{% set read_time = 1 %}{% endif %}
+                                            <span><i class="ri-time-line"></i> {{ read_time }} min read</span>
+                                        </span>
+                                    </div>
+                                    <h5 class="card-title fs-4 mb-2">
+                                        <a class="text-decoration-none text-body" href="{{ post.permalink_url }}">
+                                            {{ post.title }}
+                                        </a>
+                                    </h5>
+
+                                    {% if post.excerpt %}
+                                        <p class="text-muted mb-3">{{ post.excerpt }}</p>
+                                    {% else %}
+                                        <p class="text-muted mb-3">{{ post.content|striptags|truncate(200) }}</p>
+                                    {% endif %}
+
+                                    <a class="text-decoration-none text-body mb-0" href="{{ post.permalink_url }}">
+                                        Read more <i class="ri-arrow-right-line"></i>
+                                    </a>
+                                </div>
+                            </article>
+                        {% endfor %}
+                    {% else %}
+                        {# Empty State #}
+                        <div class="empty-state py-5 text-center">
+                            <div class="mb-4">
+                                <i class="ri-inbox-fill display-1 text-muted"></i>
+                            </div>
+                            <h3 class="text-muted mb-3">No Posts Found</h3>
+                            {% if category %}
+                                <p class="text-muted mb-4">
+                                    There are no posts in the
+                                    <strong>{{ category.title }}</strong>
+                                    {{ category.type }} yet.
+                                </p>
+                            {% else %}
+                                <p class="text-muted mb-4">
+                                    There are no posts to display at the moment.
+                                </p>
+                            {% endif %}
+                            <a class="btn btn-primary" href="{{ route('home') }}">
+                                <i class="ri-home-line"></i> Back to Home
+                            </a>
+                        </div>
+                    {% endif %}
+
+                    {# Pagination #}
+                    {% if posts is defined and posts.hasMorePages() %}
+                        <nav class="d-flex justify-content-center mt-5" aria-label="Pagination">
+                            <div class="d-flex justify-content-center">
+                                {% include 'layouts/partials/pagination.twig' with {'paginator': posts} %}
+                            </div>
+                        </nav>
+                    {% endif %}
+                </div>
+
+                {% if theme_option('show_sidebar_on_archive', true) %}
+                    <div class="col-lg-4 col-md-12">
+                        {% include 'layouts/partials/sidebar.twig' %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+{% endblock %}
+

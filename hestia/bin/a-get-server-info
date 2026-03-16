@@ -1,0 +1,295 @@
+#!/bin/bash
+#
+# Script: a-get-server-info
+#
+# Description: Returns comprehensive server information in JSON format for
+#              the Astero platform. This includes system specs, Hestia info,
+#              and Astero release information.
+#
+# Usage: a-get-server-info [FORMAT]
+#
+# Arguments:
+#   FORMAT - Optional: output format ('json' or 'plain'). Default: 'json'
+#
+# Example: a-get-server-info
+#          a-get-server-info json
+#          a-get-server-info plain
+#
+# Output (JSON):
+# {
+#   "status": "success",
+#   "data": {
+#     "hostname": "server.example.com",
+#     "os": "Ubuntu 22.04",
+#     "cpu": "Intel Xeon E5",
+#     "cpu_cores": 4,
+#     "ram_mb": 16384,
+#     "storage_gb": 500,
+#     "hestia_version": "1.8.11",
+#     "astero_version": "1.0.5",
+#     "astero_releases": ["v1.0.3", "v1.0.4", "v1.0.5"],
+#     "uptime": "45 days",
+#     "load_average": "0.15 0.10 0.05"
+#   }
+# }
+#
+# Exit Codes:
+#   0 - Success
+
+# --- Configuration and Setup ---
+HESTIA=${HESTIA:-/usr/local/hestia}
+BIN=${BIN:-/usr/local/hestia/bin}
+
+# Local releases repository path
+ASTERO_DATA_DIR="${ASTERO_DATA_DIR:-/usr/local/hestia/data/astero}"
+RELEASES_DIR="$ASTERO_DATA_DIR/releases/application/main"
+
+# --- Functions ---
+
+get_os_info() {
+    if [ -f /etc/os-release ]; then
+        . /etc/os-release
+        echo "$NAME $VERSION_ID"
+    elif [ -f /etc/lsb-release ]; then
+        . /etc/lsb-release
+        echo "$DISTRIB_DESCRIPTION"
+    else
+        uname -s -r
+    fi
+}
+
+get_cpu_info() {
+    if [ -f /proc/cpuinfo ]; then
+        grep -m1 'model name' /proc/cpuinfo | cut -d: -f2 | sed 's/^ *//'
+    else
+        echo "Unknown"
+    fi
+}
+
+get_cpu_cores() {
+    if [ -f /proc/cpuinfo ]; then
+        grep -c '^processor' /proc/cpuinfo
+    else
+        echo "0"
+    fi
+}
+
+get_ram_mb() {
+    if [ -f /proc/meminfo ]; then
+        grep MemTotal /proc/meminfo | awk '{print int($2/1024)}'
+    else
+        echo "0"
+    fi
+}
+
+get_ram_used_mb() {
+    if [ -f /proc/meminfo ]; then
+        # Calculate used RAM = Total - Available (more accurate than Total - Free)
+        local total=$(grep MemTotal /proc/meminfo | awk '{print $2}')
+        local available=$(grep MemAvailable /proc/meminfo | awk '{print $2}')
+        echo $(( (total - available) / 1024 ))
+    else
+        echo "0"
+    fi
+}
+
+get_ram_free_mb() {
+    if [ -f /proc/meminfo ]; then
+        grep MemAvailable /proc/meminfo | awk '{print int($2/1024)}'
+    else
+        echo "0"
+    fi
+}
+
+get_hestia_user_count() {
+    # Count Hestia users (excluding admin if you want, but we'll count all)
+    if [ -d "$HESTIA/data/users" ]; then
+        ls -1 "$HESTIA/data/users" 2>/dev/null | wc -l
+    else
+        echo "0"
+    fi
+}
+
+get_hestia_domain_count() {
+    # Count all web domains across all Hestia users
+    # Uses v-list-web-domains for accurate count (web.conf DOMAIN= lines may be unreliable)
+    local count=0
+
+    if [ -d "$HESTIA/data/users" ]; then
+        for user_dir in "$HESTIA/data/users"/*/; do
+            [ -d "$user_dir" ] || continue
+            local username=$(basename "$user_dir")
+
+            # Skip if not a valid user directory
+            [ -f "${user_dir}user.conf" ] || continue
+
+            # Count domains using v-list-web-domains (most reliable)
+            if [ -x "$BIN/v-list-web-domains" ]; then
+                local user_domains=$("$BIN/v-list-web-domains" "$username" plain 2>/dev/null | wc -l)
+                count=$((count + user_domains))
+            elif [ -f "${user_dir}web.conf" ]; then
+                # Fallback: count DOMAIN= lines in web.conf
+                local user_domains=$(grep -c "^DOMAIN=" "${user_dir}web.conf" 2>/dev/null || echo "0")
+                count=$((count + user_domains))
+            fi
+        done
+    fi
+    echo "$count"
+}
+
+get_storage_gb() {
+    # Get total storage of root partition in GB
+    df -BG / 2>/dev/null | awk 'NR==2 {gsub(/G/,"",$2); print $2}'
+}
+
+get_storage_used_gb() {
+    # Get used storage of root partition in GB
+    df -BG / 2>/dev/null | awk 'NR==2 {gsub(/G/,"",$3); print $3}'
+}
+
+get_storage_free_gb() {
+    # Get free storage of root partition in GB
+    df -BG / 2>/dev/null | awk 'NR==2 {gsub(/G/,"",$4); print $4}'
+}
+
+get_hestia_version() {
+    if [ -f "$HESTIA/conf/hestia.conf" ]; then
+        grep '^VERSION=' "$HESTIA/conf/hestia.conf" | cut -d"'" -f2
+    else
+        echo ""
+    fi
+}
+
+get_hostname() {
+    hostname -f 2>/dev/null || hostname
+}
+
+get_astero_version() {
+    # Get current/active Astero version from local releases
+    if [ -L "$RELEASES_DIR/current" ]; then
+        local current_link=$(readlink "$RELEASES_DIR/current")
+        local version=$(basename "$current_link" .zip)
+        echo "${version#v}"  # Remove 'v' prefix if present
+    else
+        echo ""
+    fi
+}
+
+get_astero_releases() {
+    # Get list of all available Astero releases
+    local releases=""
+    if [ -d "$RELEASES_DIR" ]; then
+        for zip_file in "$RELEASES_DIR"/v*.zip; do
+            [ -f "$zip_file" ] || continue
+            local version=$(basename "$zip_file" .zip)
+            if [ -n "$releases" ]; then
+                releases="$releases,$version"
+            else
+                releases="$version"
+            fi
+        done
+    fi
+    echo "$releases"
+}
+
+get_uptime() {
+    uptime -p 2>/dev/null | sed 's/^up //' || uptime | awk -F'( |,|:)+' '{print $6,$7",",$8,"hours,",$9,"minutes"}'
+}
+
+get_load_average() {
+    cat /proc/loadavg 2>/dev/null | awk '{print $1, $2, $3}'
+}
+
+get_ip_address() {
+    # Get primary IP address
+    hostname -I 2>/dev/null | awk '{print $1}'
+}
+
+# --- Main Logic ---
+
+format="${1:-json}"
+
+# Collect all information
+hostname=$(get_hostname)
+os=$(get_os_info)
+cpu=$(get_cpu_info)
+cpu_cores=$(get_cpu_cores)
+ram_mb=$(get_ram_mb)
+ram_used_mb=$(get_ram_used_mb)
+ram_free_mb=$(get_ram_free_mb)
+storage_total_gb=$(get_storage_gb)
+storage_used_gb=$(get_storage_used_gb)
+storage_free_gb=$(get_storage_free_gb)
+hestia_version=$(get_hestia_version)
+astero_version=$(get_astero_version)
+astero_releases=$(get_astero_releases)
+uptime_info=$(get_uptime)
+load_average=$(get_load_average)
+ip_address=$(get_ip_address)
+user_count=$(get_hestia_user_count)
+domain_count=$(get_hestia_domain_count)
+
+if [ "$format" = "plain" ]; then
+    # Plain text output
+    echo "Hostname: $hostname"
+    echo "IP Address: $ip_address"
+    echo "OS: $os"
+    echo "CPU: $cpu"
+    echo "CPU Cores: $cpu_cores"
+    echo "RAM Total: ${ram_mb}MB"
+    echo "RAM Used: ${ram_used_mb}MB"
+    echo "RAM Free: ${ram_free_mb}MB"
+    echo "Storage Total: ${storage_total_gb}GB"
+    echo "Storage Used: ${storage_used_gb}GB"
+    echo "Storage Free: ${storage_free_gb}GB"
+    echo "Hestia Version: $hestia_version"
+    echo "Astero Version: $astero_version"
+    echo "Astero Releases: $astero_releases"
+    echo "Uptime: $uptime_info"
+    echo "Load Average: $load_average"
+    echo "User Count: $user_count"
+    echo "Domain Count: $domain_count"
+else
+    # JSON output - raw data only (a-exec adds the wrapper)
+    # Build releases array for JSON
+    releases_json="[]"
+    if [ -n "$astero_releases" ]; then
+        releases_json="["
+        first=true
+        IFS=',' read -ra RELEASES <<< "$astero_releases"
+        for release in "${RELEASES[@]}"; do
+            if [ "$first" = true ]; then
+                first=false
+            else
+                releases_json="$releases_json,"
+            fi
+            releases_json="$releases_json\"$release\""
+        done
+        releases_json="$releases_json]"
+    fi
+
+    cat << EOF
+{
+  "hostname": "$hostname",
+  "ip_address": "$ip_address",
+  "os": "$os",
+  "cpu": "$cpu",
+  "cpu_cores": $cpu_cores,
+  "ram_mb": $ram_mb,
+  "ram_used_mb": ${ram_used_mb:-0},
+  "ram_free_mb": ${ram_free_mb:-0},
+  "storage_total_gb": ${storage_total_gb:-0},
+  "storage_used_gb": ${storage_used_gb:-0},
+  "storage_free_gb": ${storage_free_gb:-0},
+  "hestia_version": "$hestia_version",
+  "astero_version": "$astero_version",
+  "astero_releases": $releases_json,
+  "uptime": "$uptime_info",
+  "load_average": "$load_average",
+  "user_count": ${user_count:-0},
+  "domain_count": ${domain_count:-0}
+}
+EOF
+fi
+
+exit 0

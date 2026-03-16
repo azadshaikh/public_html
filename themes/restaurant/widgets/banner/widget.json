@@ -1,0 +1,86 @@
+{
+    "name": "Banner Widget",
+    "description": "Display a promotional banner with title, text and call-to-action button",
+    "category": "marketing",
+    "settings": {
+        "title": {
+            "type": "text",
+            "label": "Widget Title",
+            "default": "",
+            "description": "Optional widget title displayed above the banner",
+            "required": false
+        },
+        "banner_title": {
+            "type": "text",
+            "label": "Banner Title",
+            "default": "Your Banner Title",
+            "description": "Main banner headline",
+            "required": true
+        },
+        "text": {
+            "type": "textarea",
+            "label": "Banner Text",
+            "default": "Banner description text",
+            "description": "Banner description or promotional text",
+            "required": false
+        },
+        "button_text": {
+            "type": "text",
+            "label": "Button Text",
+            "default": "Learn More",
+            "description": "Call-to-action button text",
+            "required": false
+        },
+        "button_url": {
+            "type": "url",
+            "label": "Button URL",
+            "default": "#",
+            "description": "URL for the call-to-action button",
+            "required": false
+        },
+        "background_color": {
+            "type": "color",
+            "label": "Background Color",
+            "default": "#007bff",
+            "description": "Banner background color",
+            "required": true
+        },
+        "text_color": {
+            "type": "color",
+            "label": "Text Color",
+            "default": "#ffffff",
+            "description": "Banner text color",
+            "required": true
+        },
+        "button_style": {
+            "type": "select",
+            "label": "Button Style",
+            "default": "primary",
+            "options": {
+                "primary": "Primary",
+                "secondary": "Secondary",
+                "success": "Success",
+                "danger": "Danger",
+                "warning": "Warning",
+                "info": "Info",
+                "light": "Light",
+                "dark": "Dark",
+                "outline-primary": "Outline Primary"
+            },
+            "description": "Bootstrap button style",
+            "required": true
+        },
+        "banner_size": {
+            "type": "select",
+            "label": "Banner Size",
+            "default": "medium",
+            "options": {
+                "small": "Small",
+                "medium": "Medium",
+                "large": "Large"
+            },
+            "description": "Banner display size",
+            "required": true
+        }
+    }
+}

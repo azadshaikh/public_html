@@ -1,0 +1,48 @@
+{
+    "name": "Text Widget",
+    "description": "Display custom text content with formatting options",
+    "category": "content",
+    "settings": {
+        "title": {
+            "type": "text",
+            "label": "Widget Title",
+            "default": "",
+            "description": "Optional widget title",
+            "required": false
+        },
+        "content": {
+            "type": "textarea",
+            "label": "Text Content",
+            "default": "Add your text content here...",
+            "description": "Main text content (HTML allowed)",
+            "required": true
+        },
+        "text_alignment": {
+            "type": "select",
+            "label": "Text Alignment",
+            "default": "left",
+            "options": {
+                "left": "Left",
+                "center": "Center",
+                "right": "Right",
+                "justify": "Justify"
+            },
+            "description": "Text alignment style",
+            "required": true
+        },
+        "background_enabled": {
+            "type": "checkbox",
+            "label": "Enable Background",
+            "default": false,
+            "description": "Add background styling to the text widget",
+            "required": false
+        },
+        "background_color": {
+            "type": "color",
+            "label": "Background Color",
+            "default": "#f8f9fa",
+            "description": "Background color (only if background enabled)",
+            "required": false
+        }
+    }
+}

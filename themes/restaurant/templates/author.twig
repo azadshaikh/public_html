@@ -1,0 +1,142 @@
+{% extends 'layouts/layout.twig' %}
+
+{% set body_class_value = author is defined and author ? 'author author-' ~ author.username : 'author' %}
+{% block body_class %}{{ body_class_value }}{% endblock %}
+
+{% block content %}
+    {# Author Header #}
+    <header class="author-header py-5 bg-light">
+        <div class="container">
+            {% if author %}
+                <div class="row justify-content-center">
+                    <div class="col-lg-8 text-center">
+                        {# Avatar #}
+                        <div class="author-avatar mb-4" data-aos="zoom-in">
+                            {% if author.avatar %}
+                                <img src="{{ author.avatar }}" alt="{{ author.name }}"
+                                     class="rounded-circle shadow-lg" width="120" height="120"
+                                     style="object-fit: cover; border: 4px solid white;">
+                            {% else %}
+                                <div class="avatar-placeholder rounded-circle shadow-lg d-inline-flex align-items-center justify-content-center bg-primary text-white"
+                                     style="width: 120px; height: 120px; font-size: 2.5rem; border: 4px solid white;">
+                                    {{ author.name|first|upper }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        {# Name & Bio #}
+                        <h1 class="display-6 fw-bold mb-2" data-aos="fade-up" data-aos-delay="50">
+                            Name: {{ author.name }}
+                        </h1>
+
+                        {% if author.bio %}
+                            <p class="lead text-muted mb-4" data-aos="fade-up" data-aos-delay="150">
+                                {{ author.bio }}
+                            </p>
+                        {% endif %}
+
+                        {# Social Links #}
+                        {% if author.social %}
+                            <div class="author-social d-flex justify-content-center gap-2" data-aos="fade-up" data-aos-delay="200">
+                                {% if author.social.twitter %}
+                                    <a href="{{ esc_url(author.social.twitter) }}" target="_blank" rel="noopener" class="btn btn-outline-dark btn-sm rounded-circle" style="width: 40px; height: 40px;" title="Twitter">
+                                        <i class="ri-twitter-x-line"></i>
+                                    </a>
+                                {% endif %}
+                                {% if author.social.linkedin %}
+                                    <a href="{{ esc_url(author.social.linkedin) }}" target="_blank" rel="noopener" class="btn btn-outline-dark btn-sm rounded-circle" style="width: 40px; height: 40px;" title="LinkedIn">
+                                        <i class="ri-linkedin-fill"></i>
+                                    </a>
+                                {% endif %}
+                                {% if author.social.facebook %}
+                                    <a href="{{ esc_url(author.social.facebook) }}" target="_blank" rel="noopener" class="btn btn-outline-dark btn-sm rounded-circle" style="width: 40px; height: 40px;" title="Facebook">
+                                        <i class="ri-facebook-fill"></i>
+                                    </a>
+                                {% endif %}
+                                {% if author.social.website %}
+                                    <a href="{{ esc_url(author.social.website) }}" target="_blank" rel="noopener" class="btn btn-outline-dark btn-sm rounded-circle" style="width: 40px; height: 40px;" title="Website">
+                                        <i class="ri-global-line"></i>
+                                    </a>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+
+                        {# Stats #}
+                        {% if posts is defined %}
+                            <div class="author-stats mt-4 pt-4 border-top d-inline-block" data-aos="fade-up" data-aos-delay="250">
+                                <span class="text-muted">
+                                    <i class="ri-article-line me-1"></i>
+                                    <strong class="text-dark">{{ posts.total() }}</strong> articles published
+                                </span>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </header>
+
+    {# Posts Section #}
+    <section class="author-posts py-5">
+        <div class="container">
+            <div class="row">
+                <div class="{% if theme_option('show_sidebar_on_archive', true) %}col-lg-8{% else %}col-lg-10 mx-auto{% endif %}">
+
+                    {# Section Header #}
+                    {% if posts is defined and posts|length > 0 %}
+                        <div class="section-header d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom" data-aos="fade-up">
+                            <h2 class="h4 mb-0">
+                                <i class="ri-file-list-3-line text-primary me-2"></i>Articles by {{ author.name|split(' ')|first }}
+                            </h2>
+                        </div>
+                    {% endif %}
+
+                    {# Posts Grid #}
+                    {% if posts is defined and posts|length > 0 %}
+                        <div class="posts-grid row g-4">
+                            {% for post in posts %}
+                                <div class="col-md-6" data-aos="fade-up" data-aos-delay="{{ (loop.index % 4) * 50 }}">
+                                    {% include 'components/post-card.twig' with {
+                                        'post': post,
+                                        'show_author': false,
+                                        'image_height': '180px',
+                                        'card_class': 'h-100 border-0 shadow-sm'
+                                    } only %}
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        {# Pagination #}
+                        {% if posts.hasMorePages() %}
+                            <nav class="pagination-wrapper mt-5 pt-4 border-top" aria-label="Pagination" data-aos="fade-up">
+                                {% include 'layouts/partials/pagination.twig' with {'paginator': posts} %}
+                            </nav>
+                        {% endif %}
+                    {% else %}
+                        {# Empty State #}
+                        <div data-aos="fade-up">
+                            {% include 'components/empty-state.twig' with {
+                                'icon': 'edit-line',
+                                'title': 'No Articles Yet',
+                                'message': author
+                                    ? '<strong>' ~ author.name ~ '</strong> hasn\'t published any articles yet. Check back soon!'
+                                    : 'There are no posts to display at the moment.',
+                                'action_url': urls.home,
+                                'action_label': 'Back to Home'
+                            } only %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                {# Sidebar #}
+                {% if theme_option('show_sidebar_on_archive', true) %}
+                    <aside class="col-lg-4 mt-5 mt-lg-0">
+                        <div class="sticky-top" style="top: 100px;">
+                            {% include 'layouts/partials/sidebar.twig' %}
+                        </div>
+                    </aside>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+{% endblock %}

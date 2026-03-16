@@ -1,0 +1,94 @@
+{% extends 'layouts/layout.twig' %}
+
+{% block body_class %}home homepage saas-landing{% endblock %}
+
+{% block content %}
+    {# Form Response Messages #}
+    {% if session_has('success') or session_has('error') %}
+        <div class="container py-3">
+            {{ form_response() }}
+        </div>
+    {% endif %}
+
+    {# If a homepage is set, show ONLY that page's content #}
+    {% if page is defined and page is not null and page.content %}
+        <section class="homepage-content-section">
+            <div class="page-content homepage-content" data-v-post-content data-astero-enabled>
+                {{ page.content|raw }}
+            </div>
+        </section>
+    {% else %}
+
+        {# SaaS Hero Section #}
+        {% include 'sections/hero/saas-hero.twig' with {
+            'badge_text': theme_option('hero_badge', 'New: AI-Powered Content'),
+            'headline': theme_option('hero_title', 'The Complete CMS for Modern Teams'),
+            'subheadline': theme_option('hero_description', 'Everything you need to build, manage, and scale your content. From blogs to enterprise websites, our platform grows with you.'),
+            'primary_cta_text': 'Start Free Trial',
+            'primary_cta_url': '/signup',
+            'secondary_cta_text': 'Watch Demo',
+            'secondary_cta_url': '#demo',
+            'trust_text': 'Trusted by 10,000+ teams worldwide'
+        } %}
+
+        {# Trust Logos Section #}
+        {% include 'sections/trust/logo-cloud.twig' with {
+            'section_title': 'Trusted by industry leaders'
+        } %}
+
+        {# Features Section - 6 Key Features #}
+        {% include 'sections/features/saas-features.twig' with {
+            'section_title': theme_option('features_title', 'Everything you need to succeed'),
+            'section_subtitle': theme_option('features_subtitle', 'Powerful features that help you create, manage, and grow your content'),
+            'features': [
+                {'icon': 'ri-edit-box-line', 'title': 'Visual Editor', 'description': 'Drag-and-drop interface with real-time preview. No coding required.'},
+                {'icon': 'ri-global-line', 'title': 'Multi-site Management', 'description': 'Manage unlimited websites from a single dashboard with unified analytics.'},
+                {'icon': 'ri-team-line', 'title': 'Team Collaboration', 'description': 'Role-based permissions, version control, and inline commenting.'},
+                {'icon': 'ri-search-line', 'title': 'Built-in SEO', 'description': 'Automatic SEO optimization, sitemaps, and performance insights.'},
+                {'icon': 'ri-code-box-line', 'title': 'Custom Themes', 'description': 'Create custom themes with our intuitive template system and Twig support.'},
+                {'icon': 'ri-shield-check-line', 'title': 'Enterprise Security', 'description': 'SSO, audit logs, backups, and compliance with GDPR and SOC2.'}
+            ]
+        } %}
+
+        {# How It Works Section #}
+        {% include 'sections/how-it-works/steps.twig' %}
+
+        {# Stats Section #}
+        {% include 'sections/stats/counter-section.twig' with {
+            'stats': [
+                {'number': '10K+', 'label': 'Active Users'},
+                {'number': '50M+', 'label': 'Pages Published'},
+                {'number': '99.9%', 'label': 'Uptime'},
+                {'number': '4.9/5', 'label': 'Customer Rating'}
+            ]
+        } %}
+
+        {# Testimonials Section #}
+        {% include 'sections/testimonials/testimonials-grid.twig' with {
+            'section_title': 'What our customers say',
+            'section_subtitle': 'Join thousands of satisfied customers growing their business with us'
+        } %}
+
+        {# Pricing Section #}
+        {% include 'sections/pricing/pricing-table.twig' with {
+            'section_title': 'Simple, transparent pricing',
+            'section_subtitle': 'Start free, then scale as you grow. No hidden fees.'
+        } %}
+
+        {# FAQ Section #}
+        {% include 'sections/faq/faq-accordion.twig' with {
+            'section_title': 'Frequently asked questions',
+            'section_subtitle': 'Everything you need to know about our platform'
+        } %}
+
+        {# Final CTA Section #}
+        {% include 'sections/CTA/saas-cta.twig' with {
+            'headline': 'Ready to transform your content strategy?',
+            'description': 'Join 10,000+ teams already using our platform. Start your free 14-day trial today.',
+            'button_text': 'Get Started Free',
+            'button_url': '/signup',
+            'secondary_text': 'No credit card required'
+        } %}
+
+    {% endif %}
+{% endblock %}

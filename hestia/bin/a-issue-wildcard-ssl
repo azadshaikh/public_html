@@ -1,0 +1,67 @@
+#!/bin/bash
+# Usage: a-issue-wildcard-ssl <domain> [challenge_alias]
+# Issues *.domain + domain via acme.sh DNS-01 with Bunny DNS.
+# Runs acme.sh as the dedicated 'asterossl' user (DNS-01 needs no root).
+# Stores certs to /home/asterossl/.ssl-store/<domain>/
+#
+# BUNNY_API_KEY must be set as an environment variable (passed via
+# a-exec --env:BUNNY_API_KEY=xxx to avoid leaking in process cmdline).
+# Legacy positional $2 is accepted as fallback but deprecated.
+#
+# Exit codes:
+#   0 - Success
+#   1 - Error / issuance failed
+
+set -euo pipefail
+
+DOMAIN="${1:?Usage: a-issue-wildcard-ssl <domain> [challenge_alias]}"
+
+# Determine BUNNY_API_KEY and CHALLENGE_ALIAS based on invocation mode:
+#   New flow (via a-exec --env:):  $1=domain, $2=challenge_alias — BUNNY_API_KEY from env
+#   Legacy flow (direct call):     $1=domain, $2=api_key, $3=challenge_alias
+if [ -n "${BUNNY_API_KEY:-}" ]; then
+    # API key already in environment (set by a-exec --env: extraction)
+    CHALLENGE_ALIAS="${2:-}"
+elif [ -n "${2:-}" ]; then
+    # Legacy: API key as positional arg (deprecated — leaks via /proc/PID/cmdline)
+    BUNNY_API_KEY="$2"
+    CHALLENGE_ALIAS="${3:-}"
+else
+    echo "ERROR: BUNNY_API_KEY must be set (via environment or positional arg)."
+    exit 1
+fi
+
+CERT_DIR="/home/asterossl/.ssl-store/$DOMAIN"
+
+# Ensure cert directory exists
+sudo -u asterossl mkdir -p "$CERT_DIR"
+
+ACME_CMD="/home/asterossl/.acme.sh/acme.sh"
+
+if [ ! -f "$ACME_CMD" ]; then
+    echo "ERROR: acme.sh not found at $ACME_CMD. Run platform:server:setup-acme first."
+    exit 1
+fi
+
+EXTRA_ARGS=""
+if [ -n "$CHALLENGE_ALIAS" ]; then
+    EXTRA_ARGS="--challenge-alias $CHALLENGE_ALIAS"
+fi
+
+echo "Issuing wildcard cert for $DOMAIN via DNS-01 (Bunny DNS)..."
+
+sudo -u asterossl env BUNNY_API_KEY="$BUNNY_API_KEY" \
+    $ACME_CMD --issue \
+    -d "$DOMAIN" \
+    -d "*.$DOMAIN" \
+    --dns dns_bunny \
+    --server letsencrypt \
+    --keylength 4096 \
+    --force \
+    --cert-file "$CERT_DIR/cert.pem" \
+    --key-file  "$CERT_DIR/privkey.pem" \
+    --fullchain-file "$CERT_DIR/fullchain.pem" \
+    --reloadcmd "echo renewed" \
+    $EXTRA_ARGS
+
+echo "OK:$CERT_DIR"

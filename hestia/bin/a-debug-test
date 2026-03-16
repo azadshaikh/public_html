@@ -1,0 +1,71 @@
+#!/bin/bash
+#
+# Simple test script to debug Hestia issues
+#
+
+# --- Configuration and Setup ---
+HESTIA=${HESTIA:-/usr/local/hestia}
+BIN=${BIN:-/usr/local/hestia/bin}
+
+echo "=== HESTIA DEBUG TEST ==="
+echo "HESTIA: $HESTIA"
+echo "BIN: $BIN"
+echo "Arguments: $*"
+
+# Test if Hestia functions are available
+if [ -f "$HESTIA/func/main.sh" ]; then
+    echo "✓ Hestia main.sh found"
+    source $HESTIA/func/main.sh
+else
+    echo "✗ Hestia main.sh not found"
+    exit 1
+fi
+
+if [ -f "$HESTIA/conf/hestia.conf" ]; then
+    echo "✓ Hestia config found"
+    source $HESTIA/conf/hestia.conf
+else
+    echo "✗ Hestia config not found"
+    exit 1
+fi
+
+if [ -f "$HESTIA/func/domain.sh" ]; then
+    echo "✓ Hestia domain functions found"
+    source $HESTIA/func/domain.sh
+else
+    echo "✗ Hestia domain functions not found"
+    exit 1
+fi
+
+# Test debug functions
+if [ -f "$BIN/a-debug-functions.sh" ]; then
+    echo "✓ Debug functions found"
+    source "$BIN/a-debug-functions.sh"
+    echo "✓ Debug functions loaded"
+else
+    echo "✗ Debug functions not found"
+    # Set up fallback
+    LARAVEL_DEBUG="${laravel_debug:-0}"
+    debug_init() { echo "DEBUG_INIT: fallback"; }
+    debug_log() { echo "DEBUG_LOG: $1"; }
+fi
+
+# Test debug functions
+echo "Testing debug functions..."
+debug_init
+debug_log "Test message"
+
+# Test basic Hestia functions
+echo "Testing basic Hestia functions..."
+if command -v check_args >/dev/null 2>&1; then
+    echo "✓ check_args function available"
+else
+    echo "✗ check_args function not available"
+fi
+
+# Test parameters
+echo "Laravel debug parameter: ${laravel_debug:-not_set}"
+echo "LARAVEL_DEBUG variable: ${LARAVEL_DEBUG:-not_set}"
+
+echo "=== TEST COMPLETED ==="
+exit 0

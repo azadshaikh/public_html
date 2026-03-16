@@ -1,0 +1,105 @@
+{# Testimonials Grid Section #}
+{# Use |default() for all variables so template works without JSON #}
+
+{% set section_title = section_title|default('What Our Customers Say') %}
+{% set section_subtitle = section_subtitle|default('Trusted by thousands of businesses worldwide') %}
+
+{% set testimonial_1_rating = testimonial_1_rating|default(5) %}
+{% set testimonial_1_quote = testimonial_1_quote|default('This platform has transformed the way we build websites. The ease of use is exceptional.') %}
+{% set testimonial_1_avatar = testimonial_1_avatar|default('https://ui-avatars.com/api/?name=Sarah+Johnson&background=6366f1&color=fff') %}
+{% set testimonial_1_name = testimonial_1_name|default('Sarah Johnson') %}
+{% set testimonial_1_title = testimonial_1_title|default('CEO, TechStart') %}
+
+{% set testimonial_2_rating = testimonial_2_rating|default(5) %}
+{% set testimonial_2_quote = testimonial_2_quote|default('Outstanding support and features. Our team productivity has increased significantly.') %}
+{% set testimonial_2_avatar = testimonial_2_avatar|default('https://ui-avatars.com/api/?name=Michael+Chen&background=10b981&color=fff') %}
+{% set testimonial_2_name = testimonial_2_name|default('Michael Chen') %}
+{% set testimonial_2_title = testimonial_2_title|default('CTO, Innovate Labs') %}
+
+{% set testimonial_3_rating = testimonial_3_rating|default(5) %}
+{% set testimonial_3_quote = testimonial_3_quote|default('The best website builder we have ever used. Highly recommend for any business.') %}
+{% set testimonial_3_avatar = testimonial_3_avatar|default('https://ui-avatars.com/api/?name=Emily+Davis&background=f59e0b&color=fff') %}
+{% set testimonial_3_name = testimonial_3_name|default('Emily Davis') %}
+{% set testimonial_3_title = testimonial_3_title|default('Marketing Director, GrowthCo') %}
+
+<section class="py-5 py-lg-6 bg-light" title="Testimonials">
+    <div class="container">
+        <div class="row justify-content-center mb-5">
+            <div class="col-lg-7 text-center">
+                <h2 class="display-6 fw-bold mb-3">{{ section_title }}</h2>
+                <p class="lead text-muted">{{ section_subtitle }}</p>
+            </div>
+        </div>
+        <div class="row g-4">
+            {# Testimonial 1 #}
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="d-flex gap-1 mb-3 text-warning">
+                            {% for i in 1..testimonial_1_rating %}
+                                <i class="ri-star-fill"></i>
+                            {% endfor %}
+                        </div>
+                        <blockquote class="mb-4">
+                            <p class="text-muted mb-0">"{{ testimonial_1_quote }}"</p>
+                        </blockquote>
+                        <div class="d-flex align-items-center">
+                            <img src="{{ testimonial_1_avatar }}" alt="{{ testimonial_1_name }}" 
+                                 class="rounded-circle me-3" width="48" height="48" style="object-fit: cover;">
+                            <div>
+                                <h6 class="mb-0 fw-semibold">{{ testimonial_1_name }}</h6>
+                                <small class="text-muted">{{ testimonial_1_title }}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {# Testimonial 2 #}
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="d-flex gap-1 mb-3 text-warning">
+                            {% for i in 1..testimonial_2_rating %}
+                                <i class="ri-star-fill"></i>
+                            {% endfor %}
+                        </div>
+                        <blockquote class="mb-4">
+                            <p class="text-muted mb-0">"{{ testimonial_2_quote }}"</p>
+                        </blockquote>
+                        <div class="d-flex align-items-center">
+                            <img src="{{ testimonial_2_avatar }}" alt="{{ testimonial_2_name }}" 
+                                 class="rounded-circle me-3" width="48" height="48" style="object-fit: cover;">
+                            <div>
+                                <h6 class="mb-0 fw-semibold">{{ testimonial_2_name }}</h6>
+                                <small class="text-muted">{{ testimonial_2_title }}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {# Testimonial 3 #}
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="d-flex gap-1 mb-3 text-warning">
+                            {% for i in 1..testimonial_3_rating %}
+                                <i class="ri-star-fill"></i>
+                            {% endfor %}
+                        </div>
+                        <blockquote class="mb-4">
+                            <p class="text-muted mb-0">"{{ testimonial_3_quote }}"</p>
+                        </blockquote>
+                        <div class="d-flex align-items-center">
+                            <img src="{{ testimonial_3_avatar }}" alt="{{ testimonial_3_name }}" 
+                                 class="rounded-circle me-3" width="48" height="48" style="object-fit: cover;">
+                            <div>
+                                <h6 class="mb-0 fw-semibold">{{ testimonial_3_name }}</h6>
+                                <small class="text-muted">{{ testimonial_3_title }}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

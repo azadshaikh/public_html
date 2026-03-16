@@ -1,0 +1,198 @@
+{
+    "setup": {
+        "default_options": {
+            "show_sidebar": true,
+            "show_sidebar_on_pages": true,
+            "show_latest_posts": true,
+            "show_features": true,
+            "show_recent_posts_widget": true,
+            "show_categories_widget": true,
+            "show_tags_widget": true,
+            "show_newsletter_widget": true,
+            "show_page_navigation": true,
+            "show_related_pages": true,
+            "features_title": "Why Choose Us",
+            "feature_1_title": "Fast Performance",
+            "feature_1_description": "Lightning-fast loading times and optimized performance.",
+            "feature_2_title": "Responsive Design",
+            "feature_2_description": "Perfect display on all devices and screen sizes.",
+            "feature_3_title": "Secure & Reliable",
+            "feature_3_description": "Built with security and reliability in mind.",
+            "newsletter_title": "Newsletter",
+            "newsletter_description": "Subscribe to our newsletter for updates.",
+            "footer_about": "We are a modern company focused on delivering exceptional digital experiences through innovative design and development.",
+            "primary_color": "#007cba",
+            "secondary_color": "#6c757d"
+        }
+    },
+    "menus": {
+        "locations": {
+            "primary": "Primary Navigation",
+            "footer": "Footer Menu",
+            "footer2": "Footer Menu 2"
+        },
+        "settings": {
+            "support_hierarchy": true,
+            "max_depth": 2,
+            "auto_add_pages": false
+        }
+    },
+    "customizer": {
+        "sections": {
+            "layout": {
+                "title": "Layout",
+                "description": "Configure layout and display options",
+                "settings": {
+                    "show_sidebar_on_archive": {
+                        "label": "Show Sidebar on Archive",
+                        "type": "checkbox",
+                        "default": true,
+                        "helper_text": "Enable this if your archive templates should display the widget sidebar."
+                    },
+                    "show_sidebar_on_posts": {
+                        "label": "Show Sidebar on Single Post",
+                        "type": "checkbox",
+                        "default": false,
+                        "helper_text": "Enable this if your single-post templates use sidebar widgets."
+                    },
+                    "show_social_sharing_on_posts": {
+                        "label": "Show Social Sharing on Posts",
+                        "type": "checkbox",
+                        "default": true
+                    },
+                    "show_breadcrumb_on_pages": {
+                        "label": "Show Breadcrumb on Pages",
+                        "type": "checkbox",
+                        "default": false
+                    }
+                }
+            },
+            "colors": {
+                "title": "Colors",
+                "description": "Customize theme colors",
+                "settings": {
+                    "primary_color": {
+                        "label": "Primary Color",
+                        "type": "color",
+                        "default": "#007cba"
+                    },
+                    "secondary_color": {
+                        "label": "Secondary Color",
+                        "type": "color",
+                        "default": "#6c757d"
+                    }
+                }
+            },
+            "contact": {
+                "title": "Contact Information",
+                "description": "Add your contact details",
+                "settings": {
+                    "contact_email": {
+                        "label": "Email Address",
+                        "type": "email",
+                        "default": "",
+                        "helper_text": "Shown in footer/contact sections. Use a valid mailbox like hello@example.com."
+                    },
+                    "contact_phone": {
+                        "label": "Phone Number",
+                        "type": "text",
+                        "default": ""
+                    },
+                    "contact_address": {
+                        "label": "Address",
+                        "type": "textarea",
+                        "default": ""
+                    }
+                }
+            },
+            "social": {
+                "title": "Social Media",
+                "description": "Add your social media links",
+                "settings": {
+                    "social_facebook": {
+                        "label": "Facebook URL",
+                        "type": "url",
+                        "default": "",
+                        "helper_text": "Use the full URL, including https://."
+                    },
+                    "social_twitter": {
+                        "label": "Twitter URL",
+                        "type": "url",
+                        "default": "",
+                        "helper_text": "Use the full URL, including https://."
+                    },
+                    "social_instagram": {
+                        "label": "Instagram URL",
+                        "type": "url",
+                        "default": "",
+                        "helper_text": "Use the full URL, including https://."
+                    },
+                    "social_linkedin": {
+                        "label": "LinkedIn URL",
+                        "type": "url",
+                        "default": "",
+                        "helper_text": "Use the full URL, including https://."
+                    }
+                }
+            },
+            "advanced": {
+                "title": "Advanced",
+                "description": "Advanced customization options",
+                "settings": {
+                    "custom_css": {
+                        "label": "Custom CSS",
+                        "type": "textarea",
+                        "default": "",
+                        "description": "Add custom CSS code here",
+                        "helper_text": "Theme defaults load first; your custom CSS is applied after and can override them."
+                    }
+                }
+            }
+        }
+    },
+    "css_generation": {
+        "variable_selectors": [":root", "[data-bs-theme='light']"],
+        "variables": {
+            "--bs-primary": "{{ theme_get_option(\"primary_color\", \"#007cba\") }}",
+            "--bs-primary-rgb": "{{ theme_get_option(\"primary_color\", \"#007cba\") | to_rgb }}",
+            "--bs-secondary": "{{ theme_get_option(\"secondary_color\", \"#6c757d\") }}",
+            "--bs-secondary-rgb": "{{ theme_get_option(\"secondary_color\", \"#6c757d\") | to_rgb }}"
+        },
+        "custom_rules": [".hero-section { background-color: var(--bs-primary); }"],
+        "conditional": {
+            "theme_get_option('show_animations') === true": [
+                ".fade-in { animation: fadeIn 0.3s ease-in; }",
+                "@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }"
+            ]
+        }
+    },
+    "widgets": {
+        "sidebars": [
+            {
+                "name": "Main Sidebar",
+                "id": "sidebar-main",
+                "description": "Main sidebar widget area"
+            },
+            {
+                "name": "Archive Sidebar",
+                "id": "sidebar-archive",
+                "description": "Archive sidebar widget area"
+            },
+            {
+                "name": "Footer Area 1",
+                "id": "footer-1",
+                "description": "First footer widget area"
+            },
+            {
+                "name": "Footer Area 2",
+                "id": "footer-2",
+                "description": "Second footer widget area"
+            },
+            {
+                "name": "Footer Area 3",
+                "id": "footer-3",
+                "description": "Third footer widget area"
+            }
+        ]
+    }
+}

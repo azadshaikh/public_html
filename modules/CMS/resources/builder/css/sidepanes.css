@@ -1,0 +1,382 @@
+#astero-builder .drag-elements {
+    flex: 1 1;
+    overflow: hidden;
+    padding-top: 0rem;
+    height: 100%;
+}
+
+#astero-builder .drag-elements > .header {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+#astero-builder .drag-elements .nav-item .nav-link {
+    text-align: center;
+    border-top-color: var(--bs-body-bg);
+    border-radius: 0px;
+    min-width: 4.5rem;
+    --bs-nav-link-color: var(--bs-secondary-color);
+    line-height: 1.4;
+}
+
+#astero-builder .drag-elements .nav-item .nav-link i {
+    font-size: 1.1rem;
+    vertical-align: bottom;
+}
+
+#astero-builder .drag-elements .nav-item .nav-link small,
+#astero-builder .drag-elements .nav-item .nav-link .small {
+    font-size: 0.8rem;
+}
+
+#astero-builder .drag-elements#add-section-box .nav-item:first-child .nav-link {
+    border-left: none;
+}
+
+#astero-builder .search {
+    position: relative;
+}
+
+#astero-builder .search .form-control {
+    border-color: var(--bs-body-bg);
+    border-bottom-color: var(--bs-border-color);
+    border-radius: 0px;
+    box-shadow: none;
+}
+
+#astero-builder .search .form-control::placeholder {
+    font-size: 0.75rem;
+}
+
+#astero-builder .search .clear-backspace {
+    border: none;
+    background: none;
+    position: absolute;
+    top: 0.3rem;
+    right: 12px;
+    opacity: 0.5;
+}
+
+#astero-builder .search .clear-backspace:hover {
+    opacity: 1;
+    background: var(--bs-border-color);
+}
+
+#astero-builder .search i {
+    font-size: 16px;
+}
+
+#astero-builder .search input:focus + .clear-backspace,
+#astero-builder .search input:hover + .clear-backspace {
+    opacity: 1;
+    background: var(--bs-border-color);
+}
+
+#astero-builder .search .expand {
+    position: absolute;
+    top: 4px;
+    right: 5px;
+}
+
+#astero-builder .search .expand button {
+    padding: 0.1rem 0.25rem;
+    background: transparent;
+    border: none;
+    color: var(--bs-body-color);
+}
+
+#astero-builder .search .expand button:hover {
+    background: var(--bs-border-color);
+}
+
+#astero-builder .search .expand ~ .clear-backspace {
+    right: 56px;
+}
+
+#astero-builder .components-list,
+#astero-builder .blocks-list,
+#astero-builder .component-properties,
+#astero-builder .sections-list {
+    list-style: none;
+    background: rgba(var(--bs-secondary-color-rgb), 0.015);
+}
+
+#astero-builder #add-section-box {
+    animation: popup-animation 0.1s cubic-bezier(0, 0, 0.2, 1) 0s;
+    animation-fill-mode: forwards;
+}
+
+#astero-builder #add-section-box .header > div.section-box-actions {
+    position: absolute;
+    right: 0.5rem;
+}
+
+#astero-builder #add-section-box .components-list,
+#astero-builder #add-section-box .blocks-list,
+#astero-builder #add-section-box .component-properties,
+#astero-builder #add-section-box .sections-list {
+    width: auto;
+    height: auto;
+    padding: 0px;
+    margin: 0;
+}
+
+#astero-builder #add-section-box .components-list ol,
+#astero-builder #add-section-box .blocks-list ol,
+#astero-builder #add-section-box .component-properties ol,
+#astero-builder #add-section-box .sections-list ol {
+    padding: 0rem 0rem 0rem 1rem;
+    list-style: none;
+}
+
+#astero-builder #add-section-box .components-list ol li,
+#astero-builder #add-section-box .blocks-list ol li,
+#astero-builder #add-section-box .component-properties ol li,
+#astero-builder #add-section-box .sections-list ol li {
+    width: 14%;
+    min-width: 90px;
+    float: left;
+    margin: 0% 1% 2% 1%;
+}
+
+#astero-builder #add-section-box .components-list ol li a,
+#astero-builder #add-section-box .blocks-list ol li a,
+#astero-builder #add-section-box .component-properties ol li a,
+#astero-builder #add-section-box .sections-list ol li a {
+    display: block;
+    color: var(--bs-gray-900);
+    text-decoration: none;
+    text-shadow: none;
+    margin-top: 5px;
+}
+
+#astero-builder #add-section-box .blocks-list ol,
+#astero-builder #add-section-box .sections-list ol {
+    list-style: none;
+}
+
+#astero-builder #add-section-box .blocks-list ol li,
+#astero-builder #add-section-box .sections-list ol li {
+    width: 95%;
+    height: auto;
+    min-height: 100px;
+    position: relative;
+    text-align: center;
+    font-weight: normal;
+    font-size: 11px;
+    /* color: #000; */
+    background-repeat: no-repeat;
+    padding: 0px;
+    margin: 1rem auto;
+    display: block;
+    border-color: var(--bs-border-color);
+    border-style: solid;
+    border-width: 1px;
+    border-radius: 0px;
+    background-position: center;
+    box-shadow: 0px 1px 5px 0px rgba(var(--bs-body-color-rgb), 0.25);
+    box-shadow: none;
+    background-size: 100%;
+    z-index: 100;
+    background-color: var(--bs-body-bg);
+    cursor: grab;
+    opacity: 1;
+    width: 29%;
+    margin-right: 1.5rem;
+}
+
+#astero-builder #add-section-box .blocks-list ol li .name,
+#astero-builder #add-section-box .sections-list ol li .name {
+    background: rgba(var(--bs-body-bg-rgb), 0.9);
+    background: rgba(var(--bs-body-color-rgb), 0.7);
+    background: rgba(var(--bs-link-color-rgb), 0.7);
+    background: rgba(var(--bs-body-bg-rgb), 0.9);
+    color: var(--bs-body-color);
+    padding: 0.5rem 0;
+    position: absolute;
+    bottom: 0px;
+    width: 100%;
+    left: 0;
+    font-size: 12px;
+    border-top: 1px solid rgba(var(--bs-body-color-rgb), 0.1);
+}
+
+#astero-builder #add-section-box .blocks-list ol li:hover,
+#astero-builder #add-section-box .sections-list ol li:hover {
+    border-color: var(--bs-link-color);
+    box-shadow: 0px 2px 8px 0px rgba(var(--bs-link-color-rgb), 0.3);
+    -webkit-box-shadow: 0px 2px 8px 0px rgba(var(--bs-link-color-rgb), 0.3);
+}
+
+#astero-builder #add-section-box .blocks-list ol li:hover:before,
+#astero-builder #add-section-box .sections-list ol li:hover:before {
+    opacity: 0.1;
+}
+
+#astero-builder #add-section-box .blocks-list ol li:hover .name,
+#astero-builder #add-section-box .sections-list ol li:hover .name {
+    visibility: visible;
+}
+
+#astero-builder #add-section-box .blocks-list ol li[data-section='Reusable'] .name,
+#astero-builder #add-section-box .sections-list ol li[data-section='Reusable'] .name {
+    visibility: visible;
+}
+
+#astero-builder .component-properties-sidepane {
+    z-index: 0;
+    margin: 0;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    height: 100%;
+}
+
+#astero-builder .component-properties-sidepane > div {
+    flex: 1 1;
+    height: 100%;
+}
+
+#astero-builder .component-properties {
+    background: var(--bs-body-bg);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    height: calc(100% - 45px);
+}
+
+#astero-builder .component-properties .tab-content {
+    padding: 0.5rem 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    flex: 1 1;
+}
+
+#astero-builder .component-properties .tab-content > .active {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    margin-bottom: 2rem;
+}
+
+#astero-builder .component-properties #right-panel {
+    color: #777;
+}
+/*
+#astero-builder .component-properties,
+#astero-builder .component-properties select,
+#astero-builder .component-properties input[type="text"] {
+  font-size: 12px;
+}
+
+#astero-builder .component-properties .form-select {
+  height: auto;
+}
+
+#astero-builder .component-properties .mb-3.row {
+  margin: 0;
+}
+
+#astero-builder .component-properties .mb-3>label {
+  font-size: 11px;
+  font-weight: 600;
+  margin-bottom: 5px;
+  color: var(--bs-secondary-color);
+  flex-grow: 1;
+}
+
+#astero-builder .component-properties .mb-3>label i {
+  font-size: 14px;
+}
+
+#astero-builder .component-properties .mb-3 .input [type="color"],
+#astero-builder .component-properties .mb-3 .input .form-check-input {
+  float: right;
+} */
+
+#astero-builder .component-properties .mb-3 .input .input-range {
+    position: relative;
+    padding-top: 0.4rem;
+}
+
+#astero-builder .component-properties .mb-3 .input .input-range input[type='number'] {
+    position: absolute;
+    right: 0;
+    top: -1.2rem;
+    width: 5em;
+    padding: 0.2rem 0.2rem;
+    text-align: center;
+    line-height: 12px;
+    font-size: 12px;
+}
+
+/* #astero-builder .component-properties .mb-3 .custom-control {
+  min-height: 1.1rem;
+}
+
+#astero-builder .component-properties .mb-3.inline {
+  display: flex;
+  align-items: center;
+}
+
+#astero-builder .component-properties .mb-3.inline .control-label {
+  flex-grow: 1;
+}
+
+#astero-builder .component-properties .mb-3.inline .input {
+  flex: 1 1 auto;
+  width: auto;
+} */
+/* Component Icons (Remix Icons) */
+#astero-builder #add-section-box .components-list ol li {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 70px;
+    padding: 0.5rem 0.25rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 4px;
+    background-color: var(--bs-body-bg);
+    cursor: grab;
+    transition: all 0.15s ease;
+}
+
+#astero-builder #add-section-box .components-list ol li:hover {
+    border-color: var(--bs-link-color);
+    box-shadow: 0px 1px 5px 2px rgba(var(--bs-link-color-rgb), 0.25);
+}
+
+#astero-builder #add-section-box .components-list ol li .component-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    width: 100%;
+}
+
+#astero-builder #add-section-box .components-list ol li .component-icon i {
+    font-size: 1.75rem;
+    color: var(--bs-secondary-color);
+    line-height: 1;
+}
+
+#astero-builder #add-section-box .components-list ol li:hover .component-icon i {
+    color: var(--bs-link-color);
+}
+
+#astero-builder #add-section-box .components-list ol li .name {
+    font-size: 10px;
+    text-align: center;
+    color: var(--bs-secondary-color);
+    margin-top: 0.25rem;
+    line-height: 1.2;
+    word-break: break-word;
+}

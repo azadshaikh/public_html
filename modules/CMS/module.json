@@ -1,0 +1,8 @@
+{
+    "name": "CMS",
+    "slug": "cms",
+    "version": "1.0.0",
+    "description": "Content Management System module for managing pages, posts, and website content.",
+    "namespace": "Modules\\CMS\\",
+    "provider": "Modules\\CMS\\Providers\\CMSServiceProvider"
+}

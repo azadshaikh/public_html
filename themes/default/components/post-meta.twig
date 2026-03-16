@@ -1,0 +1,52 @@
+{#
+    Post Meta Component
+
+    Displays post metadata like date, read time, and author.
+
+    All URLs are pre-computed by the backend. Templates should never construct URLs.
+
+    @see docs/astero-modules-system/DATA_CONTRACT.md
+
+    @param post - The post object (from ContentTransformer)
+    @param show_author - Whether to show author (default: true)
+    @param show_date - Whether to show date (default: true)
+    @param show_read_time - Whether to show read time (default: true)
+    @param show_updated - Whether to show updated date if different (default: false)
+    @param compact - Whether to use compact styling (default: false)
+    @param class - Additional CSS classes
+#}
+
+{% set show_author = show_author ?? true %}
+{% set show_date = show_date ?? true %}
+{% set show_read_time = show_read_time ?? true %}
+{% set show_updated = show_updated ?? false %}
+{% set compact = compact ?? false %}
+
+<span class="post-meta d-flex text-muted {{ compact ? 'small' : '' }} gap-3 flex-wrap">
+    {# Author - post.author.url is always pre-computed #}
+    {% if show_author and post.author %}
+        <a class="text-decoration-none text-muted" href="{{ post.author.url }}">
+            <i class="ri-user-line me-1"></i>{{ post.author.name }}
+        </a>
+    {% endif %}
+
+    {# Published Date #}
+    {% if show_date %}
+        <span>
+            <i class="ri-calendar-line-event me-1"></i>
+            {{ post.formatted_date }}
+        </span>
+    {% endif %}
+
+    {# Read Time - always pre-computed #}
+    {% if show_read_time and post.read_time %}
+        <span><i class="ri-time-line me-1"></i>{{ post.read_time }} min read</span>
+    {% endif %}
+
+    {# Updated Date #}
+    {% if show_updated and post.updated_at != post.created_at %}
+        <span>
+            <i class="ri-refresh-line me-1"></i>Updated {{ post.updated_at|time_ago }}
+        </span>
+    {% endif %}
+</span>

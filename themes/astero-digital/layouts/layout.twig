@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="{{ locale()|str_replace('_', '-') }}">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        {# CSRF token #}
+        <meta name="csrf-token" content="{{ csrf_token() }}">
+
+        {# Favicon #}
+        {% if theme_option('favicon') %}
+            <link type="image/x-icon" href="{{ theme_option('favicon') }}" rel="shortcut icon" />
+        {% else %}
+            <link type="image/x-icon" href="{{ theme_asset('img/favicon.png') }}" rel="shortcut icon" />
+        {% endif %}
+
+        {# SEO Meta Tags #}
+        {{ seo_meta() }}
+
+        {# Theme Styles #}
+        <link href="{{ theme_asset('css/style.min.css') }}" rel="stylesheet">
+        <link href="{{ theme_asset('css/theme-styles.css') }}" rel="stylesheet">
+
+        {# AOS animations #}
+        <link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet" />
+
+        {# GLightbox #}
+        <link href="https://cdn.jsdelivr.net/npm/glightbox/dist/css/glightbox.min.css" rel="stylesheet" />
+
+        {# Source Sans 3 from Google Fonts #}
+        <link
+            href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,200..900;1,200..900&family=Ubuntu+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+            rel="stylesheet" />
+
+        {# Custom CSS is auto-injected by ThemeService before </head> #}
+
+        {# Sidebar Styles #}
+        <style>
+            /* Custom styles to complement Bootstrap */
+            .sidebar .card {
+                border: 1px solid rgba(0, 0, 0, .125);
+                box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            }
+
+            .sidebar .card-header {
+                background-color: #f8f9fa;
+                border-bottom: 1px solid rgba(0, 0, 0, .125);
+            }
+
+            .sidebar .badge.bg-light {
+                color: #6c757d !important;
+            }
+
+            .sidebar .badge.bg-light:hover {
+                background-color: var(--bs-primary) !important;
+                color: white !important;
+            }
+
+            .widget-content img {
+                max-width: 100%;
+                height: auto;
+                border-radius: 0.375rem;
+            }
+
+            .sidebar .border-bottom:last-child {
+                border-bottom: none !important;
+                padding-bottom: 0 !important;
+                margin-bottom: 0 !important;
+            }
+
+            /* Widget area styles */
+            .widget {
+                margin-bottom: 1.5rem;
+            }
+
+            .widget:last-child {
+                margin-bottom: 0;
+            }
+
+            .widget-title {
+                margin-bottom: 1rem;
+            }
+        </style>
+    </head>
+    <body class="{% block body_class %}{% endblock %}">
+        {# Main Content #}
+        <main class="site-main">
+            {% include 'layouts/partials/header.twig' %}
+
+            {% if theme_option('show_breadcrumb_on_pages', false) %}
+                {# Breadcrumb Navigation #}
+                <nav class="breadcrumb-nav bg-primary-subtle py-2">
+                    <div class="container">
+                        {{ breadcrumb({'class': 'breadcrumb mb-0', 'separator': '<span class="breadcrumb-separator mx-2 text-muted">/</span>'}) }}
+                    </div>
+                </nav>
+            {% endif %}
+
+            <div class="content-wrapper bg-body">
+                {% block content %}{% endblock %}
+            </div>
+
+            {% include 'layouts/partials/footer.twig' %}
+        </main>
+
+        {# Theme Main JS #}
+        <script src="{{ theme_asset('js/main.min.js') }}" type="module"></script>
+        {# AOS Animation Script #}
+        <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+        <script>
+            AOS.init({
+                once: true,
+            });
+        </script>
+        {# Typer Script #}
+        <script src="https://unpkg.com/typed.js@2.1.0/dist/typed.umd.js"></script>
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                const typers = document.querySelectorAll(".typer");
+
+                typers.forEach(function(typer) {
+                    const typeSpeed = typer.getAttribute("data-type-speed") || 50;
+                    const backSpeed = typer.getAttribute("data-back-speed") || 50;
+                    const strings = typer.getAttribute("data-strings") ? typer.getAttribute("data-strings")
+                        .split(",") : [];
+                    const loop = typer.getAttribute("data-loop") === "true";
+
+                    new Typed(typer.querySelector(".text-primary"), {
+                        strings: strings,
+                        typeSpeed: parseInt(typeSpeed, 10),
+                        backSpeed: parseInt(backSpeed, 10),
+                        loop: loop,
+                        backDelay: 1000,
+                    });
+                });
+
+                const forms = document.querySelectorAll('form');
+                if (forms.length > 0) {
+                    var csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                    forms.forEach(form => {
+                        if (!form.querySelector('input[name="_token"]')) {
+                            var tokenfield = document.createElement('input');
+                            tokenfield.type = 'hidden';
+                            tokenfield.name = '_token';
+                            tokenfield.value = csrfToken;
+                            form.appendChild(tokenfield);
+                        } else {
+                            form.querySelector('input[name="_token"]').value = csrfToken;
+                        }
+                    });
+                }
+            });
+        </script>
+        {# GLightbox #}
+        <script src="https://cdn.jsdelivr.net/npm/glightbox/dist/js/glightbox.min.js"></script>
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                const lightbox = GLightbox({
+                    selector: ".glightbox",
+                });
+            });
+        </script>
+
+        {# Footer integrations are auto-injected #}
+    </body>
+</html>

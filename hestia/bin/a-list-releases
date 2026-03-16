@@ -1,0 +1,78 @@
+#!/bin/bash
+#
+# Script: a-list-releases
+#
+# Description: Lists locally available releases in the server's release repository.
+#
+# Usage: a-list-releases [TYPE] [PACKAGE_ID]
+#
+# Exit Codes:
+#   0   - Success
+#   204 - Releases directory missing
+
+# --- Configuration ---
+HESTIA=${HESTIA:-/usr/local/hestia}
+BIN=${BIN:-/usr/local/hestia/bin}
+ASTERO_DATA_DIR="${ASTERO_DATA_DIR:-/usr/local/hestia/data/astero}"
+RELEASES_DIR="$ASTERO_DATA_DIR/releases"
+
+[ -f "$HESTIA/func/main.sh" ] && source $HESTIA/func/main.sh
+
+# --- Functions ---
+print_header() {
+    printf "%-15s %-15s %-12s %-10s %s\n" "TYPE" "PACKAGE" "VERSION" "ACTIVE" "SIZE"
+    printf "%-15s %-15s %-12s %-10s %s\n" "---------------" "---------------" "------------" "----------" "----------"
+}
+
+format_size() {
+    local size=$1
+    [ "$size" -ge 1048576 ] && echo "$(( size / 1048576 )) MB" && return
+    [ "$size" -ge 1024 ] && echo "$(( size / 1024 )) KB" && return
+    echo "$size B"
+}
+
+# --- Main Logic ---
+filter_type="${1:-}"
+filter_package="${2:-}"
+
+if [ ! -d "$RELEASES_DIR" ]; then
+    echo "No releases found at $RELEASES_DIR"
+    exit 204
+fi
+
+echo ""
+echo "Local Releases: $RELEASES_DIR"
+echo ""
+print_header
+
+found_any=false
+
+for type_dir in "$RELEASES_DIR"/*/; do
+    [ -d "$type_dir" ] || continue
+    release_type=$(basename "$type_dir")
+    [ -n "$filter_type" ] && [ "$release_type" != "$filter_type" ] && continue
+
+    for package_dir in "$type_dir"*/; do
+        [ -d "$package_dir" ] || continue
+        package_id=$(basename "$package_dir")
+        [ -n "$filter_package" ] && [ "$package_id" != "$filter_package" ] && continue
+
+        current_version=""
+        [ -L "$package_dir/current" ] && current_version=$(basename "$(readlink "$package_dir/current")" .zip)
+
+        for zip_file in "$package_dir"v*.zip; do
+            [ -f "$zip_file" ] || continue
+            found_any=true
+            version=$(basename "$zip_file" .zip)
+            file_size=$(stat -c%s "$zip_file" 2>/dev/null || echo "0")
+            is_active=""
+            [ "$version" = "$current_version" ] && is_active="*"
+            printf "%-15s %-15s %-12s %-10s %s\n" "$release_type" "$package_id" "$version" "$is_active" "$(format_size "$file_size")"
+        done
+    done
+done
+
+echo ""
+[ "$found_any" = false ] && echo "No releases found."
+[ "$found_any" = true ] && echo "* = Active version"
+exit 0

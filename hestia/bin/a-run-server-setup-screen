@@ -1,0 +1,164 @@
+#!/bin/bash
+#
+# Script: a-run-server-setup-screen
+#
+# Description: Manages the server setup screen session lifecycle.
+#              Supports start/status/wait/result/log-tail actions.
+#
+# Usage:
+#   a-run-server-setup-screen [--session NAME] [--log-file PATH] [--exit-file PATH] ACTION [options]
+#
+# Actions:
+#   start --command "command to run in screen"
+#   status
+#   wait [--timeout 1800] [--poll 10]
+#   result
+#   log-tail [--lines 120]
+
+set -euo pipefail
+
+SESSION_NAME="astero_server_setup"
+LOG_FILE="/tmp/astero_server_setup.log"
+EXIT_FILE="/tmp/astero_server_setup.exit"
+WAIT_TIMEOUT=1800
+WAIT_POLL=10
+TAIL_LINES=120
+COMMAND=""
+ACTION=""
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --session)
+            SESSION_NAME="${2:-$SESSION_NAME}"
+            shift 2
+            ;;
+        --log-file)
+            LOG_FILE="${2:-$LOG_FILE}"
+            shift 2
+            ;;
+        --exit-file)
+            EXIT_FILE="${2:-$EXIT_FILE}"
+            shift 2
+            ;;
+        --timeout)
+            WAIT_TIMEOUT="${2:-$WAIT_TIMEOUT}"
+            shift 2
+            ;;
+        --poll)
+            WAIT_POLL="${2:-$WAIT_POLL}"
+            shift 2
+            ;;
+        --lines)
+            TAIL_LINES="${2:-$TAIL_LINES}"
+            shift 2
+            ;;
+        --command)
+            COMMAND="${2:-}"
+            shift 2
+            ;;
+        start|status|wait|result|log-tail)
+            ACTION="$1"
+            shift
+            ;;
+        *)
+            echo "[a-run-server-setup-screen] Unknown argument: $1" >&2
+            exit 1
+            ;;
+    esac
+done
+
+if [ -z "$ACTION" ]; then
+    echo "[a-run-server-setup-screen] Missing action." >&2
+    exit 1
+fi
+
+is_running() {
+    screen -ls | grep -q "[.]${SESSION_NAME}[[:space:]]"
+}
+
+ensure_screen() {
+    if command -v screen >/dev/null 2>&1; then
+        return
+    fi
+
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update -qq
+    apt-get install -y -qq screen
+}
+
+start_setup() {
+    ensure_screen
+
+    if [ -z "$COMMAND" ]; then
+        echo "[a-run-server-setup-screen] start action requires --command." >&2
+        exit 1
+    fi
+
+    if is_running; then
+        echo "STATE:RUNNING"
+        return
+    fi
+
+    rm -f "$LOG_FILE" "$EXIT_FILE"
+
+    printf -v escaped_log_file '%q' "$LOG_FILE"
+    printf -v escaped_exit_file '%q' "$EXIT_FILE"
+    payload="set -o pipefail; ${COMMAND} 2>&1 | tee ${escaped_log_file}; setup_status=\${PIPESTATUS[0]}; echo \"\${setup_status}\" > ${escaped_exit_file}; exit \${setup_status}"
+
+    screen -dmS "$SESSION_NAME" bash -lc "$payload"
+    echo "STATE:STARTED"
+}
+
+status_setup() {
+    if is_running; then
+        echo "RUNNING"
+    else
+        echo "DONE"
+    fi
+}
+
+wait_setup() {
+    local elapsed=0
+
+    while is_running; do
+        if [ "$elapsed" -ge "$WAIT_TIMEOUT" ]; then
+            echo "WAIT_TIMEOUT"
+            exit 1
+        fi
+
+        sleep "$WAIT_POLL"
+        elapsed=$((elapsed + WAIT_POLL))
+    done
+
+    echo "WAIT_DONE"
+}
+
+result_setup() {
+    if [ -f "$EXIT_FILE" ]; then
+        cat "$EXIT_FILE"
+    else
+        echo "1"
+    fi
+}
+
+log_tail_setup() {
+    tail -n "$TAIL_LINES" "$LOG_FILE" 2>/dev/null || true
+}
+
+case "$ACTION" in
+    start)
+        start_setup
+        ;;
+    status)
+        status_setup
+        ;;
+    wait)
+        wait_setup
+        ;;
+    result)
+        result_setup
+        ;;
+    log-tail)
+        log_tail_setup
+        ;;
+esac

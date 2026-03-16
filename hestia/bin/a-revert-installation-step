@@ -1,0 +1,108 @@
+#!/bin/bash
+#
+# Script: a-revert-installation-step
+#
+# Description: Reverts changes made by specific Astero installation steps.
+#              Supports: app-install, env-add, platform-dl
+#
+# Usage: a-revert-installation-step HESTIA_USER DOMAIN COMMAND_TYPE
+#
+# Exit Codes:
+#   0   - Success
+#   1   - Invalid arguments
+#   3   - User or domain not found
+#   217 - Invalid command type
+#   219 - Revert operation failed
+
+# --- Configuration ---
+HESTIA=${HESTIA:-/usr/local/hestia}
+BIN=${BIN:-/usr/local/hestia/bin}
+ASTERO_DATA_DIR="${ASTERO_DATA_DIR:-/usr/local/hestia/data/astero}"
+LOG_FILE="${ASTERO_DATA_DIR}/logs/astero-scripts.log"
+
+# --- Argument Validation (must happen before sourcing Hestia main.sh) ---
+user="${1:-}"
+domain="${2:-}"
+
+if [ "$#" -ne 3 ] || [ -z "$user" ] || [ -z "$domain" ]; then
+  echo "Error: Not enough arguments provided. Usage: a-revert-installation-step HESTIA_USER DOMAIN COMMAND_TYPE" >&2
+  exit 1
+fi
+
+# Source Hestia core functions
+source "$HESTIA/func/main.sh"
+source "$HESTIA/conf/hestia.conf"
+source "$HESTIA/func/domain.sh"
+
+# --- Helper Functions ---
+log_error() {
+    local msg="$1"
+    mkdir -p "$(dirname "$LOG_FILE")"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [a-revert-installation-step] ERROR: $msg" >> "$LOG_FILE"
+    echo "Error: $msg" >&2
+}
+
+handle_error() {
+    log_error "$2"
+    exit "$1"
+}
+
+# --- Argument Validation ---
+check_args '3' "$#" 'HESTIA_USER DOMAIN COMMAND_TYPE'
+hestia_user=$1
+web_domain=$2
+command_type=$3
+
+echo "Reverting $command_type for $web_domain..."
+
+# Validate command type
+case "$command_type" in
+  app-install|env-add|platform-dl) ;;
+  *) handle_error 217 "Invalid command type '$command_type'." ;;
+esac
+
+# Validate user
+"$BIN/v-list-sys-users" | grep -q "^$hestia_user$" || handle_error 3 "User '$hestia_user' does not exist."
+
+ROOTDIR="/home/$hestia_user/web/$web_domain/public_html"
+[ -d "/home/$hestia_user/web/$web_domain" ] || handle_error 3 "Domain '$web_domain' does not exist."
+
+# Early exit if already reverted
+if [ ! -d "$ROOTDIR" ]; then
+    echo "Already reverted (directory not found)"
+    exit 0
+fi
+
+# --- Path Resolution ---
+RELEASES_DIR="$ROOTDIR/releases"
+LATEST_VERSION=$(ls -vr "$RELEASES_DIR" 2>/dev/null | head -n 1)
+WORKINGDIR="$RELEASES_DIR/$LATEST_VERSION"
+SHARED_DIR="$ROOTDIR/shared"
+CURRENT_DIR="$ROOTDIR/current"
+
+# --- Revert Actions ---
+case "$command_type" in
+  app-install)
+    # Remove scheduler cron
+    if command -v jq >/dev/null 2>&1; then
+        existing_cron=$("$BIN/v-list-cron-jobs" "$hestia_user" json | jq -r ".[] | select(.command | contains(\"artisan schedule:run\")) | .id")
+        [ -n "$existing_cron" ] && "$BIN/v-delete-cron-job" "$hestia_user" "$existing_cron" >/dev/null 2>&1
+    fi
+    # Wipe database and clean vendor
+    if [ -d "$CURRENT_DIR" ]; then
+        sudo -u "$hestia_user" php "$CURRENT_DIR/artisan" db:wipe --force >/dev/null 2>&1 || handle_error 219 "Artisan db:wipe failed."
+        sudo -u "$hestia_user" rm -rf "$CURRENT_DIR/vendor" "$CURRENT_DIR/composer.lock"
+    fi
+    ;;
+  env-add)
+    [ -f "$SHARED_DIR/.env" ] && rm -f "$SHARED_DIR/.env"
+    [ -n "$LATEST_VERSION" ] && [ -e "$WORKINGDIR/.env" ] && rm -f "$WORKINGDIR/.env"
+    ;;
+  platform-dl)
+    rm -rf "$RELEASES_DIR" "$SHARED_DIR" "$CURRENT_DIR" || handle_error 219 "Failed to remove platform directories."
+    ;;
+esac
+
+echo "Reverted $command_type"
+$BIN/v-log-action "system" "Info" "System" "Revert: $web_domain $command_type"
+exit 0

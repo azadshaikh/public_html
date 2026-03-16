@@ -52,6 +52,12 @@ export function suppressNextFlashToast(): void {
     _suppressCount++;
 }
 
+export function releaseSuppressedFlashToast(): void {
+    if (_suppressCount > 0) {
+        _suppressCount--;
+    }
+}
+
 function showFlashToasts(flash: FlashData): void {
     if (!flash || typeof flash !== 'object') {
         return;

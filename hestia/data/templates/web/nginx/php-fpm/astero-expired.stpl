@@ -1,0 +1,124 @@
+#=========================================================================#
+# Astero Nginx Template (HTTPS) - Expired Website                  #
+# Shows an expired page for all requests                                  #
+#=========================================================================#
+
+server {
+    listen      %ip%:%web_ssl_port% ssl http2;
+    server_name %domain_idn% %alias_idn%;
+    root        %sdocroot%/current/public;
+    index       index.html;
+    access_log  /var/log/nginx/domains/%domain%.log combined;
+    access_log  /var/log/nginx/domains/%domain%.bytes bytes;
+    error_log   /var/log/nginx/domains/%domain%.error.log error;
+
+    ssl_certificate      %ssl_pem%;
+    ssl_certificate_key  %ssl_key%;
+    ssl_stapling on;
+    ssl_stapling_verify on;
+
+    include %home%/%user%/conf/web/%domain%/nginx.hsts.conf*;
+
+    # Return expired page for all requests
+    location / {
+        default_type text/html;
+        return 503 '<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Website Expired</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            padding: 48px;
+            max-width: 500px;
+            text-align: center;
+        }
+        .icon {
+            width: 80px;
+            height: 80px;
+            background: #FEE2E2;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+        }
+        .icon svg {
+            width: 40px;
+            height: 40px;
+            color: #DC2626;
+        }
+        h1 {
+            color: #1F2937;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+        p {
+            color: #6B7280;
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+        .contact {
+            background: #F3F4F6;
+            border-radius: 8px;
+            padding: 16px;
+            font-size: 14px;
+            color: #4B5563;
+        }
+        .renew-btn {
+            display: inline-block;
+            background: #DC2626;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 16px;
+            transition: background 0.2s;
+        }
+        .renew-btn:hover {
+            background: #B91C1C;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+        </div>
+        <h1>Website Expired</h1>
+        <p>This website subscription has expired. If you are the website owner, please renew your subscription to restore access.</p>
+        <div class="contact">
+            Please contact your service provider to renew your subscription.
+        </div>
+    </div>
+</body>
+</html>';
+    }
+
+    # Error pages
+    location /error/ {
+        alias %home%/%user%/web/%domain%/document_errors/;
+    }
+
+    proxy_hide_header Upgrade;
+    include %home%/%user%/conf/web/%domain%/nginx.ssl.conf_*;
+}

@@ -1,0 +1,23 @@
+{# Feature Card Block #}
+{# Use |default() for all variables so block works without JSON #}
+
+{% set icon = icon|default('ri-flashlight-line') %}
+{% set title = title|default('Lightning Fast') %}
+{% set description = description|default('Optimized for speed with instant load times and smooth interactions.') %}
+{% set link_url = link_url|default('') %}
+{% set link_text = link_text|default('Learn more →') %}
+
+<div class="card h-100 border-0 shadow-sm hover-lift">
+    <div class="card-body p-4">
+        <div class="feature-icon bg-primary bg-gradient text-white rounded-3 mb-3 d-inline-flex align-items-center justify-content-center" style="width: 3rem; height: 3rem;">
+            <i class="{{ icon }} fs-4"></i>
+        </div>
+        <h5 class="card-title fw-semibold mb-2">{{ title }}</h5>
+        <p class="card-text text-muted mb-3">{{ description }}</p>
+        {% if link_url %}
+        <a href="{{ link_url }}" class="text-primary text-decoration-none fw-medium">
+            {{ link_text }} <i class="ri-arrow-right-line"></i>
+        </a>
+        {% endif %}
+    </div>
+</div>

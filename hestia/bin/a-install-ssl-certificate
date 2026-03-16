@@ -1,0 +1,152 @@
+#!/bin/bash
+#
+# Script: a-install-ssl-certificate
+#
+# Description: Installs an SSL certificate from provided base64-encoded content.
+#
+# Usage: a-install-ssl-certificate USER DOMAIN CERT_B64 KEY_B64 [CA_B64]
+#
+# Exit Codes:
+#   0   - Success
+#   1   - Invalid arguments
+#   200 - System capability check failed
+#   201 - Object validation failed
+#   202 - Failed to write/validate certificate files
+#   203 - Failed to apply certificate
+
+# --- Configuration ---
+HESTIA=${HESTIA:-/usr/local/hestia}
+BIN=${BIN:-/usr/local/hestia/bin}
+ASTERO_DATA_DIR="${ASTERO_DATA_DIR:-/usr/local/hestia/data/astero}"
+LOG_FILE="${ASTERO_DATA_DIR}/logs/astero-scripts.log"
+
+# --- Argument Validation (must happen before sourcing Hestia main.sh) ---
+user="${1:-}"
+domain="${2:-}"
+
+if [ "$#" -lt 4 ] || [ -z "$user" ] || [ -z "$domain" ]; then
+    echo "Error: Not enough arguments provided. Usage: a-install-ssl-certificate USER DOMAIN CERT_B64 KEY_B64 [CA_B64]" >&2
+    exit 1
+fi
+
+# Source Hestia core functions
+source "$HESTIA/func/main.sh"
+source "$HESTIA/conf/hestia.conf"
+source "$HESTIA/func/domain.sh"
+
+# --- Helper Functions ---
+log_error() {
+    local msg="$1"
+    mkdir -p "$(dirname "$LOG_FILE")"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [a-install-ssl-certificate] ERROR: $msg" >> "$LOG_FILE"
+    echo "Error: $msg" >&2
+}
+
+handle_error() {
+    log_error "$2"
+    exit "$1"
+}
+
+# --- Argument Validation ---
+[ $# -lt 4 ] && handle_error 1 "Usage: a-install-ssl-certificate USER DOMAIN CERT_B64 KEY_B64 [CA_B64]"
+
+user=$1
+domain=$2
+cert_b64=$3
+key_b64=$4
+ca_b64=${5:-""}
+
+echo "Installing SSL certificate for $domain..."
+
+# Validation
+is_format_valid 'user' 'domain'
+is_system_enabled "$WEB_SYSTEM" 'WEB_SYSTEM' || handle_error 200 "Web system is not enabled."
+is_system_enabled "$WEB_SSL" 'SSL_SUPPORT' || handle_error 200 "SSL support is not enabled."
+is_object_valid 'user' 'USER' "$user" || handle_error 201 "User '$user' is not valid."
+is_object_unsuspended 'user' 'USER' "$user" || handle_error 201 "User '$user' is suspended."
+is_object_valid 'web' 'DOMAIN' "$domain" || handle_error 201 "Domain '$domain' is not valid."
+is_object_unsuspended 'web' 'DOMAIN' "$domain" || handle_error 201 "Domain '$domain' is suspended."
+check_hestia_demo_mode
+
+# --- Decode Certificate Content ---
+certificate=$(echo "$cert_b64" | base64 -d 2>/dev/null)
+[ $? -ne 0 ] || [ -z "$certificate" ] && handle_error 202 "Failed to decode certificate."
+
+private_key=$(echo "$key_b64" | base64 -d 2>/dev/null)
+[ $? -ne 0 ] || [ -z "$private_key" ] && handle_error 202 "Failed to decode private key."
+
+ca_bundle=""
+[ -n "$ca_b64" ] && ca_bundle=$(echo "$ca_b64" | base64 -d 2>/dev/null)
+
+# --- Split Fullchain if Needed ---
+# If the certificate contains multiple certs (a fullchain), split into leaf + CA chain.
+# Hestia requires domain.crt = leaf cert only, domain.ca = intermediate chain only.
+cert_count=$(echo "$certificate" | grep -c "BEGIN CERTIFICATE" || true)
+if [ "$cert_count" -gt 1 ]; then
+    echo "Certificate contains $cert_count certs (fullchain) — splitting into leaf + CA chain..."
+
+    # Extract the first certificate (leaf cert)
+    leaf_cert=$(echo "$certificate" | awk '/-----BEGIN CERTIFICATE-----/{found++} found==1{print} /-----END CERTIFICATE-----/ && found==1{exit}')
+
+    # Extract everything after the first certificate (intermediate/CA chain)
+    chain_cert=$(echo "$certificate" | awk '/-----BEGIN CERTIFICATE-----/{found++} found>=2{print}')
+
+    # Use the split parts
+    certificate="$leaf_cert"
+
+    # Only override ca_bundle if caller didn't provide a separate one
+    if [ -z "$ca_bundle" ]; then
+        ca_bundle="$chain_cert"
+    fi
+fi
+
+# --- Write Certificate Files ---
+ssl_dir="/home/$user/conf/web/$domain/ssl"
+mkdir -p "$ssl_dir" && chown "$user:$user" "$ssl_dir" && chmod 750 "$ssl_dir"
+
+cert_file="$ssl_dir/$domain.crt"
+echo "$certificate" > "$cert_file" || handle_error 202 "Failed to write certificate."
+chown "$user:$user" "$cert_file" && chmod 640 "$cert_file"
+
+key_file="$ssl_dir/$domain.key"
+echo "$private_key" > "$key_file" || handle_error 202 "Failed to write private key."
+chown "$user:$user" "$key_file" && chmod 600 "$key_file"
+
+ca_file="$ssl_dir/$domain.ca"
+
+# CA Bundle Fallback Logic:
+# Hestia's v-add-web-domain-ssl requires a CA bundle file (domain.ca) to exist.
+# When using certificates from providers like Let's Encrypt, the certificate
+# is often a "fullchain" containing both the certificate and CA chain.
+# If the caller didn't provide a separate CA bundle, we use the certificate
+# content itself. This prevents SSL installation failures due to missing
+# domain.ca file and works correctly for fullchain certificates.
+if [ -z "$ca_bundle" ]; then
+    ca_bundle="$certificate"
+fi
+
+echo "$ca_bundle" > "$ca_file" || handle_error 202 "Failed to write CA bundle."
+chown "$user:$user" "$ca_file" && chmod 640 "$ca_file"
+
+# --- Validate Certificate ---
+cert_hash=$(openssl x509 -noout -pubkey -in "$cert_file" 2>/dev/null | openssl md5 2>/dev/null)
+key_hash=$(openssl pkey -pubout -in "$key_file" 2>/dev/null | openssl md5 2>/dev/null)
+[ -z "$cert_hash" ] || [ -z "$key_hash" ] && handle_error 202 "Invalid certificate or key files."
+[ "$cert_hash" != "$key_hash" ] && handle_error 202 "Certificate and key do not match."
+
+# --- Remove Existing SSL ---
+ssl_status=$($BIN/v-list-web-domain "$user" "$domain" json 2>/dev/null | jq -r '.[].SSL // empty' 2>/dev/null)
+[ "$ssl_status" = "yes" ] && $BIN/v-delete-web-domain-ssl "$user" "$domain" 'no' 2>&1
+
+# --- Install SSL ---
+$BIN/v-add-web-domain-ssl "$user" "$domain" "$ssl_dir" 'same' 'no' 2>&1
+[ $? -ne 0 ] && handle_error 203 "Failed to install SSL certificate."
+
+# Force SSL
+$BIN/v-add-web-domain-ssl-force "$user" "$domain" 'no' 2>&1
+
+# Restart web server
+$BIN/v-restart-web 2>/dev/null
+
+echo "SSL certificate installed for $domain"
+exit 0

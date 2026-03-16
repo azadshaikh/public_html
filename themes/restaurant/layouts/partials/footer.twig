@@ -1,0 +1,38 @@
+<footer class="bg-dark text-white py-5 mt-auto">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <h5 class="fw-bold text-danger mb-3">Delicious Restaurant</h5>
+                <p class="opacity-75">{{ theme_option('footer_about') }}</p>
+                <div class="d-flex gap-3">
+                    <a href="#" class="text-white-50 fs-4 transition-all hover-scale"><i class="bi bi-facebook"></i></a>
+                    <a href="#" class="text-white-50 fs-4 transition-all hover-scale"><i class="bi bi-instagram"></i></a>
+                    <a href="#" class="text-white-50 fs-4 transition-all hover-scale"><i class="bi bi-twitter-x"></i></a>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <h6 class="fw-bold mb-3">Contact Info</h6>
+                <div class="d-flex align-items-start mb-2">
+                    <i class="bi bi-telephone-fill text-danger me-3 mt-1 fs-5"></i>
+                    <div>{{ theme_option('contact_phone') }}</div>
+                </div>
+                <div class="d-flex align-items-start mb-2">
+                    <i class="bi bi-envelope-fill text-danger me-3 mt-1 fs-5"></i>
+                    <div>{{ theme_option('contact_email') }}</div>
+                </div>
+                <div class="d-flex align-items-start">
+                    <i class="bi bi-geo-alt-fill text-danger me-3 mt-1 fs-5"></i>
+                    <div>{{ theme_option('contact_address') }}</div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <h6 class="fw-bold mb-3">Quick Links</h6>
+                {{ menu('footer', {'container': false, 'class': 'list-unstyled', 'link_class': 'text-white-50 text-decoration-none d-block mb-2 transition-all hover-scale'}) }}
+            </div>
+        </div>
+        <hr class="my-4 opacity-25">
+        <div class="text-center">
+            <p class="mb-0 opacity-75">&copy; {{ current_year() }} Delicious Restaurant. All rights reserved.</p>
+        </div>
+    </div>
+</footer>

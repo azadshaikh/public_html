@@ -1,0 +1,39 @@
+{# Testimonial Card Block #}
+{# Use |default() for all variables so block works without JSON #}
+
+{% set quote = quote|default('This platform has transformed the way we work. Highly recommended!') %}
+{% set rating = rating|default(5) %}
+{% set author_name = author_name|default('John Smith') %}
+{% set author_title = author_title|default('CEO, Company Inc') %}
+{% set author_image = author_image|default('') %}
+
+<div class="card h-100 border-0 shadow-sm">
+    <div class="card-body p-4">
+        {% if rating %}
+        <div class="mb-3 text-warning">
+            {% for i in 1..rating %}
+            <i class="ri-star-fill"></i>
+            {% endfor %}
+            {% for i in (rating + 1)..5 %}
+            <i class="ri-star-line text-muted"></i>
+            {% endfor %}
+        </div>
+        {% endif %}
+        <blockquote class="blockquote mb-4">
+            <p class="mb-0 fst-italic text-dark">"{{ quote }}"</p>
+        </blockquote>
+        <div class="d-flex align-items-center">
+            {% if author_image %}
+            <img src="{{ author_image }}" alt="{{ author_name }}" class="rounded-circle me-3" width="48" height="48" style="object-fit: cover;">
+            {% else %}
+            <div class="rounded-circle bg-primary bg-gradient text-white d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px;">
+                <span class="fw-bold">{{ author_name|first|upper }}</span>
+            </div>
+            {% endif %}
+            <div>
+                <h6 class="mb-0 fw-semibold">{{ author_name }}</h6>
+                <small class="text-muted">{{ author_title }}</small>
+            </div>
+        </div>
+    </div>
+</div>

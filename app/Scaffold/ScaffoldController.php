@@ -66,6 +66,8 @@ abstract class ScaffoldController extends Controller
         return Inertia::render($this->inertiaPage().'/index', [
             'config' => $this->service()->getScaffoldDefinition()->toInertiaConfig(),
             ...$data,
+            'status' => session('status'),
+            'error' => session('error'),
             ...$this->getIndexViewData($request),
         ]);
     }

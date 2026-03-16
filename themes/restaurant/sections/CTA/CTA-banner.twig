@@ -1,0 +1,35 @@
+{# CTA Banner Section #}
+{# Use |default() for all variables so template works without JSON #}
+
+{% set background_style = background_style|default('primary') %}
+{% set headline = headline|default('Ready to Get Started?') %}
+{% set description = description|default('Join thousands of satisfied customers using our platform today.') %}
+{% set button_text = button_text|default('Start Free Trial') %}
+{% set button_url = button_url|default('#') %}
+
+{% if background_style == 'primary' %}
+    {% set bg_class = 'bg-primary bg-gradient text-white' %}
+    {% set btn_class = 'btn-light text-primary' %}
+{% elseif background_style == 'dark' %}
+    {% set bg_class = 'bg-dark text-white' %}
+    {% set btn_class = 'btn-primary' %}
+{% else %}
+    {% set bg_class = 'bg-light text-dark' %}
+    {% set btn_class = 'btn-primary' %}
+{% endif %}
+
+<section class="py-5 py-lg-6 {{ bg_class }}" title="CTA Banner">
+    <div class="container">
+        <div class="row align-items-center justify-content-between">
+            <div class="col-lg-7 mb-4 mb-lg-0">
+                <h2 class="display-6 fw-bold mb-3">{{ headline }}</h2>
+                <p class="lead mb-0 opacity-75">{{ description }}</p>
+            </div>
+            <div class="col-lg-auto">
+                <a href="{{ button_url }}" class="btn {{ btn_class }} btn-lg px-5">
+                    {{ button_text }} <i class="ri-arrow-right-line ms-2"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>

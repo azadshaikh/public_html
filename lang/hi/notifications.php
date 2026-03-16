@@ -1,0 +1,26 @@
+<?php
+
+return [
+    'mobile_notifications' => 'मोबाइल सूचनाएं',
+    'sms_notifications' => 'SMS सूचनाएं',
+    'receive_updates_via_sms' => 'अपने मोबाइल डिवाइस पर SMS के माध्यम से महत्वपूर्ण अपडेट और सुरक्षा अलर्ट प्राप्त करें',
+    'browser_notifications' => 'ब्राउज़र सूचनाएं',
+    'show_desktop_notifications' => 'ब्राउज़िंग के दौरान महत्वपूर्ण घटनाओं के होने पर डेस्कटॉप सूचनाएं दिखाएं',
+    'mobile_push_notifications' => 'मोबाइल पुश सूचनाएं',
+    'get_instant_notifications' => 'महत्वपूर्ण अपडेट के लिए अपने मोबाइल डिवाइस पर तत्काल सूचनाएं प्राप्त करें',
+    'email_communication_preferences' => 'ईमेल संचार प्राथमिकताएं',
+    'account_security_alerts' => 'खाता सुरक्षा अलर्ट',
+    'important_notifications_about_security' => 'आपकी खाता सुरक्षा और गतिविधि के बारे में महत्वपूर्ण सूचनाएं',
+    'special_offers_promotions' => 'विशेष ऑफर और प्रचार',
+    'stay_updated_with_deals' => 'विशेष सौदों, छूट और प्रचारात्मक ऑफर के साथ अपडेट रहें',
+    'monthly_newsletter' => 'मासिक न्यूज़लेटर',
+    'receive_monthly_newsletter' => 'उद्योग अंतर्दृष्टि और टिप्स के साथ हमारा मासिक न्यूज़लेटर प्राप्त करें',
+    'security_privacy_updates' => 'सुरक्षा और गोपनीयता अपडेट',
+    'important_notifications_about_updates' => 'सुरक्षा पैच और गोपनीयता नीति परिवर्तनों के बारे में महत्वपूर्ण सूचनाएं',
+    'product_feature_updates' => 'उत्पाद और सुविधा अपडेट',
+    'stay_informed_about_features' => 'नई सुविधाओं, सुधारों और उत्पाद रिलीज़ के बारे में सूचित रहें',
+    'mark_all_as_read' => 'सभी को पढ़ा हुआ चिह्नित करें',
+    'view_all_notifications' => 'सभी सूचनाएं देखें',
+    'notifications' => 'सूचनाएं',
+    'new_notifications' => ':count नई',
+];

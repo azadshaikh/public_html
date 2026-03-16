@@ -1,0 +1,314 @@
+#!/bin/bash
+#
+# Script: a-exec
+#
+# Description: Universal Hestia command executor with structured JSON output.
+#              Wraps any Hestia command (v-* or a-*) and returns consistent
+#              JSON response format with status, code, message, and data.
+#
+# Usage: a-exec COMMAND [ARGS...]
+#
+# Arguments:
+#   COMMAND - The Hestia command to execute (e.g., 'v-list-users', 'a-get-server-info')
+#   ARGS    - Arguments to pass to the command
+#
+# Examples:
+#   a-exec v-list-users admin json
+#   a-exec a-get-server-info
+#   a-exec v-add-user admin password admin@example.com default
+#
+# Response Format:
+#   {
+#     "status": "success|error",
+#     "code": 0,
+#     "message": "Human-readable message",
+#     "data": {
+#       "output": { ... },   // Parsed JSON if stdout is valid JSON
+#       "raw": "..."         // Raw string if stdout is not JSON
+#     }
+#   }
+#
+# Exit Codes:
+#   Always exits 0 - actual status is in JSON response
+#
+# Logging:
+#   - Errors: Always logged to astero-scripts.log
+#   - Debug: Logged when LARAVEL_DEBUG=1
+#
+
+# --- Configuration ---
+HESTIA=${HESTIA:-/usr/local/hestia}
+BIN=${BIN:-/usr/local/hestia/bin}
+ASTERO_DATA_DIR="${ASTERO_DATA_DIR:-/usr/local/hestia/data/astero}"
+LOG_FILE="${ASTERO_DATA_DIR}/logs/astero-scripts.log"
+
+# Read Laravel debug flag (default off for production)
+LARAVEL_DEBUG="${LARAVEL_DEBUG:-0}"
+
+# Script identification
+SCRIPT_NAME="a-exec"
+
+# --- Logging Functions ---
+
+# Ensure log directory exists
+ensure_log_dir() {
+    mkdir -p "$(dirname "$LOG_FILE")" 2>/dev/null
+}
+
+# Log message (always logs errors, debug based on LARAVEL_DEBUG)
+log_message() {
+    local level="$1"
+    local message="$2"
+    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+    local pid=$$
+
+    # Always log errors, debug only when enabled
+    if [ "$level" = "ERROR" ] || [ "$LARAVEL_DEBUG" = "1" ]; then
+        ensure_log_dir
+        echo "[$timestamp] [PID:$pid] [$SCRIPT_NAME] $level: $message" >> "$LOG_FILE"
+    fi
+}
+
+log_debug() {
+    log_message "DEBUG" "$1"
+}
+
+log_error() {
+    log_message "ERROR" "$1"
+}
+
+# --- Response Helper Functions ---
+
+# Escape string for JSON (handles quotes, backslashes, newlines, tabs)
+json_escape() {
+    local str="$1"
+    # Use printf with %q for basic escaping, then clean up for JSON
+    printf '%s' "$str" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g' -e 's/\t/\\t/g' | tr '\n' ' '
+}
+
+# Build success JSON response
+# Always wraps output in data.output (if valid JSON) or data.raw (if plain text)
+build_success_response() {
+    local message="$1"
+    local stdout_output="$2"
+    local code="${3:-0}"
+
+    local escaped_msg=$(json_escape "$message")
+
+    # If stdout is empty
+    if [ -z "$stdout_output" ]; then
+        cat <<EOF
+{
+  "status": "success",
+  "code": $code,
+  "message": "$escaped_msg",
+  "data": {}
+}
+EOF
+        return
+    fi
+
+    # Check if output is valid JSON
+    if echo "$stdout_output" | jq -e . >/dev/null 2>&1; then
+        # Valid JSON - put in data.output
+        local json_output=$(echo "$stdout_output" | jq -c .)
+        cat <<EOF
+{
+  "status": "success",
+  "code": $code,
+  "message": "$escaped_msg",
+  "data": {
+    "output": $json_output
+  }
+}
+EOF
+    else
+        # Plain text - put in data.raw
+        local escaped_output=$(json_escape "$stdout_output")
+        cat <<EOF
+{
+  "status": "success",
+  "code": $code,
+  "message": "$escaped_msg",
+  "data": {
+    "raw": "$escaped_output"
+  }
+}
+EOF
+    fi
+}
+
+# Build error JSON response
+# Always includes stderr and stdout in data for debugging
+build_error_response() {
+    local message="$1"
+    local code="${2:-1}"
+    local stderr_output="${3:-}"
+    local stdout_output="${4:-}"
+
+    local escaped_msg=$(json_escape "$message")
+    local escaped_stderr=$(json_escape "$stderr_output")
+    local escaped_stdout=$(json_escape "$stdout_output")
+
+    cat <<EOF
+{
+  "status": "error",
+  "code": $code,
+  "message": "$escaped_msg",
+  "data": {
+    "stderr": "$escaped_stderr",
+    "stdout": "$escaped_stdout"
+  }
+}
+EOF
+}
+
+# Get human-readable message for Hestia error codes
+get_error_message() {
+    local code="$1"
+    case "$code" in
+        0)  echo "Command executed successfully" ;;
+        1)  echo "Not enough arguments provided" ;;
+        2)  echo "Object or argument is not valid" ;;
+        3)  echo "Object does not exist" ;;
+        4)  echo "Object already exists" ;;
+        5)  echo "Object is already suspended" ;;
+        6)  echo "Object is already unsuspended" ;;
+        7)  echo "Object cannot be deleted because it is used by another object" ;;
+        8)  echo "Object cannot be created because of hosting package limits" ;;
+        9)  echo "Wrong or invalid password" ;;
+        10) echo "Object cannot be accessed by this user" ;;
+        11) echo "Subsystem is disabled" ;;
+        12) echo "Configuration is broken" ;;
+        13) echo "Not enough disk space to complete the action" ;;
+        14) echo "Server is too busy to complete the action" ;;
+        15) echo "Connection failed - host is unreachable" ;;
+        16) echo "FTP server is not responding" ;;
+        17) echo "Database server is not responding" ;;
+        # Astero custom codes (200+)
+        200) echo "Prerequisite check failed" ;;
+        201) echo "Object validation failed" ;;
+        202) echo "Certificate generation failed" ;;
+        203) echo "Failed to apply SSL certificate" ;;
+        204) echo "Releases directory not found" ;;
+        205) echo "No application release versions found" ;;
+        206) echo "File or directory operation failed" ;;
+        207) echo "Required dependency missing" ;;
+        208) echo "API connection failed" ;;
+        209) echo "Failed to parse API response" ;;
+        210) echo "Directory operation failed" ;;
+        211) echo "Application download failed" ;;
+        212) echo "Archive extraction failed" ;;
+        213) echo "File ownership or move operation failed" ;;
+        214) echo "Invalid or incomplete JSON data" ;;
+        215) echo "Composer install failed" ;;
+        216) echo "Artisan command failed" ;;
+        217) echo "Invalid application type" ;;
+        218) echo "Target version not found" ;;
+        219) echo "Revert operation failed" ;;
+        *)  echo "Command failed with code $code" ;;
+    esac
+}
+
+# --- Main Logic ---
+
+# Check for minimum arguments
+if [ $# -lt 1 ]; then
+    log_error "No command provided"
+    build_error_response "No command provided" 1 "" ""
+    exit 0
+fi
+
+# Parse debug flag if present (--debug=0 or --debug=1)
+if [[ "$1" =~ ^--debug= ]]; then
+    LARAVEL_DEBUG="${1#--debug=}"
+    export LARAVEL_DEBUG
+    shift
+fi
+
+# Check again after potentially consuming debug flag
+if [ $# -lt 1 ]; then
+    log_error "No command provided"
+    build_error_response "No command provided" 1 "" ""
+    exit 0
+fi
+
+# Extract command and arguments
+command="$1"
+shift
+args=("$@")
+
+# Extract --env:KEY=VALUE args → set as env vars, remove from args
+# This prevents sensitive values (API keys, passwords) from appearing in
+# child process cmdline / /proc/PID/cmdline. The env var is only visible
+# in the child process's /proc/PID/environ (root-readable only).
+filtered_args=()
+for arg in "${args[@]}"; do
+    if [[ "$arg" =~ ^--env:([A-Za-z_][A-Za-z0-9_]*)=(.*)$ ]]; then
+        export "${BASH_REMATCH[1]}=${BASH_REMATCH[2]}"
+        log_debug "Set env var: ${BASH_REMATCH[1]}=[MASKED]"
+    else
+        filtered_args+=("$arg")
+    fi
+done
+args=("${filtered_args[@]}")
+
+log_debug "Executing command: $command ${args[*]}"
+
+# Verify command exists
+command_path=""
+if [ -x "$BIN/$command" ]; then
+    command_path="$BIN/$command"
+elif command -v "$command" &>/dev/null; then
+    command_path="$command"
+else
+    log_error "Command not found: $command"
+    build_error_response "Command not found: $command" 2 "" ""
+    exit 0
+fi
+
+log_debug "Command path resolved: $command_path"
+
+# Execute command and capture output
+start_time=$(date +%s)
+stdout_file=$(mktemp)
+stderr_file=$(mktemp)
+
+# Run command, capture stdout and stderr separately
+"$command_path" "${args[@]}" > "$stdout_file" 2> "$stderr_file"
+exit_code=$?
+
+end_time=$(date +%s)
+duration=$((end_time - start_time))
+
+# Read outputs
+stdout_output=$(cat "$stdout_file")
+stderr_output=$(cat "$stderr_file")
+
+# Cleanup temp files
+rm -f "$stdout_file" "$stderr_file"
+
+log_debug "Command completed in ${duration}s with exit code: $exit_code"
+
+# Build response based on exit code
+if [ $exit_code -eq 0 ]; then
+    # Success case - wrap stdout in consistent format
+    build_success_response "Command executed successfully" "$stdout_output" 0
+else
+    # Error case
+    error_message=$(get_error_message "$exit_code")
+
+    # Build full error message with context
+    if [ -n "$stderr_output" ]; then
+        full_message="$error_message: $stderr_output"
+    elif [ -n "$stdout_output" ]; then
+        full_message="$error_message: $stdout_output"
+    else
+        full_message="$error_message"
+    fi
+
+    log_error "Command '$command' failed: $full_message (code: $exit_code)"
+    build_error_response "$full_message" "$exit_code" "$stderr_output" "$stdout_output"
+fi
+
+exit 0

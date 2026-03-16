@@ -1,0 +1,291 @@
+{
+    "site_title": "Laravel",
+    "logo": "",
+    "primary_color": "#007cba",
+    "secondary_color": "#6c757d",
+    "accent_color": "#ff6b6b",
+    "text_color": "#333333",
+    "background_color": "#ffffff",
+    "font_family": "Inter",
+    "font_size": "16px",
+    "line_height": "1.6",
+    "show_sidebar": false,
+    "show_sidebar_on_pages": false,
+    "show_latest_posts": false,
+    "show_features": true,
+    "show_recent_posts_widget": true,
+    "show_categories_widget": true,
+    "show_tags_widget": true,
+    "show_newsletter_widget": true,
+    "show_page_navigation": true,
+    "show_related_pages": true,
+    "hero_title": "Welcome to Our Amazing Website",
+    "hero_description": "We create exceptional digital experiences that help your business grow and succeed in the modern world.",
+    "hero_button_text": null,
+    "hero_button_url": "#",
+    "features_title": "Why Choose Us",
+    "feature_1_title": "Fast Performance",
+    "feature_1_description": "Lightning-fast loading times and optimized performance.",
+    "feature_2_title": "Responsive Design",
+    "feature_2_description": "Perfect display on all devices and screen sizes.",
+    "feature_3_title": "Secure & Reliable",
+    "feature_3_description": "Built with security and reliability in mind.",
+    "newsletter_title": "Newsletter",
+    "newsletter_description": "Subscribe to our newsletter for updates.",
+    "footer_about": "We are a modern company focused on delivering exceptional digital experiences through innovative design and development.",
+    "_token": null,
+    "contact_email": null,
+    "contact_phone": null,
+    "contact_address": null,
+    "social_facebook": null,
+    "social_twitter": null,
+    "social_instagram": null,
+    "social_linkedin": null,
+    "custom_css": null,
+    "_theme_activated": true,
+    "sidebar_sidebar-main": {
+        "name": "Main Sidebar",
+        "id": "sidebar-main",
+        "description": "Main sidebar widget area"
+    },
+    "sidebar_footer-1": {
+        "name": "Footer Area 1",
+        "id": "footer-1",
+        "description": "First footer widget area"
+    },
+    "sidebar_footer-2": {
+        "name": "Footer Area 2",
+        "id": "footer-2",
+        "description": "Second footer widget area"
+    },
+    "sidebar_footer-3": {
+        "name": "Footer Area 3",
+        "id": "footer-3",
+        "description": "Third footer widget area"
+    },
+    "test_option": true,
+    "test_checkbox": false,
+    "test_bool": false,
+    "widgets_sidebar-main": [
+        {
+            "id": "widget-1752904303786-0lb114",
+            "type": "popularposts",
+            "title": "Popular Posts 33",
+            "settings": {
+                "title": null,
+                "icon": "ri-history-line",
+                "posts_count": "3",
+                "background_enabled": true,
+                "background_color": "#e8e8e8",
+                "posts_limit": "6",
+                "background_style": "warning"
+            },
+            "position": 0
+        },
+        {
+            "id": "widget-1752907488347-6mxrjl",
+            "type": "categories",
+            "title": "Categories",
+            "settings": {
+                "title": "Categories",
+                "icon": "ri-folder-line",
+                "categories_count": "5",
+                "background_style": "secondary"
+            },
+            "position": 1
+        },
+        {
+            "id": "widget-1762520235221-bxhrwk",
+            "type": "tags",
+            "title": "",
+            "settings": {
+                "title": "Tags",
+                "icon": "ri-price-tag-3-line",
+                "tags_limit": 5,
+                "background_style": "secondary"
+            },
+            "position": 2
+        },
+        {
+            "id": "widget-1762516455160-rt0nq1",
+            "type": "text",
+            "title": "New Text Widget",
+            "settings": {
+                "title": null,
+                "content": "Add your text content here...",
+                "text_alignment": "left",
+                "background_enabled": false,
+                "background_color": "#f8f9fa"
+            },
+            "position": 3
+        },
+        {
+            "id": "widget-1768309002-TPluHd",
+            "type": "tags",
+            "title": "New Tags",
+            "settings": {
+                "title": "Tags",
+                "icon": "ri-price-tag-3-line",
+                "tags_limit": "5",
+                "background_style": "success"
+            },
+            "position": 4
+        },
+        {
+            "id": "widget-1768309316-B2Qw7J",
+            "type": "popularposts",
+            "title": "New Popular Posts",
+            "settings": {
+                "title": "Popular Posts",
+                "icon": "ri-history-line",
+                "posts_limit": 3,
+                "background_style": "secondary"
+            },
+            "position": 5
+        },
+        {
+            "id": "widget-1768310934-ihtKDe",
+            "type": "search",
+            "title": "New Search",
+            "settings": {
+                "title": "Search",
+                "icon": "ri-search-line",
+                "placeholder_text": "Search",
+                "background_style": "secondary"
+            },
+            "position": 6
+        }
+    ],
+    "widgets_footer-1": [],
+    "widgets_footer-3": [],
+    "widgets_footer-2": [
+        {
+            "id": "widget-1751393287831-o5wdux",
+            "type": "newsletter",
+            "title": "",
+            "settings": {
+                "title": null,
+                "heading": "Subscribe to Newsletter",
+                "description_text": "Stay updated with our latest news and offers.",
+                "placeholder": "Enter your email address",
+                "button_text": "Subscribe",
+                "form_style": "horizontal"
+            },
+            "position": 0
+        },
+        {
+            "id": "widget-1751393468246-bw0roe",
+            "type": "text",
+            "title": "",
+            "settings": {
+                "title": null,
+                "content": "Add your text content here...",
+                "text_alignment": "left",
+                "background_enabled": false,
+                "background_color": "#f8f9fa"
+            },
+            "position": 1
+        },
+        {
+            "id": "widget-1751372510486-rcp901",
+            "type": "banner",
+            "title": "asdfsadfasdf",
+            "settings": {
+                "title": null,
+                "text": "Banner description text",
+                "button_text": "Learn More",
+                "button_url": "http:\/\/127.0.0.1:8000\/admin\/widgets\/footer-2\/edit",
+                "background_color": "#007bff",
+                "text_color": "#ffffff",
+                "button_style": "primary",
+                "banner_size": "medium",
+                "banner_title": "Your Banner Titleasdf"
+            },
+            "position": 2
+        },
+        {
+            "id": "widget-1751393290070-h7nyg2",
+            "type": "banner",
+            "title": "New Banner Widget",
+            "settings": {
+                "title": null,
+                "banner_title": "Your Banner Title",
+                "text": "Banner description text",
+                "button_text": "Learn More",
+                "button_url": "#",
+                "background_color": "#007bff",
+                "text_color": "#ffffff",
+                "button_style": "primary",
+                "banner_size": "medium"
+            },
+            "position": 3
+        },
+        {
+            "id": "widget-1751393755028-jfsxjq",
+            "type": "text",
+            "title": "New Text Widget",
+            "settings": {
+                "title": null,
+                "content": "Add your text content here...",
+                "text_alignment": "left",
+                "background_enabled": false,
+                "background_color": "#f8f9fa"
+            },
+            "position": 4
+        }
+    ],
+    "sidebar_sidebar-archive": {
+        "name": "Archive Sidebar",
+        "id": "sidebar-archive",
+        "description": "Archive sidebar widget area"
+    },
+    "widgets_sidebar-archive": [
+        {
+            "id": "widget-1752918251979-jj58z8",
+            "type": "search",
+            "title": "Search Blog Posts",
+            "settings": {
+                "title": "Search",
+                "icon": "ri-search-line",
+                "placeholder_text": "Search topics, titles...",
+                "background_style": "secondary"
+            },
+            "position": 0
+        },
+        {
+            "id": "widget-1752920480076-9bj1lf",
+            "type": "categories",
+            "title": "Browse by Categories",
+            "settings": {
+                "title": "Categories",
+                "icon": "ri-folder-line",
+                "categories_limit": "6",
+                "background_style": "secondary"
+            },
+            "position": 1
+        },
+        {
+            "id": "widget-1752918290920-9umqm4",
+            "type": "popularposts",
+            "title": "Recent Posts",
+            "settings": {
+                "title": "Popular Posts",
+                "icon": "ri-history-line",
+                "posts_limit": "3",
+                "background_style": "secondary"
+            },
+            "position": 2
+        }
+    ],
+    "sidebar_sidebar-post": {
+        "name": "Post Sidebar",
+        "id": "sidebar-post",
+        "description": "Post sidebar widget area"
+    },
+    "show_sidebar_on_archive": true,
+    "show_sidebar_on_posts": false,
+    "show_social_sharing_on_posts": true,
+    "show_breadcrumb_on_pages": false,
+    "favicon": "",
+    "custom_js": null
+}

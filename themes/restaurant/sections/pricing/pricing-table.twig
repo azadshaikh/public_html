@@ -1,0 +1,166 @@
+{# Pricing Table Section #}
+
+{% set section_title = section_title|default('Simple, transparent pricing') %}
+{% set section_subtitle = section_subtitle|default('Start free, then scale as you grow. No hidden fees.') %}
+
+<section class="pricing-section py-6 py-lg-7 bg-light" title="Pricing" id="pricing">
+    <div class="container">
+        {# Section Header #}
+        <div class="row justify-content-center mb-5">
+            <div class="col-lg-7 text-center" data-aos="fade-up">
+                <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 mb-3">Pricing</span>
+                <h2 class="display-5 fw-bold mb-3">{{ section_title }}</h2>
+                <p class="lead text-muted">{{ section_subtitle }}</p>
+            </div>
+        </div>
+        
+        {# Pricing Cards #}
+        <div class="row g-4 justify-content-center">
+            {# Starter Plan #}
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
+                <div class="pricing-card card h-100 border-0 shadow-sm">
+                    <div class="card-body p-4 p-lg-5">
+                        <div class="text-center mb-4">
+                            <h3 class="h5 fw-semibold mb-2">Starter</h3>
+                            <p class="text-muted small mb-0">Perfect for getting started</p>
+                        </div>
+                        <div class="text-center mb-4">
+                            <span class="display-4 fw-bold">$0</span>
+                            <span class="text-muted">/month</span>
+                        </div>
+                        <ul class="list-unstyled mb-4">
+                            <li class="d-flex align-items-center gap-2 mb-3">
+                                <i class="ri-check-line text-success fs-5"></i>
+                                <span>1 website</span>
+                            </li>
+                            <li class="d-flex align-items-center gap-2 mb-3">
+                                <i class="ri-check-line text-success fs-5"></i>
+                                <span>10 pages</span>
+                            </li>
+                            <li class="d-flex align-items-center gap-2 mb-3">
+                                <i class="ri-check-line text-success fs-5"></i>
+                                <span>Basic analytics</span>
+                            </li>
+                            <li class="d-flex align-items-center gap-2 mb-3">
+                                <i class="ri-check-line text-success fs-5"></i>
+                                <span>Community support</span>
+                            </li>
+                            <li class="d-flex align-items-center gap-2 mb-3 text-muted">
+                                <i class="ri-close-line fs-5"></i>
+                                <span>Custom themes</span>
+                            </li>
+                        </ul>
+                        <a href="/signup" class="btn btn-outline-primary w-100 py-3 rounded-pill">Get Started</a>
+                    </div>
+                </div>
+            </div>
+            
+            {# Pro Plan (Featured) #}
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
+                <div class="pricing-card card h-100 border-primary shadow-lg position-relative">
+                    <div class="badge bg-primary position-absolute top-0 start-50 translate-middle px-3 py-2">Most Popular</div>
+                    <div class="card-body p-4 p-lg-5">
+                        <div class="text-center mb-4">
+                            <h3 class="h5 fw-semibold mb-2">Pro</h3>
+                            <p class="text-muted small mb-0">For growing businesses</p>
+                        </div>
+                        <div class="text-center mb-4">
+                            <span class="display-4 fw-bold text-primary">$29</span>
+                            <span class="text-muted">/month</span>
+                        </div>
+                        <ul class="list-unstyled mb-4">
+                            <li class="d-flex align-items-center gap-2 mb-3">
+                                <i class="ri-check-line text-success fs-5"></i>
+                                <span>10 websites</span>
+                            </li>
+                            <li class="d-flex align-items-center gap-2 mb-3">
+                                <i class="ri-check-line text-success fs-5"></i>
+                                <span>Unlimited pages</span>
+                            </li>
+                            <li class="d-flex align-items-center gap-2 mb-3">
+                                <i class="ri-check-line text-success fs-5"></i>
+                                <span>Advanced analytics</span>
+                            </li>
+                            <li class="d-flex align-items-center gap-2 mb-3">
+                                <i class="ri-check-line text-success fs-5"></i>
+                                <span>Priority support</span>
+                            </li>
+                            <li class="d-flex align-items-center gap-2 mb-3">
+                                <i class="ri-check-line text-success fs-5"></i>
+                                <span>Custom themes</span>
+                            </li>
+                        </ul>
+                        <a href="/signup" class="btn btn-primary w-100 py-3 rounded-pill">Start Free Trial</a>
+                    </div>
+                </div>
+            </div>
+            
+            {# Enterprise Plan #}
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="300">
+                <div class="pricing-card card h-100 border-0 shadow-sm">
+                    <div class="card-body p-4 p-lg-5">
+                        <div class="text-center mb-4">
+                            <h3 class="h5 fw-semibold mb-2">Enterprise</h3>
+                            <p class="text-muted small mb-0">For large organizations</p>
+                        </div>
+                        <div class="text-center mb-4">
+                            <span class="display-4 fw-bold">$99</span>
+                            <span class="text-muted">/month</span>
+                        </div>
+                        <ul class="list-unstyled mb-4">
+                            <li class="d-flex align-items-center gap-2 mb-3">
+                                <i class="ri-check-line text-success fs-5"></i>
+                                <span>Unlimited websites</span>
+                            </li>
+                            <li class="d-flex align-items-center gap-2 mb-3">
+                                <i class="ri-check-line text-success fs-5"></i>
+                                <span>Unlimited pages</span>
+                            </li>
+                            <li class="d-flex align-items-center gap-2 mb-3">
+                                <i class="ri-check-line text-success fs-5"></i>
+                                <span>Enterprise analytics</span>
+                            </li>
+                            <li class="d-flex align-items-center gap-2 mb-3">
+                                <i class="ri-check-line text-success fs-5"></i>
+                                <span>24/7 dedicated support</span>
+                            </li>
+                            <li class="d-flex align-items-center gap-2 mb-3">
+                                <i class="ri-check-line text-success fs-5"></i>
+                                <span>SLA & Security</span>
+                            </li>
+                        </ul>
+                        <a href="/contact" class="btn btn-outline-primary w-100 py-3 rounded-pill">Contact Sales</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        {# Trust Badge #}
+        <div class="text-center mt-5" data-aos="fade-up">
+            <p class="text-muted small mb-0">
+                <i class="ri-shield-check-line text-success me-1"></i>
+                14-day free trial • No credit card required • Cancel anytime
+            </p>
+        </div>
+    </div>
+</section>
+
+<style>
+.pricing-section {
+    background-color: #f8f9fa;
+}
+.pricing-card {
+    transition: all 0.3s ease;
+    border-radius: 1rem;
+}
+.pricing-card:hover {
+    transform: translateY(-5px);
+}
+.pricing-card.border-primary {
+    border-width: 2px;
+}
+.py-6 {
+    padding-top: 5rem;
+    padding-bottom: 5rem;
+}
+</style>

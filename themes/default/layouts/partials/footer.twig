@@ -1,0 +1,138 @@
+{#
+    Modern Footer Component
+
+    Features:
+    - Clean 4-column layout
+    - Newsletter subscription
+    - Social links
+    - Contact info
+#}
+
+{% set logoWidth = site.logo_width|default(160) %}
+
+<footer class="site-footer bg-dark text-white pt-5">
+    <div class="container">
+        <div class="row g-4 pb-4">
+            {# Brand Column #}
+            <div class="col-lg-4 col-md-6" data-aos="fade-up">
+                <a class="d-inline-block mb-3" href="{{ urls.home }}">
+                    {% if theme_option('footer_logo', theme_option('logo')) %}
+                        <img src="{{ theme_option('footer_logo', theme_option('logo')) }}" alt="{{ site.title|default(setting('site_title')) }}" width="{{ logoWidth }}" style="height: auto;" class="img-fluid">
+                    {% else %}
+                        <span class="h4 fw-bold text-white mb-0">{{ theme_option('site_title', site.title|default(setting('site_title'))) }}</span>
+                    {% endif %}
+                </a>
+                <p class="text-white-50 mb-4">
+                    {{ theme_option('footer_about', 'We create exceptional digital experiences through innovative design and development.') }}
+                </p>
+                {# Social Links #}
+                <div class="social-links d-flex gap-3">
+                    {% if theme_option('social_twitter') %}
+                        <a class="text-white-50 fs-5" href="{{ esc_url(theme_option('social_twitter')) }}" target="_blank" rel="noopener" aria-label="Twitter">
+                            <i class="ri-twitter-x-line"></i>
+                        </a>
+                    {% endif %}
+                    {% if theme_option('social_facebook') %}
+                        <a class="text-white-50 fs-5" href="{{ esc_url(theme_option('social_facebook')) }}" target="_blank" rel="noopener" aria-label="Facebook">
+                            <i class="ri-facebook-line"></i>
+                        </a>
+                    {% endif %}
+                    {% if theme_option('social_instagram') %}
+                        <a class="text-white-50 fs-5" href="{{ esc_url(theme_option('social_instagram')) }}" target="_blank" rel="noopener" aria-label="Instagram">
+                            <i class="ri-instagram-line"></i>
+                        </a>
+                    {% endif %}
+                    {% if theme_option('social_linkedin') %}
+                        <a class="text-white-50 fs-5" href="{{ esc_url(theme_option('social_linkedin')) }}" target="_blank" rel="noopener" aria-label="LinkedIn">
+                            <i class="ri-linkedin-line"></i>
+                        </a>
+                    {% endif %}
+                    {% if theme_option('social_youtube') %}
+                        <a class="text-white-50 fs-5" href="{{ esc_url(theme_option('social_youtube')) }}" target="_blank" rel="noopener" aria-label="YouTube">
+                            <i class="ri-youtube-line"></i>
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            {# Quick Links #}
+            <div class="col-lg-2 col-md-6 col-6" data-aos="fade-up" data-aos-delay="100">
+                <h6 class="text-uppercase fw-semibold mb-3 text-white-50">Quick Links</h6>
+                {{ menu('footer', {
+                    'container': 'nav',
+                    'class': 'd-flex flex-column gap-2 footer-nav',
+                    'link_class': 'text-white-50 text-decoration-none'
+                }) }}
+            </div>
+
+            {# Resources #}
+            <div class="col-lg-2 col-md-6 col-6" data-aos="fade-up" data-aos-delay="150">
+                <h6 class="text-uppercase fw-semibold mb-3 text-white-50">Resources</h6>
+                {{ menu('footer2', {
+                    'container': 'nav',
+                    'class': 'd-flex flex-column gap-2 footer-nav',
+                    'link_class': 'text-white-50 text-decoration-none'
+                }) }}
+            </div>
+
+            {# Contact Info #}
+            <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="200">
+                <h6 class="text-uppercase fw-semibold mb-3 text-white-50">Get in Touch</h6>
+                <ul class="list-unstyled mb-0">
+                    {% if theme_option('contact_email') %}
+                        <li class="mb-2">
+                            <a class="text-white-50 text-decoration-none d-flex align-items-center" href="{{ esc_url('mailto:' ~ theme_option('contact_email')) }}">
+                                <i class="ri-mail-line me-2 text-primary"></i>
+                                {{ theme_option('contact_email') }}
+                            </a>
+                        </li>
+                    {% endif %}
+                    {% if theme_option('contact_phone') %}
+                        <li class="mb-2">
+                            <a class="text-white-50 text-decoration-none d-flex align-items-center" href="{{ esc_url('tel:' ~ theme_option('contact_phone')) }}">
+                                <i class="ri-phone-line me-2 text-primary"></i>
+                                {{ theme_option('contact_phone') }}
+                            </a>
+                        </li>
+                    {% endif %}
+                    {% if theme_option('contact_address') %}
+                        <li class="mb-2">
+                            <span class="text-white-50 d-flex align-items-start">
+                                <i class="ri-map-pin-line me-2 text-primary mt-1"></i>
+                                {{ theme_option('contact_address') }}
+                            </span>
+                        </li>
+                    {% endif %}
+                </ul>
+
+                {# Newsletter Mini Form #}
+                {% if theme_option('show_footer_newsletter', true) %}
+                    <div class="mt-4">
+                        <h6 class="text-white mb-2">Subscribe to updates</h6>
+                        <form class="d-flex gap-2" method="POST" action="{{ urls.newsletter_subscribe }}">
+                            <input class="form-control form-control-sm bg-white bg-opacity-10 border-0 text-white" type="email" name="email" placeholder="Your email" required>
+                            <button class="btn btn-primary btn-sm px-3" type="submit">
+                                <i class="ri-send-plane-line"></i>
+                            </button>
+                        </form>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {# Bottom Bar #}
+        <div class="border-top border-white border-opacity-10 py-4">
+            <div class="row align-items-center">
+                <div class="col-md-6 text-center text-md-start">
+                    <p class="text-white-50 mb-0 small">
+                        &copy; {{ current_year() }} {{ theme_option('site_title', site.title|default(setting('site_title'))) }}. All rights reserved.
+                    </p>
+                </div>
+                <div class="col-md-6 text-center text-md-end mt-2 mt-md-0">
+                    <a class="text-white-50 text-decoration-none small me-3" href="{{ urls.privacy_policy }}">Privacy Policy</a>
+                    <a class="text-white-50 text-decoration-none small" href="{{ urls.terms_of_service }}">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>

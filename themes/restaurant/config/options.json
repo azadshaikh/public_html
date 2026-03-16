@@ -1,0 +1,27 @@
+{
+    "primary_color": "#dc3545",
+    "secondary_color": "#fd7e14",
+    "hero_title": "Welcome to Delicious",
+    "hero_subtitle": "Savor Authentic Italian Flavors",
+    "hero_description": "Join us for an unforgettable dining experience with fresh ingredients, passionate chefs, and warm hospitality.",
+    "contact_phone": "(555) 123-4567",
+    "contact_email": "info@deliciousrestaurant.com",
+    "contact_address": "123 Gourmet Street, Food City, FC 12345",
+    "footer_about": "Family-owned since 1985, serving authentic Italian cuisine with a modern twist. Reservations recommended.",
+    "show_sidebar": false,
+    "show_sidebar_on_pages": false,
+    "show_latest_posts": false,
+    "show_features": false,
+    "show_recent_posts_widget": false,
+    "show_categories_widget": false,
+    "show_tags_widget": false,
+    "show_newsletter_widget": true,
+    "show_page_navigation": false,
+    "show_related_pages": false,
+    "features_title": "Our Specialties",
+    "sidebar_footer": {
+        "name": "Footer",
+        "id": "footer",
+        "description": "Footer widgets"
+    }
+}

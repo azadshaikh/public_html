@@ -1,0 +1,130 @@
+{% set formClass = 'newsletter-form form-' ~ (settings.form_style|default('horizontal')) %}
+
+<style>
+    /* Newsletter Widget Inline Styles */
+    .widget-newsletter {
+        --newsletter-border-radius: 0.5rem;
+        --newsletter-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        --newsletter-transition: all 0.3s ease;
+    }
+
+    .widget-newsletter .newsletter-content {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: var(--newsletter-border-radius);
+        padding: 1.5rem;
+        text-align: center;
+    }
+
+    .widget-newsletter .newsletter-heading {
+        color: #495057;
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+    }
+
+    .widget-newsletter .newsletter-description {
+        color: #6c757d;
+        font-size: 0.95rem;
+        margin-bottom: 1.25rem;
+        line-height: 1.5;
+    }
+
+    .newsletter-form.form-horizontal {
+        display: flex;
+        gap: 0.5rem;
+        align-items: stretch;
+    }
+
+    .newsletter-form.form-horizontal .form-control {
+        flex: 1;
+        border-radius: 0.375rem 0 0 0.375rem;
+        border-right: none;
+    }
+
+    .newsletter-form.form-horizontal .btn {
+        border-radius: 0 0.375rem 0.375rem 0;
+        padding: 0.5rem 1rem;
+        white-space: nowrap;
+    }
+
+    .newsletter-form.form-vertical {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .newsletter-form.form-vertical .form-control,
+    .newsletter-form.form-vertical .btn {
+        border-radius: 0.375rem;
+    }
+
+    .newsletter-form .form-control {
+        border: 1px solid #ced4da;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.95rem;
+        transition: var(--newsletter-transition);
+    }
+
+    .newsletter-form .form-control:focus {
+        outline: none;
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+
+    .newsletter-form .btn {
+        background: #007bff;
+        color: white;
+        border: 1px solid #007bff;
+        font-weight: 500;
+        transition: var(--newsletter-transition);
+        cursor: pointer;
+    }
+
+    .newsletter-form .btn:hover {
+        background: #0056b3;
+        border-color: #0056b3;
+        transform: translateY(-1px);
+    }
+
+    @media (max-width: 576px) {
+        .newsletter-form.form-horizontal {
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .newsletter-form.form-horizontal .form-control {
+            border-radius: 0.375rem;
+            border-right: 1px solid #ced4da;
+        }
+        .newsletter-form.form-horizontal .btn {
+            border-radius: 0.375rem;
+        }
+    }
+</style>
+
+<div class="widget widget-newsletter mb-4">
+    {% if title %}
+        <h3 class="widget-title mb-3">{{ title }}</h3>
+    {% endif %}
+
+    <div class="newsletter-content">
+        {% if settings.heading %}
+            <h4 class="newsletter-heading">{{ settings.heading }}</h4>
+        {% endif %}
+
+        {% if settings.description_text %}
+            <p class="newsletter-description">{{ settings.description_text }}</p>
+        {% endif %}
+
+        <form class="{{ formClass }}" action="#" method="post">
+            {{ csrf_field() }}
+            <input class="form-control" name="email" type="email"
+                placeholder="{{ settings.placeholder|default('Enter your email address') }}" required>
+
+            <button class="btn" type="submit">
+                {{ settings.button_text|default('Subscribe') }}
+            </button>
+        </form>
+    </div>
+</div>
+

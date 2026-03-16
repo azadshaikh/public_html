@@ -1,0 +1,53 @@
+{
+    "name": "Newsletter Signup",
+    "description": "Email subscription form for newsletter signup",
+    "category": "forms",
+    "settings": {
+        "title": {
+            "type": "text",
+            "label": "Widget Title",
+            "default": "",
+            "description": "Optional widget title",
+            "required": false
+        },
+        "heading": {
+            "type": "text",
+            "label": "Form Heading",
+            "default": "Subscribe to Newsletter",
+            "description": "Main heading for the newsletter form",
+            "required": true
+        },
+        "description_text": {
+            "type": "textarea",
+            "label": "Description",
+            "default": "Stay updated with our latest news and offers.",
+            "description": "Description text below the heading",
+            "required": false
+        },
+        "placeholder": {
+            "type": "text",
+            "label": "Email Placeholder",
+            "default": "Enter your email address",
+            "description": "Placeholder text for email input",
+            "required": false
+        },
+        "button_text": {
+            "type": "text",
+            "label": "Button Text",
+            "default": "Subscribe",
+            "description": "Text for the subscribe button",
+            "required": true
+        },
+        "form_style": {
+            "type": "select",
+            "label": "Form Style",
+            "default": "horizontal",
+            "options": {
+                "horizontal": "Horizontal (side by side)",
+                "vertical": "Vertical (stacked)"
+            },
+            "description": "Layout style for the form",
+            "required": true
+        }
+    }
+}

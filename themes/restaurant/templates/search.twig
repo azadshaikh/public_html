@@ -1,0 +1,118 @@
+{% extends 'layouts/layout.twig' %}
+
+{% block body_class %}search-results{% endblock %}
+
+{% block content %}
+    {# Search Header #}
+    <header class="search-header py-5 bg-gradient-primary text-white" style="background: linear-gradient(135deg, var(--bs-primary) 0%, #6366f1 100%);">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8 text-center">
+                    <span class="badge bg-white text-primary mb-3 px-3 py-2 rounded-pill" data-aos="fade-up">
+                        <i class="ri-search-line me-1"></i>Search
+                    </span>
+
+                    {% if query is defined and query %}
+                        <h1 class="display-6 fw-bold mb-3" data-aos="fade-up" data-aos-delay="50">
+                            Results for "{{ query }}"
+                        </h1>
+                        {% if posts is defined %}
+                            <p class="lead opacity-90 mb-0" data-aos="fade-up" data-aos-delay="100">
+                                Found <strong>{{ posts.total() }}</strong> {{ posts.total() == 1 ? 'article' : 'articles' }}
+                            </p>
+                        {% endif %}
+                    {% else %}
+                        <h1 class="display-6 fw-bold mb-3" data-aos="fade-up" data-aos-delay="50">
+                            Search Articles
+                        </h1>
+                        <p class="lead opacity-90 mb-0" data-aos="fade-up" data-aos-delay="100">
+                            Find the content you're looking for
+                        </p>
+                    {% endif %}
+
+                    {# Search Form #}
+                    <div class="search-form-wrapper mt-4" data-aos="fade-up" data-aos-delay="150">
+                        <form action="{{ url('/search.html') }}" method="GET" class="d-flex justify-content-center">
+                            <div class="input-group" style="max-width: 500px;">
+                                <input type="text" name="q" class="form-control form-control-lg"
+                                       placeholder="Search articles..." value="{{ query ?? '' }}"
+                                       style="border-radius: 50px 0 0 50px;">
+                                <button class="btn btn-lg btn-dark px-4" type="submit" style="border-radius: 0 50px 50px 0;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.031 16.6168L22.3137 20.8995L20.8995 22.3137L16.6168 18.031C15.0769 19.263 13.124 20 11 20C6.032 20 2 15.968 2 11C2 6.032 6.032 2 11 2C15.968 2 20 6.032 20 11C20 13.124 19.263 15.0769 18.031 16.6168ZM16.0247 15.8748C17.2475 14.6146 18 12.8956 18 11C18 7.1325 14.8675 4 11 4C7.1325 4 4 7.1325 4 11C4 14.8675 7.1325 18 11 18C12.8956 18 14.6146 17.2475 15.8748 16.0247L16.0247 15.8748Z"></path></svg>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    {# Results Section #}
+    <section class="search-results-section py-5">
+        <div class="container">
+            <div class="row">
+                <div class="{% if theme_option('show_sidebar_on_archive', true) %}col-lg-8{% else %}col-lg-10 mx-auto{% endif %}">
+
+                    {# Posts Grid #}
+                    {% if posts is defined and posts|length > 0 %}
+                        <div class="posts-grid row g-4">
+                            {% for post in posts %}
+                                <div class="col-md-6" data-aos="fade-up" data-aos-delay="{{ (loop.index % 4) * 50 }}">
+                                    {% include 'components/post-card.twig' with {
+                                        'post': post,
+                                        'image_height': '180px',
+                                        'card_class': 'h-100 border-0 shadow-sm',
+                                        'highlight_query': query
+                                    } only %}
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        {# Pagination #}
+                        {% if posts.hasMorePages() %}
+                            <nav class="pagination-wrapper mt-5 pt-4 border-top" aria-label="Pagination" data-aos="fade-up">
+                                {% include 'layouts/partials/pagination.twig' with {'paginator': posts} %}
+                            </nav>
+                        {% endif %}
+                    {% else %}
+                        {# Empty State #}
+                        <div class="empty-state py-5 text-center" data-aos="fade-up">
+                            <div class="mb-4">
+                                <div class="empty-icon rounded-circle bg-light d-inline-flex align-items-center justify-content-center"
+                                     style="width: 100px; height: 100px;">
+                                    <i class="ri-search-line display-4 text-muted"></i>
+                                </div>
+                            </div>
+                            {% if query is defined and query %}
+                                <h3 class="h4 mb-3">No Results Found</h3>
+                                <p class="text-muted mb-4" style="max-width: 400px; margin: 0 auto;">
+                                    Sorry, we couldn't find any articles matching "<strong>{{ query }}</strong>".
+                                    Try different keywords or browse our categories.
+                                </p>
+                            {% else %}
+                                <h3 class="h4 mb-3">Start Your Search</h3>
+                                <p class="text-muted mb-4">
+                                    Enter a search term above to find articles.
+                                </p>
+                            {% endif %}
+                            <a href="{{ urls.home }}" class="btn btn-primary">
+                                <i class="ri-home-line me-2"></i>Back to Home
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+
+                {# Sidebar #}
+                {% if theme_option('show_sidebar_on_archive', true) %}
+                    <aside class="col-lg-4 mt-5 mt-lg-0">
+                        <div class="sticky-top" style="top: 100px;">
+                            {% include 'layouts/partials/sidebar.twig' %}
+                        </div>
+                    </aside>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+{% endblock %}
+

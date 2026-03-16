@@ -1,0 +1,55 @@
+<!-- Footer -->
+{% set logoWidth = site.logo_width|default(160) %}
+<footer class="bg-body border-top">
+    <div class="container">
+        <div class="row pt-5 pb-4">
+            <div class="col-md-4 col-lg-6 mb-5 mb-md-0">
+                {% if theme_option('logo') %}
+                    <a href="{{ url('/') }}" class="d-inline-flex align-items-center text-decoration-none mb-3"
+                        aria-label="{{ setting('site_title') }}">
+                        <img src="{{ theme_option('logo') }}" alt="{{ setting('site_title') }}" class="me-2" style="width: {{ logoWidth }}px; height: auto;" />
+                    </a>
+                {% else %}
+                    <div>
+                        <h4 class="fw-semibold text-primary mb-0">
+                            {{ theme_option('site_title', setting('site_title')) }}
+                        </h4>
+                    </div>
+                {% endif %}
+                {% if theme_option('contact_address') %}
+                    <address class="text-body-secondary mb-2">{{ theme_option('contact_address') }}</address>
+                {% endif %}
+                {% if theme_option('contact_phone') %}
+                    <div class="mb-2">
+                        <a href="tel:{{ theme_option('contact_phone') }}" class="text-decoration-none text-body-secondary">{{ theme_option('contact_phone') }}</a>
+                    </div>
+                {% endif %}
+                {% if theme_option('contact_email') %}
+                    <div>
+                        <a href="mailto:{{ theme_option('contact_email') }}"
+                            class="text-decoration-none text-body-secondary">{{ theme_option('contact_email') }}</a>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Quick Links -->
+            <div class="col-sm-6 col-md-4 col-lg-3 mb-4 mb-sm-0">
+                <nav aria-label="Quick Links">
+                    <h5 class="mb-3">Quick Links</h5>
+                    {{ menu('footer', {'container': 'ul', 'class': 'nav flex-column'}) }}
+                </nav>
+            </div>
+
+            <!-- Other Links -->
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <nav aria-label="Other Links">
+                    <h5 class="mb-3">Other Links</h5>
+                    {{ menu('footer2', {'container': 'ul', 'class': 'nav flex-column'}) }}
+                </nav>
+            </div>
+        </div>
+        <div class="text-body-secondary border-top pt-3 pb-4">
+            <p class="mb-3 mb-md-0">&copy; {{ current_year() }} {{ theme_option('site_title', setting('site_title')) }}. All rights reserved.</p>
+        </div>
+    </div>
+</footer>

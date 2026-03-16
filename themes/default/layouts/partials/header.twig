@@ -1,0 +1,122 @@
+{#
+    Modern Header Component
+
+    Features:
+    - Clean sticky navigation
+    - Responsive offcanvas menu
+    - Search integration
+    - Optional CTA button
+#}
+
+{% set logoWidth = site.logo_width|default(160) %}
+
+<header class="site-header">
+    {# Main Navigation #}
+    <nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top shadow-sm py-3">
+        <div class="container">
+            {# Logo/Brand #}
+            <a class="navbar-brand py-1" href="{{ urls.home }}">
+                {% if theme_option('logo') %}
+                    <img src="{{ theme_option('logo') }}" alt="{{ site.title|default(setting('site_title')) }}" width="{{ logoWidth }}" style="height: auto;" class="d-inline-block">
+                {% else %}
+                    <span class="fw-bold fs-4 text-primary">{{ theme_option('site_title', site.title|default(setting('site_title'))) }}</span>
+                {% endif %}
+            </a>
+
+            {# Desktop Navigation (centered) #}
+            <div class="collapse navbar-collapse justify-content-center" id="mainNav">
+                {{ menu('primary', {
+                    'class': 'navbar-nav gap-1',
+                    'link_class': 'nav-link px-3 py-2'
+                }) }}
+            </div>
+
+            {# Desktop Actions (Search + CTA) #}
+            <div class="d-none d-lg-flex align-items-center gap-2">
+                {# Search Toggle #}
+                <button class="btn btn-link text-dark p-2" type="button" data-bs-toggle="modal" data-bs-target="#searchModal" aria-label="Search">
+                    <i class="ri-search-line fs-5"></i>
+                </button>
+
+                {# CTA Button #}
+                <a class="btn btn-primary rounded-pill px-4" href="{{ esc_url(theme_option('header_cta_url', '/contact')) }}">
+                    {{ theme_option('header_cta_text', 'Contact Us') }}
+                </a>
+            </div>
+
+            {# Mobile Toggle #}
+            <button class="navbar-toggler border-0 d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileMenu" aria-controls="mobileMenu" aria-label="Toggle navigation">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M3 4H21V6H3V4ZM3 11H21V13H3V11ZM3 18H21V20H3V18Z"></path></svg>
+            </button>
+        </div>
+    </nav>
+
+    {# Mobile Offcanvas Menu #}
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="mobileMenu" aria-labelledby="mobileMenuLabel">
+        <div class="offcanvas-header border-bottom">
+            <a class="navbar-brand" href="{{ urls.home }}">
+                {% if theme_option('logo') %}
+                    <img src="{{ theme_option('logo') }}" alt="{{ site.title|default(setting('site_title')) }}" width="{{ logoWidth }}" style="height: auto;">
+                {% else %}
+                    <span class="fw-bold fs-5 text-primary">{{ theme_option('site_title', site.title|default(setting('site_title'))) }}</span>
+                {% endif %}
+            </a>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body d-flex flex-column">
+            {# Mobile Search #}
+            <form class="mb-4" method="GET" action="{{ urls.search }}">
+                <div class="input-group">
+                    <input class="form-control" type="text" name="q" placeholder="Search..." aria-label="Search">
+                    <button class="btn btn-primary" type="submit">
+                        <i class="ri-search-line"></i>
+                    </button>
+                </div>
+            </form>
+
+            {# Mobile Nav #}
+            {{ menu('primary', {
+                'class': 'navbar-nav flex-column gap-1',
+                'link_class': 'nav-link py-2 px-3 rounded'
+            }) }}
+
+            {# Mobile CTA #}
+            <div class="mt-auto pt-4 border-top">
+                {% if theme_option('contact_email') %}
+                    <a class="btn btn-outline-primary w-100 mb-2" href="{{ esc_url('mailto:' ~ theme_option('contact_email')) }}">
+                        <i class="ri-mail-line me-2"></i>Email Us
+                    </a>
+                {% endif %}
+                <a class="btn btn-primary w-100" href="{{ esc_url(theme_option('header_cta_url', '/contact')) }}">
+                    {{ theme_option('header_cta_text', 'Contact Us') }}
+                </a>
+            </div>
+        </div>
+    </div>
+</header>
+
+{# Search Modal #}
+<div class="modal fade" id="searchModal" tabindex="-1" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-body p-4">
+                <form method="GET" action="{{ urls.search }}">
+                    <div class="input-group input-group-lg">
+                        <span class="input-group-text bg-transparent border-end-0">
+                            <i class="ri-search-line text-muted"></i>
+                        </span>
+                        <input class="form-control border-start-0 ps-0" type="text" name="q"
+                            placeholder="Search articles, topics, authors..." autofocus>
+                        <button class="btn btn-primary px-4" type="submit">Search</button>
+                    </div>
+                </form>
+                <div class="mt-3 text-muted small">
+                    <span class="me-3">Popular:</span>
+                    <a href="{{ urls.search }}?q=laravel" class="text-decoration-none me-2">#Laravel</a>
+                    <a href="{{ urls.search }}?q=startup" class="text-decoration-none me-2">#Startup</a>
+                    <a href="{{ urls.search }}?q=design" class="text-decoration-none">#Design</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,102 @@
+{#
+    Share Buttons Component
+
+    Displays social sharing buttons for a post.
+
+    Share URLs are pre-computed by the backend in post.share object.
+
+    @see docs/astero-modules-system/DATA_CONTRACT.md
+
+    @param post - The post object with post.share URLs
+    @param style - Button style: 'buttons', 'icons', 'modal' (default: 'buttons')
+    @param platforms - Array of platforms to show (default: all)
+    @param show_copy - Whether to show copy link button (default: true)
+    @param class - Additional CSS classes
+#}
+
+{% set style = style ?? 'buttons' %}
+{% set show_copy = show_copy ?? true %}
+{% set platforms = platforms ?? ['twitter', 'facebook', 'linkedin', 'whatsapp', 'email'] %}
+
+{# Share URLs are always pre-computed in post.share #}
+{% set share_urls = post.share ?? {} %}
+
+{% set platform_icons = {
+    'twitter': 'ri-twitter-x-line',
+    'facebook': 'ri-facebook-line',
+    'linkedin': 'ri-linkedin-line',
+    'whatsapp': 'ri-whatsapp-line',
+    'email': 'ri-mail-line',
+    'pinterest': 'ri-pinterest-line'
+} %}
+
+{% set platform_labels = {
+    'twitter': 'Twitter',
+    'facebook': 'Facebook',
+    'linkedin': 'LinkedIn',
+    'whatsapp': 'WhatsApp',
+    'email': 'Email',
+    'pinterest': 'Pinterest'
+} %}
+
+<div class="share-buttons d-flex gap-2 flex-wrap {{ class ?? '' }}">
+    {% for platform in platforms %}
+        {% if share_urls[platform] is defined %}
+            {% if style == 'icons' %}
+                <a class="text-decoration-none text-muted fs-5"
+                    href="{{ share_urls[platform] }}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="Share on {{ platform_labels[platform] }}">
+                    <i class="{{ platform_icons[platform] }}"></i>
+                </a>
+            {% else %}
+                <a class="btn btn-outline-primary btn-sm"
+                    href="{{ share_urls[platform] }}"
+                    target="_blank"
+                    rel="noopener noreferrer">
+                    <i class="{{ platform_icons[platform] }} me-1"></i>
+                    {{ platform_labels[platform] }}
+                </a>
+            {% endif %}
+        {% endif %}
+    {% endfor %}
+
+    {# Copy Link Button - share_urls.copy has the raw URL #}
+    {% if show_copy %}
+        <button class="btn btn-outline-secondary btn-sm"
+            type="button"
+            onclick="copyToClipboard('{{ esc_js(share_urls.copy ?? post.url) }}', event, this)"
+            title="Copy link">
+            <i class="ri-link me-1"></i>
+            {% if style != 'icons' %}Copy Link{% endif %}
+        </button>
+    {% endif %}
+</div>
+
+{# Copy to Clipboard Script - only include once #}
+{% if not _share_script_included is defined %}
+    {% set _share_script_included = true %}
+    <script>
+        if (typeof copyToClipboard !== 'function') {
+            function copyToClipboard(text, event, button) {
+                navigator.clipboard.writeText(text).then(function() {
+                    const btn = button || (event ? event.target.closest('button') : null);
+                    if (!btn) {
+                        return;
+                    }
+                    const originalText = btn.innerHTML;
+                    btn.innerHTML = '<i class="ri-check-line me-1"></i>Copied!';
+                    btn.classList.add('btn-success');
+                    btn.classList.remove('btn-outline-secondary');
+
+                    setTimeout(() => {
+                        btn.innerHTML = originalText;
+                        btn.classList.remove('btn-success');
+                        btn.classList.add('btn-outline-secondary');
+                    }, 2000);
+                });
+            }
+        }
+    </script>
+{% endif %}

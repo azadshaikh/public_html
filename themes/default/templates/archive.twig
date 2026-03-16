@@ -1,0 +1,122 @@
+{% extends 'layouts/layout.twig' %}
+
+{% block body_class %}{% apply spaceless %}
+    {% if category %}
+        archive {{ category.type }} {{ category.type }}-{{ category.slug }}
+    {% else %}
+        archive blog
+    {% endif %}
+{% endapply %}{% endblock %}
+
+{% block content %}
+    {# Archive Header #}
+    <header class="archive-header bg-primary text-white py-5">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8 text-center">
+                    {% if category %}
+                        <span class="badge bg-white text-primary mb-3 px-3 py-2 rounded-pill" data-aos="fade-up">
+                            <i class="ri-folder-line me-1"></i>{{ category.type|capitalize }}
+                        </span>
+                        <h1 class="display-5 fw-bold mb-3" data-aos="fade-up" data-aos-delay="50">{{ category.title }}</h1>
+                        {% if category.excerpt %}
+                            <p class="lead opacity-90 mb-0" data-aos="fade-up" data-aos-delay="100">{{ category.excerpt }}</p>
+                        {% endif %}
+                    {% else %}
+                        <span class="badge bg-white text-primary mb-3 px-3 py-2 rounded-pill" data-aos="fade-up">
+                            <i class="ri-article-line me-1"></i>Blog
+                        </span>
+                        <h1 class="display-5 fw-bold mb-3" data-aos="fade-up" data-aos-delay="50">
+                            {{ theme_option('archive_title', 'Latest Articles') }}
+                        </h1>
+                        <p class="lead opacity-90 mb-0" data-aos="fade-up" data-aos-delay="100">
+                            {{ theme_option('archive_description', 'Discover insights, tutorials, and stories from our team.') }}
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </header>
+
+    {# Main Content #}
+    <section class="archive-content py-5">
+        <div class="container">
+            <div class="row">
+                {# Posts Column #}
+                <div class="{% if theme_option('show_sidebar_on_archive', true) %}col-lg-8{% else %}col-lg-10 mx-auto{% endif %}">
+
+                    {# Category Content (if has page content) #}
+                    {% if category and category.content %}
+                        <div class="category-content mb-5 p-4 bg-light rounded-3" data-v-post-content data-astero-enabled data-aos="fade-up">
+                            {{ category.content|raw }}
+                        </div>
+                    {% endif %}
+
+                    {# Filters Bar #}
+                    {% if posts is defined and posts|length > 0 %}
+                        <div class="filters-bar d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom" data-aos="fade-up">
+                            <p class="text-muted mb-0">
+                                <span class="fw-medium">{{ posts.total() }}</span> articles found
+                            </p>
+                            <div class="dropdown">
+                                <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    <i class="ri-sort-desc me-1"></i>Sort by
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item {% if not app.request.get('sort') or app.request.get('sort') == 'latest' %}active{% endif %}" href="?sort=latest">Latest First</a></li>
+                                    <li><a class="dropdown-item {% if app.request.get('sort') == 'oldest' %}active{% endif %}" href="?sort=oldest">Oldest First</a></li>
+                                    <li><a class="dropdown-item {% if app.request.get('sort') == 'title' %}active{% endif %}" href="?sort=title">Title A-Z</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    {# Posts Grid #}
+                    {% if posts is defined and posts|length > 0 %}
+                        <div class="posts-grid row g-4">
+                            {% for post in posts %}
+                                <div class="col-md-6" data-aos="fade-up" data-aos-delay="{{ (loop.index % 4) * 50 }}">
+                                    {% include 'components/post-card.twig' with {
+                                        'post': post,
+                                        'image_height': '200px',
+                                        'card_class': 'h-100 border-0 shadow-sm'
+                                    } only %}
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        {# Pagination #}
+                        {% if posts.hasMorePages() %}
+                            <nav class="pagination-wrapper mt-5 pt-4 border-top" aria-label="Pagination" data-aos="fade-up">
+                                {% include 'layouts/partials/pagination.twig' with {'paginator': posts} %}
+                            </nav>
+                        {% endif %}
+                    {% else %}
+                        {# Empty State #}
+                        <div data-aos="fade-up">
+                            {% include 'components/empty-state.twig' with {
+                                'icon': 'file-text-line',
+                                'title': 'No Articles Yet',
+                                'message': category
+                                    ? 'There are no posts in <strong>' ~ category.title ~ '</strong> yet. Check back soon!'
+                                    : 'We haven\'t published any articles yet. Check back soon!',
+                                'action_url': urls.home,
+                                'action_label': 'Back to Home'
+                            } only %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                {# Sidebar #}
+                {% if theme_option('show_sidebar_on_archive', true) %}
+                    <aside class="col-lg-4 mt-5 mt-lg-0">
+                        <div class="sticky-top" style="top: 100px;">
+                            {% include 'layouts/partials/sidebar.twig' %}
+                        </div>
+                    </aside>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+{% endblock %}
+

@@ -1,0 +1,106 @@
+#!/bin/bash
+#
+# Script: a-create-environment-file
+#
+# Description: Creates or overwrites the .env file for an application.
+#              Stored in shared directory and symlinked into release.
+#              Accepts BASE64 encoded content for safe transmission.
+#
+# Usage: a-create-environment-file USER DOMAIN ENV_DATA_BASE64
+#
+# Exit Codes:
+#   0   - Success
+#   1   - Invalid arguments
+#   3   - User or domain not found
+#   204 - Releases directory not found
+#   205 - No release versions found
+#   206 - File/directory operation failed
+
+# NOTE: Do not enable `set -u` (nounset) here.
+# Hestia's core shell functions (main.sh) are not nounset-safe and may reference
+# unset variables (e.g. HIDE), which would crash the script during `source`.
+set -eo pipefail
+
+# --- Configuration ---
+HESTIA=${HESTIA:-/usr/local/hestia}
+BIN=${BIN:-/usr/local/hestia/bin}
+ASTERO_DATA_DIR="${ASTERO_DATA_DIR:-/usr/local/hestia/data/astero}"
+LOG_FILE="${ASTERO_DATA_DIR}/logs/astero-scripts.log"
+
+# --- Argument Validation (must happen before sourcing Hestia main.sh) ---
+user="${1:-}"
+domain="${2:-}"
+env_data_b64="${3:-}"
+
+if [ "$#" -ne 3 ] || [ -z "$user" ] || [ -z "$domain" ] || [ -z "$env_data_b64" ]; then
+    echo "Error: Not enough arguments provided. Usage: a-create-environment-file USER DOMAIN ENV_DATA_BASE64" >&2
+    exit 1
+fi
+
+# Source Hestia core functions
+source "$HESTIA/func/main.sh"
+source "$HESTIA/conf/hestia.conf"
+source "$HESTIA/func/domain.sh"
+
+# --- Helper Functions ---
+log_error() {
+    local msg="$1"
+    mkdir -p "$(dirname "$LOG_FILE")"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [a-create-environment-file] ERROR: $msg" >> "$LOG_FILE"
+    echo "Error: $msg" >&2
+}
+
+handle_error() {
+    log_error "$2"
+    exit "$1"
+}
+
+# --- Argument Validation ---
+echo "Creating .env for $domain..."
+
+# Validate Hestia objects
+is_format_valid 'user' 'domain'
+is_object_valid 'user' 'USER' "$user" || handle_error 3 "User '$user' does not exist."
+is_object_valid 'web' 'DOMAIN' "$domain" || handle_error 3 "Domain '$domain' does not exist."
+
+# --- Decode Base64 Content ---
+env_data=$(printf '%s' "$env_data_b64" | base64 -d 2>/dev/null)
+if [ $? -ne 0 ] || [ -z "$env_data" ]; then
+    handle_error 206 "Failed to decode base64 environment data."
+fi
+
+# --- Directory Setup ---
+ROOT_DIR="/home/$user/web/$domain/public_html"
+RELEASES_DIR="$ROOT_DIR/releases"
+SHARED_DIR="$ROOT_DIR/shared"
+ENV_FILE_PATH="$SHARED_DIR/.env"
+
+[ -d "$RELEASES_DIR" ] || handle_error 204 "Releases directory not found."
+
+# Find latest release (robust even when no releases exist)
+shopt -s nullglob
+release_dirs=("$RELEASES_DIR"/*/)
+shopt -u nullglob
+
+[ ${#release_dirs[@]} -eq 0 ] && handle_error 205 "No release versions found."
+LATEST_RELEASE_DIR=$(printf '%s\n' "${release_dirs[@]}" | sort -V | tail -n 1)
+
+# --- Create Environment File ---
+mkdir -p "$SHARED_DIR" || handle_error 206 "Failed to create shared directory."
+printf '%s' "$env_data" > "$ENV_FILE_PATH" || handle_error 206 "Failed to write .env file."
+
+# --- Create Symlink ---
+WORKING_DIR=$(readlink -f "$LATEST_RELEASE_DIR")
+SYMLINK_PATH="$WORKING_DIR/.env"
+
+# Use ln -sfn for idempotent symlink creation (handles existing symlinks/files)
+ln -sfn "$ENV_FILE_PATH" "$SYMLINK_PATH" || handle_error 206 "Failed to create .env symlink."
+
+# Set ownership and permissions
+chown "$user:$user" "$ENV_FILE_PATH"
+chmod 640 "$ENV_FILE_PATH"
+chown -h "$user:$user" "$SYMLINK_PATH"
+
+echo "Environment file created"
+$BIN/v-log-action "system" "Info" "System" "Environment file for $domain created."
+exit 0

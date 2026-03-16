@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="{{ locale()|str_replace('_', '-') }}">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        {# CSRF token - Azad: I don't think we will need this. #}
+        <meta name="csrf-token" content="{{ csrf_token() }}">
+
+        {# Favicon #}
+        {% if theme_option('favicon') %}
+            <link type="image/x-icon" href="{{ theme_option('favicon') }}" rel="shortcut icon" />
+        {% else %}
+            <link type="image/x-icon" href="{{ theme_asset('img/favicon.png') }}" rel="shortcut icon" />
+        {% endif %}
+
+        {# SEO Meta Tags #}
+        {{ seo_meta() }}
+
+        {# Theme Styles #}
+        <link href="{{ theme_asset('css/style.min.css') }}" rel="stylesheet">
+
+        {# Bootstrap Icons (used instead of Remix Icons) #}
+
+        {# AOS animations #}
+        <link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet" />
+
+        {# GLightbox #}
+        <link href="https://cdn.jsdelivr.net/npm/glightbox/dist/css/glightbox.min.css" rel="stylesheet" />
+
+        {# Source Sans 3 from Google Fonts #}
+        <link
+            href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,200..900;1,200..900&family=Ubuntu+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+            rel="stylesheet" />
+
+        {# Custom CSS is auto-injected by ThemeService before </head> #}
+
+    </head>
+    <body class="{% block body_class %}{% endblock %}">
+        {# Main Content #}
+        <main class="site-main">
+            {% include 'layouts/partials/header.twig' %}
+
+            {% if theme_option('show_breadcrumb_on_pages', false) %}
+                {# Breadcrumb Navigation #}
+                {# Note: Breadcrumb will handle its own display logic #}
+                <nav class="breadcrumb-nav bg-light border-bottom py-2">
+                    <div class="container">
+                        {{ breadcrumb({'class': 'breadcrumb mb-0', 'separator': '<span class="breadcrumb-separator mx-2 text-muted">/</span>'}) }}
+                    </div>
+                </nav>
+            {% endif %}
+
+            <div class="content-wrapper bg-body">
+                {% block content %}{% endblock %}
+            </div>
+
+            {% include 'layouts/partials/footer.twig' %}
+        </main>
+
+        {# Theme Main JS #}
+        <script src="{{ theme_asset('js/main.min.js') }}" type="module"></script>
+        {# AOS Animation Script #}
+        <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+        <script>
+            AOS.init({
+                once: true,
+            });
+        </script>
+        {# Typer Script #}
+        <script src="https://unpkg.com/typed.js@2.1.0/dist/typed.umd.js"></script>
+        <script>
+            // Wait for the DOM to be ready before running the script
+            document.addEventListener("DOMContentLoaded", function() {
+                // Select all elements with the class 'typer'
+                const typers = document.querySelectorAll(".typer");
+
+                typers.forEach(function(typer) {
+                    // Get the configuration values from data attributes
+                    const typeSpeed = typer.getAttribute("data-type-speed") || 50;
+                    const backSpeed = typer.getAttribute("data-back-speed") || 50;
+                    const strings = typer.getAttribute("data-strings") ? typer.getAttribute("data-strings")
+                        .split(",") : [];
+                    const loop = typer.getAttribute("data-loop") === "true";
+
+                    // Initialize the Typed.js instance with the custom options
+                    new Typed(typer.querySelector(".text-primary"), {
+                        strings: strings,
+                        typeSpeed: parseInt(typeSpeed, 10),
+                        backSpeed: parseInt(backSpeed, 10),
+                        loop: loop,
+                        backDelay: 1000, // Add a slight delay before the text starts backspacing
+                    });
+                });
+
+                const forms = document.querySelectorAll('form');
+                if (forms.length > 0) {
+                    var csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                    forms.forEach(form => {
+                        // check if form has _token field if not then append it
+                        if (!form.querySelector('input[name="_token"]')) {
+                            var tokenfield = document.createElement('input');
+                            tokenfield.type = 'hidden';
+                            tokenfield.name = '_token';
+                            tokenfield.value = csrfToken;
+                            form.appendChild(tokenfield);
+                        } else {
+                            form.querySelector('input[name="_token"]').value = csrfToken;
+                        }
+                    });
+                }
+            });
+        </script>
+        {# GLightbox #}
+        <script src="https://cdn.jsdelivr.net/npm/glightbox/dist/js/glightbox.min.js"></script>
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                const lightbox = GLightbox({
+                    selector: ".glightbox",
+                });
+            });
+        </script>
+    </body>
+</html>

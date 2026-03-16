@@ -1,0 +1,314 @@
+#!/bin/bash
+#
+# Script: a-setup-astero
+#
+# Description: Master setup script for Astero server configuration.
+#              Runs after scripts are uploaded to configure the server.
+#
+# This script handles:
+#   1. HestiaCP configuration (timezone, API settings, etc.)
+#   2. PHP configuration (Composer, enable functions)
+#   3. Astero directory setup
+#   4. Supervisor configuration
+#
+# Usage: a-setup-astero [--timezone TIMEZONE] [--api-allowed-ip VALUE] [--multiphp yes|no] [--php-versions "8.3,8.4"]
+#
+# Exit Codes:
+#   0 - Success
+#   1 - Not running as root
+#   2 - HestiaCP not installed
+#
+
+set -euo pipefail
+
+# =============================================================================
+# CONFIGURATION
+# =============================================================================
+
+HESTIA_DIR="/usr/local/hestia"
+HESTIA_BIN="$HESTIA_DIR/bin"
+HESTIA_DATA="$HESTIA_DIR/data"
+ASTERO_DATA_DIR="$HESTIA_DATA/astero"
+
+# Default timezone
+TIMEZONE="Asia/Kolkata"
+API_ALLOWED_IP="allow-all"
+MULTIPHP_ENABLED="no"
+PHP_VERSIONS="8.4"
+
+# =============================================================================
+# ARGUMENT PARSING
+# =============================================================================
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --timezone)
+            TIMEZONE="$2"
+            shift 2
+            ;;
+        --api-allowed-ip)
+            API_ALLOWED_IP="$2"
+            shift 2
+            ;;
+        --multiphp)
+            MULTIPHP_ENABLED="$2"
+            shift 2
+            ;;
+        --php-versions)
+            PHP_VERSIONS="$2"
+            shift 2
+            ;;
+        *)
+            shift
+            ;;
+    esac
+done
+
+MULTIPHP_ENABLED="$(echo "$MULTIPHP_ENABLED" | tr '[:upper:]' '[:lower:]')"
+if [ "$MULTIPHP_ENABLED" != "yes" ]; then
+    MULTIPHP_ENABLED="no"
+fi
+
+# =============================================================================
+# HELPER FUNCTIONS
+# =============================================================================
+
+log() {
+    echo "[a-setup-astero] $1"
+}
+
+log_success() {
+    echo "[a-setup-astero] ✓ $1"
+}
+
+log_error() {
+    echo "[a-setup-astero] ✗ $1" >&2
+}
+
+normalize_php_versions() {
+    local raw_versions="$1"
+    local normalized=""
+
+    IFS=',' read -ra php_parts <<< "$raw_versions"
+    for version in "${php_parts[@]}"; do
+        version="$(echo "$version" | tr -d '[:space:]')"
+        if [[ -z "$version" ]]; then
+            continue
+        fi
+
+        if [[ ! "$version" =~ ^[0-9]+\.[0-9]+$ ]]; then
+            continue
+        fi
+
+        if [[ ",$normalized," != *",$version,"* ]]; then
+            if [[ -n "$normalized" ]]; then
+                normalized="$normalized,$version"
+            else
+                normalized="$version"
+            fi
+        fi
+    done
+
+    if [[ -z "$normalized" ]]; then
+        normalized="8.4"
+    fi
+
+    echo "$normalized"
+}
+
+enable_php_runtime_functions() {
+    local functions_to_enable="$1"
+
+    for ini in /etc/php/*/fpm/php.ini /etc/php/*/cli/php.ini; do
+        if [ -f "$ini" ]; then
+            current=$(grep "^disable_functions" "$ini" | cut -d'=' -f2 | tr -d ' ')
+            if [ -n "$current" ]; then
+                new="$current"
+                IFS=',' read -ra funcs <<< "$functions_to_enable"
+                for func in "${funcs[@]}"; do
+                    new=$(echo "$new" | sed "s/,$func,/,/g; s/^$func,//g; s/,$func$//g; s/^$func$//g")
+                done
+                new=$(echo "$new" | sed 's/,,*/,/g; s/^,//; s/,$//')
+                sed -i "s|^disable_functions.*|disable_functions = $new|" "$ini"
+            fi
+        fi
+    done
+
+    systemctl restart php*-fpm 2>/dev/null || true
+    log_success "PHP functions enabled for installed versions and services restarted"
+}
+
+# =============================================================================
+# VERIFICATION
+# =============================================================================
+
+# Check root access
+if [ "$(id -u)" -ne 0 ]; then
+    log_error "This script must be run as root"
+    exit 1
+fi
+
+# Check HestiaCP installation
+if [ ! -d "$HESTIA_DIR" ] || [ ! -f "$HESTIA_DIR/conf/hestia.conf" ]; then
+    log_error "HestiaCP is not installed"
+    exit 2
+fi
+
+log "Starting Astero server setup..."
+
+# =============================================================================
+# 1. CONFIGURE HESTIACP SETTINGS
+# =============================================================================
+
+log "Configuring HestiaCP settings..."
+
+# Set timezone
+$HESTIA_BIN/v-change-sys-timezone "$TIMEZONE" 2>/dev/null || true
+log_success "Timezone set to $TIMEZONE"
+
+# Disable subdomain ownership enforcement
+$HESTIA_BIN/v-change-sys-config-value ENFORCE_SUBDOMAIN_OWNERSHIP no 2>/dev/null || true
+log_success "Subdomain ownership enforcement disabled"
+
+# Disable legacy API (we use access keys)
+$HESTIA_BIN/v-change-sys-config-value API no 2>/dev/null || true
+log_success "Legacy API disabled"
+
+# Enable resource limit plugin
+$HESTIA_BIN/v-change-sys-config-value PLUGIN_RESOURCE_LIMIT yes 2>/dev/null || true
+log_success "Resource limit plugin enabled"
+
+# Ensure loopback is always allowed for local control-plane calls when using explicit IP allowlists.
+if [ "$API_ALLOWED_IP" != "allow-all" ]; then
+    api_allowlist_input="$(printf '%s' "$API_ALLOWED_IP" | tr ',' '\n')"
+    normalized_api_ips=""
+    while IFS= read -r ip; do
+        ip="$(echo "$ip" | tr -d '[:space:]')"
+        if [ -z "$ip" ]; then
+            continue
+        fi
+        if [[ ",$normalized_api_ips," != *",$ip,"* ]]; then
+            if [ -n "$normalized_api_ips" ]; then
+                normalized_api_ips="$normalized_api_ips"$'\n'"$ip"
+            else
+                normalized_api_ips="$ip"
+            fi
+        fi
+    done <<< "$api_allowlist_input"
+
+    if [[ ",$normalized_api_ips," != *",127.0.0.1,"* ]]; then
+        if [ -n "$normalized_api_ips" ]; then
+            normalized_api_ips="$normalized_api_ips"$'\n''127.0.0.1'
+        else
+            normalized_api_ips="127.0.0.1"
+        fi
+    fi
+    API_ALLOWED_IP="$normalized_api_ips"
+fi
+
+# Set API allowed IPs
+$HESTIA_BIN/v-change-sys-config-value API_ALLOWED_IP "$API_ALLOWED_IP" 2>/dev/null || true
+log_success "API allowed IPs set to $API_ALLOWED_IP"
+
+# Enable resource limits
+$HESTIA_BIN/v-change-sys-config-value RESOURCES_LIMIT yes 2>/dev/null || true
+log_success "Resource limits enabled"
+
+# =============================================================================
+# 2. CONFIGURE PHP ENVIRONMENT
+# =============================================================================
+
+log "Configuring PHP environment..."
+
+# Install Composer globally
+if ! command -v composer &>/dev/null; then
+    curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+    chmod +x /usr/local/bin/composer
+    log_success "Composer installed"
+else
+    log_success "Composer already installed"
+fi
+
+# Enable PHP functions (proc_open, pcntl_*)
+FUNCTIONS_TO_ENABLE="proc_open,pcntl_alarm,pcntl_fork,pcntl_waitpid,pcntl_wait,pcntl_wifexited,pcntl_wifstopped,pcntl_wifsignaled,pcntl_wifcontinued,pcntl_wexitstatus,pcntl_wtermsig,pcntl_wstopsig,pcntl_signal,pcntl_signal_get_handler,pcntl_signal_dispatch,pcntl_get_last_error,pcntl_strerror,pcntl_sigprocmask,pcntl_sigwaitinfo,pcntl_sigtimedwait,pcntl_exec,pcntl_getpriority,pcntl_setpriority,pcntl_async_signals"
+
+NORMALIZED_PHP_VERSIONS="$(normalize_php_versions "$PHP_VERSIONS")"
+PRIMARY_PHP_VERSION="$(echo "$NORMALIZED_PHP_VERSIONS" | awk -F',' '{print $NF}')"
+
+if [ "$MULTIPHP_ENABLED" = "yes" ]; then
+    log "Installing selected MultiPHP versions: $NORMALIZED_PHP_VERSIONS"
+else
+    NORMALIZED_PHP_VERSIONS="$PRIMARY_PHP_VERSION"
+    log "Installing single PHP version: $PRIMARY_PHP_VERSION"
+fi
+
+IFS=',' read -ra PHP_VERSION_LIST <<< "$NORMALIZED_PHP_VERSIONS"
+for php_version in "${PHP_VERSION_LIST[@]}"; do
+    if command -v "php${php_version}" &>/dev/null; then
+        log_success "PHP $php_version already installed"
+        continue
+    fi
+
+    log "Installing PHP $php_version via HestiaCP..."
+    $HESTIA_BIN/v-add-web-php "$php_version"
+done
+
+# Set selected primary version as the default system PHP version
+CURRENT_PHP=$(php -r 'echo PHP_MAJOR_VERSION . "." . PHP_MINOR_VERSION;' 2>/dev/null || echo "unknown")
+if [ "$CURRENT_PHP" != "$PRIMARY_PHP_VERSION" ]; then
+    log "Setting PHP $PRIMARY_PHP_VERSION as default system PHP (current: $CURRENT_PHP)..."
+    $HESTIA_BIN/v-change-sys-php "$PRIMARY_PHP_VERSION"
+    log_success "PHP $PRIMARY_PHP_VERSION set as default system PHP"
+else
+    log_success "PHP $PRIMARY_PHP_VERSION already set as default"
+fi
+
+# Enable runtime functions after all target versions are present (covers freshly installed PHP versions).
+enable_php_runtime_functions "$FUNCTIONS_TO_ENABLE"
+
+# Verify PHP version
+VERIFIED_PHP=$(php -v 2>/dev/null | head -1 || echo "unknown")
+log_success "System PHP: $VERIFIED_PHP"
+
+# =============================================================================
+# 3. CREATE ASTERO DIRECTORIES
+# =============================================================================
+
+log "Creating Astero directories..."
+
+mkdir -p "$ASTERO_DATA_DIR/releases/application/main"
+mkdir -p "$ASTERO_DATA_DIR/logs"
+chmod -R 755 "$ASTERO_DATA_DIR"
+
+log_success "Astero directories created"
+
+# =============================================================================
+# 4. CONFIGURE SUPERVISOR (for queue workers)
+# =============================================================================
+
+log "Configuring supervisor..."
+
+# Install supervisor if not present
+if ! command -v supervisorctl &>/dev/null; then
+    apt-get update -qq
+    apt-get install -y -qq supervisor
+fi
+
+# Create Astero supervisor config directory
+mkdir -p /etc/supervisor/conf.d
+
+# Ensure supervisor is running
+systemctl enable supervisor 2>/dev/null || true
+systemctl start supervisor 2>/dev/null || true
+
+log_success "Supervisor configured"
+
+# =============================================================================
+# DONE
+# =============================================================================
+
+echo ""
+log_success "Astero server setup completed successfully!"
+echo ""
+
+exit 0

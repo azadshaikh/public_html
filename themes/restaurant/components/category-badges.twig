@@ -1,0 +1,50 @@
+{#
+    Category Badges Component
+
+    Displays category/tag badges with links.
+
+    All category URLs are pre-computed by the backend.
+
+    @see docs/astero-modules-system/DATA_CONTRACT.md
+
+    @param categories - Array of category/tag objects (from ContentTransformer)
+    @param style - Badge style: 'default', 'subtle', 'outline' (default: 'subtle')
+    @param linkable - Whether badges should link to category page (default: true)
+    @param limit - Max number of badges to show (default: null = show all)
+    @param class - Additional CSS classes for wrapper
+#}
+
+{% set style = style ?? 'subtle' %}
+{% set linkable = linkable ?? true %}
+{% set limit = limit ?? null %}
+
+{% set badge_classes = {
+    'default': 'badge bg-primary text-white',
+    'subtle': 'badge text-body bg-secondary-pale fs-6',
+    'outline': 'badge border text-body',
+    'primary-subtle': 'badge text-body bg-primary-subtle fs-6'
+} %}
+
+{% set badge_class = badge_classes[style] ?? badge_classes['subtle'] %}
+
+{% if categories and categories|length > 0 %}
+    <div class="post-categories d-flex flex-wrap gap-2 {{ class ?? '' }}">
+        {% for category in (limit ? categories|slice(0, limit) : categories) %}
+            {% if category %}
+                {% if linkable and category.url %}
+                    <a class="{{ badge_class }} text-decoration-none" href="{{ category.url }}">
+                        {{ category.title }}
+                    </a>
+                {% else %}
+                    <span class="{{ badge_class }}">{{ category.title }}</span>
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+
+        {% if limit and categories|length > limit %}
+            <span class="badge bg-secondary-subtle text-muted">
+                +{{ categories|length - limit }} more
+            </span>
+        {% endif %}
+    </div>
+{% endif %}

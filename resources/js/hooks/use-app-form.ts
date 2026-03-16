@@ -10,16 +10,19 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { AppToastOptions } from '@/components/forms/form-success-toast';
 import { showAppToast } from '@/components/forms/form-success-toast';
 import { useDirtyFormGuard } from '@/hooks/use-dirty-form-guard';
-import { suppressNextFlashToast } from '@/hooks/use-flash-toast';
+import {
+    releaseSuppressedFlashToast,
+    suppressNextFlashToast,
+} from '@/hooks/use-flash-toast';
 import { normalizeFormErrorMessage, validateFormData } from '@/lib/forms';
 import type { FormFieldErrors, FormValidationRules } from '@/lib/forms';
 
 type DirtyGuardOptions =
     | boolean
     | {
-          enabled?: boolean;
-          message?: string;
-      };
+        enabled?: boolean;
+        message?: string;
+    };
 
 type UseAppFormOptions<T extends FormDataType<T>> = {
     defaults: T;
@@ -271,13 +274,20 @@ export function useAppForm<T extends FormDataType<T>>({
                 onFinish,
                 ...submitOptions
             } = options;
+            const resolvedSuccessToast = resolveSuccessToast(successToast);
+            let didSucceed = false;
 
             isSubmittingRef.current = true;
+
+            if (resolvedSuccessToast !== null) {
+                suppressNextFlashToast();
+            }
 
             inertiaForm.submit(method, url, {
                 preserveScroll: true,
                 ...submitOptions,
                 onSuccess: (...args) => {
+                    didSucceed = true;
                     setClientErrors({});
                     resetValidationState();
 
@@ -288,16 +298,17 @@ export function useAppForm<T extends FormDataType<T>>({
 
                     onSuccess?.(...args);
 
-                    const resolvedSuccessToast =
-                        resolveSuccessToast(successToast);
-
                     if (resolvedSuccessToast !== null) {
-                        suppressNextFlashToast();
                         showAppToast(resolvedSuccessToast);
                     }
                 },
                 onFinish: (...args) => {
                     isSubmittingRef.current = false;
+
+                    if (resolvedSuccessToast !== null && !didSucceed) {
+                        releaseSuppressedFlashToast();
+                    }
+
                     onFinish?.(...args);
                 },
             });

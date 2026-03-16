@@ -1,0 +1,154 @@
+#!/bin/bash
+#
+# Script: a-install-master
+#
+# Description: Creates an immutable master installation from a release zip.
+#              Masters are shared read-only across all websites to save storage.
+#              Once created, masters are NEVER modified - deploy new version = new master.
+#
+# Usage: a-install-master VERSION [TYPE] [PACKAGE_ID]
+#
+# Exit Codes:
+#   0   - Success (or already exists)
+#   1   - Invalid arguments
+#   207 - Required dependency missing
+#   210 - Directory operation failed
+#   212 - Archive extraction failed
+#   218 - No local release available
+
+# --- Configuration ---
+HESTIA=${HESTIA:-/usr/local/hestia}
+BIN=${BIN:-/usr/local/hestia/bin}
+ASTERO_DATA_DIR="${ASTERO_DATA_DIR:-/usr/local/hestia/data/astero}"
+RELEASES_REPO="$ASTERO_DATA_DIR/releases"
+INSTALLED_DIR="$ASTERO_DATA_DIR/installed"
+LOG_FILE="${ASTERO_DATA_DIR}/logs/astero-scripts.log"
+
+# Source Hestia core functions
+source $HESTIA/func/main.sh
+source $HESTIA/conf/hestia.conf
+
+# --- Helper Functions ---
+log_info() {
+    local msg="$1"
+    mkdir -p "$(dirname "$LOG_FILE")"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [a-install-master] INFO: $msg" >> "$LOG_FILE"
+    echo "$msg"
+}
+
+log_error() {
+    local msg="$1"
+    mkdir -p "$(dirname "$LOG_FILE")"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [a-install-master] ERROR: $msg" >> "$LOG_FILE"
+    echo "Error: $msg" >&2
+}
+
+handle_error() {
+    log_error "$2"
+    exit "$1"
+}
+
+# --- Argument Validation ---
+for cmd in unzip; do
+    command -v "$cmd" &>/dev/null || handle_error 207 "Required dependency '$cmd' is not installed."
+done
+
+[ $# -lt 1 ] && { echo "Usage: a-install-master VERSION [TYPE] [PACKAGE_ID]"; exit 1; }
+
+version=$1
+release_type="${2:-application}"
+package_id="${3:-main}"
+
+# Normalize version (ensure v prefix for directory, without v for display)
+[[ "$version" =~ ^v ]] && version="${version#v}"
+
+# --- Paths ---
+PACKAGE_DIR="$RELEASES_REPO/$release_type/$package_id"
+SOURCE_ZIP="$PACKAGE_DIR/v${version}.zip"
+TARGET_DIR="$INSTALLED_DIR/v${version}"
+
+# --- Check if master already exists (immutable) ---
+if [ -d "$TARGET_DIR" ]; then
+    log_info "Master v${version} already exists (immutable, not modifying)"
+    exit 0
+fi
+
+# --- Verify source zip exists ---
+[ -f "$SOURCE_ZIP" ] || handle_error 218 "Release v${version} not found at $SOURCE_ZIP"
+
+log_info "Creating master installation v${version}..."
+
+# --- Extract to temporary directory first (atomic creation) ---
+TEMP_DIR=$(mktemp -d)
+trap "rm -rf '$TEMP_DIR'" EXIT
+
+cd "$TEMP_DIR" || handle_error 210 "Failed to change to temp directory"
+
+unzip -q "$SOURCE_ZIP" -d "$TEMP_DIR" || handle_error 212 "Failed to extract release archive"
+
+# Check if zip extracted into a subdirectory and fix if needed
+# (some zips have a root folder like "astero-v1.0.0/")
+if [ ! -f "$TEMP_DIR/artisan" ]; then
+    # Look for artisan in a subdirectory
+    subdir=$(find "$TEMP_DIR" -maxdepth 2 -name "artisan" -type f | head -1 | xargs dirname 2>/dev/null)
+    if [ -n "$subdir" ] && [ "$subdir" != "$TEMP_DIR" ]; then
+        log_info "Moving files from subdirectory: $subdir"
+        mv "$subdir"/* "$TEMP_DIR"/ 2>/dev/null || true
+        mv "$subdir"/.[!.]* "$TEMP_DIR"/ 2>/dev/null || true
+        rmdir "$subdir" 2>/dev/null || true
+    fi
+fi
+
+# Verify required files exist after extraction
+if [ ! -f "$TEMP_DIR/artisan" ]; then
+    handle_error 212 "Extraction failed: artisan file not found in extracted archive"
+fi
+
+if [ ! -f "$TEMP_DIR/public/index.php" ]; then
+    handle_error 212 "Extraction failed: public/index.php not found in extracted archive"
+fi
+
+if [ ! -d "$TEMP_DIR/vendor" ]; then
+    handle_error 212 "Extraction failed: vendor directory not found in extracted archive"
+fi
+
+log_info "Extraction verified: artisan, public/index.php, vendor/ found"
+
+# Remove hestia folder if present (security - contains server scripts)
+# Note: Excluded from release zip since v1.0.13, but check for older releases
+[ -d "$TEMP_DIR/hestia" ] && rm -rf "$TEMP_DIR/hestia"
+
+# Remove any .env file that might have been included
+rm -f "$TEMP_DIR/.env"
+
+# Remove storage directory if present (excluded from release zip)
+rm -rf "$TEMP_DIR/storage"
+
+# Ensure bootstrap/cache exists but is empty (per-site cache)
+rm -rf "$TEMP_DIR/bootstrap/cache"
+mkdir -p "$TEMP_DIR/bootstrap/cache"
+
+# --- Move to final location atomically ---
+mkdir -p "$INSTALLED_DIR" || handle_error 210 "Failed to create installed directory"
+
+# Remove trap since we're moving the directory
+trap - EXIT
+
+mv "$TEMP_DIR" "$TARGET_DIR" || handle_error 210 "Failed to move master to final location"
+
+# --- Set permissions (read-only but readable by all users) ---
+# Masters are shared via symlinks, so all website users need read access
+# Set directories to 755 (rwxr-xr-x) and files to 644 (rw-r--r--)
+find "$TARGET_DIR" -type d -exec chmod 755 {} \;
+find "$TARGET_DIR" -type f -exec chmod 644 {} \;
+
+# Ensure artisan is executable
+chmod 755 "$TARGET_DIR/artisan" 2>/dev/null || true
+
+# Ensure root owns everything
+chown -R root:root "$TARGET_DIR"
+
+log_info "Master installation created: $TARGET_DIR (immutable)"
+$BIN/v-log-action "system" "Info" "Astero" "Master installation created: v${version}"
+
+exit 0

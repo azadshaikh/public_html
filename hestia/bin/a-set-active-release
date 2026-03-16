@@ -1,0 +1,81 @@
+#!/bin/bash
+#
+# Script: a-set-active-release
+#
+# Description: Sets which local release version should be used for new deployments.
+#
+# Usage: a-set-active-release TYPE PACKAGE_ID VERSION
+#
+# Exit Codes:
+#   0   - Success
+#   1   - Invalid arguments
+#   204 - Releases directory missing
+#   218 - Version not found locally
+
+# --- Configuration ---
+HESTIA=${HESTIA:-/usr/local/hestia}
+BIN=${BIN:-/usr/local/hestia/bin}
+ASTERO_DATA_DIR="${ASTERO_DATA_DIR:-/usr/local/hestia/data/astero}"
+RELEASES_DIR="$ASTERO_DATA_DIR/releases"
+LOG_FILE="${ASTERO_DATA_DIR}/logs/astero-scripts.log"
+
+[ -f "$HESTIA/func/main.sh" ] && source $HESTIA/func/main.sh
+
+# --- Helper Functions ---
+log_error() {
+    local msg="$1"
+    mkdir -p "$(dirname "$LOG_FILE")"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [a-set-active-release] ERROR: $msg" >> "$LOG_FILE"
+    echo "Error: $msg" >&2
+}
+
+handle_error() {
+    log_error "$2"
+    exit "$1"
+}
+
+show_usage() {
+    echo "Usage: a-set-active-release TYPE PACKAGE_ID VERSION"
+    exit 1
+}
+
+# --- Argument Validation ---
+[ $# -ne 3 ] && show_usage
+
+release_type=$1
+package_id=$2
+version=$3
+
+# Normalize version
+[[ "$version" =~ ^v ]] || version="v$version"
+
+# --- Path Validation ---
+PACKAGE_DIR="$RELEASES_DIR/$release_type/$package_id"
+VERSION_FILE="$PACKAGE_DIR/$version.zip"
+
+[ -d "$RELEASES_DIR" ] || handle_error 204 "Releases directory does not exist."
+[ -d "$PACKAGE_DIR" ] || { echo "Error: No releases found for $release_type/$package_id"; exit 218; }
+
+if [ ! -f "$VERSION_FILE" ]; then
+    echo "Error: Version $version not found locally"
+    echo "Available:"
+    for f in "$PACKAGE_DIR"/v*.zip; do
+        [ -f "$f" ] && echo "  $(basename "$f" .zip)"
+    done
+    exit 218
+fi
+
+# --- Set Active Version ---
+previous_version=""
+if [ -L "$PACKAGE_DIR/current" ]; then
+    previous_link=$(readlink "$PACKAGE_DIR/current")
+    previous_version=$(basename "$previous_link" .zip)
+fi
+
+ln -sfn "$version.zip" "$PACKAGE_DIR/current" || handle_error 210 "Failed to update current symlink."
+
+echo "Active release: $release_type/$package_id $version"
+[ -n "$previous_version" ] && [ "$previous_version" != "$version" ] && echo "Previous: $previous_version"
+
+[ -f "$BIN/v-log-action" ] && $BIN/v-log-action "system" "Info" "Astero" "Active release set: $release_type/$package_id $version"
+exit 0

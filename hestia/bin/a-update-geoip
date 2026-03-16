@@ -1,0 +1,164 @@
+#!/bin/bash
+#=============================================================================
+# a-update-geoip - Download/update MaxMind GeoLite2 database
+#=============================================================================
+# Usage: a-update-geoip [--edition EDITION] [--force]
+#
+# Downloads the latest MaxMind GeoLite2 database and installs it to the
+# shared location at /usr/local/hestia/data/astero/geoip/
+#
+# Options:
+#   --edition EDITION    Database edition (default: GeoLite2-City)
+#   --force              Skip confirmation prompt
+#   --help               Show this help message
+#
+# License key is hardcoded in this script. Can be overridden via:
+#   MAXMIND_LICENSE_KEY environment variable
+#=============================================================================
+
+set -euo pipefail
+
+# Configuration
+GEOIP_DIR="/usr/local/hestia/data/astero/geoip"
+DEFAULT_EDITION="GeoLite2-City"
+DEFAULT_LICENSE_KEY="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"
+MAXMIND_DOWNLOAD_URL="https://download.maxmind.com/app/geoip_download"
+
+# Parse arguments (can override defaults)
+LICENSE_KEY="${MAXMIND_LICENSE_KEY:-$DEFAULT_LICENSE_KEY}"
+EDITION="${MAXMIND_EDITION:-$DEFAULT_EDITION}"
+FORCE=false
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --edition)
+            EDITION="$2"
+            shift 2
+            ;;
+        --force)
+            FORCE=true
+            shift
+            ;;
+        --help)
+            head -n 17 "$0" | tail -n 15
+            exit 0
+            ;;
+        *)
+            echo "Unknown option: $1"
+            exit 1
+            ;;
+    esac
+done
+
+# Validate license key (should never fail with hardcoded default)
+if [[ -z "$LICENSE_KEY" ]]; then
+    echo "Error: MaxMind license key not configured."
+    exit 1
+fi
+
+# Create directory if needed
+mkdir -p "$GEOIP_DIR"
+
+# Build download URL
+DB_FILE="$GEOIP_DIR/${EDITION}.mmdb"
+TEMP_FILE="$GEOIP_DIR/${EDITION}.tar.gz"
+
+echo "=== MaxMind GeoIP Database Update ==="
+echo "Edition: $EDITION"
+echo "Target: $DB_FILE"
+echo ""
+
+# Check if database exists
+if [[ -f "$DB_FILE" ]]; then
+    CURRENT_SIZE=$(stat -c%s "$DB_FILE" 2>/dev/null || echo "0")
+    CURRENT_DATE=$(stat -c%y "$DB_FILE" 2>/dev/null | cut -d' ' -f1 || echo "unknown")
+    echo "Current database: $CURRENT_DATE ($(numfmt --to=iec-i --suffix=B "$CURRENT_SIZE" 2>/dev/null || echo "${CURRENT_SIZE} bytes"))"
+    
+    if [[ "$FORCE" != true ]]; then
+        read -r -p "Download latest version? [y/N] " response
+        if [[ ! "$response" =~ ^[Yy]$ ]]; then
+            echo "Cancelled."
+            exit 0
+        fi
+    fi
+fi
+
+echo ""
+echo "Downloading ${EDITION}..."
+
+# Download database
+DOWNLOAD_URL="${MAXMIND_DOWNLOAD_URL}?edition_id=${EDITION}&license_key=${LICENSE_KEY}&suffix=tar.gz"
+
+# Use -L to follow redirects, -f to fail on HTTP errors
+HTTP_CODE=$(curl -sSL -w "%{http_code}" -o "$TEMP_FILE" "$DOWNLOAD_URL")
+
+if [[ "$HTTP_CODE" != "200" ]]; then
+    echo "Error: Download failed with HTTP $HTTP_CODE"
+    # Show error content if it's small (error messages from MaxMind)
+    if [[ -f "$TEMP_FILE" ]] && [[ $(stat -c%s "$TEMP_FILE" 2>/dev/null || echo 0) -lt 1000 ]]; then
+        echo "Response: $(cat "$TEMP_FILE")"
+    fi
+    rm -f "$TEMP_FILE"
+    exit 1
+fi
+
+# Verify it's actually a gzip file (not an HTML error page)
+if ! file "$TEMP_FILE" | grep -q "gzip compressed"; then
+    echo "Error: Downloaded file is not a valid gzip archive"
+    echo "The license key may be invalid or expired."
+    # Show first line if it looks like an error message
+    if [[ -f "$TEMP_FILE" ]]; then
+        echo "Response: $(head -c 200 "$TEMP_FILE")"
+    fi
+    rm -f "$TEMP_FILE"
+    exit 1
+fi
+
+# Extract mmdb file from tar.gz
+echo "Extracting database..."
+EXTRACT_DIR=$(mktemp -d)
+if ! tar -xzf "$TEMP_FILE" -C "$EXTRACT_DIR"; then
+    echo "Error: Failed to extract archive"
+    rm -f "$TEMP_FILE"
+    rm -rf "$EXTRACT_DIR"
+    exit 1
+fi
+
+# Find the .mmdb file
+MMDB_FILE=$(find "$EXTRACT_DIR" -name "*.mmdb" -type f | head -1)
+if [[ -z "$MMDB_FILE" ]]; then
+    echo "Error: No .mmdb file found in archive"
+    rm -f "$TEMP_FILE"
+    rm -rf "$EXTRACT_DIR"
+    exit 1
+fi
+
+# Validate the new database file
+NEW_SIZE=$(stat -c%s "$MMDB_FILE")
+if [[ "$NEW_SIZE" -lt 1000000 ]]; then
+    echo "Error: Downloaded database is too small (${NEW_SIZE} bytes)"
+    rm -f "$TEMP_FILE"
+    rm -rf "$EXTRACT_DIR"
+    exit 1
+fi
+
+# Remove old database and install new one
+if [[ -f "$DB_FILE" ]]; then
+    rm -f "$DB_FILE"
+    echo "Removed old database"
+fi
+
+mv "$MMDB_FILE" "$DB_FILE"
+chmod 644 "$DB_FILE"
+
+# Cleanup
+rm -f "$TEMP_FILE"
+rm -rf "$EXTRACT_DIR"
+
+# Show result
+FINAL_SIZE=$(stat -c%s "$DB_FILE")
+echo ""
+echo "✓ Database updated successfully!"
+echo "  File: $DB_FILE"
+echo "  Size: $(numfmt --to=iec-i --suffix=B "$FINAL_SIZE" 2>/dev/null || echo "${FINAL_SIZE} bytes")"
+echo ""

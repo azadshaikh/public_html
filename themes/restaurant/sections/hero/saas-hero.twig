@@ -1,0 +1,168 @@
+{# SaaS Hero Section - Modern Two-Column Layout #}
+
+{% set badge_text = badge_text|default('New: AI-Powered Content') %}
+{% set headline = headline|default('The Complete CMS for Modern Teams') %}
+{% set subheadline = subheadline|default('Everything you need to build, manage, and scale your content. From blogs to enterprise websites, our platform grows with you.') %}
+{% set primary_cta_text = primary_cta_text|default('Start Free Trial') %}
+{% set primary_cta_url = primary_cta_url|default('/signup') %}
+{% set secondary_cta_text = secondary_cta_text|default('Watch Demo') %}
+{% set secondary_cta_url = secondary_cta_url|default('#demo') %}
+{% set trust_text = trust_text|default('Trusted by 10,000+ teams worldwide') %}
+
+<section class="saas-hero py-5 py-lg-7 position-relative overflow-hidden" title="Hero">
+    {# Background Gradient #}
+    <div class="hero-bg-gradient position-absolute top-0 start-0 w-100 h-100" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); z-index: -2;"></div>
+    
+    {# Decorative Shapes #}
+    <div class="hero-shape hero-shape-1 position-absolute rounded-circle" style="width: 600px; height: 600px; background: rgba(255,255,255,0.03); top: -200px; right: -100px; z-index: -1;"></div>
+    <div class="hero-shape hero-shape-2 position-absolute rounded-circle" style="width: 400px; height: 400px; background: rgba(255,255,255,0.05); bottom: -100px; left: -100px; z-index: -1;"></div>
+    
+    <div class="container position-relative">
+        <div class="row align-items-center min-vh-75 py-5">
+            {# Content Column #}
+            <div class="col-lg-6 mb-5 mb-lg-0">
+                {# Badge #}
+                {% if badge_text %}
+                <div class="mb-3" data-aos="fade-up">
+                    <span class="badge bg-white bg-opacity-20 text-white px-3 py-2 rounded-pill">
+                        <i class="ri-sparkle-line me-1"></i>{{ badge_text }}
+                    </span>
+                </div>
+                {% endif %}
+                
+                {# Headline #}
+                <h1 class="display-3 fw-bold text-white mb-4" data-aos="fade-up" data-aos-delay="100">
+                    {{ headline }}
+                </h1>
+                
+                {# Subheadline #}
+                <p class="lead text-white opacity-75 mb-4" data-aos="fade-up" data-aos-delay="200">
+                    {{ subheadline }}
+                </p>
+                
+                {# CTA Buttons #}
+                <div class="d-flex flex-column flex-sm-row gap-3 mb-4" data-aos="fade-up" data-aos-delay="300">
+                    <a href="{{ primary_cta_url }}" class="btn btn-light btn-lg px-5 py-3 fw-semibold rounded-pill">
+                        {{ primary_cta_text }}
+                        <i class="ri-arrow-right-line ms-2"></i>
+                    </a>
+                    <a href="{{ secondary_cta_url }}" class="btn btn-outline-light btn-lg px-5 py-3 rounded-pill">
+                        <i class="ri-play-circle-line me-2"></i>{{ secondary_cta_text }}
+                    </a>
+                </div>
+                
+                {# Trust Indicators #}
+                <div class="d-flex align-items-center gap-4" data-aos="fade-up" data-aos-delay="400">
+                    <div class="d-flex -space-x-2">
+                        <img src="https://ui-avatars.com/api/?name=Alex+W&background=6366f1&color=fff&size=40" class="rounded-circle border border-2 border-white" width="40" height="40" alt="User">
+                        <img src="https://ui-avatars.com/api/?name=Sarah+J&background=10b981&color=fff&size=40" class="rounded-circle border border-2 border-white" width="40" height="40" alt="User" style="margin-left: -10px;">
+                        <img src="https://ui-avatars.com/api/?name=Mike+C&background=f59e0b&color=fff&size=40" class="rounded-circle border border-2 border-white" width="40" height="40" alt="User" style="margin-left: -10px;">
+                    </div>
+                    <p class="text-white opacity-75 mb-0 small">
+                        <i class="ri-star-fill text-warning me-1"></i>{{ trust_text }}
+                    </p>
+                </div>
+            </div>
+            
+            {# Visual Column #}
+            <div class="col-lg-6" data-aos="fade-left" data-aos-delay="500">
+                <div class="hero-dashboard position-relative">
+                    {# Main Dashboard Preview #}
+                    <div class="dashboard-card bg-white rounded-4 shadow-lg p-4">
+                        {# Dashboard Header #}
+                        <div class="d-flex align-items-center gap-2 mb-4">
+                            <div class="d-flex gap-1">
+                                <span class="rounded-circle bg-danger" style="width: 12px; height: 12px;"></span>
+                                <span class="rounded-circle bg-warning" style="width: 12px; height: 12px;"></span>
+                                <span class="rounded-circle bg-success" style="width: 12px; height: 12px;"></span>
+                            </div>
+                            <span class="text-muted small ms-2">Content Studio</span>
+                        </div>
+                        
+                        {# Dashboard Content #}
+                        <div class="row g-3">
+                            <div class="col-8">
+                                <div class="bg-light rounded-3 p-3 mb-3">
+                                    <div class="d-flex gap-2 mb-2">
+                                        <span class="badge bg-primary">Published</span>
+                                        <span class="text-muted small">Blog Post</span>
+                                    </div>
+                                    <h6 class="mb-1">10 Tips for Better Content</h6>
+                                    <p class="text-muted small mb-0">Draft saved 2 mins ago...</p>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <div class="bg-light rounded-3 p-2 flex-fill text-center">
+                                        <i class="ri-file-text-line text-primary fs-4"></i>
+                                        <p class="small text-muted mb-0">Posts</p>
+                                    </div>
+                                    <div class="bg-light rounded-3 p-2 flex-fill text-center">
+                                        <i class="ri-image-line text-success fs-4"></i>
+                                        <p class="small text-muted mb-0">Media</p>
+                                    </div>
+                                    <div class="bg-light rounded-3 p-2 flex-fill text-center">
+                                        <i class="ri-user-line text-warning fs-4"></i>
+                                        <p class="small text-muted mb-0">Users</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="bg-primary bg-opacity-10 rounded-3 p-3 text-center">
+                                    <i class="ri-bar-chart-line text-primary fs-1 mb-2"></i>
+                                    <p class="fw-bold mb-0">24.5K</p>
+                                    <p class="text-muted small mb-0">Views</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {# Floating Elements #}
+                    <div class="floating-card position-absolute bg-white rounded-3 shadow-lg p-3" style="bottom: 20px; left: -30px; animation: float 3s ease-in-out infinite;">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="bg-success bg-opacity-10 rounded-2 p-2">
+                                <i class="ri-check-line text-success fs-5"></i>
+                            </div>
+                            <div>
+                                <p class="fw-semibold mb-0 small">Site Published!</p>
+                                <p class="text-muted small mb-0">Just now</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="floating-card position-absolute bg-white rounded-3 shadow-lg p-3" style="top: 40px; right: -20px; animation: float 4s ease-in-out infinite 1s;">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="bg-primary bg-opacity-10 rounded-2 p-2">
+                                <i class="ri-rocket-line text-primary fs-5"></i>
+                            </div>
+                            <div>
+                                <p class="fw-semibold mb-0 small">SEO Score</p>
+                                <p class="text-success small mb-0">98/100</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+.min-vh-75 {
+    min-height: 75vh;
+}
+.hero-dashboard .dashboard-card {
+    transform: perspective(1000px) rotateY(-5deg) rotateX(5deg);
+    transition: transform 0.3s ease;
+}
+.hero-dashboard:hover .dashboard-card {
+    transform: perspective(1000px) rotateY(0deg) rotateX(0deg);
+}
+@media (max-width: 991.98px) {
+    .hero-dashboard {
+        transform: scale(0.9);
+    }
+}
+</style>

@@ -1,0 +1,35 @@
+{# Stats Counter Section #}
+
+{% set stats = stats|default([
+    {'number': '10K+', 'label': 'Active Users'},
+    {'number': '50M+', 'label': 'Pages Published'},
+    {'number': '99.9%', 'label': 'Uptime'},
+    {'number': '4.9/5', 'label': 'Customer Rating'}
+]) %}
+
+<section class="stats-section py-5 bg-primary text-white" title="Stats">
+    <div class="container">
+        <div class="row g-4">
+            {% for stat in stats %}
+            <div class="col-6 col-md-3" data-aos="fade-up" data-aos-delay="{{ loop.index * 100 }}">
+                <div class="stat-item text-center">
+                    <div class="stat-number display-4 fw-bold mb-1">{{ stat.number }}</div>
+                    <div class="stat-label text-white opacity-75">{{ stat.label }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<style>
+.stats-section {
+    background: linear-gradient(135deg, var(--bs-primary) 0%, #5a67d8 100%);
+}
+.stat-number {
+    background: linear-gradient(to right, #ffffff, rgba(255,255,255,0.8));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+</style>

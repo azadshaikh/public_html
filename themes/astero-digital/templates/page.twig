@@ -1,0 +1,58 @@
+{% extends 'layouts/layout.twig' %}
+{% block body_class %}single-page{% endblock %}
+
+{% block content %}
+    {# page header section #}
+    <section class="position-relative text-light text-center" style="height: 400px;">
+        {# Image #}
+        {% if page.post_feature_image_id %}
+            {{ responsive_image(page.post_feature_image_id, {'class': 'w-100 h-100 object-fit-cover position-absolute start-0 top-0', 'alt': page.title, 'style': 'z-index:1;object-fit:cover;'}) }}
+        {% else %}
+            <img class="w-100 h-100 object-fit-cover position-absolute start-0 top-0"
+                src="{{ theme_asset('img/default-feature-image.jpg') }}" alt="{{ page.title }}"
+                style="z-index:1;object-fit:cover;">
+        {% endif %}
+        {# Overlay #}
+        <div class="position-absolute w-100 h-100 bg-dark start-0 top-0 opacity-50" style="z-index:2;"></div>
+        {# Content #}
+        <div class="position-relative d-flex flex-column justify-content-center h-100 px-3" style="z-index:3;">
+            <div class="row">
+                <div class="col-lg-6 offset-lg-3">
+                    <h1 class="display-4 fw-semibold aos-init aos-animate mb-2" data-aos="fade-up" data-aos-duration="1600">
+                        {{ page.title }}</h1>
+                    {% if page.post_excerpt %}
+                        <p class="fs-4 aos-init aos-animate mb-2" data-aos="fade-up" data-aos-delay="200"
+                            data-aos-duration="1600">
+                            {{ page.post_excerpt }}
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {% if session_has('success') or session_has('error') %}
+        {{ form_response() }}
+    {% endif %}
+
+    <div class="row">
+        <div class="col-12">
+            <article class="page">
+
+                <div class="page-content" data-v-post-content data-astero-enabled>
+                    {% if page.format == 'asterobuilder' and page.content %}
+                        {{ page.content|raw }}
+                    {% elseif page.content %}
+                        {{ page.content|raw }}
+                    {% else %}
+                        <div class="alert alert-info text-center" role="alert">
+                            <i class="ri-information-line"></i>
+                            This page doesn't have any content yet.
+                        </div>
+                    {% endif %}
+                </div>
+
+            </article>
+        </div>
+    </div>
+{% endblock %}

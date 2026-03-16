@@ -1,0 +1,23 @@
+{
+    "name": "Updated Site Title",
+    "short_name": "Updated Site Title",
+    "icons": [
+        {
+            "src": "https://one.xip.net.in/web-app-manifest-192x192.png?source=theme&v=a84d71507abaed31",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "https://one.xip.net.in/web-app-manifest-512x512.png?source=theme&v=a84d71507abaed31",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ],
+    "theme_color": "#252525",
+    "background_color": "#ffffff",
+    "display": "standalone",
+    "start_url": "/",
+    "scope": "/"
+}

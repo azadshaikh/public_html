@@ -1,0 +1,88 @@
+#!/bin/bash
+#
+# Script: a-recache-application
+#
+# Description: Runs Astero recache for a provisioned website release.
+#              Executes `php artisan astero:recache` as the website user.
+#
+# Usage: a-recache-application HESTIA_USER DOMAIN
+#
+# Exit Codes:
+#   0   - Success
+#   1   - Invalid arguments
+#   3   - User or domain not found
+#   9   - Operation failed
+#   210 - Directory operation failed
+#   216 - Artisan recache failed
+#
+
+# --- Configuration ---
+HESTIA=${HESTIA:-/usr/local/hestia}
+BIN=${BIN:-/usr/local/hestia/bin}
+ASTERO_DATA_DIR="${ASTERO_DATA_DIR:-/usr/local/hestia/data/astero}"
+LOG_FILE="${ASTERO_DATA_DIR}/logs/astero-scripts.log"
+
+# --- Argument Validation (must happen before sourcing Hestia main.sh) ---
+user="${1:-}"
+domain="${2:-}"
+
+if [ "$#" -lt 2 ] || [ -z "$user" ] || [ -z "$domain" ]; then
+    echo "Usage: a-recache-application HESTIA_USER DOMAIN" >&2
+    exit 1
+fi
+
+# Source Hestia core functions
+source "$HESTIA/func/main.sh"
+source "$HESTIA/conf/hestia.conf"
+
+# --- Helper Functions ---
+log_error() {
+    local msg="$1"
+    mkdir -p "$(dirname "$LOG_FILE")"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [a-recache-application] ERROR: $msg" >> "$LOG_FILE"
+    echo "Error: $msg" >&2
+}
+
+handle_error() {
+    log_error "$2"
+    exit "$1"
+}
+
+log_info() {
+    local msg="$1"
+    mkdir -p "$(dirname "$LOG_FILE")"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [a-recache-application] INFO: $msg" >> "$LOG_FILE"
+    echo "$msg"
+}
+
+# --- Runtime Validation ---
+hestia_user="$user"
+web_domain="$domain"
+
+is_object_valid 'user' 'USER' "$hestia_user" || handle_error 3 "User '$hestia_user' does not exist."
+is_object_valid 'web' 'DOMAIN' "$web_domain" || handle_error 3 "Domain '$web_domain' does not exist."
+"$BIN/v-list-web-domain" "$hestia_user" "$web_domain" >/dev/null 2>&1 || handle_error 3 "Domain '$web_domain' does not belong to user '$hestia_user'."
+
+ROOT_DIR="/home/$hestia_user/web/$web_domain/public_html"
+CURRENT_SYMLINK="$ROOT_DIR/current"
+ARTISAN_PATH="$CURRENT_SYMLINK/artisan"
+
+[ -d "$CURRENT_SYMLINK" ] || handle_error 210 "Current release directory missing at $CURRENT_SYMLINK"
+[ -f "$ARTISAN_PATH" ] || handle_error 216 "Artisan not found at $ARTISAN_PATH"
+
+log_info "Running astero:recache for $web_domain..."
+
+cd "$CURRENT_SYMLINK" || handle_error 210 "Failed to change directory to $CURRENT_SYMLINK"
+
+command_output=$(sudo -u "$hestia_user" php artisan astero:recache --no-interaction 2>&1)
+command_exit_code=$?
+
+if [ "$command_exit_code" -ne 0 ]; then
+    handle_error 216 "Artisan recache failed: $command_output"
+fi
+
+"$BIN/v-log-action" "system" "Info" "System" "Application recache completed for $web_domain (User: $hestia_user)."
+log_info "Application recache completed for $web_domain"
+echo "Application recache completed for $web_domain"
+
+exit 0

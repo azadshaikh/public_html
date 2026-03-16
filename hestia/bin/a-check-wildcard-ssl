@@ -1,0 +1,29 @@
+#!/bin/bash
+# Usage: a-check-wildcard-ssl <domain>
+# Outputs: JSON with exists, expires_at, days_left
+# Reads from asterossl's cert store — no root needed.
+#
+# Exit codes:
+#   0 - Always (output JSON indicates cert status)
+
+set -euo pipefail
+
+DOMAIN="${1:?Usage: a-check-wildcard-ssl <domain>}"
+CERT_DIR="/home/asterossl/.ssl-store/$DOMAIN"
+CERT="$CERT_DIR/fullchain.pem"
+
+if [ ! -f "$CERT" ]; then
+    echo '{"exists":false}'
+    exit 0
+fi
+
+EXPIRY=$(openssl x509 -noout -enddate -in "$CERT" | cut -d= -f2)
+EXPIRY_EPOCH=$(date -d "$EXPIRY" +%s)
+NOW_EPOCH=$(date +%s)
+DAYS_LEFT=$(( (EXPIRY_EPOCH - NOW_EPOCH) / 86400 ))
+
+if [ $DAYS_LEFT -lt 14 ]; then
+    echo "{\"exists\":false,\"expired\":true,\"expires_at\":\"$EXPIRY\",\"days_left\":$DAYS_LEFT}"
+else
+    echo "{\"exists\":true,\"expires_at\":\"$EXPIRY\",\"days_left\":$DAYS_LEFT}"
+fi

@@ -1,0 +1,85 @@
+{#
+    Social Links Component
+
+    Displays social media links for an author.
+
+    Uses the nested author.social object following the data contract.
+
+    @see docs/astero-modules-system/DATA_CONTRACT.md
+
+    @param author - The author object with author.social nested object
+    @param size - Icon size: 'sm', 'md', 'lg' (default: 'md')
+    @param style - Link style: 'icons', 'buttons' (default: 'icons')
+    @param class - Additional CSS classes
+#}
+
+{% set size = size ?? 'md' %}
+{% set style = style ?? 'icons' %}
+
+{% set icon_sizes = {
+    'sm': 'fs-6',
+    'md': '',
+    'lg': 'fs-4'
+} %}
+
+{% set social = author.social ?? {} %}
+{% set has_social = social.website or social.twitter or social.facebook or social.instagram or social.linkedin %}
+
+{% if has_social %}
+    <div class="social-links d-flex gap-2 {{ class ?? '' }}">
+        {# Website #}
+        {% if social.website %}
+            <a class="text-decoration-none text-muted {{ icon_sizes[size] }}"
+                href="{{ esc_url(social.website) }}"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Website">
+                <i class="ri-global-line text-primary"></i>
+            </a>
+        {% endif %}
+
+        {# Twitter/X #}
+        {% if social.twitter %}
+            <a class="text-decoration-none text-muted {{ icon_sizes[size] }}"
+                href="{{ esc_url(social.twitter) }}"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Twitter">
+                <i class="ri-twitter-x-line text-dark"></i>
+            </a>
+        {% endif %}
+
+        {# Facebook #}
+        {% if social.facebook %}
+            <a class="text-decoration-none text-muted {{ icon_sizes[size] }}"
+                href="{{ esc_url(social.facebook) }}"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Facebook">
+                <i class="ri-facebook-line" style="color: #1877f2;"></i>
+            </a>
+        {% endif %}
+
+        {# Instagram #}
+        {% if social.instagram %}
+            <a class="text-decoration-none text-muted {{ icon_sizes[size] }}"
+                href="{{ esc_url(social.instagram) }}"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Instagram">
+                <i class="ri-instagram-line" style="color: #e4405f;"></i>
+            </a>
+        {% endif %}
+
+        {# LinkedIn #}
+        {% if social.linkedin %}
+            <a class="text-decoration-none text-muted {{ icon_sizes[size] }}"
+                href="{{ esc_url(social.linkedin) }}"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="LinkedIn">
+                <i class="ri-linkedin-line" style="color: #0a66c2;"></i>
+            </a>
+        {% endif %}
+    </div>
+{% endif %}

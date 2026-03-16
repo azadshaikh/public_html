@@ -1,0 +1,221 @@
+#!/bin/bash
+#
+# Script: a-update-astero
+#
+# Description: Updates Astero to a specific version using symlinks to shared master.
+#              Creates a new release directory with symlinks to the new master version,
+#              runs migrations, then performs atomic symlink switch.
+#              Old release is preserved for instant rollback.
+#
+# Usage: a-update-astero HESTIA_USER DOMAIN TYPE [VERSION]
+#
+# Exit Codes:
+#   0   - Success
+#   1   - Invalid arguments
+#   3   - User or domain not found
+#   204 - Releases directory missing
+#   207 - Required dependency missing
+#   210 - Directory operation failed
+#   216 - Artisan update failed
+#   218 - No local release available
+#   220 - Health check failed
+
+# --- Configuration ---
+HESTIA=${HESTIA:-/usr/local/hestia}
+BIN=${BIN:-/usr/local/hestia/bin}
+SCRIPT_NAME="a-update-astero"
+
+# --- Argument Validation (must happen before sourcing Hestia main.sh) ---
+user="${1:-}"
+domain="${2:-}"
+
+if [ "$#" -lt 3 ] || [ -z "$user" ] || [ -z "$domain" ]; then
+    echo "Error: Not enough arguments provided. Usage: a-update-astero HESTIA_USER DOMAIN TYPE [VERSION]" >&2
+    exit 1
+fi
+
+# Source Hestia core functions
+source "$HESTIA/func/main.sh"
+source "$HESTIA/conf/hestia.conf"
+source "$HESTIA/func/domain.sh"
+
+# Source Astero common functions
+source "$BIN/a-common.sh"
+
+# --- Argument Validation ---
+check_args '3' "$#" 'HESTIA_USER DOMAIN TYPE [VERSION]'
+hestia_user=$1
+web_domain=$2
+package_id=$3
+requested_version="${4:-}"
+
+echo "Updating $web_domain..."
+
+# Check dependencies
+for cmd in php jq; do
+    command -v "$cmd" >/dev/null 2>&1 || handle_error 207 "Required dependency '$cmd' is not installed."
+done
+
+# Validate user and domain
+"$BIN/v-list-sys-users" 2>/dev/null | grep -q "^$hestia_user$" || handle_error 3 "Hestia user '$hestia_user' does not exist."
+[ -d "/home/$hestia_user/web/$web_domain" ] || handle_error 3 "Domain '$web_domain' does not exist."
+
+# --- Local Repository Lookup ---
+RELEASE_TYPE="application"
+PACKAGE_DIR="$RELEASES_REPO/$RELEASE_TYPE/$package_id"
+
+[ -d "$RELEASES_REPO" ] || handle_error 218 "Local releases repository not found. Run 'a-sync-releases' first."
+[ -d "$PACKAGE_DIR" ] || handle_error 218 "No releases found for $RELEASE_TYPE/$package_id."
+
+# Determine target version
+if [ -n "$requested_version" ]; then
+    [[ "$requested_version" =~ ^v ]] || requested_version="v$requested_version"
+    SOURCE_ZIP="$PACKAGE_DIR/$requested_version.zip"
+    target_version="${requested_version#v}"
+    [ -f "$SOURCE_ZIP" ] || handle_error 218 "Version $requested_version not found locally."
+else
+    [ -L "$PACKAGE_DIR/current" ] || handle_error 218 "No active release set. Run 'a-set-active-release' first."
+    CURRENT_LINK=$(readlink "$PACKAGE_DIR/current")
+    SOURCE_ZIP="$PACKAGE_DIR/$CURRENT_LINK"
+    target_version=$(basename "$CURRENT_LINK" .zip)
+    target_version="${target_version#v}"
+    [ -f "$SOURCE_ZIP" ] || handle_error 218 "Active release file not found."
+fi
+
+log_info "Target version: v$target_version"
+
+# --- Path Resolution ---
+ROOTDIR="/home/$hestia_user/web/$web_domain/public_html"
+SITE_RELEASES_DIR="$ROOTDIR/releases"
+NEW_RELEASE="$SITE_RELEASES_DIR/v$target_version"
+CURRENTDIR="$ROOTDIR/current"
+SHARED_DIR="$ROOTDIR/shared"
+
+[ -d "$SITE_RELEASES_DIR" ] || handle_error 204 "Releases directory missing at $SITE_RELEASES_DIR"
+
+# Get current version
+EXISTING_VERSION=""
+if [ -L "$CURRENTDIR" ]; then
+    existing_target=$(readlink -f "$CURRENTDIR" 2>/dev/null || true)
+    [ -n "$existing_target" ] && EXISTING_VERSION=$(basename "$existing_target")
+fi
+EXISTINGDIR="$SITE_RELEASES_DIR/$EXISTING_VERSION"
+
+# Check if already at target version
+if [ "v$target_version" = "$EXISTING_VERSION" ]; then
+    log_info "Already at version v$target_version"
+    exit 0
+fi
+
+log_info "Current version: ${EXISTING_VERSION:-none}"
+
+# --- Ensure Master Installation Exists (using common function) ---
+ensure_master_exists "$target_version" "$RELEASE_TYPE" "$package_id"
+MASTER_DIR="$INSTALLED_DIR/v$target_version"
+
+# --- Suspend Cron (using common function) ---
+existing_cron=$(suspend_cron "$hestia_user" "$CURRENTDIR")
+
+# --- Create New Release Directory with Symlinks ---
+log_info "Creating new release with symlinks to master..."
+
+# Create release directory structure
+mkdir -p "$NEW_RELEASE" || handle_error 210 "Failed to create release directory."
+mkdir -p "$NEW_RELEASE/bootstrap/cache" || handle_error 210 "Failed to create bootstrap/cache directory."
+mkdir -p "$NEW_RELEASE/public" || handle_error 210 "Failed to create public directory."
+
+# --- Use common functions for symlinks ---
+create_master_symlinks "$NEW_RELEASE" "$MASTER_DIR"
+copy_dir_dependent_files "$NEW_RELEASE" "$MASTER_DIR"
+
+# --- Shared Directory Setup (using common function) ---
+setup_shared_dirs "$SHARED_DIR" "$MASTER_DIR" "$hestia_user" "$EXISTINGDIR"
+sync_shared_themes "$SHARED_DIR" "$MASTER_DIR" "$EXISTINGDIR" "$hestia_user"
+
+# --- Symlinks to shared directories (using common function) ---
+create_shared_symlinks "$NEW_RELEASE"
+
+# --- Per-website Unique Public Files (using common function) ---
+setup_unique_public_files "$NEW_RELEASE" "$SHARED_DIR" "$MASTER_DIR" "$EXISTINGDIR"
+
+# --- Set Ownership ---
+chown -R "$hestia_user:$hestia_user" "$NEW_RELEASE/bootstrap/cache"
+chown -h "$hestia_user:$hestia_user" "$NEW_RELEASE"/* 2>/dev/null || true
+chown -h "$hestia_user:$hestia_user" "$NEW_RELEASE/public"/* 2>/dev/null || true
+
+# --- Validate compiled assets before running migrations ---
+log_info "Validating Vite manifest..."
+if [ ! -f "$NEW_RELEASE/public/build/manifest.json" ]; then
+    log_error "Build manifest missing at $NEW_RELEASE/public/build/manifest.json"
+    rm -rf "$NEW_RELEASE"
+    resume_cron "$hestia_user" "$existing_cron"
+    handle_error 220 "Build manifest missing; aborting update."
+fi
+
+# --- Run Migrations Before Switch ---
+log_info "Running migrations..."
+cd "$NEW_RELEASE" || handle_error 210 "Could not change to release directory."
+
+artisan_output=""
+if sudo -u "$hestia_user" php artisan list --raw 2>/dev/null | grep -q "^astero:update"; then
+    artisan_output=$(sudo -u "$hestia_user" php artisan astero:update --type="$package_id" --force --no-interaction 2>&1)
+    artisan_exit=$?
+else
+    artisan_output=$(sudo -u "$hestia_user" php artisan migrate --force --no-interaction 2>&1)
+    artisan_exit=$?
+fi
+
+if [ $artisan_exit -ne 0 ]; then
+    log_error "Migration failed - keeping old release active"
+    [ -n "$artisan_output" ] && log_error "Artisan output: $artisan_output"
+    # Cleanup failed release
+    rm -rf "$NEW_RELEASE"
+    # Resume cron
+    resume_cron "$hestia_user" "$existing_cron"
+    handle_error 216 "Artisan update failed."
+fi
+
+# --- Health Check Before Switch (using common function) ---
+log_info "Running health check..."
+if ! run_health_check "$NEW_RELEASE" "$SHARED_DIR"; then
+    log_error "Health check failed - keeping old release active"
+    rm -rf "$NEW_RELEASE"
+    resume_cron "$hestia_user" "$existing_cron"
+    handle_error 220 "Health check failed"
+fi
+
+# --- Clear and Rebuild Caches ---
+log_info "Rebuilding caches..."
+sudo -u "$hestia_user" php artisan config:clear --no-interaction >/dev/null 2>&1 || true
+sudo -u "$hestia_user" php artisan config:cache --no-interaction >/dev/null 2>&1 || true
+sudo -u "$hestia_user" php artisan route:cache --no-interaction >/dev/null 2>&1 || true
+sudo -u "$hestia_user" php artisan view:cache --no-interaction >/dev/null 2>&1 || true
+
+# --- Atomic Symlink Switch ---
+log_info "Performing atomic switch to v$target_version..."
+ln -sfn "$NEW_RELEASE" "$CURRENTDIR" || handle_error 210 "Failed to update current symlink."
+
+# --- Resume Cron (using common function) ---
+resume_cron "$hestia_user" "$existing_cron"
+
+# --- Reload PHP-FPM to clear OPcache (using common function) ---
+restart_php_fpm "$hestia_user" "$web_domain"
+
+# --- Restart Queue Workers (using common function) ---
+restart_queue_workers "$hestia_user" "$web_domain"
+
+# --- Cleanup Old Releases (keep only current and previous for rollback) ---
+# Get list of releases sorted by modification time (newest first)
+releases_to_keep=2
+release_count=0
+for old_release in $(ls -dt "$SITE_RELEASES_DIR"/v* 2>/dev/null); do
+    release_count=$((release_count + 1))
+    if [ $release_count -gt $releases_to_keep ] && [ -d "$old_release" ]; then
+        log_info "Removing old release: $(basename "$old_release")"
+        rm -rf "$old_release"
+    fi
+done
+
+log_info "Updated to v$target_version (previous release preserved for rollback)"
+$BIN/v-log-action "system" "Info" "System" "Astero update: $web_domain updated to v$target_version"
+exit 0

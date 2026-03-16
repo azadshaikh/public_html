@@ -1,0 +1,102 @@
+#!/bin/bash
+#
+# Script: a-generate-ssl-certificate
+#
+# Description: Generates a self-signed SSL certificate and applies it to a domain.
+#
+# Usage: a-generate-ssl-certificate USER DOMAIN EMAIL COUNTRY STATE CITY ORG ORG_UNIT
+#
+# Exit Codes:
+#   0   - Success
+#   1   - Invalid arguments
+#   200 - System capability check failed
+#   201 - Object validation failed
+#   202 - Certificate generation failed
+#   203 - Failed to apply certificate
+
+# --- Configuration ---
+HESTIA=${HESTIA:-/usr/local/hestia}
+BIN=${BIN:-/usr/local/hestia/bin}
+ASTERO_DATA_DIR="${ASTERO_DATA_DIR:-/usr/local/hestia/data/astero}"
+LOG_FILE="${ASTERO_DATA_DIR}/logs/astero-scripts.log"
+
+# Source Hestia core functions
+source $HESTIA/func/main.sh
+source $HESTIA/conf/hestia.conf
+source $HESTIA/func/domain.sh
+source $HESTIA/func/ip.sh
+
+# --- Helper Functions ---
+log_error() {
+    local msg="$1"
+    mkdir -p "$(dirname "$LOG_FILE")"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [a-generate-ssl-certificate] ERROR: $msg" >> "$LOG_FILE"
+    echo "Error: $msg" >&2
+}
+
+handle_error() {
+    log_error "$2"
+    exit "$1"
+}
+
+# --- Argument Validation ---
+check_args '8' "$#" 'USER DOMAIN EMAIL COUNTRY STATE CITY ORG ORG_UNIT'
+user=$1
+domain=$2
+email=$3
+country=$4
+state=$5
+city=$6
+org=$7
+org_unit=$8
+
+echo "Generating SSL certificate for $domain..."
+
+# Format validation
+is_format_valid 'user' 'domain' 'email'
+
+# Validate SSL certificate fields (alphanumeric, spaces, hyphens allowed)
+for field_name in country state city org org_unit; do
+    field_value="${!field_name}"
+    if [[ ! "$field_value" =~ ^[a-zA-Z0-9\ \-\.]+$ ]]; then
+        handle_error 1 "Invalid $field_name format: '$field_value'"
+    fi
+done
+
+# System checks
+is_system_enabled "$WEB_SYSTEM" 'WEB_SYSTEM' || handle_error 200 "Web system is not enabled."
+is_system_enabled "$WEB_SSL" 'SSL_SUPPORT' || handle_error 200 "SSL support is not enabled."
+
+# Object validation
+is_object_valid 'user' 'USER' "$user" || handle_error 201 "User '$user' is not valid."
+is_object_unsuspended 'user' 'USER' "$user" || handle_error 201 "User '$user' is suspended."
+is_object_valid 'web' 'DOMAIN' "$domain" || handle_error 201 "Domain '$domain' is not valid."
+is_object_unsuspended 'web' 'DOMAIN' "$domain" || handle_error 201 "Domain '$domain' is suspended."
+
+check_hestia_demo_mode
+
+# --- Generate Certificate ---
+generate_output=$($BIN/v-generate-ssl-cert "$domain" "$email" "$country" "$state" "$city" "$org" "$org_unit" 2>&1)
+[ $? -ne 0 ] && handle_error 202 "Certificate generation failed."
+
+tmp_path=$(echo "$generate_output" | grep "Directory:" | awk '{print $2}')
+[ -z "$tmp_path" ] || [ ! -d "$tmp_path" ] && handle_error 202 "Failed to extract certificate directory."
+
+# --- Apply Certificate ---
+LOGFILE=/tmp/ssl_error.log
+$BIN/v-add-web-domain-ssl "$user" "$domain" "$tmp_path" "yes" >"$LOGFILE" 2>&1
+ssl_result=$?
+
+if [ $ssl_result -ne 0 ]; then
+    $BIN/v-change-web-domain-sslcert "$user" "$domain" "$tmp_path" "yes" >"$LOGFILE" 2>&1
+    [ $? -ne 0 ] && rm -f "$LOGFILE" && handle_error 203 "Failed to apply SSL certificate."
+fi
+rm -f "$LOGFILE"
+
+# Force SSL
+$BIN/v-add-web-domain-ssl-force "$user" "$domain"
+[ $? -ne 0 ] && handle_error 203 "Failed to enforce SSL redirection."
+
+echo "SSL certificate generated and applied"
+$BIN/v-log-action "$user" "Info" "Web" "Generated SSL certificate for $domain"
+exit 0

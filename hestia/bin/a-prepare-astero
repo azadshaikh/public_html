@@ -1,0 +1,154 @@
+#!/bin/bash
+#
+# Script: a-prepare-astero
+#
+# Description: Prepares Astero for installation by creating symlinks to a shared
+#              master installation. This saves significant storage space by sharing
+#              read-only code (vendor, app, modules) across all websites.
+#
+# Usage: a-prepare-astero HESTIA_USER DOMAIN TYPE [VERSION]
+#
+# Exit Codes:
+#   0   - Success
+#   1   - Invalid arguments
+#   3   - User or domain not found
+#   207 - Required dependency missing
+#   210 - Directory operation failed
+#   213 - File ownership/move failed
+#   218 - No local release available
+#   220 - Health check failed
+
+# --- Configuration ---
+HESTIA=${HESTIA:-/usr/local/hestia}
+BIN=${BIN:-/usr/local/hestia/bin}
+SCRIPT_NAME="a-prepare-astero"
+
+# Source Hestia core functions
+source $HESTIA/func/main.sh
+source $HESTIA/conf/hestia.conf
+source $HESTIA/func/domain.sh
+
+# Source Astero common functions
+source "$BIN/a-common.sh"
+
+# --- Argument Validation ---
+for cmd in php; do
+    command -v "$cmd" &>/dev/null || handle_error 207 "Required dependency '$cmd' is not installed."
+done
+
+check_args '3' "$#" 'HESTIA_USER DOMAIN TYPE [VERSION]'
+hestia_user=$1
+web_domain=$2
+package_id=$3
+requested_version="${4:-}"
+
+echo "Preparing $web_domain..."
+
+# Validate user and domain
+$BIN/v-list-sys-users | grep -q "^$hestia_user$" || handle_error 3 "Hestia user '$hestia_user' does not exist."
+[ -d "/home/$hestia_user/web/$web_domain" ] || handle_error 3 "Domain '$web_domain' does not exist."
+
+# --- Local Repository Lookup ---
+RELEASE_TYPE="application"
+PACKAGE_DIR="$RELEASES_REPO/$RELEASE_TYPE/$package_id"
+
+# Auto-setup: If local releases repository doesn't exist, try to sync it
+if [ ! -d "$RELEASES_REPO" ] || [ ! -d "$PACKAGE_DIR" ]; then
+    echo "Local releases repository not found. Auto-syncing..."
+
+    # Create the base directory structure
+    mkdir -p "$ASTERO_DATA_DIR/logs" 2>/dev/null || true
+
+    # Try to sync the latest release
+    if [ -x "$BIN/a-sync-releases" ]; then
+        "$BIN/a-sync-releases" "$RELEASE_TYPE" "$package_id" --set-active
+        sync_exit=$?
+        if [ $sync_exit -ne 0 ]; then
+            handle_error 218 "Failed to auto-sync releases. Ensure API connectivity and run 'a-sync-releases $RELEASE_TYPE $package_id --set-active' manually."
+        fi
+        echo "Auto-sync completed successfully."
+    else
+        handle_error 218 "Local releases repository not found and a-sync-releases script is missing."
+    fi
+fi
+
+# Re-check after potential auto-sync
+[ -d "$PACKAGE_DIR" ] || handle_error 218 "No releases found for $RELEASE_TYPE/$package_id after auto-sync attempt."
+
+# Determine version
+if [ -n "$requested_version" ]; then
+    [[ "$requested_version" =~ ^v ]] || requested_version="v$requested_version"
+    SOURCE_ZIP="$PACKAGE_DIR/$requested_version.zip"
+    app_version="${requested_version#v}"
+    [ -f "$SOURCE_ZIP" ] || handle_error 218 "Version $requested_version not found locally."
+else
+    [ -L "$PACKAGE_DIR/current" ] || handle_error 218 "No active release set. Run 'a-set-active-release' first."
+    CURRENT_LINK=$(readlink "$PACKAGE_DIR/current")
+    SOURCE_ZIP="$PACKAGE_DIR/$CURRENT_LINK"
+    app_version=$(basename "$CURRENT_LINK" .zip)
+    app_version="${app_version#v}"
+    [ -f "$SOURCE_ZIP" ] || handle_error 218 "Active release file not found."
+fi
+
+echo "Version: v$app_version"
+
+# --- Ensure Master Installation Exists (using common function) ---
+ensure_master_exists "$app_version" "$RELEASE_TYPE" "$package_id"
+MASTER_DIR="$INSTALLED_DIR/v$app_version"
+
+# --- Directory Setup ---
+ROOT_DIR="/home/$hestia_user/web/$web_domain/public_html"
+RELEASES_DIR="$ROOT_DIR/releases"
+RELEASE_PATH="$RELEASES_DIR/v$app_version"
+SHARED_DIR="$ROOT_DIR/shared"
+
+# Create release directory structure
+mkdir -p "$RELEASE_PATH" || handle_error 210 "Failed to create release directory."
+mkdir -p "$RELEASE_PATH/bootstrap/cache" || handle_error 210 "Failed to create bootstrap/cache directory."
+mkdir -p "$RELEASE_PATH/public" || handle_error 210 "Failed to create public directory."
+
+echo "Creating symlinks to master installation..."
+
+# --- Use common functions for symlinks ---
+create_master_symlinks "$RELEASE_PATH" "$MASTER_DIR"
+copy_dir_dependent_files "$RELEASE_PATH" "$MASTER_DIR"
+
+# Validate critical files were copied
+[ -f "$RELEASE_PATH/artisan" ] || handle_error 218 "Master installation missing artisan file at $MASTER_DIR/artisan"
+[ -f "$RELEASE_PATH/bootstrap/app.php" ] || handle_error 218 "Master installation missing bootstrap/app.php at $MASTER_DIR"
+[ -f "$RELEASE_PATH/public/index.php" ] || handle_error 218 "Master installation missing public/index.php at $MASTER_DIR"
+
+# --- Shared Directory Setup (using common function) ---
+mkdir -p "$SHARED_DIR" || handle_error 210 "Failed to create shared directory."
+setup_shared_dirs "$SHARED_DIR" "$MASTER_DIR" "$hestia_user"
+sync_shared_themes "$SHARED_DIR" "$MASTER_DIR" "" "$hestia_user"
+
+# --- Symlinks to shared directories (using common function) ---
+create_shared_symlinks "$RELEASE_PATH"
+
+# --- Per-website Unique Public Files (using common function) ---
+setup_unique_public_files "$RELEASE_PATH" "$SHARED_DIR" "$MASTER_DIR"
+
+# --- Set Ownership ---
+echo "Setting ownership..."
+chown -R "$hestia_user:$hestia_user" "$RELEASE_PATH/bootstrap/cache"
+chown -h "$hestia_user:$hestia_user" "$RELEASE_PATH"/* 2>/dev/null || true
+chown -h "$hestia_user:$hestia_user" "$RELEASE_PATH/public"/* 2>/dev/null || true
+
+# --- Create/Update Current Symlink Atomically ---
+CURRENT_SYMLINK="$ROOT_DIR/current"
+ln -sfn "$RELEASE_PATH" "$CURRENT_SYMLINK" || handle_error 213 "Failed to create current symlink."
+
+# Ensure releases directory ownership
+chown -h "$hestia_user:$hestia_user" "$CURRENT_SYMLINK" 2>/dev/null || true
+chown "$hestia_user:$hestia_user" "$RELEASES_DIR" 2>/dev/null || true
+
+# --- Health Check (using common function) ---
+echo "Running health check..."
+if ! run_health_check "$RELEASE_PATH" "$SHARED_DIR"; then
+    handle_error 220 "Health check failed - see errors above"
+fi
+
+echo "Prepared v$app_version (symlinked to master)"
+$BIN/v-log-action "system" "Info" "System" "Astero prepared: $web_domain v$app_version (symlinked)"
+exit 0

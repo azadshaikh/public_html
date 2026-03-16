@@ -1,0 +1,467 @@
+/* ========================================
+   MENU EDITOR SPECIFIC STYLES
+   ======================================== */
+
+/* Note: Shared CMS styles (toasts, validation, animations) are in widget-edit.css */
+
+/* ===== MENU BUILDER LAYOUT ===== */
+.menu-builder {
+    min-height: 400px;
+}
+
+.menu-library-panel .accordion-button {
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.menu-library-panel .accordion-body {
+    padding: 0.75rem;
+}
+
+.menu-save-bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1040;
+    background: var(--bs-warning-bg-subtle);
+}
+
+/* Empty menu state */
+.empty-menu-state {
+    text-align: center;
+    padding: 50px;
+    border: 2px dashed var(--bs-border-color);
+    border-radius: var(--bs-border-radius);
+    background-color: var(--bs-light);
+}
+
+/* ===== MENU ITEM STRUCTURE ===== */
+.menu-item {
+    margin-bottom: 4px;
+    cursor: default;
+}
+
+/* Menu item content layout - single clean row */
+.menu-item-content {
+    display: flex;
+    align-items: center;
+    padding: 10px 12px;
+    background-color: var(--bs-body-bg);
+    border: 1px solid var(--bs-border-color);
+    border-radius: var(--bs-border-radius);
+    transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+.menu-item-content:hover {
+    border-color: var(--bs-primary-border-subtle);
+    box-shadow: var(--bs-box-shadow-sm);
+}
+
+/* ===== MENU ITEM CONTENT ===== */
+.menu-item-info {
+    flex: 1;
+    min-width: 0;
+    line-height: 1.3;
+}
+
+.menu-item-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    margin-right: 10px;
+    background-color: var(--bs-light);
+    border-radius: var(--bs-border-radius);
+    color: var(--bs-secondary);
+    flex-shrink: 0;
+}
+
+.menu-item-icon i {
+    font-size: 1rem;
+}
+
+.menu-item-main-line {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.menu-item-title {
+    font-weight: 500;
+    margin-bottom: 2px;
+    cursor: text;
+}
+
+.menu-item-badges {
+    display: flex;
+    gap: 0.25rem;
+    flex-wrap: wrap;
+}
+
+.menu-item-badges .badge {
+    font-size: 0.7em;
+    font-weight: 500;
+}
+
+.menu-item-type {
+    font-size: 0.7rem;
+    text-transform: capitalize;
+    font-weight: 500;
+}
+
+/* Inactive menu item state */
+.menu-item.menu-item-inactive {
+    opacity: 0.65;
+    background-color: var(--bs-light);
+}
+
+.menu-item.menu-item-inactive .menu-item-title {
+    text-decoration: line-through;
+    color: var(--bs-secondary);
+}
+
+/* ===== MENU ITEM ACTIONS ===== */
+.menu-item-actions {
+    display: flex;
+    gap: 5px;
+}
+
+/* ===== MENU HIERARCHY ===== */
+.menu-children {
+    margin-top: 8px;
+    margin-left: 40px;
+    padding-left: 15px;
+    border-left: 2px dashed var(--bs-border-color);
+}
+
+.menu-children:empty {
+    display: none;
+}
+
+/* ===== DRAG HANDLE ===== */
+.menu-item-drag-handle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 32px;
+    margin-right: 10px;
+    color: var(--bs-primary);
+    cursor: grab;
+    flex-shrink: 0;
+    border-radius: var(--bs-border-radius);
+    transition:
+        background-color 0.15s ease,
+        color 0.15s ease;
+}
+
+.menu-item-drag-handle:hover {
+    background-color: var(--bs-primary-bg-subtle);
+    color: var(--bs-primary);
+}
+
+.menu-item-drag-handle:active {
+    cursor: grabbing;
+}
+
+.menu-item-drag-handle i {
+    font-size: 1.25rem;
+}
+
+/* Touch devices - show pointer cursor instead of grab */
+@media (pointer: coarse) {
+    .menu-item-drag-handle {
+        cursor: pointer;
+    }
+
+    .menu-item-drag-handle:active {
+        cursor: pointer;
+    }
+}
+
+/* ===== REORDER MODAL ===== */
+#reorderModal .reorder-btn {
+    width: 60px;
+    height: 50px;
+    font-size: 1.5rem;
+}
+
+#reorderModal .reorder-btn i {
+    font-size: 1.5rem;
+}
+
+/* Dragging state */
+.menu-item.is-dragging {
+    opacity: 0.5;
+    background-color: var(--bs-primary-bg-subtle);
+    border-color: var(--bs-primary);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Drop target highlighting */
+.menu-item.drop-target {
+    border-color: var(--bs-primary);
+}
+
+.menu-item.drop-target.drop-child {
+    background-color: var(--bs-primary-bg-subtle);
+}
+
+/* Focus state for keyboard navigation */
+.menu-item:focus {
+    outline: 2px solid var(--bs-primary);
+    outline-offset: 2px;
+}
+
+.menu-item:focus-visible {
+    outline: 2px solid var(--bs-primary);
+    outline-offset: 2px;
+}
+
+/* ===== MENU-SPECIFIC UI ===== */
+/* Alert container for menu notifications */
+.alert-container {
+    position: relative;
+    z-index: 1050;
+}
+
+/* Character counter for menu descriptions */
+#description-counter,
+#edit-description-counter {
+    font-weight: 600;
+}
+
+/* ===== DELETE CONFIRMATION MODAL ===== */
+#deleteConfirmModal .modal-header {
+    border-bottom: 1px solid var(--bs-border-color);
+    background-color: var(--bs-light);
+}
+
+#deleteConfirmModal .modal-title {
+    font-weight: 600;
+}
+
+#deleteConfirmModal .alert-light {
+    background-color: var(--bs-light);
+    border-color: var(--bs-border-color);
+}
+
+#deleteConfirmModal .alert-light strong {
+    color: var(--bs-dark);
+}
+
+#deleteConfirmModal .btn-danger {
+    background-color: var(--bs-danger);
+    border-color: var(--bs-danger);
+}
+
+#deleteConfirmModal .btn-danger:hover {
+    background-color: color-mix(in srgb, var(--bs-danger) 90%, var(--bs-black));
+    border-color: color-mix(in srgb, var(--bs-danger) 85%, var(--bs-black));
+}
+
+/* ===== INLINE TITLE EDITING ===== */
+.menu-item-title input.form-control {
+    font-weight: 500;
+    padding: 0.15rem 0.35rem;
+    height: auto;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+/* Mobile adjustments for menu editor */
+@media (max-width: 767.98px) {
+    .menu-item-main-line {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+    }
+
+    .menu-builder .menu-children {
+        margin-left: 20px;
+        padding-left: 10px;
+    }
+
+    .menu-item-title {
+        font-size: 0.9rem;
+    }
+
+    .menu-item-actions .btn {
+        padding: 0.1rem 0.4rem;
+        font-size: 0.8rem;
+    }
+
+    .menu-item-icon {
+        display: none;
+    }
+
+    .menu-item-drag-handle {
+        width: 24px;
+        height: 28px;
+    }
+
+    .menu-save-bar .d-flex {
+        justify-content: center !important;
+        text-align: center;
+    }
+}
+
+/* ===== BUTTON ICON STYLES ===== */
+.btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border-radius: var(--bs-border-radius);
+}
+
+.btn-icon i {
+    font-size: 1rem;
+}
+
+.btn-light-primary {
+    background-color: var(--bs-primary-bg-subtle);
+    border-color: var(--bs-primary-bg-subtle);
+    color: var(--bs-primary);
+}
+
+.btn-light-primary:hover {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+    color: #fff;
+}
+
+.btn-light-danger {
+    background-color: var(--bs-danger-bg-subtle);
+    border-color: var(--bs-danger-bg-subtle);
+    color: var(--bs-danger);
+}
+
+.btn-light-danger:hover {
+    background-color: var(--bs-danger);
+    border-color: var(--bs-danger);
+    color: #fff;
+}
+
+/* ===== ADD ITEMS ACCORDION ===== */
+#add-items-accordion .accordion-button {
+    padding: 0.75rem 1rem;
+    font-weight: 500;
+}
+
+#add-items-accordion .accordion-button .badge {
+    font-size: 0.7rem;
+}
+
+#add-items-accordion .list-group-item {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-bottom: 1px solid var(--bs-border-color);
+}
+
+#add-items-accordion .list-group-item:last-child {
+    border-bottom: none;
+}
+
+/* ===== ADD MENU ITEMS SECTION ===== */
+.add-item-section {
+    border-bottom: 1px solid var(--bs-border-color-translucent);
+}
+
+.add-item-section:last-child {
+    border-bottom: 1px solid var(--bs-border-color-translucent);
+    padding-bottom: 0;
+    margin-bottom: 0;
+}
+
+.add-item-section .section-header {
+    font-size: 0.875rem;
+}
+
+.add-items-list {
+    max-height: 220px;
+    overflow-y: auto;
+    border: 1px solid var(--bs-border-color);
+    border-radius: var(--bs-border-radius);
+}
+
+.add-item-btn {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    text-align: left;
+    background: var(--bs-body-bg);
+    border: none;
+    border-bottom: 1px solid var(--bs-border-color-translucent);
+    color: var(--bs-body-color);
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.add-item-btn:last-child {
+    border-bottom: none;
+}
+
+.add-item-btn:hover {
+    background-color: var(--bs-primary-bg-subtle);
+}
+
+.add-item-btn:active {
+    background-color: var(--bs-primary-border-subtle);
+}
+
+.add-item-btn > i:first-child {
+    color: var(--bs-secondary-color);
+    margin-right: 0.5rem;
+    flex-shrink: 0;
+}
+
+.add-item-btn .item-title {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.add-item-btn .add-icon {
+    color: var(--bs-primary);
+    opacity: 0;
+    margin-left: 0.5rem;
+    transition: opacity 0.15s ease;
+}
+
+.add-item-btn:hover .add-icon {
+    opacity: 1;
+}
+
+/* Added state animation */
+.add-item-btn.added {
+    background-color: var(--bs-success-bg-subtle);
+}
+
+.add-item-btn.added .add-icon::before {
+    content: '\eb7a'; /* ri-check-line */
+}
+
+/* ===== SPIN ANIMATION FOR LOADING ===== */
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.spin {
+    animation: spin 1s linear infinite;
+}

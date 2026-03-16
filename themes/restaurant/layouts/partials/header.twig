@@ -1,0 +1,18 @@
+<header class="navbar navbar-expand-lg fixed-top shadow-sm" style="background: rgba(255,255,255,0.95); backdrop-filter: blur(10px);">
+    <div class="container">
+        <a class="navbar-brand fw-bold fs-2 text-danger" href="{{ urls.home }}">
+            <i class="bi bi-utensils me-2"></i>Delicious
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                {{ menu('primary', {'container': false, 'class': 'navbar-nav ms-auto gap-3', 'link_class': 'nav-link fw-medium px-3 py-2 rounded-pill transition-all'}) }}
+            </ul>
+            <a class="btn btn-danger ms-3 px-4 rounded-pill fw-medium" href="#reservations">
+                <i class="bi bi-calendar-check me-2"></i>Reserve Table
+            </a>
+        </div>
+    </div>
+</header>

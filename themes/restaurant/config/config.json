@@ -1,0 +1,86 @@
+{
+    "setup": {
+        "default_options": {
+            "show_sidebar": false,
+            "show_sidebar_on_pages": false,
+            "show_latest_posts": false,
+            "show_features": false,
+            "show_recent_posts_widget": false,
+            "show_categories_widget": false,
+            "show_tags_widget": false,
+            "show_newsletter_widget": true,
+            "show_page_navigation": false,
+            "show_related_pages": false,
+            "features_title": "Our Specialties",
+            "hero_title": "Welcome to Delicious Restaurant",
+            "hero_subtitle": "Authentic Italian Cuisine",
+            "footer_about": "Experience the best Italian food in town with fresh ingredients and family recipes.",
+            "primary_color": "#dc3545",
+            "secondary_color": "#fd7e14"
+        }
+    },
+    "menus": {
+        "locations": {
+            "primary": "Primary Navigation",
+            "footer": "Footer Menu"
+        }
+    },
+    "customizer": {
+        "sections": {
+            "colors": {
+                "title": "Restaurant Colors",
+                "settings": {
+                    "primary_color": {
+                        "label": "Primary Color (Red)",
+                        "type": "color",
+                        "default": "#dc3545"
+                    },
+                    "secondary_color": {
+                        "label": "Secondary Color (Orange)",
+                        "type": "color",
+                        "default": "#fd7e14"
+                    }
+                }
+            },
+            "restaurant": {
+                "title": "Restaurant Info",
+                "settings": {
+                    "contact_phone": {
+                        "label": "Phone",
+                        "type": "text",
+                        "default": "(555) 123-4567"
+                    },
+                    "contact_email": {
+                        "label": "Email",
+                        "type": "email",
+                        "default": "info@restaurant.com"
+                    },
+                    "contact_address": {
+                        "label": "Address",
+                        "type": "textarea",
+                        "default": "123 Main St, Food City"
+                    },
+                    "hero_title": {
+                        "label": "Hero Title",
+                        "type": "text",
+                        "default": "Welcome to Delicious"
+                    },
+                    "hero_subtitle": {
+                        "label": "Hero Subtitle",
+                        "type": "text",
+                        "default": "Authentic Flavors"
+                    }
+                }
+            }
+        }
+    },
+    "widgets": {
+        "sidebars": [
+            {
+                "name": "Footer",
+                "id": "footer",
+                "description": "Footer widgets"
+            }
+        ]
+    }
+}

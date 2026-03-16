@@ -1,0 +1,141 @@
+#!/bin/bash
+#
+# Script: a-install-astero
+#
+# Description: Runs final installation for Astero. Executes artisan install
+#              command and sets up scheduler cron job.
+#
+# Usage: a-install-astero HESTIA_USER DOMAIN 'JSON_DATA'
+#
+# Exit Codes:
+#   0   - Success
+#   1   - Invalid arguments
+#   3   - User or domain not found
+#   205 - No release versions found
+#   207 - Required dependency missing
+#   210 - Directory operation failed
+#   214 - Invalid or incomplete JSON data
+#   216 - Artisan install failed
+
+# --- Configuration ---
+HESTIA=${HESTIA:-/usr/local/hestia}
+BIN=${BIN:-/usr/local/hestia/bin}
+ASTERO_DATA_DIR="${ASTERO_DATA_DIR:-/usr/local/hestia/data/astero}"
+LOG_FILE="${ASTERO_DATA_DIR}/logs/astero-scripts.log"
+
+# Source Hestia core functions
+source $HESTIA/func/main.sh
+source $HESTIA/conf/hestia.conf
+source $HESTIA/func/domain.sh
+
+# --- Helper Functions ---
+log_error() {
+    local msg="$1"
+    mkdir -p "$(dirname "$LOG_FILE")"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [a-install-astero] ERROR: $msg" >> "$LOG_FILE"
+    echo "Error: $msg" >&2
+}
+
+handle_error() {
+    log_error "$2"
+    exit "$1"
+}
+
+# --- Argument Validation ---
+check_args '3' "$#" "USER DOMAIN 'JSON_DATA'"
+user=$1
+domain=$2
+json_data=$3
+
+echo "Installing Astero for $domain..."
+
+# Check dependencies
+for cmd in php jq; do
+    command -v $cmd &> /dev/null || handle_error 207 "Required dependency '$cmd' is not installed."
+done
+
+# Validate Hestia objects
+is_object_valid 'user' 'USER' "$user" || handle_error 3 "User '$user' does not exist."
+is_object_valid 'web' 'DOMAIN' "$domain" || handle_error 3 "Domain '$domain' does not exist."
+
+# Validate JSON data
+echo "$json_data" | jq -e . >/dev/null 2>&1 || handle_error 214 "Invalid JSON data provided."
+
+# Extract required fields
+owner_first_name=$(echo "$json_data" | jq -r '.owner_first_name')
+owner_last_name=$(echo "$json_data" | jq -r '.owner_last_name')
+owner_email=$(echo "$json_data" | jq -r '.owner_email')
+owner_password=$(echo "$json_data" | jq -r '.owner_password')
+super_user_email=$(echo "$json_data" | jq -r '.super_user_email')
+super_user_password=$(echo "$json_data" | jq -r '.super_user_password')
+
+for field in owner_first_name owner_last_name owner_email owner_password super_user_email super_user_password; do
+    [ -z "${!field}" ] || [ "${!field}" = "null" ] && handle_error 214 "JSON data is missing required field: '$field'."
+done
+
+# --- Main Logic ---
+ROOT_DIR="/home/$user/web/$domain/public_html"
+RELEASES_DIR="$ROOT_DIR/releases"
+CURRENT_SYMLINK="$ROOT_DIR/current"
+
+# Find latest release directory
+LATEST_RELEASE_DIR=$(ls -vdr "$RELEASES_DIR"/*/ 2>/dev/null | head -n 1)
+[ -z "$LATEST_RELEASE_DIR" ] || [ ! -d "$LATEST_RELEASE_DIR" ] && handle_error 205 "No application release versions found in $RELEASES_DIR."
+WORKING_DIR=$(readlink -f "$LATEST_RELEASE_DIR")
+
+cd "$WORKING_DIR" || handle_error 210 "Failed to change to working directory: $WORKING_DIR"
+
+# Verify artisan exists (should be a real file, not symlink, to ensure __DIR__ works)
+if [ ! -f "$WORKING_DIR/artisan" ]; then
+    handle_error 216 "Artisan file not found at $WORKING_DIR/artisan"
+fi
+
+# Ensure storage directories exist (storage may be a symlink to shared/storage)
+SHARED_DIR="$ROOT_DIR/shared"
+sudo -u "$user" mkdir -p "$SHARED_DIR/storage/framework/sessions"
+sudo -u "$user" mkdir -p "$SHARED_DIR/storage/framework/views"
+sudo -u "$user" mkdir -p "$SHARED_DIR/storage/framework/cache/data"
+sudo -u "$user" mkdir -p "$SHARED_DIR/storage/logs"
+sudo -u "$user" mkdir -p "$SHARED_DIR/storage/app/public"
+
+# Run artisan install
+echo "Running installation..."
+artisan_output=$(sudo -u "$user" php artisan astero:install "$owner_first_name" "$owner_last_name" "$owner_email" "$owner_password" "$super_user_email" "$super_user_password" --skipemail=true 2>&1)
+artisan_exit_code=$?
+
+[ $artisan_exit_code -ne 0 ] && handle_error 216 "Artisan install failed: $artisan_output"
+
+# Create current symlink
+ln -sfn "$WORKING_DIR" "$CURRENT_SYMLINK"
+
+# Setup cron job
+CRON_COMMAND="php $CURRENT_SYMLINK/artisan schedule:run >> /dev/null 2>&1"
+if ! $BIN/v-list-cron-jobs "$user" | grep -Fq -- "$CRON_COMMAND"; then
+    $BIN/v-add-cron-job "$user" "*" "*" "*" "*" "*" "$CRON_COMMAND" >/dev/null 2>&1
+fi
+
+# Ensure Supervisor exists for queue worker setup (manual servers may not have run a-setup-astero).
+if ! command -v supervisorctl >/dev/null 2>&1; then
+    echo "Installing Supervisor..."
+    apt-get update -qq >/dev/null 2>&1 || true
+    apt-get install -y -qq supervisor >/dev/null 2>&1 || true
+fi
+
+if command -v systemctl >/dev/null 2>&1; then
+    systemctl enable supervisor >/dev/null 2>&1 || true
+    systemctl start supervisor >/dev/null 2>&1 || true
+fi
+
+# Setup queue worker (Supervisor)
+# Uses 1 worker by default, can be configured per website via a-manage-queue-worker scale
+if [ -x "$BIN/a-setup-queue-worker" ]; then
+    echo "Setting up queue worker..."
+    setup_output=$("$BIN/a-setup-queue-worker" "$user" "$domain" 1 2>&1)
+    if [ $? -ne 0 ]; then
+        echo "Warning: Could not setup queue worker: $setup_output"
+    fi
+fi
+
+echo "Installation completed"
+$BIN/v-log-action "system" "Info" "System" "Astero installation completed (User: $user, Domain: $domain)."
+exit 0

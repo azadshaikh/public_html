@@ -1,0 +1,214 @@
+{% extends 'layouts/layout.twig' %}
+
+{% block body_class %}single-post{% endblock %}
+
+{% block content %}
+    {# Form Response Messages #}
+    {% if session('success') or session('error') %}
+        {{ form_response() }}
+    {% endif %}
+
+    {# Post Header with Featured Image #}
+    <header class="post-header bg-light py-5">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-10 col-xl-8 text-center">
+                    {# Categories #}
+                    {% if post.categories and post.categories|length > 0 %}
+                        <div class="mb-3" data-aos="fade-up">
+                            {% for category in post.categories %}
+                                <a class="badge bg-primary text-decoration-none me-1" href="{{ category.url }}">
+                                    {{ category.title }}
+                                </a>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    {# Title #}
+                    <h1 class="display-5 fw-bold mb-3" data-aos="fade-up" data-aos-delay="50">{{ post.title }}</h1>
+
+                    {# Meta #}
+                    <div class="d-flex align-items-center justify-content-center flex-wrap gap-3 text-muted" data-aos="fade-up" data-aos-delay="100">
+                        {% if post.author %}
+                            <a class="d-flex align-items-center text-decoration-none text-muted" href="{{ post.author.url }}">
+                                <img class="rounded-circle me-2" src="{{ post.author.avatar }}" alt="{{ post.author.name }}" width="32" height="32">
+                                <span>{{ post.author.name }}</span>
+                            </a>
+                            <span class="text-muted">•</span>
+                        {% endif %}
+                        <span><i class="ri-calendar-line me-1"></i>{{ post.formatted_date }}</span>
+                        <span class="text-muted">•</span>
+                        <span><i class="ri-time-line me-1"></i>{{ post.read_time }} min read</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    {# Featured Image #}
+    {% if post.featured_image %}
+        <div class="featured-image-wrapper bg-light pb-5">
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-lg-10">
+                        <div class="rounded-4 overflow-hidden shadow-lg" data-aos="fade-up">
+                            {% if post.featured_image.id is defined %}
+                                {{ responsive_image(post.featured_image.id, {
+                                    'class': 'img-fluid w-100',
+                                    'alt': post.featured_image.alt|default(post.title)
+                                }) }}
+                            {% elseif post.featured_image.url %}
+                                <img class="img-fluid w-100" src="{{ post.featured_image.url }}" alt="{{ post.title }}" loading="lazy">
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    {# Post Content #}
+    <article class="post-content py-5">
+        <div class="container">
+            <div class="row">
+                {# Main Content #}
+                <div class="{% if theme_option('show_sidebar_on_posts', true) %}col-lg-8{% else %}col-lg-8 mx-auto{% endif %}">
+                    {# Article Body #}
+                    <div class="article-body prose mb-5" data-astero-enabled>
+                        {% if post.content %}
+                            {{ post.content|raw }}
+                        {% else %}
+                            <div class="alert alert-info text-center" role="alert">
+                                <i class="ri-information-line"></i>
+                                This post doesn't have any content yet.
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    {# Tags #}
+                    {% if post.tags and post.tags|length > 0 %}
+                        <div class="post-tags mb-4 pb-4 border-bottom">
+                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                <span class="text-muted"><i class="ri-price-tag-3-line me-1"></i>Tags:</span>
+                                {% for tag in post.tags %}
+                                    <a class="badge bg-light text-dark text-decoration-none" href="{{ tag.url }}">
+                                        {{ tag.title }}
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    {# Share Buttons #}
+                    {% if theme_option('show_social_sharing', true) %}
+                        <div class="share-section mb-5 pb-4 border-bottom">
+                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                                <span class="fw-medium"><i class="ri-share-line me-2"></i>Share this article</span>
+                                {% include 'components/share-buttons.twig' with {
+                                    'post': post,
+                                    'style': 'icons',
+                                    'platforms': ['twitter', 'facebook', 'linkedin', 'whatsapp'],
+                                    'show_copy': true
+                                } only %}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    {# Author Box #}
+                    {% if post.author %}
+                        <div class="author-section mb-5">
+                            {% include 'components/author-box.twig' with {
+                                'author': post.author,
+                                'show_bio': true,
+                                'show_tagline': true,
+                                'show_social': true,
+                                'show_posts_link': true,
+                                'avatar_size': 80,
+                                'style': 'card'
+                            } only %}
+                        </div>
+                    {% endif %}
+
+                    {# Post Navigation #}
+                    {% if previous_post or next_post %}
+                        <nav class="post-navigation mb-5" aria-label="Post navigation">
+                            <div class="row g-3">
+                                {% if previous_post %}
+                                    <div class="col-md-6">
+                                        <a class="card h-100 text-decoration-none border-0 bg-light" href="{{ previous_post.url }}">
+                                            <div class="card-body">
+                                                <span class="small text-muted"><i class="ri-arrow-left-line me-1"></i>Previous</span>
+                                                <h6 class="mb-0 mt-1 text-dark">{{ previous_post.title|truncate(50) }}</h6>
+                                            </div>
+                                        </a>
+                                    </div>
+                                {% endif %}
+                                {% if next_post %}
+                                    <div class="col-md-6 {% if not previous_post %}ms-auto{% endif %}">
+                                        <a class="card h-100 text-decoration-none border-0 bg-light text-end" href="{{ next_post.url }}">
+                                            <div class="card-body">
+                                                <span class="small text-muted">Next<i class="ri-arrow-right-line ms-1"></i></span>
+                                                <h6 class="mb-0 mt-1 text-dark">{{ next_post.title|truncate(50) }}</h6>
+                                            </div>
+                                        </a>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </nav>
+                    {% endif %}
+                </div>
+
+                {# Sidebar #}
+                {% if theme_option('show_sidebar_on_posts', true) %}
+                    <aside class="col-lg-4">
+                        <div class="sticky-top" style="top: 100px;">
+                            {% include 'layouts/partials/sidebar.twig' %}
+                        </div>
+                    </aside>
+                {% endif %}
+            </div>
+        </div>
+    </article>
+
+    {# Related Posts #}
+    {% if theme_option('show_related_posts', true) and related_posts is defined and related_posts|length > 0 %}
+        <section class="related-posts py-5 bg-light">
+            <div class="container">
+                <h3 class="h4 mb-4" data-aos="fade-up">
+                    <i class="ri-article-line text-primary me-2"></i>Related Articles
+                </h3>
+                <div class="row g-4">
+                    {% for related_post in related_posts|slice(0, 3) %}
+                        <div class="col-md-4" data-aos="fade-up" data-aos-delay="{{ loop.index * 50 }}">
+                            {% include 'components/post-card.twig' with {
+                                'post': related_post,
+                                'image_height': '180px',
+                                'card_class': 'h-100 border-0 shadow-sm'
+                            } only %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+    {% endif %}
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(function() {
+                const btn = event.target.closest('button');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="ri-check-line"></i> Copied!';
+                btn.classList.add('btn-success');
+                btn.classList.remove('btn-outline-secondary');
+
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.classList.remove('btn-success');
+                    btn.classList.add('btn-outline-secondary');
+                }, 2000);
+            });
+        }
+    </script>
+{% endblock %}

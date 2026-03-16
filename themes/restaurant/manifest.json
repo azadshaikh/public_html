@@ -1,0 +1,37 @@
+{
+    "name": "Delicious Restaurant",
+    "slug": "restaurant",
+    "description": "A modern restaurant theme with menu showcase, reservations, gallery, and Bootstrap-powered responsive design.",
+    "version": "1.0.0",
+    "author": {
+        "name": "Azad Shaikh",
+        "uri": "https://asterodigital.com"
+    },
+    "theme_uri": "https://asterodigital.com",
+    "license": {
+        "name": "Proprietary",
+        "uri": "https://asterodigital.com"
+    },
+    "assets": {
+        "screenshot": "screenshot.png"
+    },
+    "tags": ["responsive", "modern", "clean", "blog", "business", "portfolio", "asteroadmin"],
+    "supports": {
+        "responsive": true,
+        "dark_mode": true,
+        "custom_colors": true,
+        "custom_fonts": true,
+        "sidebar": true,
+        "widgets": true,
+        "menus": {
+            "locations": {
+                "primary": "Primary Navigation",
+                "footer": "Footer Menu"
+            },
+            "hierarchy": true,
+            "max_depth": 3
+        }
+    },
+    "created_at": "2025-06-26T00:00:00Z",
+    "updated_at": "2025-06-26T00:00:00Z"
+}

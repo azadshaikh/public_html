@@ -1,0 +1,67 @@
+{# SaaS Features Section - 6 Column Grid #}
+
+{% set section_title = section_title|default('Everything you need to succeed') %}
+{% set section_subtitle = section_subtitle|default('Powerful features that help you create, manage, and grow your content') %}
+{% set features = features|default([
+    {'icon': 'ri-edit-box-line', 'title': 'Visual Editor', 'description': 'Drag-and-drop interface with real-time preview. No coding required.'},
+    {'icon': 'ri-global-line', 'title': 'Multi-site Management', 'description': 'Manage unlimited websites from a single dashboard with unified analytics.'},
+    {'icon': 'ri-team-line', 'title': 'Team Collaboration', 'description': 'Role-based permissions, version control, and inline commenting.'},
+    {'icon': 'ri-search-line', 'title': 'Built-in SEO', 'description': 'Automatic SEO optimization, sitemaps, and performance insights.'},
+    {'icon': 'ri-code-box-line', 'title': 'Custom Themes', 'description': 'Create custom themes with our intuitive template system and Twig support.'},
+    {'icon': 'ri-shield-check-line', 'title': 'Enterprise Security', 'description': 'SSO, audit logs, backups, and compliance with GDPR and SOC2.'}
+]) %}
+
+<section class="saas-features py-6 py-lg-7 bg-white" title="Features">
+    <div class="container">
+        {# Section Header #}
+        <div class="row justify-content-center mb-5">
+            <div class="col-lg-7 text-center" data-aos="fade-up">
+                <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 mb-3">Features</span>
+                <h2 class="display-5 fw-bold mb-3">{{ section_title }}</h2>
+                <p class="lead text-muted">{{ section_subtitle }}</p>
+            </div>
+        </div>
+        
+        {# Features Grid #}
+        <div class="row g-4">
+            {% for feature in features %}
+            <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="{{ loop.index * 100 }}">
+                <div class="feature-card h-100 p-4 rounded-4 border bg-white">
+                    <div class="feature-icon-wrapper mb-4">
+                        <div class="feature-icon bg-primary bg-gradient text-white rounded-3 d-inline-flex align-items-center justify-content-center" style="width: 3.5rem; height: 3.5rem;">
+                            <i class="{{ feature.icon }} fs-4"></i>
+                        </div>
+                    </div>
+                    <h4 class="fw-semibold h5 mb-2">{{ feature.title }}</h4>
+                    <p class="text-muted mb-0">{{ feature.description }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<style>
+.saas-features {
+    background: linear-gradient(to bottom, #ffffff 0%, #f8f9fa 100%);
+}
+.feature-card {
+    transition: all 0.3s ease;
+    border-color: #e9ecef;
+}
+.feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 1rem 3rem rgba(0,0,0,0.1);
+    border-color: transparent;
+}
+.feature-icon {
+    transition: all 0.3s ease;
+}
+.feature-card:hover .feature-icon {
+    transform: scale(1.1);
+}
+.py-6 {
+    padding-top: 5rem;
+    padding-bottom: 5rem;
+}
+</style>

@@ -1,0 +1,21 @@
+# Astero theme development
+.DS_Store
+Thumbs.db
+
+# Node / build artifacts
+node_modules/
+dist/
+build/
+.vite/
+
+# IDE
+.idea/
+.vscode/
+
+# Logs
+*.log
+
+# OS / temp
+*.tmp
+*.swp
+

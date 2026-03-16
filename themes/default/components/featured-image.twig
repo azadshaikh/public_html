@@ -1,0 +1,89 @@
+{#
+    Featured Image Component
+
+    Displays a featured/hero image with optional overlay and content.
+
+    Image data uses the standardized structure from ContentTransformer.
+    Use image.alt for alt text (not image.alt_text).
+
+    @see docs/astero-modules-system/DATA_CONTRACT.md
+
+    @param image - The image object (from ContentTransformer) or image ID
+    @param title - Title to display on overlay
+    @param subtitle - Subtitle/excerpt to display
+    @param height - Container height (default: '400px')
+    @param overlay - Whether to show dark overlay (default: true)
+    @param overlay_opacity - Overlay opacity (default: 50)
+    @param fallback - Fallback image URL
+    @param class - Additional CSS classes
+#}
+
+{% set height = height ?? '400px' %}
+{% set overlay = overlay ?? true %}
+{% set overlay_opacity = overlay_opacity ?? 50 %}
+{% set fallback = fallback ?? theme_asset('img/default-feature-image.jpg') %}
+
+<section class="featured-image position-relative text-light text-center {{ class ?? '' }}"
+    style="height: {{ height }};">
+
+    {# Image #}
+    {% if image %}
+        {% if image.id is defined %}
+            {{ responsive_image(image.id, {
+                'class': 'w-100 h-100 object-fit-cover position-absolute start-0 top-0',
+                'alt': image.alt|default(title|default('')),
+                'style': 'z-index:1;object-fit:cover;'
+            }) }}
+        {% elseif image is iterable and image.url is defined %}
+            <img class="w-100 h-100 object-fit-cover position-absolute start-0 top-0"
+                src="{{ image.url }}"
+                alt="{{ image.alt|default(title|default('')) }}"
+                style="z-index:1;object-fit:cover;"
+                loading="lazy">
+        {% elseif image is numeric %}
+            {{ responsive_image(image, {
+                'class': 'w-100 h-100 object-fit-cover position-absolute start-0 top-0',
+                'alt': title|default(''),
+                'style': 'z-index:1;object-fit:cover;'
+            }) }}
+        {% else %}
+            <img class="w-100 h-100 object-fit-cover position-absolute start-0 top-0"
+                src="{{ image }}"
+                alt="{{ title|default('') }}"
+                style="z-index:1;object-fit:cover;"
+                loading="lazy">
+        {% endif %}
+    {% else %}
+        <img class="w-100 h-100 object-fit-cover position-absolute start-0 top-0"
+            src="{{ fallback }}"
+            alt="{{ title|default('') }}"
+            style="z-index:1;object-fit:cover;"
+            loading="lazy">
+    {% endif %}
+
+    {# Overlay #}
+    {% if overlay %}
+        <div class="position-absolute w-100 h-100 bg-dark start-0 top-0 opacity-{{ overlay_opacity }}"
+            style="z-index:2;"></div>
+    {% endif %}
+
+    {# Content #}
+    {% if title or subtitle %}
+        <div class="position-relative d-flex flex-column justify-content-center h-100 px-3" style="z-index:3;">
+            <div class="row">
+                <div class="col-lg-6 offset-lg-3">
+                    {% if title %}
+                        <h1 class="display-4 fw-semibold mb-2" data-aos="fade-up" data-aos-duration="1600">
+                            {{ title }}
+                        </h1>
+                    {% endif %}
+                    {% if subtitle %}
+                        <p class="fs-4 mb-2" data-aos="fade-up" data-aos-delay="200" data-aos-duration="1600">
+                            {{ subtitle }}
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</section>

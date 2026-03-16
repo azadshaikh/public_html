@@ -1,0 +1,92 @@
+{% extends 'layouts/layout.twig' %}
+{% block body_class %}single-page{% endblock %}
+
+{% block content %}
+    {# Page Header #}
+    <header class="page-header py-5 {% if page.featured_image %}bg-dark text-white position-relative{% else %}bg-light{% endif %}">
+        {% if page.featured_image %}
+            {# With Featured Image - Overlay Style #}
+            <div class="position-absolute top-0 start-0 w-100 h-100" style="z-index: 0;">
+                {% set img = page.featured_image %}
+                {% if img.id is defined %}
+                    {{ responsive_image(img.id, {
+                        'class': 'w-100 h-100',
+                        'alt': img.alt|default(page.title),
+                        'style': 'object-fit: cover; opacity: 0.3;'
+                    }) }}
+                {% elseif img.url %}
+                    <img src="{{ img.url }}" alt="{{ img.alt|default(page.title) }}"
+                         class="w-100 h-100" style="object-fit: cover; opacity: 0.3;">
+                {% endif %}
+            </div>
+            <div class="container position-relative" style="z-index: 1;">
+                <div class="row justify-content-center">
+                    <div class="col-lg-8 text-center py-5">
+                        <h1 class="display-5 fw-bold mb-3" data-aos="fade-up">{{ page.title }}</h1>
+                        {% if page.excerpt %}
+                            <p class="lead opacity-75 mb-0" data-aos="fade-up" data-aos-delay="50">
+                                {{ page.excerpt }}
+                            </p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            {# Without Featured Image - Simple Style #}
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-lg-8 text-center">
+                        <h1 class="display-5 fw-bold mb-3" data-aos="fade-up">{{ page.title }}</h1>
+                        {% if page.excerpt %}
+                            <p class="lead text-muted mb-0" data-aos="fade-up" data-aos-delay="50">
+                                {{ page.excerpt }}
+                            </p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </header>
+
+    {# Form Response Messages #}
+    {% if session_has('success') or session_has('error') %}
+        <div class="container py-3">
+            {{ form_response() }}
+        </div>
+    {% endif %}
+
+    {# Main Content #}
+    <section class="page-content-section py-5">
+        <div class="container">
+            <div class="row {% if not theme_option('show_sidebar_on_pages', false) %}justify-content-center{% endif %}">
+                <div class="{% if theme_option('show_sidebar_on_pages', false) %}col-lg-8{% else %}col-lg-10{% endif %}">
+                    <article class="page-article">
+                        <div class="page-content prose" data-v-post-content data-astero-enabled data-aos="fade-up">
+                            {% if page.content %}
+                                {{ page.content|raw }}
+                            {% else %}
+                                <div class="empty-state text-center py-5">
+                                    <div class="empty-icon mb-4">
+                                        <i class="ri-file-text-line display-1 text-muted"></i>
+                                    </div>
+                                    <h3 class="h5 text-muted">No Content Yet</h3>
+                                    <p class="text-muted">This page doesn't have any content yet.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </article>
+                </div>
+
+                {# Sidebar #}
+                {% if theme_option('show_sidebar_on_pages', false) %}
+                    <aside class="col-lg-4 mt-5 mt-lg-0">
+                        <div class="sticky-top" style="top: 100px;">
+                            {% include 'layouts/partials/sidebar.twig' %}
+                        </div>
+                    </aside>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+{% endblock %}
+

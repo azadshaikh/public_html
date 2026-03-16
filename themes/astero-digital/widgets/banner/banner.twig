@@ -1,0 +1,120 @@
+{% set bannerClass = 'widget-banner banner-' ~ (settings.banner_size|default('medium')) %}
+{% set buttonClass = 'btn btn-' ~ (settings.button_style|default('primary')) %}
+
+<style>
+    /* Banner Widget Inline Styles */
+    .widget-banner {
+        --banner-border-radius: 0.5rem;
+        --banner-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        --banner-transition: all 0.3s ease;
+    }
+
+    .widget-banner .banner-content {
+        border-radius: var(--banner-border-radius);
+        box-shadow: var(--banner-shadow);
+        transition: var(--banner-transition);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .widget-banner .banner-content:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+
+    .widget-banner .banner-inner {
+        position: relative;
+        z-index: 2;
+    }
+
+    .widget-banner .banner-title {
+        font-size: 1.25rem;
+        line-height: 1.2;
+        margin-bottom: 0.75rem;
+    }
+
+    .widget-banner .banner-text {
+        line-height: 1.5;
+        margin-bottom: 1rem;
+    }
+
+    .widget-banner .banner-decoration {
+        right: 1rem;
+        top: 1rem;
+        z-index: 1;
+        pointer-events: none;
+    }
+
+    /* Banner Sizes */
+    .widget-banner.banner-small .banner-inner { padding: 1rem; }
+    .widget-banner.banner-small .banner-title { font-size: 1.1rem; margin-bottom: 0.5rem; }
+    .widget-banner.banner-small .banner-text { font-size: 0.9rem; margin-bottom: 0.75rem; }
+    .widget-banner.banner-small .btn { padding: 0.375rem 0.75rem; font-size: 0.875rem; }
+
+    .widget-banner.banner-medium .banner-inner { padding: 1.5rem; }
+    .widget-banner.banner-medium .banner-title { font-size: 1.25rem; margin-bottom: 0.75rem; }
+    .widget-banner.banner-medium .banner-text { font-size: 1rem; margin-bottom: 1rem; }
+
+    .widget-banner.banner-large .banner-inner { padding: 2rem; }
+    .widget-banner.banner-large .banner-title { font-size: 1.5rem; margin-bottom: 1rem; }
+    .widget-banner.banner-large .banner-text { font-size: 1.1rem; margin-bottom: 1.25rem; }
+    .widget-banner.banner-large .btn { padding: 0.5rem 1.5rem; font-size: 1rem; }
+    .widget-banner.banner-large .banner-decoration i { font-size: 4rem !important; }
+
+    /* Button Enhancements */
+    .widget-banner .banner-action .btn {
+        transition: var(--banner-transition);
+        font-weight: 500;
+        text-decoration: none;
+        border: none;
+        outline: none;
+    }
+
+    .widget-banner .banner-action .btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .widget-banner.banner-large .banner-inner { padding: 1.5rem; }
+        .widget-banner.banner-large .banner-title { font-size: 1.25rem; }
+        .widget-banner .banner-decoration { display: none; }
+    }
+</style>
+
+<div class="widget {{ bannerClass }} mb-4">
+
+    <div class="banner-content position-relative overflow-hidden rounded"
+        style="background-color: {{ settings.background_color|default('#007bff') }};
+                color: {{ settings.text_color|default('#ffffff') }};">
+
+        <div class="banner-inner">
+            {% if settings.banner_title %}
+                <h4 class="banner-title fw-bold mb-3">{{ settings.banner_title }}</h4>
+            {% endif %}
+
+            {% if settings.text %}
+                <p class="banner-text mb-3 opacity-90">{{ settings.text }}</p>
+            {% endif %}
+
+            {% if settings.button_text and settings.button_url %}
+                <div class="banner-action">
+                    <a class="{{ buttonClass }}" href="{{ settings.button_url }}"
+                        {% if settings.button_url|starts_with('http') %}target="_blank" rel="noopener"{% endif %}>
+                        {{ settings.button_text }}
+                        {% if settings.button_url|starts_with('http') %}
+                            <i class="ri-external-link-line small ms-1"></i>
+                        {% endif %}
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+
+        {# Decorative background element #}
+        <div class="banner-decoration position-absolute end-0 top-0 opacity-10">
+            <i class="ri-megaphone-line fa-3x"></i>
+        </div>
+    </div>
+</div>
+

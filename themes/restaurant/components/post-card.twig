@@ -1,0 +1,285 @@
+{#
+    Post Card Component
+
+    A reusable card component for displaying post previews in archives, search results, and home page.
+
+    All URLs and data are pre-computed by the backend. Templates should never construct URLs.
+
+    @see docs/astero-modules-system/DATA_CONTRACT.md
+
+    @param post - The post object (from ContentTransformer)
+    @param show_excerpt - Whether to show excerpt (default: true)
+    @param show_meta - Whether to show post meta (default: true)
+    @param show_author - Whether to show author (default: true)
+    @param show_categories - Whether to show categories (default: true)
+    @param image_height - Max height for featured image (default: '220px')
+    @param card_class - Additional CSS classes for card
+    @param variant - Card style variant: 'default', 'compact', 'horizontal', 'featured' (default: 'default')
+    @param highlight_query - Search query to highlight in title/excerpt (optional)
+#}
+
+{% set show_excerpt = show_excerpt ?? true %}
+{% set show_meta = show_meta ?? true %}
+{% set show_author = show_author ?? true %}
+{% set show_categories = show_categories ?? true %}
+{% set image_height = image_height ?? '220px' %}
+{% set card_class = card_class ?? '' %}
+{% set variant = variant ?? 'default' %}
+
+{% set is_featured = (post.is_featured ?? post.is_sticky ?? false) %}
+
+{# Horizontal Variant #}
+{% if variant == 'horizontal' %}
+<article class="post-card post-card--horizontal card {{ card_class }} overflow-hidden">
+    <div class="row g-0">
+        {% if post.featured_image %}
+            <div class="col-md-4">
+                {% set img = post.featured_image %}
+                {% if img.id is defined %}
+                    {{ responsive_image(img.id, {
+                        'class': 'h-100 w-100',
+                        'alt': img.alt|default(post.title),
+                        'style': 'object-fit: cover; min-height: 200px;'
+                    }) }}
+                {% elseif img.url %}
+                    <img class="h-100 w-100"
+                        src="{{ img.url }}"
+                        alt="{{ img.alt|default(post.title) }}"
+                        style="object-fit: cover; min-height: 200px;"
+                        loading="lazy" />
+                {% endif %}
+            </div>
+        {% endif %}
+        <div class="col-md-{% if post.featured_image %}8{% else %}12{% endif %}">
+            <div class="card-body h-100 d-flex flex-column">
+                {% if show_categories and post.categories %}
+                    <div class="mb-2">
+                        {% for category in post.categories|slice(0, 1) %}
+                            <a href="{{ category.url }}" class="badge bg-primary-subtle text-primary text-decoration-none">
+                                {{ category.title }}
+                            </a>
+                        {% endfor %}
+                        {% if is_featured %}
+                            <span class="badge bg-warning-subtle text-warning ms-1">
+                                <i class="ri-pushpin-2-fill me-1"></i>Featured
+                            </span>
+                        {% endif %}
+                    </div>
+                {% endif %}
+                <h5 class="card-title mb-2">
+                    <a class="text-decoration-none text-dark stretched-link" href="{{ post.url }}">
+                        {{ post.title }}
+                    </a>
+                </h5>
+                {% if show_excerpt and post.excerpt %}
+                    <p class="card-text text-muted small mb-3 flex-grow-1">
+                        {{ post.excerpt|striptags|truncate(120) }}
+                    </p>
+                {% endif %}
+                {% if show_meta %}
+                    <div class="d-flex align-items-center text-muted small mt-auto">
+                        <span><i class="ri-time-line me-1"></i>{{ post.formatted_date }}</span>
+                        {% if post.read_time %}
+                            <span class="ms-3"><i class="ri-book-line me-1"></i>{{ post.read_time }}</span>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</article>
+
+{# Featured Variant (Large card for homepage) #}
+{% elseif variant == 'featured' %}
+<article class="post-card post-card--featured card {{ card_class }} border-0 overflow-hidden position-relative">
+    {% if post.featured_image %}
+        {% set img = post.featured_image %}
+        <div class="ratio ratio-16x9">
+            {% if img.id is defined %}
+                {{ responsive_image(img.id, {
+                    'class': 'card-img',
+                    'alt': img.alt|default(post.title),
+                    'style': 'object-fit: cover;'
+                }) }}
+            {% elseif img.url %}
+                <img class="card-img"
+                    src="{{ img.url }}"
+                    alt="{{ img.alt|default(post.title) }}"
+                    style="object-fit: cover;"
+                    loading="lazy" />
+            {% endif %}
+        </div>
+        <div class="card-img-overlay d-flex flex-column justify-content-end" style="background: linear-gradient(transparent 40%, rgba(0,0,0,0.8));">
+            <div class="text-white">
+                {% if show_categories and post.categories %}
+                    <div class="mb-2">
+                        {% for category in post.categories|slice(0, 1) %}
+                            <span class="badge bg-primary">{{ category.title }}</span>
+                        {% endfor %}
+                        {% if is_featured %}
+                            <span class="badge bg-warning text-dark ms-1">
+                                <i class="ri-pushpin-2-fill me-1"></i>Featured
+                            </span>
+                        {% endif %}
+                    </div>
+                {% endif %}
+                <h3 class="card-title h4 mb-2">
+                    <a class="text-white text-decoration-none stretched-link" href="{{ post.url }}">
+                        {{ post.title }}
+                    </a>
+                </h3>
+                {% if show_meta %}
+                    <div class="d-flex align-items-center small opacity-75">
+                        {% if show_author and post.author %}
+                            <span>{{ post.author.name }}</span>
+                            <span class="mx-2">·</span>
+                        {% endif %}
+                        <span>{{ post.formatted_date }}</span>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    {% else %}
+        <div class="card-body bg-primary text-white d-flex flex-column justify-content-end" style="min-height: 300px;">
+            {% if show_categories and post.categories %}
+                <div class="mb-2">
+                    {% for category in post.categories|slice(0, 1) %}
+                        <span class="badge bg-white text-primary">{{ category.title }}</span>
+                    {% endfor %}
+                    {% if is_featured %}
+                        <span class="badge bg-warning text-dark ms-1">
+                            <i class="ri-pushpin-2-fill me-1"></i>Featured
+                        </span>
+                    {% endif %}
+                </div>
+            {% endif %}
+            <h3 class="card-title h4 mb-2">
+                <a class="text-white text-decoration-none stretched-link" href="{{ post.url }}">
+                    {{ post.title }}
+                </a>
+            </h3>
+            {% if show_meta %}
+                <div class="d-flex align-items-center small opacity-75">
+                    {% if show_author and post.author %}
+                        <span>{{ post.author.name }}</span>
+                        <span class="mx-2">·</span>
+                    {% endif %}
+                    <span>{{ post.formatted_date }}</span>
+                </div>
+            {% endif %}
+        </div>
+    {% endif %}
+</article>
+
+{# Default Variant #}
+{% else %}
+<article class="post-card card {{ card_class }} border-0 h-100 transition-all hover-lift">
+    {# Featured Image #}
+    {% if post.featured_image %}
+        {% set img = post.featured_image %}
+        <div class="card-img-wrapper overflow-hidden" style="height: {{ image_height }};">
+            {% if img.id is defined %}
+                {{ responsive_image(img.id, {
+                    'class': 'card-img-top h-100 w-100 transition-transform',
+                    'alt': img.alt|default(post.title),
+                    'style': 'object-fit: cover;'
+                }) }}
+            {% elseif img.url %}
+                <img class="card-img-top h-100 w-100 transition-transform"
+                    src="{{ img.url }}"
+                    alt="{{ img.alt|default(post.title) }}"
+                    style="object-fit: cover;"
+                    loading="lazy" />
+            {% endif %}
+        </div>
+    {% endif %}
+
+    <div class="card-body d-flex flex-column p-4">
+        {# Categories #}
+        {% if show_categories and post.categories %}
+            <div class="mb-2">
+                {% for category in post.categories|slice(0, 2) %}
+                    <a href="{{ category.url }}" class="badge bg-primary-subtle text-primary text-decoration-none me-1 fw-medium">
+                        {{ category.title }}
+                    </a>
+                {% endfor %}
+                {% if is_featured %}
+                    <span class="badge bg-warning-subtle text-warning fw-medium">
+                        <i class="ri-pushpin-2-fill me-1"></i>Featured
+                    </span>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        {# Title #}
+        <h5 class="card-title h5 mb-2 line-clamp-2">
+            <a class="text-decoration-none text-dark link-hover-primary" href="{{ post.url }}">
+                {{ post.title }}
+            </a>
+        </h5>
+
+        {# Excerpt #}
+        {% if show_excerpt and post.excerpt %}
+            <p class="card-text text-muted small mb-3 line-clamp-3 flex-grow-1">
+                {{ post.excerpt|striptags|truncate(150) }}
+            </p>
+        {% endif %}
+
+        {# Footer: Author & Date #}
+        <div class="card-footer-meta mt-auto pt-3 border-top">
+            <div class="d-flex align-items-center justify-content-between">
+                {% if show_author and post.author %}
+                    <div class="d-flex align-items-center">
+                        {% if post.author.avatar %}
+                            <img src="{{ post.author.avatar }}" alt="{{ post.author.name }}"
+                                 class="rounded-circle me-2" width="28" height="28" style="object-fit: cover;">
+                        {% else %}
+                            <div class="avatar-placeholder rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2"
+                                 style="width: 28px; height: 28px; font-size: 0.75rem;">
+                                {{ post.author.name|first|upper }}
+                            </div>
+                        {% endif %}
+                        <span class="small text-muted">{{ post.author.name }}</span>
+                    </div>
+                {% endif %}
+                {% if show_meta %}
+                    <span class="small text-muted">
+                        {{ post.formatted_date }}
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</article>
+{% endif %}
+
+<style>
+.post-card.hover-lift {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.post-card.hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.1) !important;
+}
+.post-card .transition-transform {
+    transition: transform 0.3s ease;
+}
+.post-card:hover .transition-transform {
+    transform: scale(1.05);
+}
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.link-hover-primary:hover {
+    color: var(--bs-primary) !important;
+}
+</style>

@@ -1,0 +1,46 @@
+{
+    "name": "Categories",
+    "description": "Display categories",
+    "category": "content",
+    "settings": {
+        "title": {
+            "type": "text",
+            "label": "Widget Title",
+            "default": "Categories",
+            "description": "Optional widget title",
+            "required": false
+        },
+        "icon": {
+            "type": "text",
+            "label": "Widget Icon",
+            "default": "ri-folder-line",
+            "description": "Optional widget icon (e.g. ri-folder-line)",
+            "required": false
+        },
+        "categories_limit": {
+            "type": "number",
+            "label": "Categories Limit",
+            "default": 5,
+            "description": "Number of categories to display",
+            "required": true
+        },
+        "background_style": {
+            "type": "select",
+            "label": "Background Style",
+            "default": "secondary",
+            "options": {
+                "primary": "Primary",
+                "secondary": "Secondary",
+                "success": "Success",
+                "danger": "Danger",
+                "warning": "Warning",
+                "info": "Info",
+                "light": "Light",
+                "dark": "Dark",
+                "outline-primary": "Outline Primary"
+            },
+            "description": "Bootstrap background style",
+            "required": true
+        }
+    }
+}

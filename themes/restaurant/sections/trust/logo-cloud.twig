@@ -1,0 +1,39 @@
+{# Trust Logo Cloud Section #}
+
+{% set section_title = section_title|default('Trusted by industry leaders') %}
+
+<section class="logo-cloud py-4 border-bottom" title="Trust Logos">
+    <div class="container">
+        <p class="text-center text-muted small mb-4 text-uppercase tracking-wider">{{ section_title }}</p>
+        <div class="row justify-content-center align-items-center g-4">
+            {% for i in 1..6 %}
+            <div class="col-6 col-md-4 col-lg-2" data-aos="fade-up" data-aos-delay="{{ i * 50 }}">
+                <div class="logo-item text-center p-3">
+                    <div class="d-flex align-items-center justify-content-center gap-2 text-muted opacity-50 hover-opacity-100 transition-all">
+                        <i class="ri-building-4-line fs-2"></i>
+                        <span class="fw-bold h5 mb-0">Company {{ i }}</span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<style>
+.logo-cloud {
+    background-color: #f8f9fa;
+}
+.logo-item {
+    transition: all 0.3s ease;
+}
+.logo-item:hover {
+    opacity: 1;
+}
+.hover-opacity-100:hover {
+    opacity: 1 !important;
+}
+.tracking-wider {
+    letter-spacing: 0.05em;
+}
+</style>

@@ -1,0 +1,205 @@
+#!/bin/bash
+#
+# Script: a-setup-queue-worker
+#
+# Description: Creates Supervisor configuration for a website's Laravel queue worker.
+#              Enables persistent background job processing with automatic restart.
+#
+# Usage: a-setup-queue-worker HESTIA_USER DOMAIN [NUM_WORKERS]
+#
+# Arguments:
+#   HESTIA_USER   - The Hestia username
+#   DOMAIN        - The website domain
+#   NUM_WORKERS   - Number of queue workers (optional, default: 1)
+#
+# Exit Codes:
+#   0   - Success
+#   1   - Invalid arguments
+#   3   - User or domain not found
+#   9   - Configuration file operation failed
+#
+# Requirements:
+#   - Supervisor must be installed (apt install supervisor)
+#   - Directory /etc/supervisor/conf.d/ must exist
+#
+
+# --- Configuration ---
+HESTIA=${HESTIA:-/usr/local/hestia}
+BIN=${BIN:-/usr/local/hestia/bin}
+ASTERO_DATA_DIR="${ASTERO_DATA_DIR:-/usr/local/hestia/data/astero}"
+LOG_FILE="${ASTERO_DATA_DIR}/logs/astero-scripts.log"
+QUEUE_TIMEOUT_SECONDS=600
+QUEUE_STOPWAIT_SECONDS=660
+
+# Supervisor config directory - use main conf.d for compatibility
+SUPERVISOR_CONF_DIR="/etc/supervisor/conf.d"
+
+# Source Hestia core functions
+source $HESTIA/func/main.sh
+source $HESTIA/conf/hestia.conf
+
+# --- Helper Functions ---
+log_error() {
+    local msg="$1"
+    mkdir -p "$(dirname "$LOG_FILE")"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [a-setup-queue-worker] ERROR: $msg" >> "$LOG_FILE"
+    echo "Error: $msg" >&2
+}
+
+handle_error() {
+    log_error "$2"
+    exit "$1"
+}
+
+log_info() {
+    local msg="$1"
+    mkdir -p "$(dirname "$LOG_FILE")"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [a-setup-queue-worker] INFO: $msg" >> "$LOG_FILE"
+    echo "$msg"
+}
+
+# Remove orphan Astero Supervisor configs that reference deleted Linux users.
+# This keeps `supervisorctl status` clean when someone deletes Hestia users manually
+# without removing /etc/supervisor/conf.d/<user>.conf.
+cleanup_orphan_supervisor_configs() {
+    local removed=0
+    local conf_path
+
+    shopt -s nullglob
+    for conf_path in "$SUPERVISOR_CONF_DIR"/*.conf; do
+        # Only touch configs managed by this script.
+        if ! grep -q "Astero Queue Worker Configuration" "$conf_path" 2>/dev/null; then
+            continue
+        fi
+
+        local conf_user
+        conf_user=$(grep -E '^user=' "$conf_path" 2>/dev/null | head -1 | cut -d'=' -f2 | tr -d '[:space:]')
+        if [ -z "$conf_user" ]; then
+            conf_user=$(basename "$conf_path" .conf)
+        fi
+
+        if ! id "$conf_user" >/dev/null 2>&1; then
+            log_info "Removing orphan Supervisor config: $conf_path (missing user: $conf_user)"
+            rm -f "$conf_path"
+            removed=1
+        fi
+    done
+    shopt -u nullglob
+
+    if [ "$removed" -eq 1 ]; then
+        log_info "Reloading Supervisor after orphan cleanup..."
+        supervisorctl reread > /dev/null 2>&1 || true
+        supervisorctl update > /dev/null 2>&1 || true
+    fi
+}
+
+# --- Argument Validation ---
+if [ "$#" -lt 2 ]; then
+    echo "Usage: a-setup-queue-worker HESTIA_USER DOMAIN [NUM_WORKERS]"
+    exit 1
+fi
+
+user=$1
+domain=$2
+num_workers=${3:-1}  # Default to 1 worker
+
+# Validate Hestia objects
+is_object_valid 'user' 'USER' "$user" || handle_error 3 "User '$user' does not exist."
+is_object_valid 'web' 'DOMAIN' "$domain" || handle_error 3 "Domain '$domain' does not exist."
+$BIN/v-list-web-domain "$user" "$domain" >/dev/null 2>&1 || handle_error 3 "Domain '$domain' does not belong to user '$user'."
+
+# Validate num_workers is a positive integer
+if ! [[ "$num_workers" =~ ^[1-9][0-9]*$ ]]; then
+    handle_error 1 "NUM_WORKERS must be a positive integer, got: '$num_workers'"
+fi
+
+# Check Supervisor is installed
+if ! command -v supervisorctl &> /dev/null; then
+    handle_error 9 "Supervisor is not installed. Run: apt install supervisor"
+fi
+
+# Ensure Supervisor config directory exists
+if [ ! -d "$SUPERVISOR_CONF_DIR" ]; then
+    mkdir -p "$SUPERVISOR_CONF_DIR" || handle_error 9 "Failed to create $SUPERVISOR_CONF_DIR"
+fi
+
+# Clean orphaned Astero queue-worker configs before creating/updating this one
+cleanup_orphan_supervisor_configs
+
+# --- Main Logic ---
+log_info "Setting up queue worker for $domain with $num_workers worker(s)..."
+
+# Paths
+ROOT_DIR="/home/$user/web/$domain/public_html"
+CURRENT_SYMLINK="$ROOT_DIR/current"
+ARTISAN_PATH="$CURRENT_SYMLINK/artisan"
+LOG_DIR="/home/$user/web/$domain/logs"
+QUEUE_LOG_PATH="$LOG_DIR/queue-worker.log"
+
+# Ensure log directory exists
+mkdir -p "$LOG_DIR" 2>/dev/null
+chown "$user:$user" "$LOG_DIR" 2>/dev/null
+
+# Program name uses just the user (one website per user)
+PROGRAM_NAME="${user}"
+CONF_PATH="$SUPERVISOR_CONF_DIR/${PROGRAM_NAME}.conf"
+
+# Create Supervisor config
+cat > "$CONF_PATH" << EOF
+; Astero Queue Worker Configuration
+; Website: $domain
+; User: $user
+; Workers: $num_workers
+; Generated: $(date '+%Y-%m-%d %H:%M:%S')
+
+[program:${PROGRAM_NAME}]
+command=php ${ARTISAN_PATH} queue:work --tries=3 --timeout=${QUEUE_TIMEOUT_SECONDS} --sleep=3 --max-jobs=100 --max-time=3600
+process_name=%(program_name)s_%(process_num)02d
+numprocs=${num_workers}
+autostart=true
+autorestart=true
+startsecs=5
+startretries=3
+user=${user}
+directory=${CURRENT_SYMLINK}
+stdout_logfile=${QUEUE_LOG_PATH}
+stdout_logfile_maxbytes=10MB
+stdout_logfile_backups=3
+stderr_logfile=${QUEUE_LOG_PATH}
+stderr_logfile_maxbytes=10MB
+stderr_logfile_backups=3
+stopwaitsecs=${QUEUE_STOPWAIT_SECONDS}
+stopsignal=SIGTERM
+EOF
+
+# Set permissions
+chmod 644 "$CONF_PATH" || handle_error 9 "Failed to set permissions on config file"
+
+# Create log file if it doesn't exist
+touch "$QUEUE_LOG_PATH" 2>/dev/null
+chown "$user:$user" "$QUEUE_LOG_PATH" 2>/dev/null
+
+# Reload Supervisor configuration
+log_info "Reloading Supervisor configuration..."
+supervisorctl reread > /dev/null 2>&1 || handle_error 9 "Failed to reread Supervisor config"
+supervisorctl update > /dev/null 2>&1 || handle_error 9 "Failed to update Supervisor"
+
+# Start the workers
+log_info "Starting queue workers..."
+supervisorctl start "${PROGRAM_NAME}:*" > /dev/null 2>&1
+
+# Verify workers are running
+sleep 2
+status=$(supervisorctl status "${PROGRAM_NAME}:*" 2>/dev/null | head -1)
+if echo "$status" | grep -q "RUNNING"; then
+    log_info "Queue workers started successfully"
+else
+    log_info "Queue workers may still be starting. Status: $status"
+fi
+
+$BIN/v-log-action "system" "Info" "System" "Queue worker configured for $domain (User: $user, Workers: $num_workers)."
+
+echo "Queue worker started for $domain with $num_workers worker(s)"
+echo "Config: $CONF_PATH"
+echo "Logs: $QUEUE_LOG_PATH"
+exit 0

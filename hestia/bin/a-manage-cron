@@ -1,0 +1,143 @@
+#!/bin/bash
+#
+# Script: a-manage-cron
+#
+# Description: Manages the website's scheduler cron job (suspend/unsuspend).
+#              Used to pause scheduled tasks for suspended/expired/trashed websites.
+#
+# Usage: a-manage-cron HESTIA_USER DOMAIN ACTION
+#
+# Arguments:
+#   HESTIA_USER   - The Hestia username
+#   DOMAIN        - The website domain
+#   ACTION        - One of: suspend, unsuspend
+#
+# Exit Codes:
+#   0   - Success
+#   1   - Invalid arguments
+#   3   - User or domain not found
+#   9   - Operation failed
+#   207 - Required dependency missing
+#
+
+# --- Configuration ---
+HESTIA=${HESTIA:-/usr/local/hestia}
+BIN=${BIN:-/usr/local/hestia/bin}
+ASTERO_DATA_DIR="${ASTERO_DATA_DIR:-/usr/local/hestia/data/astero}"
+LOG_FILE="${ASTERO_DATA_DIR}/logs/astero-scripts.log"
+
+# Source Hestia core functions
+source $HESTIA/func/main.sh
+source $HESTIA/conf/hestia.conf
+
+# --- Helper Functions ---
+log_error() {
+    local msg="$1"
+    mkdir -p "$(dirname "$LOG_FILE")"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [a-manage-cron] ERROR: $msg" >> "$LOG_FILE"
+    echo "Error: $msg" >&2
+}
+
+handle_error() {
+    log_error "$2"
+    exit "$1"
+}
+
+log_info() {
+    local msg="$1"
+    mkdir -p "$(dirname "$LOG_FILE")"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [a-manage-cron] INFO: $msg" >> "$LOG_FILE"
+    echo "$msg"
+}
+
+show_usage() {
+    echo "Usage: a-manage-cron HESTIA_USER DOMAIN ACTION"
+    echo ""
+    echo "Actions:"
+    echo "  suspend    - Suspend the scheduler cron job"
+    echo "  unsuspend  - Unsuspend the scheduler cron job"
+    exit 1
+}
+
+# --- Argument Validation ---
+if [ "$#" -lt 3 ]; then
+    show_usage
+fi
+
+user=$1
+domain=$2
+action=$3
+
+# Validate Hestia user exists
+is_object_valid 'user' 'USER' "$user" || handle_error 3 "User '$user' does not exist."
+is_object_valid 'web' 'DOMAIN' "$domain" || handle_error 3 "Domain '$domain' does not exist."
+
+# Ensure jq is available for JSON parsing
+command -v jq &> /dev/null || handle_error 207 "Required dependency 'jq' is not installed."
+
+# --- Find and manage cron job ---
+# The scheduler cron job command pattern
+CRON_PATTERN="php /home/$user/web/$domain/public_html/current/artisan schedule:run"
+
+# Get cron job ID by matching the command
+get_cron_id() {
+    local cron_output
+    cron_output=$($BIN/v-list-cron-jobs "$user" json 2>/dev/null)
+    if [ $? -ne 0 ] || [ -z "$cron_output" ]; then
+        return 1
+    fi
+    echo "$cron_output" | jq -r --arg pattern "$CRON_PATTERN" '
+        to_entries[] |
+        select(.value.CMD | contains($pattern)) |
+        .key
+    ' | head -1
+
+# --- Execute Action ---
+case "$action" in
+    suspend)
+        log_info "Suspending cron job for $domain..."
+        CRON_ID=$(get_cron_id)
+        if [ $? -ne 0 ]; then
+            handle_error 9 "Failed to list cron jobs for user '$user'."
+        fi
+        if [ -n "$CRON_ID" ]; then
+            output=$($BIN/v-suspend-cron-job "$user" "$CRON_ID" 2>&1)
+            if [ $? -ne 0 ]; then
+                handle_error 9 "Failed to suspend cron job: $output"
+            fi
+            log_info "Suspended cron job ID: $CRON_ID"
+            $BIN/v-log-action "system" "Info" "System" "Cron job suspended for $domain (User: $user, ID: $CRON_ID)."
+            echo "Cron job suspended for $domain"
+        else
+            log_info "No scheduler cron job found for $domain"
+            echo "No cron job to suspend"
+        fi
+        ;;
+
+    unsuspend)
+        log_info "Unsuspending cron job for $domain..."
+        CRON_ID=$(get_cron_id)
+        if [ $? -ne 0 ]; then
+            handle_error 9 "Failed to list cron jobs for user '$user'."
+        fi
+        if [ -n "$CRON_ID" ]; then
+            output=$($BIN/v-unsuspend-cron-job "$user" "$CRON_ID" 2>&1)
+            if [ $? -ne 0 ]; then
+                handle_error 9 "Failed to unsuspend cron job: $output"
+            fi
+            log_info "Unsuspended cron job ID: $CRON_ID"
+            $BIN/v-log-action "system" "Info" "System" "Cron job unsuspended for $domain (User: $user, ID: $CRON_ID)."
+            echo "Cron job unsuspended for $domain"
+        else
+            log_info "No scheduler cron job found for $domain"
+            echo "No cron job to unsuspend"
+        fi
+        ;;
+
+    *)
+        echo "Unknown action: $action"
+        show_usage
+        ;;
+esac
+
+exit 0

@@ -1,0 +1,106 @@
+#!/bin/bash
+#
+# Script: a-provision-server
+#
+# Description: Consolidated Astero server provisioning entrypoint.
+#              Installs core packages and delegates to a-setup-astero.
+#
+# Usage: a-provision-server [--timezone TIMEZONE] [--api-allowed-ip VALUE] [--multiphp yes|no] [--php-versions "8.3,8.4"]
+
+set -euo pipefail
+
+HESTIA_BIN="${HESTIA_BIN:-/usr/local/hestia/bin}"
+SETUP_SCRIPT="$HESTIA_BIN/a-setup-astero"
+
+TIMEZONE="Asia/Kolkata"
+API_ALLOWED_IP="allow-all"
+MULTIPHP_ENABLED="no"
+PHP_VERSIONS="8.4"
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --timezone)
+            TIMEZONE="${2:-$TIMEZONE}"
+            shift 2
+            ;;
+        --api-allowed-ip)
+            API_ALLOWED_IP="${2:-$API_ALLOWED_IP}"
+            shift 2
+            ;;
+        --multiphp)
+            MULTIPHP_ENABLED="${2:-$MULTIPHP_ENABLED}"
+            shift 2
+            ;;
+        --php-versions)
+            PHP_VERSIONS="${2:-$PHP_VERSIONS}"
+            shift 2
+            ;;
+        *)
+            shift
+            ;;
+    esac
+done
+
+if [ "$(id -u)" -ne 0 ]; then
+    echo "[a-provision-server] This script must be run as root." >&2
+    exit 1
+fi
+
+if [ ! -x "$SETUP_SCRIPT" ]; then
+    echo "[a-provision-server] Missing setup script: $SETUP_SCRIPT" >&2
+    exit 2
+fi
+
+export DEBIAN_FRONTEND=noninteractive
+apt-get update -qq
+apt-get install -y -qq git supervisor screen ripgrep universal-ctags unzip curl
+
+# Install image optimization toolchain used by CMS asset processing.
+if ! apt-get install -y -qq jpegoptim optipng pngquant gifsicle libavif-bin; then
+    echo "[a-provision-server] Warning: Failed to install one or more image optimization packages." >&2
+    echo "[a-provision-server] Install manually: apt install jpegoptim optipng pngquant gifsicle libavif-bin" >&2
+fi
+
+# Install snapd if snap is unavailable (required for svgo installation).
+if ! command -v snap >/dev/null 2>&1; then
+    if apt-get install -y -qq snapd >/dev/null 2>&1; then
+        if command -v systemctl >/dev/null 2>&1; then
+            systemctl enable snapd snapd.socket >/dev/null 2>&1 || true
+            systemctl start snapd snapd.socket >/dev/null 2>&1 || true
+        fi
+    else
+        echo "[a-provision-server] Warning: Failed to install snapd." >&2
+        echo "[a-provision-server] Install manually: apt install snapd" >&2
+    fi
+fi
+
+# Install SVG optimizer via Snap when available.
+if ! command -v svgo >/dev/null 2>&1; then
+    if command -v snap >/dev/null 2>&1; then
+        if ! snap list svgo >/dev/null 2>&1; then
+            if ! snap install svgo >/dev/null 2>&1; then
+                echo "[a-provision-server] Warning: Failed to install svgo via snap." >&2
+                echo "[a-provision-server] Install manually: snap install svgo" >&2
+            fi
+        fi
+    else
+        echo "[a-provision-server] Warning: snap is still unavailable after snapd install attempt; skipping svgo installation." >&2
+        echo "[a-provision-server] Install manually: apt install snapd && snap install svgo" >&2
+    fi
+fi
+
+if command -v systemctl >/dev/null 2>&1; then
+    systemctl enable supervisor >/dev/null 2>&1 || true
+    systemctl start supervisor >/dev/null 2>&1 || true
+fi
+
+if command -v supervisorctl >/dev/null 2>&1; then
+    supervisorctl reread >/dev/null 2>&1 || true
+    supervisorctl update >/dev/null 2>&1 || true
+fi
+
+"$SETUP_SCRIPT" \
+    --timezone "$TIMEZONE" \
+    --api-allowed-ip "$API_ALLOWED_IP" \
+    --multiphp "$MULTIPHP_ENABLED" \
+    --php-versions "$PHP_VERSIONS"

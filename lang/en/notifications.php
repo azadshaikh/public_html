@@ -1,0 +1,121 @@
+<?php
+
+return [
+    // General
+    'notifications' => 'Notifications',
+    'notification' => 'Notification',
+    'notification_center' => 'Notification Center',
+    'notification_details' => 'Notification Details',
+    'manage_your_notifications' => 'View and manage all your notifications',
+    'all_notifications' => 'All Notifications',
+    'no_notifications' => 'No notifications',
+    'no_notifications_description' => 'You\'re all caught up! New notifications will appear here.',
+
+    // Status
+    'status' => 'Status',
+    'all' => 'All',
+    'read' => 'Read',
+    'unread' => 'Unread',
+    'unread_count' => '{0} No unread notifications|{1} :count unread notification|[2,*] :count unread notifications',
+
+    // Actions
+    'mark_read' => 'Mark as Read',
+    'mark_unread' => 'Mark as Unread',
+    'mark_all_read' => 'Mark All as Read',
+    'delete' => 'Delete',
+    'delete_all_read' => 'Delete All Read',
+    'confirm_delete' => 'Are you sure you want to delete this notification?',
+    'confirm_delete_read' => 'Are you sure you want to delete all read notifications?',
+    'view_details' => 'View Details',
+    'view_in_backend' => 'View in Dashboard',
+    'view_in_frontend' => 'View on Website',
+    'view_on_site' => 'View on Site',
+
+    // Categories
+    'categories' => 'Categories',
+    'category' => 'Category',
+    'category_system_description' => 'System alerts and important updates',
+    'category_website_description' => 'Website creation, updates, and status changes',
+    'category_user_description' => 'User account and profile notifications',
+    'category_cms_description' => 'Content management notifications',
+    'category_broadcast_description' => 'Announcements from administrators',
+
+    // Priorities
+    'priority' => 'Priority',
+    'all_priorities' => 'All Priorities',
+    'priority_high_description' => 'Critical notifications requiring immediate attention',
+    'priority_medium_description' => 'Standard notifications for regular updates',
+    'priority_low_description' => 'Informational notifications',
+
+    // Details
+    'details' => 'Details',
+    'id' => 'ID',
+    'type' => 'Type',
+    'module' => 'Module',
+    'received' => 'Received',
+    'received_at' => 'Received at',
+    'read_at' => 'Read at',
+
+    // Search & Filter
+    'search_placeholder' => 'Search notifications...',
+
+    // Preferences
+    'preferences' => 'Preferences',
+    'settings' => 'Settings',
+    'notification_preferences' => 'Notification Preferences',
+    'manage_notification_settings' => 'Customize how you receive notifications',
+    'global_settings' => 'Global Settings',
+    'enable_notifications' => 'Enable Notifications',
+    'enable_notifications_description' => 'Turn on/off all notifications. When disabled, you won\'t receive any notifications.',
+    'category_preferences' => 'Category Preferences',
+    'category_preferences_description' => 'Choose which types of notifications you want to receive.',
+    'priority_preferences' => 'Priority Preferences',
+    'priority_preferences_description' => 'Choose which priority levels you want to receive.',
+    'about_preferences' => 'About Preferences',
+    'preferences_help_text' => 'Customize your notification experience by enabling or disabling different categories and priority levels. Your preferences are saved automatically.',
+    'tips' => 'Tips',
+    'tip_disable_global' => 'Disable the global toggle to stop all notifications at once.',
+    'tip_category_filter' => 'Disable specific categories to reduce notification noise.',
+    'tip_priority_filter' => 'Keep high priority enabled to never miss critical alerts.',
+
+    // Messages
+    'notification_marked_read' => 'Notification marked as read.',
+    'notification_marked_unread' => 'Notification marked as unread.',
+    'all_notifications_marked_read' => 'All notifications marked as read.',
+    'notification_deleted' => 'Notification deleted.',
+    'read_notifications_deleted' => 'All read notifications deleted.',
+    'preferences_updated' => 'Notification preferences updated.',
+
+    // Broadcast
+    'broadcast' => 'Broadcast',
+    'broadcast_notification' => 'Broadcast Notification',
+    'compose_broadcast' => 'Compose Broadcast',
+    'send_broadcast' => 'Send Broadcast',
+    'broadcast_to_all' => 'Send to All Users',
+    'broadcast_to_roles' => 'Send to Specific Roles',
+    'broadcast_message' => 'Message',
+    'broadcast_title' => 'Title',
+    'broadcast_sent' => 'Broadcast notification sent to :count user(s) successfully.',
+    'broadcast_no_users' => 'No users found matching the selected criteria.',
+    'broadcast_history' => 'Broadcast History',
+    'view_history' => 'View History',
+    'new_broadcast' => 'New Broadcast',
+    'broadcast_title_placeholder' => 'Enter notification title...',
+    'broadcast_message_placeholder' => 'Enter your message here...',
+    'broadcast_message_hint' => 'HTML is supported. Keep messages concise and actionable.',
+    'broadcast_warning' => 'This will send a notification to all selected users immediately. This action cannot be undone.',
+    'target_audience' => 'Target Audience',
+    'all_users' => 'All Users',
+    'specific_roles' => 'Specific Roles',
+    'specific_users' => 'Specific Users',
+    'select_users' => 'Select Users',
+    'select_users_placeholder' => 'Search and select users...',
+    'search_users_placeholder' => 'Type to search users...',
+    'broadcast_icon' => 'Icon',
+    'icon_hint' => 'Remix Icon class (e.g., ri-megaphone-line)',
+    'no_broadcasts_yet' => 'No Broadcasts Yet',
+    'no_broadcasts_hint' => 'You haven\'t sent any broadcast notifications yet.',
+    'create_first_broadcast' => 'Create First Broadcast',
+    'recipients' => 'Recipients',
+    'sent_at' => 'Sent At',
+];

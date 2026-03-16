@@ -1,0 +1,40 @@
+{# Pricing Card Block #}
+{# Use |default() for all variables so block works without JSON #}
+
+{% set plan_name = plan_name|default('Professional') %}
+{% set description = description|default('Perfect for growing businesses') %}
+{% set price = price|default('$49') %}
+{% set period = period|default('/month') %}
+{% set is_featured = is_featured|default(false) %}
+{% set features = features|default("Unlimited projects\n10GB storage\nPriority support\nAdvanced analytics\nCustom domain") %}
+{% set button_text = button_text|default('Get Started') %}
+{% set button_url = button_url|default('#') %}
+
+{% set featured_class = is_featured ? 'border-primary shadow-lg' : 'border-0 shadow-sm' %}
+{% set button_class = is_featured ? 'btn-primary' : 'btn-outline-primary' %}
+{% set feature_list = features|split('\n') %}
+
+<div class="card h-100 {{ featured_class }}">
+    {% if is_featured %}
+    <div class="card-header bg-primary text-white text-center py-2 border-0">
+        <small class="fw-semibold text-uppercase">Most Popular</small>
+    </div>
+    {% endif %}
+    <div class="card-body p-4 text-center">
+        <h4 class="card-title fw-bold mb-2">{{ plan_name }}</h4>
+        <p class="text-muted small mb-3">{{ description }}</p>
+        <div class="display-5 fw-bold mb-1">
+            {{ price }}<small class="fs-6 fw-normal text-muted">{{ period }}</small>
+        </div>
+        <hr class="my-4">
+        <ul class="list-unstyled text-start mb-4">
+            {% for feature in feature_list %}
+            <li class="py-2">
+                <i class="ri-check-line text-success me-2"></i>
+                {{ feature }}
+            </li>
+            {% endfor %}
+        </ul>
+        <a href="{{ button_url }}" class="btn {{ button_class }} w-100">{{ button_text }}</a>
+    </div>
+</div>

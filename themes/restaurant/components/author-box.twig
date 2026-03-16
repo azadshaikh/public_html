@@ -1,0 +1,65 @@
+{#
+    Author Box Component
+
+    Displays author information with avatar, bio, and social links.
+
+    Following the data contract, author.url and author.avatar are ALWAYS pre-computed.
+    Templates should never construct URLs using route() or setting().
+
+    @see docs/astero-modules-system/DATA_CONTRACT.md
+
+    @param author - The author object (from ContentTransformer)
+    @param show_bio - Whether to show bio (default: true)
+    @param show_social - Whether to show social links (default: true)
+    @param show_posts_link - Whether to show "View all posts" link (default: true)
+    @param variant - Display variant: 'inline', 'card', 'compact' (default: 'inline')
+    @param avatar_size - Avatar size in pixels (default: 64)
+    @param class - Additional CSS classes
+#}
+
+{% set show_bio = show_bio ?? true %}
+{% set show_social = show_social ?? true %}
+{% set show_posts_link = show_posts_link ?? true %}
+{% set variant = variant ?? 'inline' %}
+{% set avatar_size = avatar_size ?? 64 %}
+
+{% if author %}
+    <div class="author-box d-flex align-items-{{ variant == 'compact' ? 'center' : 'start' }} {{ class ?? '' }}">
+        {# Avatar - author.avatar is always available with fallback #}
+        <img class="rounded-circle me-3"
+            src="{{ author.avatar }}"
+            alt="{{ author.name }}"
+            width="{{ avatar_size }}"
+            height="{{ avatar_size }}"
+            loading="lazy" />
+
+        <div class="author-info flex-grow-1">
+            {# Name - author.url is always pre-computed #}
+            <h6 class="fs-{{ variant == 'compact' ? '6' : '5' }} mb-1">
+                <a class="text-decoration-none text-body" href="{{ author.url }}">
+                    {{ author.name }}
+                </a>
+            </h6>
+
+            {# Bio #}
+            {% if show_bio and author.bio and variant != 'compact' %}
+                <p class="text-muted mb-0">{{ author.bio }}</p>
+            {% endif %}
+
+            {# Social Links #}
+            {% if show_social %}
+                {% include 'components/social-links.twig' with {
+                    'author': author,
+                    'class': 'mt-2'
+                } only %}
+            {% endif %}
+        </div>
+
+        {# View All Posts Link - author.url is pre-computed #}
+        {% if show_posts_link and variant != 'compact' %}
+            <a class="btn btn-outline-primary ms-3 flex-shrink-0" href="{{ author.url }}">
+                View all posts
+            </a>
+        {% endif %}
+    </div>
+{% endif %}

@@ -1,0 +1,212 @@
+#!/bin/bash
+#
+# Script: a-manage-queue-worker
+#
+# Description: Manages Supervisor queue workers for a website.
+#              Provides start, stop, restart, status, and remove operations.
+#
+# Usage: a-manage-queue-worker HESTIA_USER DOMAIN ACTION [NUM_WORKERS]
+#
+# Arguments:
+#   HESTIA_USER   - The Hestia username
+#   DOMAIN        - The website domain
+#   ACTION        - One of: start, stop, restart, status, remove, scale
+#   NUM_WORKERS   - Required for 'scale' action
+#
+# Exit Codes:
+#   0   - Success
+#   1   - Invalid arguments
+#   3   - User or domain not found
+#   9   - Operation failed
+#
+
+# --- Configuration ---
+HESTIA=${HESTIA:-/usr/local/hestia}
+BIN=${BIN:-/usr/local/hestia/bin}
+ASTERO_DATA_DIR="${ASTERO_DATA_DIR:-/usr/local/hestia/data/astero}"
+LOG_FILE="${ASTERO_DATA_DIR}/logs/astero-scripts.log"
+
+# Supervisor config directory - use main conf.d for compatibility
+SUPERVISOR_CONF_DIR="/etc/supervisor/conf.d"
+
+# Source Hestia core functions
+source $HESTIA/func/main.sh
+source $HESTIA/conf/hestia.conf
+
+# --- Helper Functions ---
+log_error() {
+    local msg="$1"
+    mkdir -p "$(dirname "$LOG_FILE")"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [a-manage-queue-worker] ERROR: $msg" >> "$LOG_FILE"
+    echo "Error: $msg" >&2
+}
+
+handle_error() {
+    log_error "$2"
+    exit "$1"
+}
+
+log_info() {
+    local msg="$1"
+    mkdir -p "$(dirname "$LOG_FILE")"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [a-manage-queue-worker] INFO: $msg" >> "$LOG_FILE"
+    echo "$msg"
+}
+
+show_usage() {
+    echo "Usage: a-manage-queue-worker HESTIA_USER DOMAIN ACTION [NUM_WORKERS]"
+    echo ""
+    echo "Actions:"
+    echo "  start    - Start queue workers"
+    echo "  stop     - Stop queue workers"
+    echo "  restart  - Restart queue workers (graceful)"
+    echo "  status   - Show worker status"
+    echo "  remove   - Remove queue worker configuration"
+    echo "  scale    - Change number of workers (requires NUM_WORKERS)"
+    exit 1
+}
+
+# --- Argument Validation ---
+if [ "$#" -lt 3 ]; then
+    show_usage
+fi
+
+user=$1
+domain=$2
+action=$3
+num_workers=${4:-}
+
+# Validate Hestia objects
+is_object_valid 'user' 'USER' "$user" || handle_error 3 "User '$user' does not exist."
+is_object_valid 'web' 'DOMAIN' "$domain" || handle_error 3 "Domain '$domain' does not exist."
+$BIN/v-list-web-domain "$user" "$domain" >/dev/null 2>&1 || handle_error 3 "Domain '$domain' does not belong to user '$user'."
+
+# Check Supervisor is installed
+if ! command -v supervisorctl &> /dev/null; then
+    handle_error 9 "Supervisor is not installed."
+fi
+
+# Program name uses just the user (one website per user)
+PROGRAM_NAME="${user}"
+CONF_PATH="$SUPERVISOR_CONF_DIR/${PROGRAM_NAME}.conf"
+ROOT_DIR="/home/$user/web/$domain/public_html"
+CURRENT_SYMLINK="$ROOT_DIR/current"
+ARTISAN_PATH="$CURRENT_SYMLINK/artisan"
+
+# --- Execute Action ---
+case "$action" in
+    start)
+        if [ ! -f "$CONF_PATH" ]; then
+            handle_error 9 "No queue worker configured for $domain. Run a-setup-queue-worker first."
+        fi
+        log_info "Starting queue workers for $domain..."
+        output=$(supervisorctl start "${PROGRAM_NAME}:*" 2>&1)
+        if [ $? -ne 0 ]; then
+            handle_error 9 "Failed to start queue workers: $output"
+        fi
+        $BIN/v-log-action "system" "Info" "System" "Queue workers started for $domain (User: $user)."
+        ;;
+
+    stop)
+        log_info "Stopping queue workers for $domain..."
+        if [ ! -f "$CONF_PATH" ]; then
+            log_info "No queue worker configured for $domain"
+            echo "No queue worker configured for $domain"
+            exit 0
+        fi
+        output=$(supervisorctl stop "${PROGRAM_NAME}:*" 2>&1)
+        if [ $? -ne 0 ]; then
+            handle_error 9 "Failed to stop queue workers: $output"
+        fi
+        $BIN/v-log-action "system" "Info" "System" "Queue workers stopped for $domain (User: $user)."
+        ;;
+
+    restart)
+        if [ ! -f "$CONF_PATH" ]; then
+            handle_error 9 "No queue worker configured for $domain. Run a-setup-queue-worker first."
+        fi
+        if [ ! -f "$ARTISAN_PATH" ]; then
+            handle_error 9 "Artisan not found at $ARTISAN_PATH"
+        fi
+        log_info "Gracefully restarting queue workers for $domain..."
+        output=$(sudo -u "$user" php "$ARTISAN_PATH" queue:restart 2>&1)
+        if [ $? -ne 0 ]; then
+            handle_error 9 "Failed to send queue restart signal: $output"
+        fi
+
+        sleep 2
+        status_output=$(supervisorctl status "${PROGRAM_NAME}:*" 2>/dev/null || true)
+        if ! echo "$status_output" | grep -Eq "RUNNING|STARTING"; then
+            log_info "Workers are not active after restart signal, attempting to start..."
+            output=$(supervisorctl start "${PROGRAM_NAME}:*" 2>&1)
+            if [ $? -ne 0 ]; then
+                handle_error 9 "Failed to start queue workers after restart signal: $output"
+            fi
+        fi
+
+        $BIN/v-log-action "system" "Info" "System" "Queue workers gracefully restarted for $domain (User: $user)."
+        ;;
+
+    status)
+        echo "Queue worker status for $domain:"
+        echo "Config: $CONF_PATH"
+        echo ""
+        if [ -f "$CONF_PATH" ]; then
+            supervisorctl status "${PROGRAM_NAME}:*"
+        else
+            echo "No queue worker configured for this domain."
+        fi
+        ;;
+
+    remove)
+        log_info "Removing queue worker for $domain..."
+        if [ ! -f "$CONF_PATH" ]; then
+            log_info "No queue worker configured for $domain"
+            echo "No queue worker configured for $domain"
+            exit 0
+        fi
+        # Stop workers first
+        output=$(supervisorctl stop "${PROGRAM_NAME}:*" 2>&1)
+        if [ $? -ne 0 ]; then
+            handle_error 9 "Failed to stop queue workers: $output"
+        fi
+        # Remove config file
+        if [ -f "$CONF_PATH" ]; then
+            rm -f "$CONF_PATH"
+            log_info "Removed config: $CONF_PATH"
+        fi
+        # Reload Supervisor
+        reread_output=$(supervisorctl reread 2>&1)
+        if [ $? -ne 0 ]; then
+            handle_error 9 "Supervisor reread failed: $reread_output"
+        fi
+        update_output=$(supervisorctl update 2>&1)
+        if [ $? -ne 0 ]; then
+            handle_error 9 "Supervisor update failed: $update_output"
+        fi
+        $BIN/v-log-action "system" "Info" "System" "Queue worker removed for $domain (User: $user)."
+        echo "Queue worker removed for $domain"
+        ;;
+
+    scale)
+        if [ -z "$num_workers" ]; then
+            handle_error 1 "scale action requires NUM_WORKERS argument"
+        fi
+        if ! [[ "$num_workers" =~ ^[1-9][0-9]*$ ]]; then
+            handle_error 1 "NUM_WORKERS must be a positive integer, got: '$num_workers'"
+        fi
+        log_info "Scaling queue workers for $domain to $num_workers..."
+        # Re-run setup with new worker count
+        setup_output=$("$BIN/a-setup-queue-worker" "$user" "$domain" "$num_workers" 2>&1)
+        if [ $? -ne 0 ]; then
+            handle_error 9 "Failed to scale queue workers: $setup_output"
+        fi
+        ;;
+
+    *)
+        echo "Unknown action: $action"
+        show_usage
+        ;;
+esac
+
+exit 0

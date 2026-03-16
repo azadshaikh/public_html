@@ -1,0 +1,179 @@
+#!/bin/bash
+#
+# Script: a-rollback-astero
+#
+# Description: Rolls back Astero to a previous version by switching the current symlink.
+#              This is an instant operation - just repoints the symlink to a previous release.
+#
+# Usage: a-rollback-astero HESTIA_USER DOMAIN [VERSION]
+#
+# Exit Codes:
+#   0   - Success
+#   1   - Invalid arguments
+#   3   - User or domain not found
+#   204 - Releases directory missing
+#   207 - Required dependency missing
+#   218 - No previous release available
+
+# --- Configuration ---
+HESTIA=${HESTIA:-/usr/local/hestia}
+BIN=${BIN:-/usr/local/hestia/bin}
+ASTERO_DATA_DIR="${ASTERO_DATA_DIR:-/usr/local/hestia/data/astero}"
+LOG_FILE="${ASTERO_DATA_DIR}/logs/astero-scripts.log"
+
+# --- Argument Validation (must happen before sourcing Hestia main.sh) ---
+user="${1:-}"
+domain="${2:-}"
+
+if [ "$#" -lt 2 ] || [ -z "$user" ] || [ -z "$domain" ]; then
+    echo "Error: Not enough arguments provided. Usage: a-rollback-astero HESTIA_USER DOMAIN [VERSION]" >&2
+    exit 1
+fi
+
+# Source Hestia core functions
+source "$HESTIA/func/main.sh"
+source "$HESTIA/conf/hestia.conf"
+source "$HESTIA/func/domain.sh"
+
+# --- Helper Functions ---
+log_info() {
+    local msg="$1"
+    mkdir -p "$(dirname "$LOG_FILE")" 2>/dev/null || true
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [a-rollback-astero] INFO: $msg" >> "$LOG_FILE"
+    echo "$msg"
+}
+
+log_error() {
+    local msg="$1"
+    mkdir -p "$(dirname "$LOG_FILE")" 2>/dev/null || true
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [a-rollback-astero] ERROR: $msg" >> "$LOG_FILE"
+    echo "Error: $msg" >&2
+}
+
+handle_error() {
+    log_error "$2"
+    exit "$1"
+}
+
+# --- Argument Validation ---
+check_args '2' "$#" 'HESTIA_USER DOMAIN [VERSION]'
+hestia_user=$1
+web_domain=$2
+target_version="${3:-}"
+
+echo "Rolling back $web_domain..."
+
+# Check dependencies
+for cmd in php; do
+    command -v "$cmd" >/dev/null 2>&1 || handle_error 207 "Required dependency '$cmd' is not installed."
+done
+
+# Validate user and domain
+"$BIN/v-list-sys-users" | grep -q "^$hestia_user$" || handle_error 3 "Hestia user '$hestia_user' does not exist."
+[ -d "/home/$hestia_user/web/$web_domain" ] || handle_error 3 "Domain '$web_domain' does not exist."
+
+# --- Path Resolution ---
+ROOTDIR="/home/$hestia_user/web/$web_domain/public_html"
+SITE_RELEASES_DIR="$ROOTDIR/releases"
+CURRENTDIR="$ROOTDIR/current"
+
+[ -d "$SITE_RELEASES_DIR" ] || handle_error 204 "Releases directory missing at $SITE_RELEASES_DIR"
+
+# Get current version
+CURRENT_VERSION=""
+CURRENT_RELEASE=""
+if [ -L "$CURRENTDIR" ]; then
+    CURRENT_RELEASE=$(readlink -f "$CURRENTDIR" 2>/dev/null || true)
+    [ -n "$CURRENT_RELEASE" ] && CURRENT_VERSION=$(basename "$CURRENT_RELEASE")
+fi
+
+log_info "Current version: ${CURRENT_VERSION:-none}"
+
+# --- Determine Target Version ---
+if [ -n "$target_version" ]; then
+    # Specific version requested
+    [[ "$target_version" =~ ^v ]] || target_version="v$target_version"
+    TARGET_RELEASE="$SITE_RELEASES_DIR/$target_version"
+else
+    # Find previous release (most recent before current)
+    TARGET_RELEASE=""
+    for release in $(ls -dt "$SITE_RELEASES_DIR"/v* 2>/dev/null); do
+        if [ -d "$release" ] && [ "$release" != "$CURRENT_RELEASE" ]; then
+            TARGET_RELEASE="$release"
+            break
+        fi
+    done
+fi
+
+# Verify target release exists
+[ -z "$TARGET_RELEASE" ] && handle_error 218 "No previous release available for rollback"
+[ ! -d "$TARGET_RELEASE" ] && handle_error 218 "Target release not found: $TARGET_RELEASE"
+
+TARGET_VERSION=$(basename "$TARGET_RELEASE")
+
+# Check if already at target version
+if [ "$TARGET_VERSION" = "$CURRENT_VERSION" ]; then
+    log_info "Already at version $TARGET_VERSION"
+    exit 0
+fi
+
+log_info "Rolling back to: $TARGET_VERSION"
+
+# --- List Available Releases ---
+echo ""
+echo "Available releases:"
+for release in $(ls -dt "$SITE_RELEASES_DIR"/v* 2>/dev/null); do
+    release_name=$(basename "$release")
+    if [ "$release_name" = "$CURRENT_VERSION" ]; then
+        echo "  $release_name (current)"
+    elif [ "$release_name" = "$TARGET_VERSION" ]; then
+        echo "  $release_name <- rolling back to this"
+    else
+        echo "  $release_name"
+    fi
+done
+echo ""
+
+# --- Suspend Cron ---
+existing_cron=""
+if command -v jq >/dev/null 2>&1; then
+    existing_cron=$("$BIN/v-list-cron-jobs" "$hestia_user" json | jq -r ".[] | select(.command | contains(\"$CURRENTDIR/artisan schedule:run\")) | .id")
+    [ -n "$existing_cron" ] && "$BIN/v-suspend-cron-job" "$hestia_user" "$existing_cron" >/dev/null 2>&1
+fi
+
+# --- Atomic Symlink Switch ---
+log_info "Performing atomic switch to $TARGET_VERSION..."
+ln -sfn "$TARGET_RELEASE" "$CURRENTDIR" || handle_error 210 "Failed to update current symlink."
+
+# --- Clear Caches ---
+log_info "Clearing caches..."
+cd "$TARGET_RELEASE" || handle_error 210 "Could not change to release directory."
+sudo -u "$hestia_user" php artisan config:clear --no-interaction >/dev/null 2>&1 || true
+sudo -u "$hestia_user" php artisan cache:clear --no-interaction >/dev/null 2>&1 || true
+sudo -u "$hestia_user" php artisan route:clear --no-interaction >/dev/null 2>&1 || true
+sudo -u "$hestia_user" php artisan view:clear --no-interaction >/dev/null 2>&1 || true
+
+# Rebuild caches
+sudo -u "$hestia_user" php artisan config:cache --no-interaction >/dev/null 2>&1 || true
+sudo -u "$hestia_user" php artisan route:cache --no-interaction >/dev/null 2>&1 || true
+
+# --- Resume Cron ---
+[ -n "$existing_cron" ] && "$BIN/v-unsuspend-cron-job" "$hestia_user" "$existing_cron" >/dev/null 2>&1
+
+# --- Restart Queue Workers ---
+if [ -x "$BIN/a-manage-queue-worker" ]; then
+    "$BIN/a-manage-queue-worker" "$hestia_user" "$web_domain" restart >/dev/null 2>&1 || true
+fi
+
+log_info "Rolled back to $TARGET_VERSION"
+$BIN/v-log-action "system" "Info" "System" "Astero rollback: $web_domain rolled back to $TARGET_VERSION"
+
+echo ""
+echo "Rollback complete!"
+echo "  Previous version: ${CURRENT_VERSION:-none}"
+echo "  Current version:  $TARGET_VERSION"
+echo ""
+echo "Note: Database migrations are NOT reversed. If the new version had"
+echo "      destructive migrations, you may need to restore from backup."
+
+exit 0

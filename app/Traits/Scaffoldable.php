@@ -109,14 +109,11 @@ trait Scaffoldable
     // =========================================================================
 
     /**
-     * Get paginated list data in DataGrid format
+     * Get paginated list data in Datagrid-compatible format.
      *
-     * Response structure:
-     * - items: Array of transformed row data
-     * - pagination: { current_page, last_page, per_page, total, from, to }
-     * - columns: Column configuration from scaffold
-     * - filters: Filter configuration from scaffold
-     * - actions: Unified actions (filtered by status, includes scope for row/bulk)
+     * Response structure (PaginatedData-compatible):
+     * - rows: PaginatedData with transformed items in `data`, plus pagination links
+     * - filters: Current request filter/sort/pagination values (for Datagrid state)
      * - statistics: Status counts and totals (only on initial load or when include_stats=1)
      * - empty_state_config: Empty state display config
      *
@@ -129,28 +126,52 @@ trait Scaffoldable
         $query = $this->buildListQuery($request);
         $paginator = $query->paginate($this->getPerPage($request))->onEachSide(1);
 
-        // Get current status from request (route param or query param)
-        $status = $request->input('status') ?? $request->route('status') ?? 'all';
-
         // Only include statistics on initial load (non-AJAX) or when explicitly requested
         // This avoids expensive COUNT queries on every filter/sort/pagination change
         $includeStats = ! $request->ajax() || $request->boolean('include_stats');
 
+        // Build PaginatedData-compatible payload with transformed items
+        $rows = $paginator->toArray();
+        $rows['data'] = $this->transformItems($paginator->items());
+
         $data = [
-            'items' => $this->transformItems($paginator->items()),
-            'pagination' => $this->buildPaginationData($paginator),
-            'columns' => $this->getColumnsConfig(),
-            'filters' => $this->getFiltersConfig(),
-            'actions' => $this->getActionsConfig($status),
+            'rows' => $rows,
+            'filters' => $this->collectRequestFilters($request),
+            'statistics' => $includeStats ? $this->getStatistics() : [],
             'empty_state_config' => $this->getEmptyStateConfig(),
         ];
 
-        // Include statistics only when needed
-        if ($includeStats) {
-            $data['statistics'] = $this->getStatistics();
+        return $data;
+    }
+
+    /**
+     * Collect current filter, sort, and pagination values from the request.
+     *
+     * Builds a typed filters object for the React Datagrid component,
+     * combining standard parameters (search, status, sort, direction, per_page, view)
+     * with any additional filter values defined in the scaffold definition.
+     *
+     * @return array<string, mixed>
+     */
+    public function collectRequestFilters(Request $request): array
+    {
+        $filters = [
+            'search' => $request->input('search', ''),
+            'status' => $request->input('status') ?? $request->route('status') ?? 'all',
+            'sort' => $request->input('sort', $this->scaffold()->getDefaultSort() ?? 'created_at'),
+            'direction' => $request->input('direction', $this->scaffold()->getDefaultSortDirection()),
+            'per_page' => (int) $request->input('per_page', $this->scaffold()->getPerPage()),
+            'view' => $request->input('view'),
+        ];
+
+        // Collect current values for each defined filter
+        foreach ($this->scaffold()->filters() as $filter) {
+            if (! array_key_exists($filter->key, $filters)) {
+                $filters[$filter->key] = $request->input($filter->key, '');
+            }
         }
 
-        return $data;
+        return $filters;
     }
 
     /**

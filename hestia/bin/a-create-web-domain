@@ -1,0 +1,111 @@
+#!/bin/bash
+#
+# Script: a-create-web-domain
+#
+# Description: Creates a web domain with Astero configuration in a single call.
+#              Combines: v-add-web-domain, v-change-web-domain-tpl, v-change-web-domain-backend-tpl
+#
+# Usage: a-create-web-domain USER DOMAIN [WEB_TEMPLATE] [BACKEND_TEMPLATE]
+#
+# Arguments:
+#   USER             - Hestia username
+#   DOMAIN           - Domain name to create
+#   WEB_TEMPLATE     - Optional: nginx web template (default: astero-active)
+#   BACKEND_TEMPLATE - Optional: PHP-FPM backend template (default: astero-php)
+#
+# Exit Codes:
+#   0   - Success
+#   1   - Invalid arguments
+#   3   - User does not exist
+#   4   - Domain already exists
+#   220 - Failed to create domain
+#   221 - Failed to set web template
+#   222 - Failed to set backend template
+
+# --- Configuration ---
+HESTIA=${HESTIA:-/usr/local/hestia}
+BIN=${BIN:-/usr/local/hestia/bin}
+ASTERO_DATA_DIR="${ASTERO_DATA_DIR:-/usr/local/hestia/data/astero}"
+LOG_FILE="${ASTERO_DATA_DIR}/logs/astero-scripts.log"
+
+# --- Argument Validation (must happen before sourcing Hestia main.sh) ---
+user="${1:-}"
+domain="${2:-}"
+
+if [ "$#" -lt 2 ] || [ -z "$user" ] || [ -z "$domain" ]; then
+    echo "Error: Not enough arguments provided. Usage: a-create-web-domain USER DOMAIN [WEB_TEMPLATE] [BACKEND_TEMPLATE]" >&2
+    exit 1
+fi
+
+# Source Hestia core functions
+source "$HESTIA/func/main.sh"
+source "$HESTIA/conf/hestia.conf"
+
+# --- Helper Functions ---
+log_error() {
+    local msg="$1"
+    mkdir -p "$(dirname "$LOG_FILE")"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [a-create-web-domain] ERROR: $msg" >> "$LOG_FILE"
+    echo "Error: $msg" >&2
+}
+
+handle_error() {
+    log_error "$2"
+    exit "$1"
+}
+
+# --- Argument Validation ---
+check_args '2' "$#" 'USER DOMAIN [WEB_TEMPLATE] [BACKEND_TEMPLATE]'
+user=$1
+domain=$2
+web_template="${3:-astero-active}"
+backend_template="${4:-astero-php}"
+
+nginx_tpl_path="$HESTIA/data/templates/web/nginx/php-fpm/${web_template}.tpl"
+backend_tpl_path="$HESTIA/data/templates/web/php-fpm/${web_template}.tpl"
+
+# Backward-compatibility guard:
+# Some older callers passed only USER DOMAIN BACKEND_TEMPLATE, which put
+# backend template value into WEB_TEMPLATE position. Auto-correct that shape.
+if [ ! -f "$nginx_tpl_path" ] && [ -z "${4:-}" ] && [ -f "$backend_tpl_path" ]; then
+    backend_template="$web_template"
+    web_template="astero-active"
+fi
+
+echo "Creating web domain $domain..."
+
+# Validate user exists (fixed-string match)
+$BIN/v-list-sys-users | grep -Fxq "$user" || handle_error 3 "User '$user' does not exist."
+
+# Check if domain already exists
+if $BIN/v-list-web-domain "$user" "$domain" >/dev/null 2>&1; then
+    handle_error 4 "Domain '$domain' already exists for user '$user'."
+fi
+
+# --- Step 1: Create Web Domain ---
+echo "Creating domain..."
+$BIN/v-add-web-domain "$user" "$domain" "" "no" >/dev/null 2>&1
+result=$?
+if [ $result -ne 0 ]; then
+    handle_error 220 "Failed to create web domain (exit code: $result)."
+fi
+
+# --- Step 2: Set nginx Web Template ---
+echo "Setting web template: $web_template"
+$BIN/v-change-web-domain-tpl "$user" "$domain" "$web_template" >/dev/null 2>&1
+result=$?
+if [ $result -ne 0 ]; then
+    handle_error 221 "Failed to set web template (exit code: $result)."
+fi
+
+# --- Step 3: Set Backend Template ---
+echo "Setting backend template: $backend_template"
+$BIN/v-change-web-domain-backend-tpl "$user" "$domain" "$backend_template" >/dev/null 2>&1
+result=$?
+if [ $result -ne 0 ]; then
+    handle_error 222 "Failed to set backend template (exit code: $result)."
+fi
+
+echo "Domain $domain created successfully"
+$BIN/v-log-action "$user" "Info" "Web" "Domain $domain created with templates: $web_template, $backend_template"
+exit 0

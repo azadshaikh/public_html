@@ -1,0 +1,86 @@
+#!/bin/bash
+#
+# Script: a-provision-hestia
+#
+# Description: Bootstraps Hestia installer in a screen session and reports state.
+#              Prints one of: STATE:INSTALLED, STATE:RUNNING, STATE:STARTED
+#
+# Usage:
+#   a-provision-hestia [installer flags...]
+#     --session SESSION_NAME
+#     --log-file /path/to/log
+#
+# Notes:
+#   - This script is intended to run before Hestia exists on a fresh server.
+#   - It does not wait for installer completion; caller should monitor session/process state.
+
+set -euo pipefail
+
+SESSION_NAME="hestia_install"
+LOG_FILE="/tmp/hestia_install.log"
+
+INSTALL_ARGS=()
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --session)
+            SESSION_NAME="${2:-$SESSION_NAME}"
+            shift 2
+            ;;
+        --log-file)
+            LOG_FILE="${2:-$LOG_FILE}"
+            shift 2
+            ;;
+        *)
+            INSTALL_ARGS+=("$1")
+            shift
+            ;;
+    esac
+done
+
+if [ "${#INSTALL_ARGS[@]}" -eq 0 ]; then
+    echo "[a-provision-hestia] Missing installer arguments." >&2
+    exit 1
+fi
+
+if [ "$(id -u)" -ne 0 ]; then
+    echo "[a-provision-hestia] This script must be run as root." >&2
+    exit 2
+fi
+
+export DEBIAN_FRONTEND=noninteractive
+export NEEDRESTART_MODE=a
+
+if dpkg -s ufw >/dev/null 2>&1; then
+    apt-get remove -y ufw >/dev/null 2>&1 || true
+fi
+
+if [ -f /usr/local/hestia/bin/v-list-users ]; then
+    echo "STATE:INSTALLED"
+    exit 0
+fi
+
+if screen -ls | grep -q "[.]${SESSION_NAME}[[:space:]]"; then
+    echo "STATE:RUNNING"
+    exit 0
+fi
+
+if command -v pgrep >/dev/null 2>&1 && pgrep -fa '/tmp/hst-install\.sh' | grep -v 'pgrep -fa' | grep -q .; then
+    echo "STATE:RUNNING"
+    exit 0
+fi
+
+cd /tmp
+wget -q https://raw.githubusercontent.com/hestiacp/hestiacp/release/install/hst-install.sh -O hst-install.sh
+
+quoted_args=()
+for arg in "${INSTALL_ARGS[@]}"; do
+    printf -v escaped_arg '%q' "$arg"
+    quoted_args+=("$escaped_arg")
+done
+
+printf -v escaped_log_file '%q' "$LOG_FILE"
+install_payload="yes | bash /tmp/hst-install.sh ${quoted_args[*]} 2>&1 | tee ${escaped_log_file}"
+
+screen -dmS "$SESSION_NAME" bash -lc "$install_payload"
+echo "STATE:STARTED"

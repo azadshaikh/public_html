@@ -1,0 +1,17 @@
+{# CTA Button Block #}
+{# Use |default() for all variables so block works without JSON #}
+
+{% set text = text|default('Get Started') %}
+{% set url = url|default('#') %}
+{% set style = style|default('primary') %}
+{% set size = size|default('md') %}
+{% set icon = icon|default('') %}
+
+{% set size_class = size == 'sm' ? 'btn-sm' : (size == 'lg' ? 'btn-lg' : '') %}
+
+<a href="{{ url }}" class="btn btn-{{ style }} {{ size_class }}">
+    {{ text }}
+    {% if icon %}
+    <i class="{{ icon }} ms-2"></i>
+    {% endif %}
+</a>

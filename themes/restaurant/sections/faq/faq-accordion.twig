@@ -1,0 +1,108 @@
+{# FAQ Accordion Section #}
+
+{% set section_title = section_title|default('Frequently asked questions') %}
+{% set section_subtitle = section_subtitle|default('Everything you need to know about our platform') %}
+
+{% set faqs = [
+    {
+        'question': 'What is included in the free plan?',
+        'answer': 'Our free plan includes 1 website, up to 10 pages, basic analytics, and community support. It is perfect for personal projects and getting started with our platform.'
+    },
+    {
+        'question': 'Can I upgrade or downgrade my plan anytime?',
+        'answer': 'Yes! You can upgrade, downgrade, or cancel your plan at any time. When upgrading, you will get immediate access to new features. When downgrading, changes take effect at the start of your next billing cycle.'
+    },
+    {
+        'question': 'Do you offer refunds?',
+        'answer': 'We offer a 14-day free trial so you can explore all features risk-free. If you are not satisfied with our paid plans, contact our support within 30 days for a full refund.'
+    },
+    {
+        'question': 'Is there a limit on page views or bandwidth?',
+        'answer': 'No, we do not charge based on page views or bandwidth. All plans include unlimited traffic. Our infrastructure automatically scales to handle traffic spikes without any additional cost.'
+    },
+    {
+        'question': 'Can I use my own domain name?',
+        'answer': 'Absolutely! All paid plans allow you to connect custom domains with free SSL certificates included. You can also use subdomains on our platform for free during development.'
+    },
+    {
+        'question': 'What kind of support do you offer?',
+        'answer': 'Free plans include community support through our forums. Pro plans get priority email support with 24-hour response time. Enterprise plans include 24/7 dedicated support with a dedicated account manager.'
+    }
+] %}
+
+<section class="faq-section py-6 py-lg-7 bg-white" title="FAQ">
+    <div class="container">
+        {# Section Header #}
+        <div class="row justify-content-center mb-5">
+            <div class="col-lg-7 text-center" data-aos="fade-up">
+                <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 mb-3">FAQ</span>
+                <h2 class="display-5 fw-bold mb-3">{{ section_title }}</h2>
+                <p class="lead text-muted">{{ section_subtitle }}</p>
+            </div>
+        </div>
+        
+        {# FAQ Accordion #}
+        <div class="row justify-content-center">
+            <div class="col-lg-8" data-aos="fade-up" data-aos-delay="100">
+                <div class="accordion" id="faqAccordion">
+                    {% for faq in faqs %}
+                    <div class="accordion-item border-0 mb-3 rounded-3 shadow-sm overflow-hidden">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button {% if loop.first %}{% else %}collapsed{% endif %} fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq{{ loop.index }}">
+                                <span class="me-3 text-primary"><i class="ri-question-line"></i></span>
+                                {{ faq.question }}
+                            </button>
+                        </h2>
+                        <div id="faq{{ loop.index }}" class="accordion-collapse collapse {% if loop.first %}show{% endif %}" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body text-muted">
+                                {{ faq.answer }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        {# Still Have Questions #}
+        <div class="text-center mt-5" data-aos="fade-up">
+            <p class="text-muted mb-3">Still have questions?</p>
+            <a href="/contact" class="btn btn-outline-primary rounded-pill px-4">
+                <i class="ri-message-3-line me-2"></i>Contact Support
+            </a>
+        </div>
+    </div>
+</section>
+
+<style>
+.faq-section {
+    background-color: #ffffff;
+}
+.accordion-item {
+    background-color: #f8f9fa;
+    border: none;
+}
+.accordion-button {
+    background-color: #f8f9fa;
+    padding: 1.5rem;
+}
+.accordion-button:not(.collapsed) {
+    background-color: #ffffff;
+    color: var(--bs-primary);
+    box-shadow: none;
+}
+.accordion-button:focus {
+    box-shadow: none;
+    border-color: rgba(var(--bs-primary-rgb), 0.25);
+}
+.accordion-button::after {
+    background-size: 1rem;
+}
+.accordion-body {
+    padding: 0 1.5rem 1.5rem 1.5rem;
+}
+.py-6 {
+    padding-top: 5rem;
+    padding-bottom: 5rem;
+}
+</style>

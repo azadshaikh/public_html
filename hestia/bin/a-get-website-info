@@ -1,0 +1,508 @@
+#!/bin/bash
+#
+# Script: a-get-website-info
+#
+# Description: Returns website information in JSON format for the Astero platform.
+#              Currently retrieves version from composer.json, with potential for
+#              more details in the future.
+#
+# Usage: a-get-website-info [HESTIA_USER] DOMAIN [FORMAT]
+#
+# Arguments:
+#   HESTIA_USER - Optional Hestia username (recommended for accuracy/performance)
+#   DOMAIN      - The website domain (used to locate the web directory)
+#   FORMAT      - Optional: output format ('json' or 'plain'). Default: 'json'
+#
+# Example: a-get-website-info admin example.com
+#          a-get-website-info admin example.com json
+#          a-get-website-info example.com
+#          a-get-website-info example.com json
+#          a-get-website-info example.com plain
+#
+# Output (JSON - raw data, a-exec adds wrapper):
+# {
+#   "domain": "example.com",
+#   "astero_version": "1.0.5",
+#   "laravel_version": "12.0.0",
+#   "php_version": "8.4.0"
+# }
+#
+# Exit Codes:
+#   0   - Success
+#   1   - Invalid arguments
+#   2   - Domain directory not found
+#   3   - composer.json not found
+
+# --- Configuration and Setup ---
+HESTIA=${HESTIA:-/usr/local/hestia}
+BIN=${BIN:-/usr/local/hestia/bin}
+
+# Web directory base path
+WEB_BASE_DIR="/home"
+
+# --- Functions ---
+
+show_usage() {
+    echo "Usage: a-get-website-info [HESTIA_USER] DOMAIN [FORMAT]"
+    echo ""
+    echo "Arguments:"
+    echo "  HESTIA_USER - Optional Hestia username (recommended)"
+    echo "  DOMAIN      - The website domain"
+    echo "  FORMAT      - Optional: 'json' or 'plain' (default: json)"
+    echo ""
+    echo "Example: a-get-website-info admin example.com json"
+    exit 1
+}
+
+find_web_directory() {
+    local domain="$1"
+    local preferred_user="$2"
+    local web_dir=""
+
+    # Priority 1: Use explicit Hestia user when provided
+    if [ -n "$preferred_user" ] && [ -d "/home/$preferred_user/web/$domain" ]; then
+        echo "/home/$preferred_user/web/$domain/public_html"
+        return
+    fi
+
+    # Search for the domain in all user web directories
+    for user_dir in "$WEB_BASE_DIR"/*/web; do
+        if [ -d "$user_dir/$domain" ]; then
+            web_dir="$user_dir/$domain/public_html"
+            break
+        fi
+    done
+
+    echo "$web_dir"
+}
+
+# Find the application root (where composer.json lives)
+# Handles both direct installs and release-based deployments
+find_app_root() {
+    local web_dir="$1"
+
+    # Priority 1: Check for 'current' directory or symlink (always present in Astero deployments)
+    if [ -f "$web_dir/current/composer.json" ]; then
+        echo "$web_dir/current"
+        return
+    fi
+
+    # Priority 2: Check for composer.json directly in public_html
+    if [ -f "$web_dir/composer.json" ]; then
+        echo "$web_dir"
+        return
+    fi
+
+    # Priority 3: Check releases directory for latest version
+    if [ -d "$web_dir/releases" ]; then
+        # Find the most recent release directory with composer.json
+        local latest_release=$(ls -td "$web_dir/releases"/v* 2>/dev/null | head -1)
+        if [ -n "$latest_release" ] && [ -f "$latest_release/composer.json" ]; then
+            echo "$latest_release"
+            return
+        fi
+    fi
+
+    # No app root found
+    echo ""
+}
+
+get_astero_version() {
+    local app_root="$1"
+    local composer_file="$app_root/composer.json"
+
+    if [ -f "$composer_file" ]; then
+        # Extract version from composer.json
+        # First try "version" field, then try to get it from description or other fields
+        local version=$(grep -o '"version"[[:space:]]*:[[:space:]]*"[^"]*"' "$composer_file" | head -1 | cut -d'"' -f4)
+
+        if [ -z "$version" ]; then
+            # Try to get from config/app.php or similar
+            local app_config="$app_root/config/app.php"
+            if [ -f "$app_config" ]; then
+                version=$(grep -o "'version'[[:space:]]*=>[[:space:]]*'[^']*'" "$app_config" | head -1 | cut -d"'" -f4)
+            fi
+        fi
+
+        echo "$version"
+    else
+        echo ""
+    fi
+}
+
+get_laravel_version() {
+    local app_root="$1"
+    local composer_lock="$app_root/composer.lock"
+
+    if [ -f "$composer_lock" ]; then
+        local version=""
+
+        # Prefer jq parsing when available
+        if command -v jq >/dev/null 2>&1; then
+            version=$(jq -r '
+                (.packages // []) + (.packages-dev // [])
+                | map(select(.name == "laravel/framework"))
+                | .[0].version // empty
+            ' "$composer_lock" 2>/dev/null)
+        fi
+
+        # Fallback to grep parsing
+        if [ -z "$version" ]; then
+            version=$(grep -A 30 '"name": "laravel/framework"' "$composer_lock" | grep '"version"' | head -1 | cut -d'"' -f4)
+        fi
+
+        version="${version#v}"
+        if [ -n "$version" ]; then
+            echo "$version"
+            return
+        fi
+    fi
+
+    # Fallback: parse VERSION constant from vendor framework file
+    local app_version_file="$app_root/vendor/laravel/framework/src/Illuminate/Foundation/Application.php"
+    if [ -f "$app_version_file" ]; then
+        local file_version
+        file_version=$(grep -E "const[[:space:]]+VERSION[[:space:]]*=" "$app_version_file" | head -1 | sed -E "s/.*'([^']+)'.*/\1/")
+        echo "${file_version#v}"
+        return
+    fi
+
+    echo ""
+}
+
+get_php_version() {
+    if command -v php >/dev/null 2>&1; then
+        php -v 2>/dev/null | head -1 | awk '{print $2}'
+        return
+    fi
+
+    if [ -x "/usr/bin/php" ]; then
+        /usr/bin/php -v 2>/dev/null | head -1 | awk '{print $2}'
+        return
+    fi
+
+    echo ""
+}
+
+get_env_value() {
+    local app_root="$1"
+    local web_dir="$2"
+    local key="$3"
+    local env_file="$app_root/.env"
+
+    # In release-based deployments, .env is symlinked to shared/.env
+    # Follow the symlink if it exists
+    if [ -L "$env_file" ]; then
+        env_file=$(readlink -f "$env_file")
+    fi
+
+    # Fallbacks when .env is not present/symlinked at app_root
+    if [ ! -f "$env_file" ] && [ -f "$app_root/shared/.env" ]; then
+        env_file="$app_root/shared/.env"
+    fi
+
+    if [ ! -f "$env_file" ] && [ -f "$web_dir/shared/.env" ]; then
+        env_file="$web_dir/shared/.env"
+    fi
+
+    if [ -f "$env_file" ]; then
+        grep "^${key}=" "$env_file" | cut -d'=' -f2 | tr -d '"' | tr -d "'"
+    else
+        echo ""
+    fi
+}
+
+# Get Hestia username from web directory path
+get_hestia_user() {
+    local web_dir="$1"
+    local preferred_user="$2"
+
+    if [ -n "$preferred_user" ]; then
+        echo "$preferred_user"
+        return
+    fi
+
+    # Extract username from path like /home/USERNAME/web/domain/public_html
+    echo "$web_dir" | sed -n 's|/home/\([^/]*\)/web/.*|\1|p'
+}
+
+# Get queue worker status from Supervisor
+get_queue_worker_info() {
+    local user="$1"
+    local program_name="${user}"
+
+    # If the system user is gone, treat leftover Supervisor entries as orphaned.
+    # This can happen when a Hestia user is deleted manually without removing
+    # /etc/supervisor/conf.d/<user>.conf.
+    if ! id "$user" >/dev/null 2>&1; then
+        echo "not_configured|0|0"
+        return
+    fi
+
+    # Check if Supervisor is available
+    if ! command -v supervisorctl &> /dev/null; then
+        echo "not_installed|0|0"
+        return
+    fi
+
+    # Check if config exists
+    local conf_file="/etc/supervisor/conf.d/${program_name}.conf"
+    if [ ! -f "$conf_file" ]; then
+        echo "not_configured|0|0"
+        return
+    fi
+
+    # Get status from supervisorctl.
+    # Different supervisor versions may return results for either PROGRAM:* or PROGRAM.
+    local status_output
+    status_output=$(supervisorctl status "${program_name}:*" 2>/dev/null)
+
+    if [ -z "$status_output" ] || echo "$status_output" | grep -qi "no such process"; then
+        status_output=$(supervisorctl status "${program_name}" 2>/dev/null)
+    fi
+
+    if [ -z "$status_output" ]; then
+        echo "not_running|0|0"
+        return
+    fi
+
+    # Ignore orphaned programs that fail because executable/working dir no longer exists.
+    if echo "$status_output" | grep -Eq "FATAL.*ENOENT"; then
+        echo "not_configured|0|0"
+        return
+    fi
+
+    # Count running and total workers
+    local running_count
+    running_count=$(echo "$status_output" | awk '$2 == "RUNNING" {count++} END {print count+0}')
+
+    local total_count
+    total_count=$(echo "$status_output" | awk 'NF > 1 {count++} END {print count+0}')
+
+    local normalized_states
+    normalized_states=$(echo "$status_output" | awk 'NF > 1 {print tolower($2)}' | sort -u | tr '\n' ' ')
+
+    # Determine overall status
+    if echo "$normalized_states" | grep -qw "running"; then
+        if [ "$running_count" -eq "$total_count" ] && [ "$total_count" -gt 0 ]; then
+            echo "running|$running_count|$total_count"
+        else
+            echo "degraded|$running_count|$total_count"
+        fi
+    elif echo "$normalized_states" | grep -qw "starting"; then
+        echo "starting|$running_count|$total_count"
+    elif echo "$normalized_states" | grep -qw "stopped"; then
+        echo "stopped|$running_count|$total_count"
+    elif echo "$normalized_states" | grep -Eqw "exited|exit"; then
+        echo "not_running|$running_count|$total_count"
+    elif echo "$normalized_states" | grep -Eqw "fatal|backoff"; then
+        echo "error|$running_count|$total_count"
+    else
+        echo "unknown|$running_count|$total_count"
+    fi
+}
+
+# Get cron job status
+get_cron_status() {
+    local user="$1"
+    local domain="$2"
+    local cron_pattern="php /home/$user/web/$domain/public_html/current/artisan schedule:run"
+
+    if ! command -v jq >/dev/null 2>&1; then
+        echo "unknown"
+        return
+    fi
+
+    # Get cron jobs for user
+    local cron_info=$($BIN/v-list-cron-jobs "$user" json 2>/dev/null | jq -r --arg pattern "$cron_pattern" '
+        to_entries[] |
+        select(.value.CMD | contains($pattern)) |
+        .value.SUSPENDED
+    ' 2>/dev/null | head -1)
+        echo "suspended"
+    else
+        echo "active"
+    fi
+}
+
+# Get disk usage for user home directory (returns bytes)
+get_disk_usage() {
+    local user="$1"
+    local user_home="/home/${user}"
+
+    if [ ! -d "$user_home" ]; then
+        echo "0"
+        return
+    fi
+
+    # Get size in bytes using du (-s summary, -b bytes)
+    # Fall back to -sk (kilobytes) if -b not supported
+    local size_bytes
+    size_bytes=$(du -sb "$user_home" 2>/dev/null | cut -f1)
+
+    if [ -z "$size_bytes" ]; then
+        # Fallback: use du -sk and convert to bytes
+        local size_kb=$(du -sk "$user_home" 2>/dev/null | cut -f1)
+        size_bytes=$((size_kb * 1024))
+    fi
+
+    echo "${size_bytes:-0}"
+}
+
+output_error() {
+    local message="$1"
+    local code="$2"
+    local format="$3"
+
+    # Just output plain error message - a-exec captures exit code and wraps response
+    echo "Error: $message" >&2
+    exit "$code"
+}
+
+# --- Argument Validation ---
+
+if [ "$#" -lt 1 ]; then
+    show_usage
+fi
+
+preferred_user=""
+domain=""
+format="json"
+
+if [ "$#" -ge 3 ]; then
+    preferred_user="$1"
+    domain="$2"
+    format="$3"
+elif [ "$#" -eq 2 ]; then
+    # Backward compatible: DOMAIN FORMAT
+    # New format: HESTIA_USER DOMAIN
+    if [ "$2" = "json" ] || [ "$2" = "plain" ]; then
+        domain="$1"
+        format="$2"
+    else
+        preferred_user="$1"
+        domain="$2"
+    fi
+else
+    domain="$1"
+fi
+
+if [ -z "$domain" ]; then
+    show_usage
+fi
+
+if [ "$format" != "json" ] && [ "$format" != "plain" ]; then
+    show_usage
+fi
+
+# --- Main Logic ---
+
+# Find the web directory for this domain
+web_dir=$(find_web_directory "$domain" "$preferred_user")
+
+if [ -z "$web_dir" ] || [ ! -d "$web_dir" ]; then
+    output_error "Web directory not found for domain: $domain" 2 "$format"
+fi
+
+# Find the application root (handles both direct and release-based installs)
+app_root=$(find_app_root "$web_dir")
+
+if [ -z "$app_root" ]; then
+    output_error "Application not found. No composer.json in $web_dir, current/, or releases/" 3 "$format"
+fi
+
+# Determine the deployment type
+if [ -L "$web_dir/current" ]; then
+    deploy_type="release-based"
+    current_release=$(basename "$(readlink "$web_dir/current")")
+elif [ -d "$web_dir/current" ]; then
+    # Real directory (no symlink) — no shared/ or releases/, everything lives in current/
+    deploy_type="direct"
+    current_release=""
+elif [ -d "$web_dir/releases" ]; then
+    deploy_type="release-based (no current symlink)"
+    current_release=$(basename "$app_root")
+else
+    deploy_type="direct"
+    current_release=""
+fi
+
+# Collect all information
+astero_version=$(get_astero_version "$app_root")
+laravel_version=$(get_laravel_version "$app_root")
+php_version=$(get_php_version)
+app_name=$(get_env_value "$app_root" "$web_dir" "APP_NAME")
+app_env=$(get_env_value "$app_root" "$web_dir" "APP_ENV")
+app_debug=$(get_env_value "$app_root" "$web_dir" "APP_DEBUG")
+admin_slug=$(get_env_value "$app_root" "$web_dir" "ADMIN_SLUG")
+
+# Prefer release name for Astero version in release-based deployments
+if [ -n "$current_release" ]; then
+    release_version="${current_release#v}"
+    if [ -n "$release_version" ] && [ "$release_version" != "$astero_version" ]; then
+        astero_version="$release_version"
+    fi
+fi
+
+# Get Hestia user for queue worker lookup
+hestia_user=$(get_hestia_user "$web_dir" "$preferred_user")
+
+# Get queue worker status
+queue_info=$(get_queue_worker_info "$hestia_user")
+queue_status=$(echo "$queue_info" | cut -d'|' -f1)
+queue_running=$(echo "$queue_info" | cut -d'|' -f2)
+queue_total=$(echo "$queue_info" | cut -d'|' -f3)
+
+# Get cron status
+cron_status=$(get_cron_status "$hestia_user" "$domain")
+
+# Get disk usage for user
+disk_usage_bytes=$(get_disk_usage "$hestia_user")
+
+if [ "$format" = "plain" ]; then
+    # Plain text output
+    echo "Domain: $domain"
+    echo "Web Directory: $web_dir"
+    echo "App Root: $app_root"
+    echo "Deploy Type: $deploy_type"
+    [ -n "$current_release" ] && echo "Current Release: $current_release"
+    echo "Astero Version: ${astero_version:-N/A}"
+    echo "Laravel Version: ${laravel_version:-N/A}"
+    echo "PHP Version: ${php_version:-N/A}"
+    echo "App Name: ${app_name:-N/A}"
+    echo "App Environment: ${app_env:-N/A}"
+    echo "App Debug: ${app_debug:-N/A}"
+    echo "Admin Slug: ${admin_slug:-N/A}"
+    echo "Queue Worker Status: ${queue_status:-N/A}"
+    echo "Queue Workers Running: ${queue_running:-0}/${queue_total:-0}"
+    echo "Cron Status: ${cron_status:-N/A}"
+else
+    # JSON output - raw data only (a-exec adds the wrapper)
+    cat << EOF
+{
+  "domain": "$domain",
+  "web_directory": "$web_dir",
+  "app_root": "$app_root",
+  "deploy_type": "$deploy_type",
+  "current_release": "${current_release:-}",
+  "astero_version": "${astero_version:-}",
+  "laravel_version": "${laravel_version:-}",
+  "php_version": "${php_version:-}",
+  "app_name": "${app_name:-}",
+  "app_env": "${app_env:-}",
+  "app_debug": "${app_debug:-}",
+    "admin_slug": "${admin_slug:-}",
+  "queue_worker": {
+    "status": "${queue_status:-}",
+    "running_count": ${queue_running:-0},
+    "total_count": ${queue_total:-0}
+  },
+  "cron": {
+    "status": "${cron_status:-}"
+  },
+  "disk_usage_bytes": ${disk_usage_bytes:-0}
+}
+EOF
+fi
+
+exit 0

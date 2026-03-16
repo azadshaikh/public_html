@@ -1,0 +1,148 @@
+#!/bin/bash
+#
+# Script: a-revert-astero-updates
+#
+# Description: Reverts Astero to a specific previously downloaded version.
+#              Performs atomic symlink switch for zero-downtime rollback.
+#
+# Usage: a-revert-astero-updates HESTIA_USER DOMAIN TYPE TARGET_VERSION
+#
+# Exit Codes:
+#   0   - Success
+#   1   - Invalid arguments
+#   3   - User or domain not found
+#   204 - Releases directory missing
+#   207 - Dependency missing
+#   210 - Directory operation failed
+#   215 - Composer install failed
+#   216 - Artisan revert failed
+#   217 - Invalid app type
+#   218 - Target version not found
+
+# --- Configuration ---
+HESTIA=${HESTIA:-/usr/local/hestia}
+BIN=${BIN:-/usr/local/hestia/bin}
+ASTERO_DATA_DIR="${ASTERO_DATA_DIR:-/usr/local/hestia/data/astero}"
+LOG_FILE="${ASTERO_DATA_DIR}/logs/astero-scripts.log"
+
+# --- Argument Validation (must happen before sourcing Hestia main.sh) ---
+user="${1:-}"
+domain="${2:-}"
+
+if [ "$#" -ne 4 ] || [ -z "$user" ] || [ -z "$domain" ]; then
+    echo "Error: Not enough arguments provided. Usage: a-revert-astero-updates HESTIA_USER DOMAIN TYPE TARGET_VERSION" >&2
+    exit 1
+fi
+
+# Source Hestia core functions
+source "$HESTIA/func/main.sh"
+source "$HESTIA/conf/hestia.conf"
+source "$HESTIA/func/domain.sh"
+
+# --- Helper Functions ---
+log_error() {
+    local msg="$1"
+    mkdir -p "$(dirname "$LOG_FILE")"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [a-revert-astero-updates] ERROR: $msg" >> "$LOG_FILE"
+    echo "Error: $msg" >&2
+}
+
+handle_error() {
+    log_error "$2"
+    exit "$1"
+}
+
+# --- Argument Validation ---
+check_args '4' "$#" 'HESTIA_USER DOMAIN TYPE TARGET_VERSION'
+hestia_user=$1
+web_domain=$2
+app_type=$3
+target_version=$4
+
+echo "Reverting $web_domain to v$target_version..."
+
+# Validate user and domain
+"$BIN/v-list-sys-users" | grep -q "^$hestia_user$" || handle_error 3 "User '$hestia_user' does not exist."
+[ -d "/home/$hestia_user/web/$web_domain" ] || handle_error 3 "Domain '$web_domain' does not exist."
+
+# Validate type
+case "$app_type" in
+  main|dev) ;;
+  *) handle_error 217 "Invalid type '$app_type'. Must be 'main' or 'dev'." ;;
+esac
+
+# --- Path Resolution ---
+ROOTDIR="/home/$hestia_user/web/$web_domain/public_html"
+RELEASES_DIR="$ROOTDIR/releases"
+TARGETDIR="$RELEASES_DIR/v$target_version"
+CURRENTDIR="$ROOTDIR/current"
+SHARED_DIR="$ROOTDIR/shared"
+
+[ -d "$RELEASES_DIR" ] || handle_error 204 "Releases directory missing."
+[ -d "$TARGETDIR" ] || handle_error 218 "Version $target_version not found."
+
+EXISTING_VERSION=""
+if [ -L "$CURRENTDIR" ]; then
+    existing_target=$(readlink -f "$CURRENTDIR" 2>/dev/null || true)
+    [ -n "$existing_target" ] && EXISTING_VERSION=$(basename "$existing_target")
+fi
+EXISTINGDIR="$RELEASES_DIR/$EXISTING_VERSION"
+
+echo "Current version: ${EXISTING_VERSION:-none}"
+
+# --- Suspend Cron ---
+existing_cron=""
+if [ -d "$CURRENTDIR" ] && command -v jq >/dev/null 2>&1; then
+    existing_cron=$("$BIN/v-list-cron-jobs" "$hestia_user" json | jq -r ".[] | select(.command | contains(\"$CURRENTDIR/artisan schedule:run\")) | .id")
+    [ -n "$existing_cron" ] && "$BIN/v-suspend-cron-job" "$hestia_user" "$existing_cron" >/dev/null 2>&1
+fi
+
+# --- Main Logic ---
+case "$app_type" in
+  main|dev)
+    # Copy static files
+    if [ -d "$EXISTINGDIR/public" ]; then
+        for static_file in robots.txt ads.txt; do
+            [ -f "$EXISTINGDIR/public/$static_file" ] && cp "$EXISTINGDIR/public/$static_file" "$TARGETDIR/public/$static_file"
+        done
+    fi
+
+    # Ensure storage symlink (use -sfn for idempotency)
+    [ -d "$SHARED_DIR/storage" ] && ln -sfn "$SHARED_DIR/storage" "$TARGETDIR/storage"
+
+    # Ensure public/storage symlink (Laravel storage:link equivalent)
+    [ -d "$SHARED_DIR/storage/app/public" ] && ln -sfn "$SHARED_DIR/storage/app/public" "$TARGETDIR/public/storage"
+
+    # Ensure themes symlink
+    [ -d "$TARGETDIR/public/themes" ] && [ ! -L "$TARGETDIR/public/themes" ] && rm -rf "$TARGETDIR/public/themes"
+    [ -d "$SHARED_DIR/themes" ] && ln -sfn "$SHARED_DIR/themes" "$TARGETDIR/public/themes"
+
+    # Composer install if needed
+    if [ ! -d "$TARGETDIR/vendor" ]; then
+        command -v composer >/dev/null 2>&1 || handle_error 207 "Composer not installed."
+        cd "$TARGETDIR" || handle_error 210 "Failed to cd into $TARGETDIR"
+        echo "Installing dependencies..."
+        sudo -u "$hestia_user" composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader >/dev/null 2>&1 || handle_error 215 "Composer install failed."
+    else
+        cd "$TARGETDIR" || handle_error 210 "Failed to cd into $TARGETDIR"
+    fi
+
+    # .env symlink (use -sfn for idempotency)
+    [ -f "$SHARED_DIR/.env" ] && ln -sfn "$SHARED_DIR/.env" "$TARGETDIR/.env"
+
+    # Artisan revert
+    echo "Running revert command..."
+    command -v php >/dev/null 2>&1 || handle_error 207 "PHP not found."
+    sudo -u "$hestia_user" php artisan app:revert --type="$app_type" --version="$target_version" --force >/dev/null 2>&1 || handle_error 216 "Artisan revert failed."
+
+    # Symlink switch
+    ln -sfn "$TARGETDIR" "$CURRENTDIR" || handle_error 210 "Failed to update current symlink."
+    ;;
+esac
+
+# Resume cron
+[ -n "$existing_cron" ] && "$BIN/v-unsuspend-cron-job" "$hestia_user" "$existing_cron" >/dev/null 2>&1
+
+echo "Reverted to v$target_version"
+$BIN/v-log-action "system" "Info" "System" "Astero reverted: $web_domain to v$target_version"
+exit 0

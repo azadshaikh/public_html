@@ -1,0 +1,38 @@
+{#
+    Empty State Component
+
+    Displays an empty state message when no content is available.
+
+    @see docs/astero-modules-system/DATA_CONTRACT.md
+
+    @param icon - Remix icon name (default: 'inbox-fill')
+    @param title - Title message (default: 'No Content Found')
+    @param message - Description message
+    @param action_url - URL for action button (pre-computed)
+    @param action_label - Label for action button
+    @param action_icon - Icon for action button (default: 'home-line')
+    @param class - Additional CSS classes
+#}
+
+{% set icon = icon ?? 'inbox-fill' %}
+{% set title = title ?? 'No Content Found' %}
+{% set action_icon = action_icon ?? 'home-line' %}
+
+<div class="empty-state py-5 text-center {{ class ?? '' }}">
+    <div class="mb-4">
+        <i class="ri-{{ icon }} display-1 text-muted"></i>
+    </div>
+
+    <h3 class="text-muted mb-3">{{ title }}</h3>
+
+    {% if message %}
+        <p class="text-muted mb-4">{{ message }}</p>
+    {% endif %}
+
+    {% if action_url %}
+        <a class="btn btn-primary" href="{{ action_url }}">
+            <i class="ri-{{ action_icon }} me-1"></i>
+            {{ action_label ?? 'Go Back' }}
+        </a>
+    {% endif %}
+</div>
