@@ -22,11 +22,11 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
-import type { BadgeVariant } from '@/types/ui';
 import type {
     ActivityLogListItem,
     ActivityLogsIndexPageProps,
 } from '@/types/activity-log';
+import type { BadgeVariant } from '@/types/ui';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: route('dashboard') },

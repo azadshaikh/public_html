@@ -1,8 +1,8 @@
-import ManagedUserForm from '@/components/users/managed-user-form';
-import { Button } from '@/components/ui/button';
-import AppLayout from '@/layouts/app-layout';
 import { Link } from '@inertiajs/react';
 import { ArrowLeftIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import ManagedUserForm from '@/components/users/managed-user-form';
+import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import type { UserCreatePageProps } from '@/types/user-management';
 

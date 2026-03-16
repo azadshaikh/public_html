@@ -26,8 +26,8 @@ import { ResourceFeedbackAlerts } from '@/components/resource/resource-feedback-
 import { Badge } from '@/components/ui/badge';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
-import type { BadgeVariant } from '@/types/ui';
 import type { MediaIndexPageProps, MediaListItem } from '@/types/media';
+import type { BadgeVariant } from '@/types/ui';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: route('dashboard') },

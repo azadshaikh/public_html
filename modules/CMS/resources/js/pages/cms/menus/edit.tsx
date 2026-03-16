@@ -18,15 +18,17 @@ import {
     Trash2Icon,
 } from 'lucide-react';
 import {
-    type DragEvent,
-    type FormEvent,
+    
+    
     useCallback,
     useEffect,
     useMemo,
     useRef,
-    useState,
+    useState
 } from 'react';
+import type {DragEvent, FormEvent} from 'react';
 import { showAppToast } from '@/components/forms/form-success-toast';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -45,7 +47,6 @@ import {
 import { Spinner } from '@/components/ui/spinner';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import type { MenuEditPageProps } from '../../types/cms';

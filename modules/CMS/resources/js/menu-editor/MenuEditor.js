@@ -2,10 +2,10 @@
  * Menu Editor - Core Class
  */
 
-import { Toast } from './Toast.js';
-import { Modals } from './Modals.js';
 import { DragDrop } from './DragDrop.js';
 import { ItemRenderer } from './ItemRenderer.js';
+import { Modals } from './Modals.js';
+import { Toast } from './Toast.js';
 import { escapeHtml, getItemDepth } from './utils.js';
 
 export class MenuEditor {

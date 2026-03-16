@@ -13,7 +13,6 @@ import type {
     DatagridProps,
 } from '@/components/datagrid/types';
 import { normalizeRowKey } from '@/components/datagrid/utils';
-import type { BadgeVariant } from '@/types/ui';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -47,6 +46,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
+import type { BadgeVariant } from '@/types/ui';
 
 type DatagridResultsProps<T> = {
     rows: DatagridProps<T>['rows'];

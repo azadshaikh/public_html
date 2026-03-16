@@ -12,6 +12,10 @@ import {
     XIcon,
 } from 'lucide-react';
 import { useState } from 'react';
+import {
+    NoteRichTextEditor,
+    hasMeaningfulNoteContent,
+} from '@/components/notes/note-rich-text-editor';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -37,10 +41,6 @@ import {
     FieldLegend,
     FieldSet,
 } from '@/components/ui/field';
-import {
-    NoteRichTextEditor,
-    hasMeaningfulNoteContent,
-} from '@/components/notes/note-rich-text-editor';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useAppForm } from '@/hooks/use-app-form';
 import { useInitials } from '@/hooks/use-initials';

@@ -221,7 +221,7 @@ export function DatagridToolbar({
                     >
                         <TabsList
                             className={cn(
-                                'w-full',
+                                'w-full md:w-fit',
                                 !isMobile &&
                                     'min-w-0 justify-start overflow-x-auto pr-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
                             )}

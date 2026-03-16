@@ -11,8 +11,8 @@ import { Spinner } from '@/components/ui/spinner';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { useAppForm } from '@/hooks/use-app-form';
-import { formValidators } from '@/lib/forms';
 import AppLayout from '@/layouts/app-layout';
+import { formValidators } from '@/lib/forms';
 import type { BreadcrumbItem } from '@/types';
 import type { MenuCreatePageProps } from '../../types/cms';
 

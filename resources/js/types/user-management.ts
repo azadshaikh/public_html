@@ -1,10 +1,10 @@
-import type { PaginatedData } from '@/types/pagination';
 import type {
     AppNote,
     NoteBadgeVariant,
     NoteTarget,
     NoteVisibilityOption,
 } from '@/types/notes';
+import type { PaginatedData } from '@/types/pagination';
 
 export type ManagedUserRole = {
     id: number;

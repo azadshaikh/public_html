@@ -3,6 +3,7 @@
 import { router } from '@inertiajs/react';
 import { ImageIcon, Loader2Icon, UploadCloudIcon } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { MediaPickerItem, MediaPickerSelection } from '@/components/media/media-picker-utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { MediaListItem, MediaPickerFilters, UploadSettings } from '@/types/media';
@@ -10,7 +11,6 @@ import type { PaginatedData } from '@/types/pagination';
 import { MediaPickerDetailsPanel } from './media-picker-details-panel';
 import { MediaPickerGrid } from './media-picker-grid';
 import { MediaPickerUploadTab } from './media-picker-upload-tab';
-import type { MediaPickerItem, MediaPickerSelection } from '@/components/media/media-picker-utils';
 import { toPickerItem } from './media-picker-utils';
 
 type MediaPickerDialogProps = {

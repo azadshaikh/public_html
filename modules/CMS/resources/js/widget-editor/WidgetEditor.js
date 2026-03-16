@@ -4,9 +4,9 @@
  * Uses native drag & drop, no external dependencies.
  */
 
-import { Toast } from './Toast.js';
 import { DragDrop } from './DragDrop.js';
 import { ItemRenderer } from './ItemRenderer.js';
+import { Toast } from './Toast.js';
 import { escapeHtml, generateWidgetId, getWidgetDisplayName, getDefaultSettings } from './utils.js';
 
 export class WidgetEditor {

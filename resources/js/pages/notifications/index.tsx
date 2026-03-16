@@ -34,11 +34,11 @@ import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import type { BreadcrumbItem } from '@/types';
-import type { BadgeVariant } from '@/types/ui';
 import type {
     NotificationListItem,
     NotificationsIndexPageProps,
 } from '@/types/notification';
+import type { BadgeVariant } from '@/types/ui';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: route('dashboard') },

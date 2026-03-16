@@ -9,8 +9,10 @@ import {
     SaveIcon,
     Trash2Icon,
 } from 'lucide-react';
-import { type DragEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {  useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type {DragEvent} from 'react';
 import { showAppToast } from '@/components/forms/form-success-toast';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Field, FieldDescription, FieldLabel } from '@/components/ui/field';
@@ -27,7 +29,6 @@ import {
 import { Spinner } from '@/components/ui/spinner';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import type {
