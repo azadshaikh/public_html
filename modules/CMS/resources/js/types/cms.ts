@@ -691,3 +691,81 @@ export type WidgetEditPageProps = {
     currentWidgets: WidgetInstance[];
     availableWidgets: Record<string, AvailableWidget>;
 };
+
+// ================================================================
+// Themes
+// ================================================================
+
+export type ThemeListItem = {
+    directory: string;
+    name: string;
+    description: string;
+    author: string;
+    author_uri: string;
+    version: string;
+    screenshot: string | null;
+    is_active: boolean;
+    is_child: boolean;
+    parent: string | null;
+    has_children: boolean;
+    child_count: number;
+    is_protected: boolean;
+    tags: string[];
+    supports: string[];
+};
+
+export type ThemeIndexFilters = {
+    search: string;
+    filter: 'all' | 'active' | 'inactive' | 'supports' | string;
+    supports: string[];
+};
+
+export type ThemeIndexStatistics = {
+    total: number;
+    active: number;
+    inactive: number;
+    child: number;
+    protected: number;
+};
+
+export type ThemeIndexPageProps = {
+    themes: ThemeListItem[];
+    activeTheme: ThemeListItem | null;
+    filters: ThemeIndexFilters;
+    statistics: ThemeIndexStatistics;
+    availableSupports: string[];
+};
+
+export type ThemeEditorThemeSummary = {
+    directory: string;
+    name: string;
+    description: string;
+    author: string;
+    version: string;
+    screenshot: string | null;
+    is_active: boolean;
+    parent: string | null;
+};
+
+export type ThemeEditorFileNode = {
+    name: string;
+    path: string;
+    type: 'file' | 'directory';
+    extension?: string;
+    size?: number;
+    editable?: boolean;
+    protected?: boolean;
+    inherited?: boolean;
+    inheritedFrom?: string;
+    override?: boolean;
+    overrides?: string;
+    children?: ThemeEditorFileNode[];
+};
+
+export type ThemeEditorPageProps = {
+    theme: ThemeEditorThemeSummary;
+    themeDirectory: string;
+    files: ThemeEditorFileNode[];
+    isChildTheme: boolean;
+    parentTheme: ThemeEditorThemeSummary | null;
+};

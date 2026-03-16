@@ -7,14 +7,14 @@ use App\Http\Controllers\Controller;
 use App\Jobs\RecacheApplication;
 use App\Traits\ActivityTrait;
 use Exception;
-use Illuminate\Contracts\View\Factory;
-use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Response as ResponseFacade;
 use Illuminate\Support\Str;
+use Inertia\Inertia;
+use Inertia\Response as InertiaResponse;
 use Modules\CMS\Models\Theme;
 use Modules\CMS\Repositories\ThemeRepository;
 use Modules\CMS\Services\ThemeAssetResolver;
@@ -26,8 +26,6 @@ use ZipArchive;
 class ThemeController extends Controller implements HasMiddleware
 {
     use ActivityTrait;
-
-    private const string MODULE_PATH = 'cms::themes';
 
     protected string $activityLogModule = 'Themes';
 
@@ -51,39 +49,82 @@ class ThemeController extends Controller implements HasMiddleware
     /**
      * Display all file-based themes
      */
-    public function index(Request $request): Factory|View
+    public function index(Request $request): InertiaResponse
     {
-        $search = $request->query('search');
-        $filter = $request->query('filter');
+        $search = trim((string) $request->query('search', ''));
+        $filter = (string) $request->query('filter', 'all');
+        $selectedSupports = collect($request->query('supports', []))
+            ->filter(fn (mixed $support): bool => is_string($support) && $support !== '')
+            ->values();
 
-        // Build filter array for repository
-        $filters = [];
+        $allThemes = $this->themeRepository->getAllThemes()->values();
+        $childCounts = $allThemes
+            ->pluck('parent')
+            ->filter(fn (mixed $parent): bool => is_string($parent) && $parent !== '')
+            ->countBy();
 
-        if ($search) {
-            $filters['search'] = $search;
-        }
+        $mappedThemes = $allThemes
+            ->map(fn (array $theme): array => $this->mapThemeForIndex($theme, $childCounts->get($theme['directory'], 0)))
+            ->values();
 
-        if ($filter === 'supports') {
-            $supports = $request->query('supports', []);
-            if (! empty($supports)) {
-                $filters['supports'] = $supports;
-            }
-        }
+        $themes = $mappedThemes
+            ->filter(function (array $theme) use ($search, $filter, $selectedSupports): bool {
+                if ($search !== '') {
+                    $haystack = implode(' ', [
+                        $theme['name'],
+                        $theme['description'],
+                        $theme['author'],
+                        $theme['directory'],
+                        implode(' ', $theme['tags']),
+                    ]);
 
-        // Get filtered themes using repository
-        $themes = $this->themeRepository->getThemesFiltered($filters)->toArray();
+                    if (! str_contains(Str::lower($haystack), Str::lower($search))) {
+                        return false;
+                    }
+                }
 
-        // Apply additional filters
-        if ($filter === 'active') {
-            $themes = array_filter($themes, fn (array $theme) => $theme['is_active']);
-        } elseif ($filter === 'inactive') {
-            $themes = array_filter($themes, fn (array $theme): bool => ! $theme['is_active']);
-        }
+                if ($filter === 'active' && ! $theme['is_active']) {
+                    return false;
+                }
 
-        /** @var view-string $view */
-        $view = self::MODULE_PATH.'.index';
+                if ($filter === 'inactive' && $theme['is_active']) {
+                    return false;
+                }
 
-        return view($view, ['themes' => $themes, 'search' => $search, 'filter' => $filter]);
+                if ($filter === 'supports' && $selectedSupports->isNotEmpty()) {
+                    return $selectedSupports->every(
+                        fn (string $support): bool => in_array($support, $theme['supports'], true)
+                    );
+                }
+
+                return true;
+            })
+            ->values();
+
+        $activeTheme = Theme::getActiveTheme();
+        $availableSupports = $mappedThemes
+            ->flatMap(fn (array $theme): array => $theme['supports'])
+            ->unique()
+            ->sort()
+            ->values();
+
+        return Inertia::render('cms/themes/index', [
+            'themes' => $themes,
+            'activeTheme' => $activeTheme ? $this->mapThemeForIndex($activeTheme, $childCounts->get($activeTheme['directory'], 0)) : null,
+            'filters' => [
+                'search' => $search,
+                'filter' => $filter,
+                'supports' => $selectedSupports,
+            ],
+            'statistics' => [
+                'total' => $mappedThemes->count(),
+                'active' => $mappedThemes->where('is_active', true)->count(),
+                'inactive' => $mappedThemes->where('is_active', false)->count(),
+                'child' => $mappedThemes->where('is_child', true)->count(),
+                'protected' => $mappedThemes->where('is_protected', true)->count(),
+            ],
+            'availableSupports' => $availableSupports,
+        ]);
     }
 
     /**
@@ -148,7 +189,7 @@ class ThemeController extends Controller implements HasMiddleware
                 $theme
             );
 
-            return Response::download($zipPath, $zipFileName)->deleteFileAfterSend();
+            return ResponseFacade::download($zipPath, $zipFileName)->deleteFileAfterSend();
         }
 
         return back()->with('error', 'Failed to create theme export.');
@@ -604,6 +645,54 @@ class ThemeController extends Controller implements HasMiddleware
 
         // Use Laravel's Str::slug for consistent naming
         return Str::slug($name);
+    }
+
+    /**
+     * @param  array<string, mixed>  $theme
+     * @return array<string, mixed>
+     */
+    private function mapThemeForIndex(array $theme, int $childCount = 0): array
+    {
+        $directory = (string) ($theme['directory'] ?? '');
+
+        return [
+            'directory' => $directory,
+            'name' => (string) ($theme['name'] ?? Str::headline($directory)),
+            'description' => (string) ($theme['description'] ?? ''),
+            'author' => (string) ($theme['author'] ?? ''),
+            'author_uri' => (string) ($theme['author_uri'] ?? ''),
+            'version' => (string) ($theme['version'] ?? '1.0.0'),
+            'screenshot' => $theme['screenshot'] ?? null,
+            'is_active' => (bool) ($theme['is_active'] ?? false),
+            'is_child' => ! empty($theme['parent']),
+            'parent' => $theme['parent'] ?? null,
+            'has_children' => $childCount > 0,
+            'child_count' => $childCount,
+            'is_protected' => Theme::isProtectedTheme($directory),
+            'tags' => array_values(array_filter((array) ($theme['tags'] ?? []), 'is_string')),
+            'supports' => $this->normalizeThemeSupports($theme['supports'] ?? []),
+        ];
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function normalizeThemeSupports(mixed $supports): array
+    {
+        if (! is_array($supports)) {
+            return [];
+        }
+
+        if (array_is_list($supports)) {
+            return array_values(array_filter($supports, 'is_string'));
+        }
+
+        return collect($supports)
+            ->filter(fn (mixed $enabled): bool => (bool) $enabled)
+            ->keys()
+            ->filter(fn (mixed $support): bool => is_string($support) && $support !== '')
+            ->values()
+            ->all();
     }
 
     /**

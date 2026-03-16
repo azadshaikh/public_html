@@ -7,12 +7,15 @@ use App\Support\CacheInvalidation;
 use App\Traits\ActivityTrait;
 use Exception;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Inertia\Inertia;
+use Inertia\Response;
 use Modules\CMS\Models\Theme;
 use Modules\CMS\Services\ThemeAssetResolver;
 use Modules\CMS\Services\ThemeGitService;
@@ -103,7 +106,7 @@ class ThemeEditorController extends Controller implements HasMiddleware
     /**
      * Display the IDE-style theme editor
      */
-    public function index(string $directory)
+    public function index(string $directory): Response|RedirectResponse
     {
         $theme = Theme::getThemeInfo($directory);
 
@@ -122,15 +125,12 @@ class ThemeEditorController extends Controller implements HasMiddleware
             $parentTheme = $parentDirectory ? Theme::getThemeInfo($parentDirectory) : null;
         }
 
-        /** @var view-string $view */
-        $view = 'cms::themes.editor.index';
-
-        return view($view, [
-            'theme' => $theme,
+        return Inertia::render('cms/themes/editor/index', [
+            'theme' => $this->mapThemeSummary($theme),
             'themeDirectory' => $directory,
             'files' => $files,
             'isChildTheme' => $isChildTheme,
-            'parentTheme' => $parentTheme,
+            'parentTheme' => $parentTheme ? $this->mapThemeSummary($parentTheme) : null,
         ]);
     }
 
@@ -1761,5 +1761,25 @@ class ThemeEditorController extends Controller implements HasMiddleware
         $activity
             ->withProperties(array_merge(['theme_directory' => $directory], $properties))
             ->log($description);
+    }
+
+    /**
+     * @param  array<string, mixed>  $theme
+     * @return array<string, mixed>
+     */
+    private function mapThemeSummary(array $theme): array
+    {
+        $directory = (string) ($theme['directory'] ?? '');
+
+        return [
+            'directory' => $directory,
+            'name' => (string) ($theme['name'] ?? Str::headline($directory)),
+            'description' => (string) ($theme['description'] ?? ''),
+            'author' => (string) ($theme['author'] ?? ''),
+            'version' => (string) ($theme['version'] ?? '1.0.0'),
+            'screenshot' => $theme['screenshot'] ?? null,
+            'is_active' => (bool) ($theme['is_active'] ?? false),
+            'parent' => isset($theme['parent']) && is_string($theme['parent']) ? $theme['parent'] : null,
+        ];
     }
 }
