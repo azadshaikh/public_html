@@ -10,14 +10,14 @@ import type { PaginatedData } from '@/types/pagination';
 import { MediaPickerDetailsPanel } from './media-picker-details-panel';
 import { MediaPickerGrid } from './media-picker-grid';
 import { MediaPickerUploadTab } from './media-picker-upload-tab';
-import { toPickerItem, type MediaPickerItem } from './media-picker-utils';
-
-type MediaPickerSelection = 'single' | 'multiple';
+import type { MediaPickerItem, MediaPickerSelection } from '@/components/media/media-picker-utils';
+import { toPickerItem } from './media-picker-utils';
 
 type MediaPickerDialogProps = {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     onSelect: (items: MediaPickerItem[]) => void;
+    selection?: MediaPickerSelection;
     title?: string;
     defaultTab?: 'upload' | 'library';
     /** Inertia-backed paginated media data (null on first load). */
@@ -28,6 +28,13 @@ type MediaPickerDialogProps = {
     uploadSettings: UploadSettings | null;
     /** The Inertia action URL the Datagrid submits to (current page URL). */
     pickerAction: string;
+    /** Statistics for the tabs. */
+    pickerStatistics?: {
+        total: number;
+        trash: number;
+    } | null;
+    /** The initially selected media ID */
+    initialSelectedId?: number | null;
 };
 
 type UploadingFile = {
@@ -47,15 +54,18 @@ export function MediaPickerDialog({
     open,
     onOpenChange,
     onSelect,
+    selection = 'single',
     title = 'Select Media',
     defaultTab = 'upload',
     pickerMedia,
     pickerFilters,
     uploadSettings,
     pickerAction,
+    pickerStatistics,
+    initialSelectedId = null,
 }: MediaPickerDialogProps) {
     const [tab, setTab] = useState<'upload' | 'library'>(defaultTab);
-    const [activeMediaId, setActiveMediaId] = useState<number | null>(null);
+    const [activeMediaId, setActiveMediaId] = useState<number | null>(initialSelectedId);
     const [isEditing, setIsEditing] = useState(false);
     const [editedAltText, setEditedAltText] = useState('');
     const [editedTitle, setEditedTitle] = useState('');
@@ -69,6 +79,7 @@ export function MediaPickerDialog({
     const dragCounterRef = useRef(0);
     const uploadedIdsRef = useRef<Set<string>>(new Set());
     const refreshedAfterUploadRef = useRef(false);
+    const pendingActiveMediaIdRef = useRef<number | null>(null);
 
     const resetDialogState = useCallback(() => {
         setTab(defaultTab);
@@ -93,6 +104,13 @@ export function MediaPickerDialog({
         (nextOpen: boolean) => {
             if (!nextOpen) {
                 resetDialogState();
+            } else {
+                // When opening, if there is a value prop passed from MediaPickerField,
+                // we want to select it by default (this is handled in useEffect below, 
+                // but we need to ensure the grid can highlight it).
+                if (initialSelectedId) {
+                    setActiveMediaId(initialSelectedId);
+                }
             }
             onOpenChange(nextOpen);
         },
@@ -252,11 +270,11 @@ export function MediaPickerDialog({
                             prev.map((f) =>
                                 f.id === uf.id
                                     ? {
-                                          ...f,
-                                          progress: 100,
-                                          status: 'success',
-                                          result: response.file,
-                                      }
+                                        ...f,
+                                        progress: 100,
+                                        status: 'success',
+                                        result: response.file,
+                                    }
                                     : f,
                             ),
                         );
@@ -265,10 +283,10 @@ export function MediaPickerDialog({
                             prev.map((f) =>
                                 f.id === uf.id
                                     ? {
-                                          ...f,
-                                          status: 'error',
-                                          error: response.error || 'Upload failed',
-                                      }
+                                        ...f,
+                                        status: 'error',
+                                        error: response.error || 'Upload failed',
+                                    }
                                     : f,
                             ),
                         );
@@ -332,10 +350,7 @@ export function MediaPickerDialog({
         refreshedAfterUploadRef.current = true;
 
         if (successfulUploads.length > 0 && successfulUploads[0].result) {
-            const firstResult = successfulUploads[0].result;
-            // Since result uses MediaPickerItem type, we just pass its ID
-            // We'll let the grid row selection handle full MediaListItem populating when we refresh
-            setActiveMediaId(firstResult.id);
+            pendingActiveMediaIdRef.current = successfulUploads[0].result.id;
         }
 
         // Refresh library data so new uploads appear in the grid
@@ -353,6 +368,11 @@ export function MediaPickerDialog({
                 preserveScroll: true,
                 replace: true,
                 onSuccess: () => {
+                    if (pendingActiveMediaIdRef.current !== null) {
+                        setActiveMediaId(pendingActiveMediaIdRef.current);
+                        pendingActiveMediaIdRef.current = null;
+                    }
+
                     // Switch to library tab only if all uploads succeeded without errors
                     if (!hasErrors) {
                         setTab('library');
@@ -516,6 +536,7 @@ export function MediaPickerDialog({
                                     pickerMedia={pickerMedia}
                                     pickerFilters={pickerFilters}
                                     pickerAction={pickerAction}
+                                    pickerStatistics={pickerStatistics}
                                     activeMediaId={activeMediaId}
                                     onMediaClick={handleMediaClick}
                                 />

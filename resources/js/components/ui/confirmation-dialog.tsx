@@ -139,7 +139,7 @@ function ConfirmationDialog({
       <AlertDialogContent
         size="comfortable"
         className={cn(
-          "w-[min(calc(100%-2rem),36rem)] max-w-[36rem] gap-0 overflow-hidden rounded-2xl p-0",
+          "w-[min(calc(100%-2rem),50rem)] !max-w-[40rem] gap-0 overflow-hidden rounded-2xl p-0",
           contentClassName
         )}
       >
@@ -154,7 +154,7 @@ function ConfirmationDialog({
               >
                 {resolvedIcon ?? <AlertTriangleIcon className="size-4" />}
               </div>
-              <AlertDialogTitle className="pt-0.5 text-[1.7rem] leading-none font-semibold tracking-tight">
+              <AlertDialogTitle className="pt-0.5 text-[1.25rem] leading-none font-semibold tracking-tight">
                 {resolvedTitle}
               </AlertDialogTitle>
             </div>
@@ -174,7 +174,7 @@ function ConfirmationDialog({
             disabled={cancelDisabled}
             onClick={handleCancel}
             className={cn(
-              "h-[2.875rem] rounded-none border-0 border-r px-5 text-[0.95rem] font-medium shadow-none hover:bg-muted/50",
+              "rounded-none border-0 border-r px-5 text-[0.95rem] font-medium shadow-none hover:bg-muted/50",
               resolvedCancelClassName
             )}
           >
@@ -187,7 +187,7 @@ function ConfirmationDialog({
             disabled={confirmDisabled}
             onClick={handleConfirm}
             className={cn(
-              "h-[2.875rem] rounded-none px-5 text-[0.95rem] font-medium shadow-none",
+              "rounded-none border-0 px-5 text-[0.95rem] font-medium shadow-none",
               resolvedConfirmClassName
             )}
           >

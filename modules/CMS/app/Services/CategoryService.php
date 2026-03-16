@@ -70,6 +70,11 @@ class CategoryService implements ScaffoldServiceInterface
         return $stats;
     }
 
+    protected function alwaysIncludeStatistics(): bool
+    {
+        return true;
+    }
+
     public function generateSitemap(): void
     {
         dispatch(new GenerateSitemapJob('categories'));

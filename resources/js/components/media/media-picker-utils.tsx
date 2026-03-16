@@ -59,6 +59,8 @@ export type MediaPickerItem = {
     created_at: string;
 };
 
+export type MediaPickerSelection = 'single' | 'multiple';
+
 export function toPickerItem(item: MediaListItem): MediaPickerItem {
     return {
         id: item.id,

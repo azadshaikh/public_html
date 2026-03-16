@@ -128,6 +128,7 @@ export default function CategoryForm({
     pickerMedia,
     pickerFilters,
     uploadSettings,
+    pickerStatistics,
 }: CategoryFormProps) {
     const form = useAppForm<CategoryFormValues>({
         defaults: initialValues || emptyValues,
@@ -397,6 +398,7 @@ export default function CategoryForm({
                                 pickerMedia={pickerMedia}
                                 pickerFilters={pickerFilters}
                                 uploadSettings={uploadSettings}
+                                pickerStatistics={pickerStatistics}
                                 pickerAction={
                                     mode === 'create'
                                         ? route('cms.categories.create')

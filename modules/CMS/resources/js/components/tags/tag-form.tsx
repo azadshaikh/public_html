@@ -125,6 +125,7 @@ export default function TagForm({
     pickerMedia,
     pickerFilters,
     uploadSettings,
+    pickerStatistics,
 }: TagFormProps) {
     const form = useAppForm<TagFormValues>({
         defaults: initialValues || emptyValues,
@@ -393,6 +394,7 @@ export default function TagForm({
                                 pickerMedia={pickerMedia}
                                 pickerFilters={pickerFilters}
                                 uploadSettings={uploadSettings}
+                                pickerStatistics={pickerStatistics}
                                 pickerAction={
                                     mode === 'create'
                                         ? route('cms.tags.create')

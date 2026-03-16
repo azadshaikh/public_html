@@ -142,6 +142,7 @@ export default function PageForm({
     pickerMedia,
     pickerFilters,
     uploadSettings,
+    pickerStatistics,
 }: PageFormProps) {
     const form = useAppForm<PageFormValues>({
         defaults: initialValues || emptyValues,
@@ -681,6 +682,7 @@ export default function PageForm({
                                 pickerMedia={pickerMedia}
                                 pickerFilters={pickerFilters}
                                 uploadSettings={uploadSettings}
+                                pickerStatistics={pickerStatistics}
                                 pickerAction={
                                     mode === 'create'
                                         ? route('cms.pages.create')

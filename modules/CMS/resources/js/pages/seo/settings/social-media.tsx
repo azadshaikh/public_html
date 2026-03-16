@@ -54,6 +54,7 @@ export default function SeoSocialMediaPage({
     pickerMedia,
     pickerFilters,
     uploadSettings,
+    pickerStatistics,
 }: SocialMediaPageProps) {
     const form = useAppForm<SocialMediaFormValues>({
         defaults: initialValues,
@@ -127,6 +128,7 @@ export default function SeoSocialMediaPage({
                                         pickerMedia={pickerMedia}
                                         pickerFilters={pickerFilters}
                                         uploadSettings={uploadSettings}
+                                        pickerStatistics={pickerStatistics}
                                         pickerAction={route('seo.settings.socialmedia')}
                                     />
                                     <FieldDescription>

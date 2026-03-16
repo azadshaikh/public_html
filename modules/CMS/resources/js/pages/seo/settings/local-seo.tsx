@@ -102,6 +102,7 @@ export default function SeoLocalSeoPage({
     pickerMedia,
     pickerFilters,
     uploadSettings,
+    pickerStatistics,
 }: LocalSeoPageProps) {
     const form = useAppForm<LocalSeoFormValues>({
         defaults: initialValues,
@@ -336,6 +337,7 @@ export default function SeoLocalSeoPage({
                                                 pickerMedia={pickerMedia}
                                                 pickerFilters={pickerFilters}
                                                 uploadSettings={uploadSettings}
+                                                pickerStatistics={pickerStatistics}
                                                 pickerAction={route('seo.settings.localseo')}
                                             />
                                             <FieldDescription>

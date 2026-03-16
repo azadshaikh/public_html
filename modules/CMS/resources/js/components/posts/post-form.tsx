@@ -266,6 +266,7 @@ export default function PostForm({
     pickerMedia,
     pickerFilters,
     uploadSettings,
+    pickerStatistics,
 }: PostFormProps) {
     const form = useAppForm<PostFormValues>({
         defaults: initialValues || emptyValues,
@@ -818,6 +819,7 @@ export default function PostForm({
                                 pickerMedia={pickerMedia}
                                 pickerFilters={pickerFilters}
                                 uploadSettings={uploadSettings}
+                                pickerStatistics={pickerStatistics}
                                 pickerAction={
                                     mode === 'create'
                                         ? route('cms.posts.create')

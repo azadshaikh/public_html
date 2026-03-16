@@ -75,6 +75,11 @@ class PageService implements ScaffoldServiceInterface
         return $stats;
     }
 
+    protected function alwaysIncludeStatistics(): bool
+    {
+        return true;
+    }
+
     public function getMetaRobotsOptions(): array
     {
         $options = [['value' => '', 'label' => 'Default']];

@@ -126,9 +126,9 @@ trait Scaffoldable
         $query = $this->buildListQuery($request);
         $paginator = $query->paginate($this->getPerPage($request))->onEachSide(1);
 
-        // Only include statistics on initial load (non-AJAX) or when explicitly requested
-        // This avoids expensive COUNT queries on every filter/sort/pagination change
-        $includeStats = ! $request->ajax() || $request->boolean('include_stats');
+        // Only include statistics on initial load (non-AJAX) or when explicitly requested.
+        // Services can override alwaysIncludeStatistics() to force inclusion on every request.
+        $includeStats = ! $request->ajax() || $request->boolean('include_stats') || $this->alwaysIncludeStatistics();
 
         // Build PaginatedData-compatible payload with transformed items
         $rows = $paginator->toArray();
@@ -228,6 +228,15 @@ trait Scaffoldable
         }
 
         return $stats;
+    }
+
+    /**
+     * Whether to always include statistics in getData() responses, even on AJAX requests.
+     * Override in service classes that require tab counts on every response (e.g. CMS).
+     */
+    protected function alwaysIncludeStatistics(): bool
+    {
+        return false;
     }
 
     // =========================================================================

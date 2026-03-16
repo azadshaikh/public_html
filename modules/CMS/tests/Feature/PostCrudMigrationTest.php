@@ -86,6 +86,36 @@ class PostCrudMigrationTest extends TestCase
             );
     }
 
+    public function test_admin_can_access_posts_index_page_with_listing_data_for_the_refactored_ui(): void
+    {
+        $category = $this->createTerm(CmsPostType::CATEGORY, 'Announcements');
+        $post = $this->createPost('Index Ready Post');
+        $featuredImage = $this->createMediaForPost($post, 'index-ready.jpg');
+
+        $post->categories()->attach($category->id, ['term_type' => CmsPostType::CATEGORY->value]);
+        $post->forceFill([
+            'feature_image_id' => $featuredImage->id,
+            'status' => 'published',
+            'published_at' => now(),
+        ])->save();
+
+        $this->actingAs($this->admin)
+            ->get(route('cms.posts.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->component('cms/posts/index')
+                ->has('rows.data', 1)
+                ->where('rows.data.0.title', $post->title)
+                ->where('rows.data.0.author_name', $this->admin->name)
+                ->where('rows.data.0.featured_image_url', get_media_url($featuredImage, 'thumbnail', usePlaceholder: false))
+                ->where('rows.data.0.status', 'published')
+                ->where('rows.data.0.status_label', 'Published')
+                ->where('rows.data.0.categories.0.title', $category->title)
+                ->where('rows.data.0.categories_display', $category->title)
+                ->has('rows.data.0.permalink_url')
+            );
+    }
+
     public function test_admin_can_access_posts_edit_page_with_initial_values(): void
     {
         $category = $this->createTerm(CmsPostType::CATEGORY, 'Guides');

@@ -71,6 +71,7 @@ export type MediaPickerFilters = {
     mime_type_category: string;
     picker: string;
     view: 'table' | 'cards';
+    status?: 'all' | 'trash';
 };
 
 export type StorageData = {

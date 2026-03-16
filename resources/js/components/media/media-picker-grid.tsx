@@ -2,7 +2,7 @@ import { router } from '@inertiajs/react';
 import { useCallback, useMemo } from 'react';
 import { Datagrid } from '@/components/datagrid/datagrid';
 import type { DatagridColumn, DatagridFilter, DatagridTab } from '@/components/datagrid/datagrid';
-import { ImageIcon, ListIcon, Trash2Icon } from 'lucide-react';
+import { CheckIcon, ImageIcon, ListIcon, Trash2Icon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { MediaListItem, MediaPickerFilters } from '@/types/media';
 import type { PaginatedData } from '@/types/pagination';
@@ -12,6 +12,10 @@ type MediaPickerGridProps = {
     pickerMedia: PaginatedData<MediaListItem> | null;
     pickerFilters: MediaPickerFilters | null;
     pickerAction: string;
+    pickerStatistics?: {
+        total: number;
+        trash: number;
+    } | null;
     activeMediaId: number | null;
     onMediaClick: (item: MediaListItem) => void;
 };
@@ -34,6 +38,7 @@ export function MediaPickerGrid({
     pickerMedia,
     pickerFilters,
     pickerAction,
+    pickerStatistics,
     activeMediaId,
     onMediaClick,
 }: MediaPickerGridProps) {
@@ -141,15 +146,19 @@ export function MediaPickerGrid({
                 value: 'all',
                 active: (pickerFilters?.status ?? 'all') === 'all',
                 icon: <ListIcon />,
+                count: pickerStatistics?.total ?? 0,
+                countVariant: 'secondary',
             },
             {
                 label: 'Trash',
                 value: 'trash',
                 active: pickerFilters?.status === 'trash',
                 icon: <Trash2Icon />,
+                count: pickerStatistics?.trash ?? 0,
+                countVariant: 'destructive',
             },
         ],
-        [pickerFilters?.status],
+        [pickerFilters?.status, pickerStatistics],
     );
 
     return (
@@ -178,7 +187,7 @@ export function MediaPickerGrid({
                                 type="button"
                                 onClick={() => onMediaClick(item)}
                                 className={cn(
-                                    'group relative aspect-square w-full overflow-hidden bg-muted',
+                                    'group relative aspect-square w-full overflow-hidden rounded-lg bg-muted',
                                     isActive && 'ring-2 ring-primary ring-offset-2',
                                 )}
                             >
@@ -196,6 +205,18 @@ export function MediaPickerGrid({
                                             item.mime_type,
                                             'size-10 text-muted-foreground/40',
                                         )}
+                                    </div>
+                                )}
+
+                                {/* Selection overlay */}
+                                {isActive && (
+                                    <div className="absolute inset-0 bg-primary/10" />
+                                )}
+
+                                {/* Check badge */}
+                                {isActive && (
+                                    <div className="absolute top-1.5 right-1.5 flex size-5 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm">
+                                        <CheckIcon className="size-3 stroke-[3]" />
                                     </div>
                                 )}
 

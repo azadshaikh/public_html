@@ -2,7 +2,9 @@ import { Link, router, usePage } from '@inertiajs/react';
 import {
     CopyIcon,
     EyeIcon,
+    ExternalLinkIcon,
     FileTextIcon,
+    ImageIcon,
     PencilIcon,
     PlusIcon,
     RefreshCwIcon,
@@ -25,6 +27,7 @@ import type { PostIndexPageProps, PostListItem } from '../../types/cms';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: route('dashboard') },
+    { title: 'CMS', href: route('cms.posts.index') },
     { title: 'Posts', href: route('cms.posts.index') },
 ];
 
@@ -38,6 +41,47 @@ const STATUS_BADGE_VARIANT: Record<string, string> = {
 
 function statusBadgeVariant(status: string): string {
     return STATUS_BADGE_VARIANT[status] ?? 'secondary';
+}
+
+function getPostPath(post: PostListItem): string | null {
+    if (!post.permalink_url) {
+        return null;
+    }
+
+    try {
+        const url = new URL(post.permalink_url, window.location.origin);
+
+        return url.pathname === '/' ? '/' : url.pathname.replace(/\/$/, '');
+    } catch {
+        return post.permalink_url;
+    }
+}
+
+function getPostDateLabel(post: PostListItem): string {
+    return post.status === 'published' && post.published_at_formatted
+        ? 'Published'
+        : 'Last Modified';
+}
+
+function PostPreview({ post }: { post: PostListItem }) {
+    if (post.featured_image_url) {
+        return (
+            <div className="flex h-12 w-18 shrink-0 overflow-hidden rounded-md border bg-muted">
+                <img
+                    src={post.featured_image_url}
+                    alt={post.title}
+                    className="h-full w-full object-cover"
+                    loading="lazy"
+                />
+            </div>
+        );
+    }
+
+    return (
+        <div className="flex h-12 w-18 shrink-0 items-center justify-center rounded-md border bg-muted/50 text-muted-foreground">
+            <ImageIcon className="size-4" />
+        </div>
+    );
 }
 
 export default function PostsIndex({
@@ -100,52 +144,90 @@ export default function PostsIndex({
             cell: (post) => (
                 <Link
                     href={post.edit_url}
-                    className="flex min-w-0 flex-col gap-1 hover:opacity-80"
+                    className="flex min-w-0 items-start gap-3 hover:opacity-80"
                 >
-                    <span className="font-medium text-foreground">
-                        {post.title}
-                        {post.is_featured && (
-                            <span className="ml-2 text-yellow-500" aria-label="Featured">
-                                ★
+                    <PostPreview post={post} />
+
+                    <div className="min-w-0 flex-1 space-y-1">
+                        <div className="flex items-center gap-2">
+                            <span className="truncate font-medium text-foreground">
+                                {post.title}
                             </span>
-                        )}
-                    </span>
-                    {post.excerpt && (
-                        <span className="truncate text-xs text-muted-foreground">
-                            {post.excerpt}
-                        </span>
-                    )}
+                            {post.is_featured ? (
+                                <Badge variant="outline" className="shrink-0">
+                                    Featured
+                                </Badge>
+                            ) : null}
+                        </div>
+
+                        <div className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
+                            <span className="truncate">by {post.author_name}</span>
+                            {getPostPath(post) ? (
+                                <>
+                                    <span className="text-muted-foreground/50">|</span>
+                                    <span className="flex min-w-0 items-center gap-1 truncate">
+                                        <ExternalLinkIcon className="size-3 shrink-0" />
+                                        <span className="truncate">{getPostPath(post)}</span>
+                                    </span>
+                                </>
+                            ) : null}
+                        </div>
+                    </div>
                 </Link>
             ),
         },
         {
-            key: 'categories_display',
+            key: 'categories',
             header: 'Categories',
-            cellClassName: 'w-44 text-sm text-muted-foreground',
+            cellClassName: 'w-44',
             headerClassName: 'w-44',
-        },
-        {
-            key: 'author_name',
-            header: 'Author',
-            cellClassName: 'w-32 text-sm text-muted-foreground',
-            headerClassName: 'w-32',
+            cell: (post) => (
+                <div className="flex flex-wrap gap-1.5">
+                    {post.categories.length > 0 ? (
+                        post.categories.slice(0, 2).map((category) => (
+                            <Badge key={category.id} variant="secondary" className="max-w-full truncate">
+                                {category.title}
+                            </Badge>
+                        ))
+                    ) : (
+                        <span className="text-sm text-muted-foreground">—</span>
+                    )}
+                    {post.categories.length > 2 ? (
+                        <Badge variant="outline">+{post.categories.length - 2}</Badge>
+                    ) : null}
+                </div>
+            ),
         },
         {
             key: 'status_label',
             header: 'Status',
             headerClassName: 'w-32 text-center',
             cellClassName: 'w-32 text-center',
-            type: 'badge',
             sortable: true,
             sortKey: 'status',
+            cell: (post) => (
+                <Badge
+                    variant={
+                        statusBadgeVariant(post.status) as Parameters<typeof Badge>[0]['variant']
+                    }
+                >
+                    {post.status_label}
+                </Badge>
+            ),
         },
         {
             key: 'display_date',
             header: 'Date',
-            headerClassName: 'w-36',
-            cellClassName: 'w-36 text-sm text-muted-foreground',
+            headerClassName: 'w-44',
+            cellClassName: 'w-44',
             sortable: true,
             sortKey: 'published_at',
+            cell: (post) => (
+                <div className="space-y-0.5 text-sm">
+                    <div className="text-xs text-muted-foreground">{getPostDateLabel(post)}</div>
+                    <div className="font-medium text-foreground">{post.display_date}</div>
+                </div>
+            ),
         },
     ];
 
@@ -284,7 +366,7 @@ export default function PostsIndex({
                     <Button asChild>
                         <Link href={route('cms.posts.create')}>
                             <PlusIcon data-icon="inline-start" />
-                            Add Post
+                            Create
                         </Link>
                     </Button>
                 ) : undefined
@@ -317,25 +399,52 @@ export default function PostsIndex({
                         <div className="flex flex-col gap-3">
                             <Link
                                 href={post.edit_url}
-                                className="flex flex-col gap-1 hover:opacity-80"
+                                className="flex items-start gap-3 hover:opacity-80"
                             >
-                                <span className="font-medium text-foreground">
-                                    {post.title}
-                                    {post.is_featured && (
-                                        <span className="ml-2 text-yellow-500">
-                                            ★
+                                <PostPreview post={post} />
+
+                                <div className="min-w-0 flex-1 space-y-1">
+                                    <div className="flex items-center gap-2">
+                                        <span className="truncate font-medium text-foreground">
+                                            {post.title}
                                         </span>
-                                    )}
-                                </span>
-                                {post.excerpt && (
-                                    <span className="text-xs text-muted-foreground">
-                                        {post.excerpt}
-                                    </span>
-                                )}
+                                        {post.is_featured ? (
+                                            <Badge variant="outline">Featured</Badge>
+                                        ) : null}
+                                    </div>
+                                    <div className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
+                                        <span className="truncate">by {post.author_name}</span>
+                                        {getPostPath(post) ? (
+                                            <>
+                                                <span className="text-muted-foreground/50">|</span>
+                                                <span className="flex min-w-0 items-center gap-1 truncate">
+                                                    <ExternalLinkIcon className="size-3 shrink-0" />
+                                                    <span className="truncate">{getPostPath(post)}</span>
+                                                </span>
+                                            </>
+                                        ) : null}
+                                    </div>
+                                </div>
                             </Link>
                             <div className="grid gap-3 sm:grid-cols-3">
                                 <div className="rounded-lg border bg-muted/30 px-3 py-2">
-                                    <div className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                                    <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                                        Categories
+                                    </div>
+                                    <div className="mt-2 flex flex-wrap gap-1.5">
+                                        {post.categories.length > 0 ? (
+                                            post.categories.slice(0, 2).map((category) => (
+                                                <Badge key={category.id} variant="secondary">
+                                                    {category.title}
+                                                </Badge>
+                                            ))
+                                        ) : (
+                                            <span className="text-sm text-muted-foreground">—</span>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="rounded-lg border bg-muted/30 px-3 py-2">
+                                    <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                                         Status
                                     </div>
                                     <div className="mt-1">
@@ -353,16 +462,8 @@ export default function PostsIndex({
                                     </div>
                                 </div>
                                 <div className="rounded-lg border bg-muted/30 px-3 py-2">
-                                    <div className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                                        Author
-                                    </div>
-                                    <div className="mt-1 text-sm font-medium text-foreground">
-                                        {post.author_name}
-                                    </div>
-                                </div>
-                                <div className="rounded-lg border bg-muted/30 px-3 py-2">
-                                    <div className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                                        Date
+                                    <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                                        {getPostDateLabel(post)}
                                     </div>
                                     <div className="mt-1 text-sm font-medium text-foreground">
                                         {post.display_date}

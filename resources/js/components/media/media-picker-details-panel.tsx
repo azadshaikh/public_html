@@ -46,15 +46,15 @@ export function MediaPickerDetailsPanel({
                 <ScrollArea className="flex-1">
                     <div className="space-y-4 p-4">
                         {/* Preview */}
-                        <div className="relative h-48 w-full overflow-hidden rounded-lg border bg-muted p-2">
+                        <div className="flex h-48 w-full items-center justify-center overflow-hidden rounded-lg border bg-muted p-2">
                             {isImageMime(activeMedia.mime_type) && activeMedia.thumbnail_url ? (
                                 <img
                                     src={activeMedia.thumbnail_url}
                                     alt={activeMedia.alt_text || activeMedia.name}
-                                    className="absolute inset-0 m-auto max-h-[calc(100%-1rem)] max-w-[calc(100%-1rem)] object-contain"
+                                    className="max-h-full max-w-full object-contain"
                                 />
                             ) : (
-                                <div className="absolute inset-0 flex items-center justify-center">
+                                <div className="flex items-center justify-center">
                                     {getFileTypeIcon(
                                         activeMedia.mime_type,
                                         'size-16 text-muted-foreground/40',

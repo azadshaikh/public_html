@@ -224,6 +224,10 @@ export type MediaPickerPageProps = {
     pickerMedia: PaginatedData<MediaListItem> | null;
     pickerFilters: MediaPickerFilters | null;
     uploadSettings: UploadSettings | null;
+    pickerStatistics?: {
+        total: number;
+        trash: number;
+    } | null;
 };
 
 // ================================================================

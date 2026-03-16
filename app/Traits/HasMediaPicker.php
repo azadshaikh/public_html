@@ -23,7 +23,7 @@ trait HasMediaPicker
      * Returns pickerMedia, pickerFilters, and uploadSettings when
      * the request contains `?picker=1`. Returns all nulls otherwise.
      *
-     * @return array{pickerMedia: mixed, pickerFilters: array<string, mixed>|null, uploadSettings: array<string, mixed>|null}
+     * @return array{pickerMedia: mixed, pickerFilters: array<string, mixed>|null, uploadSettings: array<string, mixed>|null, pickerStatistics?: array<string, int>}
      */
     protected function getMediaPickerProps(): array
     {
@@ -36,7 +36,14 @@ trait HasMediaPicker
         }
 
         $request = request();
-        $query = CustomMedia::query()->withoutTrashed();
+        $status = in_array($request->input('status'), ['all', 'trash'], true) ? $request->input('status') : 'all';
+        $query = CustomMedia::query();
+
+        if ($status === 'trash') {
+            $query->onlyTrashed();
+        } else {
+            $query->withoutTrashed();
+        }
 
         // Search
         if ($search = $request->input('search', '')) {
@@ -101,6 +108,7 @@ trait HasMediaPicker
                 'direction' => $direction,
                 'per_page' => $perPage,
                 'mime_type_category' => $request->input('mime_type_category', ''),
+                'status' => $request->input('status', 'all'),
                 'picker' => '1',
                 'view' => $request->input('view', 'cards'),
             ],
@@ -112,6 +120,10 @@ trait HasMediaPicker
                 'friendly_file_types' => implode(', ', $friendlyCategories),
                 'max_filename_length' => (int) config('media.max_file_name_length', 100),
                 'upload_route' => route('app.media.upload-media'),
+            ],
+            'pickerStatistics' => [
+                'total' => CustomMedia::withoutTrashed()->count(),
+                'trash' => CustomMedia::onlyTrashed()->count(),
             ],
         ];
     }

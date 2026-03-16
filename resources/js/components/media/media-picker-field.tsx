@@ -3,8 +3,8 @@
 import { ImageIcon, ImagePlusIcon, Trash2Icon } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import type { MediaPickerItem } from '@/components/media/media-picker-dialog';
 import { MediaPickerDialog } from '@/components/media/media-picker-dialog';
+import type { MediaPickerItem } from '@/components/media/media-picker-utils';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { MediaListItem, MediaPickerFilters, UploadSettings } from '@/types/media';
@@ -41,6 +41,11 @@ type MediaPickerFieldProps = {
     uploadSettings?: UploadSettings | null;
     /** Inertia action URL the Datagrid submits to (current page URL). */
     pickerAction?: string;
+    /** Statistics for the tabs. */
+    pickerStatistics?: {
+        total: number;
+        trash: number;
+    } | null;
 };
 
 // ─── Component ───────────────────────────────────────────────────────────
@@ -60,6 +65,7 @@ export function MediaPickerField({
     pickerFilters = null,
     uploadSettings = null,
     pickerAction = '',
+    pickerStatistics = null,
 }: MediaPickerFieldProps) {
     const [dialogOpen, setDialogOpen] = useState(false);
     // Track the preview URL that was resolved from the media picker selection
@@ -105,8 +111,8 @@ export function MediaPickerField({
                 if (!cancelled && json.status === 1 && json.data) {
                     setFetchedPreview(
                         json.data.thumbnail_url ||
-                            json.data.media_url ||
-                            json.data.original_url,
+                        json.data.media_url ||
+                        json.data.original_url,
                     );
                 }
             } catch {
@@ -233,6 +239,8 @@ export function MediaPickerField({
                 pickerFilters={pickerFilters}
                 uploadSettings={uploadSettings}
                 pickerAction={pickerAction}
+                pickerStatistics={pickerStatistics}
+                initialSelectedId={typeof value === 'number' ? value : null}
             />
         </>
     );
