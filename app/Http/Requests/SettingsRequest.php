@@ -155,6 +155,7 @@ class SettingsRequest extends FormRequest
             case 'media':
                 $rules = [
                     'max_file_name_length' => ['required', 'integer', 'min:1', 'max:255'],
+                    'max_files_per_upload' => ['required', 'integer', 'min:1', 'max:100'],
                     'image_quality' => ['required', 'integer', 'min:1', 'max:100'],
                     'max_upload_size' => ['required', 'integer', 'min:1'],
                     'allowed_file_types' => ['nullable', 'string'],
@@ -390,6 +391,10 @@ class SettingsRequest extends FormRequest
                     'max_file_name_length.integer' => 'Max file name length must be an integer',
                     'max_file_name_length.min' => 'Max file name length must be at least 1',
                     'max_file_name_length.max' => 'Max file name length must be at most 255',
+                    'max_files_per_upload.required' => 'Max files per upload is required',
+                    'max_files_per_upload.integer' => 'Max files per upload must be an integer',
+                    'max_files_per_upload.min' => 'Max files per upload must be at least 1',
+                    'max_files_per_upload.max' => 'Max files per upload must be at most 100',
                     'image_quality.required' => 'Image quality is required',
                     'image_quality.integer' => 'Image quality must be an integer',
                     'image_quality.min' => 'Image quality must be at least 1',

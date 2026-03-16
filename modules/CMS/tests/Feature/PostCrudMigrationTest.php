@@ -129,6 +129,21 @@ class PostCrudMigrationTest extends TestCase
             );
     }
 
+    public function test_post_edit_picker_request_includes_upload_settings(): void
+    {
+        $post = $this->createPost('Picker Ready Post');
+
+        $this->actingAs($this->admin)
+            ->get(route('cms.posts.edit', $post).'?picker=1')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->component('cms/posts/edit')
+                ->where('pickerFilters.picker', '1')
+                ->where('uploadSettings.max_files_per_upload', config('media.max_files_per_upload', 10))
+                ->where('uploadSettings.upload_route', route('app.media.upload-media'))
+            );
+    }
+
     public function test_admin_can_store_a_post_from_the_migrated_form(): void
     {
         $category = $this->createTerm(CmsPostType::CATEGORY, 'Development');

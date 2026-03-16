@@ -66,6 +66,17 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Maximum Files Per Upload
+    |--------------------------------------------------------------------------
+    |
+    | The maximum number of files a user can select or drop into a single
+    | upload action in the media library and media picker.
+    |
+    */
+    'max_files_per_upload' => env('MEDIA_MAX_FILES_PER_UPLOAD', 10),
+
+    /*
+    |--------------------------------------------------------------------------
     | Image Quality Settings
     |--------------------------------------------------------------------------
     |

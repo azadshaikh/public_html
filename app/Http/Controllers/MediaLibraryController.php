@@ -93,6 +93,7 @@ class MediaLibraryController extends Controller implements HasMiddleware
         $uploadSettings = [
             'max_size_mb' => $maxUploadSize,
             'max_size_bytes' => config('media-library.max_file_size'),
+            'max_files_per_upload' => (int) config('media.max_files_per_upload', 10),
             'accepted_mime_types' => $acceptedFileTypes,
             'friendly_file_types' => implode(', ', $friendlyCategories),
             'max_filename_length' => (int) config('media.max_file_name_length', 100),

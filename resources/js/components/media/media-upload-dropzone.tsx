@@ -58,6 +58,10 @@ export function MediaUploadDropzone({
         [acceptedTypes, uploadSettings],
     );
 
+    const batchLimitMessage = useCallback((): string => {
+        return `You can upload up to ${uploadSettings.max_files_per_upload} files at once`;
+    }, [uploadSettings.max_files_per_upload]);
+
     // ── Create preview URL ───────────────────────────────────────────
 
     const createPreview = useCallback((file: File): string | undefined => {
@@ -173,7 +177,12 @@ export function MediaUploadDropzone({
 
     const stageFiles = useCallback(
         (fileList: FileList | File[]) => {
-            const newFiles: UploadFile[] = Array.from(fileList).map((file) => {
+            const incomingFiles = Array.from(fileList);
+            const newFiles: UploadFile[] = incomingFiles.map((file, index) => {
+                const batchError =
+                    index >= uploadSettings.max_files_per_upload
+                        ? batchLimitMessage()
+                        : null;
                 const error = validateFile(file);
                 return {
                     id: crypto.randomUUID(),
@@ -182,8 +191,8 @@ export function MediaUploadDropzone({
                     size: file.size,
                     type: file.type,
                     progress: 0,
-                    status: error ? 'error' : 'staged',
-                    error: error ?? undefined,
+                    status: batchError || error ? 'error' : 'staged',
+                    error: batchError ?? error ?? undefined,
                     previewUrl: createPreview(file),
                 };
             });
@@ -198,7 +207,7 @@ export function MediaUploadDropzone({
             });
             setIsUploading(false);
         },
-        [validateFile, createPreview],
+        [validateFile, createPreview, uploadSettings.max_files_per_upload, batchLimitMessage],
     );
 
     // ── Start uploading all staged files ─────────────────────────────
@@ -344,7 +353,8 @@ export function MediaUploadDropzone({
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">
                     {uploadSettings.friendly_file_types} — Max{' '}
-                    {uploadSettings.max_size_mb}MB per file
+                    {uploadSettings.max_size_mb}MB per file — Up to{' '}
+                    {uploadSettings.max_files_per_upload} files at once
                 </p>
                 <input
                     ref={fileInputRef}

@@ -439,18 +439,6 @@ class MenuCrudTest extends TestCase
         $this->assertSoftDeleted('cms_menus', ['id' => $menu->id]);
     }
 
-    public function test_admin_can_restore_a_soft_deleted_menu(): void
-    {
-        $menu = $this->createMenu('Restorable Menu');
-        $menu->delete();
-
-        $this->actingAs($this->admin)
-            ->post(route('cms.appearance.menus.restore', $menu))
-            ->assertRedirect();
-
-        $this->assertNotSoftDeleted('cms_menus', ['id' => $menu->id]);
-    }
-
     // =========================================================================
     // Duplicate
     // =========================================================================

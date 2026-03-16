@@ -26,6 +26,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 type MediaPageProps = {
     settings: {
         max_file_name_length: string;
+        max_files_per_upload: string;
         max_upload_size: string;
         allowed_file_types: string;
         image_optimization: boolean;
@@ -43,6 +44,7 @@ type MediaPageProps = {
 
 type MediaFormData = {
     max_file_name_length: string;
+    max_files_per_upload: string;
     max_upload_size: string;
     allowed_file_types: string;
     image_optimization: boolean;
@@ -60,6 +62,7 @@ export default function Media({ settings, settingsNav }: MediaPageProps) {
     const form = useAppForm<MediaFormData>({
         defaults: {
             max_file_name_length: settings.max_file_name_length,
+            max_files_per_upload: settings.max_files_per_upload,
             max_upload_size: settings.max_upload_size,
             allowed_file_types: settings.allowed_file_types,
             image_optimization: settings.image_optimization,
@@ -113,7 +116,7 @@ export default function Media({ settings, settingsNav }: MediaPageProps) {
 
                         <CardContent>
                             <FieldGroup>
-                                <FieldGroup className="md:grid md:grid-cols-2 md:gap-6">
+                                <FieldGroup className="md:grid md:grid-cols-3 md:gap-6">
                                     <Field
                                         data-invalid={
                                             form.invalid(
@@ -151,6 +154,46 @@ export default function Media({ settings, settingsNav }: MediaPageProps) {
                                         />
                                         <FieldError>
                                             {form.error('max_file_name_length')}
+                                        </FieldError>
+                                    </Field>
+
+                                    <Field
+                                        data-invalid={
+                                            form.invalid(
+                                                'max_files_per_upload',
+                                            ) || undefined
+                                        }
+                                    >
+                                        <FieldLabel htmlFor="max_files_per_upload">
+                                            Max Files Per Upload
+                                        </FieldLabel>
+                                        <Input
+                                            id="max_files_per_upload"
+                                            type="number"
+                                            value={
+                                                form.data.max_files_per_upload
+                                            }
+                                            onChange={(e) =>
+                                                form.setField(
+                                                    'max_files_per_upload',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            onBlur={() =>
+                                                form.touch(
+                                                    'max_files_per_upload',
+                                                )
+                                            }
+                                            aria-invalid={
+                                                form.invalid(
+                                                    'max_files_per_upload',
+                                                ) || undefined
+                                            }
+                                            placeholder="10"
+                                            size="comfortable"
+                                        />
+                                        <FieldError>
+                                            {form.error('max_files_per_upload')}
                                         </FieldError>
                                     </Field>
 

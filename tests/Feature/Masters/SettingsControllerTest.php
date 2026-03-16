@@ -289,6 +289,7 @@ class SettingsControllerTest extends TestCase
                 ->component('master-settings/media')
                 ->has('settings', fn (Assert $settings): Assert => $settings
                     ->has('max_file_name_length')
+                    ->has('max_files_per_upload')
                     ->has('max_upload_size')
                     ->has('allowed_file_types')
                     ->has('image_optimization')
@@ -303,6 +304,30 @@ class SettingsControllerTest extends TestCase
                 )
                 ->has('settingsNav')
             );
+    }
+
+    public function test_super_user_can_update_media_settings(): void
+    {
+        $this->actingAs($this->superUser)
+            ->put(route('app.masters.settings.update', 'media'), [
+                'max_file_name_length' => '120',
+                'max_files_per_upload' => '12',
+                'max_upload_size' => '20',
+                'allowed_file_types' => 'image/png,image/jpeg,application/pdf',
+                'image_optimization' => true,
+                'image_quality' => '80',
+                'thumbnail_width' => '150',
+                'small_width' => '400',
+                'medium_width' => '800',
+                'large_width' => '1200',
+                'xlarge_width' => '1920',
+                'delete_trashed' => false,
+                'delete_trashed_days' => '7',
+            ])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect();
+
+        $this->assertSame('12', get_env_value('MEDIA_MAX_FILES_PER_UPLOAD'));
     }
 
     // =========================================================================

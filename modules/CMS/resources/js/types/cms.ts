@@ -645,3 +645,49 @@ export type MenuEditPageProps = {
     statusOptions: CmsOption[];
     locationOptions: CmsOption[];
 };
+
+// ================================================================
+// Widgets
+// ================================================================
+
+export type WidgetArea = {
+    id: string;
+    name: string;
+    description: string;
+};
+
+export type WidgetSettingField = {
+    type: 'text' | 'textarea' | 'select' | 'checkbox' | 'color' | 'url' | 'email' | string;
+    label: string;
+    default: string | boolean | number;
+    description?: string;
+    required?: boolean;
+    options?: Record<string, string>;
+};
+
+export type AvailableWidget = {
+    name: string;
+    description: string;
+    category: string;
+    settings_schema: Record<string, WidgetSettingField>;
+};
+
+export type WidgetInstance = {
+    id: string;
+    type: string;
+    title: string;
+    settings: Record<string, string | boolean | number>;
+    position: number;
+};
+
+export type WidgetIndexPageProps = {
+    widgetAreas: WidgetArea[];
+    currentWidgets: Record<string, WidgetInstance[]>;
+    availableWidgets: Record<string, AvailableWidget>;
+};
+
+export type WidgetEditPageProps = {
+    widgetArea: WidgetArea;
+    currentWidgets: WidgetInstance[];
+    availableWidgets: Record<string, AvailableWidget>;
+};

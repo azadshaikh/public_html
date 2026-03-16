@@ -179,6 +179,7 @@ class SettingsController extends Controller
         return Inertia::render('master-settings/media', [
             'settings' => [
                 'max_file_name_length' => get_env_value('MEDIA_MAX_FILE_NAME_LENGTH', ''),
+                'max_files_per_upload' => get_env_value('MEDIA_MAX_FILES_PER_UPLOAD', '10'),
                 'max_upload_size' => get_env_value('MEDIA_MAX_SIZE_IN_MB', ''),
                 'allowed_file_types' => trim((string) get_env_value('MEDIA_ALLOWED_FILE_TYPES', ''), '"'),
                 'image_optimization' => $this->toBool(get_env_value('MEDIA_IMAGE_OPTIMIZATION', 'false')),
@@ -995,6 +996,7 @@ class SettingsController extends Controller
         $mediaMappings = [
             // File management settings
             'max_file_name_length' => 'MEDIA_MAX_FILE_NAME_LENGTH',
+            'max_files_per_upload' => 'MEDIA_MAX_FILES_PER_UPLOAD',
             'max_upload_size' => 'MEDIA_MAX_SIZE_IN_MB',
             'allowed_file_types' => 'MEDIA_ALLOWED_FILE_TYPES',
 
@@ -1165,6 +1167,7 @@ class SettingsController extends Controller
             case 'media':
                 $currentState = [
                     'max_file_name_length' => get_env_value('MEDIA_MAX_FILE_NAME_LENGTH', ''),
+                    'max_files_per_upload' => get_env_value('MEDIA_MAX_FILES_PER_UPLOAD', '10'),
                     'max_upload_size' => get_env_value('MEDIA_MAX_SIZE_IN_MB', ''),
                     'allowed_file_types' => trim((string) get_env_value('MEDIA_ALLOWED_FILE_TYPES', ''), '"'),
                     'image_optimization' => get_env_value('MEDIA_IMAGE_OPTIMIZATION', 'false'),
@@ -1559,6 +1562,7 @@ class SettingsController extends Controller
 
             // Media
             'max_file_name_length' => 'Max File Name Length',
+            'max_files_per_upload' => 'Max Files Per Upload',
             'max_upload_size' => 'Max Upload Size (MB)',
             'allowed_file_types' => 'Allowed File Types',
             'image_optimization' => 'Image Conversions',

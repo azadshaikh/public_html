@@ -12,7 +12,8 @@ use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 use Modules\CMS\Models\Theme;
 
 class WidgetController extends Controller implements HasMiddleware
@@ -36,7 +37,7 @@ class WidgetController extends Controller implements HasMiddleware
     /**
      * Display the widget management interface
      */
-    public function index(): View
+    public function index(): Response
     {
         $widgetAreas = get_widget_areas();
         $currentWidgets = [];
@@ -46,16 +47,17 @@ class WidgetController extends Controller implements HasMiddleware
 
         $availableWidgets = get_available_widgets();
 
-        /** @var view-string $view */
-        $view = self::MODULE_PATH.'.index';
-
-        return view($view, ['widgetAreas' => $widgetAreas, 'currentWidgets' => $currentWidgets, 'availableWidgets' => $availableWidgets]);
+        return Inertia::render('cms/widgets/index', [
+            'widgetAreas' => array_values($widgetAreas),
+            'currentWidgets' => $currentWidgets,
+            'availableWidgets' => $availableWidgets,
+        ]);
     }
 
     /**
      * Display the widget management interface for a specific area.
      */
-    public function edit(string $areaId): View
+    public function edit(string $areaId): Response
     {
         $allWidgetAreas = get_widget_areas();
 
@@ -64,18 +66,14 @@ class WidgetController extends Controller implements HasMiddleware
 
         abort_unless($targetArea, 404, 'Widget area not found.');
 
-        // We pass only the target area to the view, but as an array to match the editor's expectation
-        $widgetAreas = [$targetArea];
         $availableWidgets = get_available_widgets();
+        $currentWidgets = theme_get_option('widgets_'.$areaId, []);
 
-        // Get current widgets for the target area only
-        $currentWidgets = [];
-        $currentWidgets[$areaId] = theme_get_option('widgets_'.$areaId, []);
-
-        /** @var view-string $view */
-        $view = self::MODULE_PATH.'.edit';
-
-        return view($view, ['widgetAreas' => $widgetAreas, 'availableWidgets' => $availableWidgets, 'currentWidgets' => $currentWidgets]);
+        return Inertia::render('cms/widgets/edit', [
+            'widgetArea' => $targetArea,
+            'currentWidgets' => array_values((array) $currentWidgets),
+            'availableWidgets' => $availableWidgets,
+        ]);
     }
 
     /**

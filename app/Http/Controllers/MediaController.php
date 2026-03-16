@@ -81,6 +81,7 @@ class MediaController extends Controller
             'data' => [
                 'max_size_mb' => $max_upload_size,
                 'max_size_bytes' => config('media-library.max_file_size'),
+                'max_files_per_upload' => (int) config('media.max_files_per_upload', 10),
                 'accepted_mime_types' => $accepted_file_types,
                 'accepted_types_array' => $allowed_types,
                 'friendly_file_types' => implode(', ', $friendly_categories),

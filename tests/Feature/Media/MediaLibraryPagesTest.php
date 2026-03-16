@@ -76,6 +76,7 @@ class MediaLibraryPagesTest extends TestCase
                 ->component('media/index')
                 ->where('filters.status', 'all')
                 ->where('uploadSettings.upload_route', route('app.media.upload-media'))
+                ->where('uploadSettings.max_files_per_upload', config('media.max_files_per_upload', 10))
                 ->where('statistics.total', 1)
                 ->where('statistics.trash', 0)
                 ->has('media.data', 1)

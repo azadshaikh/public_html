@@ -70,6 +70,7 @@ class BuilderController extends Controller
         $upload_settings = [
             'max_size_mb' => $max_upload_size,
             'max_size_bytes' => config('media-library.max_file_size'),
+            'max_files_per_upload' => (int) config('media.max_files_per_upload', 10),
             'accepted_mime_types' => $accepted_file_types,
             'friendly_file_types' => implode(', ', $friendly_categories),
             'upload_route' => route('app.media.upload-media'),

@@ -52,6 +52,7 @@ export type MediaListItem = {
 export type UploadSettings = {
     max_size_mb: number;
     max_size_bytes: number;
+    max_files_per_upload: number;
     accepted_mime_types: string;
     friendly_file_types: string;
     max_filename_length: number;
