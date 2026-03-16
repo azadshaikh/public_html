@@ -48,8 +48,8 @@ export default defineConfig(({ mode }) => {
             react({
                 babel: useReactCompiler
                     ? {
-                          plugins: ['babel-plugin-react-compiler'],
-                      }
+                        plugins: ['babel-plugin-react-compiler'],
+                    }
                     : undefined,
             }),
             tailwindcss(),
@@ -60,7 +60,12 @@ export default defineConfig(({ mode }) => {
             strictPort: true,
             https: httpsConfig,
             watch: {
-                ignored: ['**/tmp/**'],
+                ignored: [
+                    '**/tmp/**',
+                    '**/node_modules/**',
+                    '**/vendor/**',
+                    '**/storage/**',
+                ],
             },
             cors: {
                 origin: [appOrigin],

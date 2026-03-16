@@ -503,7 +503,7 @@ export default function PageForm({
                         <CardHeader>
                             <CardTitle>Featured image</CardTitle>
                             <CardDescription>
-                                Choose an image from the media library or upload a new one.
+                                Choose an image or upload a new one.
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="flex flex-col gap-4">
@@ -796,9 +796,9 @@ export default function PageForm({
                                             event.target.value === ''
                                                 ? ''
                                                 : Number.parseInt(
-                                                      event.target.value,
-                                                      10,
-                                                  ),
+                                                    event.target.value,
+                                                    10,
+                                                ),
                                         )
                                     }
                                     onBlur={() => form.touch('author_id')}

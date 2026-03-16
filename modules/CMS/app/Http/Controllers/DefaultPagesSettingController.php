@@ -6,10 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Jobs\RecacheApplication;
 use App\Models\Settings;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
+use Modules\CMS\Http\Requests\UpdateDefaultPagesRequest;
 use Modules\CMS\Services\CmsDefaultPagesCacheService;
 use Modules\CMS\Services\PageService;
 
@@ -48,47 +49,35 @@ class DefaultPagesSettingController extends Controller implements HasMiddleware
     /**
      * Display the default pages settings form.
      */
-    public function index(): View
+    public function index(): Response
     {
         $pageOptions = $this->pageService->getPublishedPageOptions();
 
         // Get current settings
         $settings = [
-            'home_page' => setting('cms_default_pages_home_page', ''),
-            'blogs_page' => setting('cms_default_pages_blogs_page', ''),
-            'blog_base_url' => setting('cms_default_pages_blog_base_url', 'blog'),
-            'contact_page' => setting('cms_default_pages_contact_page', ''),
-            'about_page' => setting('cms_default_pages_about_page', ''),
-            'privacy_policy_page' => setting('cms_default_pages_privacy_policy_page', ''),
-            'terms_of_service_page' => setting('cms_default_pages_terms_of_service_page', ''),
-            'blog_same_as_home' => setting('cms_default_pages_blog_same_as_home', false),
+            'home_page' => (string) setting('cms_default_pages_home_page', ''),
+            'blogs_page' => (string) setting('cms_default_pages_blogs_page', ''),
+            'blog_base_url' => (string) setting('cms_default_pages_blog_base_url', 'blog'),
+            'contact_page' => (string) setting('cms_default_pages_contact_page', ''),
+            'about_page' => (string) setting('cms_default_pages_about_page', ''),
+            'privacy_policy_page' => (string) setting('cms_default_pages_privacy_policy_page', ''),
+            'terms_of_service_page' => (string) setting('cms_default_pages_terms_of_service_page', ''),
+            'blog_same_as_home' => (bool) setting('cms_default_pages_blog_same_as_home', false),
         ];
 
-        /** @var view-string $view */
-        $view = 'cms::settings.default_pages';
-
-        return view($view, [
-            'page_title' => 'Default Pages',
+        return Inertia::render('cms/settings/default-pages', [
             'pageOptions' => $pageOptions,
             'settings' => $settings,
+            'publishedPageCount' => count($pageOptions) > 0 ? max(count($pageOptions) - 1, 0) : 0,
         ]);
     }
 
     /**
      * Update default pages settings.
      */
-    public function update(Request $request): RedirectResponse
+    public function update(UpdateDefaultPagesRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'home_page' => ['nullable', 'integer', 'exists:cms_posts,id'],
-            'blogs_page' => ['nullable', 'integer', 'exists:cms_posts,id'],
-            'blog_base_url' => ['nullable', 'string', 'max:50', 'regex:/^[a-z0-9-]*$/'],
-            'contact_page' => ['nullable', 'integer', 'exists:cms_posts,id'],
-            'about_page' => ['nullable', 'integer', 'exists:cms_posts,id'],
-            'privacy_policy_page' => ['nullable', 'integer', 'exists:cms_posts,id'],
-            'terms_of_service_page' => ['nullable', 'integer', 'exists:cms_posts,id'],
-            'blog_same_as_home' => ['nullable', 'boolean'],
-        ]);
+        $validated = $request->validated();
 
         // Handle blog_same_as_home checkbox - if checked, clear blogs_page
         $blogSameAsHome = $request->boolean('blog_same_as_home');

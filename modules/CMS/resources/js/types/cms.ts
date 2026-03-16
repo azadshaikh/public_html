@@ -11,6 +11,23 @@ export type CmsOption = {
     disabled?: boolean;
 };
 
+export type DefaultPagesSettings = {
+    home_page: string;
+    blogs_page: string;
+    blog_base_url: string;
+    contact_page: string;
+    about_page: string;
+    privacy_policy_page: string;
+    terms_of_service_page: string;
+    blog_same_as_home: boolean;
+};
+
+export type DefaultPagesPageProps = {
+    pageOptions: CmsOption[];
+    settings: DefaultPagesSettings;
+    publishedPageCount: number;
+};
+
 // ================================================================
 // Shared scaffold filter state (from collectRequestFilters)
 // ================================================================

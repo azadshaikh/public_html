@@ -371,7 +371,7 @@ export default function TagForm({
                         <CardHeader>
                             <CardTitle>Featured image</CardTitle>
                             <CardDescription>
-                                Choose an image from the media library or upload a new one.
+                                Choose an image or upload a new one.
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="flex flex-col gap-4">
