@@ -191,22 +191,25 @@ function PostSingleSelectCombobox({
     searchPlaceholder = 'Search...',
 }: PostSingleSelectComboboxProps) {
     const selectedOption = React.useMemo(
-        () => options.find((option) => option.value === value),
+        () => options.find((option) => String(option.value) === String(value)) ?? null,
         [options, value],
     );
 
     return (
         <Combobox
-            value={value}
+            items={options}
+            value={selectedOption}
             disabled={disabled}
+            itemToStringLabel={(item) => item?.label ?? ''}
+            itemToStringValue={(item) => item ? [item.label, item.value].join(' ') : ''}
             onValueChange={(newValue) => {
-                onChange(newValue);
+                onChange(newValue ? newValue.value : null);
                 onBlur?.();
             }}
         >
             <ComboboxTrigger
                 id={id}
-                className={className}
+                className={!selectedOption ? `text-muted-foreground ${className || ''}` : className}
                 aria-invalid={invalid || undefined}
                 onBlur={onBlur}
                 render={
@@ -216,9 +219,6 @@ function PostSingleSelectCombobox({
                         size="comfortable"
                         className="w-full justify-between font-normal"
                     />
-                }
-                className={
-                    !selectedOption ? 'text-muted-foreground' : undefined
                 }
             >
                 <span className="truncate">
@@ -969,23 +969,22 @@ export default function PostForm({
                                 }
                             >
                                 <RequiredLabel htmlFor="categories">
-                                    Categories
+                                    Category
                                 </RequiredLabel>
                                 <FieldDescription>
-                                    Select at least one category for this post.
+                                    Select a category for this post.
                                 </FieldDescription>
-                                <MultiSelectCombobox
+                                <PostSingleSelectCombobox
                                     id="categories"
-                                    value={form.data.categories}
-                                    options={categorySelectOptions}
-                                    onValueChange={(value) =>
-                                        form.setField('categories', value)
+                                    value={form.data.categories.length > 0 ? String(form.data.categories[0]) : null}
+                                    options={categorySelectOptions.map(opt => ({ ...opt, value: String(opt.value) }))}
+                                    onChange={(value) =>
+                                        form.setField('categories', value ? [Number.parseInt(value, 10)] : [])
                                     }
                                     onBlur={() => form.touch('categories')}
-                                    placeholder="Select categories"
+                                    placeholder="Select category"
                                     emptyMessage="No categories found."
-                                    size="comfortable"
-                                    aria-invalid={
+                                    invalid={
                                         form.invalid('categories') || undefined
                                     }
                                 />

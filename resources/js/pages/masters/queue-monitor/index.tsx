@@ -1,22 +1,5 @@
 import { router } from '@inertiajs/react';
-import {
-    ActivityIcon,
-    AlertTriangleIcon,
-    BarChart3Icon,
-    CheckCircle2Icon,
-    Clock3Icon,
-    CopyIcon,
-    PauseCircleIcon,
-    PlayCircleIcon,
-    RefreshCwIcon,
-    RotateCcwIcon,
-    SearchXIcon,
-    ServerCogIcon,
-    ShieldAlertIcon,
-    Trash2Icon,
-    WorkflowIcon,
-    XCircleIcon,
-} from 'lucide-react';
+import { ActivityIcon, AlertTriangleIcon, BarChart3Icon, CheckCircle2Icon, Clock3Icon, CopyIcon, ListIcon, PauseCircleIcon, PlayCircleIcon, RefreshCwIcon, RotateCcwIcon, SearchXIcon, ServerCogIcon, ShieldAlertIcon, Trash2Icon, WorkflowIcon, XCircleIcon } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Line, LineChart, CartesianGrid, XAxis, YAxis } from 'recharts';
@@ -230,7 +213,7 @@ export default function QueueMonitorIndex({
             value: 'all',
             count: statistics.total,
             active: filters.status === 'all',
-            icon: <WorkflowIcon />,
+            icon: <ListIcon />,
             countVariant: 'secondary',
         },
         {

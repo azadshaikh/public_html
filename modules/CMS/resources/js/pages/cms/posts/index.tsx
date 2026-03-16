@@ -22,7 +22,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
-import { mapStatusTab } from '../../../lib/helpers';
+import { mapFilters, mapStatusTab } from '../../../lib/helpers';
 import type { PostIndexPageProps, PostListItem } from '../../types/cms';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -118,15 +118,7 @@ export default function PostsIndex({
 
     // ----- Filters -----
 
-    const gridFilters: DatagridFilter[] = [
-        {
-            type: 'search',
-            name: 'search',
-            value: filters.search,
-            placeholder: 'Search posts...',
-            className: 'lg:min-w-80',
-        },
-    ];
+    const gridFilters = mapFilters(config.filters, filters, 'Search posts...');
 
     // ----- Status Tabs -----
 

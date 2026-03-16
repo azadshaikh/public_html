@@ -1,16 +1,5 @@
 import { router } from '@inertiajs/react';
-import {
-    EyeIcon,
-    FileAudioIcon,
-    FileIcon,
-    FileSpreadsheetIcon,
-    FileTextIcon,
-    FileVideoIcon,
-    ImageIcon,
-    ListIcon,
-    RefreshCwIcon,
-    Trash2Icon,
-} from 'lucide-react';
+import { EyeIcon, FileAudioIcon, FileIcon, FileSpreadsheetIcon, FileTextIcon, FileVideoIcon, ImageIcon, ListIcon, RefreshCwIcon, Trash2Icon } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Datagrid } from '@/components/datagrid/datagrid';
 import type {

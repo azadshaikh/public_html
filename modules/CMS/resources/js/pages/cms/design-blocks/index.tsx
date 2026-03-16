@@ -18,7 +18,7 @@ import type {
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
-import { mapStatusTab } from '../../../lib/helpers';
+import { mapFilters, mapStatusTab } from '../../../lib/helpers';
 import type { DesignBlockIndexPageProps, DesignBlockListItem } from '../../types/cms';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -38,12 +38,7 @@ export default function DesignBlocksIndex({ config, rows, filters, statistics, d
         router.post(route('cms.designblock.bulk-action'), { action, ids: selected.map((d) => d.id), status: filters.status }, { preserveScroll: true, onSuccess: () => clearSelection() });
     };
 
-    const gridFilters: DatagridFilter[] = [
-        { type: 'search', name: 'search', value: filters.search, placeholder: 'Search design blocks...', className: 'lg:min-w-80' },
-        { type: 'select', name: 'design_type', value: (filters.design_type as string) ?? '', options: designTypeOptions as DatagridFilterOption[] },
-        { type: 'select', name: 'category_id', value: (filters.category_id as string) ?? '', options: categoryOptions as DatagridFilterOption[] },
-        { type: 'select', name: 'design_system', value: (filters.design_system as string) ?? '', options: designSystemOptions as DatagridFilterOption[] },
-    ];
+    const gridFilters = mapFilters(config.filters, filters, 'Search design blocks...');
 
     const statusTabs: DatagridTab[] = config.statusTabs.map((tab) => mapStatusTab(tab, statistics, filters.status));
 

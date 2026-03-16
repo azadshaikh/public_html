@@ -17,7 +17,7 @@ import type {
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
-import { mapStatusTab } from '../../../lib/helpers';
+import { mapFilters, mapStatusTab } from '../../../lib/helpers';
 import type { PageIndexPageProps, PageListItem } from '../../types/cms';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -37,9 +37,7 @@ export default function PagesIndex({ config, rows, filters, statistics }: PageIn
         router.post(route('cms.pages.bulk-action'), { action, ids: selected.map((p) => p.id), status: filters.status }, { preserveScroll: true, onSuccess: () => clearSelection() });
     };
 
-    const gridFilters: DatagridFilter[] = [
-        { type: 'search', name: 'search', value: filters.search, placeholder: 'Search pages...', className: 'lg:min-w-80' },
-    ];
+    const gridFilters = mapFilters(config.filters, filters, 'Search pages...');
 
     const statusTabs: DatagridTab[] = config.statusTabs.map((tab) => mapStatusTab(tab, statistics, filters.status));
 

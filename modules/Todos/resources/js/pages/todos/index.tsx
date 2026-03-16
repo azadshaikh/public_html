@@ -1,18 +1,5 @@
 import { Link, router, usePage } from '@inertiajs/react';
-import {
-    AlertCircleIcon,
-    CheckCircleIcon,
-    ClipboardListIcon,
-    EyeIcon,
-    ListIcon,
-    PauseCircleIcon,
-    PencilIcon,
-    PlusIcon,
-    RefreshCwIcon,
-    TimerIcon,
-    Trash2Icon,
-    XCircleIcon,
-} from 'lucide-react';
+import { AlertCircleIcon, CheckCircleIcon, ClipboardListIcon, EyeIcon, ListIcon, PauseCircleIcon, PencilIcon, PlusIcon, RefreshCwIcon, TimerIcon, Trash2Icon, XCircleIcon } from 'lucide-react';
 import { Datagrid } from '@/components/datagrid/datagrid';
 import type {
     DatagridAction,

@@ -17,7 +17,7 @@ import type {
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
-import { mapStatusTab } from '../../../lib/helpers';
+import { mapFilters, mapStatusTab } from '../../../lib/helpers';
 import type { FormIndexPageProps, FormListItem } from '../../types/cms';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -37,9 +37,7 @@ export default function FormsIndex({ config, rows, filters, statistics }: FormIn
         router.post(route('cms.form.bulk-action'), { action, ids: selected.map((f) => f.id), status: filters.status }, { preserveScroll: true, onSuccess: () => clearSelection() });
     };
 
-    const gridFilters: DatagridFilter[] = [
-        { type: 'search', name: 'search', value: filters.search, placeholder: 'Search forms...', className: 'lg:min-w-80' },
-    ];
+    const gridFilters = mapFilters(config.filters, filters, 'Search forms...');
 
     const statusTabs: DatagridTab[] = config.statusTabs.map((tab) => mapStatusTab(tab, statistics, filters.status));
 

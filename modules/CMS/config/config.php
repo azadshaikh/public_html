@@ -19,7 +19,7 @@ return [
     */
     'post_status' => [
         'draft' => ['value' => 'draft',          'label' => 'Draft',          'color' => 'warning', 'icon' => 'ri-file-line'],
-        'published' => ['value' => 'published',      'label' => 'Published',      'color' => 'success', 'icon' => 'ri-global-line'],
+        'published' => ['value' => 'published',      'label' => 'Published',      'color' => 'success', 'icon' => 'ri-checkbox-circle-line'],
         // 'pending_review' => ['value' => 'pending_review', 'label' => 'Pending Review', 'color' => 'warning', 'icon' => 'ri-hourglass-line'],
         'scheduled' => ['value' => 'scheduled',      'label' => 'Scheduled',      'color' => 'info',    'icon' => 'ri-time-line'],
     ],

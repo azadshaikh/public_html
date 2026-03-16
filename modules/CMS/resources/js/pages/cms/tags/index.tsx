@@ -17,7 +17,7 @@ import type {
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
-import { mapStatusTab } from '../../../lib/helpers';
+import { mapFilters, mapStatusTab } from '../../../lib/helpers';
 import type { TagIndexPageProps, TagListItem } from '../../types/cms';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -37,9 +37,7 @@ export default function TagsIndex({ config, rows, filters, statistics }: TagInde
         router.post(route('cms.tags.bulk-action'), { action, ids: selected.map((t) => t.id), status: filters.status }, { preserveScroll: true, onSuccess: () => clearSelection() });
     };
 
-    const gridFilters: DatagridFilter[] = [
-        { type: 'search', name: 'search', value: filters.search, placeholder: 'Search tags...', className: 'lg:min-w-80' },
-    ];
+    const gridFilters = mapFilters(config.filters, filters, 'Search tags...');
 
     const statusTabs: DatagridTab[] = config.statusTabs.map((tab) => mapStatusTab(tab, statistics, filters.status));
 

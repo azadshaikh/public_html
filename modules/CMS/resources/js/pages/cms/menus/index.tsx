@@ -19,7 +19,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
-import { mapStatusTab } from '../../../lib/helpers';
+import { mapFilters, mapStatusTab } from '../../../lib/helpers';
 import type { MenuIndexPageProps, MenuListItem } from '../../types/cms';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -39,9 +39,7 @@ export default function MenusIndex({ config, rows, filters, statistics, location
         router.post(route('cms.appearance.menus.bulk-action'), { action, ids: selected.map((m) => m.id), status: filters.status }, { preserveScroll: true, onSuccess: () => clearSelection() });
     };
 
-    const gridFilters: DatagridFilter[] = [
-        { type: 'search', name: 'search', value: filters.search, placeholder: 'Search menus...', className: 'lg:min-w-80' },
-    ];
+    const gridFilters = mapFilters(config.filters, filters, 'Search menus...');
 
     const statusTabs: DatagridTab[] = config.statusTabs.map((tab) => mapStatusTab(tab, statistics, filters.status));
 

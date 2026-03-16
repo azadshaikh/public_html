@@ -88,8 +88,8 @@ class CategoryDefinition extends ScaffoldDefinition
     {
         return [
             StatusTab::make('all')->label('All')->icon('ri-list-check')->color('primary')->default(),
-            StatusTab::make('published')->label('Published')->icon('ri-checkbox-circle-line')->color('success')->value('published'),
             StatusTab::make('draft')->label('Draft')->icon('ri-file-line')->color('warning')->value('draft'),
+            StatusTab::make('published')->label('Published')->icon('ri-checkbox-circle-line')->color('success')->value('published'),
             StatusTab::make('trash')->label('Trash')->icon('ri-delete-bin-line')->color('danger'),
         ];
     }
