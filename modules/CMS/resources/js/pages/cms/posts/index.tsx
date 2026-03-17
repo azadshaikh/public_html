@@ -47,6 +47,8 @@ function getPostDateLabel(post: PostListItem): string {
         : 'Last Modified';
 }
 
+const FEATURED_IMAGE_COLUMN_CLASS = 'w-32 min-w-32';
+
 function PostPreview({ post }: { post: PostListItem }) {
     if (post.featured_image_url) {
         return (
@@ -110,49 +112,54 @@ export default function PostsIndex({
 
     const columns: DatagridColumn<PostListItem>[] = [
         {
+            key: 'featured_image_url',
+            header: '',
+            headerClassName: FEATURED_IMAGE_COLUMN_CLASS,
+            cellClassName: FEATURED_IMAGE_COLUMN_CLASS,
+            cell: (post) => (
+                <Link
+                    href={post.edit_url}
+                    className="block shrink-0 transition-opacity hover:opacity-80"
+                >
+                    <PostPreview post={post} />
+                </Link>
+            ),
+        },
+        {
             key: 'title',
             header: 'Title',
-            headerClassName: 'w-[42%] min-w-[26rem]',
-            cellClassName: 'w-[42%] min-w-[26rem]',
+            headerClassName: 'w-[400px] min-w-[24rem]',
+            cellClassName: 'w-[400px] min-w-[24rem]',
             sortable: true,
             cell: (post) => (
-                <div className="flex min-w-0 items-center gap-4">
-                    <Link
-                        href={post.edit_url}
-                        className="shrink-0 transition-opacity hover:opacity-80"
-                    >
-                        <PostPreview post={post} />
-                    </Link>
-
-                    <div className="min-w-0 flex-1 space-y-1.5">
-                        <div className="flex items-start gap-2">
-                            <Link
-                                href={post.edit_url}
-                                className="line-clamp-2 font-semibold break-words text-foreground hover:underline"
-                            >
-                                {post.title}
-                            </Link>
-                            {post.is_featured ? (
-                                <Badge
-                                    variant="outline"
-                                    className="mt-0.5 shrink-0"
-                                >
-                                    Featured
-                                </Badge>
-                            ) : null}
-                        </div>
-
-                        <div className="flex flex-wrap items-center gap-1.5 pt-1 text-sm sm:gap-2">
+                <div className="min-w-0 space-y-1.5">
+                    <div className="flex items-start gap-2">
+                        <Link
+                            href={post.edit_url}
+                            className="line-clamp-2 font-semibold break-words text-foreground hover:underline"
+                        >
+                            {post.title}
+                        </Link>
+                        {post.is_featured ? (
                             <Badge
-                                variant="secondary"
-                                className="max-w-[150px] bg-muted/50 font-normal hover:bg-muted sm:max-w-[200px]"
+                                variant="outline"
+                                className="mt-0.5 shrink-0"
                             >
-                                <UserIcon className="mr-1.5 size-3 shrink-0 text-muted-foreground" />
-                                <span className="truncate">
-                                    {post.author_name}
-                                </span>
+                                Featured
                             </Badge>
-                        </div>
+                        ) : null}
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-1.5 pt-1 text-sm sm:gap-2">
+                        <Badge
+                            variant="secondary"
+                            className="max-w-[150px] bg-muted/50 font-normal hover:bg-muted sm:max-w-[200px]"
+                        >
+                            <UserIcon className="mr-1.5 size-3 shrink-0 text-muted-foreground" />
+                            <span className="truncate">
+                                {post.author_name}
+                            </span>
+                        </Badge>
                     </div>
                 </div>
             ),
@@ -160,8 +167,8 @@ export default function PostsIndex({
         {
             key: 'categories',
             header: 'Categories',
-            cellClassName: 'w-44',
-            headerClassName: 'w-44',
+            cellClassName: 'w-[180px]',
+            headerClassName: 'w-[180px]',
             cell: (post) => (
                 <div className="flex flex-wrap gap-1.5">
                     {post.categories.length > 0 ? (
@@ -188,8 +195,8 @@ export default function PostsIndex({
         {
             key: 'status_label',
             header: 'Status',
-            headerClassName: 'w-32 text-center',
-            cellClassName: 'w-32 text-center',
+            headerClassName: 'w-[140px] text-center',
+            cellClassName: 'w-[140px] text-center',
             sortable: true,
             sortKey: 'status',
             cell: (post) => (
@@ -207,8 +214,8 @@ export default function PostsIndex({
         {
             key: 'display_date',
             header: 'Date',
-            headerClassName: 'w-52',
-            cellClassName: 'w-52',
+            headerClassName: 'w-[180px]',
+            cellClassName: 'w-[180px]',
             sortable: true,
             sortKey: 'published_at',
             cell: (post) => (

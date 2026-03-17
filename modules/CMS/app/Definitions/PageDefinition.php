@@ -43,7 +43,7 @@ class PageDefinition extends ScaffoldDefinition
             Column::make('featured_image')
                 ->label('')
                 ->template('page_featured_image')
-                ->width('88px'),
+                ->width('128px'),
 
             Column::make('title_with_meta')
                 ->label('Title')
@@ -52,22 +52,17 @@ class PageDefinition extends ScaffoldDefinition
                 ->template('page_title_meta')
                 ->width('400px'),
 
-            Column::make('parent_display')
-                ->label('Parent')
-                ->template('page_parent')
-                ->width('150px'),
-
             Column::make('status')
                 ->label('Status')
                 ->template('badge')
                 ->sortable()
-                ->width('120px'),
+                ->width('140px'),
 
             Column::make('display_date')
                 ->label('Date')
                 ->sortable('published_at')
                 ->template('page_date')
-                ->width('160px'),
+                ->width('180px'),
 
             Column::make('_actions')->label('Actions')->template('actions')->excludeFromExport()->width('80px'),
         ];

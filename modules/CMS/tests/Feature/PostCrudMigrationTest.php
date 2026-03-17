@@ -105,6 +105,11 @@ class PostCrudMigrationTest extends TestCase
             ->assertInertia(fn (Assert $page): Assert => $page
                 ->component('cms/posts/index')
                 ->has('rows.data', 1)
+                ->where('config.columns.1.key', 'featured_image')
+                ->where('config.columns.2.key', 'title_with_meta')
+                ->where('config.columns.3.key', 'categories_display')
+                ->where('config.columns.4.key', 'status')
+                ->where('config.columns.5.key', 'display_date')
                 ->where('rows.data.0.title', $post->title)
                 ->where('rows.data.0.author_name', $this->admin->name)
                 ->where('rows.data.0.featured_image_url', get_media_url($featuredImage, 'thumbnail', usePlaceholder: false))

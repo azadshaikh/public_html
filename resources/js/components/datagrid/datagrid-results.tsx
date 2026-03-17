@@ -76,6 +76,8 @@ type DatagridResultsProps<T> = {
     resolvedSummary?: string;
 };
 
+const SELECTION_COLUMN_WIDTH = '3.5rem';
+
 export function DatagridResults<T>({
     rows,
     empty,
@@ -105,6 +107,14 @@ export function DatagridResults<T>({
 }: DatagridResultsProps<T>) {
     const [confirmBulkAction, setConfirmBulkAction] =
         React.useState<DatagridBulkAction<T> | null>(null);
+    const selectionColumnStyle = React.useMemo(
+        () => ({
+            width: SELECTION_COLUMN_WIDTH,
+            minWidth: SELECTION_COLUMN_WIDTH,
+            maxWidth: SELECTION_COLUMN_WIDTH,
+        }),
+        [],
+    );
     const perPageItems = React.useMemo(
         () =>
             perPage?.options.map((option) => ({
@@ -225,11 +235,17 @@ export function DatagridResults<T>({
                     />
                 ) : (
                     <Table className="table-auto">
+                        <colgroup>
+                            {hasSelection ? (
+                                <col style={selectionColumnStyle} />
+                            ) : null}
+                        </colgroup>
                         <TableHeader>
                             <TableRow className="hover:bg-transparent">
                                 {hasSelection ? (
                                     <TableHead
-                                        className="w-12 cursor-pointer px-4"
+                                        className="cursor-pointer px-4"
+                                        style={selectionColumnStyle}
                                         onClick={(e) => {
                                             if (
                                                 (
@@ -331,6 +347,7 @@ export function DatagridResults<T>({
                                                     rowSelectable &&
                                                         'cursor-pointer',
                                                 )}
+                                                style={selectionColumnStyle}
                                                 onClick={(e) => {
                                                     if (
                                                         !rowSelectable ||
