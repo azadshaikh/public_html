@@ -27,10 +27,7 @@ class ThemeService
      */
     protected ?string $pageJs = null;
 
-    public function __construct(
-        protected TwigService $twigService,
-        protected FrontendFaviconService $frontendFaviconService
-    ) {}
+    public function __construct(protected TwigService $twigService) {}
 
     /**
      * Render template with theme data using Twig
@@ -355,7 +352,6 @@ class ThemeService
      */
     protected function applyFrontendEnhancements(Response $response): Response
     {
-        $response = $this->applyFaviconTags($response);
         $response = $this->applyPageCss($response);
         $response = $this->applyCustomCss($response);
         $response = $this->applyPageJs($response);
@@ -363,64 +359,6 @@ class ThemeService
         $response = $this->applyAdminBar($response);
 
         return $this->applyHtmlMinification($response);
-    }
-
-    /**
-     * Auto-inject favicon markup for frontend themes and remove duplicate theme-defined tags.
-     */
-    protected function applyFaviconTags(Response $response): Response
-    {
-        $contentType = $response->headers->get('Content-Type');
-
-        if ($contentType && ! str_contains(strtolower($contentType), 'text/html')) {
-            return $response;
-        }
-
-        $content = $response->getContent();
-
-        if (! is_string($content) || trim($content) === '') {
-            return $response;
-        }
-
-        $headPos = stripos($content, '</head>');
-        if ($headPos === false) {
-            return $response;
-        }
-
-        // Remove old auto-injected block and any theme-defined favicon tags to prevent duplicates.
-        $content = preg_replace('/<!--\s*cms-auto-favicon:start\s*-->.*?<!--\s*cms-auto-favicon:end\s*-->/is', '', $content) ?? $content;
-        $content = $this->stripExistingFaviconTags($content);
-
-        $faviconMarkup = $this->frontendFaviconService->renderHeadMarkup();
-        $headPos = stripos($content, '</head>');
-
-        if ($headPos === false) {
-            return $response;
-        }
-
-        $updatedContent = substr($content, 0, $headPos).$faviconMarkup.substr($content, $headPos);
-        $response->setContent($updatedContent);
-
-        return $response;
-    }
-
-    /**
-     * Remove existing favicon/manifest related tags so auto-injection remains the single output.
-     */
-    protected function stripExistingFaviconTags(string $content): string
-    {
-        $patterns = [
-            '/<link\b[^>]*\brel\s*=\s*["\'](?:icon|shortcut\s+icon|apple-touch-icon)["\'][^>]*>/i',
-            '/<link\b[^>]*\brel\s*=\s*["\']manifest["\'][^>]*>/i',
-            '/<meta\b[^>]*\bname\s*=\s*["\']theme-color["\'][^>]*>/i',
-            '/<meta\b[^>]*\bname\s*=\s*["\']apple-mobile-web-app-title["\'][^>]*>/i',
-        ];
-
-        foreach ($patterns as $pattern) {
-            $content = preg_replace($pattern, '', $content) ?? $content;
-        }
-
-        return $content;
     }
 
     /**

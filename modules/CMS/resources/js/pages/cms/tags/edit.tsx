@@ -7,16 +7,19 @@ import TagForm from '../../../components/tags/tag-form';
 import type { TagEditPageProps } from '../../../types/cms';
 
 export default function TagsEdit({ tag, ...props }: TagEditPageProps) {
+    const shortTitle =
+        tag.title.length > 40 ? `${tag.title.substring(0, 40)}...` : tag.title;
+
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: route('dashboard') },
         { title: 'Tags', href: route('cms.tags.index') },
-        { title: tag.title, href: route('cms.tags.edit', tag.id) },
+        { title: shortTitle, href: route('cms.tags.edit', tag.id) },
     ];
 
     return (
         <AppLayout
             breadcrumbs={breadcrumbs}
-            title={`Edit: ${tag.title}`}
+            title={`Edit: ${shortTitle}`}
             description="Update the tag content, publishing settings, and metadata."
             headerActions={
                 <div className="flex flex-wrap items-center gap-3">

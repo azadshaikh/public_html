@@ -11,16 +11,21 @@ import PostForm from '../../../components/posts/post-form';
 import type { PostEditPageProps } from '../../../types/cms';
 
 export default function PostsEdit({ post, ...props }: PostEditPageProps) {
+    const shortTitle =
+        post.title.length > 40
+            ? `${post.title.substring(0, 40)}...`
+            : post.title;
+
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: route('dashboard') },
         { title: 'Posts', href: route('cms.posts.index') },
-        { title: post.title, href: route('cms.posts.edit', post.id) },
+        { title: shortTitle, href: route('cms.posts.edit', post.id) },
     ];
 
     return (
         <AppLayout
             breadcrumbs={breadcrumbs}
-            title={`Edit: ${post.title}`}
+            title={`Edit: ${shortTitle}`}
             description="Update the post content, publishing settings, and metadata."
             headerActions={
                 <div className="flex flex-wrap items-center gap-3">

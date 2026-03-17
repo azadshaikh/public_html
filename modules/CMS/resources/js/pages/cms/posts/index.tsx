@@ -9,6 +9,7 @@ import {
     PlusIcon,
     RefreshCwIcon,
     Trash2Icon,
+    UserIcon,
 } from 'lucide-react';
 import { Datagrid } from '@/components/datagrid/datagrid';
 import type {
@@ -64,7 +65,7 @@ function getPostDateLabel(post: PostListItem): string {
 function PostPreview({ post }: { post: PostListItem }) {
     if (post.featured_image_url) {
         return (
-            <div className="flex h-16 w-24 shrink-0 overflow-hidden rounded-md border bg-muted">
+            <div className="flex h-20 w-32 shrink-0 overflow-hidden rounded-md border bg-muted">
                 <img
                     src={post.featured_image_url}
                     alt={post.title}
@@ -76,8 +77,8 @@ function PostPreview({ post }: { post: PostListItem }) {
     }
 
     return (
-        <div className="flex h-16 w-24 shrink-0 items-center justify-center rounded-md border bg-muted/50 text-muted-foreground">
-            <ImageIcon className="size-5" />
+        <div className="flex h-20 w-32 shrink-0 items-center justify-center rounded-md border bg-muted/50 text-muted-foreground">
+            <ImageIcon className="size-6" />
         </div>
     );
 }
@@ -133,42 +134,33 @@ export default function PostsIndex({
                     </Link>
 
                     <div className="min-w-0 flex-1 space-y-1.5 pt-0.5">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-start gap-2">
                             <Link
                                 href={post.edit_url}
-                                className="truncate font-semibold text-foreground hover:underline"
+                                className="line-clamp-2 font-semibold break-words text-foreground hover:underline"
                             >
                                 {post.title}
                             </Link>
                             {post.is_featured ? (
-                                <Badge variant="outline" className="shrink-0">
+                                <Badge
+                                    variant="outline"
+                                    className="mt-0.5 shrink-0"
+                                >
                                     Featured
                                 </Badge>
                             ) : null}
                         </div>
 
-                        <div className="flex min-w-0 items-center gap-2 text-sm">
-                            <span className="truncate font-medium text-foreground/80">
-                                {post.author_name}
-                            </span>
-                            {getPostPath(post) ? (
-                                <>
-                                    <span className="text-muted-foreground/40">
-                                        •
-                                    </span>
-                                    <a
-                                        href={post.permalink_url!}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="flex min-w-0 items-center gap-1 text-muted-foreground transition-colors hover:text-foreground"
-                                    >
-                                        <span className="truncate">
-                                            {getPostPath(post)}
-                                        </span>
-                                        <ExternalLinkIcon className="size-3.5 shrink-0" />
-                                    </a>
-                                </>
-                            ) : null}
+                        <div className="flex flex-wrap items-center gap-1.5 pt-1 text-sm sm:gap-2">
+                            <Badge
+                                variant="secondary"
+                                className="max-w-[150px] bg-muted/50 font-normal hover:bg-muted sm:max-w-[200px]"
+                            >
+                                <UserIcon className="mr-1.5 size-3 shrink-0 text-muted-foreground" />
+                                <span className="truncate">
+                                    {post.author_name}
+                                </span>
+                            </Badge>
                         </div>
                     </div>
                 </div>
@@ -224,8 +216,8 @@ export default function PostsIndex({
         {
             key: 'display_date',
             header: 'Date',
-            headerClassName: 'w-44',
-            cellClassName: 'w-44',
+            headerClassName: 'w-52',
+            cellClassName: 'w-52',
             sortable: true,
             sortKey: 'published_at',
             cell: (post) => (
@@ -418,23 +410,16 @@ export default function PostsIndex({
                                             </Badge>
                                         ) : null}
                                     </div>
-                                    <div className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
-                                        <span className="truncate">
-                                            by {post.author_name}
-                                        </span>
-                                        {getPostPath(post) ? (
-                                            <>
-                                                <span className="text-muted-foreground/50">
-                                                    |
-                                                </span>
-                                                <span className="flex min-w-0 items-center gap-1 truncate">
-                                                    <ExternalLinkIcon className="size-3 shrink-0" />
-                                                    <span className="truncate">
-                                                        {getPostPath(post)}
-                                                    </span>
-                                                </span>
-                                            </>
-                                        ) : null}
+                                    <div className="flex flex-wrap items-center gap-1.5 pt-1 text-sm sm:gap-2">
+                                        <Badge
+                                            variant="secondary"
+                                            className="max-w-[150px] bg-muted/50 font-normal hover:bg-muted sm:max-w-[200px]"
+                                        >
+                                            <UserIcon className="mr-1.5 size-3 shrink-0 text-muted-foreground" />
+                                            <span className="truncate">
+                                                {post.author_name}
+                                            </span>
+                                        </Badge>
                                     </div>
                                 </div>
                             </Link>

@@ -10,11 +10,16 @@ export default function CategoriesEdit({
     category,
     ...props
 }: CategoryEditPageProps) {
+    const shortTitle =
+        category.title.length > 40
+            ? `${category.title.substring(0, 40)}...`
+            : category.title;
+
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: route('dashboard') },
         { title: 'Categories', href: route('cms.categories.index') },
         {
-            title: category.title,
+            title: shortTitle,
             href: route('cms.categories.edit', category.id),
         },
     ];
@@ -22,7 +27,7 @@ export default function CategoriesEdit({
     return (
         <AppLayout
             breadcrumbs={breadcrumbs}
-            title={`Edit: ${category.title}`}
+            title={`Edit: ${shortTitle}`}
             description="Update the category content, publishing settings, and metadata."
             headerActions={
                 <div className="flex flex-wrap items-center gap-3">

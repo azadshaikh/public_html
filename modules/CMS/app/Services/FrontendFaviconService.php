@@ -13,6 +13,16 @@ use Throwable;
 
 class FrontendFaviconService
 {
+    private const array GENERATED_PUBLIC_FILES = [
+        'favicon.ico',
+        'favicon.svg',
+        'favicon-96x96.png',
+        'apple-touch-icon.png',
+        'web-app-manifest-192x192.png',
+        'web-app-manifest-512x512.png',
+        'site.webmanifest',
+    ];
+
     /**
      * Transparent 1x1 PNG fallback.
      */
@@ -27,55 +37,70 @@ class FrontendFaviconService
 
     public function renderHeadMarkup(): string
     {
-        $assetVersion = $this->preparePublicAssets();
-        $manifestVersion = $this->prepareManifest($assetVersion);
+        if (! $this->shouldInjectGeneratedMarkup()) {
+            return '';
+        }
+
+        $assetVersion = $this->resolveAssetVersionForMarkup();
+        $manifestVersion = $this->resolveManifestVersionForMarkup($assetVersion);
         $themeColor = $this->resolveThemeColor();
         $siteTitle = e($this->resolveSiteTitle());
 
-        $svgUrl = $this->buildFrontendAssetUrl('/favicon.svg', $assetVersion);
-        $png96Url = $this->buildFrontendAssetUrl('/favicon-96x96.png', $assetVersion);
-        $icoUrl = $this->buildFrontendAssetUrl('/favicon.ico', $assetVersion);
-        $appleUrl = $this->buildFrontendAssetUrl('/apple-touch-icon.png', $assetVersion);
-        $manifestUrl = $this->buildFrontendAssetUrl('/site.webmanifest', $manifestVersion);
+        $markup = [
+            '',
+            '<!-- cms-auto-favicon:start -->',
+        ];
 
-        return "\n<!-- cms-auto-favicon:start -->\n"
-            .'<link id="cms-auto-favicon-svg" rel="icon" type="image/svg+xml" href="'.$svgUrl.'" />'."\n"
-            .'<link id="cms-auto-favicon-96" rel="icon" type="image/png" sizes="96x96" href="'.$png96Url.'" />'."\n"
-            .'<link id="cms-auto-favicon-ico" rel="shortcut icon" href="'.$icoUrl.'" />'."\n"
-            .'<link id="cms-auto-favicon-apple" rel="apple-touch-icon" sizes="180x180" href="'.$appleUrl.'" />'."\n"
-            .'<meta id="cms-auto-favicon-title" name="apple-mobile-web-app-title" content="'.$siteTitle.'" />'."\n"
-            .'<link id="cms-auto-favicon-manifest" rel="manifest" href="'.$manifestUrl.'" />'."\n"
-            .'<meta id="cms-auto-favicon-theme-color" name="theme-color" content="'.$themeColor.'" />'."\n"
-            ."<!-- cms-auto-favicon:end -->\n";
-    }
-
-    public function preparePublicAssets(): string
-    {
-        $version = $this->getCacheVersion();
-
-        if (! $this->needsGeneration($version)) {
-            return $version;
+        if (is_file(public_path('favicon.svg'))) {
+            $svgUrl = $this->buildFrontendAssetUrl('/favicon.svg', $assetVersion);
+            $markup[] = '<link id="cms-auto-favicon-svg" rel="icon" type="image/svg+xml" href="'.$svgUrl.'" />';
         }
 
-        $this->generateAndPersist($version);
+        if (is_file(public_path('favicon-96x96.png'))) {
+            $png96Url = $this->buildFrontendAssetUrl('/favicon-96x96.png', $assetVersion);
+            $markup[] = '<link id="cms-auto-favicon-96" rel="icon" type="image/png" sizes="96x96" href="'.$png96Url.'" />';
+        }
 
-        return $version;
+        if (is_file(public_path('favicon.ico'))) {
+            $icoUrl = $this->buildFrontendAssetUrl('/favicon.ico', $assetVersion);
+            $markup[] = '<link id="cms-auto-favicon-ico" rel="shortcut icon" href="'.$icoUrl.'" />';
+        }
+
+        if (is_file(public_path('apple-touch-icon.png'))) {
+            $appleUrl = $this->buildFrontendAssetUrl('/apple-touch-icon.png', $assetVersion);
+            $markup[] = '<link id="cms-auto-favicon-apple" rel="apple-touch-icon" sizes="180x180" href="'.$appleUrl.'" />';
+        }
+
+        $markup[] = '<meta id="cms-auto-favicon-title" name="apple-mobile-web-app-title" content="'.$siteTitle.'" />';
+
+        if (is_file(public_path('site.webmanifest'))) {
+            $manifestUrl = $this->buildFrontendAssetUrl('/site.webmanifest', $manifestVersion);
+            $markup[] = '<link id="cms-auto-favicon-manifest" rel="manifest" href="'.$manifestUrl.'" />';
+        }
+
+        $markup[] = '<meta id="cms-auto-favicon-theme-color" name="theme-color" content="'.$themeColor.'" />';
+        $markup[] = '<!-- cms-auto-favicon:end -->';
+
+        return implode("\n", $markup)."\n";
+    }
+
+    public function syncGeneratedAssets(): void
+    {
+        if (! $this->hasCustomFaviconConfigured()) {
+            $this->deleteGeneratedAssets();
+            $this->forgetGeneratedAssetState();
+
+            return;
+        }
+
+        $version = $this->getCacheVersion();
+        $this->generateAndPersist($version);
+        $this->prepareManifest($version);
     }
 
     public function getCacheVersion(): string
     {
         return substr(sha1($this->getSourceSignature()), 0, 16);
-    }
-
-    private function needsGeneration(string $version): bool
-    {
-        $cachedVersion = Cache::get('cms_frontend_favicon_public_version');
-
-        if (! is_string($cachedVersion) || $cachedVersion !== $version) {
-            return true;
-        }
-
-        return ! $this->allPublicAssetsExist();
     }
 
     private function allPublicAssetsExist(): bool
@@ -132,10 +157,6 @@ class FrontendFaviconService
     {
         $manifestVersion = $this->getManifestVersion($assetVersion);
 
-        if (! $this->needsManifestGeneration($manifestVersion)) {
-            return $manifestVersion;
-        }
-
         $manifest = $this->buildManifestJson($assetVersion);
         $this->writeFile(public_path('site.webmanifest'), $manifest);
         Cache::forever('cms_frontend_favicon_manifest_version', $manifestVersion);
@@ -152,19 +173,73 @@ class FrontendFaviconService
         return substr(sha1($assetVersion.'|'.$themeColor.'|'.$backgroundColor.'|'.$siteTitle), 0, 16);
     }
 
-    private function needsManifestGeneration(string $manifestVersion): bool
+    private function shouldInjectGeneratedMarkup(): bool
     {
-        $cachedManifestVersion = Cache::get('cms_frontend_favicon_manifest_version');
+        return $this->hasCustomFaviconConfigured() && $this->hasAnyGeneratedAsset();
+    }
 
-        if (! is_string($cachedManifestVersion) || $cachedManifestVersion !== $manifestVersion) {
-            return true;
+    private function hasCustomFaviconConfigured(): bool
+    {
+        return $this->getCustomFaviconReference() !== null;
+    }
+
+    private function hasAnyGeneratedAsset(): bool
+    {
+        foreach (self::GENERATED_PUBLIC_FILES as $file) {
+            if (is_file(public_path($file))) {
+                return true;
+            }
         }
 
-        return ! is_file(public_path('site.webmanifest'));
+        return false;
+    }
+
+    private function resolveAssetVersionForMarkup(): string
+    {
+        $cachedVersion = Cache::get('cms_frontend_favicon_public_version');
+
+        return is_string($cachedVersion) && $cachedVersion !== ''
+            ? $cachedVersion
+            : $this->getCacheVersion();
+    }
+
+    private function resolveManifestVersionForMarkup(string $assetVersion): string
+    {
+        $cachedVersion = Cache::get('cms_frontend_favicon_manifest_version');
+
+        return is_string($cachedVersion) && $cachedVersion !== ''
+            ? $cachedVersion
+            : $this->getManifestVersion($assetVersion);
+    }
+
+    private function deleteGeneratedAssets(): void
+    {
+        foreach (self::GENERATED_PUBLIC_FILES as $file) {
+            $path = public_path($file);
+
+            if (is_file($path)) {
+                @unlink($path);
+            }
+        }
+    }
+
+    private function forgetGeneratedAssetState(): void
+    {
+        Cache::forget('cms_frontend_favicon_public_version');
+        Cache::forget('cms_frontend_favicon_manifest_version');
+        Cache::forget('cms_frontend_favicon_source_signature');
     }
 
     private function writeFile(string $path, string $contents): void
     {
+        if (is_file($path)) {
+            $existingContents = @file_get_contents($path);
+
+            if (is_string($existingContents) && $existingContents === $contents) {
+                return;
+            }
+        }
+
         $bytes = @file_put_contents($path, $contents, LOCK_EX);
 
         if ($bytes === false) {
@@ -683,13 +758,13 @@ SVG;
 
     private function buildFrontendAssetUrl(string $path, string $version): string
     {
-        $absoluteUrl = url($path);
-        $parts = parse_url($absoluteUrl);
+        $assetPath = '/'.ltrim($path, '/');
+        $parts = parse_url($assetPath);
 
         if ($parts === false) {
-            $separator = str_contains($absoluteUrl, '?') ? '&' : '?';
+            $separator = str_contains($assetPath, '?') ? '&' : '?';
 
-            return $absoluteUrl.$separator.'source=theme&v='.$version;
+            return $assetPath.$separator.'source=theme&v='.$version;
         }
 
         $queryParams = [];
@@ -703,33 +778,7 @@ SVG;
 
         $parts['query'] = http_build_query($queryParams, '', '&', PHP_QUERY_RFC3986);
 
-        $rebuilt = '';
-
-        if (isset($parts['scheme'])) {
-            $rebuilt .= $parts['scheme'].'://';
-        }
-
-        if (isset($parts['user'])) {
-            $rebuilt .= $parts['user'];
-
-            if (isset($parts['pass'])) {
-                $rebuilt .= ':'.$parts['pass'];
-            }
-
-            $rebuilt .= '@';
-        }
-
-        if (isset($parts['host'])) {
-            $rebuilt .= $parts['host'];
-        }
-
-        if (isset($parts['port'])) {
-            $rebuilt .= ':'.$parts['port'];
-        }
-
-        if (isset($parts['path'])) {
-            $rebuilt .= $parts['path'];
-        }
+        $rebuilt = (string) ($parts['path'] ?? $assetPath);
 
         if ($parts['query'] !== '') {
             $rebuilt .= '?'.$parts['query'];

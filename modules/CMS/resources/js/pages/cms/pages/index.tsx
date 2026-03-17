@@ -5,6 +5,7 @@ import {
     PlusIcon,
     RefreshCwIcon,
     Trash2Icon,
+    UserIcon,
 } from 'lucide-react';
 import { Datagrid } from '@/components/datagrid/datagrid';
 import type {
@@ -12,6 +13,7 @@ import type {
     DatagridBulkAction,
     DatagridColumn,
 } from '@/components/datagrid/datagrid';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
@@ -22,6 +24,12 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: route('dashboard') },
     { title: 'Pages', href: route('cms.pages.index') },
 ];
+
+function getPageDateLabel(item: PageListItem): string {
+    return item.status === 'published' && item.published_at_formatted
+        ? 'Published'
+        : 'Last Modified';
+}
 
 export default function PagesIndex({
     config,
@@ -56,26 +64,37 @@ export default function PagesIndex({
             header: 'Title',
             sortable: true,
             cell: (item) => (
-                <Link
-                    href={item.edit_url}
-                    className="flex min-w-0 flex-col gap-1 hover:opacity-80"
-                >
-                    <span className="font-medium text-foreground">
-                        {item.title}
-                    </span>
-                    {item.parent_name && (
-                        <span className="text-xs text-muted-foreground">
-                            in {item.parent_name}
-                        </span>
-                    )}
-                </Link>
+                <div className="flex min-w-0 flex-1 flex-col space-y-1.5 pt-0.5">
+                    <div className="flex items-start gap-2">
+                        <Link
+                            href={item.edit_url}
+                            className="line-clamp-2 font-semibold break-words text-foreground hover:underline"
+                        >
+                            {item.title}
+                        </Link>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-1.5 pt-1 text-sm sm:gap-2">
+                        <Badge
+                            variant="secondary"
+                            className="max-w-[150px] bg-muted/50 font-normal hover:bg-muted sm:max-w-[200px]"
+                        >
+                            <UserIcon className="mr-1.5 size-3 shrink-0 text-muted-foreground" />
+                            <span className="truncate">{item.author_name}</span>
+                        </Badge>
+                        {item.parent_name && (
+                            <>
+                                <span className="hidden pb-0.5 text-muted-foreground/40 sm:inline">
+                                    •
+                                </span>
+                                <span className="max-w-[200px] truncate text-xs text-muted-foreground">
+                                    in {item.parent_name}
+                                </span>
+                            </>
+                        )}
+                    </div>
+                </div>
             ),
-        },
-        {
-            key: 'author_name',
-            header: 'Author',
-            cellClassName: 'w-32 text-sm text-muted-foreground',
-            headerClassName: 'w-32',
         },
         {
             key: 'status_label',
@@ -89,10 +108,20 @@ export default function PagesIndex({
         {
             key: 'display_date',
             header: 'Date',
-            headerClassName: 'w-36',
-            cellClassName: 'w-36 text-sm text-muted-foreground',
+            headerClassName: 'w-52',
+            cellClassName: 'w-52',
             sortable: true,
             sortKey: 'published_at',
+            cell: (item) => (
+                <div className="space-y-0.5 text-sm">
+                    <div className="text-xs text-muted-foreground">
+                        {getPageDateLabel(item)}
+                    </div>
+                    <div className="font-medium text-foreground">
+                        {item.display_date}
+                    </div>
+                </div>
+            ),
         },
     ];
 
@@ -223,6 +252,73 @@ export default function PagesIndex({
                         value: (filters.view as 'table' | 'cards') ?? 'table',
                         storageKey: 'cms-pages-datagrid-view',
                     }}
+                    renderCard={(item) => (
+                        <div className="flex flex-col gap-3">
+                            <Link
+                                href={item.edit_url}
+                                className="flex min-w-0 flex-1 flex-col space-y-1.5 hover:opacity-80"
+                            >
+                                <div className="flex items-start gap-2">
+                                    <span className="line-clamp-2 font-semibold break-words text-foreground">
+                                        {item.title}
+                                    </span>
+                                </div>
+                                <div className="flex flex-wrap items-center gap-1.5 pt-1 text-sm sm:gap-2">
+                                    <Badge
+                                        variant="secondary"
+                                        className="max-w-[150px] bg-muted/50 font-normal hover:bg-muted sm:max-w-[200px]"
+                                    >
+                                        <UserIcon className="mr-1.5 size-3 shrink-0 text-muted-foreground" />
+                                        <span className="truncate">
+                                            {item.author_name}
+                                        </span>
+                                    </Badge>
+                                    {item.parent_name && (
+                                        <>
+                                            <span className="hidden pb-0.5 text-muted-foreground/40 sm:inline">
+                                                •
+                                            </span>
+                                            <span className="max-w-[200px] truncate text-xs text-muted-foreground">
+                                                in {item.parent_name}
+                                            </span>
+                                        </>
+                                    )}
+                                </div>
+                            </Link>
+                            <div className="mt-auto grid gap-3 pt-2 sm:grid-cols-2">
+                                <div className="rounded-lg border bg-muted/30 px-3 py-2">
+                                    <div className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                                        Status
+                                    </div>
+                                    <div className="mt-1">
+                                        <Badge
+                                            variant={
+                                                (item.status === 'published'
+                                                    ? 'success'
+                                                    : item.status === 'draft'
+                                                      ? 'warning'
+                                                      : item.status === 'trash'
+                                                        ? 'destructive'
+                                                        : 'secondary') as Parameters<
+                                                    typeof Badge
+                                                >[0]['variant']
+                                            }
+                                        >
+                                            {item.status_label}
+                                        </Badge>
+                                    </div>
+                                </div>
+                                <div className="rounded-lg border bg-muted/30 px-3 py-2">
+                                    <div className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                                        {getPageDateLabel(item)}
+                                    </div>
+                                    <div className="mt-1 text-sm font-medium text-foreground">
+                                        {item.display_date}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                     empty={{
                         icon: <FileIcon />,
                         title: 'No pages found',

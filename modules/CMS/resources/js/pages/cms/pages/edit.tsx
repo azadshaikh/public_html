@@ -11,16 +11,21 @@ import PageForm from '../../../components/pages/page-form';
 import type { PageEditPageProps } from '../../../types/cms';
 
 export default function PagesEdit({ page, ...props }: PageEditPageProps) {
+    const shortTitle =
+        page.title.length > 40
+            ? `${page.title.substring(0, 40)}...`
+            : page.title;
+
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: route('dashboard') },
         { title: 'Pages', href: route('cms.pages.index') },
-        { title: page.title, href: route('cms.pages.edit', page.id) },
+        { title: shortTitle, href: route('cms.pages.edit', page.id) },
     ];
 
     return (
         <AppLayout
             breadcrumbs={breadcrumbs}
-            title={`Edit: ${page.title}`}
+            title={`Edit: ${shortTitle}`}
             description="Update the page content, publishing settings, and metadata."
             headerActions={
                 <div className="flex flex-wrap items-center gap-3">

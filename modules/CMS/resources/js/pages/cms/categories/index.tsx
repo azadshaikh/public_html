@@ -12,6 +12,7 @@ import type {
     DatagridBulkAction,
     DatagridColumn,
 } from '@/components/datagrid/datagrid';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
@@ -22,6 +23,10 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: route('dashboard') },
     { title: 'Categories', href: route('cms.categories.index') },
 ];
+
+function getCategoryDateLabel(cat: CategoryListItem): string {
+    return 'Created';
+}
 
 export default function CategoriesIndex({
     config,
@@ -56,27 +61,36 @@ export default function CategoriesIndex({
             header: 'Title',
             sortable: true,
             cell: (cat) => (
-                <Link
-                    href={cat.edit_url}
-                    className="flex min-w-0 flex-col gap-1 hover:opacity-80"
-                >
-                    <span className="font-medium text-foreground">
-                        {cat.title}
-                    </span>
+                <div className="flex min-w-0 flex-1 flex-col space-y-1.5 pt-0.5">
+                    <div className="flex items-start gap-2">
+                        <Link
+                            href={cat.edit_url}
+                            className="line-clamp-2 font-semibold break-words text-foreground hover:underline"
+                        >
+                            {cat.title}
+                        </Link>
+                    </div>
                     {cat.parent_name && (
-                        <span className="text-xs text-muted-foreground">
-                            in {cat.parent_name}
-                        </span>
+                        <div className="flex items-center gap-1.5 pt-1 text-sm">
+                            <span className="max-w-[250px] truncate text-xs text-muted-foreground">
+                                in {cat.parent_name}
+                            </span>
+                        </div>
                     )}
-                </Link>
+                </div>
             ),
         },
         {
             key: 'posts_count',
             header: 'Posts',
             headerClassName: 'w-24 text-center',
-            cellClassName: 'w-24 text-center text-sm text-muted-foreground',
+            cellClassName: 'w-24 text-center',
             sortable: true,
+            cell: (cat) => (
+                <Badge variant="secondary" className="bg-muted/50 font-normal">
+                    {cat.posts_count}
+                </Badge>
+            ),
         },
         {
             key: 'status_label',
@@ -90,10 +104,20 @@ export default function CategoriesIndex({
         {
             key: 'display_date',
             header: 'Date',
-            headerClassName: 'w-36',
-            cellClassName: 'w-36 text-sm text-muted-foreground',
+            headerClassName: 'w-52',
+            cellClassName: 'w-52',
             sortable: true,
             sortKey: 'created_at',
+            cell: (cat) => (
+                <div className="space-y-0.5 text-sm">
+                    <div className="text-xs text-muted-foreground">
+                        {getCategoryDateLabel(cat)}
+                    </div>
+                    <div className="font-medium text-foreground">
+                        {cat.display_date}
+                    </div>
+                </div>
+            ),
         },
     ];
 
@@ -232,6 +256,59 @@ export default function CategoriesIndex({
                         value: (filters.view as 'table' | 'cards') ?? 'table',
                         storageKey: 'cms-categories-datagrid-view',
                     }}
+                    renderCard={(cat) => (
+                        <div className="flex flex-col gap-3">
+                            <Link
+                                href={cat.edit_url}
+                                className="flex min-w-0 flex-1 flex-col space-y-1.5 hover:opacity-80"
+                            >
+                                <div className="flex items-start gap-2">
+                                    <span className="line-clamp-2 font-semibold break-words text-foreground">
+                                        {cat.title}
+                                    </span>
+                                </div>
+                                {cat.parent_name && (
+                                    <div className="flex items-center gap-1.5 pt-1 text-sm">
+                                        <span className="max-w-[250px] truncate text-xs text-muted-foreground">
+                                            in {cat.parent_name}
+                                        </span>
+                                    </div>
+                                )}
+                            </Link>
+                            <div className="mt-auto grid gap-3 pt-2 sm:grid-cols-2">
+                                <div className="rounded-lg border bg-muted/30 px-3 py-2">
+                                    <div className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                                        Status
+                                    </div>
+                                    <div className="mt-1">
+                                        <Badge
+                                            variant={
+                                                (cat.status === 'published'
+                                                    ? 'success'
+                                                    : cat.status === 'draft'
+                                                      ? 'warning'
+                                                      : cat.status === 'trash'
+                                                        ? 'destructive'
+                                                        : 'secondary') as Parameters<
+                                                    typeof Badge
+                                                >[0]['variant']
+                                            }
+                                        >
+                                            {cat.status_label}
+                                        </Badge>
+                                    </div>
+                                </div>
+                                <div className="rounded-lg border bg-muted/30 px-3 py-2">
+                                    <div className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                                        {getCategoryDateLabel(cat)}
+                                    </div>
+                                    <div className="mt-1 text-sm font-medium text-foreground">
+                                        {cat.display_date}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                     empty={{
                         icon: <FolderIcon />,
                         title: 'No categories found',

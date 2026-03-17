@@ -7,8 +7,10 @@ use App\Http\Controllers\Controller;
 use App\Jobs\RecacheApplication;
 use App\Models\Settings;
 use App\Services\SettingsService;
+use App\Traits\HasMediaPicker;
 use App\Traits\ActivityTrait;
 use Exception;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
@@ -16,20 +18,25 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Inertia\Inertia;
+use Inertia\Response;
 use Modules\CMS\Models\Theme;
+use Modules\CMS\Services\FrontendFaviconService;
 use Modules\CMS\Services\ThemeConfigService;
 use Modules\CMS\Services\ThemeOptionsCacheService;
 
 class ThemeCustomizerController extends Controller implements HasMiddleware
 {
     use ActivityTrait;
+    use HasMediaPicker;
 
     protected string $activityLogModule = 'Theme Customizer';
 
     protected string $activityEntityAttribute = 'name';
 
     public function __construct(
-        private readonly ThemeOptionsCacheService $themeOptionsCacheService
+        private readonly ThemeOptionsCacheService $themeOptionsCacheService,
+        private readonly FrontendFaviconService $frontendFaviconService
     ) {}
 
     public static function middleware(): array
@@ -51,7 +58,7 @@ class ThemeCustomizerController extends Controller implements HasMiddleware
     /**
      * Show the theme customizer interface
      */
-    public function index(Request $request)
+    public function index(Request $request): Response|RedirectResponse
     {
         try {
             $activeTheme = Theme::getActiveTheme();
@@ -61,19 +68,18 @@ class ThemeCustomizerController extends Controller implements HasMiddleware
                     ->with('error', 'No active theme found. Please activate a theme first.');
             }
 
-            // Get theme customizer settings
-            $settings = $this->getThemeCustomizerSettings($activeTheme['directory']);
-
-            // Get current values
-            $currentValues = $this->getCurrentValues($activeTheme['directory']);
-
-            // Get preview URL
             $previewUrl = $request->query('preview_url', url('/'));
 
-            /** @var view-string $view */
-            $view = 'cms::themes.customizer';
-
-            return view($view, ['activeTheme' => $activeTheme, 'settings' => $settings, 'currentValues' => $currentValues, 'previewUrl' => $previewUrl]);
+            return Inertia::render('cms/themes/customizer/index', [
+                'activeTheme' => $this->mapThemeSummary($activeTheme),
+                'sections' => $this->buildCustomizerSections($activeTheme['directory']),
+                'initialValues' => $this->decodeCodeEditorValues(
+                    $activeTheme['directory'],
+                    $this->getCurrentValues($activeTheme['directory'])
+                ),
+                'previewUrl' => $previewUrl,
+                ...$this->getMediaPickerProps(),
+            ]);
         } catch (Exception $exception) {
             Log::error('Theme customizer index error: '.$exception->getMessage(), [
                 'file' => $exception->getFile(),
@@ -84,6 +90,24 @@ class ThemeCustomizerController extends Controller implements HasMiddleware
             return to_route('cms.appearance.themes.index')
                 ->with('error', 'Failed to load theme customizer: '.$exception->getMessage());
         }
+    }
+
+    /**
+     * @param  array<string, mixed>  $theme
+     * @return array<string, mixed>
+     */
+    private function mapThemeSummary(array $theme): array
+    {
+        return [
+            'name' => $theme['name'] ?? Str::headline((string) ($theme['directory'] ?? 'Theme')),
+            'directory' => $theme['directory'] ?? null,
+            'description' => $theme['description'] ?? null,
+            'screenshot' => $theme['screenshot'] ?? null,
+            'author' => $theme['author'] ?? null,
+            'version' => $theme['version'] ?? null,
+            'is_child' => $theme['is_child'] ?? false,
+            'parent' => $theme['parent'] ?? null,
+        ];
     }
 
     /**
@@ -147,6 +171,7 @@ class ThemeCustomizerController extends Controller implements HasMiddleware
 
             // Save branding settings to App Settings (database)
             $this->saveBrandingToAppSettings($brandingSettings);
+            $this->syncFrontendFaviconAssets($brandingSettings);
 
             // Save theme-specific settings to theme options.json
             if ($themeSettings !== []) {
@@ -239,6 +264,7 @@ class ThemeCustomizerController extends Controller implements HasMiddleware
         // Reset branding defaults to App Settings
         if ($brandingSettings !== []) {
             $this->saveBrandingToAppSettings($brandingSettings);
+            $this->syncFrontendFaviconAssets($brandingSettings);
             // Note: Settings cache is automatically invalidated by SettingsObserver
         }
 
@@ -326,6 +352,7 @@ class ThemeCustomizerController extends Controller implements HasMiddleware
 
             if ($brandingSettings !== []) {
                 $this->saveBrandingToAppSettings($brandingSettings);
+                $this->syncFrontendFaviconAssets($brandingSettings);
                 // Note: Settings cache is automatically invalidated by SettingsObserver
             }
 
@@ -451,6 +478,65 @@ class ThemeCustomizerController extends Controller implements HasMiddleware
 
         // Return just Site Identity if no theme settings found
         return ['sections' => $sections];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function buildCustomizerSections(string $themeDirectory): array
+    {
+        $settings = $this->getThemeCustomizerSettings($themeDirectory);
+        $sections = $settings['sections'] ?? [];
+
+        $sections['custom_code'] = [
+            'title' => 'Custom Code',
+            'description' => 'Add custom CSS and JavaScript snippets for this theme.',
+            'settings' => [
+                'custom_css' => [
+                    'label' => 'Custom CSS',
+                    'type' => 'code_editor',
+                    'language' => 'css',
+                    'default' => '',
+                    'helper_text' => 'Injected into the document head after theme styles.',
+                ],
+                'custom_js' => [
+                    'label' => 'Custom JavaScript',
+                    'type' => 'code_editor',
+                    'language' => 'javascript',
+                    'default' => '',
+                    'helper_text' => 'Injected before the closing body tag.',
+                ],
+            ],
+        ];
+
+        return $sections;
+    }
+
+    /**
+     * @param  array<string, mixed>  $values
+     * @return array<string, mixed>
+     */
+    private function decodeCodeEditorValues(string $themeDirectory, array $values): array
+    {
+        $codeFields = array_unique(array_merge(
+            ['custom_css', 'custom_js'],
+            $this->getCodeFieldKeys($themeDirectory)
+        ));
+
+        foreach ($codeFields as $field) {
+            $rawValue = $values[$field] ?? '';
+
+            if (! is_string($rawValue) || $rawValue === '') {
+                $values[$field] = '';
+
+                continue;
+            }
+
+            $decoded = base64_decode($rawValue, true);
+            $values[$field] = $decoded !== false ? $decoded : $rawValue;
+        }
+
+        return $values;
     }
 
     /**
@@ -584,6 +670,31 @@ class ThemeCustomizerController extends Controller implements HasMiddleware
         }
 
         return $favicon;
+    }
+
+    /**
+     * Sync generated favicon assets only when branding settings that affect them were changed.
+     *
+     * @param  array<string, mixed>  $brandingSettings
+     */
+    private function syncFrontendFaviconAssets(array $brandingSettings): void
+    {
+        if ($brandingSettings === []) {
+            return;
+        }
+
+        $relevantKeys = [
+            'favicon',
+            'site_title',
+            'primary_color',
+            'secondary_color',
+        ];
+
+        if (array_intersect(array_keys($brandingSettings), $relevantKeys) === []) {
+            return;
+        }
+
+        $this->frontendFaviconService->syncGeneratedAssets();
     }
 
     /**
