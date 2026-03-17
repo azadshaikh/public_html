@@ -85,7 +85,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useDirtyFormGuard } from '@/hooks/use-dirty-form-guard';
 import { cn } from '@/lib/utils';
-import ThemeCustomizerLayout from '../../../components/theme-customizer/theme-customizer-layout';
+import ThemeCustomizerLayout from '../../../../components/theme-customizer/theme-customizer-layout';
 import type {
     ThemeCustomizerField,
     ThemeCustomizerPageProps,
@@ -480,21 +480,6 @@ export default function ThemeCustomizerIndex({
         };
     }, [values]);
 
-    useEffect(() => {
-        const onKeyDown = (event: KeyboardEvent) => {
-            if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
-                event.preventDefault();
-                void handleSave();
-            }
-        };
-
-        window.addEventListener('keydown', onKeyDown);
-
-        return () => {
-            window.removeEventListener('keydown', onKeyDown);
-        };
-    }, [handleSave]);
-
     const handlePreviewLoad = useCallback(() => {
         injectPreviewCss(latestPreviewCssRef.current);
         installPreviewInterceptors();
@@ -551,6 +536,21 @@ export default function ThemeCustomizerIndex({
             setIsSaving(false);
         }
     }, [refreshPreview, values]);
+
+    useEffect(() => {
+        const onKeyDown = (event: KeyboardEvent) => {
+            if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
+                event.preventDefault();
+                void handleSave();
+            }
+        };
+
+        window.addEventListener('keydown', onKeyDown);
+
+        return () => {
+            window.removeEventListener('keydown', onKeyDown);
+        };
+    }, [handleSave]);
 
     const handleReset = useCallback(async () => {
         try {
