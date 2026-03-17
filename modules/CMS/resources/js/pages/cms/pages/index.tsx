@@ -53,7 +53,27 @@ function PagePreview({ page }: { page: PageListItem }) {
     );
 }
 
+function formatPermalinkLabel(
+    permalinkUrl: string | null,
+    slug: string,
+): string {
+    if (!permalinkUrl) {
+        return `/${slug}`;
+    }
+
+    try {
+        const parsedUrl = new URL(permalinkUrl, 'https://example.test');
+        const label = `${parsedUrl.pathname}${parsedUrl.search}${parsedUrl.hash}`;
+
+        return label === '' ? `/${slug}` : label;
+    } catch {
+        return permalinkUrl;
+    }
+}
+
 function PageMeta({ page }: { page: PageListItem }) {
+    const permalinkLabel = formatPermalinkLabel(page.permalink_url, page.slug);
+
     return (
         <div className="flex flex-wrap items-center gap-1.5 pt-1 text-sm sm:gap-2">
             {page.permalink_url ? (
@@ -64,12 +84,12 @@ function PageMeta({ page }: { page: PageListItem }) {
                     className="inline-flex max-w-[18rem] items-center gap-1 font-mono text-xs leading-none text-muted-foreground transition-colors hover:text-foreground"
                 >
                     <ExternalLinkIcon className="size-3.5 shrink-0" />
-                    <span className="truncate leading-none pt-1">/{page.slug}</span>
+                    <span className="truncate leading-none">{permalinkLabel}</span>
                 </a>
             ) : (
                 <span className="inline-flex max-w-[18rem] items-center gap-1 font-mono text-xs leading-none text-muted-foreground">
                     <ExternalLinkIcon className="size-3.5 shrink-0" />
-                    <span className="truncate leading-none">/{page.slug}</span>
+                    <span className="truncate leading-none">{permalinkLabel}</span>
                 </span>
             )}
             {page.parent_name ? (
