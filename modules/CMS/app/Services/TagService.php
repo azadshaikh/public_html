@@ -113,6 +113,7 @@ class TagService implements ScaffoldServiceInterface
     protected function getEagerLoadRelationships(): array
     {
         return [
+            'featuredImage',
             'createdBy:id,name',
             'updatedBy:id,name',
         ];

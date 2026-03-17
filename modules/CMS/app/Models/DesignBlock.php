@@ -116,7 +116,7 @@ class DesignBlock extends CmsPost
         ];
     }
 
-    protected static function boot(): void
+    public static function boot(): void
     {
         parent::boot();
 

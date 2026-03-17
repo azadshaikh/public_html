@@ -317,7 +317,7 @@ export default function PageForm({
                                         }
                                     >
                                         <FieldLabel htmlFor="excerpt">
-                                            Excerpt
+                                            Excerpt (optional)
                                         </FieldLabel>
                                         <Textarea
                                             id="excerpt"

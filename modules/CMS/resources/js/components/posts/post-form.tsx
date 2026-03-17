@@ -41,6 +41,10 @@ import {
 import { Input } from '@/components/ui/input';
 import { MultiSelectCombobox } from '@/components/ui/multi-select-combobox';
 import {
+    NativeSelect,
+    NativeSelectOption,
+} from '@/components/ui/native-select';
+import {
     PanelTabs,
     PanelTabsContent,
     PanelTabsList,
@@ -168,7 +172,6 @@ type PostSingleSelectComboboxProps = {
     placeholder?: string;
     invalid?: boolean;
     searchable?: boolean;
-    clearable?: boolean;
     disabled?: boolean;
     className?: string;
     emptyMessage?: string;
@@ -184,13 +187,12 @@ function PostSingleSelectCombobox({
     placeholder = 'Select an option...',
     invalid = false,
     searchable = false,
-    clearable = false,
     disabled = false,
     className,
     emptyMessage = 'No results found.',
     searchPlaceholder = 'Search...',
 }: PostSingleSelectComboboxProps) {
-    const selectedOption = React.useMemo(
+    const selectedOption = useMemo(
         () =>
             options.find((option) => String(option.value) === String(value)) ??
             null,
@@ -202,6 +204,7 @@ function PostSingleSelectCombobox({
             items={options}
             value={selectedOption}
             disabled={disabled}
+            autoComplete={searchable ? 'list' : 'none'}
             itemToStringLabel={(item) => item?.label ?? ''}
             itemToStringValue={(item) =>
                 item ? [item.label, item.value].join(' ') : ''
@@ -504,7 +507,7 @@ export default function PostForm({
                                 }
                             >
                                 <FieldLabel htmlFor="excerpt">
-                                    Excerpt
+                                    Excerpt (optional)
                                 </FieldLabel>
                                 <Textarea
                                     id="excerpt"
@@ -866,12 +869,16 @@ export default function PostForm({
                                     <RequiredLabel htmlFor="status">
                                         Status
                                     </RequiredLabel>
-                                    <PostSingleSelectCombobox
+                                    <NativeSelect
                                         id="status"
                                         value={form.data.status}
-                                        options={statusSelectOptions}
-                                        onChange={(value) => {
-                                            const nextStatus = value ?? '';
+                                        className="w-full"
+                                        aria-invalid={
+                                            form.invalid('status') || undefined
+                                        }
+                                        onChange={(event) => {
+                                            const nextStatus =
+                                                event.target.value;
                                             form.setField('status', nextStatus);
 
                                             if (
@@ -885,11 +892,17 @@ export default function PostForm({
                                             }
                                         }}
                                         onBlur={() => form.touch('status')}
-                                        placeholder="Select status"
-                                        invalid={
-                                            form.invalid('status') || undefined
-                                        }
-                                    />
+                                    >
+                                        {statusSelectOptions.map((option) => (
+                                            <NativeSelectOption
+                                                key={`status-${option.value}`}
+                                                value={option.value}
+                                                disabled={option.disabled}
+                                            >
+                                                {option.label}
+                                            </NativeSelectOption>
+                                        ))}
+                                    </NativeSelect>
                                     <FieldError>
                                         {form.error('status')}
                                     </FieldError>
@@ -903,12 +916,17 @@ export default function PostForm({
                                     <FieldLabel htmlFor="visibility">
                                         Visibility
                                     </FieldLabel>
-                                    <PostSingleSelectCombobox
+                                    <NativeSelect
                                         id="visibility"
                                         value={form.data.visibility}
-                                        options={visibilitySelectOptions}
-                                        onChange={(value) => {
-                                            const nextVisibility = value ?? '';
+                                        className="w-full"
+                                        aria-invalid={
+                                            form.invalid('visibility') ||
+                                            undefined
+                                        }
+                                        onChange={(event) => {
+                                            const nextVisibility =
+                                                event.target.value;
                                             form.setField(
                                                 'visibility',
                                                 nextVisibility,
@@ -926,12 +944,19 @@ export default function PostForm({
                                             }
                                         }}
                                         onBlur={() => form.touch('visibility')}
-                                        placeholder="Select visibility"
-                                        invalid={
-                                            form.invalid('visibility') ||
-                                            undefined
-                                        }
-                                    />
+                                    >
+                                        {visibilitySelectOptions.map(
+                                            (option) => (
+                                                <NativeSelectOption
+                                                    key={`visibility-${option.value}`}
+                                                    value={option.value}
+                                                    disabled={option.disabled}
+                                                >
+                                                    {option.label}
+                                                </NativeSelectOption>
+                                            ),
+                                        )}
+                                    </NativeSelect>
                                     <FieldError>
                                         {form.error('visibility')}
                                     </FieldError>
@@ -988,34 +1013,45 @@ export default function PostForm({
                                 <FieldDescription>
                                     Select a category for this post.
                                 </FieldDescription>
-                                <PostSingleSelectCombobox
+                                <NativeSelect
                                     id="categories"
                                     value={
                                         form.data.categories.length > 0
                                             ? String(form.data.categories[0])
-                                            : null
+                                            : ''
                                     }
-                                    options={categorySelectOptions.map(
-                                        (opt) => ({
-                                            ...opt,
-                                            value: String(opt.value),
-                                        }),
-                                    )}
-                                    onChange={(value) =>
+                                    className="w-full"
+                                    aria-invalid={
+                                        form.invalid('categories') || undefined
+                                    }
+                                    onChange={(event) =>
                                         form.setField(
                                             'categories',
-                                            value
-                                                ? [Number.parseInt(value, 10)]
+                                            event.target.value
+                                                ? [
+                                                      Number.parseInt(
+                                                          event.target.value,
+                                                          10,
+                                                      ),
+                                                  ]
                                                 : [],
                                         )
                                     }
                                     onBlur={() => form.touch('categories')}
-                                    placeholder="Select category"
-                                    emptyMessage="No categories found."
-                                    invalid={
-                                        form.invalid('categories') || undefined
-                                    }
-                                />
+                                >
+                                    <NativeSelectOption value="">
+                                        Select category
+                                    </NativeSelectOption>
+                                    {categorySelectOptions.map((option) => (
+                                        <NativeSelectOption
+                                            key={`category-${option.value}`}
+                                            value={String(option.value)}
+                                            disabled={option.disabled}
+                                        >
+                                            {option.label}
+                                        </NativeSelectOption>
+                                    ))}
+                                </NativeSelect>
                                 <FieldError>
                                     {getArrayFieldError('categories')}
                                 </FieldError>

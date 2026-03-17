@@ -1,5 +1,7 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import {
+    ExternalLinkIcon,
+    ImageIcon,
     PencilIcon,
     PlusIcon,
     RefreshCwIcon,
@@ -15,8 +17,8 @@ import type {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
-import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
 import { buildScaffoldDatagridState } from '@/lib/scaffold-datagrid';
+import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
 import type { TagIndexPageProps, TagListItem } from '../../../types/cms';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -24,8 +26,52 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Tags', href: route('cms.tags.index') },
 ];
 
-function getTagDateLabel(tag: TagListItem): string {
+function getTagDateLabel(): string {
     return 'Created';
+}
+
+function TagPreview({ tag }: { tag: TagListItem }) {
+    if (tag.featured_image_url) {
+        return (
+            <div className="flex h-20 w-32 shrink-0 overflow-hidden rounded-md border bg-muted">
+                <img
+                    src={tag.featured_image_url}
+                    alt={tag.title}
+                    className="h-full w-full object-cover"
+                    loading="lazy"
+                />
+            </div>
+        );
+    }
+
+    return (
+        <div className="flex h-20 w-32 shrink-0 items-center justify-center rounded-md border bg-muted/50 text-muted-foreground">
+            <ImageIcon className="size-6" />
+        </div>
+    );
+}
+
+function TagMeta({ tag }: { tag: TagListItem }) {
+    return (
+        <div className="flex flex-wrap items-center gap-1.5 pt-1 text-sm sm:gap-2">
+            {tag.permalink_url ? (
+                <a
+                    href={tag.permalink_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex max-w-[18rem] items-center gap-1 font-mono text-xs leading-none text-muted-foreground transition-colors hover:text-foreground"
+                >
+                    <ExternalLinkIcon className="size-3.5 shrink-0" />
+                    <span className="truncate leading-none pt-1">/{tag.slug}</span>
+                </a>
+            ) : (
+                <span className="inline-flex max-w-[18rem] items-center gap-1 font-mono text-xs leading-none text-muted-foreground">
+                    <ExternalLinkIcon className="size-3.5 shrink-0" />
+                    <span className="truncate leading-none">/{tag.slug}</span>
+                </span>
+            )}
+        </div>
+    );
 }
 
 export default function TagsIndex({
@@ -61,16 +107,29 @@ export default function TagsIndex({
         {
             key: 'title',
             header: 'Title',
+            headerClassName: 'w-[42%] min-w-[26rem]',
+            cellClassName: 'w-[42%] min-w-[26rem]',
             sortable: true,
             cell: (tag) => (
-                <div className="flex min-w-0 flex-1 flex-col space-y-1.5 pt-0.5">
-                    <div className="flex items-start gap-2">
-                        <Link
-                            href={tag.edit_url}
-                            className="line-clamp-2 font-semibold break-words text-foreground hover:underline"
-                        >
-                            {tag.title}
-                        </Link>
+                <div className="flex min-w-0 items-center gap-4">
+                    <Link
+                        href={tag.edit_url}
+                        className="shrink-0 transition-opacity hover:opacity-80"
+                    >
+                        <TagPreview tag={tag} />
+                    </Link>
+
+                    <div className="min-w-0 flex-1 space-y-1.5">
+                        <div className="flex items-start gap-2">
+                            <Link
+                                href={tag.edit_url}
+                                className="line-clamp-2 font-semibold break-words text-foreground hover:underline"
+                            >
+                                {tag.title}
+                            </Link>
+                        </div>
+
+                        <TagMeta tag={tag} />
                     </div>
                 </div>
             ),
@@ -244,16 +303,25 @@ export default function TagsIndex({
                     }}
                     renderCard={(tag) => (
                         <div className="flex flex-col gap-3">
-                            <Link
-                                href={tag.edit_url}
-                                className="flex min-w-0 flex-1 flex-col space-y-1.5 hover:opacity-80"
-                            >
-                                <div className="flex items-start gap-2">
-                                    <span className="line-clamp-2 font-semibold break-words text-foreground">
-                                        {tag.title}
-                                    </span>
-                                </div>
-                            </Link>
+                            <div className="flex items-center gap-3">
+                                <Link
+                                    href={tag.edit_url}
+                                    className="shrink-0 transition-opacity hover:opacity-80"
+                                >
+                                    <TagPreview tag={tag} />
+                                </Link>
+                                <Link
+                                    href={tag.edit_url}
+                                    className="flex min-w-0 flex-1 flex-col space-y-1.5 hover:opacity-80"
+                                >
+                                    <div className="flex items-start gap-2">
+                                        <span className="line-clamp-2 font-semibold break-words text-foreground">
+                                            {tag.title}
+                                        </span>
+                                    </div>
+                                    <TagMeta tag={tag} />
+                                </Link>
+                            </div>
                             <div className="mt-auto grid gap-3 pt-2 sm:grid-cols-2">
                                 <div className="rounded-lg border bg-muted/30 px-3 py-2">
                                     <div className="text-xs font-medium tracking-wide text-muted-foreground uppercase">

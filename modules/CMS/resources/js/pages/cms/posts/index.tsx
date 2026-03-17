@@ -2,7 +2,6 @@ import { Link, router, usePage } from '@inertiajs/react';
 import {
     CopyIcon,
     EyeIcon,
-    ExternalLinkIcon,
     FileTextIcon,
     ImageIcon,
     PencilIcon,
@@ -20,8 +19,8 @@ import type {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
-import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
 import { buildScaffoldDatagridState } from '@/lib/scaffold-datagrid';
+import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
 import type { PostIndexPageProps, PostListItem } from '../../../types/cms';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -40,20 +39,6 @@ const STATUS_BADGE_VARIANT: Record<string, string> = {
 
 function statusBadgeVariant(status: string): string {
     return STATUS_BADGE_VARIANT[status] ?? 'secondary';
-}
-
-function getPostPath(post: PostListItem): string | null {
-    if (!post.permalink_url) {
-        return null;
-    }
-
-    try {
-        const url = new URL(post.permalink_url, window.location.origin);
-
-        return url.pathname === '/' ? '/' : url.pathname.replace(/\/$/, '');
-    } catch {
-        return post.permalink_url;
-    }
 }
 
 function getPostDateLabel(post: PostListItem): string {
@@ -127,9 +112,11 @@ export default function PostsIndex({
         {
             key: 'title',
             header: 'Title',
+            headerClassName: 'w-[42%] min-w-[26rem]',
+            cellClassName: 'w-[42%] min-w-[26rem]',
             sortable: true,
             cell: (post) => (
-                <div className="flex min-w-0 items-start gap-4">
+                <div className="flex min-w-0 items-center gap-4">
                     <Link
                         href={post.edit_url}
                         className="shrink-0 transition-opacity hover:opacity-80"
@@ -137,7 +124,7 @@ export default function PostsIndex({
                         <PostPreview post={post} />
                     </Link>
 
-                    <div className="min-w-0 flex-1 space-y-1.5 pt-0.5">
+                    <div className="min-w-0 flex-1 space-y-1.5">
                         <div className="flex items-start gap-2">
                             <Link
                                 href={post.edit_url}

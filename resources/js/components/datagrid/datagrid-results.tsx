@@ -327,7 +327,7 @@ export function DatagridResults<T>({
                                         {hasSelection ? (
                                             <TableCell
                                                 className={cn(
-                                                    'px-4 py-3 align-top',
+                                                    'px-4 py-3 align-middle',
                                                     rowSelectable &&
                                                         'cursor-pointer',
                                                 )}
@@ -368,7 +368,7 @@ export function DatagridResults<T>({
                                             <TableCell
                                                 key={`${rowKey}-${column.key}`}
                                                 className={cn(
-                                                    'px-4 py-3 align-top whitespace-normal',
+                                                    'px-4 py-3 align-middle whitespace-normal',
                                                     column.cellClassName,
                                                 )}
                                             >
@@ -404,7 +404,7 @@ export function DatagridResults<T>({
                                             </TableCell>
                                         ))}
                                         {rowActions ? (
-                                            <TableCell className="px-4 py-3 text-right align-top">
+                                            <TableCell className="px-4 py-3 text-right align-middle">
                                                 <DatagridActionMenu
                                                     actions={actions ?? []}
                                                 />

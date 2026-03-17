@@ -329,6 +329,7 @@ export type CategoryListItem = {
     title: string;
     title_with_meta: string;
     slug: string;
+    featured_image_url: string | null;
     status: string;
     status_label: string;
     status_class: string;
@@ -395,6 +396,7 @@ export type TagListItem = {
     title: string;
     title_with_meta: string;
     slug: string;
+    featured_image_url: string | null;
     status: string;
     status_label: string;
     status_class: string;
@@ -766,14 +768,14 @@ export type WidgetArea = {
 
 export type WidgetSettingField = {
     type:
-        | 'text'
-        | 'textarea'
-        | 'select'
-        | 'checkbox'
-        | 'color'
-        | 'url'
-        | 'email'
-        | string;
+    | 'text'
+    | 'textarea'
+    | 'select'
+    | 'checkbox'
+    | 'color'
+    | 'url'
+    | 'email'
+    | string;
     label: string;
     default: string | boolean | number;
     description?: string;

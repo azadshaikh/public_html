@@ -1,7 +1,7 @@
 'use client';
 
 import { Link, router } from '@inertiajs/react';
-import { CodeIcon, SaveIcon, Settings2Icon, Trash2Icon } from 'lucide-react';
+import { SaveIcon, Settings2Icon, Trash2Icon } from 'lucide-react';
 import type { FormEvent } from 'react';
 import { MonacoEditor } from '@/components/code-editor/monaco-editor';
 import { FormErrorSummary } from '@/components/forms/form-error-summary';
@@ -25,8 +25,13 @@ import {
     NativeSelect,
     NativeSelectOption,
 } from '@/components/ui/native-select';
+import {
+    PanelTabs,
+    PanelTabsContent,
+    PanelTabsList,
+    PanelTabsTrigger,
+} from '@/components/ui/panel-tabs';
 import { Spinner } from '@/components/ui/spinner';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { useAppForm } from '@/hooks/use-app-form';
 import { formValidators } from '@/lib/forms';
@@ -154,83 +159,49 @@ export default function DesignBlockForm({
 
             <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
                 <div className="flex flex-col gap-6">
-                    <Card>
-                        <CardHeader>
-                            <div className="flex items-center gap-2">
-                                <CodeIcon className="size-4 text-muted-foreground" />
-                                <CardTitle>Block content</CardTitle>
-                            </div>
-                            <CardDescription>
-                                Write the markup, styles, and scripts for this
-                                reusable design block.
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="flex flex-col gap-6">
-                            <Field
-                                data-invalid={
-                                    form.invalid('title') || undefined
-                                }
-                            >
-                                <RequiredLabel htmlFor="title">
-                                    Title
-                                </RequiredLabel>
-                                <Input
-                                    id="title"
-                                    value={form.data.title}
-                                    onChange={(event) =>
-                                        form.setField(
-                                            'title',
-                                            event.target.value,
-                                        )
-                                    }
-                                    onBlur={() => form.touch('title')}
-                                    aria-invalid={
-                                        form.invalid('title') || undefined
-                                    }
-                                    placeholder="Enter design block title"
-                                />
-                                <FieldError>{form.error('title')}</FieldError>
-                            </Field>
+                    <Field data-invalid={form.invalid('title') || undefined}>
+                        <RequiredLabel htmlFor="title">Title</RequiredLabel>
+                        <Input
+                            id="title"
+                            value={form.data.title}
+                            onChange={(event) =>
+                                form.setField('title', event.target.value)
+                            }
+                            onBlur={() => form.touch('title')}
+                            aria-invalid={form.invalid('title') || undefined}
+                            placeholder="Enter design block title"
+                        />
+                        <FieldError>{form.error('title')}</FieldError>
+                    </Field>
 
-                            <Field
-                                data-invalid={
-                                    form.invalid('description') || undefined
-                                }
-                            >
-                                <FieldLabel htmlFor="description">
-                                    Description
-                                </FieldLabel>
-                                <Textarea
-                                    id="description"
-                                    rows={3}
-                                    value={form.data.description}
-                                    onChange={(event) =>
-                                        form.setField(
-                                            'description',
-                                            event.target.value,
-                                        )
-                                    }
-                                    onBlur={() => form.touch('description')}
-                                    aria-invalid={
-                                        form.invalid('description') || undefined
-                                    }
-                                    placeholder="Brief description of this block's purpose and usage"
-                                />
-                                <FieldError>
-                                    {form.error('description')}
-                                </FieldError>
-                            </Field>
+                    <Field
+                        data-invalid={form.invalid('description') || undefined}
+                    >
+                        <FieldLabel htmlFor="description">Description</FieldLabel>
+                        <Textarea
+                            id="description"
+                            rows={3}
+                            value={form.data.description}
+                            onChange={(event) =>
+                                form.setField('description', event.target.value)
+                            }
+                            onBlur={() => form.touch('description')}
+                            aria-invalid={form.invalid('description') || undefined}
+                            placeholder="Brief description of this block's purpose and usage"
+                        />
+                        <FieldError>{form.error('description')}</FieldError>
+                    </Field>
 
-                            <Tabs defaultValue="html">
-                                <TabsList variant="line">
-                                    <TabsTrigger value="html">HTML</TabsTrigger>
-                                    <TabsTrigger value="css">CSS</TabsTrigger>
-                                    <TabsTrigger value="scripts">
-                                        Scripts
-                                    </TabsTrigger>
-                                </TabsList>
+                    <PanelTabs defaultValue="html">
+                        <PanelTabsList>
+                            <PanelTabsTrigger value="html">HTML</PanelTabsTrigger>
+                            <PanelTabsTrigger value="css">CSS</PanelTabsTrigger>
+                            <PanelTabsTrigger value="scripts">
+                                Scripts
+                            </PanelTabsTrigger>
+                        </PanelTabsList>
 
-                                <TabsContent value="html">
+                        <PanelTabsContent value="html">
                                     <Field
                                         data-invalid={
                                             form.invalid('html') || undefined
@@ -251,9 +222,9 @@ export default function DesignBlockForm({
                                             {form.error('html')}
                                         </FieldError>
                                     </Field>
-                                </TabsContent>
+                        </PanelTabsContent>
 
-                                <TabsContent value="css">
+                        <PanelTabsContent value="css">
                                     <Field
                                         data-invalid={
                                             form.invalid('css') || undefined
@@ -277,9 +248,9 @@ export default function DesignBlockForm({
                                             {form.error('css')}
                                         </FieldError>
                                     </Field>
-                                </TabsContent>
+                        </PanelTabsContent>
 
-                                <TabsContent value="scripts">
+                        <PanelTabsContent value="scripts">
                                     <Field
                                         data-invalid={
                                             form.invalid('scripts') || undefined
@@ -304,20 +275,17 @@ export default function DesignBlockForm({
                                             {form.error('scripts')}
                                         </FieldError>
                                     </Field>
-                                </TabsContent>
-                            </Tabs>
+                        </PanelTabsContent>
+                    </PanelTabs>
 
-                            {designBlock ? (
-                                <div className="text-sm text-muted-foreground">
-                                    Last updated{' '}
-                                    {designBlock.updated_at_human ?? 'recently'}
-                                    {designBlock.updated_at_formatted
-                                        ? ` (${designBlock.updated_at_formatted})`
-                                        : ''}
-                                </div>
-                            ) : null}
-                        </CardContent>
-                    </Card>
+                    {designBlock ? (
+                        <div className="text-sm text-muted-foreground">
+                            Last updated {designBlock.updated_at_human ?? 'recently'}
+                            {designBlock.updated_at_formatted
+                                ? ` (${designBlock.updated_at_formatted})`
+                                : ''}
+                        </div>
+                    ) : null}
                 </div>
 
                 <div className="flex flex-col gap-4">

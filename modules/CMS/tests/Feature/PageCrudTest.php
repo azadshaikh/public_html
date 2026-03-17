@@ -79,6 +79,23 @@ class PageCrudTest extends TestCase
             );
     }
 
+    public function test_admin_can_access_pages_index_with_thumbnail_and_permalink_fields(): void
+    {
+        $page = $this->createPage('About Us');
+
+        $this->actingAs($this->admin)
+            ->get(route('cms.pages.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $assert): Assert => $assert
+                ->component('cms/pages/index')
+                ->has('rows.data', 1)
+                ->where('rows.data.0.title', $page->title)
+                ->where('rows.data.0.slug', $page->slug)
+                ->where('rows.data.0.permalink_url', $page->permalink_url)
+                ->where('rows.data.0.featured_image_url', null)
+            );
+    }
+
     public function test_admin_can_access_pages_edit_page_with_initial_values(): void
     {
         $parent = $this->createPage('Parent Page');

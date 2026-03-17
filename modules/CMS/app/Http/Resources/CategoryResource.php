@@ -40,6 +40,9 @@ class CategoryResource extends ScaffoldResource
             'title' => $this->resource->title,
             'title_with_meta' => $this->resource->title,
             'slug' => $this->resource->slug,
+            'featured_image_url' => $this->resource->featuredImage
+                ? get_media_url($this->resource->featuredImage, 'thumbnail', usePlaceholder: false)
+                : null,
 
             // Parent info for display
             'parent_name' => $parentName,

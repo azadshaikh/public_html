@@ -130,6 +130,7 @@ class CategoryService implements ScaffoldServiceInterface
         return [
             'parent:id,title,slug,parent_id', // Include slug and parent_id for permalink generation
             'parent.parent:id,slug,parent_id', // Load grandparent for hierarchy
+            'featuredImage',
             'createdBy:id,name',
             'updatedBy:id,name',
         ];

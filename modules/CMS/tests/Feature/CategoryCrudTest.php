@@ -76,6 +76,23 @@ class CategoryCrudTest extends TestCase
             );
     }
 
+    public function test_admin_can_access_categories_index_with_thumbnail_and_permalink_fields(): void
+    {
+        $category = $this->createCategory('Product Updates');
+
+        $this->actingAs($this->admin)
+            ->get(route('cms.categories.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->component('cms/categories/index')
+                ->has('rows.data', 1)
+                ->where('rows.data.0.title', $category->title)
+                ->where('rows.data.0.slug', $category->slug)
+                ->where('rows.data.0.permalink_url', $category->permalink_url)
+                ->where('rows.data.0.featured_image_url', null)
+            );
+    }
+
     public function test_admin_can_access_categories_edit_page_with_initial_values(): void
     {
         $parent = $this->createCategory('Parent Category');

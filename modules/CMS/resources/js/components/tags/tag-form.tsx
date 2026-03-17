@@ -34,8 +34,13 @@ import {
     NativeSelect,
     NativeSelectOption,
 } from '@/components/ui/native-select';
+import {
+    PanelTabs,
+    PanelTabsContent,
+    PanelTabsList,
+    PanelTabsTrigger,
+} from '@/components/ui/panel-tabs';
 import { Spinner } from '@/components/ui/spinner';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { useAppForm } from '@/hooks/use-app-form';
 import { formValidators } from '@/lib/forms';
@@ -212,53 +217,33 @@ export default function TagForm({
 
             <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
                 <div className="flex flex-col gap-6">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Tag content</CardTitle>
-                            <CardDescription>
-                                Write the description, summary, and SEO metadata
-                                for this tag.
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="flex flex-col gap-6">
-                            <Field
-                                data-invalid={
-                                    form.invalid('title') || undefined
-                                }
-                            >
-                                <RequiredLabel htmlFor="title">
-                                    Title
-                                </RequiredLabel>
-                                <Input
-                                    id="title"
-                                    value={form.data.title}
-                                    onChange={(event) =>
-                                        form.setField(
-                                            'title',
-                                            event.target.value,
-                                        )
-                                    }
-                                    onBlur={() => form.touch('title')}
-                                    aria-invalid={
-                                        form.invalid('title') || undefined
-                                    }
-                                    placeholder="Enter tag title"
-                                />
-                                <FieldError>{form.error('title')}</FieldError>
-                            </Field>
+                    <Field data-invalid={form.invalid('title') || undefined}>
+                        <RequiredLabel htmlFor="title">Title</RequiredLabel>
+                        <Input
+                            id="title"
+                            value={form.data.title}
+                            onChange={(event) =>
+                                form.setField('title', event.target.value)
+                            }
+                            onBlur={() => form.touch('title')}
+                            aria-invalid={form.invalid('title') || undefined}
+                            placeholder="Enter tag title"
+                        />
+                        <FieldError>{form.error('title')}</FieldError>
+                    </Field>
 
-                            <Tabs defaultValue="content">
-                                <TabsList variant="line">
-                                    <TabsTrigger value="content">
-                                        Content
-                                    </TabsTrigger>
-                                    <TabsTrigger value="seo">SEO</TabsTrigger>
-                                </TabsList>
+                    <PanelTabs defaultValue="content">
+                        <PanelTabsList>
+                            <PanelTabsTrigger value="content">
+                                Content
+                            </PanelTabsTrigger>
+                            <PanelTabsTrigger value="seo">SEO</PanelTabsTrigger>
+                        </PanelTabsList>
 
-                                <TabsContent
-                                    value="content"
-                                    className="flex flex-col gap-6"
-                                >
+                        <PanelTabsContent
+                            value="content"
+                            className="flex flex-col gap-6"
+                        >
                                     <Field
                                         data-invalid={
                                             form.invalid('content') || undefined
@@ -291,7 +276,7 @@ export default function TagForm({
                                         }
                                     >
                                         <FieldLabel htmlFor="excerpt">
-                                            Excerpt
+                                            Excerpt (optional)
                                         </FieldLabel>
                                         <Textarea
                                             id="excerpt"
@@ -328,12 +313,12 @@ export default function TagForm({
                                                 : ''}
                                         </div>
                                     ) : null}
-                                </TabsContent>
+                        </PanelTabsContent>
 
-                                <TabsContent
-                                    value="seo"
-                                    className="flex flex-col gap-6"
-                                >
+                        <PanelTabsContent
+                            value="seo"
+                            className="flex flex-col gap-6"
+                        >
                                     <Field
                                         data-invalid={
                                             form.invalid('meta_title') ||
@@ -444,10 +429,8 @@ export default function TagForm({
                                             {form.error('meta_robots')}
                                         </FieldError>
                                     </Field>
-                                </TabsContent>
-                            </Tabs>
-                        </CardContent>
-                    </Card>
+                        </PanelTabsContent>
+                    </PanelTabs>
                 </div>
 
                 <div className="flex flex-col gap-4">

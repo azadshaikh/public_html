@@ -1,6 +1,8 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import {
+    ExternalLinkIcon,
     FolderIcon,
+    ImageIcon,
     PencilIcon,
     PlusIcon,
     RefreshCwIcon,
@@ -15,8 +17,8 @@ import type {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
-import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
 import { buildScaffoldDatagridState } from '@/lib/scaffold-datagrid';
+import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
 import type { CategoryIndexPageProps, CategoryListItem } from '../../../types/cms';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -24,8 +26,57 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Categories', href: route('cms.categories.index') },
 ];
 
-function getCategoryDateLabel(cat: CategoryListItem): string {
+function getCategoryDateLabel(): string {
     return 'Created';
+}
+
+function CategoryPreview({ category }: { category: CategoryListItem }) {
+    if (category.featured_image_url) {
+        return (
+            <div className="flex h-20 w-32 shrink-0 overflow-hidden rounded-md border bg-muted">
+                <img
+                    src={category.featured_image_url}
+                    alt={category.title}
+                    className="h-full w-full object-cover"
+                    loading="lazy"
+                />
+            </div>
+        );
+    }
+
+    return (
+        <div className="flex h-20 w-32 shrink-0 items-center justify-center rounded-md border bg-muted/50 text-muted-foreground">
+            <ImageIcon className="size-6" />
+        </div>
+    );
+}
+
+function CategoryMeta({ category }: { category: CategoryListItem }) {
+    return (
+        <div className="flex flex-wrap items-center gap-1.5 pt-1 text-sm sm:gap-2">
+            {category.permalink_url ? (
+                <a
+                    href={category.permalink_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex max-w-[18rem] items-center gap-1 font-mono text-xs leading-none text-muted-foreground transition-colors hover:text-foreground"
+                >
+                    <ExternalLinkIcon className="size-3.5 shrink-0" />
+                    <span className="truncate leading-none pt-1">/{category.slug}</span>
+                </a>
+            ) : (
+                <span className="inline-flex max-w-[18rem] items-center gap-1 font-mono text-xs leading-none text-muted-foreground">
+                    <ExternalLinkIcon className="size-3.5 shrink-0" />
+                    <span className="truncate leading-none">/{category.slug}</span>
+                </span>
+            )}
+            {category.parent_name ? (
+                <span className="max-w-[250px] truncate text-xs text-muted-foreground">
+                    in {category.parent_name}
+                </span>
+            ) : null}
+        </div>
+    );
 }
 
 export default function CategoriesIndex({
@@ -61,24 +112,30 @@ export default function CategoriesIndex({
         {
             key: 'title',
             header: 'Title',
+            headerClassName: 'w-[42%] min-w-[26rem]',
+            cellClassName: 'w-[42%] min-w-[26rem]',
             sortable: true,
             cell: (cat) => (
-                <div className="flex min-w-0 flex-1 flex-col space-y-1.5 pt-0.5">
-                    <div className="flex items-start gap-2">
-                        <Link
-                            href={cat.edit_url}
-                            className="line-clamp-2 font-semibold break-words text-foreground hover:underline"
-                        >
-                            {cat.title}
-                        </Link>
-                    </div>
-                    {cat.parent_name && (
-                        <div className="flex items-center gap-1.5 pt-1 text-sm">
-                            <span className="max-w-[250px] truncate text-xs text-muted-foreground">
-                                in {cat.parent_name}
-                            </span>
+                <div className="flex min-w-0 items-center gap-4">
+                    <Link
+                        href={cat.edit_url}
+                        className="shrink-0 transition-opacity hover:opacity-80"
+                    >
+                        <CategoryPreview category={cat} />
+                    </Link>
+
+                    <div className="min-w-0 flex-1 space-y-1.5">
+                        <div className="flex items-start gap-2">
+                            <Link
+                                href={cat.edit_url}
+                                className="line-clamp-2 font-semibold break-words text-foreground hover:underline"
+                            >
+                                {cat.title}
+                            </Link>
                         </div>
-                    )}
+
+                        <CategoryMeta category={cat} />
+                    </div>
                 </div>
             ),
         },
@@ -260,23 +317,25 @@ export default function CategoriesIndex({
                     }}
                     renderCard={(cat) => (
                         <div className="flex flex-col gap-3">
-                            <Link
-                                href={cat.edit_url}
-                                className="flex min-w-0 flex-1 flex-col space-y-1.5 hover:opacity-80"
-                            >
-                                <div className="flex items-start gap-2">
-                                    <span className="line-clamp-2 font-semibold break-words text-foreground">
-                                        {cat.title}
-                                    </span>
-                                </div>
-                                {cat.parent_name && (
-                                    <div className="flex items-center gap-1.5 pt-1 text-sm">
-                                        <span className="max-w-[250px] truncate text-xs text-muted-foreground">
-                                            in {cat.parent_name}
+                            <div className="flex items-center gap-3">
+                                <Link
+                                    href={cat.edit_url}
+                                    className="shrink-0 transition-opacity hover:opacity-80"
+                                >
+                                    <CategoryPreview category={cat} />
+                                </Link>
+                                <Link
+                                    href={cat.edit_url}
+                                    className="flex min-w-0 flex-1 flex-col space-y-1.5 hover:opacity-80"
+                                >
+                                    <div className="flex items-start gap-2">
+                                        <span className="line-clamp-2 font-semibold break-words text-foreground">
+                                            {cat.title}
                                         </span>
                                     </div>
-                                )}
-                            </Link>
+                                    <CategoryMeta category={cat} />
+                                </Link>
+                            </div>
                             <div className="mt-auto grid gap-3 pt-2 sm:grid-cols-2">
                                 <div className="rounded-lg border bg-muted/30 px-3 py-2">
                                     <div className="text-xs font-medium tracking-wide text-muted-foreground uppercase">

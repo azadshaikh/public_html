@@ -1,11 +1,12 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import {
+    ExternalLinkIcon,
     FileIcon,
+    ImageIcon,
     PencilIcon,
     PlusIcon,
     RefreshCwIcon,
     Trash2Icon,
-    UserIcon,
 } from 'lucide-react';
 import { Datagrid } from '@/components/datagrid/datagrid';
 import type {
@@ -16,8 +17,8 @@ import type {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
-import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
 import { buildScaffoldDatagridState } from '@/lib/scaffold-datagrid';
+import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
 import type { PageIndexPageProps, PageListItem } from '../../../types/cms';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -29,6 +30,55 @@ function getPageDateLabel(item: PageListItem): string {
     return item.status === 'published' && item.published_at_formatted
         ? 'Published'
         : 'Last Modified';
+}
+
+function PagePreview({ page }: { page: PageListItem }) {
+    if (page.featured_image_url) {
+        return (
+            <div className="flex h-20 w-32 shrink-0 overflow-hidden rounded-md border bg-muted">
+                <img
+                    src={page.featured_image_url}
+                    alt={page.title}
+                    className="h-full w-full object-cover"
+                    loading="lazy"
+                />
+            </div>
+        );
+    }
+
+    return (
+        <div className="flex h-20 w-32 shrink-0 items-center justify-center rounded-md border bg-muted/50 text-muted-foreground">
+            <ImageIcon className="size-6" />
+        </div>
+    );
+}
+
+function PageMeta({ page }: { page: PageListItem }) {
+    return (
+        <div className="flex flex-wrap items-center gap-1.5 pt-1 text-sm sm:gap-2">
+            {page.permalink_url ? (
+                <a
+                    href={page.permalink_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex max-w-[18rem] items-center gap-1 font-mono text-xs leading-none text-muted-foreground transition-colors hover:text-foreground"
+                >
+                    <ExternalLinkIcon className="size-3.5 shrink-0" />
+                    <span className="truncate leading-none pt-1">/{page.slug}</span>
+                </a>
+            ) : (
+                <span className="inline-flex max-w-[18rem] items-center gap-1 font-mono text-xs leading-none text-muted-foreground">
+                    <ExternalLinkIcon className="size-3.5 shrink-0" />
+                    <span className="truncate leading-none">/{page.slug}</span>
+                </span>
+            )}
+            {page.parent_name ? (
+                <span className="max-w-[250px] truncate text-xs text-muted-foreground">
+                    in {page.parent_name}
+                </span>
+            ) : null}
+        </div>
+    );
 }
 
 export default function PagesIndex({
@@ -64,36 +114,29 @@ export default function PagesIndex({
         {
             key: 'title',
             header: 'Title',
+            headerClassName: 'w-[42%] min-w-[26rem]',
+            cellClassName: 'w-[42%] min-w-[26rem]',
             sortable: true,
             cell: (item) => (
-                <div className="flex min-w-0 flex-1 flex-col space-y-1.5 pt-0.5">
-                    <div className="flex items-start gap-2">
-                        <Link
-                            href={item.edit_url}
-                            className="line-clamp-2 font-semibold break-words text-foreground hover:underline"
-                        >
-                            {item.title}
-                        </Link>
-                    </div>
+                <div className="flex min-w-0 items-center gap-4">
+                    <Link
+                        href={item.edit_url}
+                        className="shrink-0 transition-opacity hover:opacity-80"
+                    >
+                        <PagePreview page={item} />
+                    </Link>
 
-                    <div className="flex flex-wrap items-center gap-1.5 pt-1 text-sm sm:gap-2">
-                        <Badge
-                            variant="secondary"
-                            className="max-w-[150px] bg-muted/50 font-normal hover:bg-muted sm:max-w-[200px]"
-                        >
-                            <UserIcon className="mr-1.5 size-3 shrink-0 text-muted-foreground" />
-                            <span className="truncate">{item.author_name}</span>
-                        </Badge>
-                        {item.parent_name && (
-                            <>
-                                <span className="hidden pb-0.5 text-muted-foreground/40 sm:inline">
-                                    •
-                                </span>
-                                <span className="max-w-[200px] truncate text-xs text-muted-foreground">
-                                    in {item.parent_name}
-                                </span>
-                            </>
-                        )}
+                    <div className="min-w-0 flex-1 space-y-1.5">
+                        <div className="flex items-start gap-2">
+                            <Link
+                                href={item.edit_url}
+                                className="line-clamp-2 font-semibold break-words text-foreground hover:underline"
+                            >
+                                {item.title}
+                            </Link>
+                        </div>
+
+                        <PageMeta page={item} />
                     </div>
                 </div>
             ),
@@ -155,6 +198,7 @@ export default function PagesIndex({
                     : []),
             ];
         }
+
         return [
             ...(canEditPages
                 ? [{ label: 'Edit', href: item.edit_url, icon: <PencilIcon /> }]
@@ -256,37 +300,25 @@ export default function PagesIndex({
                     }}
                     renderCard={(item) => (
                         <div className="flex flex-col gap-3">
-                            <Link
-                                href={item.edit_url}
-                                className="flex min-w-0 flex-1 flex-col space-y-1.5 hover:opacity-80"
-                            >
-                                <div className="flex items-start gap-2">
-                                    <span className="line-clamp-2 font-semibold break-words text-foreground">
-                                        {item.title}
-                                    </span>
-                                </div>
-                                <div className="flex flex-wrap items-center gap-1.5 pt-1 text-sm sm:gap-2">
-                                    <Badge
-                                        variant="secondary"
-                                        className="max-w-[150px] bg-muted/50 font-normal hover:bg-muted sm:max-w-[200px]"
-                                    >
-                                        <UserIcon className="mr-1.5 size-3 shrink-0 text-muted-foreground" />
-                                        <span className="truncate">
-                                            {item.author_name}
+                            <div className="flex items-center gap-3">
+                                <Link
+                                    href={item.edit_url}
+                                    className="shrink-0 transition-opacity hover:opacity-80"
+                                >
+                                    <PagePreview page={item} />
+                                </Link>
+                                <Link
+                                    href={item.edit_url}
+                                    className="flex min-w-0 flex-1 flex-col space-y-1.5 hover:opacity-80"
+                                >
+                                    <div className="flex items-start gap-2">
+                                        <span className="line-clamp-2 font-semibold break-words text-foreground">
+                                            {item.title}
                                         </span>
-                                    </Badge>
-                                    {item.parent_name && (
-                                        <>
-                                            <span className="hidden pb-0.5 text-muted-foreground/40 sm:inline">
-                                                •
-                                            </span>
-                                            <span className="max-w-[200px] truncate text-xs text-muted-foreground">
-                                                in {item.parent_name}
-                                            </span>
-                                        </>
-                                    )}
-                                </div>
-                            </Link>
+                                    </div>
+                                    <PageMeta page={item} />
+                                </Link>
+                            </div>
                             <div className="mt-auto grid gap-3 pt-2 sm:grid-cols-2">
                                 <div className="rounded-lg border bg-muted/30 px-3 py-2">
                                     <div className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
