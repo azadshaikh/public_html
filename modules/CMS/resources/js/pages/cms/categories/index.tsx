@@ -11,13 +11,11 @@ import type {
     DatagridAction,
     DatagridBulkAction,
     DatagridColumn,
-    DatagridFilter,
-    DatagridTab,
 } from '@/components/datagrid/datagrid';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
-import { mapFilters, mapStatusTab } from '../../../lib/helpers';
+import { buildDatagridState } from '../../../lib/helpers';
 import type { CategoryIndexPageProps, CategoryListItem } from '../../types/cms';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -31,15 +29,12 @@ export default function CategoriesIndex({ config, rows, filters, statistics }: C
     const canEditCategories = page.props.auth.abilities.editCategories;
     const canDeleteCategories = page.props.auth.abilities.deleteCategories;
     const canRestoreCategories = page.props.auth.abilities.restoreCategories;
+    const { currentStatus, gridFilters, perPage, sorting, statusTabs } = buildDatagridState(config, filters, statistics, 'Search categories...');
 
     const handleBulkAction = (action: string, selected: CategoryListItem[], clearSelection: () => void) => {
         if (selected.length === 0) return;
-        router.post(route('cms.categories.bulk-action'), { action, ids: selected.map((c) => c.id), status: filters.status }, { preserveScroll: true, onSuccess: () => clearSelection() });
+        router.post(route('cms.categories.bulk-action'), { action, ids: selected.map((c) => c.id), status: currentStatus }, { preserveScroll: true, onSuccess: () => clearSelection() });
     };
-
-    const gridFilters = mapFilters(config.filters, filters, 'Search categories...');
-
-    const statusTabs: DatagridTab[] = config.statusTabs.map((tab) => mapStatusTab(tab, statistics, filters.status));
 
     const columns: DatagridColumn<CategoryListItem>[] = [
         {
@@ -75,7 +70,7 @@ export default function CategoriesIndex({ config, rows, filters, statistics }: C
         ...(canDeleteCategories ? [{ key: 'bulk-force-delete', label: 'Delete Permanently', icon: <Trash2Icon />, variant: 'destructive' as const, confirm: '⚠️ Permanently delete selected categories?', onSelect: (items: CategoryListItem[], clear: () => void) => handleBulkAction('force_delete', items, clear) }] : []),
     ];
 
-    const visibleBulkActions = filters.status === 'trash'
+    const visibleBulkActions = currentStatus === 'trash'
         ? bulkActions.filter((a) => a.key !== 'bulk-delete')
         : bulkActions.filter((a) => a.key === 'bulk-delete');
 
@@ -93,8 +88,8 @@ export default function CategoriesIndex({ config, rows, filters, statistics }: C
                     rowActions={rowActions}
                     bulkActions={visibleBulkActions}
                     isRowSelectable={() => visibleBulkActions.length > 0}
-                    sorting={{ sort: filters.sort, direction: filters.direction }}
-                    perPage={{ value: filters.per_page, options: [10, 25, 50, 100] }}
+                    sorting={sorting}
+                    perPage={perPage}
                     view={{ value: (filters.view as 'table' | 'cards') ?? 'table', storageKey: 'cms-categories-datagrid-view' }}
                     empty={{ icon: <FolderIcon />, title: 'No categories found', description: 'Try a different filter or create the first category.' }}
                 />

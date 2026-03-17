@@ -25,17 +25,18 @@ The desired end state is a platform where:
 - `scaffold:inspect` provides a debug command for resolved scaffold metadata so humans and AI can inspect the runtime contract without code archaeology.
 - Shared frontend scaffold types now live in `resources/js/types/scaffold.ts` so module pages can alias one canonical client-side scaffold contract instead of redefining it per module.
 - Shared scaffold-to-datagrid adapter utilities now live in `resources/js/lib/scaffold-datagrid.ts`, and Platform index pages now consume the derived datagrid state instead of rebuilding filters, tabs, sorting, and per-page config inline.
+- CMS scaffold index pages and the ReleaseManager releases index now consume the shared derived datagrid state, shrinking repeated page-level filter, tab, sorting, and pagination glue across modules.
 
 ### Still pending from this PRD
 
 - generator-driven CRUD/module scaffolding,
-- broader rollout of shared datagrid adapters across non-Platform module pages,
+- adoption of the shared datagrid adapter pattern in the remaining custom CMS list pages that still need bespoke bulk/view behavior,
 - golden-path example resource/module,
 - broader contract tests around generated output.
 
 ### Revised next implementation slice
 
-1. Extend shared datagrid-state adoption to remaining CMS and ReleaseManager scaffold index pages.
+1. Finish the shared datagrid adapter rollout for the remaining bespoke CMS list pages, starting with `cms.posts.index`.
 2. Create one golden-path scaffold resource/module that both `scaffold:doctor` and `scaffold:inspect` can validate.
 3. Start the CRUD generator on top of the now-stable introspection, validation, and datagrid adapter APIs.
 

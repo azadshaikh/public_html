@@ -11,13 +11,11 @@ import type {
     DatagridAction,
     DatagridBulkAction,
     DatagridColumn,
-    DatagridFilter,
-    DatagridTab,
 } from '@/components/datagrid/datagrid';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
-import { mapFilters, mapStatusTab } from '../../../lib/helpers';
+import { buildDatagridState } from '../../../lib/helpers';
 import type { FormIndexPageProps, FormListItem } from '../../types/cms';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -31,15 +29,12 @@ export default function FormsIndex({ config, rows, filters, statistics }: FormIn
     const canEditForms = page.props.auth.abilities.editCmsForms;
     const canDeleteForms = page.props.auth.abilities.deleteCmsForms;
     const canRestoreForms = page.props.auth.abilities.restoreCmsForms;
+    const { currentStatus, gridFilters, perPage, sorting, statusTabs } = buildDatagridState(config, filters, statistics, 'Search forms...');
 
     const handleBulkAction = (action: string, selected: FormListItem[], clearSelection: () => void) => {
         if (selected.length === 0) return;
-        router.post(route('cms.form.bulk-action'), { action, ids: selected.map((f) => f.id), status: filters.status }, { preserveScroll: true, onSuccess: () => clearSelection() });
+        router.post(route('cms.form.bulk-action'), { action, ids: selected.map((f) => f.id), status: currentStatus }, { preserveScroll: true, onSuccess: () => clearSelection() });
     };
-
-    const gridFilters = mapFilters(config.filters, filters, 'Search forms...');
-
-    const statusTabs: DatagridTab[] = config.statusTabs.map((tab) => mapStatusTab(tab, statistics, filters.status));
 
     const columns: DatagridColumn<FormListItem>[] = [
         {
@@ -77,7 +72,7 @@ export default function FormsIndex({ config, rows, filters, statistics }: FormIn
         ...(canDeleteForms ? [{ key: 'bulk-force-delete', label: 'Delete Permanently', icon: <Trash2Icon />, variant: 'destructive' as const, confirm: '⚠️ Permanently delete selected forms?', onSelect: (items: FormListItem[], clear: () => void) => handleBulkAction('force_delete', items, clear) }] : []),
     ];
 
-    const visibleBulkActions = filters.status === 'trash'
+    const visibleBulkActions = currentStatus === 'trash'
         ? bulkActions.filter((a) => a.key !== 'bulk-delete')
         : bulkActions.filter((a) => a.key === 'bulk-delete');
 
@@ -95,8 +90,8 @@ export default function FormsIndex({ config, rows, filters, statistics }: FormIn
                     rowActions={rowActions}
                     bulkActions={visibleBulkActions}
                     isRowSelectable={() => visibleBulkActions.length > 0}
-                    sorting={{ sort: filters.sort, direction: filters.direction }}
-                    perPage={{ value: filters.per_page, options: [10, 25, 50, 100] }}
+                    sorting={sorting}
+                    perPage={perPage}
                     empty={{ icon: <ClipboardListIcon />, title: 'No forms found', description: 'Try a different filter or create the first form.' }}
                 />
             </div>

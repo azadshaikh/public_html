@@ -11,14 +11,11 @@ import type {
     DatagridAction,
     DatagridBulkAction,
     DatagridColumn,
-    DatagridFilter,
-    DatagridFilterOption,
-    DatagridTab,
 } from '@/components/datagrid/datagrid';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
-import { mapFilters, mapStatusTab } from '../../../lib/helpers';
+import { buildDatagridState } from '../../../lib/helpers';
 import type { DesignBlockIndexPageProps, DesignBlockListItem } from '../../types/cms';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -26,21 +23,18 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Design Blocks', href: route('cms.designblock.index') },
 ];
 
-export default function DesignBlocksIndex({ config, rows, filters, statistics, designTypeOptions, categoryOptions, designSystemOptions }: DesignBlockIndexPageProps) {
+export default function DesignBlocksIndex({ config, rows, filters, statistics }: DesignBlockIndexPageProps) {
     const page = usePage<AuthenticatedSharedData>();
     const canAddDesignBlocks = page.props.auth.abilities.addDesignBlocks;
     const canEditDesignBlocks = page.props.auth.abilities.editDesignBlocks;
     const canDeleteDesignBlocks = page.props.auth.abilities.deleteDesignBlocks;
     const canRestoreDesignBlocks = page.props.auth.abilities.restoreDesignBlocks;
+    const { currentStatus, gridFilters, perPage, sorting, statusTabs } = buildDatagridState(config, filters, statistics, 'Search design blocks...');
 
     const handleBulkAction = (action: string, selected: DesignBlockListItem[], clearSelection: () => void) => {
         if (selected.length === 0) return;
-        router.post(route('cms.designblock.bulk-action'), { action, ids: selected.map((d) => d.id), status: filters.status }, { preserveScroll: true, onSuccess: () => clearSelection() });
+        router.post(route('cms.designblock.bulk-action'), { action, ids: selected.map((d) => d.id), status: currentStatus }, { preserveScroll: true, onSuccess: () => clearSelection() });
     };
-
-    const gridFilters = mapFilters(config.filters, filters, 'Search design blocks...');
-
-    const statusTabs: DatagridTab[] = config.statusTabs.map((tab) => mapStatusTab(tab, statistics, filters.status));
 
     const columns: DatagridColumn<DesignBlockListItem>[] = [
         {
@@ -82,7 +76,7 @@ export default function DesignBlocksIndex({ config, rows, filters, statistics, d
         ...(canDeleteDesignBlocks ? [{ key: 'bulk-force-delete', label: 'Delete Permanently', icon: <Trash2Icon />, variant: 'destructive' as const, confirm: '⚠️ Permanently delete selected design blocks?', onSelect: (items: DesignBlockListItem[], clear: () => void) => handleBulkAction('force_delete', items, clear) }] : []),
     ];
 
-    const visibleBulkActions = filters.status === 'trash'
+    const visibleBulkActions = currentStatus === 'trash'
         ? bulkActions.filter((a) => a.key !== 'bulk-delete')
         : bulkActions.filter((a) => a.key === 'bulk-delete');
 
@@ -100,8 +94,8 @@ export default function DesignBlocksIndex({ config, rows, filters, statistics, d
                     rowActions={rowActions}
                     bulkActions={visibleBulkActions}
                     isRowSelectable={() => visibleBulkActions.length > 0}
-                    sorting={{ sort: filters.sort, direction: filters.direction }}
-                    perPage={{ value: filters.per_page, options: [10, 25, 50, 100] }}
+                    sorting={sorting}
+                    perPage={perPage}
                     view={{ value: (filters.view as 'table' | 'cards') ?? 'table', storageKey: 'cms-designblocks-datagrid-view' }}
                     empty={{ icon: <LayoutTemplateIcon />, title: 'No design blocks found', description: 'Try a different filter or create the first design block.' }}
                 />

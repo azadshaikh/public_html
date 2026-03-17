@@ -12,14 +12,12 @@ import type {
     DatagridAction,
     DatagridBulkAction,
     DatagridColumn,
-    DatagridFilter,
-    DatagridTab,
 } from '@/components/datagrid/datagrid';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
-import { mapFilters, mapStatusTab } from '../../../lib/helpers';
+import { buildDatagridState } from '../../../lib/helpers';
 import type { MenuIndexPageProps, MenuListItem } from '../../types/cms';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -27,21 +25,18 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Menus', href: route('cms.appearance.menus.index') },
 ];
 
-export default function MenusIndex({ config, rows, filters, statistics, locations }: MenuIndexPageProps) {
+export default function MenusIndex({ config, rows, filters, statistics }: MenuIndexPageProps) {
     const page = usePage<AuthenticatedSharedData>();
     const canAddMenus = page.props.auth.abilities.addMenus;
     const canEditMenus = page.props.auth.abilities.editMenus;
     const canDeleteMenus = page.props.auth.abilities.deleteMenus;
     const canRestoreMenus = page.props.auth.abilities.restoreMenus;
+    const { currentStatus, gridFilters, perPage, sorting, statusTabs } = buildDatagridState(config, filters, statistics, 'Search menus...');
 
     const handleBulkAction = (action: string, selected: MenuListItem[], clearSelection: () => void) => {
         if (selected.length === 0) return;
-        router.post(route('cms.appearance.menus.bulk-action'), { action, ids: selected.map((m) => m.id), status: filters.status }, { preserveScroll: true, onSuccess: () => clearSelection() });
+        router.post(route('cms.appearance.menus.bulk-action'), { action, ids: selected.map((m) => m.id), status: currentStatus }, { preserveScroll: true, onSuccess: () => clearSelection() });
     };
-
-    const gridFilters = mapFilters(config.filters, filters, 'Search menus...');
-
-    const statusTabs: DatagridTab[] = config.statusTabs.map((tab) => mapStatusTab(tab, statistics, filters.status));
 
     const columns: DatagridColumn<MenuListItem>[] = [
         {
@@ -95,7 +90,7 @@ export default function MenusIndex({ config, rows, filters, statistics, location
         ...(canDeleteMenus ? [{ key: 'bulk-force-delete', label: 'Delete Permanently', icon: <Trash2Icon />, variant: 'destructive' as const, confirm: '⚠️ Permanently delete selected menus?', onSelect: (items: MenuListItem[], clear: () => void) => handleBulkAction('force_delete', items, clear) }] : []),
     ];
 
-    const visibleBulkActions = filters.status === 'trash'
+    const visibleBulkActions = currentStatus === 'trash'
         ? bulkActions.filter((a) => a.key !== 'bulk-delete')
         : bulkActions.filter((a) => a.key === 'bulk-delete');
 
@@ -113,8 +108,8 @@ export default function MenusIndex({ config, rows, filters, statistics, location
                     rowActions={rowActions}
                     bulkActions={visibleBulkActions}
                     isRowSelectable={() => visibleBulkActions.length > 0}
-                    sorting={{ sort: filters.sort, direction: filters.direction }}
-                    perPage={{ value: filters.per_page, options: [10, 25, 50, 100] }}
+                    sorting={sorting}
+                    perPage={perPage}
                     empty={{ icon: <MenuIcon />, title: 'No menus found', description: 'Create your first navigation menu.' }}
                 />
             </div>

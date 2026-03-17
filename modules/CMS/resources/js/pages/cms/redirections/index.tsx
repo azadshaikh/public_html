@@ -13,13 +13,11 @@ import type {
     DatagridAction,
     DatagridBulkAction,
     DatagridColumn,
-    DatagridFilter,
-    DatagridTab,
 } from '@/components/datagrid/datagrid';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
-import { mapFilters, mapStatusTab } from '../../../lib/helpers';
+import { buildDatagridState } from '../../../lib/helpers';
 import type {
     RedirectionIndexPageProps,
     RedirectionListItem,
@@ -42,6 +40,7 @@ export default function RedirectionsIndex({
     const canDeleteRedirections = page.props.auth.abilities.deleteRedirections;
     const canRestoreRedirections =
         page.props.auth.abilities.restoreRedirections;
+    const { currentStatus, gridFilters, perPage, sorting, statusTabs } = buildDatagridState(config, filters, statistics, 'Search redirections...');
 
     const handleBulkAction = (
         action: string,
@@ -51,16 +50,10 @@ export default function RedirectionsIndex({
         if (selected.length === 0) return;
         router.post(
             route('cms.redirections.bulk-action'),
-            { action, ids: selected.map((r) => r.id), status: filters.status },
+            { action, ids: selected.map((r) => r.id), status: currentStatus },
             { preserveScroll: true, onSuccess: () => clearSelection() },
         );
     };
-
-    const gridFilters = mapFilters(config.filters, filters, 'Search redirections...');
-
-    const statusTabs: DatagridTab[] = config.statusTabs.map((tab) =>
-        mapStatusTab(tab, statistics, filters.status),
-    );
 
     const columns: DatagridColumn<RedirectionListItem>[] = [
         {
@@ -249,7 +242,7 @@ export default function RedirectionsIndex({
     ];
 
     const visibleBulkActions =
-        filters.status === 'trash'
+        currentStatus === 'trash'
             ? bulkActions.filter((a) => a.key !== 'bulk-delete')
             : bulkActions.filter((a) => a.key === 'bulk-delete');
 
@@ -263,7 +256,7 @@ export default function RedirectionsIndex({
                     <Button variant="outline" asChild>
                         <a
                             href={route('cms.redirections.export', {
-                                status: filters.status,
+                                status: currentStatus,
                             })}
                         >
                             <DownloadIcon data-icon="inline-start" />
@@ -298,14 +291,8 @@ export default function RedirectionsIndex({
                     rowActions={rowActions}
                     bulkActions={visibleBulkActions}
                     isRowSelectable={() => visibleBulkActions.length > 0}
-                    sorting={{
-                        sort: filters.sort,
-                        direction: filters.direction,
-                    }}
-                    perPage={{
-                        value: filters.per_page,
-                        options: [10, 25, 50, 100],
-                    }}
+                    sorting={sorting}
+                    perPage={perPage}
                     empty={{
                         icon: <ArrowRightLeftIcon />,
                         title: 'No redirections found',

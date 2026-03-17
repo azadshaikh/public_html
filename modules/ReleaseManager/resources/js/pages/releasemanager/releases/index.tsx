@@ -11,14 +11,13 @@ import type {
     DatagridAction,
     DatagridBulkAction,
     DatagridColumn,
-    DatagridTab,
 } from '@/components/datagrid/datagrid';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
-import { mapFilters, mapStatusTab } from '../../../lib/helpers';
+import { buildDatagridState } from '../../../lib/helpers';
 
-export default function ReleasesIndex({ config, rows, filters, statistics, initialData, type }: any) {
+export default function ReleasesIndex({ config, rows, filters, statistics, type }: any) {
     const page = usePage<AuthenticatedSharedData>();
     const routeNamespace = type === 'module' ? 'releasemanager.module' : 'releasemanager.application';
     const abilities = page.props.auth.abilities || {};
@@ -27,6 +26,7 @@ export default function ReleasesIndex({ config, rows, filters, statistics, initi
     const canEditReleases = abilities.editReleases ?? true;
     const canDeleteReleases = abilities.deleteReleases ?? true;
     const canRestoreReleases = abilities.restoreReleases ?? true;
+    const { currentStatus, gridFilters, perPage, sorting, statusTabs } = buildDatagridState(config, filters, statistics, 'Search releases...');
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: route('dashboard') },
         { title: 'Releases', href: route(`${routeNamespace}.index`) },
@@ -34,11 +34,8 @@ export default function ReleasesIndex({ config, rows, filters, statistics, initi
 
     const handleBulkAction = (action: string, selected: any[], clearSelection: () => void) => {
         if (selected.length === 0) return;
-        router.post(route(`${routeNamespace}.bulk-action`), { action, ids: selected.map((p: any) => p.id), status: filters.status }, { preserveScroll: true, onSuccess: () => clearSelection() });
+        router.post(route(`${routeNamespace}.bulk-action`), { action, ids: selected.map((p: any) => p.id), status: currentStatus }, { preserveScroll: true, onSuccess: () => clearSelection() });
     };
-
-    const gridFilters = mapFilters(config.filters, filters, 'Search releases...');
-    const statusTabs: DatagridTab[] = config.statusTabs.map((tab: any) => mapStatusTab(tab, statistics, filters.status));
 
     const columns: DatagridColumn<any>[] = [
         {
@@ -75,7 +72,7 @@ export default function ReleasesIndex({ config, rows, filters, statistics, initi
         ...(canDeleteReleases ? [{ key: 'bulk-force-delete', label: 'Delete Permanently', icon: <Trash2Icon />, variant: 'destructive' as const, confirm: '⚠️ Permanently delete selected releases? This cannot be undone!', onSelect: (items: any[], clear: () => void) => handleBulkAction('force_delete', items, clear) }] : []),
     ];
 
-    const visibleBulkActions = filters.status === 'trash'
+    const visibleBulkActions = currentStatus === 'trash'
         ? bulkActions.filter((a) => a.key !== 'bulk-delete')
         : bulkActions.filter((a) => a.key === 'bulk-delete');
 
@@ -93,8 +90,8 @@ export default function ReleasesIndex({ config, rows, filters, statistics, initi
                     rowActions={rowActions}
                     bulkActions={visibleBulkActions}
                     isRowSelectable={() => visibleBulkActions.length > 0}
-                    sorting={{ sort: filters.sort, direction: filters.direction }}
-                    perPage={{ value: filters.per_page, options: [10, 25, 50, 100] }}
+                    sorting={sorting}
+                    perPage={perPage}
                     view={{ value: (filters.view as 'table' | 'cards') ?? 'table', storageKey: 'rm-releases-datagrid-view' }}
                     empty={{ icon: <FileIcon />, title: 'No releases found', description: 'Try a different filter or create the first release.' }}
                 />
