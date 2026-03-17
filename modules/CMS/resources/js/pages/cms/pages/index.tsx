@@ -17,8 +17,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
-import { buildDatagridState } from '../../../lib/helpers';
-import type { PageIndexPageProps, PageListItem } from '../../types/cms';
+import { buildScaffoldDatagridState } from '@/lib/scaffold-datagrid';
+import type { PageIndexPageProps, PageListItem } from '../../../types/cms';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: route('dashboard') },
@@ -43,7 +43,9 @@ export default function PagesIndex({
     const canDeletePages = page.props.auth.abilities.deletePages;
     const canRestorePages = page.props.auth.abilities.restorePages;
     const { currentStatus, gridFilters, perPage, sorting, statusTabs } =
-        buildDatagridState(config, filters, statistics, 'Search pages...');
+        buildScaffoldDatagridState(config, filters, statistics, {
+            searchPlaceholder: 'Search pages...',
+        });
 
     const handleBulkAction = (
         action: string,

@@ -16,8 +16,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
-import { buildDatagridState } from '../../../lib/helpers';
-import type { TagIndexPageProps, TagListItem } from '../../types/cms';
+import { buildScaffoldDatagridState } from '@/lib/scaffold-datagrid';
+import type { TagIndexPageProps, TagListItem } from '../../../types/cms';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: route('dashboard') },
@@ -40,7 +40,9 @@ export default function TagsIndex({
     const canDeleteTags = page.props.auth.abilities.deleteTags;
     const canRestoreTags = page.props.auth.abilities.restoreTags;
     const { currentStatus, gridFilters, perPage, sorting, statusTabs } =
-        buildDatagridState(config, filters, statistics, 'Search tags...');
+        buildScaffoldDatagridState(config, filters, statistics, {
+            searchPlaceholder: 'Search tags...',
+        });
 
     const handleBulkAction = (
         action: string,

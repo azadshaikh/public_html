@@ -15,8 +15,8 @@ import type {
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
-import { buildDatagridState } from '../../../lib/helpers';
-import type { FormIndexPageProps, FormListItem } from '../../types/cms';
+import { buildScaffoldDatagridState } from '@/lib/scaffold-datagrid';
+import type { FormIndexPageProps, FormListItem } from '../../../types/cms';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: route('dashboard') },
@@ -35,7 +35,9 @@ export default function FormsIndex({
     const canDeleteForms = page.props.auth.abilities.deleteCmsForms;
     const canRestoreForms = page.props.auth.abilities.restoreCmsForms;
     const { currentStatus, gridFilters, perPage, sorting, statusTabs } =
-        buildDatagridState(config, filters, statistics, 'Search forms...');
+        buildScaffoldDatagridState(config, filters, statistics, {
+            searchPlaceholder: 'Search forms...',
+        });
 
     const handleBulkAction = (
         action: string,

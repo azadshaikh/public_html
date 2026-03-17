@@ -135,6 +135,7 @@ class ScaffoldDefinitionInertiaConfigTest extends TestCase
         $this->assertArrayHasKey('filters', $config);
         $this->assertArrayHasKey('actions', $config);
         $this->assertArrayHasKey('statusTabs', $config);
+        $this->assertArrayHasKey('form', $config);
         $this->assertArrayHasKey('settings', $config);
 
         // All top-level values are arrays
@@ -187,6 +188,15 @@ class ScaffoldDefinitionInertiaConfigTest extends TestCase
             'editWidgets' => 'edit_widgets',
             'deleteWidgets' => 'delete_widgets',
         ], $this->definition->expectedAbilityMap());
+    }
+
+    public function test_runtime_inertia_config_does_not_expose_generator_metadata(): void
+    {
+        $config = $this->definition->toInertiaConfig();
+
+        $this->assertArrayNotHasKey('meta', $config);
+        $this->assertArrayNotHasKey('routePrefix', $config['settings']);
+        $this->assertSame('Widgets', $config['settings']['entityPlural']);
     }
 
     public function test_expected_file_paths_are_derived_for_app_scaffolds(): void
@@ -365,7 +375,6 @@ class ScaffoldDefinitionInertiaConfigTest extends TestCase
         $this->assertFalse($settings['hasNotes']);
         $this->assertSame('Widget', $settings['entityName']);
         $this->assertSame('Widgets', $settings['entityPlural']);
-        $this->assertSame('app.widgets', $settings['routePrefix']);
         $this->assertSame('status', $settings['statusField']);
     }
 

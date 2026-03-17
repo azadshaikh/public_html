@@ -5,16 +5,9 @@ import type { DatagridColumn } from '@/components/datagrid/datagrid';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
+import { buildScaffoldBulkActions, buildScaffoldDatagridState, mapScaffoldRowActions } from '@/lib/scaffold-datagrid';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
-import {
-    buildBulkActions,
-    buildDatagridState,
-    mapRowActions,
-} from '../../../lib/helpers';
-import type {
-    PlatformIndexPageProps,
-    TldListItem,
-} from '../../../types/platform';
+import type { PlatformIndexPageProps, TldListItem } from '../../../types/platform';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: route('dashboard') },
@@ -34,8 +27,10 @@ export default function TldsIndex({
     const page = usePage<AuthenticatedSharedData>();
     const canAddTlds = page.props.auth.abilities.addTlds;
 
-    const { currentStatus, gridFilters, perPage, sorting, statusTabs } =
-        buildDatagridState(config, filters, statistics, 'Search TLDs...');
+    const { currentStatus, gridFilters, perPage, sorting, statusTabs } = buildScaffoldDatagridState(config, filters, statistics, {
+        searchPlaceholder: 'Search TLDs...',
+        perPageOptions: [15, 25, 50, 100],
+    });
 
     const columns: DatagridColumn<TldListItem>[] = [
         {
@@ -123,12 +118,11 @@ export default function TldsIndex({
                 filters={gridFilters}
                 tabs={{ name: 'status', items: statusTabs }}
                 getRowKey={(item) => item.id}
-                rowActions={(item) => mapRowActions(item.actions)}
-                bulkActions={buildBulkActions(
-                    config.actions,
-                    config.settings.routePrefix,
+                rowActions={(item) => mapScaffoldRowActions(item.actions)}
+                bulkActions={buildScaffoldBulkActions(config.actions, {
+                    bulkActionUrl: route('platform.tlds.bulk-action'),
                     currentStatus,
-                )}
+                })}
                 empty={{
                     icon: <Globe2Icon className="size-5" />,
                     title: 'No TLDs found',

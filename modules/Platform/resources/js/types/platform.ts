@@ -368,6 +368,52 @@ export type DomainDnsRecordItem = {
     disabled: boolean;
 };
 
+export type DomainDnsRecordListItem = {
+	id: number;
+	domain_name: string | null;
+	name: string;
+	type_label: string;
+	value: string;
+	ttl: number | null;
+	updated_at: string | null;
+	actions?: Record<string, PlatformActionPayload>;
+	is_trashed?: boolean;
+};
+
+export type DomainDnsRecordFormValues = {
+	domain_id: string;
+	name: string;
+	type: string;
+	value: string;
+	ttl: string;
+	priority: string;
+	weight: string;
+	port: string;
+	disabled: boolean;
+	record_id: string;
+	zone_id: string;
+};
+
+export type DomainDnsRecordShowData = {
+	id: number;
+	domain_id: number;
+	domain_name: string | null;
+	name: string;
+	type: number | null;
+	type_label: string;
+	value: string | null;
+	ttl: number | null;
+	priority: number | null;
+	weight: number | null;
+	port: number | null;
+	disabled: boolean;
+	record_id: string | null;
+	zone_id: string | null;
+	created_at: string | null;
+	updated_at: string | null;
+	deleted_at: string | null;
+};
+
 export type DomainSslCertificateItem = {
     id: number;
     name: string;

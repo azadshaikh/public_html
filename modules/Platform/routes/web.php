@@ -449,7 +449,6 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
         // DNS Records (Scaffold)
         // ---------------------------------------------------------------------
         Route::prefix('dns')->name('dns.')->middleware(['crud.exceptions'])->group(function (): void {
-            Route::get('/data', [DomainDnsController::class, 'data'])->name('data');
             Route::post('/bulk-action', [DomainDnsController::class, 'bulkAction'])->name('bulk-action');
             Route::get('/create', [DomainDnsController::class, 'create'])->name('create');
             Route::post('/', [DomainDnsController::class, 'store'])->name('store');

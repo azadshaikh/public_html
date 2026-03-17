@@ -5,16 +5,9 @@ import type { DatagridColumn } from '@/components/datagrid/datagrid';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
+import { buildScaffoldBulkActions, buildScaffoldDatagridState, mapScaffoldRowActions } from '@/lib/scaffold-datagrid';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
-import {
-    buildBulkActions,
-    buildDatagridState,
-    mapRowActions,
-} from '../../../lib/helpers';
-import type {
-    DomainListItem,
-    PlatformIndexPageProps,
-} from '../../../types/platform';
+import type { DomainListItem, PlatformIndexPageProps } from '../../../types/platform';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: route('dashboard') },
@@ -37,8 +30,10 @@ export default function DomainsIndex({
     const page = usePage<AuthenticatedSharedData>();
     const canAddDomains = page.props.auth.abilities.addDomains;
 
-    const { currentStatus, gridFilters, perPage, sorting, statusTabs } =
-        buildDatagridState(config, filters, statistics, 'Search domains...');
+    const { currentStatus, gridFilters, perPage, sorting, statusTabs } = buildScaffoldDatagridState(config, filters, statistics, {
+        searchPlaceholder: 'Search domains...',
+        perPageOptions: [15, 25, 50, 100],
+    });
 
     const columns: DatagridColumn<DomainListItem>[] = [
         {
@@ -127,12 +122,11 @@ export default function DomainsIndex({
                 filters={gridFilters}
                 tabs={{ name: 'status', items: statusTabs }}
                 getRowKey={(domain) => domain.id}
-                rowActions={(domain) => mapRowActions(domain.actions)}
-                bulkActions={buildBulkActions(
-                    config.actions,
-                    config.settings.routePrefix,
+                rowActions={(domain) => mapScaffoldRowActions(domain.actions)}
+                bulkActions={buildScaffoldBulkActions(config.actions, {
+                    bulkActionUrl: route('platform.domains.bulk-action'),
                     currentStatus,
-                )}
+                })}
                 empty={{
                     icon: <GlobeIcon className="size-5" />,
                     title: 'No domains found',

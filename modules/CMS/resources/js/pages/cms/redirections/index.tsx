@@ -17,11 +17,11 @@ import type {
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
-import { buildDatagridState } from '../../../lib/helpers';
+import { buildScaffoldDatagridState } from '@/lib/scaffold-datagrid';
 import type {
     RedirectionIndexPageProps,
     RedirectionListItem,
-} from '../../types/cms';
+} from '../../../types/cms';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: route('dashboard') },
@@ -40,13 +40,9 @@ export default function RedirectionsIndex({
     const canDeleteRedirections = page.props.auth.abilities.deleteRedirections;
     const canRestoreRedirections =
         page.props.auth.abilities.restoreRedirections;
-    const { currentStatus, gridFilters, perPage, sorting, statusTabs } =
-        buildDatagridState(
-            config,
-            filters,
-            statistics,
-            'Search redirections...',
-        );
+    const { currentStatus, gridFilters, perPage, sorting, statusTabs } = buildScaffoldDatagridState(config, filters, statistics, {
+        searchPlaceholder: 'Search redirections...',
+    });
 
     const handleBulkAction = (
         action: string,

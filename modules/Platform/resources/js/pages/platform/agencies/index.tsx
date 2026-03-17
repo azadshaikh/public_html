@@ -5,16 +5,9 @@ import type { DatagridColumn } from '@/components/datagrid/datagrid';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
+import { buildScaffoldBulkActions, buildScaffoldDatagridState, mapScaffoldRowActions } from '@/lib/scaffold-datagrid';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
-import {
-    buildBulkActions,
-    buildDatagridState,
-    mapRowActions,
-} from '../../../lib/helpers';
-import type {
-    AgencyListItem,
-    PlatformIndexPageProps,
-} from '../../../types/platform';
+import type { AgencyListItem, PlatformIndexPageProps } from '../../../types/platform';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: route('dashboard') },
@@ -37,8 +30,10 @@ export default function AgenciesIndex({
     const page = usePage<AuthenticatedSharedData>();
     const canAddAgencies = page.props.auth.abilities.addAgencies;
 
-    const { currentStatus, gridFilters, perPage, sorting, statusTabs } =
-        buildDatagridState(config, filters, statistics, 'Search agencies...');
+    const { currentStatus, gridFilters, perPage, sorting, statusTabs } = buildScaffoldDatagridState(config, filters, statistics, {
+        searchPlaceholder: 'Search agencies...',
+        perPageOptions: [15, 25, 50, 100],
+    });
 
     const columns: DatagridColumn<AgencyListItem>[] = [
         {
@@ -135,12 +130,11 @@ export default function AgenciesIndex({
                 filters={gridFilters}
                 tabs={{ name: 'status', items: statusTabs }}
                 getRowKey={(agency) => agency.id}
-                rowActions={(agency) => mapRowActions(agency.actions)}
-                bulkActions={buildBulkActions(
-                    config.actions,
-                    config.settings.routePrefix,
+                rowActions={(agency) => mapScaffoldRowActions(agency.actions)}
+                bulkActions={buildScaffoldBulkActions(config.actions, {
+                    bulkActionUrl: route('platform.agencies.bulk-action'),
                     currentStatus,
-                )}
+                })}
                 empty={{
                     icon: <Building2Icon className="size-5" />,
                     title: 'No agencies found',

@@ -83,29 +83,30 @@ class PlatformModuleMigrationTest extends TestCase
 
     public function test_primary_platform_crud_controllers_use_inertia_scaffold_controller(): void
     {
-        $baseController = file_get_contents(base_path('modules/Platform/app/Http/Controllers/PlatformScaffoldController.php'));
         $agencyController = file_get_contents(base_path('modules/Platform/app/Http/Controllers/AgencyController.php'));
+        $dnsController = file_get_contents(base_path('modules/Platform/app/Http/Controllers/DomainDnsController.php'));
         $serverController = file_get_contents(base_path('modules/Platform/app/Http/Controllers/ServerController.php'));
         $secretController = file_get_contents(base_path('modules/Platform/app/Http/Controllers/SecretController.php'));
         $websiteController = file_get_contents(base_path('modules/Platform/app/Http/Controllers/WebsiteController.php'));
 
-        $this->assertIsString($baseController);
         $this->assertIsString($agencyController);
+        $this->assertIsString($dnsController);
         $this->assertIsString($serverController);
         $this->assertIsString($secretController);
         $this->assertIsString($websiteController);
 
-        $this->assertStringContainsString('class PlatformScaffoldController extends Controller', $baseController);
-        $this->assertStringContainsString('return view($this->scaffold()->getIndexView()', $baseController);
         $this->assertStringContainsString('use App\\Scaffold\\ScaffoldController;', $agencyController);
         $this->assertStringContainsString('class AgencyController extends ScaffoldController', $agencyController);
         $this->assertStringContainsString("return 'platform/agencies';", $agencyController);
+        $this->assertStringContainsString('class DomainDnsController extends ScaffoldController', $dnsController);
+        $this->assertStringContainsString("return 'platform/dns';", $dnsController);
         $this->assertStringContainsString('class ServerController extends ScaffoldController', $serverController);
         $this->assertStringContainsString("return 'platform/servers';", $serverController);
         $this->assertStringContainsString('class SecretController extends ScaffoldController', $secretController);
         $this->assertStringContainsString("return 'platform/secrets';", $secretController);
         $this->assertStringContainsString('class WebsiteController extends ScaffoldController', $websiteController);
         $this->assertStringContainsString("return 'platform/websites';", $websiteController);
+        $this->assertFileDoesNotExist(base_path('modules/Platform/app/Http/Controllers/PlatformScaffoldController.php'));
     }
 
     public function test_platform_module_has_inertia_pages_for_platform_crud_resources(): void
@@ -119,6 +120,10 @@ class PlatformModuleMigrationTest extends TestCase
             'modules/Platform/resources/js/pages/platform/domains/create.tsx',
             'modules/Platform/resources/js/pages/platform/domains/edit.tsx',
             'modules/Platform/resources/js/pages/platform/domains/show.tsx',
+            'modules/Platform/resources/js/pages/platform/dns/index.tsx',
+            'modules/Platform/resources/js/pages/platform/dns/create.tsx',
+            'modules/Platform/resources/js/pages/platform/dns/edit.tsx',
+            'modules/Platform/resources/js/pages/platform/dns/show.tsx',
             'modules/Platform/resources/js/pages/platform/providers/index.tsx',
             'modules/Platform/resources/js/pages/platform/providers/create.tsx',
             'modules/Platform/resources/js/pages/platform/providers/edit.tsx',
@@ -166,8 +171,11 @@ class PlatformModuleMigrationTest extends TestCase
             $contents = file_get_contents(base_path("modules/Platform/app/Services/{$service}.php"));
 
             $this->assertIsString($contents);
-            $this->assertStringContainsString('$this->scaffold()->toDataGridConfig()', $contents);
-            $this->assertStringNotContainsString('getDataGridConfig as protected scaffoldGetDataGridConfig', $contents);
+            $this->assertStringNotContainsString('getDataGridConfig', $contents);
+            $this->assertStringNotContainsString('$this->scaffold()->toDataGridConfig()', $contents);
         }
+
+        $this->assertFileDoesNotExist(base_path('modules/Platform/resources/js/lib/helpers.ts'));
+        $this->assertFileDoesNotExist(base_path('modules/CMS/resources/js/lib/helpers.ts'));
     }
 }

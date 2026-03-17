@@ -15,7 +15,8 @@ import type {
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
-import { buildDatagridState, releaseRouteParams } from '../../../lib/helpers';
+import { buildScaffoldDatagridState } from '@/lib/scaffold-datagrid';
+import { releaseRouteParams } from '../../../lib/helpers';
 
 export default function ReleasesIndex({
     config,
@@ -35,8 +36,9 @@ export default function ReleasesIndex({
     const canEditReleases = abilities.editReleases ?? true;
     const canDeleteReleases = abilities.deleteReleases ?? true;
     const canRestoreReleases = abilities.restoreReleases ?? true;
-    const { currentStatus, gridFilters, perPage, sorting, statusTabs } =
-        buildDatagridState(config, filters, statistics, 'Search releases...');
+    const { currentStatus, gridFilters, perPage, sorting, statusTabs } = buildScaffoldDatagridState(config, filters, statistics, {
+        searchPlaceholder: 'Search releases...',
+    });
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: route('dashboard') },
         { title: 'Releases', href: route('releasemanager.releases.index', releaseRouteParams(type, { status: 'all' })) },

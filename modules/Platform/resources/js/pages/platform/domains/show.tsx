@@ -104,6 +104,12 @@ export default function DomainsShow({
                             Edit domain
                         </Link>
                     </Button>
+                    <Button variant="outline" asChild>
+                        <Link href={route('platform.dns.index', { status: 'all', domain_id: domain.id })}>
+                            <GlobeIcon data-icon="inline-start" />
+                            Manage DNS
+                        </Link>
+                    </Button>
                 </div>
             }
         >
@@ -244,11 +250,18 @@ export default function DomainsShow({
                 <div className="grid gap-6 xl:grid-cols-2">
                     <Card>
                         <CardHeader>
-                            <CardTitle>DNS records</CardTitle>
-                            <CardDescription>
-                                Latest known DNS records attached to this
-                                domain.
-                            </CardDescription>
+                            <div className="flex items-center justify-between gap-3">
+                                <div>
+                                    <CardTitle>DNS records</CardTitle>
+                                    <CardDescription>Latest known DNS records attached to this domain.</CardDescription>
+                                </div>
+                                <Button variant="outline" size="sm" asChild>
+                                    <Link href={route('platform.dns.create', { domain_id: domain.id })}>
+                                        <PlusIcon data-icon="inline-start" />
+                                        Add record
+                                    </Link>
+                                </Button>
+                            </div>
                         </CardHeader>
                         <CardContent className="flex flex-col gap-3">
                             {dnsRecords.length === 0 ? (

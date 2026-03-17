@@ -5,16 +5,9 @@ import type { DatagridColumn } from '@/components/datagrid/datagrid';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
+import { buildScaffoldBulkActions, buildScaffoldDatagridState, mapScaffoldRowActions } from '@/lib/scaffold-datagrid';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
-import {
-    buildBulkActions,
-    buildDatagridState,
-    mapRowActions,
-} from '../../../lib/helpers';
-import type {
-    PlatformIndexPageProps,
-    ProviderListItem,
-} from '../../../types/platform';
+import type { PlatformIndexPageProps, ProviderListItem } from '../../../types/platform';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: route('dashboard') },
@@ -37,8 +30,10 @@ export default function ProvidersIndex({
     const page = usePage<AuthenticatedSharedData>();
     const canAddProviders = page.props.auth.abilities.addProviders;
 
-    const { currentStatus, gridFilters, perPage, sorting, statusTabs } =
-        buildDatagridState(config, filters, statistics, 'Search providers...');
+    const { currentStatus, gridFilters, perPage, sorting, statusTabs } = buildScaffoldDatagridState(config, filters, statistics, {
+        searchPlaceholder: 'Search providers...',
+        perPageOptions: [15, 25, 50, 100],
+    });
 
     const columns: DatagridColumn<ProviderListItem>[] = [
         {
@@ -128,12 +123,11 @@ export default function ProvidersIndex({
                 filters={gridFilters}
                 tabs={{ name: 'status', items: statusTabs }}
                 getRowKey={(provider) => provider.id}
-                rowActions={(provider) => mapRowActions(provider.actions)}
-                bulkActions={buildBulkActions(
-                    config.actions,
-                    config.settings.routePrefix,
+                rowActions={(provider) => mapScaffoldRowActions(provider.actions)}
+                bulkActions={buildScaffoldBulkActions(config.actions, {
+                    bulkActionUrl: route('platform.providers.bulk-action'),
                     currentStatus,
-                )}
+                })}
                 empty={{
                     icon: <ServerCogIcon className="size-5" />,
                     title: 'No providers found',

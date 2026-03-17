@@ -95,6 +95,7 @@ class ScaffoldGeneratorFileFactory
             'show_route' => $showRoute,
             'edit_route' => $editRoute,
             'update_route' => $updateRoute,
+            'bulk_action_route' => (string) ($blueprint['routes']['bulk-action'] ?? ''),
             'breadcrumbs_index_route' => $breadcrumbsIndexRoute,
             'add_ability' => $addAbility,
             'model_class' => $modelClass,
@@ -560,7 +561,7 @@ export default function {$context['studly_plural']}Index({ config, rows, filters
                 getRowKey={(row) => row.id}
                 rowActions={(row) => mapScaffoldRowActions(row.actions)}
                 bulkActions={buildScaffoldBulkActions(config.actions, {
-                    routePrefix: config.settings.routePrefix,
+                    bulkActionUrl: route('{$context['bulk_action_route']}'),
                     currentStatus,
                 })}
                 empty={{
@@ -571,7 +572,7 @@ export default function {$context['studly_plural']}Index({ config, rows, filters
                 sorting={sorting}
                 perPage={perPage}
                 title="{$context['entity_plural']}"
-                description="Generated from the scaffold runtime contract."
+                description="Review and manage {$context['entity_plural']} from the scaffold datagrid."
             />
         </AppLayout>
     );

@@ -15,11 +15,8 @@ import type {
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
-import { buildDatagridState } from '../../../lib/helpers';
-import type {
-    DesignBlockIndexPageProps,
-    DesignBlockListItem,
-} from '../../types/cms';
+import { buildScaffoldDatagridState } from '@/lib/scaffold-datagrid';
+import type { DesignBlockIndexPageProps, DesignBlockListItem } from '../../../types/cms';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: route('dashboard') },
@@ -36,15 +33,10 @@ export default function DesignBlocksIndex({
     const canAddDesignBlocks = page.props.auth.abilities.addDesignBlocks;
     const canEditDesignBlocks = page.props.auth.abilities.editDesignBlocks;
     const canDeleteDesignBlocks = page.props.auth.abilities.deleteDesignBlocks;
-    const canRestoreDesignBlocks =
-        page.props.auth.abilities.restoreDesignBlocks;
-    const { currentStatus, gridFilters, perPage, sorting, statusTabs } =
-        buildDatagridState(
-            config,
-            filters,
-            statistics,
-            'Search design blocks...',
-        );
+    const canRestoreDesignBlocks = page.props.auth.abilities.restoreDesignBlocks;
+    const { currentStatus, gridFilters, perPage, sorting, statusTabs } = buildScaffoldDatagridState(config, filters, statistics, {
+        searchPlaceholder: 'Search design blocks...',
+    });
 
     const handleBulkAction = (
         action: string,

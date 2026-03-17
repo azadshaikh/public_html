@@ -56,7 +56,8 @@ type BuildDatagridStateOptions = {
 };
 
 type BuildBulkActionOptions<T> = {
-    routePrefix: string;
+    bulkActionUrl?: string;
+    routePrefix?: string;
     currentStatus: string;
     getRowId?: (row: T) => string | number;
     iconMap?: IconMap;
@@ -253,6 +254,13 @@ export function buildScaffoldBulkActions<T extends { id: string | number }>(
         return [];
     }
 
+    const bulkActionUrl = options.bulkActionUrl
+        ?? (options.routePrefix ? route(`${options.routePrefix}.bulk-action`) : null);
+
+    if (!bulkActionUrl) {
+        return [];
+    }
+
     return actions
         .filter((action) => action.scope === 'both' || action.scope === 'bulk')
         .filter((action) => matchesStatusCondition(action.conditions?.status, options.currentStatus))
@@ -266,7 +274,7 @@ export function buildScaffoldBulkActions<T extends { id: string | number }>(
             confirm: action.confirmBulk ?? action.confirm,
             onSelect: (rows, clearSelection) => {
                 router.post(
-                    route(`${options.routePrefix}.bulk-action`),
+                    bulkActionUrl,
                     {
                         action: action.key,
                         ids: rows.map((row) =>

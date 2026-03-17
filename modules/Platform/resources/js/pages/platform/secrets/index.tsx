@@ -5,16 +5,9 @@ import type { DatagridColumn } from '@/components/datagrid/datagrid';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
+import { buildScaffoldBulkActions, buildScaffoldDatagridState, mapScaffoldRowActions } from '@/lib/scaffold-datagrid';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
-import {
-    buildBulkActions,
-    buildDatagridState,
-    mapRowActions,
-} from '../../../lib/helpers';
-import type {
-    PlatformIndexPageProps,
-    SecretListItem,
-} from '../../../types/platform';
+import type { PlatformIndexPageProps, SecretListItem } from '../../../types/platform';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: route('dashboard') },
@@ -37,8 +30,10 @@ export default function SecretsIndex({
     const page = usePage<AuthenticatedSharedData>();
     const canAddSecrets = page.props.auth.abilities.addSecrets;
 
-    const { currentStatus, gridFilters, perPage, sorting, statusTabs } =
-        buildDatagridState(config, filters, statistics, 'Search secrets...');
+    const { currentStatus, gridFilters, perPage, sorting, statusTabs } = buildScaffoldDatagridState(config, filters, statistics, {
+        searchPlaceholder: 'Search secrets...',
+        perPageOptions: [15, 25, 50, 100],
+    });
 
     const columns: DatagridColumn<SecretListItem>[] = [
         {
@@ -124,12 +119,11 @@ export default function SecretsIndex({
                 filters={gridFilters}
                 tabs={{ name: 'status', items: statusTabs }}
                 getRowKey={(secret) => secret.id}
-                rowActions={(secret) => mapRowActions(secret.actions)}
-                bulkActions={buildBulkActions(
-                    config.actions,
-                    config.settings.routePrefix,
+                rowActions={(secret) => mapScaffoldRowActions(secret.actions)}
+                bulkActions={buildScaffoldBulkActions(config.actions, {
+                    bulkActionUrl: route('platform.secrets.bulk-action'),
                     currentStatus,
-                )}
+                })}
                 empty={{
                     icon: <KeyRoundIcon className="size-5" />,
                     title: 'No secrets found',
