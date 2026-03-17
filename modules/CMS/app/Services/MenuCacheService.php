@@ -3,7 +3,9 @@
 namespace Modules\CMS\Services;
 
 use App\Support\Cache\AbstractCacheService;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
+use Modules\CMS\Models\CmsPost;
 use Modules\CMS\Models\Menu;
 
 /**
@@ -49,10 +51,25 @@ class MenuCacheService extends AbstractCacheService
                 ->first();
 
             // Cache a false sentinel so missing menus don't trigger a cache miss every request.
-            return $menu ?: false;
+            return $menu ? $this->serializeMenu($menu) : false;
         });
 
-        return $cached === false ? null : $cached;
+        if ($cached === false) {
+            return null;
+        }
+
+        if (is_array($cached)) {
+            return $this->hydrateMenu($cached);
+        }
+
+        $this->forget($cacheKey);
+
+        return Menu::query()
+            ->where('type', Menu::TYPE_CONTAINER)
+            ->where('location', $location)
+            ->where('is_active', true)
+            ->with(['items.children.page', 'items.page'])
+            ->first();
     }
 
     /**
@@ -64,12 +81,25 @@ class MenuCacheService extends AbstractCacheService
     {
         $cacheKey = self::ITEMS_PREFIX.$menuId;
 
-        return $this->remember($cacheKey, fn () => Menu::query()
+        $cached = $this->remember($cacheKey, fn (): array => $this->serializeMenus(Menu::query()
             ->where('parent_id', $menuId)
             ->where('is_active', true)
             ->with(['children', 'page'])
             ->orderBy('sort_order')
-            ->get());
+            ->get()));
+
+        if (is_array($cached)) {
+            return $this->hydrateMenus($cached);
+        }
+
+        $this->forget($cacheKey);
+
+        return Menu::query()
+            ->where('parent_id', $menuId)
+            ->where('is_active', true)
+            ->with(['children', 'page'])
+            ->orderBy('sort_order')
+            ->get();
     }
 
     /**
@@ -191,5 +221,77 @@ class MenuCacheService extends AbstractCacheService
         }
 
         return $result;
+    }
+
+    private function serializeMenu(Menu $menu): array
+    {
+        $payload = $menu->getAttributes();
+
+        if ($menu->relationLoaded('children')) {
+            $payload['children'] = $this->serializeMenus($menu->getRelation('children'));
+        }
+
+        if ($menu->relationLoaded('items')) {
+            $payload['items'] = $this->serializeMenus($menu->getRelation('items'));
+        }
+
+        if ($menu->relationLoaded('page') && $menu->getRelation('page') instanceof CmsPost) {
+            $payload['page'] = $menu->getRelation('page')->getAttributes();
+        }
+
+        return $payload;
+    }
+
+    private function serializeMenus(Collection $menus): array
+    {
+        return $menus->map(fn (Menu $menu): array => $this->serializeMenu($menu))->all();
+    }
+
+    private function hydrateMenus(array $payload): EloquentCollection
+    {
+        return new EloquentCollection(collect($payload)
+            ->filter(fn (mixed $menu): bool => is_array($menu))
+            ->map(fn (array $menu): Menu => $this->hydrateMenu($menu))
+            ->values()
+            ->all());
+    }
+
+    private function hydrateMenu(array $payload): Menu
+    {
+        $relations = [];
+
+        if (array_key_exists('children', $payload) && is_array($payload['children'])) {
+            $relations['children'] = $this->hydrateMenus($payload['children']);
+        }
+
+        if (array_key_exists('items', $payload) && is_array($payload['items'])) {
+            $relations['items'] = $this->hydrateMenus($payload['items']);
+        }
+
+        if (array_key_exists('page', $payload) && is_array($payload['page'])) {
+            $relations['page'] = $this->hydrateCmsPost($payload['page']);
+        }
+
+        unset($payload['children'], $payload['items'], $payload['page']);
+
+        /** @var Menu $menu */
+        $menu = Menu::query()->newModelInstance();
+        $menu->setRawAttributes($payload, true);
+        $menu->exists = true;
+        $menu->wasRecentlyCreated = false;
+
+        foreach ($relations as $relation => $value) {
+            $menu->setRelation($relation, $value);
+        }
+
+        return $menu;
+    }
+
+    private function hydrateCmsPost(array $payload): CmsPost
+    {
+        /** @var CmsPost $post */
+        $post = CmsPost::hydrate([$payload])->firstOrFail();
+
+        return $post;
     }
 }

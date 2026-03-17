@@ -47,19 +47,17 @@ class RedirectionCacheService extends AbstractCacheService
 
         $value = $this->remember(
             self::ACTIVE_CACHE_KEY,
-            fn () => Redirection::getActiveRedirections()
+            fn (): array => $this->serializeRedirections(Redirection::getActiveRedirections())
         );
 
-        if ($value instanceof Collection) {
-            return $value;
+        if (is_array($value)) {
+            return $this->hydrateRedirections($value);
         }
 
-        // Cache value is corrupted / from an older format (e.g. array). Heal it.
+        // Cache value is corrupted or from an older object-based format. Heal it.
         $this->forget(self::ACTIVE_CACHE_KEY);
 
-        $fresh = Redirection::getActiveRedirections();
-
-        return $fresh instanceof Collection ? $fresh : collect($fresh);
+        return Redirection::getActiveRedirections();
     }
 
     /**
@@ -165,5 +163,15 @@ class RedirectionCacheService extends AbstractCacheService
         );
 
         return $tableExists;
+    }
+
+    private function serializeRedirections(Collection $redirections): array
+    {
+        return $redirections->map(fn (Redirection $redirection): array => $redirection->getAttributes())->all();
+    }
+
+    private function hydrateRedirections(array $payload): Collection
+    {
+        return Redirection::hydrate($payload);
     }
 }
