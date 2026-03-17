@@ -17,8 +17,12 @@ final class ModuleAutoloader
     public static function register(array $modules): void
     {
         foreach ($modules as $module) {
-            self::$prefixes[$module->namespace] = $module->appPath;
+            self::registerPrefix(rtrim($module->namespace, '\\').'\\Database\\Factories\\', $module->databaseFactoriesPath());
+            self::registerPrefix(rtrim($module->namespace, '\\').'\\Database\\Seeders\\', $module->databaseSeedersPath());
+            self::registerPrefix($module->namespace, $module->appPath);
         }
+
+        uksort(self::$prefixes, static fn (string $left, string $right): int => strlen($right) <=> strlen($left));
 
         if (self::$registered) {
             return;
@@ -38,13 +42,24 @@ final class ModuleAutoloader
 
             $relativeClass = substr($class, strlen($prefix));
             $relativePath = str_replace('\\', DIRECTORY_SEPARATOR, $relativeClass).'.php';
-            $filePath = $basePath.DIRECTORY_SEPARATOR.$relativePath;
+            $filePath = rtrim($basePath, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.$relativePath;
 
             if (is_file($filePath)) {
                 require_once $filePath;
+
+                return;
             }
 
             return;
         }
+    }
+
+    private static function registerPrefix(string $prefix, string $basePath): void
+    {
+        if ($basePath === '') {
+            return;
+        }
+
+        self::$prefixes[$prefix] = $basePath;
     }
 }

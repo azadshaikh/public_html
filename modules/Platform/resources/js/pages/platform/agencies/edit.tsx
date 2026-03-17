@@ -1,0 +1,51 @@
+import AppLayout from '@/layouts/app-layout';
+import type { BreadcrumbItem } from '@/types';
+import AgencyForm from '../../../components/agencies/agency-form';
+import type { AgencyFormValues, PlatformOption } from '../../../types/platform';
+
+type AgenciesEditPageProps = {
+    agency: {
+        id: number;
+        name: string;
+        uid: string | null;
+    };
+    initialValues: AgencyFormValues;
+    typeOptions: PlatformOption[];
+    ownerOptions: PlatformOption[];
+    planOptions: PlatformOption[];
+    statusOptions: PlatformOption[];
+    websiteOptions: PlatformOption[];
+    default_country_code: string;
+    default_phone_code: string;
+};
+
+export default function AgenciesEdit(props: AgenciesEditPageProps) {
+    const breadcrumbs: BreadcrumbItem[] = [
+        { title: 'Dashboard', href: route('dashboard') },
+        { title: 'Platform', href: route('platform.agencies.index', { status: 'all' }) },
+        { title: 'Agencies', href: route('platform.agencies.index', { status: 'all' }) },
+        { title: props.agency.name, href: route('platform.agencies.show', props.agency.id) },
+        { title: 'Edit', href: route('platform.agencies.edit', props.agency.id) },
+    ];
+
+    return (
+        <AppLayout
+            breadcrumbs={breadcrumbs}
+            title={`Edit ${props.agency.name}`}
+            description="Update agency defaults, ownership, and provisioning metadata."
+        >
+            <AgencyForm
+                mode="edit"
+                agency={props.agency}
+                initialValues={props.initialValues}
+                typeOptions={props.typeOptions}
+                ownerOptions={props.ownerOptions}
+                planOptions={props.planOptions}
+                statusOptions={props.statusOptions}
+                websiteOptions={props.websiteOptions}
+                defaultCountryCode={props.default_country_code}
+                defaultPhoneCode={props.default_phone_code}
+            />
+        </AppLayout>
+    );
+}

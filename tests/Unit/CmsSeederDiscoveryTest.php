@@ -9,7 +9,7 @@ use Tests\TestCase;
 class CmsSeederDiscoveryTest extends TestCase
 {
     /**
-     * CMS module seeders should be autoloadable from the module app directory.
+     * CMS module seeders should be autoloadable through the module runtime autoloader.
      */
     public function test_cms_module_database_seeder_is_autoloadable(): void
     {

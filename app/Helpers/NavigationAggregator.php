@@ -297,6 +297,7 @@ class NavigationAggregator
                 'target' => $item['target'] ?? null,
                 'hard_reload' => (bool) ($item['hard_reload'] ?? false),
                 'attributes' => isset($item['attributes']) && is_array($item['attributes']) ? $item['attributes'] : [],
+                'default_open' => (bool) ($item['default_open'] ?? false),
                 'children' => $children,
                 'hasChildren' => $children !== [],
             ];

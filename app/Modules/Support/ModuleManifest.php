@@ -29,6 +29,21 @@ final readonly class ModuleManifest
         return '/'.$this->slug;
     }
 
+    public function databasePath(): string
+    {
+        return $this->basePath.'/database';
+    }
+
+    public function databaseFactoriesPath(): string
+    {
+        return $this->databasePath().'/factories';
+    }
+
+    public function databaseSeedersPath(): string
+    {
+        return $this->databasePath().'/seeders';
+    }
+
     /**
      * @return array{name: string, slug: string, version: string, description: string, author: ?string, homepage: ?string, icon: ?string, inertiaNamespace: string, url: string}
      */

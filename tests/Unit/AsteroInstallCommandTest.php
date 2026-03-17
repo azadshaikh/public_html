@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use App\Console\Commands\AsteroInstallCommand;
+use App\Modules\ModuleManager;
 use App\Services\InstallationPreCheckService;
 use App\Services\UserService;
 use Database\Seeders\DatabaseSeeder;
@@ -61,41 +62,23 @@ class AsteroInstallCommandTest extends TestCase
 
     public function test_database_seeder_returns_only_enabled_module_seeders(): void
     {
+        $this->refreshModuleManager();
+
         $moduleSeeders = (new DatabaseSeeder)->getModuleSeeders();
 
-        $this->assertContains('Modules\\Cms\\Database\\Seeders\\DatabaseSeeder', $moduleSeeders);
+        $this->assertContains('Modules\\CMS\\Database\\Seeders\\DatabaseSeeder', $moduleSeeders);
         $this->assertContains('Modules\\ChatBot\\Database\\Seeders\\DatabaseSeeder', $moduleSeeders);
         $this->assertContains('Modules\\Todos\\Database\\Seeders\\DatabaseSeeder', $moduleSeeders);
+        $this->assertNotContains('Modules\\Platform\\Database\\Seeders\\DatabaseSeeder', $moduleSeeders);
+        $this->assertNotContains('Modules\\ReleaseManager\\Database\\Seeders\\DatabaseSeeder', $moduleSeeders);
     }
 
-    public function test_database_seeder_includes_local_seeders_when_running_locally(): void
+    public function test_database_seeder_does_not_include_local_only_seeders(): void
     {
-        $databaseSeeder = new class extends DatabaseSeeder
-        {
-            public function markAsLocalEnvironment(): void
-            {
-                $this->command = new class
-                {
-                    public function getLaravel(): object
-                    {
-                        return new class
-                        {
-                            public function environment(string ...$environments): bool
-                            {
-                                return in_array('local', $environments, true);
-                            }
-                        };
-                    }
-                };
-            }
-        };
+        $seeders = (new DatabaseSeeder)->getSeeders();
 
-        $databaseSeeder->markAsLocalEnvironment();
-
-        $seeders = $databaseSeeder->getSeeders();
-
-        $this->assertContains(LocalUserSeeder::class, $seeders);
-        $this->assertContains(LocalDatagridUsersSeeder::class, $seeders);
+        $this->assertNotContains(LocalUserSeeder::class, $seeders);
+        $this->assertNotContains(LocalDatagridUsersSeeder::class, $seeders);
     }
 
     private function callPrivateMethod(object $instance, string $method, array $arguments = []): mixed
@@ -103,5 +86,14 @@ class AsteroInstallCommandTest extends TestCase
         $reflectionMethod = new ReflectionMethod($instance, $method);
 
         return $reflectionMethod->invokeArgs($instance, $arguments);
+    }
+
+    private function refreshModuleManager(): void
+    {
+        app()->forgetInstance(ModuleManager::class);
+        app()->singleton(ModuleManager::class, fn ($app): ModuleManager => new ModuleManager(
+            files: $app['files'],
+            config: $app['config'],
+        ));
     }
 }

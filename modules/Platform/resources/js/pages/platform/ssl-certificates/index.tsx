@@ -1,0 +1,131 @@
+import { Link, usePage } from '@inertiajs/react';
+import { PlusIcon, ShieldCheckIcon } from 'lucide-react';
+import { Datagrid } from '@/components/datagrid/datagrid';
+import type { DatagridColumn, DatagridTab } from '@/components/datagrid/datagrid';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import AppLayout from '@/layouts/app-layout';
+import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
+import { buildBulkActions, mapFilters, mapRowActions, mapStatusTab } from '../../../lib/helpers';
+import type { PlatformIndexPageProps, SslCertificateListItem } from '../../../types/platform';
+
+const breadcrumbs: BreadcrumbItem[] = [
+    { title: 'Dashboard', href: route('dashboard') },
+    { title: 'Platform', href: route('platform.ssl-certificates.index', { status: 'all' }) },
+    { title: 'SSL Certificates', href: route('platform.ssl-certificates.index', { status: 'all' }) },
+];
+
+export default function SslCertificatesIndex({
+    config,
+    rows,
+    filters,
+    statistics,
+}: PlatformIndexPageProps<SslCertificateListItem>) {
+    const page = usePage<AuthenticatedSharedData>();
+    const canEditDomains = page.props.auth.abilities.editDomains;
+
+    const gridFilters = mapFilters(config.filters, filters, 'Search certificates...');
+    const statusTabs: DatagridTab[] = config.statusTabs.map((tab) =>
+        mapStatusTab(tab, statistics, String(filters.status ?? 'all')),
+    );
+
+    const columns: DatagridColumn<SslCertificateListItem>[] = [
+        {
+            key: 'name',
+            header: 'Certificate',
+            sortable: true,
+            cell: (certificate) => (
+                <div className="flex flex-col gap-1">
+                    {certificate.show_url ? (
+                        <Link href={certificate.show_url} className="font-medium text-foreground hover:text-primary">
+                            {certificate.name}
+                        </Link>
+                    ) : (
+                        <span className="font-medium text-foreground">{certificate.name}</span>
+                    )}
+                    {certificate.domain_name ? (
+                        certificate.domain_url ? (
+                            <Link href={certificate.domain_url} className="text-xs text-muted-foreground hover:text-primary">
+                                {certificate.domain_name}
+                            </Link>
+                        ) : (
+                            <span className="text-xs text-muted-foreground">{certificate.domain_name}</span>
+                        )
+                    ) : null}
+                </div>
+            ),
+        },
+        {
+            key: 'certificate_authority',
+            header: 'Authority',
+            cell: (certificate) => <Badge variant="secondary">{certificate.certificate_authority}</Badge>,
+        },
+        {
+            key: 'expires_at',
+            header: 'Expires',
+            sortable: true,
+        },
+        {
+            key: 'status_label',
+            header: 'Status',
+            cell: (certificate) => {
+                const variant =
+                    certificate.status_label === 'Expired'
+                        ? 'destructive'
+                        : certificate.status_label === 'Expiring Soon'
+                          ? 'warning'
+                          : 'success';
+
+                return <Badge variant={variant}>{certificate.status_label}</Badge>;
+            },
+        },
+    ];
+
+    return (
+        <AppLayout
+            breadcrumbs={breadcrumbs}
+            title="SSL Certificates"
+            description="Review certificate health across all domains, including expiry windows and issuing authorities."
+            headerActions={
+                canEditDomains ? (
+                    <Button asChild>
+                        <Link href={route('platform.domains.index', { status: 'all' })}>
+                            <PlusIcon data-icon="inline-start" />
+                            Add certificate
+                        </Link>
+                    </Button>
+                ) : undefined
+            }
+        >
+            <Datagrid
+                action={route('platform.ssl-certificates.index', { status: filters.status ?? 'all' })}
+                rows={rows}
+                columns={columns}
+                filters={gridFilters}
+                tabs={{ name: 'status', items: statusTabs }}
+                getRowKey={(certificate) => certificate.id}
+                rowActions={(certificate) => mapRowActions(certificate.actions)}
+                bulkActions={buildBulkActions(config.actions, config.settings.routePrefix, String(filters.status ?? 'all'))}
+                empty={{
+                    icon: <ShieldCheckIcon className="size-5" />,
+                    title: 'No certificates found',
+                    description: 'Certificates attached to domains will appear here with expiry and status details.',
+                }}
+                sorting={{
+                    sort: String(filters.sort ?? config.settings.defaultSort ?? 'created_at'),
+                    direction:
+                        String(filters.direction ?? config.settings.defaultDirection ?? 'desc') === 'asc'
+                            ? 'asc'
+                            : 'desc',
+                }}
+                perPage={{
+                    value: Number(filters.per_page ?? config.settings.perPage ?? rows.per_page),
+                    options: [15, 25, 50, 100],
+                    paramName: 'per_page',
+                }}
+                title="Global certificate inventory"
+                description="Use the domain links to inspect, replace, or generate certificates for specific domains."
+            />
+        </AppLayout>
+    );
+}

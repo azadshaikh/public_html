@@ -1,0 +1,126 @@
+import { Link, usePage } from '@inertiajs/react';
+import { HardDriveIcon, PlusIcon } from 'lucide-react';
+import { Datagrid } from '@/components/datagrid/datagrid';
+import type { DatagridColumn, DatagridTab } from '@/components/datagrid/datagrid';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import AppLayout from '@/layouts/app-layout';
+import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
+import { buildBulkActions, mapFilters, mapRowActions, mapStatusTab } from '../../../lib/helpers';
+import type { PlatformIndexPageProps, ServerListItem } from '../../../types/platform';
+
+const breadcrumbs: BreadcrumbItem[] = [
+    { title: 'Dashboard', href: route('dashboard') },
+    { title: 'Platform', href: route('platform.servers.index', { status: 'all' }) },
+    { title: 'Servers', href: route('platform.servers.index', { status: 'all' }) },
+];
+
+export default function ServersIndex({ config, rows, filters, statistics }: PlatformIndexPageProps<ServerListItem>) {
+    const page = usePage<AuthenticatedSharedData>();
+    const canAddServers = page.props.auth.abilities.addServers;
+
+    const gridFilters = mapFilters(config.filters, filters, 'Search servers...');
+    const statusTabs: DatagridTab[] = config.statusTabs.map((tab) =>
+        mapStatusTab(tab, statistics, String(filters.status ?? 'all')),
+    );
+
+    const columns: DatagridColumn<ServerListItem>[] = [
+        {
+            key: 'name',
+            header: 'Server',
+            sortable: true,
+            cell: (server) => (
+                <div className="flex flex-col gap-1">
+                    <Link href={route('platform.servers.show', server.id)} className="font-medium text-foreground hover:text-primary">
+                        {server.name}
+                    </Link>
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                        {server.uid ? <span>{server.uid}</span> : null}
+                        <span>{server.ip}</span>
+                    </div>
+                </div>
+            ),
+        },
+        {
+            key: 'provider_name',
+            header: 'Provider',
+        },
+        {
+            key: 'type_label',
+            header: 'Type',
+            cell: (server) => <Badge variant="secondary">{server.type_label}</Badge>,
+        },
+        {
+            key: 'domain_usage_current',
+            header: 'Domains',
+            sortable: true,
+            sortKey: 'current_domains',
+            cell: (server) => (
+                <span className="font-medium">
+                    {server.domain_usage_current}
+                    {server.domain_usage_max ? ` / ${server.domain_usage_max}` : ''}
+                </span>
+            ),
+        },
+        {
+            key: 'status_label',
+            header: 'Status',
+            sortable: true,
+            sortKey: 'status',
+            cell: (server) => <Badge variant={server.is_trashed ? 'destructive' : 'secondary'}>{server.status_label}</Badge>,
+        },
+        {
+            key: 'created_at',
+            header: 'Created',
+            sortable: true,
+        },
+    ];
+
+    return (
+        <AppLayout
+            breadcrumbs={breadcrumbs}
+            title="Servers"
+            description="Manage existing Hestia endpoints and provision fresh infrastructure."
+            headerActions={
+                canAddServers ? (
+                    <Button asChild>
+                        <Link href={route('platform.servers.create')}>
+                            <PlusIcon data-icon="inline-start" />
+                            Add server
+                        </Link>
+                    </Button>
+                ) : undefined
+            }
+        >
+            <Datagrid
+                action={route('platform.servers.index', { status: filters.status ?? 'all' })}
+                rows={rows}
+                columns={columns}
+                filters={gridFilters}
+                tabs={{ name: 'status', items: statusTabs }}
+                getRowKey={(server) => server.id}
+                rowActions={(server) => mapRowActions(server.actions)}
+                bulkActions={buildBulkActions(config.actions, config.settings.routePrefix, String(filters.status ?? 'all'))}
+                empty={{
+                    icon: <HardDriveIcon className="size-5" />,
+                    title: 'No servers found',
+                    description: 'Add an existing server or provision a fresh VPS to get started.',
+                }}
+                sorting={{
+                    sort: String(filters.sort ?? config.settings.defaultSort ?? 'created_at'),
+                    direction:
+                        String(filters.direction ?? config.settings.defaultDirection ?? 'desc') === 'asc'
+                            ? 'asc'
+                            : 'desc',
+                }}
+                perPage={{
+                    value: Number(filters.per_page ?? config.settings.perPage ?? rows.per_page),
+                    options: [15, 25, 50, 100],
+                    paramName: 'per_page',
+                }}
+                title="Infrastructure"
+                description="Watch provisioning status, provider coverage, and domain capacity across servers."
+            />
+        </AppLayout>
+    );
+}

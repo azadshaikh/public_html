@@ -23,6 +23,7 @@ export type NavigationItem = {
     badge?: NavigationBadge | null;
     target?: string | null;
     hard_reload?: boolean;
+    default_open?: boolean;
     attributes?: Record<string, NavigationItemAttributeValue>;
     children: NavigationItem[];
     hasChildren: boolean;

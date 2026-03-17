@@ -1,0 +1,68 @@
+<?php
+
+return [
+    'server_created_successfully' => 'Server created successfully',
+    'error_creating_server' => 'Error creating server',
+    'server_updated_successfully' => 'Server updated successfully',
+    'error_updating_server' => 'Error updating server',
+    'server_not_found' => 'Server not found',
+    'server_permanently_deleted' => 'Server permanently deleted successfully',
+    'server_trashed' => 'Server moved to trash successfully',
+    'error_deleting_server' => 'Error deleting server',
+    'server_restored' => 'Server restored successfully',
+    'error_restoring_server' => 'Error restoring server',
+    'bulk_delete_success' => 'Bulk delete operation completed successfully: :trashed servers moved to trash and :permanently_deleted servers permanently deleted',
+    'error_deleting_servers' => 'Error deleting servers',
+    'server_version_updated' => 'Server Astero version updated successfully',
+    'error_updating_server_version' => 'Error updating server version',
+
+    // Validation Messages
+    'validation' => [
+        'server_name_required' => 'Server Name is required',
+        'server_ip_required' => 'IP Address is required',
+        'server_ip_unique' => 'IP Address already exists',
+        'server_port_required' => 'Port is required',
+        'server_port_integer' => 'Port must be an integer',
+        'server_port_min' => 'Port must be at least 1',
+        'server_port_max' => 'Port cannot exceed 65535',
+        'server_os_max' => 'Operating system cannot exceed 125 characters',
+        'server_cpu_max' => 'CPU information cannot exceed 125 characters',
+        'server_ccore_max' => 'CPU cores cannot exceed 125 characters',
+        'server_ram_integer' => 'RAM must be an integer',
+        'server_ram_min' => 'RAM cannot be negative',
+        'server_storage_integer' => 'Storage must be an integer',
+        'server_storage_min' => 'Storage cannot be negative',
+        'server_fqdn_max' => 'Server FQDN cannot exceed 255 characters',
+        'access_key_required' => 'Access Key ID is required',
+        'secret_key_required' => 'Secret Key is required',
+        'server_key_string' => 'Secret Key must be a string',
+        'astero_version_string' => 'Astero version must be a string',
+        'type_required' => 'Server type is required',
+        'provider_id_required' => 'Server provider is required',
+        'monitoring_boolean' => 'Monitoring must be a boolean',
+        'status_string' => 'Status must be a string',
+        'status_in' => 'Status must be one of the following: active, inactive, maintenance, expired, suspended, trash',
+    ],
+
+    // Controller specific
+    'server_list_title' => 'Manage Servers',
+    'server_create_title' => 'Add New Server',
+    'server_edit_title' => 'Edit Server',
+    'servers_module_title' => 'Servers',
+    'servers_module_name' => 'Servers',
+    'parent_module' => 'Platform',
+    'server_module_name_singular' => 'Server',
+    'certificates_module_title' => 'Certificates',
+    'certificates_module_name' => 'Certificates',
+    'certificate_module_name_singular' => 'Certificate',
+    'certificate_edit_title' => 'Edit Certificate',
+
+    // Activity Logs
+    'logs' => [
+        'server_created' => 'Server created successfully',
+        'server_updated' => 'Server updated successfully',
+        'server_trashed' => 'Server moved to trash successfully',
+        'server_restored' => 'Server restored successfully',
+        'server_version_updated' => 'Server Astero version updated.',
+    ],
+];

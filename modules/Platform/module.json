@@ -1,0 +1,25 @@
+{
+    "name": "Platform",
+    "slug": "platform",
+    "alias": "platform",
+    "description": "Core platform management module for system configuration, settings, and platform administration",
+    "namespace": "Modules\\Platform\\",
+    "keywords": [
+        "platform",
+        "core",
+        "system",
+        "configuration",
+        "administration"
+    ],
+    "priority": 10,
+    "version": "1.0.0",
+    "author": "AsteroDigital",
+    "homepage": "https://asterodigital.com",
+    "category": "Core",
+    "icon": "<i class='ri-settings-3-line'></i>",
+    "provider": "Modules\\Platform\\Providers\\PlatformServiceProvider",
+    "providers": [
+        "Modules\\Platform\\Providers\\PlatformServiceProvider"
+    ],
+    "files": []
+}
