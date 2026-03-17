@@ -3,6 +3,7 @@
 namespace Modules\CMS\Services;
 
 use App\Support\Cache\AbstractCacheService;
+use Closure;
 use Illuminate\Support\Collection;
 use Modules\CMS\Models\CmsPost;
 
@@ -53,7 +54,7 @@ class CmsPostCacheService extends AbstractCacheService
     {
         $cacheKey = self::POPULAR_POSTS_PREFIX.$type.'_'.$limit;
 
-        return $this->remember($cacheKey, fn () => CmsPost::query()->where('type', $type)
+        return $this->rememberPosts($cacheKey, fn () => CmsPost::query()->where('type', $type)
             ->where('status', 'published')
             ->latest('published_at')
             ->limit($limit)
@@ -67,7 +68,7 @@ class CmsPostCacheService extends AbstractCacheService
     {
         $cacheKey = self::CATEGORIES_PREFIX.$type.'_'.$limit;
 
-        return $this->remember($cacheKey, fn () => CmsPost::query()->withCount('publishedTermPosts as post_count')
+        return $this->rememberPosts($cacheKey, fn () => CmsPost::query()->withCount('publishedTermPosts as post_count')
             ->where('status', 'published')
             ->where('type', $type)
             ->orderBy('post_count', 'desc')
@@ -82,7 +83,7 @@ class CmsPostCacheService extends AbstractCacheService
     {
         $cacheKey = self::TAGS_PREFIX.$type.'_'.$limit;
 
-        return $this->remember($cacheKey, fn () => CmsPost::query()->withCount('publishedTermPosts as post_count')
+        return $this->rememberPosts($cacheKey, fn () => CmsPost::query()->withCount('publishedTermPosts as post_count')
             ->where('status', 'published')
             ->where('type', $type)
             ->orderBy('post_count', 'desc')
@@ -182,5 +183,28 @@ class CmsPostCacheService extends AbstractCacheService
     protected function loadFromSource(): mixed
     {
         return null;
+    }
+
+    private function rememberPosts(string $cacheKey, Closure $loader): Collection
+    {
+        $cached = $this->remember($cacheKey, fn (): array => $this->serializePosts($loader()));
+
+        if (is_array($cached)) {
+            return $this->hydratePosts($cached);
+        }
+
+        $this->forget($cacheKey);
+
+        return $loader();
+    }
+
+    private function serializePosts(Collection $posts): array
+    {
+        return $posts->map(fn (CmsPost $post): array => $post->getAttributes())->all();
+    }
+
+    private function hydratePosts(array $payload): Collection
+    {
+        return CmsPost::hydrate($payload);
     }
 }
