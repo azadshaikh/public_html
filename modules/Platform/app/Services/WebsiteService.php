@@ -47,35 +47,6 @@ class WebsiteService implements ScaffoldServiceInterface
         return new WebsiteDefinition;
     }
 
-    public function getDataGridConfig(): array
-    {
-        $config = $this->scaffold()->toDataGridConfig();
-
-        foreach (($config['filters'] ?? []) as $i => $filter) {
-            if (($filter['key'] ?? null) === 'type') {
-                $config['filters'][$i]['options'] = collect(config('platform.website.types', []))
-                    ->mapWithKeys(fn ($item): array => [$item['value'] => $item['label']])
-                    ->toArray();
-            }
-
-            if (($filter['key'] ?? null) === 'server_id') {
-                $config['filters'][$i]['options'] = Server::query()
-                    ->orderBy('name')
-                    ->pluck('name', 'id')
-                    ->toArray();
-            }
-
-            if (($filter['key'] ?? null) === 'agency_id') {
-                $config['filters'][$i]['options'] = Agency::query()
-                    ->orderBy('name')
-                    ->pluck('name', 'id')
-                    ->toArray();
-            }
-        }
-
-        return $config;
-    }
-
     public function getStatistics(): array
     {
         $statusCounts = Website::query()

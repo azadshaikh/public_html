@@ -24,27 +24,6 @@ class ProviderService implements ScaffoldServiceInterface
         return new ProviderDefinition;
     }
 
-    public function getDataGridConfig(): array
-    {
-        $config = $this->scaffold()->toDataGridConfig();
-
-        foreach (($config['filters'] ?? []) as $i => $filter) {
-            if (($filter['key'] ?? null) === 'type') {
-                $config['filters'][$i]['options'] = collect(config('platform.provider.types', []))
-                    ->mapWithKeys(fn ($item, $key): array => [$key => $item['label'] ?? $key])
-                    ->toArray();
-            }
-
-            if (($filter['key'] ?? null) === 'vendor') {
-                $config['filters'][$i]['options'] = collect(config('platform.provider.vendors', []))
-                    ->mapWithKeys(fn ($item, $key): array => [$key => $item['label'] ?? $key])
-                    ->toArray();
-            }
-        }
-
-        return $config;
-    }
-
     public function update(Model $model, array $data): Model
     {
         if (! $model instanceof Provider) {

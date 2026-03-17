@@ -64,36 +64,6 @@ class DomainService implements ScaffoldServiceInterface
         }
     }
 
-    public function getDataGridConfig(): array
-    {
-        $config = $this->scaffold()->toDataGridConfig();
-
-        foreach (($config['filters'] ?? []) as $i => $filter) {
-            if (($filter['key'] ?? null) === 'agency_id') {
-                $config['filters'][$i]['options'] = Agency::query()
-                    ->orderBy('name')
-                    ->pluck('name', 'id')
-                    ->toArray();
-            }
-
-            if (($filter['key'] ?? null) === 'type') {
-                $config['filters'][$i]['options'] = collect(config('platform.domain.types', []))
-                    ->mapWithKeys(fn ($item, $key): array => [$key => $item['label'] ?? $key])
-                    ->toArray();
-            }
-
-            if (($filter['key'] ?? null) === 'registrar_id') {
-                $config['filters'][$i]['options'] = Provider::query()->ofType(Provider::TYPE_DOMAIN_REGISTRAR)
-                    ->active()
-                    ->orderBy('name')
-                    ->pluck('name', 'id')
-                    ->toArray();
-            }
-        }
-
-        return $config;
-    }
-
     public function getAgencyOptions(): array
     {
         /** @var Collection<int, Agency> $agencies */

@@ -9,7 +9,9 @@ use App\Scaffold\Filter;
 use App\Scaffold\ScaffoldDefinition;
 use App\Scaffold\StatusTab;
 use Modules\Platform\Http\Requests\DomainRequest;
+use Modules\Platform\Models\Agency;
 use Modules\Platform\Models\Domain;
+use Modules\Platform\Models\Provider;
 
 class DomainDefinition extends ScaffoldDefinition
 {
@@ -81,9 +83,29 @@ class DomainDefinition extends ScaffoldDefinition
     public function filters(): array
     {
         return [
-            Filter::select('agency_id')->label('Agency')->placeholder('All Agencies'),
-            Filter::select('type')->label('Type')->placeholder('All Types'),
-            Filter::select('registrar_id')->label('Registrar')->placeholder('All Registrars'),
+            Filter::select('agency_id')
+                ->label('Agency')
+                ->placeholder('All Agencies')
+                ->options(Agency::query()->orderBy('name')->pluck('name', 'id')->toArray()),
+            Filter::select('type')
+                ->label('Type')
+                ->placeholder('All Types')
+                ->options(collect(config('platform.domain.types', []))
+                    ->map(fn (array $item, string $key): array => [
+                        'value' => $key,
+                        'label' => $item['label'] ?? $key,
+                    ])
+                    ->values()
+                    ->all()),
+            Filter::select('registrar_id')
+                ->label('Registrar')
+                ->placeholder('All Registrars')
+                ->options(Provider::query()
+                    ->ofType(Provider::TYPE_DOMAIN_REGISTRAR)
+                    ->active()
+                    ->orderBy('name')
+                    ->pluck('name', 'id')
+                    ->toArray()),
             Filter::dateRange('registered_date')->label('Registered Date'),
             Filter::dateRange('expiry_date')->label('Expiry Date'),
         ];

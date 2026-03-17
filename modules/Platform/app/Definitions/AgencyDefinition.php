@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Modules\Platform\Definitions;
 
+use App\Models\User;
 use App\Scaffold\Column;
 use App\Scaffold\Filter;
 use App\Scaffold\ScaffoldDefinition;
@@ -96,8 +97,20 @@ class AgencyDefinition extends ScaffoldDefinition
     public function filters(): array
     {
         return [
-            Filter::select('type')->label('Type')->placeholder('All Types'),
-            Filter::select('owner_id')->label('Owner')->placeholder('All Owners'),
+            Filter::select('type')
+                ->label('Type')
+                ->placeholder('All Types')
+                ->options(collect(config('platform.agency_types', []))
+                    ->map(fn (array $item): array => [
+                        'value' => $item['value'],
+                        'label' => $item['label'],
+                    ])
+                    ->values()
+                    ->all()),
+            Filter::select('owner_id')
+                ->label('Owner')
+                ->placeholder('All Owners')
+                ->options(User::getAddedByOptions()),
         ];
     }
 

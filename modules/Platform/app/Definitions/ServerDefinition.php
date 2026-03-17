@@ -9,6 +9,7 @@ use App\Scaffold\Filter;
 use App\Scaffold\ScaffoldDefinition;
 use App\Scaffold\StatusTab;
 use Modules\Platform\Http\Requests\ServerRequest;
+use Modules\Platform\Models\Provider;
 use Modules\Platform\Models\Server;
 
 class ServerDefinition extends ScaffoldDefinition
@@ -88,8 +89,25 @@ class ServerDefinition extends ScaffoldDefinition
     public function filters(): array
     {
         return [
-            Filter::select('type')->label('Type')->placeholder('All Types'),
-            Filter::select('provider_id')->label('Provider')->placeholder('All Providers'),
+            Filter::select('type')
+                ->label('Type')
+                ->placeholder('All Types')
+                ->options(collect(config('platform.server_types', []))
+                    ->map(fn (array $item): array => [
+                        'value' => $item['value'],
+                        'label' => $item['label'],
+                    ])
+                    ->values()
+                    ->all()),
+            Filter::select('provider_id')
+                ->label('Provider')
+                ->placeholder('All Providers')
+                ->options(Provider::query()
+                    ->ofType(Provider::TYPE_SERVER)
+                    ->active()
+                    ->orderBy('name')
+                    ->pluck('name', 'id')
+                    ->toArray()),
         ];
     }
 

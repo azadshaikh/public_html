@@ -46,29 +46,6 @@ class ServerService implements ScaffoldServiceInterface
         return new ServerDefinition;
     }
 
-    public function getDataGridConfig(): array
-    {
-        $config = $this->scaffold()->toDataGridConfig();
-
-        foreach (($config['filters'] ?? []) as $i => $filter) {
-            if (($filter['key'] ?? null) === 'type') {
-                $config['filters'][$i]['options'] = collect(config('platform.server_types', []))
-                    ->mapWithKeys(fn ($item): array => [$item['value'] => $item['label']])
-                    ->toArray();
-            }
-
-            if (($filter['key'] ?? null) === 'provider_id') {
-                $config['filters'][$i]['options'] = Provider::ofType(Provider::TYPE_SERVER)
-                    ->active()
-                    ->orderBy('name')
-                    ->pluck('name', 'id')
-                    ->toArray();
-            }
-        }
-
-        return $config;
-    }
-
     // =============================================================================
     // REQUIRED ABSTRACT IMPLEMENTATIONS
     // =============================================================================

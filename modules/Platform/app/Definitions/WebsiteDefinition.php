@@ -10,6 +10,8 @@ use App\Scaffold\Filter;
 use App\Scaffold\ScaffoldDefinition;
 use App\Scaffold\StatusTab;
 use Modules\Platform\Http\Requests\WebsiteRequest;
+use Modules\Platform\Models\Agency;
+use Modules\Platform\Models\Server;
 use Modules\Platform\Models\Website;
 
 class WebsiteDefinition extends ScaffoldDefinition
@@ -97,8 +99,14 @@ class WebsiteDefinition extends ScaffoldDefinition
         return [
             Filter::select('customer_ref')->label('Customer')->placeholder('All Customers'),
             Filter::select('plan_ref')->label('Plan')->placeholder('All Plans'),
-            Filter::select('server_id')->label('Server')->placeholder('All Servers'),
-            Filter::select('agency_id')->label('Agency')->placeholder('All Agencies'),
+            Filter::select('server_id')
+                ->label('Server')
+                ->placeholder('All Servers')
+                ->options(Server::query()->orderBy('name')->pluck('name', 'id')->toArray()),
+            Filter::select('agency_id')
+                ->label('Agency')
+                ->placeholder('All Agencies')
+                ->options(Agency::query()->orderBy('name')->pluck('name', 'id')->toArray()),
         ];
     }
 

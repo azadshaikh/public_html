@@ -21,34 +21,6 @@ class DomainDnsRecordService implements ScaffoldServiceInterface
         return new DomainDnsRecordDefinition;
     }
 
-    public function getDataGridConfig(): array
-    {
-        $config = $this->scaffold()->toDataGridConfig();
-
-        foreach (($config['filters'] ?? []) as $i => $filter) {
-            if (($filter['key'] ?? null) === 'domain_id') {
-                $config['filters'][$i]['options'] = Domain::query()
-                    ->orderBy('name')
-                    ->pluck('name', 'id')
-                    ->toArray();
-            }
-
-            if (($filter['key'] ?? null) === 'type') {
-                $config['filters'][$i]['options'] = collect(config('platform.domain.record_types', []))
-                    ->mapWithKeys(fn ($item): array => [(string) ($item['value'] ?? '') => ($item['label'] ?? '')])
-                    ->toArray();
-            }
-
-            if (($filter['key'] ?? null) === 'ttl') {
-                $config['filters'][$i]['options'] = collect(config('platform.domain.dns_ttls', []))
-                    ->mapWithKeys(fn ($item): array => [(string) ($item['value'] ?? '') => ($item['label'] ?? '')])
-                    ->toArray();
-            }
-        }
-
-        return $config;
-    }
-
     public function applyFilters(Builder $query, Request $request): void
     {
         if ($request->filled('domain_id')) {

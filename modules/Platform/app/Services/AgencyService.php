@@ -29,23 +29,6 @@ class AgencyService implements ScaffoldServiceInterface
         return new AgencyDefinition;
     }
 
-    public function getDataGridConfig(): array
-    {
-        $config = $this->scaffold()->toDataGridConfig();
-
-        foreach (($config['filters'] ?? []) as $i => $filter) {
-            if (($filter['key'] ?? null) === 'type') {
-                $config['filters'][$i]['options'] = $this->getTypeOptions();
-            }
-
-            if (($filter['key'] ?? null) === 'owner_id') {
-                $config['filters'][$i]['options'] = $this->getOwnerOptions();
-            }
-        }
-
-        return $config;
-    }
-
     /**
      * Override create to handle address data using AddressableTrait.
      */

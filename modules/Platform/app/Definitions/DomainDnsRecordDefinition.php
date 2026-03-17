@@ -10,6 +10,7 @@ use App\Scaffold\Filter;
 use App\Scaffold\ScaffoldDefinition;
 use App\Scaffold\StatusTab;
 use Modules\Platform\Http\Requests\DomainDnsRecordRequest;
+use Modules\Platform\Models\Domain;
 use Modules\Platform\Models\DomainDnsRecord;
 
 class DomainDnsRecordDefinition extends ScaffoldDefinition
@@ -78,9 +79,32 @@ class DomainDnsRecordDefinition extends ScaffoldDefinition
     public function filters(): array
     {
         return [
-            Filter::select('domain_id')->label('Domain')->placeholder('All Domains'),
-            Filter::select('type')->label('Type')->placeholder('All Types'),
-            Filter::select('ttl')->label('TTL')->placeholder('All TTLs'),
+            Filter::select('domain_id')
+                ->label('Domain')
+                ->placeholder('All Domains')
+                ->options(Domain::query()->orderBy('name')->pluck('name', 'id')->toArray()),
+            Filter::select('type')
+                ->label('Type')
+                ->placeholder('All Types')
+                ->options(collect(config('platform.domain.record_types', []))
+                    ->map(fn (array $item): array => [
+                        'value' => $item['value'] ?? '',
+                        'label' => $item['label'] ?? '',
+                    ])
+                    ->filter(fn (array $item): bool => $item['value'] !== '' && $item['label'] !== '')
+                    ->values()
+                    ->all()),
+            Filter::select('ttl')
+                ->label('TTL')
+                ->placeholder('All TTLs')
+                ->options(collect(config('platform.domain.dns_ttls', []))
+                    ->map(fn (array $item): array => [
+                        'value' => $item['value'] ?? '',
+                        'label' => $item['label'] ?? '',
+                    ])
+                    ->filter(fn (array $item): bool => $item['value'] !== '' && $item['label'] !== '')
+                    ->values()
+                    ->all()),
             Filter::boolean('disabled')->label('Disabled'),
         ];
     }
@@ -149,23 +173,4 @@ class DomainDnsRecordDefinition extends ScaffoldDefinition
         ];
     }
 
-    public function getIndexView(): string
-    {
-        return 'platform::dns_records.index';
-    }
-
-    public function getCreateView(): string
-    {
-        return 'platform::dns_records.create';
-    }
-
-    public function getEditView(): string
-    {
-        return 'platform::dns_records.edit';
-    }
-
-    public function getShowView(): string
-    {
-        return 'platform::dns_records.index';
-    }
 }

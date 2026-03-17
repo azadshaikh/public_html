@@ -76,8 +76,14 @@ class ProviderDefinition extends ScaffoldDefinition
     public function filters(): array
     {
         return [
-            Filter::select('type')->label('Type')->placeholder('All Types'),
-            Filter::select('vendor')->label('Vendor')->placeholder('All Vendors'),
+            Filter::select('type')
+                ->label('Type')
+                ->placeholder('All Types')
+                ->options(Provider::getTypeOptions()),
+            Filter::select('vendor')
+                ->label('Vendor')
+                ->placeholder('All Vendors')
+                ->options(Provider::getVendorOptions()),
         ];
     }
 

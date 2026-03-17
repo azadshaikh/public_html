@@ -200,63 +200,6 @@ abstract class ScaffoldRequest extends FormRequest
         return $this->isCreate() ? 'required' : 'nullable';
     }
 
-    /**
-     * Rule that is required only on update
-     */
-    protected function requiredOnUpdate(): string
-    {
-        return $this->isUpdate() ? 'required' : 'nullable';
-    }
-
-    /**
-     * Get common address validation rules
-     */
-    protected function addressRules(): array
-    {
-        return [
-            'address1' => ['nullable', 'string', 'max:255'],
-            'address2' => ['nullable', 'string', 'max:255'],
-            'country' => ['nullable', 'string', 'max:100'],
-            'country_code' => ['nullable', 'string', 'max:2'],
-            'state' => ['nullable', 'string', 'max:100'],
-            'state_code' => ['nullable', 'string', 'max:10'],
-            'city' => ['nullable', 'string', 'max:100'],
-            'city_code' => ['nullable', 'string', 'max:10'],
-            'zip' => ['nullable', 'string', 'max:20'],
-        ];
-    }
-
-    /**
-     * Get common address field labels
-     */
-    protected function addressLabels(): array
-    {
-        return [
-            'address1' => 'Address Line 1',
-            'address2' => 'Address Line 2',
-            'country' => 'Country',
-            'country_code' => 'Country Code',
-            'state' => 'State/Province',
-            'state_code' => 'State Code',
-            'city' => 'City',
-            'city_code' => 'City Code',
-            'zip' => 'ZIP/Postal Code',
-        ];
-    }
-
-    // =========================================================================
-    // DATA PREPARATION HELPERS
-    // =========================================================================
-
-    /**
-     * Prepare array field from JSON string if needed
-     */
-    protected function prepareArrayField(string $field): void
-    {
-        if ($this->{$field} && is_string($this->{$field})) {
-            $this->merge([$field => json_decode($this->{$field}, true) ?? []]);
-        }
-    }
 
     /**
      * Prepare boolean field

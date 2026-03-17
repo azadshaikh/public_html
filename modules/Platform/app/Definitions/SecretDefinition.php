@@ -9,7 +9,12 @@ use App\Scaffold\Filter;
 use App\Scaffold\ScaffoldDefinition;
 use App\Scaffold\StatusTab;
 use Modules\Platform\Http\Requests\SecretRequest;
+use Modules\Platform\Models\Agency;
+use Modules\Platform\Models\Domain;
+use Modules\Platform\Models\Provider;
+use Modules\Platform\Models\Server;
 use Modules\Platform\Models\Secret;
+use Modules\Platform\Models\Website;
 
 class SecretDefinition extends ScaffoldDefinition
 {
@@ -75,8 +80,26 @@ class SecretDefinition extends ScaffoldDefinition
     public function filters(): array
     {
         return [
-            Filter::select('type')->label('Type')->placeholder('All Types'),
-            Filter::select('secretable_type')->label('Entity Type')->placeholder('All Entities'),
+            Filter::select('type')
+                ->label('Type')
+                ->placeholder('All Types')
+                ->options(collect(config('platform.secret_types', []))
+                    ->map(fn (array $item, string $key): array => [
+                        'value' => $key,
+                        'label' => $item['label'] ?? $key,
+                    ])
+                    ->values()
+                    ->all()),
+            Filter::select('secretable_type')
+                ->label('Entity Type')
+                ->placeholder('All Entities')
+                ->options([
+                    Domain::class => 'Domain',
+                    Website::class => 'Website',
+                    Agency::class => 'Agency',
+                    Server::class => 'Server',
+                    Provider::class => 'Provider',
+                ]),
             Filter::search('key')->label('Key')->placeholder('Search key...'),
         ];
     }

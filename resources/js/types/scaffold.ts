@@ -74,21 +74,7 @@ export type ScaffoldSettings = {
     hasNotes: boolean;
     entityName: string;
     entityPlural: string;
-    routePrefix: string;
     statusField: string | null;
-};
-
-export type ScaffoldContractMeta = {
-    contractVersion: string;
-    modelPropKey: string;
-    inertiaPagePrefix: string;
-    pageComponents: Record<string, string>;
-    routes: Record<string, string>;
-    permissions: Record<string, string>;
-    abilities: Record<string, string>;
-    abilityKeys: string[];
-    files: Record<string, string>;
-    tests: Record<string, string>;
 };
 
 export type ScaffoldInertiaConfig = {
@@ -97,7 +83,6 @@ export type ScaffoldInertiaConfig = {
     actions: ScaffoldActionConfig[];
     statusTabs: ScaffoldStatusTabConfig[];
     form: ScaffoldFormFieldConfig[];
-    meta: ScaffoldContractMeta;
     settings: ScaffoldSettings;
 };
 

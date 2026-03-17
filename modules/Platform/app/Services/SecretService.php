@@ -25,31 +25,6 @@ class SecretService implements ScaffoldServiceInterface
         return new SecretDefinition;
     }
 
-    public function getDataGridConfig(): array
-    {
-        $config = $this->scaffold()->toDataGridConfig();
-
-        foreach (($config['filters'] ?? []) as $i => $filter) {
-            if (($filter['key'] ?? null) === 'type') {
-                $config['filters'][$i]['options'] = collect(config('platform.secret_types', []))
-                    ->mapWithKeys(fn ($item, $key): array => [$key => $item['label'] ?? $key])
-                    ->toArray();
-            }
-
-            if (($filter['key'] ?? null) === 'secretable_type') {
-                $config['filters'][$i]['options'] = collect([
-                    Domain::class => 'Domain',
-                    Website::class => 'Website',
-                    Agency::class => 'Agency',
-                    Server::class => 'Server',
-                    Provider::class => 'Provider',
-                ])->all();
-            }
-        }
-
-        return $config;
-    }
-
     public function applyFilters(Builder $query, Request $request): void
     {
         if ($request->filled('type')) {
