@@ -6,9 +6,19 @@
     "herd_mcp": false,
     "mcp": true,
     "nightwatch_mcp": false,
+    "packages": [
+        "laravel/ai",
+        "spatie/laravel-medialibrary",
+        "spatie/laravel-permission"
+    ],
     "sail": false,
     "skills": [
+        "cashier-stripe-development",
+        "socialite-development",
         "inertia-react-development",
-        "tailwindcss-development"
+        "tailwindcss-development",
+        "ai-sdk-development",
+        "medialibrary-development",
+        "laravel-permission-development"
     ]
 }

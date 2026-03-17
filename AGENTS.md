@@ -11,19 +11,23 @@ This application is a Laravel application and its main Laravel ecosystems packag
 
 - database - PostgreSQL
 
-- php - 8.4.18
+- php - 8.4
 - inertiajs/inertia-laravel (INERTIA_LARAVEL) - v3
-- laravel/fortify (FORTIFY) - v1
-- laravel/framework (LARAVEL) - v12
+- laravel/ai (AI) - v0
+- laravel/cashier (CASHIER) - v16
+- laravel/framework (LARAVEL) - v13
 - laravel/prompts (PROMPTS) - v0
+- laravel/socialite (SOCIALITE) - v5
 - tightenco/ziggy (ZIGGY) - v2
+- larastan/larastan (LARASTAN) - v3
 - laravel/boost (BOOST) - v2
 - laravel/mcp (MCP) - v0
 - laravel/pail (PAIL) - v1
 - laravel/pint (PINT) - v1
 - laravel/sail (SAIL) - v1
-- phpunit/phpunit (PHPUNIT) - v12
-- @inertiajs/react (INERTIA_REACT) - v3 API surface (currently installed from v3 beta package ranges)
+- phpunit/phpunit (PHPUNIT) - v13
+- rector/rector (RECTOR) - v2
+- @inertiajs/react (INERTIA_REACT) - v3
 - react (REACT) - v19
 - tailwindcss (TAILWINDCSS) - v4
 - eslint (ESLINT) - v9
@@ -35,12 +39,17 @@ This project has domain-specific skills available. You MUST activate the relevan
 
 - `shadcn` — Activates whenever working with shadcn/ui components, `components.json`, registry items, presets, generated blocks, or component composition/styling fixes. Use when adding or updating shadcn components, checking registry docs/examples, or deciding whether to reuse an existing shadcn primitive before building custom UI.
 - `ziggy-development` — Activates whenever referencing backend routes in frontend components. Use when generating URLs with Ziggy's `route()` function, working with named Laravel routes in TypeScript, or debugging route resolution.
-- `inertia-react-development` — Develops Inertia.js v3 React client-side applications. Activates when creating React pages, forms, or navigation; using &lt;Link&gt;, &lt;Form&gt;, useForm, useHttp, useLayoutProps, or router; working with deferred props, prefetching, optimistic updates, instant visits, or polling; or when user mentions React with Inertia, React pages, React forms, or React navigation.
+- `cashier-stripe-development` — Handles Laravel Cashier Stripe integration including subscriptions, webhooks, Stripe Checkout, invoices, charges, refunds, trials, coupons, metered billing, and payment failure handling. Triggered when a user mentions Cashier, Billable, IncompletePayment, stripe_id, newSubscription, Stripe subscriptions, or billing. Also applies when setting up webhooks, handling SCA/3DS payment failures, testing with Stripe test cards, or troubleshooting incomplete subscriptions, CSRF webhook errors, or migration publish issues.
+- `socialite-development` — Manages OAuth social authentication with Laravel Socialite. Activate when adding social login providers; configuring OAuth redirect/callback flows; retrieving authenticated user details; customizing scopes or parameters; setting up community providers; testing with Socialite fakes; or when the user mentions social login, OAuth, Socialite, or third-party authentication.
+- `inertia-react-development` — Develops Inertia.js v3 React client-side applications. Activates when creating React pages, forms, or navigation; using <Link>, <Form>, useForm, useHttp, useLayoutProps, or router; working with deferred props, prefetching, optimistic updates, instant visits, or polling; or when user mentions React with Inertia, React pages, React forms, or React navigation.
 - `inertia-form-system` — Builds and updates application forms using the shared Inertia + shadcn form system. Use when creating or refactoring React forms, adding client-side validation, wiring dirty-form protection, showing consistent field errors, working with success/error toasts, or deciding between the shared form hook and raw Inertia forms.
-- `tailwindcss-development` — Styles applications using Tailwind CSS v4 utilities. Activates when adding styles, restyling components, working with gradients, spacing, layout, flex, grid, responsive design, dark mode, colors, typography, or borders; or when the user mentions CSS, styling, classes, Tailwind, restyle, hero section, cards, buttons, or any visual/UI changes.
+- `tailwindcss-development` — Always invoke when the user's message includes 'tailwind' in any form. Also invoke for: building responsive grid layouts (multi-column card grids, product grids), flex/grid page structures (dashboards with sidebars, fixed topbars, mobile-toggle navs), styling UI components (cards, tables, navbars, pricing sections, forms, inputs, badges), adding dark mode variants, fixing spacing or typography, and Tailwind v3/v4 work. The core use case: writing or fixing Tailwind utility classes in HTML templates (Blade, JSX, Vue). Skip for backend PHP logic, database queries, API routes, JavaScript with no HTML/CSS component, CSS file audits, build tool configuration, and vanilla CSS.
 - `datagrid` — Builds and configures datagrid (data table) views in this project. Use when creating index pages with tables, card grids, filters, tabs, sorting, pagination, row actions, bulk actions, custom cell/card rendering, shared scaffold datagrid adapters, or common datagrid preset patterns.
 - `laravel-inertia-crud-development` — Activates whenever building or expanding CRUD resources in this project. Use when creating Laravel models, migrations, factories, seeders, form requests, resource controllers, Inertia pages, Ziggy-backed forms, filtering/sorting/pagination, scaffold-generated CRUD resources, or PHPUnit CRUD coverage.
 - `module-development` — Activates when creating new modules, adding features to existing modules, working with module config files (navigation, abilities), module service providers, module database classes (factories, seeders), module manifests, module diagnostics, or module testing. Use when any work involves the `modules/` directory.
+- `ai-sdk-development` — Builds AI agents, generates text and chat responses, produces images, synthesizes audio, transcribes speech, generates vector embeddings, reranks documents, and manages files and vector stores using the Laravel AI SDK (laravel/ai). Supports structured output, streaming, tools, conversation memory, middleware, queueing, broadcasting, and provider failover. Use when building, editing, updating, debugging, or testing any AI functionality, including agents, LLMs, chatbots, text generation, image generation, audio, transcription, embeddings, RAG, similarity search, vector stores, prompting, structured output, or any AI provider (OpenAI, Anthropic, Gemini, Cohere, Groq, xAI, ElevenLabs, Jina, OpenRouter).
+- `medialibrary-development` — Build and work with spatie/laravel-medialibrary features including associating files with Eloquent models, defining media collections and conversions, generating responsive images, and retrieving media URLs and paths.
+- `laravel-permission-development` — Build and work with Spatie Laravel Permission features, including roles, permissions, middleware, policies, teams, and Blade directives.
 
 ## Conventions
 
@@ -80,7 +89,7 @@ This project has domain-specific skills available. You MUST activate the relevan
 
 - This project uses `pnpm`, not `npm`, for frontend package management and scripts.
 - Prefer `pnpm dev` for frontend development. Do not run build commands for routine frontend validation unless the user explicitly asks for a production build.
-- If the user doesn't see a frontend change reflected in the UI, it could mean they need to run `pnpm dev` or `composer run dev`. Ask them.
+- If the user doesn't see a frontend change reflected in the UI, it could mean they need to run `pnpm run build`, `pnpm run dev`, or `composer run dev`. Ask them.
 - This project does not use Inertia SSR. Do not add, restore, or rely on SSR / hydration-specific setup unless the user explicitly asks for it.
 
 ## Documentation Files
@@ -96,33 +105,38 @@ This project has domain-specific skills available. You MUST activate the relevan
 # Laravel Boost
 
 - Laravel Boost is an MCP server that comes with powerful tools designed specifically for this application. Use them.
-- Boost tool names can differ by runtime. Match the capability to the task instead of assuming a fixed tool name.
 
-## Artisan
+## Artisan Commands
 
-- Use the available Artisan command discovery capability when you need to double-check command names or parameters.
+- Run Artisan commands directly via the command line (e.g., `php artisan route:list`, `php artisan tinker --execute "..."`).
+- Use `php artisan list` to discover available commands and `php artisan [command] --help` to check parameters.
 
 ## URLs
 
-- Whenever you share a project URL with the user, use the available absolute-URL resolution capability when the current runtime exposes one.
+- Whenever you share a project URL with the user, you should use the `get-absolute-url` tool to ensure you're using the correct scheme, domain/IP, and port.
 
-## Tinker / Debugging
+## Debugging
 
-- Use the available PHP evaluation capability when you need to debug code or query Eloquent models directly.
-- Use the available read-only database query capability when you only need to inspect data.
-- Use the available database schema inspection capability before writing migrations or models.
+- Use the `database-query` tool when you only need to read from the database.
+- Use the `database-schema` tool to inspect table structure before writing migrations or models.
+- To execute PHP code for debugging, run `php artisan tinker --execute "your code here"` directly.
+- To read configuration values, read the config files directly or run `php artisan config:show [key]`.
+- To inspect routes, run `php artisan route:list` directly.
+- To check environment variables, read the `.env` file directly.
 
-## Reading Browser Logs
+## Reading Browser Logs With the `browser-logs` Tool
 
-- Use the available browser log capability from Boost when the current runtime exposes it.
+- You can read browser logs, errors, and exceptions using the `browser-logs` tool from Boost.
 - Only recent browser logs will be useful - ignore old logs.
 
 ## Searching Documentation (Critically Important)
 
-- When the current runtime exposes Boost documentation search, use it before trying other approaches for Laravel or Laravel ecosystem packages. It automatically uses the installed package set so the results stay version-aware. Pass package filters when the tool supports them and you know which packages matter.
+- Boost comes with a powerful `search-docs` tool you should use before trying other approaches when working with Laravel or Laravel ecosystem packages. This tool automatically passes a list of installed packages and their versions to the remote Boost API, so it returns only version-specific documentation for the user's circumstance. You should pass an array of packages to filter on if you know you need docs for particular packages.
 - Search the documentation before making code changes to ensure we are taking the correct approach.
 - Use multiple, broad, simple, topic-based queries at once. For example: `['rate limiting', 'routing rate limiting', 'routing']`. The most relevant results will be returned first.
 - Do not add package names to queries; package information is already shared. For example, use `test resource table`, not `filament 4 test resource table`.
+- If `search-docs` returns `No results found`, do not assume the tool is broken. Treat that as a query or filter miss first, then retry with broader wording, multiple related queries, and fewer or no package filters before concluding the tool is unavailable.
+- Treat actual tool failure as transport or execution failure, such as a timeout, connection error, malformed response, or repeated failure across broad queries. A valid `No results found` response means the tool is working.
 
 ### Available Search Syntax
 
@@ -150,7 +164,6 @@ This project has domain-specific skills available. You MUST activate the relevan
 - Use appropriate PHP type hints for method parameters.
 
 <!-- Explicit Return Types and Method Params -->
-
 ```php
 protected function isAccessible(User $user, ?string $path = null): bool
 {
@@ -184,7 +197,7 @@ protected function isAccessible(User $user, ?string $path = null): bool
 
 - Inertia creates fully client-side rendered SPAs without modern SPA complexity, leveraging existing server-side patterns.
 - Components live in `resources/js/pages` (unless specified in `vite.config.js`). Use `Inertia::render()` for server-side routing instead of Blade views.
-- ALWAYS use the available Boost documentation search capability for version-specific Inertia documentation and updated code examples when the current runtime exposes it.
+- ALWAYS use `search-docs` tool for version-specific Inertia documentation and updated code examples.
 - IMPORTANT: Activate `inertia-react-development` when working with Inertia client-side patterns.
 
 # Inertia v3
@@ -223,13 +236,55 @@ protected function isAccessible(User $user, ?string $path = null): bool
 - SSR works automatically in Vite dev mode with `@inertiajs/vite` - no separate Node.js server needed during development.
 - Event renames: `invalid` is now `httpException`, `exception` is now `networkError`.
 - `router.cancel()` replaced by `router.cancelAll()`.
-- Do not assume all historical `future` options are gone; follow the current docs for any still-supported `defaults.future` flags.
+- The `future` configuration namespace has been removed - all v2 future options are now always enabled.
+
+=== laravel/v13 rules ===
+
+# Laravel 13
+
+- CRITICAL: ALWAYS use `search-docs` tool for version-specific Laravel documentation and updated code examples.
+- Since Laravel 11, Laravel has a new streamlined file structure which this project uses.
+
+## Laravel 13 Structure
+
+- In Laravel 13, middleware are no longer registered in `app/Http/Kernel.php`.
+- Middleware are configured declaratively in `bootstrap/app.php` using `Application::configure()->withMiddleware()`.
+- `bootstrap/app.php` is the file to register middleware, exceptions, and routing files.
+- `bootstrap/providers.php` contains application specific service providers.
+- The `app\Console\Kernel.php` file no longer exists; use `bootstrap/app.php` or `routes/console.php` for console configuration.
+- Console commands in `app/Console/Commands/` are automatically available and do not require manual registration.
+
+## Database
+
+- When modifying a column, the migration must include all of the attributes that were previously defined on the column. Otherwise, they will be dropped and lost.
+- Laravel 13 allows limiting eagerly loaded records natively, without external packages: `$query->latest()->limit(10);`.
+
+### Models
+
+- Casts can and likely should be set in a `casts()` method on a model rather than the `$casts` property. Follow existing conventions from other models.
+
+=== ziggy/core rules ===
+
+# Ziggy (tightenco/ziggy)
+
+Ziggy exposes Laravel named routes to TypeScript via the global `route()` function, powered by `ZiggyRouteFilter` which replaces the `@routes` Blade directive.
+
+- IMPORTANT: Activate `ziggy-development` skill whenever referencing backend routes in frontend components.
+- Basic usage: `route('posts.show', { post: 1 })` → `"/posts/1"`.
+- The `route()` function returns a URL string. Pass it directly to `Link href`, `router.visit()`, `form.submit()`, etc.
+- Query parameters: `route('posts.index', { _query: { page: 2, sort: 'name' } })`.
+- Current route check: `route().current('posts.*')` for active link detection.
+- Route definitions are rendered server-side by `ZiggyRouteFilter` in `resources/views/app.blade.php` on full page loads.
+- Routes are filtered per user role: super users get all routes, other users get only the groups their permissions allow. Groups are defined in `config/ziggy.php`.
+- When the admin slug or user role changes, Inertia asset versioning forces a full page reload so the filtered route set is refreshed.
+- When a route may be filtered out for the current user, check `route().has('name')` before rendering links or calling `route('name')`.
+- Cache is stored per role ID; call `ZiggyRouteFilter::clearCache()` when permissions or route groups change.
 
 === laravel/core rules ===
 
 # Do Things the Laravel Way
 
-- Use `php artisan make:` commands to create new files (i.e. migrations, controllers, models, etc.). Use the available Artisan command discovery capability when you need to confirm command names or options.
+- Use `php artisan make:` commands to create new files (i.e. migrations, controllers, models, etc.). You can list available Artisan commands using `php artisan list` and check their parameters with `php artisan [command] --help`.
 - If you're creating a generic PHP class, use `php artisan make:class`.
 - Pass `--no-interaction` to all Artisan commands to ensure they work without user input. You should also pass the correct `--options` to ensure correct behavior.
 
@@ -240,11 +295,10 @@ protected function isAccessible(User $user, ?string $path = null): bool
 - Avoid `DB::`; prefer `Model::query()`. Generate code that leverages Laravel's ORM capabilities rather than bypassing them.
 - Generate code that prevents N+1 query problems by using eager loading.
 - Use Laravel's query builder for very complex database operations.
-- Prefer PostgreSQL-native compatible approaches for schema design and queries. Do not optimize for cross-database portability unless explicitly required.
 
 ### Model Creation
 
-- When creating new models, create useful factories and seeders for them too. Ask the user if they need any other things, using the available Artisan command discovery capability to check the options for `php artisan make:model`.
+- When creating new models, create useful factories and seeders for them too. Ask the user if they need any other things, using `php artisan make:model --help` to check the available options.
 
 ### APIs & Eloquent Resources
 
@@ -280,48 +334,6 @@ protected function isAccessible(User $user, ?string $path = null): bool
 ## Vite Error
 
 - If you receive an "Illuminate\Foundation\ViteException: Unable to locate file in Vite manifest" error, you can run `pnpm run build` or ask the user to run `pnpm run dev` or `composer run dev`.
-
-=== laravel/v12 rules ===
-
-# Laravel 12
-
-- CRITICAL: ALWAYS use the available Boost documentation search capability for version-specific Laravel documentation and updated code examples when the current runtime exposes it.
-- Since Laravel 11, Laravel has a new streamlined file structure which this project uses.
-
-## Laravel 12 Structure
-
-- In Laravel 12, middleware are no longer registered in `app/Http/Kernel.php`.
-- Middleware are configured declaratively in `bootstrap/app.php` using `Application::configure()->withMiddleware()`.
-- `bootstrap/app.php` is the file to register middleware, exceptions, and routing files.
-- `bootstrap/providers.php` contains application specific service providers.
-- The `app\Console\Kernel.php` file no longer exists; use `bootstrap/app.php` or `routes/console.php` for console configuration.
-- Console commands in `app/Console/Commands/` are automatically available and do not require manual registration.
-
-## Database
-
-- When modifying a column, the migration must include all of the attributes that were previously defined on the column. Otherwise, they will be dropped and lost.
-- Laravel 12 allows limiting eagerly loaded records natively, without external packages: `$query->latest()->limit(10);`.
-
-### Models
-
-- Casts can and likely should be set in a `casts()` method on a model rather than the `$casts` property. Follow existing conventions from other models.
-
-=== ziggy/core rules ===
-
-# Ziggy (tightenco/ziggy)
-
-Ziggy exposes Laravel named routes to TypeScript via the global `route()` function, powered by `ZiggyRouteFilter` which replaces the `@routes` Blade directive.
-
-- IMPORTANT: Activate `ziggy-development` skill whenever referencing backend routes in frontend components.
-- Basic usage: `route('posts.show', { post: 1 })` → `"/posts/1"`.
-- The `route()` function returns a URL string. Pass it directly to `Link href`, `router.visit()`, `form.submit()`, etc.
-- Query parameters: `route('posts.index', { _query: { page: 2, sort: 'name' } })`.
-- Current route check: `route().current('posts.*')` for active link detection.
-- Route definitions are rendered server-side by `ZiggyRouteFilter` in `resources/views/app.blade.php` on full page loads.
-- Routes are **filtered per user role**: super users get all routes, other users get only the groups their permissions allow. Groups are defined in `config/ziggy.php`.
-- When the admin slug or user role changes, Inertia asset versioning forces a full page reload so the filtered route set is refreshed.
-- When a route may be filtered out for the current user, check `route().has('name')` before rendering links or calling `route('name')`.
-- Cache is stored per role ID; call `ZiggyRouteFilter::clearCache()` when permissions or route groups change.
 
 === pint/core rules ===
 
@@ -359,7 +371,21 @@ Ziggy exposes Laravel named routes to TypeScript via the global `route()` functi
 # Tailwind CSS
 
 - Always use existing Tailwind conventions; check project patterns before adding new ones.
-- IMPORTANT: Always use the available Boost documentation search capability for version-specific Tailwind CSS documentation and updated code examples when the current runtime exposes it. Never rely on training data.
+- IMPORTANT: Always use `search-docs` tool for version-specific Tailwind CSS documentation and updated code examples. Never rely on training data.
 - IMPORTANT: Activate `tailwindcss-development` every time you're working with a Tailwind CSS or styling-related task.
+
+=== laravel/ai rules ===
+
+## Laravel AI SDK
+
+- This application uses the Laravel AI SDK (`laravel/ai`) for all AI functionality.
+- Activate the `ai-sdk-development` skill when building, editing, updating, debugging, or testing AI agents, text generation, chat, streaming, structured output, tools, image generation, audio, transcription, embeddings, reranking, vector stores, files, conversation memory, or any AI provider integration (OpenAI, Anthropic, Gemini, Cohere, Groq, xAI, ElevenLabs, Jina, OpenRouter).
+
+=== spatie/laravel-medialibrary rules ===
+
+## Media Library
+
+- `spatie/laravel-medialibrary` associates files with Eloquent models, with support for collections, conversions, and responsive images.
+- Always activate the `medialibrary-development` skill when working with media uploads, conversions, collections, responsive images, or any code that uses the `HasMedia` interface or `InteractsWithMedia` trait.
 
 </laravel-boost-guidelines>

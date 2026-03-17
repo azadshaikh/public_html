@@ -29,4 +29,23 @@ return [
 
     'browser_logs_watcher' => env('BOOST_BROWSER_LOGS_WATCHER', true),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Agent Output Paths
+    |--------------------------------------------------------------------------
+    |
+    | Boost can generate guidelines and skills for multiple agent targets. We
+    | override Copilot's skills path so future installs and refreshes write to
+    | the repository's canonical .agents/skills directory instead of recreating
+    | a parallel .github/skills tree.
+    |
+    */
+
+    'agents' => [
+        'copilot' => [
+            'guidelines_path' => 'AGENTS.md',
+            'skills_path' => '.agents/skills',
+        ],
+    ],
+
 ];

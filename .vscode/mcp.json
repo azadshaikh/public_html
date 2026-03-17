@@ -2,11 +2,17 @@
     "servers": {
         "laravel-boost": {
             "command": "php",
-            "args": ["artisan", "boost:mcp"]
+            "args": [
+                "artisan",
+                "boost:mcp"
+            ]
         },
         "shadcn": {
             "command": "npx",
-            "args": ["shadcn@latest", "mcp"]
+            "args": [
+                "shadcn@latest",
+                "mcp"
+            ]
         },
         "context7": {
             "type": "http",

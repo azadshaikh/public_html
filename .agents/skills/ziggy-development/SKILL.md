@@ -20,7 +20,7 @@ Activate whenever referencing backend routes in frontend components:
 
 ## Documentation
 
-Use the available Boost documentation search capability for detailed Ziggy patterns and documentation when the current runtime exposes it.
+Use `search-docs` for detailed Ziggy patterns and documentation.
 
 ## How Ziggy Works
 

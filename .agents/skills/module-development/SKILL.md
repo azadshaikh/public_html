@@ -34,7 +34,7 @@ Activate this skill when:
 
 ## Documentation First
 
-Before implementing, use the available Boost documentation search capability when the current runtime exposes it. Search for:
+Before implementing, use `search-docs`. Search for:
 
 - `service provider boot register config`
 - `middleware route groups`

@@ -1,6 +1,6 @@
 ---
 name: inertia-react-development
-description: 'Develops Inertia.js v3 React applications. Use when creating React pages, forms, navigation, layout props, standalone HTTP requests, optimistic updates, instant visits, deferred props, polling, or other Inertia React v3 patterns.'
+description: 'Develops Inertia.js v3 React applications. Use when creating React pages, forms, navigation, or other Inertia React v3 patterns, including <Link>, <Form>, useForm, useHttp, useLayoutProps, router, optimistic updates, instant visits, deferred props, WhenVisible, and polling.'
 license: MIT
 metadata:
     author: laravel
@@ -20,7 +20,7 @@ Activate this skill when:
 
 ## Documentation
 
-Always use the available Boost documentation search capability for current Inertia v3 guidance when the current runtime exposes it.
+Always use `search-docs` for current Inertia v3 guidance.
 
 Before drilling into individual topics, check the documentation index at `https://inertiajs.com/docs/llms.txt` to discover the available Inertia pages.
 

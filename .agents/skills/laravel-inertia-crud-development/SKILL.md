@@ -1,6 +1,6 @@
 ---
 name: laravel-inertia-crud-development
-description: 'Builds Laravel 12 + Inertia React v3 CRUD flows for this project, including model scaffolding, Inertia pages, Ziggy routes, filters, uploads, sidebar links, and PHPUnit coverage.'
+description: 'Builds Laravel 13 + Inertia React v3 CRUD flows for this project, including model scaffolding, Inertia pages, Ziggy routes, filters, uploads, sidebar links, and PHPUnit coverage.'
 license: MIT
 metadata:
     author: GitHub Copilot
@@ -12,7 +12,7 @@ metadata:
 
 Activate this skill when:
 
-- Creating a new CRUD in this Laravel 12 + Inertia React v3 project
+- Creating a new CRUD in this Laravel 13 + Inertia React v3 project
 - Expanding an existing resource with index, create, edit, show, and delete flows
 - Building admin-style forms with many field types
 - Adding filtering, sorting, pagination, badges, or sidebar navigation for a resource
@@ -30,7 +30,7 @@ Use this skill together with the existing domain skills that match the work:
 
 ## Documentation First
 
-Before implementing, use project-specific docs search for:
+Before implementing, use `search-docs` for project-specific docs such as:
 
 - `resource controllers validation file uploads storage public files`
 - `inertia forms file uploads validation`
