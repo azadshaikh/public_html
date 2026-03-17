@@ -151,6 +151,43 @@ class ScaffoldInspectCommand extends Command
         );
 
         $this->newLine();
+        $this->info('Registration targets');
+        $this->table(
+            ['Type', 'Path'],
+            collect($inspection['registration_paths'] ?? [])
+                ->map(fn (string $path, string $type): array => [$type, $path])
+                ->values()
+                ->all(),
+        );
+
+        $this->newLine();
+        $this->info('Registration markers');
+        $this->table(
+            ['Type', 'Marker'],
+            collect($inspection['registration_markers'] ?? [])
+                ->map(fn (string $marker, string $type): array => [$type, $marker])
+                ->values()
+                ->all(),
+        );
+
+        $this->newLine();
+        $this->info('Registration audit');
+        $this->table(
+            ['Type', 'Summary'],
+            collect($inspection['registration_audit'] ?? [])
+                ->map(function (array $audit, string $type): array {
+                    $summary = collect($audit)
+                        ->reject(fn (mixed $value, string $key): bool => $key === 'path')
+                        ->map(fn (mixed $value, string $key): string => sprintf('%s=%s', $key, is_bool($value) ? ($value ? 'yes' : 'no') : (string) $value))
+                        ->implode(', ');
+
+                    return [$type, $summary];
+                })
+                ->values()
+                ->all(),
+        );
+
+        $this->newLine();
         $this->info('Suggested test paths');
         $this->table(
             ['Type', 'Path'],

@@ -10,6 +10,7 @@ Use this skill when building or modifying index/listing pages that display pagin
 ## File map
 
 - `resources/js/components/datagrid/datagrid.tsx` — barrel export; import `Datagrid` and types from here.
+- `resources/js/lib/scaffold-datagrid.ts` — shared adapter for scaffold-backed index pages; use it to derive filters, tabs, sorting, per-page state, and bulk actions from backend scaffold config.
 - `resources/js/components/datagrid/types.ts` — all TypeScript types (`DatagridProps`, `DatagridColumn`, `DatagridAction`, `DatagridBulkAction`, `DatagridFilter`, `DatagridTab`, etc.).
 - `resources/js/components/datagrid/datagrid-root.tsx` — main `<Datagrid>` component implementation.
 - `resources/js/components/datagrid/datagrid-results.tsx` — table view, card grid view, compact card view, "Next Page" filler card, bulk action bar, confirmation dialogs.
@@ -37,6 +38,8 @@ import type {
 } from '@/components/datagrid/datagrid';
 ```
 
+For scaffold resources, also prefer the shared helpers from `@/lib/scaffold-datagrid` instead of hand-assembling query state and tab metadata per page.
+
 ## Required props
 
 | Prop        | Type                           | Purpose                                                                                   |
@@ -46,6 +49,8 @@ import type {
 | `columns`   | `DatagridColumn<T>[]`          | Column definitions for table view                                                         |
 | `getRowKey` | `(row: T) => Key`              | Unique key extractor per row                                                              |
 | `empty`     | `{ icon, title, description }` | Empty state content                                                                       |
+
+For scaffold-backed pages, most of these props should come from `ScaffoldDefinition::toInertiaConfig()` plus the adapter in `resources/js/lib/scaffold-datagrid.ts`, not duplicated local page logic.
 
 ## Key optional props
 

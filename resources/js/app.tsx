@@ -1,4 +1,4 @@
-import { createInertiaApp } from '@inertiajs/react';
+import { createInertiaApp, router } from '@inertiajs/react';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import '../css/app.css';
@@ -25,6 +25,20 @@ const inertiaDefaults = {
     },
 };
 
+function syncModulePageFilter(sharedProps: Record<string, unknown>): void {
+    initModulePageFilter(
+        sharedProps.modules as
+            | {
+                  items: Array<{
+                      name?: string;
+                      slug?: string;
+                      inertiaNamespace?: string;
+                  }>;
+              }
+            | undefined,
+    );
+}
+
 createInertiaApp({
     title: (title) => (title ? `${title} | ${appName}` : appName),
     resolve: resolveInertiaPage,
@@ -38,11 +52,17 @@ createInertiaApp({
         // module pages are excluded from the page registry before the very
         // first Inertia page resolution.
         const sharedProps = props.initialPage.props as Record<string, unknown>;
-        initModulePageFilter(
-            sharedProps.modules as
-                | { items: Array<{ name: string }> }
-                | undefined,
-        );
+        syncModulePageFilter(sharedProps);
+
+        router.on('success', (event) => {
+            const nextSharedProps = event.detail?.page?.props as
+                | Record<string, unknown>
+                | undefined;
+
+            if (nextSharedProps) {
+                syncModulePageFilter(nextSharedProps);
+            }
+        });
 
         const app = (
             <StrictMode>

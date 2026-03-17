@@ -9,7 +9,9 @@ use Throwable;
 
 class ScaffoldDoctorCommand extends Command
 {
-    protected $signature = 'scaffold:doctor {--fail-fast : Stop after the first detected issue}';
+    protected $signature = 'scaffold:doctor
+        {--fail-fast : Stop after the first detected issue}
+        {--strict-legacy-registrations : Fail when non-generated registration files do not reference the expected scaffold hooks}';
 
     protected $description = 'Validate scaffold controllers, Inertia pages, routes, and module ability contracts';
 
@@ -140,8 +142,255 @@ class ScaffoldDoctorCommand extends Command
             }
         }
 
+        if (($inspection['expects_generated_registration_merges'] ?? false) === true) {
+            $issues = [...$issues, ...$this->inspectGeneratedRegistrationMerges($controllerClass, $inspection, $controllerRoutes)];
+        } elseif ($this->option('strict-legacy-registrations')) {
+            $issues = [...$issues, ...$this->inspectLegacyRegistrationReferences($controllerClass, $inspection)];
+        }
+
         if (is_string($inspection['module']) && $inspection['module'] !== '') {
             $issues = [...$issues, ...$this->inspectModuleAbilityMap($controllerClass, $inspection['module'], $inspection['ability_map'], $controllerRoutes)];
+        }
+
+        return $issues;
+    }
+
+    /**
+     * @param  array<string, mixed>  $inspection
+     * @return array<int, array{controller: string, message: string}>
+     */
+    private function inspectLegacyRegistrationReferences(string $controllerClass, array $inspection): array
+    {
+        $audit = $inspection['registration_audit'] ?? $this->introspector->auditRegistration($inspection);
+        $issues = [];
+
+        $routeAudit = is_array($audit['routes'] ?? null) ? $audit['routes'] : [];
+
+        if (($routeAudit['exists'] ?? false) === false) {
+            $issues[] = [
+                'controller' => $controllerClass,
+                'message' => sprintf('Missing legacy routes registration target [%s].', (string) (($routeAudit['path'] ?? null) ?: ($inspection['registration_paths']['routes'] ?? 'unknown'))),
+            ];
+        } elseif (($routeAudit['contains_controller_reference'] ?? false) !== true && ($routeAudit['contains_expected_index_route'] ?? false) !== true) {
+            $issues[] = [
+                'controller' => $controllerClass,
+                'message' => sprintf('Legacy routes registration [%s] does not reference the scaffold controller or expected index route.', (string) $routeAudit['path']),
+            ];
+        }
+
+        $navigationAudit = is_array($audit['navigation'] ?? null) ? $audit['navigation'] : [];
+
+        if (($navigationAudit['exists'] ?? false) === false) {
+            $issues[] = [
+                'controller' => $controllerClass,
+                'message' => sprintf('Missing legacy navigation registration target [%s].', (string) (($navigationAudit['path'] ?? null) ?: ($inspection['registration_paths']['navigation'] ?? 'unknown'))),
+            ];
+        } elseif (($navigationAudit['contains_index_route'] ?? false) !== true || ($navigationAudit['contains_view_permission'] ?? false) !== true || ($navigationAudit['contains_active_pattern'] ?? false) !== true) {
+            $issues[] = [
+                'controller' => $controllerClass,
+                'message' => sprintf('Legacy navigation registration [%s] does not reference the expected route, view permission, and active pattern trio.', (string) $navigationAudit['path']),
+            ];
+        }
+
+        return $issues;
+    }
+
+    /**
+     * @param  array<string, mixed>  $inspection
+     * @param  array<string, array<int, string>>  $controllerRoutes
+     * @return array<int, array{controller: string, message: string}>
+     */
+    private function inspectGeneratedRegistrationMerges(string $controllerClass, array $inspection, array $controllerRoutes): array
+    {
+        $registrationPaths = $inspection['registration_paths'] ?? null;
+        $registrationMarkers = $inspection['registration_markers'] ?? null;
+
+        if (! is_array($registrationPaths) || ! is_array($registrationMarkers)) {
+            return [[
+                'controller' => $controllerClass,
+                'message' => 'Generated registration metadata is missing from scaffold inspection.',
+            ]];
+        }
+
+        $issues = [];
+
+        foreach ($registrationPaths as $type => $path) {
+            $marker = $registrationMarkers[$type] ?? null;
+
+            if (! is_string($path) || $path === '' || ! is_string($marker) || $marker === '') {
+                continue;
+            }
+
+            if (! is_file($path)) {
+                $issues[] = [
+                    'controller' => $controllerClass,
+                    'message' => sprintf('Missing registration target for %s at [%s].', $type, $path),
+                ];
+
+                continue;
+            }
+
+            $contents = file_get_contents($path);
+
+            if (! is_string($contents)) {
+                $issues[] = [
+                    'controller' => $controllerClass,
+                    'message' => sprintf('Could not read registration target for %s at [%s].', $type, $path),
+                ];
+
+                continue;
+            }
+
+            $block = $this->extractMarkedBlock($contents, $marker);
+
+            if ($block === null) {
+                $issues[] = [
+                    'controller' => $controllerClass,
+                    'message' => sprintf("Missing generated %s registration block '%s' in [%s].", $type, $marker, $path),
+                ];
+
+                continue;
+            }
+
+            if ($this->countMarkedBlocks($contents, $marker) > 1) {
+                $issues[] = [
+                    'controller' => $controllerClass,
+                    'message' => sprintf("Duplicate generated %s registration block '%s' found in [%s].", $type, $marker, $path),
+                ];
+
+                continue;
+            }
+
+            $issues = [...$issues, ...$this->inspectRegistrationBlockContents($controllerClass, $type, $path, $block, $inspection, $controllerRoutes)];
+        }
+
+        return $issues;
+    }
+
+    /**
+     * @param  array<string, mixed>  $inspection
+     * @param  array<string, array<int, string>>  $controllerRoutes
+     * @return array<int, array{controller: string, message: string}>
+     */
+    private function inspectRegistrationBlockContents(string $controllerClass, string $type, string $path, string $block, array $inspection, array $controllerRoutes): array
+    {
+        return match ($type) {
+            'routes' => $this->inspectRouteRegistrationBlock($controllerClass, $path, $block, $inspection, $controllerRoutes),
+            'navigation' => $this->inspectNavigationRegistrationBlock($controllerClass, $path, $block, $inspection),
+            'abilities' => $this->inspectAbilityRegistrationBlock($controllerClass, $path, $block, $inspection, $controllerRoutes),
+            default => [],
+        };
+    }
+
+    /**
+     * @param  array<string, mixed>  $inspection
+     * @param  array<string, array<int, string>>  $controllerRoutes
+     * @return array<int, array{controller: string, message: string}>
+     */
+    private function inspectRouteRegistrationBlock(string $controllerClass, string $path, string $block, array $inspection, array $controllerRoutes): array
+    {
+        $issues = [];
+
+        if (! str_contains($block, (string) $inspection['controller']) && ! str_contains($block, class_basename((string) $inspection['controller']))) {
+            $issues[] = [
+                'controller' => $controllerClass,
+                'message' => sprintf('Generated routes block in [%s] does not reference controller [%s].', $path, $inspection['controller']),
+            ];
+        }
+
+        if (! str_contains($block, 'crud.exceptions')) {
+            $issues[] = [
+                'controller' => $controllerClass,
+                'message' => sprintf('Generated routes block in [%s] does not include the expected crud.exceptions middleware.', $path),
+            ];
+        }
+
+        if (! str_contains($block, '/bulk-action')) {
+            $issues[] = [
+                'controller' => $controllerClass,
+                'message' => sprintf('Generated routes block in [%s] does not include the expected bulk-action route.', $path),
+            ];
+        }
+
+        if (! str_contains($block, "where('status'") && ! str_contains($block, 'where("status"')) {
+            $issues[] = [
+                'controller' => $controllerClass,
+                'message' => sprintf('Generated routes block in [%s] does not include the expected status filter route constraint.', $path),
+            ];
+        }
+
+        foreach ($this->expectedRoutesForRegisteredActions($inspection['route_names'], $controllerRoutes) as $routeName) {
+            if (! str_contains($block, sprintf("'%s'", $routeName))) {
+                $issues[] = [
+                    'controller' => $controllerClass,
+                    'message' => sprintf('Generated routes block in [%s] does not reference expected route [%s].', $path, $routeName),
+                ];
+            }
+        }
+
+        return $issues;
+    }
+
+    /**
+     * @param  array<string, mixed>  $inspection
+     * @return array<int, array{controller: string, message: string}>
+     */
+    private function inspectNavigationRegistrationBlock(string $controllerClass, string $path, string $block, array $inspection): array
+    {
+        $issues = [];
+        $indexRoute = $inspection['route_names']['index'] ?? null;
+        $viewPermission = $inspection['permission_names']['view'] ?? null;
+        $activePattern = ($inspection['route_prefix'] ?? '').'.*';
+
+        if (is_string($indexRoute) && ! str_contains($block, sprintf("'%s'", $indexRoute))) {
+            $issues[] = [
+                'controller' => $controllerClass,
+                'message' => sprintf('Generated navigation block in [%s] does not reference index route [%s].', $path, $indexRoute),
+            ];
+        }
+
+        if (is_string($viewPermission) && ! str_contains($block, sprintf("'%s'", $viewPermission))) {
+            $issues[] = [
+                'controller' => $controllerClass,
+                'message' => sprintf('Generated navigation block in [%s] does not reference view permission [%s].', $path, $viewPermission),
+            ];
+        }
+
+        if (is_string($inspection['route_prefix'] ?? null) && ! str_contains($block, sprintf("'%s'", $activePattern))) {
+            $issues[] = [
+                'controller' => $controllerClass,
+                'message' => sprintf('Generated navigation block in [%s] does not reference active pattern [%s].', $path, $activePattern),
+            ];
+        }
+
+        if (! str_contains($block, "'status' => 'all'") && ! str_contains($block, '"status" => "all"')) {
+            $issues[] = [
+                'controller' => $controllerClass,
+                'message' => sprintf('Generated navigation block in [%s] does not include the expected status=all route params.', $path),
+            ];
+        }
+
+        return $issues;
+    }
+
+    /**
+     * @param  array<string, mixed>  $inspection
+     * @param  array<string, array<int, string>>  $controllerRoutes
+     * @return array<int, array{controller: string, message: string}>
+     */
+    private function inspectAbilityRegistrationBlock(string $controllerClass, string $path, string $block, array $inspection, array $controllerRoutes): array
+    {
+        $issues = [];
+
+        foreach ($this->expectedAbilitiesForRegisteredActions($inspection['ability_map'], $controllerRoutes) as $abilityKey => $permission) {
+            $expectedEntry = sprintf("'%s' => '%s'", $abilityKey, $permission);
+
+            if (! str_contains($block, $expectedEntry)) {
+                $issues[] = [
+                    'controller' => $controllerClass,
+                    'message' => sprintf('Generated abilities block in [%s] does not contain expected mapping [%s].', $path, $expectedEntry),
+                ];
+            }
         }
 
         return $issues;
@@ -243,5 +492,31 @@ class ScaffoldDoctorCommand extends Command
                 return in_array($prefix, $abilityPrefixes, true);
             })
             ->all();
+    }
+
+    private function extractMarkedBlock(string $contents, string $marker): ?string
+    {
+        $pattern = $this->markedBlockPattern($marker);
+
+        if (preg_match($pattern, $contents, $matches) !== 1) {
+            return null;
+        }
+
+        return $matches[1] ?? null;
+    }
+
+    private function countMarkedBlocks(string $contents, string $marker): int
+    {
+        preg_match_all($this->markedBlockPattern($marker), $contents, $matches);
+
+        return count($matches[0] ?? []);
+    }
+
+    private function markedBlockPattern(string $marker): string
+    {
+        $start = preg_quote(sprintf('// %s:start', $marker), '/');
+        $end = preg_quote(sprintf('// %s:end', $marker), '/');
+
+        return "/{$start}\n(.*?){$end}/s";
     }
 }

@@ -28,17 +28,29 @@ The desired end state is a platform where:
 - CMS scaffold index pages and the ReleaseManager releases index now consume the shared derived datagrid state, shrinking repeated page-level filter, tab, sorting, and pagination glue across modules.
 - The remaining bespoke CMS posts listing now also uses the shared derived datagrid state while preserving its custom cards, preview media, and bulk action behavior.
 - Scaffold definitions can now explicitly mark a canonical golden-path example, and the Platform agency scaffold is surfaced as that example through `scaffold:inspect` metadata.
+- `scaffold:generate` now provides a first generator foundation by emitting a canonical CRUD blueprint for app or module resources, including derived classes, file graph, route names, permission names, and the current golden-path example reference.
+- `scaffold:generate` now has a write-capable generation path that renders canonical model, request, definition, controller, service, React CRUD pages, shared form component, factory, seeder, migration, and baseline CRUD test files into the standard app or module structure.
+- Scaffold generator blueprints now also surface explicit registration merge targets for routes, navigation, and module abilities.
+- `scaffold:generate --write` now safely merges generated route, navigation, and module ability registrations into existing target files with marker-based updates instead of only emitting standalone stubs.
+- Scaffold generator feature coverage now verifies sandboxed app and module writes, generated frontend create/edit/show/form output, created registration files, and safe merge behavior that preserves manual registration entries without duplicating generated blocks.
+- `ScaffoldDefinition` now also exposes expected registration targets and marker names, while generated definitions opt into merge-aware registration validation.
+- `scaffold:inspect` now surfaces registration-target metadata alongside the resolved scaffold contract.
+- `scaffold:doctor` now validates generator-managed route, navigation, and ability registration blocks for missing markers, duplicate blocks, and basic drift inside generated merge regions.
+- Focused scaffold feature coverage now verifies registration drift detection in `scaffold:doctor` as well as the generated-definition opt-in for merge validation.
+- Scaffold blueprints now also expose typed datagrid metadata plus explicit form and service wiring details for higher-fidelity generated CRUDs.
+- `scaffold:inspect` now audits registration files for both generated and legacy scaffolds, surfacing whether route, navigation, and ability targets contain the expected references.
+- `scaffold:doctor` now supports stricter legacy-registration auditing and stronger semantic validation inside generated route and navigation merge blocks.
+- Focused scaffold coverage now verifies generator metadata export, legacy-registration strict auditing, and richer generated registration semantics.
 
-### Still pending from this PRD
+### PRD status
 
-- generator-driven CRUD/module scaffolding,
-- broader contract tests around generated output.
+- All planned slices in this PRD are now implemented.
 
-### Revised next implementation slice
+### Follow-up work outside this PRD
 
-1. Start the CRUD generator on top of the now-stable introspection, validation, datagrid adapter, and golden-path metadata APIs.
-2. Add broader contract tests around generated frontend scaffold output.
-3. Extend scaffold inspection output with any additional metadata the generator will need.
+1. Deepen domain-specific generator metadata for individual modules when richer CRUD field types or workflows are needed.
+2. Expand contract tests around real generated resources as more modules adopt the golden-path scaffold flow.
+3. Continue incremental migration of older modules onto the fully self-describing scaffold standard.
 
 ## Problem
 

@@ -41,6 +41,8 @@ Before implementing, use `search-docs` for:
 - `inertia render pages`
 - `factory seeder migration`
 
+When the module exposes a standard CRUD, inspect or generate it through the scaffold workflow before hand-editing routes, navigation, or abilities.
+
 ## Critical Rules
 
 ### Self-Containment
@@ -211,6 +213,8 @@ Only override `register()` or `boot()` if the module needs additional bindings o
 
 Module routes live in `modules/{Name}/routes/web.php`. The `ModuleServiceProvider` wraps them with `module.enabled:{slug}` middleware automatically, which returns a redirect when the module is disabled.
 
+For scaffold-generated modules, route files can contain marker-managed generated sections. Preserve manual code outside those markers and prefer rerunning the scaffold workflow over manually rewriting generated route blocks.
+
 Standard CRUD route structure:
 
 ```php
@@ -245,11 +249,15 @@ Route::middleware(['auth', 'user.status', 'verified', 'profile.completed'])
 
 Named routes follow the pattern `app.{slug}.{action}` (e.g., `app.todos.index`, `app.todos.create`).
 
+When auditing older modules that still use manual registrations, use `php artisan scaffold:doctor --strict-legacy-registrations` to verify route/controller references, navigation route names, active patterns, and ability hooks still match the scaffold resource.
+
 ## Config Integration Points
 
 ### Navigation (`config/navigation.php`)
 
 Discovered by `NavigationAggregator`. Returns a `sections` array with sidebar items.
+
+If scaffold registration markers are present, treat the generated section as owned by the scaffold workflow. Keep any custom navigation entries outside that block.
 
 ```php
 <?php

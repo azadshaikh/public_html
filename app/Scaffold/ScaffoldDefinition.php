@@ -72,6 +72,11 @@ abstract class ScaffoldDefinition
     protected bool $goldenPathExample = false;
 
     /**
+     * Whether this scaffold expects generator-managed registration merge blocks.
+     */
+    protected bool $expectsGeneratedRegistrationMerges = false;
+
+    /**
      * Default items per page
      */
     protected int $perPage = 10;
@@ -490,6 +495,50 @@ abstract class ScaffoldDefinition
     /**
      * @return array<string, string>
      */
+    public function expectedRegistrationPaths(): array
+    {
+        $moduleName = $this->getOwningModuleName();
+
+        if (is_string($moduleName) && $moduleName !== '') {
+            return [
+                'routes' => base_path(sprintf('modules/%s/routes/web.php', $moduleName)),
+                'navigation' => base_path(sprintf('modules/%s/config/navigation.php', $moduleName)),
+                'abilities' => base_path(sprintf('modules/%s/config/abilities.php', $moduleName)),
+            ];
+        }
+
+        return [
+            'routes' => base_path('routes/web.php'),
+            'navigation' => base_path('config/navigation.php'),
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function expectedRegistrationMarkers(): array
+    {
+        $resourceSlug = Str::of($this->getEntityPlural())
+            ->snake()
+            ->replace('_', '-')
+            ->toString();
+
+        $markerResource = str_replace('-', '_', $resourceSlug);
+        $markers = [
+            'routes' => sprintf('scaffold-generated:%s:routes', $markerResource),
+            'navigation' => sprintf('scaffold-generated:%s:navigation', $markerResource),
+        ];
+
+        if ($this->getOwningModuleName() !== null) {
+            $markers['abilities'] = sprintf('scaffold-generated:%s:abilities', $markerResource);
+        }
+
+        return $markers;
+    }
+
+    /**
+     * @return array<string, string>
+     */
     public function expectedFilePaths(): array
     {
         $files = [
@@ -541,6 +590,11 @@ abstract class ScaffoldDefinition
         return [
             'crud' => base_path(sprintf('tests/Feature/%sCrudTest.php', $entityTestName)),
         ];
+    }
+
+    public function expectsGeneratedRegistrationMerges(): bool
+    {
+        return $this->expectsGeneratedRegistrationMerges;
     }
 
     public function getOwningModuleName(): ?string

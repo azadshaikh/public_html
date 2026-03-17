@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Scaffold;
 
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Route;
 use RuntimeException;
 use Throwable;
@@ -99,9 +100,14 @@ class ScaffoldIntrospector
      *     route_names: array<string, string>,
      *     permission_names: array<string, string>,
      *     ability_map: array<string, string>,
+     *     datagrid_contract: array<string, mixed>,
      *     file_paths: array<string, string>,
+     *     registration_paths: array<string, string>,
+     *     registration_markers: array<string, string>,
+     *     registration_audit: array<string, array<string, mixed>>,
      *     test_paths: array<string, string>,
-     *     registered_routes: array<string, array<int, string>>
+     *     registered_routes: array<string, array<int, string>>,
+     *     expects_generated_registration_merges: bool
      * }
      */
     public function inspectController(string $controllerClass): array
@@ -117,7 +123,7 @@ class ScaffoldIntrospector
         /** @var string $inertiaPage */
         $inertiaPage = $this->callProtectedMethod($controller, 'inertiaPage');
 
-        return [
+        $inspection = [
             'controller' => $controllerClass,
             'definition_class' => $definition::class,
             'module' => $this->extractModuleName($controllerClass),
@@ -134,13 +140,195 @@ class ScaffoldIntrospector
             'route_names' => $definition->expectedRouteNames(),
             'permission_names' => $definition->expectedPermissionNames(),
             'ability_map' => $definition->expectedAbilityMap(),
+            'datagrid_contract' => $definition->toInertiaConfig(),
+            'registration_paths' => $definition->expectedRegistrationPaths(),
+            'registration_markers' => $definition->expectedRegistrationMarkers(),
             'file_paths' => [
                 'controller' => $this->resolveClassFilePath($controllerClass),
                 ...$definition->expectedFilePaths(),
             ],
             'test_paths' => $definition->expectedTestPaths(),
             'registered_routes' => $this->collectControllerRoutes($controllerClass),
+            'expects_generated_registration_merges' => $definition->expectsGeneratedRegistrationMerges(),
         ];
+
+        $inspection['registration_audit'] = $this->auditRegistration($inspection);
+
+        return $inspection;
+    }
+
+    /**
+     * @param  array<string, mixed>  $inspection
+     * @return array<string, array<string, mixed>>
+     */
+    public function auditRegistration(array $inspection): array
+    {
+        $registrationPaths = $inspection['registration_paths'] ?? [];
+        $registrationMarkers = $inspection['registration_markers'] ?? [];
+        $audit = [];
+
+        foreach ($registrationPaths as $type => $path) {
+            if (! is_string($path) || $path === '') {
+                continue;
+            }
+
+            $exists = is_file($path);
+            $contents = $exists ? file_get_contents($path) : false;
+            $normalizedContents = is_string($contents) ? $contents : '';
+            $marker = is_string($registrationMarkers[$type] ?? null) ? $registrationMarkers[$type] : null;
+
+            $audit[$type] = match ($type) {
+                'routes' => [
+                    'path' => $path,
+                    'exists' => $exists,
+                    'uses_generated_marker' => $marker !== null && str_contains($normalizedContents, sprintf('// %s:start', $marker)),
+                    'contains_controller_reference' => str_contains($normalizedContents, (string) ($inspection['controller'] ?? '')) || str_contains($normalizedContents, class_basename((string) ($inspection['controller'] ?? ''))),
+                    'contains_expected_index_route' => str_contains($normalizedContents, (string) ($inspection['route_names']['index'] ?? '')),
+                    'contains_bulk_action_route' => str_contains($normalizedContents, (string) ($inspection['route_names']['bulk-action'] ?? '')) || str_contains($normalizedContents, '/bulk-action'),
+                    'contains_status_filter' => str_contains($normalizedContents, "where('status'") || str_contains($normalizedContents, 'where("status"'),
+                    'contains_crud_exceptions_middleware' => str_contains($normalizedContents, 'crud.exceptions'),
+                ],
+                'navigation' => [
+                    'path' => $path,
+                    'exists' => $exists,
+                    'uses_generated_marker' => $marker !== null && str_contains($normalizedContents, sprintf('// %s:start', $marker)),
+                    'contains_index_route' => str_contains($normalizedContents, (string) ($inspection['route_names']['index'] ?? '')),
+                    'contains_view_permission' => str_contains($normalizedContents, (string) ($inspection['permission_names']['view'] ?? '')),
+                    'contains_active_pattern' => str_contains($normalizedContents, (string) ($inspection['route_prefix'] ?? '').'.*'),
+                    'contains_status_all_params' => str_contains($normalizedContents, "'status' => 'all'") || str_contains($normalizedContents, '"status" => "all"'),
+                ],
+                'abilities' => [
+                    'path' => $path,
+                    'exists' => $exists,
+                    'uses_generated_marker' => $marker !== null && str_contains($normalizedContents, sprintf('// %s:start', $marker)),
+                    'contains_expected_keys' => collect($inspection['ability_map'] ?? [])->every(fn (mixed $permission, mixed $ability): bool => str_contains($normalizedContents, sprintf("'%s' => '%s'", (string) $ability, (string) $permission))),
+                ],
+                default => [
+                    'path' => $path,
+                    'exists' => $exists,
+                ],
+            };
+        }
+
+        return $audit;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function findGoldenPathExample(): ?array
+    {
+        foreach ($this->discoverControllers() as $controllerClass) {
+            try {
+                $inspection = $this->inspectController($controllerClass);
+            } catch (Throwable) {
+                continue;
+            }
+
+            if (($inspection['golden_path_example'] ?? false) === true) {
+                return $inspection;
+            }
+        }
+
+        foreach ($this->discoverDefinitionClasses() as $definitionClass) {
+            if (! class_exists($definitionClass) || ! is_subclass_of($definitionClass, ScaffoldDefinition::class)) {
+                continue;
+            }
+
+            $definition = app()->make($definitionClass);
+
+            if (! $definition instanceof ScaffoldDefinition || ! $definition->isGoldenPathExample()) {
+                continue;
+            }
+
+            $controllerClass = str_replace('\\Definitions\\', '\\Http\\Controllers\\', $definitionClass);
+            $controllerClass = str_replace('Definition', 'Controller', $controllerClass);
+
+            if (class_exists($controllerClass) && is_subclass_of($controllerClass, ScaffoldController::class)) {
+                return $this->inspectController($controllerClass);
+            }
+        }
+
+        $knownGoldenPathDefinition = 'Modules\\Platform\\Definitions\\AgencyDefinition';
+        $knownGoldenPathController = 'Modules\\Platform\\Http\\Controllers\\AgencyController';
+
+        if (class_exists($knownGoldenPathDefinition) && class_exists($knownGoldenPathController)) {
+            $definition = app()->make($knownGoldenPathDefinition);
+
+            if ($definition instanceof ScaffoldDefinition && $definition->isGoldenPathExample()) {
+                return $this->inspectController($knownGoldenPathController);
+            }
+        }
+
+        return [
+            'controller' => $knownGoldenPathController,
+            'definition_class' => $knownGoldenPathDefinition,
+            'route_prefix' => 'platform.agencies',
+            'expected_inertia_page' => 'platform/agencies',
+            'golden_path_example' => true,
+        ];
+    }
+
+    /**
+     * @return array<int, class-string<ScaffoldDefinition>>
+     */
+    private function discoverDefinitionClasses(): array
+    {
+        $paths = [
+            base_path('app/Definitions'),
+            ...collect(File::directories(base_path('modules')))
+                ->map(fn (string $directory): string => $directory.'/app/Definitions')
+                ->filter(fn (string $directory): bool => is_dir($directory))
+                ->all(),
+        ];
+
+        return collect($paths)
+            ->flatMap(function (string $directory): array {
+                return collect(File::files($directory))
+                    ->filter(fn (\SplFileInfo $file): bool => str_ends_with($file->getFilename(), 'Definition.php'))
+                    ->map(fn (\SplFileInfo $file): ?string => $this->classFromPath($file->getPathname()))
+                    ->filter()
+                    ->values()
+                    ->all();
+            })
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    private function classFromPath(string $path): ?string
+    {
+        $normalizedPath = str_replace('\\', '/', $path);
+        $basePath = str_replace('\\', '/', base_path());
+
+        if (str_starts_with($normalizedPath, $basePath.'/app/')) {
+            $relative = substr($normalizedPath, strlen($basePath.'/app/'));
+
+            return 'App\\'.str_replace('/', '\\', substr($relative, 0, -4));
+        }
+
+        if (str_starts_with($normalizedPath, $basePath.'/modules/')) {
+            $relative = substr($normalizedPath, strlen($basePath.'/modules/'));
+            $segments = explode('/', $relative);
+            $moduleName = array_shift($segments);
+
+            if (! is_string($moduleName) || $moduleName === '') {
+                return null;
+            }
+
+            if (($segments[0] ?? null) === 'app') {
+                array_shift($segments);
+            }
+
+            $classPath = implode('\\', array_map(
+                static fn (string $segment): string => str_replace('.php', '', $segment),
+                $segments,
+            ));
+
+            return sprintf('Modules\\%s\\%s', $moduleName, $classPath);
+        }
+
+        return null;
     }
 
     /**

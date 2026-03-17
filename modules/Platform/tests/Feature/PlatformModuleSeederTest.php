@@ -39,12 +39,14 @@ class PlatformModuleSeederTest extends TestCase
     {
         $this->seed(RolesAndPermissionsSeeder::class);
 
-        User::factory()->create([
+        $user = User::factory()->create([
             'first_name' => 'Platform',
             'last_name' => 'Seeder',
             'status' => Status::ACTIVE,
             'email_verified_at' => now(),
         ]);
+
+        $this->actingAs($user);
 
         $this->seed(DatabaseSeeder::class);
 
@@ -75,6 +77,15 @@ class PlatformModuleSeederTest extends TestCase
         $this->assertSame($firstServerCount, Server::query()->count());
         $this->assertSame($firstAgencyCount, Agency::query()->count());
         $this->assertSame($platformPermissionCount, Permission::query()->where('module_slug', 'platform')->count());
+    }
+
+    public function test_platform_tlds_table_includes_audit_columns_required_by_the_model(): void
+    {
+        $this->assertTrue(Schema::hasColumns('platform_tlds', [
+            'created_by',
+            'updated_by',
+            'deleted_by',
+        ]));
     }
 
     protected function beforeRefreshingDatabase(): void

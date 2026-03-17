@@ -36,6 +36,11 @@ return new class extends Migration
             // Metadata
             $table->json('metadata')->nullable()->comment('Flexible registry-specific options');
 
+            // Audit fields
+            $table->unsignedBigInteger('created_by')->nullable();
+            $table->unsignedBigInteger('updated_by')->nullable();
+            $table->unsignedBigInteger('deleted_by')->nullable();
+
             // Timestamps and soft deletes
             $table->timestamps();
             $table->softDeletes();
@@ -43,6 +48,11 @@ return new class extends Migration
             // Indexes
             $table->index('tld');
             $table->index('status');
+
+            // Foreign key constraints for audit fields
+            $table->foreign('created_by')->references('id')->on('users')->onDelete('set null');
+            $table->foreign('updated_by')->references('id')->on('users')->onDelete('set null');
+            $table->foreign('deleted_by')->references('id')->on('users')->onDelete('set null');
         });
     }
 

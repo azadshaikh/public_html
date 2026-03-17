@@ -6,6 +6,12 @@ type InertiaPageModule = {
 
 type InertiaPageResolver = () => Promise<InertiaPageModule>;
 
+type SharedModuleDescriptor = {
+    name?: string;
+    slug?: string;
+    inertiaNamespace?: string;
+};
+
 const applicationPages = import.meta.glob<InertiaPageModule>(
     '../pages/**/*.tsx',
 );
@@ -40,11 +46,25 @@ function normalizeModulePageName(path: string): string {
     return matches[2];
 }
 
+function normalizeModuleIdentifier(value: string): string {
+    return value.trim().replace(/^\/+|\/+$/g, '').toLowerCase();
+}
+
+function extractModulePageNamespace(path: string): string | null {
+    const [namespace] = normalizeModulePageName(path).split('/');
+
+    return namespace ?? null;
+}
+
 /**
- * Set of enabled module directory names (PascalCase, e.g. "Todos").
+ * Set of enabled module identifiers.
+ *
+ * Includes any shared module `name`, `slug`, and `inertiaNamespace`
+ * values so page filtering stays resilient when the module display name,
+ * slug, and on-disk directory name differ.
  * Populated on first page resolution from the Inertia initial page props.
  */
-let enabledModuleNames: Set<string> | null = null;
+let enabledModuleIdentifiers: Set<string> | null = null;
 
 function buildPageRegistry(): Map<string, InertiaPageResolver> {
     const registry = new Map<string, InertiaPageResolver>();
@@ -55,15 +75,18 @@ function buildPageRegistry(): Map<string, InertiaPageResolver> {
 
     Object.entries(modulePages).forEach(([path, resolver]) => {
         const directoryName = extractModuleDirectoryName(path);
+        const pageNamespace = extractModulePageNamespace(path);
 
         // Skip pages from disabled modules. When enabledModuleNames is null
         // (first full-page load before props are available), include all pages
         // as a safe fallback — the server-side module.enabled middleware is
         // the authoritative guard.
         if (
-            enabledModuleNames !== null &&
-            directoryName !== null &&
-            !enabledModuleNames.has(directoryName)
+            enabledModuleIdentifiers !== null &&
+            ![directoryName, pageNamespace]
+                .filter((identifier): identifier is string => identifier !== null)
+                .map(normalizeModuleIdentifier)
+                .some((identifier) => enabledModuleIdentifiers?.has(identifier) === true)
         ) {
             return;
         }
@@ -82,11 +105,18 @@ let pageRegistry: Map<string, InertiaPageResolver> | null = null;
  * resolution already filters disabled modules.
  */
 export function initModulePageFilter(
-    modules: { items: Array<{ name: string }> } | undefined,
+    modules: { items: SharedModuleDescriptor[] } | undefined,
 ): void {
     if (modules?.items) {
-        enabledModuleNames = new Set(
-            modules.items.map((m) => m.name),
+        enabledModuleIdentifiers = new Set(
+            modules.items
+                .flatMap((module) => [
+                    module.name,
+                    module.slug,
+                    module.inertiaNamespace,
+                ])
+                .filter((identifier): identifier is string => typeof identifier === 'string' && identifier.trim() !== '')
+                .map(normalizeModuleIdentifier),
         );
     }
 

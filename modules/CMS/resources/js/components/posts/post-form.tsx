@@ -190,7 +190,7 @@ function PostSingleSelectCombobox({
     emptyMessage = 'No results found.',
     searchPlaceholder = 'Search...',
 }: PostSingleSelectComboboxProps) {
-    const selectedOption = React.useMemo(
+    const selectedOption = useMemo(
         () => options.find((option) => String(option.value) === String(value)) ?? null,
         [options, value],
     );

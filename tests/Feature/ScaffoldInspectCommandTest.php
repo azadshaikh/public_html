@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use Illuminate\Support\Facades\Artisan;
 use Modules\Platform\Http\Controllers\AgencyController;
 use Modules\Todos\Http\Controllers\TodoController;
 use Tests\Support\InteractsWithModuleManifest;
@@ -54,5 +55,18 @@ class ScaffoldInspectCommandTest extends TestCase
         ])
             ->expectsOutputToContain('"golden_path_example": true')
             ->assertSuccessful();
+    }
+
+    public function test_scaffold_inspect_includes_registration_metadata_in_json_output(): void
+    {
+        Artisan::call('scaffold:inspect', [
+            'target' => TodoController::class,
+            '--json' => true,
+        ]);
+
+        $output = Artisan::output();
+
+        $this->assertStringContainsString('"registration_paths"', $output);
+        $this->assertStringContainsString('"registration_audit"', $output);
     }
 }

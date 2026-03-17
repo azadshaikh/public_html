@@ -62,6 +62,16 @@ This project has domain-specific skills available. You MUST activate the relevan
 - Stick to existing directory structure; don't create new base folders without approval.
 - Do not change the application's dependencies without approval.
 
+## Scaffold-first CRUD workflow
+
+- For new standard CRUD work, prefer the scaffold contract and commands before inventing local patterns.
+- Use `scaffold:inspect` to understand an existing scaffold resource before editing it.
+- Use `scaffold:generate` when creating a new standard app or module CRUD so classes, pages, tests, and registration targets follow the canonical shape.
+- Use `scaffold:doctor` after scaffold changes to validate route names, page files, ability mappings, registration blocks, and convention drift.
+- Generated scaffolds now carry explicit registration targets and merge markers for routes, navigation, and module abilities. Preserve manual entries outside generated marker blocks and update generated sections through the scaffold workflow rather than ad hoc edits when practical.
+- For legacy non-generated registrations, `scaffold:doctor --strict-legacy-registrations` can be used to audit whether routes and navigation still reference the expected controller, route, permission, and active-pattern hooks.
+- When working on scaffold index pages, prefer the shared adapter flow from `ScaffoldDefinition::toInertiaConfig()` and `resources/js/lib/scaffold-datagrid.ts` instead of rebuilding tabs, filters, sorting, and per-page state by hand.
+
 ## Frontend Bundling
 
 - This project uses `pnpm`, not `npm`, for frontend package management and scripts.
