@@ -20,7 +20,7 @@ Activate this skill when:
 
 ## Documentation
 
-Always use `search-docs` for current Inertia v3 guidance.
+Always use the available Boost documentation search capability for current Inertia v3 guidance when the current runtime exposes it.
 
 Before drilling into individual topics, check the documentation index at `https://inertiajs.com/docs/llms.txt` to discover the available Inertia pages.
 
@@ -283,15 +283,15 @@ For back-office resource pages in this project, prefer a predictable body order 
 Typical order:
 
 1. filter section
-2. flash/error alerts
-3. registry table or main content
-4. empty state when no rows exist
+2. registry table or main content
+3. empty state when no rows exist
 
 Use the shared resource primitives when they fit:
 
 - `ResourceSectionCard`
-- `ResourceFeedbackAlerts`
 - `ResourceStatCard` when metrics are truly useful
+
+Flash feedback is handled globally through Sonner toasts. Do not add `ResourceFeedbackAlerts` for routine success/error messaging on new pages. If a page needs a persistent inline warning or error that must remain visible, use an explicit alert component for that specific state instead of generic flash feedback UI.
 
 Do not add summary cards by default. Only keep them when the metrics materially help the page.
 
@@ -307,13 +307,6 @@ Example:
             ...
         </Form>
     </ResourceSectionCard>
-
-    <ResourceFeedbackAlerts
-        status={status}
-        statusIcon={<ShieldCheckIcon />}
-        error={error}
-        errorIcon={<ShieldAlertIcon />}
-    />
 
     <ResourceSectionCard
         title="Role registry"

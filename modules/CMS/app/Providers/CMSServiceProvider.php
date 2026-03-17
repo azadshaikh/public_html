@@ -13,6 +13,7 @@ use Modules\CMS\Http\Middleware\ThemeMiddleware;
 use Modules\CMS\Models\CmsPost;
 use Modules\CMS\Models\Menu;
 use Modules\CMS\Models\Redirection;
+use Modules\CMS\Observers\CmsPostObserver;
 use Modules\CMS\Observers\CmsPostSitemapObserver;
 use Modules\CMS\Observers\CmsPostTaxonomyObserver;
 use Modules\CMS\Observers\MenuObserver;
@@ -104,6 +105,7 @@ class CMSServiceProvider extends ModuleServiceProvider
 
     protected function registerObservers(): void
     {
+        CmsPost::observe(CmsPostObserver::class);
         CmsPost::observe(CmsPostSitemapObserver::class);
         CmsPost::observe(CmsPostTaxonomyObserver::class);
         Redirection::observe(RedirectionObserver::class);

@@ -37,7 +37,7 @@ Use this skill for application forms that need consistent client + server valida
 - Prefer `successToast` on `form.submit(...)` for save confirmations instead of inline "Saved" text. When `successToast` is set, `useAppForm` automatically calls `suppressNextFlashToast()` before showing its own toast — the global flash listener is suppressed for that request to avoid duplicates.
 - For standalone `router.post/put/delete` calls outside `useAppForm` that also show a custom client-side toast, call `suppressNextFlashToast()` before `showAppToast()` in the `onSuccess` callback.
 - Exclude non-serializable draft values such as `File` inputs with `dontRemember`.
-- Do NOT use `ResourceFeedbackAlerts` for new pages. Flash messages are now handled globally via Sonner toasts. Existing `ResourceFeedbackAlerts` usage will be removed as pages are updated.
+- Do NOT use `ResourceFeedbackAlerts` for new form success/error feedback. Flash messages are handled globally via Sonner toasts, and custom success/error messaging should go through `successToast` or `showAppToast()`. Use an inline alert only when the message must remain visible in-page after navigation.
 
 ## Pattern
 

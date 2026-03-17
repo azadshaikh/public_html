@@ -23,7 +23,7 @@ This application is a Laravel application and its main Laravel ecosystems packag
 - laravel/pint (PINT) - v1
 - laravel/sail (SAIL) - v1
 - phpunit/phpunit (PHPUNIT) - v12
-- @inertiajs/react (INERTIA_REACT) - v3
+- @inertiajs/react (INERTIA_REACT) - v3 API surface (currently installed from v3 beta package ranges)
 - react (REACT) - v19
 - tailwindcss (TAILWINDCSS) - v4
 - eslint (ESLINT) - v9
@@ -96,29 +96,30 @@ This project has domain-specific skills available. You MUST activate the relevan
 # Laravel Boost
 
 - Laravel Boost is an MCP server that comes with powerful tools designed specifically for this application. Use them.
+- Boost tool names can differ by runtime. Match the capability to the task instead of assuming a fixed tool name.
 
 ## Artisan
 
-- Use the `list-artisan-commands` tool when you need to call an Artisan command to double-check the available parameters.
+- Use the available Artisan command discovery capability when you need to double-check command names or parameters.
 
 ## URLs
 
-- Whenever you share a project URL with the user, you should use the `get-absolute-url` tool to ensure you're using the correct scheme, domain/IP, and port.
+- Whenever you share a project URL with the user, use the available absolute-URL resolution capability when the current runtime exposes one.
 
 ## Tinker / Debugging
 
-- You should use the `tinker` tool when you need to execute PHP to debug code or query Eloquent models directly.
-- Use the `database-query` tool when you only need to read from the database.
-- Use the `database-schema` tool to inspect table structure before writing migrations or models.
+- Use the available PHP evaluation capability when you need to debug code or query Eloquent models directly.
+- Use the available read-only database query capability when you only need to inspect data.
+- Use the available database schema inspection capability before writing migrations or models.
 
-## Reading Browser Logs With the `browser-logs` Tool
+## Reading Browser Logs
 
-- You can read browser logs, errors, and exceptions using the `browser-logs` tool from Boost.
+- Use the available browser log capability from Boost when the current runtime exposes it.
 - Only recent browser logs will be useful - ignore old logs.
 
 ## Searching Documentation (Critically Important)
 
-- Boost comes with a powerful `search-docs` tool you should use before trying other approaches when working with Laravel or Laravel ecosystem packages. This tool automatically passes a list of installed packages and their versions to the remote Boost API, so it returns only version-specific documentation for the user's circumstance. You should pass an array of packages to filter on if you know you need docs for particular packages.
+- When the current runtime exposes Boost documentation search, use it before trying other approaches for Laravel or Laravel ecosystem packages. It automatically uses the installed package set so the results stay version-aware. Pass package filters when the tool supports them and you know which packages matter.
 - Search the documentation before making code changes to ensure we are taking the correct approach.
 - Use multiple, broad, simple, topic-based queries at once. For example: `['rate limiting', 'routing rate limiting', 'routing']`. The most relevant results will be returned first.
 - Do not add package names to queries; package information is already shared. For example, use `test resource table`, not `filament 4 test resource table`.
@@ -183,7 +184,7 @@ protected function isAccessible(User $user, ?string $path = null): bool
 
 - Inertia creates fully client-side rendered SPAs without modern SPA complexity, leveraging existing server-side patterns.
 - Components live in `resources/js/pages` (unless specified in `vite.config.js`). Use `Inertia::render()` for server-side routing instead of Blade views.
-- ALWAYS use `search-docs` tool for version-specific Inertia documentation and updated code examples.
+- ALWAYS use the available Boost documentation search capability for version-specific Inertia documentation and updated code examples when the current runtime exposes it.
 - IMPORTANT: Activate `inertia-react-development` when working with Inertia client-side patterns.
 
 # Inertia v3
@@ -228,7 +229,7 @@ protected function isAccessible(User $user, ?string $path = null): bool
 
 # Do Things the Laravel Way
 
-- Use `php artisan make:` commands to create new files (i.e. migrations, controllers, models, etc.). You can list available Artisan commands using the `list-artisan-commands` tool.
+- Use `php artisan make:` commands to create new files (i.e. migrations, controllers, models, etc.). Use the available Artisan command discovery capability when you need to confirm command names or options.
 - If you're creating a generic PHP class, use `php artisan make:class`.
 - Pass `--no-interaction` to all Artisan commands to ensure they work without user input. You should also pass the correct `--options` to ensure correct behavior.
 
@@ -243,7 +244,7 @@ protected function isAccessible(User $user, ?string $path = null): bool
 
 ### Model Creation
 
-- When creating new models, create useful factories and seeders for them too. Ask the user if they need any other things, using `list-artisan-commands` to check the available options to `php artisan make:model`.
+- When creating new models, create useful factories and seeders for them too. Ask the user if they need any other things, using the available Artisan command discovery capability to check the options for `php artisan make:model`.
 
 ### APIs & Eloquent Resources
 
@@ -284,7 +285,7 @@ protected function isAccessible(User $user, ?string $path = null): bool
 
 # Laravel 12
 
-- CRITICAL: ALWAYS use `search-docs` tool for version-specific Laravel documentation and updated code examples.
+- CRITICAL: ALWAYS use the available Boost documentation search capability for version-specific Laravel documentation and updated code examples when the current runtime exposes it.
 - Since Laravel 11, Laravel has a new streamlined file structure which this project uses.
 
 ## Laravel 12 Structure
@@ -319,7 +320,7 @@ Ziggy exposes Laravel named routes to TypeScript via the global `route()` functi
 - Route definitions are rendered server-side by `ZiggyRouteFilter` in `resources/views/app.blade.php` on full page loads.
 - Routes are **filtered per user role**: super users get all routes, other users get only the groups their permissions allow. Groups are defined in `config/ziggy.php`.
 - When the admin slug or user role changes, Inertia asset versioning forces a full page reload so the filtered route set is refreshed.
-- Use `safeRoute()` and `hasRoute()` from `@/lib/safe-route` when a route may not be present for the current user.
+- When a route may be filtered out for the current user, check `route().has('name')` before rendering links or calling `route('name')`.
 - Cache is stored per role ID; call `ZiggyRouteFilter::clearCache()` when permissions or route groups change.
 
 === pint/core rules ===
@@ -358,7 +359,7 @@ Ziggy exposes Laravel named routes to TypeScript via the global `route()` functi
 # Tailwind CSS
 
 - Always use existing Tailwind conventions; check project patterns before adding new ones.
-- IMPORTANT: Always use `search-docs` tool for version-specific Tailwind CSS documentation and updated code examples. Never rely on training data.
+- IMPORTANT: Always use the available Boost documentation search capability for version-specific Tailwind CSS documentation and updated code examples when the current runtime exposes it. Never rely on training data.
 - IMPORTANT: Activate `tailwindcss-development` every time you're working with a Tailwind CSS or styling-related task.
 
 </laravel-boost-guidelines>

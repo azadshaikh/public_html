@@ -30,7 +30,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Modules\CMS\Models\Presenters\CmsPostPresenter;
 use Modules\CMS\Models\QueryBuilders\CmsPostQueryBuilder;
-use Modules\CMS\Observers\CmsPostObserver;
 use Modules\CMS\Services\PermaLinkService;
 
 /**
@@ -441,17 +440,6 @@ class CmsPost extends Model
             'seo_data' => 'array',
             'og_data' => 'array',
         ];
-    }
-
-    /**
-     * Boot the model
-     */
-    protected static function boot(): void
-    {
-        parent::boot();
-
-        // Register the observer
-        static::observe(CmsPostObserver::class);
     }
 
     protected function scopePublished(Builder $query): Builder

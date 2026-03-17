@@ -16,11 +16,11 @@ Activate whenever referencing backend routes in frontend components:
 - Building `<Link href>`, `router.visit()`, or `form.submit()` targets
 - Checking the current route for active-link styling
 - Debugging route name resolution or parameter binding
-- Working with route filtering, `safeRoute()`, or `hasRoute()`
+- Working with route filtering or checking whether a named route exists before using it
 
 ## Documentation
 
-Use `search-docs` for detailed Ziggy patterns and documentation.
+Use the available Boost documentation search capability for detailed Ziggy patterns and documentation when the current runtime exposes it.
 
 ## How Ziggy Works
 
@@ -42,32 +42,29 @@ Route groups define which named routes are included for each access level:
 
 | Group          | Access Level                      | Route Patterns                    |
 |----------------|-----------------------------------|-----------------------------------|
-| `public`       | Everyone (guests included)        | `login`, `register`, `password.*` |
-| `authenticated`| All logged-in users               | `dashboard`, `app.profile.*`, `app.settings.*`, `app.media.*` |
+| `public`       | Everyone (guests included)        | `login`, `register`, `password.*`, `social.*`, `two-factor.*` |
+| `authenticated`| All logged-in users               | `dashboard`, `app.profile.*`, `app.settings.*`, `app.media.*`, `cms.*` |
 | `users`        | Requires `view_users` permission  | `app.users.*`                     |
 | `roles`        | Requires `view_roles` permission  | `app.roles.*`                     |
-| `modules`      | Requires `manage_modules`         | `app.masters.modules.*`, `cms.*`  |
-| `masters`      | Super user only                   | `app.masters.settings.*`, `app.masters.groups.*`, `app.masters.laravel-tools.*` |
+| `masters`      | Super user only                   | `app.masters.modules.*`, `app.masters.settings.*`, `app.masters.addresses.*`, `app.masters.laravel-tools.*`, `app.masters.queue-monitor.*` |
 | `logs`         | Super user only                   | `app.logs.*`, `log-viewer.*`      |
 | `broadcast`    | Super user only                   | `app.notifications.broadcast.*`   |
 
-### Safe Route Helpers (`@/lib/safe-route`)
+### Checking Filtered Routes
 
-When routes are filtered, a component may reference a route not present for the current user. Use these helpers:
+When routes are filtered, a component may reference a route not present for the current user. This repository does not have a dedicated `@/lib/safe-route` helper, so check the route before using it:
 
 ```typescript
-import { safeRoute, hasRoute } from '@/lib/safe-route';
-
-// safeRoute — same API as route(), returns '/404' if missing
-safeRoute('app.users.index')           // URL string or '/404'
-
-// hasRoute — check existence before rendering
-if (hasRoute('app.masters.settings.index')) {
+if (route().has('app.masters.settings.index')) {
     // render admin link
 }
+
+const settingsHref = route().has('app.masters.settings.index')
+    ? route('app.masters.settings.index')
+    : null;
 ```
 
-Use `safeRoute()` when a route might not exist for the user. Use `hasRoute()` to conditionally render UI elements. Regular `route()` is fine when the route is guaranteed to exist (e.g., inside permission-gated pages).
+Use `route().has('name')` to conditionally render UI or guard a route lookup when the route may be filtered out. Regular `route()` is fine when the route is guaranteed to exist, such as inside a permission-gated page that already matches the backend route filter.
 
 ## Quick Reference
 
@@ -221,7 +218,7 @@ Ziggy's `route()` function is globally typed via `resources/js/types/global.d.ts
 - Forgetting `_query` wrapper for query parameters (e.g., using `{ page: 2 }` instead of `{ _query: { page: 2 } }`)
 - Relying on stale Ziggy route definitions after admin slug changes — the app handles this automatically via `Inertia::location()` and asset versioning
 - Using `route().current()` without understanding that it checks against the Inertia page URL, not the browser URL
-- Calling `route('app.masters.settings.index')` for a non-super user — the route won't exist in their Ziggy config. Use `safeRoute()` or `hasRoute()` when the route may be filtered out.
+- Calling `route('app.masters.settings.index')` for a non-super user — the route won't exist in their Ziggy config. Check `route().has('app.masters.settings.index')` before using it when the route may be filtered out.
 - Forgetting to add new route groups to `config/ziggy.php` when creating new CRUD resources
 - Not calling `ZiggyRouteFilter::clearCache()` after modifying permission assignments or route groups
 ```

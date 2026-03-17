@@ -20,7 +20,7 @@ Activate this skill when:
 
 ## Documentation
 
-Use `search-docs` for detailed Tailwind CSS v4 patterns and documentation.
+Use the available Boost documentation search capability for detailed Tailwind CSS v4 patterns and documentation when the current runtime exposes it.
 
 ## Basic Usage
 
