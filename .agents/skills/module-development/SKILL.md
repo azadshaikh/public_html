@@ -43,6 +43,10 @@ Before implementing, use `search-docs` for:
 
 When the module exposes a standard CRUD, inspect or generate it through the scaffold workflow before hand-editing routes, navigation, or abilities.
 
+For new modules, prefer `php artisan make:module-scaffold {Module} {Resource?} --write` so the manifest, provider, routes, abilities, navigation, database seeder, and directory structure all start in the canonical shape.
+
+After module runtime changes, use `php artisan module:inspect {Module?}` or `php artisan module:inspect --json --fail-on-issues` to verify provider resolution, page-root paths, route files, navigation/abilities config, and database seeder metadata.
+
 ## Critical Rules
 
 ### Self-Containment
@@ -78,6 +82,8 @@ The `ModuleAutoloader` maps `Modules\{Name}\` namespace → `modules/{Name}/app/
 - Migrations stay in `modules/{Name}/database/migrations/` (they are loaded by path, not namespace)
 
 This is the current hard requirement. Do not put factories or seeders under `app/Database/`.
+
+`ModuleAutoloader` itself remains intentionally small, so prefer `module:inspect` when you need actionable diagnostics about missing provider classes, wrong namespaces, or incorrect module paths.
 
 ### Frontend Ability Gating
 
@@ -149,7 +155,14 @@ Every module MUST have a `module.json` at its root. Required fields: `name`, `na
     "version": "1.0.0",
     "description": "Task management module.",
     "namespace": "Modules\\Todos\\",
-    "provider": "Modules\\Todos\\Providers\\TodosServiceProvider"
+    "provider": "Modules\\Todos\\Providers\\TodosServiceProvider",
+    "page_root": "resources/js/pages/todos",
+    "route_files": {
+        "web": "routes/web.php"
+    },
+    "abilities_path": "config/abilities.php",
+    "navigation_path": "config/navigation.php",
+    "database_seeder": "Modules\\Todos\\Database\\Seeders\\DatabaseSeeder"
 }
 ```
 
@@ -164,6 +177,13 @@ Every module MUST have a `module.json` at its root. Required fields: `name`, `na
 | `author` | No | Author name |
 | `homepage` | No | URL |
 | `icon` | No | Icon identifier |
+| `page_root` | No | Relative path to the module Inertia page root; defaults to `resources/js/pages/{slug}` |
+| `route_files` | No | Relative route files keyed by type, usually `{ "web": "routes/web.php" }` |
+| `abilities_path` | No | Relative path to frontend ability declarations |
+| `navigation_path` | No | Relative path to module navigation config |
+| `database_seeder` | No | FQCN of the module database seeder |
+
+These optional fields are now first-class runtime metadata. `ModuleManager`, `ModuleManifest`, shared frontend module types, and `module:inspect` all consume them directly.
 
 ## Module Status (`modules.json`)
 
@@ -178,6 +198,8 @@ The root `modules.json` file tracks enabled/disabled status per module:
 ```
 
 Use the module name (PascalCase, matching the `name` field in `module.json`) as the key.
+
+In tests, do not rely on the implicit testing-manifest switch alone. Prefer `InteractsWithModuleManifest` helpers such as `withEnabledModules()`, `withDisabledModules()`, and `useModuleSandbox()` to make module state explicit.
 
 ## Service Provider
 

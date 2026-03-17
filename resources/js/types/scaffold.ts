@@ -37,6 +37,20 @@ export type ScaffoldActionConfig = {
     confirmBulk?: string;
     scope?: 'row' | 'bulk' | 'both';
     variant?: string;
+    conditions?: Record<string, [string, string | string[]]>;
+};
+
+export type ScaffoldFormFieldConfig = {
+    key: string;
+    label?: string;
+    type?: string;
+    required?: boolean;
+    description?: string | null;
+    options?: ScaffoldFilterOption[] | Record<string, unknown>;
+    placeholder?: string;
+    multiple?: boolean;
+    defaultValue?: unknown;
+    [key: string]: unknown;
 };
 
 export type ScaffoldRowActionPayload = {
@@ -64,11 +78,26 @@ export type ScaffoldSettings = {
     statusField: string | null;
 };
 
+export type ScaffoldContractMeta = {
+    contractVersion: string;
+    modelPropKey: string;
+    inertiaPagePrefix: string;
+    pageComponents: Record<string, string>;
+    routes: Record<string, string>;
+    permissions: Record<string, string>;
+    abilities: Record<string, string>;
+    abilityKeys: string[];
+    files: Record<string, string>;
+    tests: Record<string, string>;
+};
+
 export type ScaffoldInertiaConfig = {
     columns: Record<string, unknown>[];
     filters: ScaffoldFilterConfig[];
     actions: ScaffoldActionConfig[];
     statusTabs: ScaffoldStatusTabConfig[];
+    form: ScaffoldFormFieldConfig[];
+    meta: ScaffoldContractMeta;
     settings: ScaffoldSettings;
 };
 

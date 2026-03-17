@@ -37,7 +37,9 @@ Before implementing, use project-specific docs search for:
 - `pagination filtering sorting`
 - `ziggy inertia react route generation`
 
-Before changing an existing scaffold CRUD, inspect it first with `php artisan scaffold:inspect {resource} --format=json` so you can see its columns, filters, tabs, policy abilities, page paths, and registration metadata.
+Before changing an existing scaffold CRUD, inspect it first with `php artisan scaffold:inspect {resource} --json` so you can see its columns, filters, tabs, policy abilities, page paths, and registration metadata.
+
+If the CRUD lives inside a new module shell, prefer `php artisan make:module-scaffold {Module} {Resource?} --write` instead of assembling the module manifest, provider, routes, abilities, navigation, and seeder files by hand.
 
 If styling or component choices are involved, also use the relevant Tailwind and shadcn guidance.
 
@@ -48,16 +50,17 @@ Follow this order unless the existing codebase clearly uses a different flow.
 1. Inspect sibling patterns and, for scaffold resources, run `scaffold:inspect`
 2. Design the schema, field types, filters, and status tabs
 3. Prefer `php artisan scaffold:generate` for new standard CRUD resources instead of hand-assembling files
-4. Implement model fillables, casts, defaults, and option lists
-5. Implement migration columns and indexes
-6. Build factory and optional seeder data
-7. Create a shared form request pattern when store and update rules overlap
-8. Build or refine controller index/create/store/show/edit/update/destroy methods
-9. Let scaffold registration targets handle generated route/navigation/ability sections where available; avoid hand-editing generated blocks
-10. Build Inertia pages and shared form components
-11. Update navigation or sidebar links outside generated blocks only when necessary
-12. Write focused feature tests
-13. Run `scaffold:doctor` after scaffold changes, then Pint, tests, and the relevant frontend validation
+4. If the resource belongs to a brand new module, create the module shell first with `php artisan make:module-scaffold`
+5. Implement model fillables, casts, defaults, and option lists
+6. Implement migration columns and indexes
+7. Build factory and optional seeder data
+8. Create a shared form request pattern when store and update rules overlap
+9. Build or refine controller index/create/store/show/edit/update/destroy methods
+10. Let scaffold registration targets handle generated route/navigation/ability sections where available; avoid hand-editing generated blocks
+11. Build Inertia pages and shared form components
+12. Update navigation or sidebar links outside generated blocks only when necessary
+13. Write focused feature tests
+14. Run `scaffold:doctor` after scaffold changes, then Pint, tests, and the relevant frontend validation
 
 ## Standard File Map
 
@@ -142,6 +145,8 @@ For forms, return:
 
 For scaffold-backed resources, prefer the shared scaffold contract from `ScaffoldDefinition::toInertiaConfig()` instead of manually rebuilding datagrid tabs, filters, sort metadata, and per-page defaults in each controller.
 
+Keep readable named route calls explicit in feature pages when the route names are stable. Do not replace clear `route('app.resource.action')` calls with config/meta indirection unless the route truly needs to be dynamic.
+
 For uploads:
 
 - store on the `public` disk unless the app pattern says otherwise
@@ -158,6 +163,7 @@ Prefer:
 - separate `index`, `create`, `edit`, and `show` pages
 - `AppHead` and breadcrumbs on each page
 - `AppLayout` or the project’s normal layout wrapper
+- explicit named `route('...')` calls in page and form components when they improve readability
 
 ### Inertia Forms
 
@@ -188,6 +194,8 @@ Prefer a rich mix of:
 
 Use existing shadcn form primitives where available.
 
+For feature-specific forms, prefer explicit props such as `initialValues`, option lists, and record summaries. Use scaffold form metadata only when you are intentionally building a reusable metadata-driven form UI.
+
 ### Lists and Detail Pages
 
 For index pages, prefer:
@@ -200,6 +208,8 @@ For index pages, prefer:
 - empty state
 
 For scaffold index pages, derive the datagrid state from `resources/js/lib/scaffold-datagrid.ts` so tabs, filters, sorting, bulk actions, and pagination stay aligned with the backend definition.
+
+For common backend datagrid patterns, prefer explicit `Column`, `Filter`, `StatusTab`, and `Action` definitions in the resource so generated and hand-written CRUDs stay easy to read.
 
 For show pages, prefer:
 
@@ -258,7 +268,7 @@ After implementation:
 1. Run `php artisan scaffold:doctor` after scaffold CRUD changes; use `--strict-legacy-registrations` when auditing older manual registrations
 2. Run `vendor/bin/pint --dirty --format agent` if PHP changed
 3. Run the smallest relevant `php artisan test --compact ...`
-4. Run `pnpm build` when frontend pages or route types changed
+4. Run `pnpm build` when frontend pages or shared scaffold/datagird types changed
 5. Confirm the CRUD is reachable from the intended navigation
 
 ## Common Pitfalls

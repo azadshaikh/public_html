@@ -308,6 +308,9 @@ class {$context['definition_basename']} extends ScaffoldDefinition
     public function filters(): array
     {
         return [
+            Filter::search('search')
+                ->label('Search')
+                ->placeholder('Search...'),
             Filter::select('status')
                 ->label('Status')
                 ->placeholder('All statuses')

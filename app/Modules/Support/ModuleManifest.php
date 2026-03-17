@@ -1,9 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Modules\Support;
 
 final readonly class ModuleManifest
 {
+    /**
+     * @param  array<string, string>  $routeFiles
+     */
     public function __construct(
         public string $name,
         public string $slug,
@@ -16,6 +21,11 @@ final readonly class ModuleManifest
         public string $provider,
         public string $basePath,
         public string $appPath,
+        public string $pageRootPath,
+        public array $routeFiles,
+        public ?string $abilitiesPath,
+        public ?string $navigationPath,
+        public string $databaseSeederClass,
         public bool $enabled,
     ) {}
 
@@ -44,10 +54,25 @@ final readonly class ModuleManifest
         return $this->databasePath().'/seeders';
     }
 
+    public function providerPath(): string
+    {
+        return $this->classPath($this->provider, $this->appPath);
+    }
+
+    public function databaseSeederPath(): string
+    {
+        return $this->classPath($this->databaseSeederClass, $this->databaseSeedersPath(), trim($this->namespace, '\\').'\\Database\\Seeders\\');
+    }
+
+    public function hasRouteFile(string $key = 'web'): bool
+    {
+        return array_key_exists($key, $this->routeFiles);
+    }
+
     /**
-     * @return array{name: string, slug: string, version: string, description: string, author: ?string, homepage: ?string, icon: ?string, inertiaNamespace: string, url: string}
+     * @return array{name: string, slug: string, version: string, description: string, author: ?string, homepage: ?string, icon: ?string, inertiaNamespace: string, url: string, provider: string, providerPath: string, pageRootPath: string, routeFiles: array<string, string>, abilitiesPath: ?string, navigationPath: ?string, databaseSeederClass: string, databaseSeederPath: string}
      */
-    public function toSharedArray(): array
+    public function metadata(): array
     {
         return [
             'name' => $this->name,
@@ -59,21 +84,42 @@ final readonly class ModuleManifest
             'icon' => $this->icon,
             'inertiaNamespace' => $this->inertiaNamespace(),
             'url' => $this->url(),
+            'provider' => $this->provider,
+            'providerPath' => $this->providerPath(),
+            'pageRootPath' => $this->pageRootPath,
+            'routeFiles' => $this->routeFiles,
+            'abilitiesPath' => $this->abilitiesPath,
+            'navigationPath' => $this->navigationPath,
+            'databaseSeederClass' => $this->databaseSeederClass,
+            'databaseSeederPath' => $this->databaseSeederPath(),
         ];
     }
 
     /**
-     * @return array{name: string, version: string, description: string, author: ?string, homepage: ?string, icon: ?string}
+     * @return array{name: string, slug: string, version: string, description: string, author: ?string, homepage: ?string, icon: ?string, inertiaNamespace: string, url: string, provider: string, providerPath: string, pageRootPath: string, routeFiles: array<string, string>, abilitiesPath: ?string, navigationPath: ?string, databaseSeederClass: string, databaseSeederPath: string}
+     */
+    public function toSharedArray(): array
+    {
+        return $this->metadata();
+    }
+
+    /**
+     * @return array{name: string, slug: string, version: string, description: string, author: ?string, homepage: ?string, icon: ?string, provider: string, providerPath: string, pageRootPath: string, routeFiles: array<string, string>, abilitiesPath: ?string, navigationPath: ?string, databaseSeederClass: string, databaseSeederPath: string}
      */
     public function toManagementArray(): array
     {
         return [
-            'name' => $this->name,
-            'version' => $this->version,
-            'description' => $this->description,
-            'author' => $this->author,
-            'homepage' => $this->homepage,
-            'icon' => $this->icon,
+            ...$this->metadata(),
         ];
+    }
+
+    private function classPath(string $class, string $basePath, ?string $prefix = null): string
+    {
+        $namespacePrefix = $prefix ?? rtrim($this->namespace, '\\').'\\';
+        $relativeClass = str_starts_with($class, $namespacePrefix)
+            ? substr($class, strlen($namespacePrefix))
+            : $class;
+
+        return rtrim($basePath, '/').'/'.str_replace('\\', '/', $relativeClass).'.php';
     }
 }

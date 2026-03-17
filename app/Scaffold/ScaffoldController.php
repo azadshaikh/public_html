@@ -31,7 +31,14 @@ use RuntimeException;
  *
  * Subclasses must implement:
  * - service(): returns the ScaffoldServiceInterface implementation
- * - inertiaPage(): returns the Inertia page component path prefix (e.g., 'users')
+ *
+ * Preferred extension points:
+ * - `service()` for wiring the resource service
+ * - `getIndexViewData()`, `getFormViewData()`, and `getShowViewData()` for page props
+ * - `handle*SideEffects()` hooks for non-CRUD side effects
+ *
+ * Do not override `inertiaPage()` unless the page namespace intentionally differs
+ * from the scaffold definition's derived Inertia page prefix.
  *
  * @example
  * class UserController extends ScaffoldController
@@ -39,8 +46,6 @@ use RuntimeException;
  *     public function __construct(private readonly UserService $userService) {}
  *
  *     protected function service(): UserService { return $this->userService; }
- *
- *     protected function inertiaPage(): string { return 'users'; }
  * }
  */
 abstract class ScaffoldController extends Controller
@@ -61,10 +66,10 @@ abstract class ScaffoldController extends Controller
     {
         $this->enforcePermission('view');
 
-        $data = $this->service()->getData($request);
+        $data = $this->scaffoldService()->getData($request);
 
         return Inertia::render($this->inertiaPage().'/index', [
-            'config' => $this->service()->getScaffoldDefinition()->toInertiaConfig(),
+            'config' => $this->scaffoldDefinition()->toInertiaConfig(),
             ...$data,
             'status' => session('status'),
             'error' => session('error'),
@@ -95,7 +100,7 @@ abstract class ScaffoldController extends Controller
         $this->enforcePermission('add');
 
         $validatedData = $this->validateRequest($request);
-        $model = $this->service()->create($validatedData);
+        $model = $this->scaffoldService()->create($validatedData);
 
         CacheInvalidation::touchForModel($model, $this->getEntityName().' created');
 
@@ -148,7 +153,7 @@ abstract class ScaffoldController extends Controller
         $previousValues = $this->capturePreviousValues($model);
         $validatedData = $this->validateRequest($request);
 
-        $updatedModel = $this->service()->update($model, $validatedData);
+        $updatedModel = $this->scaffoldService()->update($model, $validatedData);
 
         CacheInvalidation::touchForModel($updatedModel, $this->getEntityName().' updated', $previousValues);
 
@@ -160,7 +165,7 @@ abstract class ScaffoldController extends Controller
             $previousValues
         );
 
-        return to_route($this->scaffold()->getEditRoute(), $updatedModel)
+        return to_route($this->scaffoldDefinition()->getEditRoute(), $updatedModel)
             ->with('status', $this->buildUpdateSuccessMessage($updatedModel));
     }
 
@@ -174,7 +179,7 @@ abstract class ScaffoldController extends Controller
         try {
             $model = $this->findModel($id);
         } catch (ModelNotFoundException) {
-            return to_route($this->scaffold()->getIndexRoute())
+            return to_route($this->scaffoldDefinition()->getIndexRoute())
                 ->with('status', $this->getEntityName().' already deleted.');
         }
 
@@ -183,14 +188,14 @@ abstract class ScaffoldController extends Controller
                 ->with('error', $this->getEntityName().' is already in trash. Use permanent delete to remove it.');
         }
 
-        $this->service()->delete($model);
+        $this->scaffoldService()->delete($model);
 
         CacheInvalidation::touchForModel($model, $this->getEntityName().' moved to trash');
 
         $this->handleDeletionSideEffects($model);
         $this->logActivity($model, ActivityAction::DELETE, $this->getEntityName().' moved to trash');
 
-        return to_route($this->scaffold()->getIndexRoute())
+        return to_route($this->scaffoldDefinition()->getIndexRoute())
             ->with('status', $this->getEntityName().' moved to trash.');
     }
 
@@ -201,7 +206,7 @@ abstract class ScaffoldController extends Controller
     {
         $this->enforcePermission('restore');
 
-        $model = $this->service()->restore($id);
+        $model = $this->scaffoldService()->restore($id);
 
         CacheInvalidation::touchForModel($model, $this->getEntityName().' restored');
 
@@ -222,7 +227,7 @@ abstract class ScaffoldController extends Controller
         try {
             $model = $this->findModel($id);
         } catch (ModelNotFoundException) {
-            return to_route($this->scaffold()->getIndexRoute())
+            return to_route($this->scaffoldDefinition()->getIndexRoute())
                 ->with('status', $this->getEntityName().' already deleted.');
         }
 
@@ -232,7 +237,7 @@ abstract class ScaffoldController extends Controller
         }
 
         try {
-            $this->service()->forceDelete($model);
+            $this->scaffoldService()->forceDelete($model);
         } catch (RuntimeException $runtimeException) {
             return back()
                 ->with('error', $runtimeException->getMessage());
@@ -241,7 +246,7 @@ abstract class ScaffoldController extends Controller
         CacheInvalidation::touchForModel($model, $this->getEntityName().' permanently deleted');
         $this->logActivity($model, ActivityAction::FORCE_DELETE, $this->getEntityName().' permanently deleted');
 
-        return to_route($this->scaffold()->getIndexRoute())
+        return to_route($this->scaffoldDefinition()->getIndexRoute())
             ->with('status', $this->getEntityName().' permanently deleted.');
     }
 
@@ -258,7 +263,7 @@ abstract class ScaffoldController extends Controller
         ]);
 
         try {
-            $result = $this->service()->handleBulkAction($request);
+            $result = $this->scaffoldService()->handleBulkAction($request);
         } catch (RuntimeException $e) {
             return back()->with('error', $e->getMessage());
         }
@@ -288,13 +293,10 @@ abstract class ScaffoldController extends Controller
      */
     abstract protected function service(): ScaffoldServiceInterface;
 
-    /**
-     * Get the Inertia page component path prefix.
-     *
-     * Returns the base path for this resource's page components.
-     * For example, 'users' maps to pages: users/index, users/create, users/edit, users/show.
-     */
-    abstract protected function inertiaPage(): string;
+    protected function inertiaPage(): string
+    {
+        return $this->scaffoldDefinition()->getInertiaPagePrefix();
+    }
 
     // =========================================================================
     // CONFIGURATION (All derived from service/scaffold definition)
@@ -305,7 +307,17 @@ abstract class ScaffoldController extends Controller
      */
     protected function scaffold(): ScaffoldDefinition
     {
-        return $this->service()->scaffold();
+        return $this->scaffoldService()->scaffold();
+    }
+
+    protected function scaffoldDefinition(): ScaffoldDefinition
+    {
+        return $this->scaffold();
+    }
+
+    protected function scaffoldService(): ScaffoldServiceInterface
+    {
+        return $this->service();
     }
 
     /**
@@ -313,7 +325,7 @@ abstract class ScaffoldController extends Controller
      */
     protected function getModelClass(): string
     {
-        return $this->service()->getModelClass();
+        return $this->scaffoldService()->getModelClass();
     }
 
     /**
@@ -321,7 +333,7 @@ abstract class ScaffoldController extends Controller
      */
     protected function getEntityName(): string
     {
-        return $this->service()->getEntityName();
+        return $this->scaffoldService()->getEntityName();
     }
 
     /**
@@ -329,7 +341,7 @@ abstract class ScaffoldController extends Controller
      */
     protected function getEntityPlural(): string
     {
-        return $this->service()->getEntityPlural();
+        return $this->scaffoldService()->getEntityPlural();
     }
 
     /**

@@ -38,7 +38,20 @@ import type {
 } from '@/components/datagrid/datagrid';
 ```
 
-For scaffold resources, also prefer the shared helpers from `@/lib/scaffold-datagrid` instead of hand-assembling query state and tab metadata per page.
+For scaffold resources, also prefer the shared helpers from `@/lib/scaffold-datagrid` instead of hand-assembling query state, tabs, sorting, or bulk actions per page.
+
+## Scaffold-backed golden path
+
+For scaffold index pages, prefer this flow:
+
+1. Treat `ScaffoldDefinition::toInertiaConfig()` as the backend source of truth.
+2. Use `buildScaffoldDatagridState()` to derive filters, tabs, sorting, and per-page state.
+3. Use `mapScaffoldRowActions()` to render row actions from backend action payloads.
+4. Use `buildScaffoldBulkActions()` when scaffold actions should drive the bulk-action toolbar.
+
+Use the shared scaffold helpers for datagrid state, but keep simple page-level navigation routes explicit with readable `route('...')` calls when those routes are fixed.
+
+Do not invent parallel helpers like `buildDatagridColumns()` or `buildDatagridActions()` when the shared scaffold adapter already covers the page.
 
 ## Required props
 
@@ -51,6 +64,8 @@ For scaffold resources, also prefer the shared helpers from `@/lib/scaffold-data
 | `empty`     | `{ icon, title, description }` | Empty state content                                                                       |
 
 For scaffold-backed pages, most of these props should come from `ScaffoldDefinition::toInertiaConfig()` plus the adapter in `resources/js/lib/scaffold-datagrid.ts`, not duplicated local page logic.
+
+On the backend, keep common status, timestamp, filter, and destructive-action definitions explicit in each scaffold definition unless a resource-specific helper clearly improves readability.
 
 ## Key optional props
 

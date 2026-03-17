@@ -41,6 +41,10 @@ The desired end state is a platform where:
 - `scaffold:inspect` now audits registration files for both generated and legacy scaffolds, surfacing whether route, navigation, and ability targets contain the expected references.
 - `scaffold:doctor` now supports stricter legacy-registration auditing and stronger semantic validation inside generated route and navigation merge blocks.
 - Focused scaffold coverage now verifies generator metadata export, legacy-registration strict auditing, and richer generated registration semantics.
+- Shared module metadata now includes explicit page roots, route files, abilities paths, navigation paths, provider paths, and database seeder paths/classes through `ModuleManifest`, `ModuleManager`, and the shared frontend module types.
+- `module:inspect` now provides machine-readable and human-readable diagnostics for module runtime structure, including provider autoloadability, page-root existence, route-file presence, navigation/abilities config presence, and database seeder resolution.
+- `make:module-scaffold` now creates the canonical module shell and can optionally generate a nested CRUD scaffold inside that module, including the module manifest, provider, routes, abilities config, navigation config, database seeder, directory skeleton, and generated registration blocks.
+- Focused feature coverage now verifies dedicated module scaffold generation and module inspection diagnostics in sandboxed scenarios, including generated file output and failure-on-issues behavior.
 
 ### PRD status
 
@@ -51,6 +55,7 @@ The desired end state is a platform where:
 1. Deepen domain-specific generator metadata for individual modules when richer CRUD field types or workflows are needed.
 2. Expand contract tests around real generated resources as more modules adopt the golden-path scaffold flow.
 3. Continue incremental migration of older modules onto the fully self-describing scaffold standard.
+4. Continue trimming scaffold abstractions that do not materially improve readability as older resources are refreshed.
 
 ## Problem
 
@@ -349,6 +354,10 @@ Deliverables:
 - generated page/form/config skeletons,
 - generator documentation.
 
+Status:
+
+- Completed through `scaffold:generate` write mode and `make:module-scaffold`, with focused feature coverage for sandboxed generation.
+
 ### Phase 4 — Datagrid contract unification
 
 Deliverables:
@@ -357,6 +366,10 @@ Deliverables:
 - reduced page-level mapping boilerplate,
 - shared datagrid adapters/primitives.
 
+Status:
+
+- Completed first-class through shared datagrid adapters, shared frontend scaffold types, and reusable datagrid preset helpers.
+
 ### Phase 5 — Golden-path rollout
 
 Deliverables:
@@ -364,6 +377,10 @@ Deliverables:
 - one reference module/resource updated to the final standard,
 - docs refreshed to point to that implementation,
 - remaining module upgrades prioritized incrementally.
+
+Status:
+
+- Completed for the golden-path reference slice; incremental rollout across older modules remains follow-up work rather than a blocker for this PRD.
 
 ## Deliverables
 
@@ -381,6 +398,10 @@ Deliverables:
 - Test helpers for module state.
 - Debug/inspection command for scaffold/module metadata.
 - Snapshot or contract tests for `toInertiaConfig()` output.
+
+Status:
+
+- All recommended supporting deliverables are now implemented, with focused PHPUnit coverage around the new command and helper surface.
 
 ## Risks
 

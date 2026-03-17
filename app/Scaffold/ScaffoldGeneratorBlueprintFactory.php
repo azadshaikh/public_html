@@ -175,6 +175,9 @@ class ScaffoldGeneratorBlueprintFactory
             public function filters(): array
             {
                 return [
+                    Filter::search('search')
+                        ->label('Search')
+                        ->placeholder('Search...'),
                     Filter::select('status')
                         ->label('Status')
                         ->placeholder('All statuses')

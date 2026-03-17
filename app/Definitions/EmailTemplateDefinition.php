@@ -7,6 +7,7 @@ namespace App\Definitions;
 use App\Http\Requests\EmailTemplateRequest;
 use App\Models\EmailProvider;
 use App\Models\EmailTemplate;
+use App\Scaffold\Action;
 use App\Scaffold\Column;
 use App\Scaffold\Filter;
 use App\Scaffold\ScaffoldDefinition;
@@ -67,7 +68,7 @@ class EmailTemplateDefinition extends ScaffoldDefinition
 
             Column::make('status')
                 ->label('Status')
-                ->template('badge')
+                ->badge()
                 ->sortable(),
 
             Column::make('created_at')
@@ -78,6 +79,59 @@ class EmailTemplateDefinition extends ScaffoldDefinition
                 ->label('Actions')
                 ->template('actions')
                 ->excludeFromExport(),
+        ];
+    }
+
+    public function actions(): array
+    {
+        $routePrefix = $this->getRoutePrefix();
+
+        return [
+            Action::make('show')
+                ->label('View')
+                ->icon('ri-eye-line')
+                ->route($routePrefix.'.show')
+                ->forRow(),
+
+            Action::make('edit')
+                ->label('Edit')
+                ->icon('ri-pencil-line')
+                ->route($routePrefix.'.edit')
+                ->hideOnStatus('trash')
+                ->forRow(),
+
+            Action::make('delete')
+                ->label('Move to Trash')
+                ->icon('ri-delete-bin-line')
+                ->danger()
+                ->route($routePrefix.'.destroy')
+                ->method('DELETE')
+                ->confirm('Are you sure you want to move this item to trash?')
+                ->confirmBulk('Move {count} items to trash?')
+                ->hideOnStatus('trash')
+                ->forBoth(),
+
+            Action::make('restore')
+                ->label('Restore')
+                ->icon('ri-refresh-line')
+                ->success()
+                ->route($routePrefix.'.restore')
+                ->method('PATCH')
+                ->confirm('Are you sure you want to restore this item?')
+                ->confirmBulk('Restore {count} items?')
+                ->showOnStatus('trash')
+                ->forBoth(),
+
+            Action::make('force_delete')
+                ->label('Delete Permanently')
+                ->icon('ri-delete-bin-fill')
+                ->danger()
+                ->route($routePrefix.'.force-delete')
+                ->method('DELETE')
+                ->confirm('⚠️ This cannot be undone!')
+                ->confirmBulk('⚠️ Permanently delete {count} items? This cannot be undone!')
+                ->showOnStatus('trash')
+                ->forBoth(),
         ];
     }
 

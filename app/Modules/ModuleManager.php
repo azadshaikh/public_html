@@ -89,7 +89,7 @@ class ModuleManager
     }
 
     /**
-     * @return array{items: array<int, array{name: string, slug: string, version: string, description: string, author: ?string, homepage: ?string, icon: ?string, inertiaNamespace: string, url: string}>}
+     * @return array{items: array<int, array{name: string, slug: string, version: string, description: string, author: ?string, homepage: ?string, icon: ?string, inertiaNamespace: string, url: string, provider: string, providerPath: string, pageRootPath: string, routeFiles: array<string, string>, abilitiesPath: ?string, navigationPath: ?string, databaseSeederClass: string, databaseSeederPath: string}>}
      */
     public function sharedData(): array
     {
@@ -102,7 +102,7 @@ class ModuleManager
     }
 
     /**
-     * @return Collection<int, array{name: string, version: string, description: string, author: ?string, homepage: ?string, icon: ?string, status: string, enabled: bool}>
+     * @return Collection<int, array{name: string, slug: string, version: string, description: string, author: ?string, homepage: ?string, icon: ?string, inertiaNamespace: string, url: string, provider: string, providerPath: string, pageRootPath: string, routeFiles: array<string, string>, abilitiesPath: ?string, navigationPath: ?string, databaseSeederClass: string, databaseSeederPath: string, status: string, enabled: bool}>
      */
     public function managementData(): Collection
     {
@@ -264,10 +264,22 @@ class ModuleManager
         $icon = trim((string) ($decoded['icon'] ?? ''));
         $namespace = trim((string) ($decoded['namespace'] ?? ''));
         $provider = trim((string) ($decoded['provider'] ?? ''));
+        $normalizedNamespace = rtrim($namespace, '\\').'\\';
 
         if ($name === '' || $namespace === '' || $provider === '') {
             throw new InvalidArgumentException(sprintf('The module manifest at [%s] must define [name], [namespace], and [provider].', $manifestPath));
         }
+
+        $pageRootPath = $this->resolveModulePath(
+            $modulePath,
+            $decoded['page_root'] ?? sprintf('resources/js/pages/%s', $slug),
+        );
+
+        $routeFiles = $this->resolveRouteFiles($modulePath, $decoded['route_files'] ?? ['web' => 'routes/web.php']);
+
+        $abilitiesPath = $this->nullableResolvedModulePath($modulePath, $decoded['abilities_path'] ?? 'config/abilities.php');
+        $navigationPath = $this->nullableResolvedModulePath($modulePath, $decoded['navigation_path'] ?? 'config/navigation.php');
+        $databaseSeederClass = trim((string) ($decoded['database_seeder'] ?? ($normalizedNamespace.'Database\\Seeders\\DatabaseSeeder')));
 
         return new ModuleManifest(
             name: $name,
@@ -277,14 +289,59 @@ class ModuleManager
             author: $author !== '' ? $author : null,
             homepage: $homepage !== '' ? $homepage : null,
             icon: $icon !== '' ? $icon : null,
-            namespace: rtrim($namespace, '\\').'\\',
+            namespace: $normalizedNamespace,
             provider: $provider,
             basePath: $modulePath,
             appPath: $modulePath.'/app',
+            pageRootPath: $pageRootPath,
+            routeFiles: $routeFiles,
+            abilitiesPath: $abilitiesPath,
+            navigationPath: $navigationPath,
+            databaseSeederClass: $databaseSeederClass,
             enabled: (
                 in_array($this->normalizeModuleIdentifier($slug), $enabledModules, true)
                 || in_array($this->normalizeModuleIdentifier($name), $enabledModules, true)
             ),
         );
+    }
+
+    private function resolveModulePath(string $modulePath, mixed $path): string
+    {
+        $relativePath = trim((string) $path);
+
+        if ($relativePath === '') {
+            return $modulePath;
+        }
+
+        return $modulePath.'/'.ltrim(str_replace('\\', '/', $relativePath), '/');
+    }
+
+    private function nullableResolvedModulePath(string $modulePath, mixed $path): ?string
+    {
+        $relativePath = trim((string) $path);
+
+        if ($relativePath === '') {
+            return null;
+        }
+
+        return $this->resolveModulePath($modulePath, $relativePath);
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function resolveRouteFiles(string $modulePath, mixed $routeFiles): array
+    {
+        if (! is_array($routeFiles)) {
+            return ['web' => $this->resolveModulePath($modulePath, 'routes/web.php')];
+        }
+
+        return collect($routeFiles)
+            ->filter(fn (mixed $path, mixed $key): bool => is_string($key) && trim($key) !== '' && is_string($path) && trim($path) !== '')
+            ->mapWithKeys(fn (string $path, string $key): array => [
+                $key => $this->resolveModulePath($modulePath, $path),
+            ])
+            ->whenEmpty(fn ($collection) => $collection->put('web', $this->resolveModulePath($modulePath, 'routes/web.php')))
+            ->all();
     }
 }

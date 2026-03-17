@@ -78,6 +78,7 @@ const DEFAULT_ICON_MAP: IconMap = {
     'ri-checkbox-circle-line': CheckCircleIcon,
     'ri-checkbox-blank-circle-line': CircleIcon,
     'ri-delete-bin-line': Trash2Icon,
+    'ri-delete-bin-fill': Trash2Icon,
     'ri-error-warning-line': ShieldAlertIcon,
     'ri-close-circle-line': XCircleIcon,
     'ri-time-line': ClockIcon,
@@ -245,6 +246,7 @@ export function buildScaffoldBulkActions<T extends { id: string | number }>(
 
     return actions
         .filter((action) => action.scope === 'both' || action.scope === 'bulk')
+        .filter((action) => matchesStatusCondition(action.conditions?.status, options.currentStatus))
         .map((action) => ({
             key: action.key,
             label: action.label,
@@ -317,6 +319,31 @@ function resolveIcon(icon: string | null | undefined, iconMap: IconMap = {}): Re
     }
 
     return createElement(IconComponent, { className: 'size-4' });
+}
+
+function matchesStatusCondition(
+    condition: [string, string | string[]] | undefined,
+    currentStatus: string,
+): boolean {
+    if (!condition) {
+        return true;
+    }
+
+    const [operator, rawValue] = condition;
+    const values = Array.isArray(rawValue) ? rawValue : [rawValue];
+
+    switch (operator) {
+        case '=':
+            return currentStatus === values[0];
+        case '!=':
+            return currentStatus !== values[0];
+        case 'in':
+            return values.includes(currentStatus);
+        case 'not_in':
+            return !values.includes(currentStatus);
+        default:
+            return true;
+    }
 }
 
 function normalizeOptions(options: ScaffoldFilterConfig['options']): DatagridFilterOption[] {

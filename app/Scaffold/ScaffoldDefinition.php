@@ -35,6 +35,8 @@ use ReflectionClass;
  */
 abstract class ScaffoldDefinition
 {
+    public const CONTRACT_VERSION = '2026-03-17';
+
     /**
      * Entity name (singular)
      */
@@ -402,6 +404,19 @@ abstract class ScaffoldDefinition
     }
 
     /**
+     * Preferred extension point for form metadata.
+     *
+     * Override only when the frontend needs a stable machine-readable form
+     * contract in addition to the request rules and initial values.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function formSchema(): array
+    {
+        return [];
+    }
+
+    /**
      * Derive the Inertia page prefix from the route prefix.
      */
     public function getInertiaPagePrefix(): string
@@ -436,6 +451,16 @@ abstract class ScaffoldDefinition
     }
 
     /**
+     * Alias kept intentionally explicit for validators, generators, and AI tools.
+     *
+     * @return array{index: string, create: string, edit: string, show: string}
+     */
+    public function expectedPagePaths(): array
+    {
+        return $this->expectedPageComponents();
+    }
+
+    /**
      * @return array<string, string>
      */
     public function expectedRouteNames(): array
@@ -462,6 +487,16 @@ abstract class ScaffoldDefinition
     }
 
     /**
+     * Alias kept intentionally explicit for validators, generators, and AI tools.
+     *
+     * @return array<string, string>
+     */
+    public function expectedRoutes(): array
+    {
+        return $this->expectedRouteNames();
+    }
+
+    /**
      * @return array<string, string>
      */
     public function expectedPermissionNames(): array
@@ -483,6 +518,16 @@ abstract class ScaffoldDefinition
     }
 
     /**
+     * Alias kept intentionally explicit for validators, generators, and AI tools.
+     *
+     * @return array<string, string>
+     */
+    public function expectedPermissions(): array
+    {
+        return $this->expectedPermissionNames();
+    }
+
+    /**
      * @return array<string, string>
      */
     public function expectedAbilityMap(): array
@@ -490,6 +535,14 @@ abstract class ScaffoldDefinition
         return collect($this->expectedPermissionNames())
             ->mapWithKeys(fn (string $permission): array => [Str::camel($permission) => $permission])
             ->all();
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public function expectedAbilityKeys(): array
+    {
+        return array_keys($this->expectedAbilityMap());
     }
 
     /**
@@ -574,6 +627,16 @@ abstract class ScaffoldDefinition
     }
 
     /**
+     * Alias kept intentionally explicit for validators, generators, and AI tools.
+     *
+     * @return array<string, string>
+     */
+    public function expectedFiles(): array
+    {
+        return $this->expectedFilePaths();
+    }
+
+    /**
      * @return array<string, string>
      */
     public function expectedTestPaths(): array
@@ -590,6 +653,21 @@ abstract class ScaffoldDefinition
         return [
             'crud' => base_path(sprintf('tests/Feature/%sCrudTest.php', $entityTestName)),
         ];
+    }
+
+    /**
+     * Alias kept intentionally explicit for validators, generators, and AI tools.
+     *
+     * @return array<string, string>
+     */
+    public function expectedTests(): array
+    {
+        return $this->expectedTestPaths();
+    }
+
+    public function getModelPropKey(): string
+    {
+        return Str::camel($this->getEntityName());
     }
 
     public function expectsGeneratedRegistrationMerges(): bool
@@ -689,6 +767,8 @@ abstract class ScaffoldDefinition
      *     filters: array<int, array<string, mixed>>,
      *     actions: array<int, array<string, mixed>>,
      *     statusTabs: array<int, array<string, mixed>>,
+     *     form: array<int, array<string, mixed>>,
+     *     meta: array<string, mixed>,
      *     settings: array<string, mixed>,
      * }
      */
@@ -717,6 +797,24 @@ abstract class ScaffoldDefinition
                 ->values()
                 ->all(),
 
+            'form' => collect($this->formSchema())
+                ->map(fn (array $field): array => $field)
+                ->values()
+                ->all(),
+
+            'meta' => [
+                'contractVersion' => self::CONTRACT_VERSION,
+                'modelPropKey' => $this->getModelPropKey(),
+                'inertiaPagePrefix' => $this->getInertiaPagePrefix(),
+                'pageComponents' => $this->expectedPagePaths(),
+                'routes' => $this->expectedRoutes(),
+                'permissions' => $this->expectedPermissions(),
+                'abilities' => $this->expectedAbilityMap(),
+                'abilityKeys' => $this->expectedAbilityKeys(),
+                'files' => $this->expectedFiles(),
+                'tests' => $this->expectedTests(),
+            ],
+
             'settings' => [
                 'perPage' => $this->getPerPage(),
                 'defaultSort' => $this->getDefaultSort(),
@@ -737,6 +835,7 @@ abstract class ScaffoldDefinition
      *
      * Returns middleware array for standard CRUD operations using the permissionPrefix.
      * Controllers can use this directly in their middleware() method.
+     * Prefer this shared helper instead of hand-writing controller middleware.
      *
      * @return array<Middleware>
      *
@@ -759,7 +858,7 @@ abstract class ScaffoldDefinition
         $prefix = $this->getPermissionPrefix();
 
         return [
-            new Middleware('permission:view_'.$prefix, only: ['index', 'show', 'data']),
+            new Middleware('permission:view_'.$prefix, only: ['index', 'show']),
             new Middleware('permission:add_'.$prefix, only: ['create', 'store']),
             new Middleware('permission:edit_'.$prefix, only: ['edit', 'update']),
             new Middleware('permission:delete_'.$prefix, only: ['destroy', 'bulkAction', 'forceDelete']),

@@ -3,23 +3,23 @@ import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import type { EmailTemplateCreatePageProps } from '@/types/email';
 
-const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Dashboard', href: route('dashboard') },
-    {
-        title: 'Email Templates',
-        href: route('app.masters.email.templates.index'),
-    },
-    {
-        title: 'New template',
-        href: route('app.masters.email.templates.create'),
-    },
-];
-
 export default function EmailTemplatesCreate({
     initialValues,
     statusOptions,
     providerOptions,
 }: EmailTemplateCreatePageProps) {
+    const breadcrumbs: BreadcrumbItem[] = [
+        { title: 'Dashboard', href: route('dashboard') },
+        {
+            title: 'Email Templates',
+            href: route('app.masters.email.templates.index'),
+        },
+        {
+            title: 'New template',
+            href: route('app.masters.email.templates.create'),
+        },
+    ];
+
     return (
         <AppLayout
             breadcrumbs={breadcrumbs}

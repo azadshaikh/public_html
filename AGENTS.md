@@ -38,9 +38,9 @@ This project has domain-specific skills available. You MUST activate the relevan
 - `inertia-react-development` — Develops Inertia.js v3 React client-side applications. Activates when creating React pages, forms, or navigation; using &lt;Link&gt;, &lt;Form&gt;, useForm, useHttp, useLayoutProps, or router; working with deferred props, prefetching, optimistic updates, instant visits, or polling; or when user mentions React with Inertia, React pages, React forms, or React navigation.
 - `inertia-form-system` — Builds and updates application forms using the shared Inertia + shadcn form system. Use when creating or refactoring React forms, adding client-side validation, wiring dirty-form protection, showing consistent field errors, working with success/error toasts, or deciding between the shared form hook and raw Inertia forms.
 - `tailwindcss-development` — Styles applications using Tailwind CSS v4 utilities. Activates when adding styles, restyling components, working with gradients, spacing, layout, flex, grid, responsive design, dark mode, colors, typography, or borders; or when the user mentions CSS, styling, classes, Tailwind, restyle, hero section, cards, buttons, or any visual/UI changes.
-- `datagrid` — Builds and configures datagrid (data table) views in this project. Use when creating index pages with tables, card grids, filters, tabs, sorting, pagination, row actions, bulk actions, or custom cell/card rendering.
-- `laravel-inertia-crud-development` — Activates whenever building or expanding CRUD resources in this project. Use when creating Laravel models, migrations, factories, seeders, form requests, resource controllers, Inertia pages, Ziggy-backed forms, filtering/sorting/pagination, media uploads, sidebar links, or PHPUnit CRUD coverage.
-- `module-development` — Activates when creating new modules, adding features to existing modules, working with module config files (navigation, abilities), module service providers, module database classes (factories, seeders), or module testing. Use when any work involves the `modules/` directory.
+- `datagrid` — Builds and configures datagrid (data table) views in this project. Use when creating index pages with tables, card grids, filters, tabs, sorting, pagination, row actions, bulk actions, custom cell/card rendering, shared scaffold datagrid adapters, or common datagrid preset patterns.
+- `laravel-inertia-crud-development` — Activates whenever building or expanding CRUD resources in this project. Use when creating Laravel models, migrations, factories, seeders, form requests, resource controllers, Inertia pages, Ziggy-backed forms, filtering/sorting/pagination, scaffold-generated CRUD resources, or PHPUnit CRUD coverage.
+- `module-development` — Activates when creating new modules, adding features to existing modules, working with module config files (navigation, abilities), module service providers, module database classes (factories, seeders), module manifests, module diagnostics, or module testing. Use when any work involves the `modules/` directory.
 
 ## Conventions
 
@@ -68,9 +68,13 @@ This project has domain-specific skills available. You MUST activate the relevan
 - Use `scaffold:inspect` to understand an existing scaffold resource before editing it.
 - Use `scaffold:generate` when creating a new standard app or module CRUD so classes, pages, tests, and registration targets follow the canonical shape.
 - Use `scaffold:doctor` after scaffold changes to validate route names, page files, ability mappings, registration blocks, and convention drift.
+- Use `make:module-scaffold` when creating a new module shell or a new module plus its first standard CRUD instead of hand-assembling `module.json`, providers, routes, abilities, navigation, and seeders.
+- Use `module:inspect` after module runtime changes to validate provider resolution, page roots, route files, navigation/abilities paths, and database seeder metadata.
 - Generated scaffolds now carry explicit registration targets and merge markers for routes, navigation, and module abilities. Preserve manual entries outside generated marker blocks and update generated sections through the scaffold workflow rather than ad hoc edits when practical.
 - For legacy non-generated registrations, `scaffold:doctor --strict-legacy-registrations` can be used to audit whether routes and navigation still reference the expected controller, route, permission, and active-pattern hooks.
 - When working on scaffold index pages, prefer the shared adapter flow from `ScaffoldDefinition::toInertiaConfig()` and `resources/js/lib/scaffold-datagrid.ts` instead of rebuilding tabs, filters, sorting, and per-page state by hand.
+- Use shared scaffold config/types where helpful, but keep straightforward frontend `route('...')` calls explicit and readable when route names are stable.
+- Treat scaffold form metadata as optional. Prefer explicit form props and feature-local field configuration unless the form is intentionally generic or generator-driven.
 
 ## Frontend Bundling
 
@@ -171,6 +175,7 @@ protected function isAccessible(User $user, ?string $path = null): bool
 
 - Every change must be programmatically tested. Write a new test or update an existing test, then run the affected tests to make sure they pass.
 - Run the minimum number of tests needed to ensure code quality and speed. Use `php artisan test --compact` with a specific filename or filter.
+- For module tests, prefer the shared `InteractsWithModuleManifest` helpers such as `withEnabledModules()` and `useModuleSandbox()` instead of implicit manifest swapping or ad hoc test setup.
 
 === inertia-laravel/core rules ===
 
