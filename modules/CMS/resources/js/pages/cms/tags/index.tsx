@@ -30,6 +30,8 @@ function getTagDateLabel(): string {
     return 'Created';
 }
 
+const FEATURED_IMAGE_COLUMN_CLASS = 'w-32 min-w-32';
+
 function TagPreview({ tag }: { tag: TagListItem }) {
     if (tag.featured_image_url) {
         return (
@@ -125,40 +127,45 @@ export default function TagsIndex({
 
     const columns: DatagridColumn<TagListItem>[] = [
         {
+            key: 'featured_image_url',
+            header: '',
+            headerClassName: FEATURED_IMAGE_COLUMN_CLASS,
+            cellClassName: FEATURED_IMAGE_COLUMN_CLASS,
+            cell: (tag) => (
+                <Link
+                    href={tag.edit_url}
+                    className="block shrink-0 transition-opacity hover:opacity-80"
+                >
+                    <TagPreview tag={tag} />
+                </Link>
+            ),
+        },
+        {
             key: 'title',
             header: 'Title',
-            headerClassName: 'w-[42%] min-w-[26rem]',
-            cellClassName: 'w-[42%] min-w-[26rem]',
+            headerClassName: 'w-[400px] min-w-[24rem]',
+            cellClassName: 'w-[400px] min-w-[24rem]',
             sortable: true,
             cell: (tag) => (
-                <div className="flex min-w-0 items-center gap-4">
-                    <Link
-                        href={tag.edit_url}
-                        className="shrink-0 transition-opacity hover:opacity-80"
-                    >
-                        <TagPreview tag={tag} />
-                    </Link>
-
-                    <div className="min-w-0 flex-1 space-y-1.5">
-                        <div className="flex items-start gap-2">
-                            <Link
-                                href={tag.edit_url}
-                                className="line-clamp-2 font-semibold break-words text-foreground hover:underline"
-                            >
-                                {tag.title}
-                            </Link>
-                        </div>
-
-                        <TagMeta tag={tag} />
+                <div className="min-w-0 space-y-1.5">
+                    <div className="flex items-start gap-2">
+                        <Link
+                            href={tag.edit_url}
+                            className="line-clamp-2 font-semibold break-words text-foreground hover:underline"
+                        >
+                            {tag.title}
+                        </Link>
                     </div>
+
+                    <TagMeta tag={tag} />
                 </div>
             ),
         },
         {
             key: 'posts_count',
             header: 'Posts',
-            headerClassName: 'w-24 text-center',
-            cellClassName: 'w-24 text-center',
+            headerClassName: 'w-[100px] text-center',
+            cellClassName: 'w-[100px] text-center',
             sortable: true,
             cell: (tag) => (
                 <Badge variant="secondary" className="bg-muted/50 font-normal">
@@ -169,8 +176,8 @@ export default function TagsIndex({
         {
             key: 'status_label',
             header: 'Status',
-            headerClassName: 'w-28 text-center',
-            cellClassName: 'w-28 text-center',
+            headerClassName: 'w-[140px] text-center',
+            cellClassName: 'w-[140px] text-center',
             type: 'badge',
             sortable: true,
             sortKey: 'status',
@@ -178,8 +185,8 @@ export default function TagsIndex({
         {
             key: 'display_date',
             header: 'Date',
-            headerClassName: 'w-52',
-            cellClassName: 'w-52',
+            headerClassName: 'w-[180px]',
+            cellClassName: 'w-[180px]',
             sortable: true,
             sortKey: 'created_at',
             cell: (tag) => (

@@ -36,12 +36,17 @@ class CategoryDefinition extends ScaffoldDefinition
         return [
             Column::make('_bulk_select')->label('')->checkbox()->width('40px')->excludeFromExport(),
 
+            Column::make('featured_image')
+                ->label('')
+                ->template('category_featured_image')
+                ->width('128px'),
+
             Column::make('title_with_meta')
                 ->label('Title')
                 ->sortable('title')
                 ->searchable(['title', 'slug', 'parent.title'])
                 ->template('category_title_meta')
-                ->width('350px'),
+                ->width('400px'),
 
             Column::make('posts_count')
                 ->label('Posts')
@@ -52,13 +57,13 @@ class CategoryDefinition extends ScaffoldDefinition
                 ->label('Status')
                 ->template('badge')
                 ->sortable()
-                ->width('120px'),
+                ->width('140px'),
 
             Column::make('display_date')
                 ->label('Date')
                 ->sortable('created_at')
                 ->template('term_date')
-                ->width('160px'),
+                ->width('180px'),
 
             Column::make('_actions')->label('Actions')->template('actions')->excludeFromExport()->width('80px'),
         ];

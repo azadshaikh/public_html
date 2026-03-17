@@ -43,7 +43,7 @@ class PostDefinition extends ScaffoldDefinition
             Column::make('featured_image')
                 ->label('')
                 ->template('post_featured_image')
-                ->width('88px'),
+                ->width('128px'),
 
             Column::make('title_with_meta')
                 ->label('Title')

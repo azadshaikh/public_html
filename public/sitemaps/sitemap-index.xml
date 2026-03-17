@@ -1,4 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?xml-stylesheet type="text/xsl" href="https://one.xip.net.in/css/sitemap.xsl?stype=root"?>
+<?xml-stylesheet type="text/xsl" href="https://two.xip.net.in/css/sitemap.xsl?stype=root"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap>
+    <loc><![CDATA[https://two.xip.net.in/sitemaps/posts/sitemap.xml]]></loc>
+    <lastmod><![CDATA[2026-03-18T02:25:53.000Z]]></lastmod>
+  </sitemap>
+  <sitemap>
+    <loc><![CDATA[https://two.xip.net.in/sitemaps/pages/sitemap.xml]]></loc>
+    <lastmod><![CDATA[2026-03-18T02:26:07.000Z]]></lastmod>
+  </sitemap>
 </sitemapindex>

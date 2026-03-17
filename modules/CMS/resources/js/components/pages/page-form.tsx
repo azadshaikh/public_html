@@ -35,8 +35,13 @@ import {
     NativeSelect,
     NativeSelectOption,
 } from '@/components/ui/native-select';
+import {
+    PanelTabs,
+    PanelTabsContent,
+    PanelTabsList,
+    PanelTabsTrigger,
+} from '@/components/ui/panel-tabs';
 import { Spinner } from '@/components/ui/spinner';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { useAppForm } from '@/hooks/use-app-form';
 import { formValidators } from '@/lib/forms';
@@ -235,59 +240,41 @@ export default function PageForm({
 
             <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
                 <div className="flex flex-col gap-6">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Page content</CardTitle>
-                            <CardDescription>
-                                Write the main content, summary, and SEO
-                                metadata for this page.
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="flex flex-col gap-6">
-                            <Field
-                                data-invalid={
-                                    form.invalid('title') || undefined
-                                }
-                            >
-                                <RequiredLabel htmlFor="title">
-                                    Title
-                                </RequiredLabel>
-                                <Input
-                                    id="title"
-                                    value={form.data.title}
-                                    onChange={(event) =>
-                                        form.setField(
-                                            'title',
-                                            event.target.value,
-                                        )
-                                    }
-                                    onBlur={() => form.touch('title')}
-                                    aria-invalid={
-                                        form.invalid('title') || undefined
-                                    }
-                                    placeholder="Enter page title"
-                                />
-                                <FieldError>{form.error('title')}</FieldError>
-                            </Field>
+                    <Field
+                        data-invalid={form.invalid('title') || undefined}
+                    >
+                        <RequiredLabel htmlFor="title">Title</RequiredLabel>
+                        <Input
+                            id="title"
+                            value={form.data.title}
+                            onChange={(event) =>
+                                form.setField('title', event.target.value)
+                            }
+                            onBlur={() => form.touch('title')}
+                            aria-invalid={form.invalid('title') || undefined}
+                            placeholder="Enter page title"
+                        />
+                        <FieldError>{form.error('title')}</FieldError>
+                    </Field>
 
-                            <Tabs defaultValue="content">
-                                <TabsList variant="line">
-                                    <TabsTrigger value="content">
-                                        Content
-                                    </TabsTrigger>
-                                    <TabsTrigger value="seo">SEO</TabsTrigger>
-                                    <TabsTrigger value="social">
-                                        Social
-                                    </TabsTrigger>
-                                    <TabsTrigger value="schema">
-                                        Schema
-                                    </TabsTrigger>
-                                </TabsList>
+                    <PanelTabs defaultValue="content">
+                        <PanelTabsList>
+                            <PanelTabsTrigger value="content">
+                                Content
+                            </PanelTabsTrigger>
+                            <PanelTabsTrigger value="seo">SEO</PanelTabsTrigger>
+                            <PanelTabsTrigger value="social">
+                                Social
+                            </PanelTabsTrigger>
+                            <PanelTabsTrigger value="schema">
+                                Schema
+                            </PanelTabsTrigger>
+                        </PanelTabsList>
 
-                                <TabsContent
-                                    value="content"
-                                    className="flex flex-col gap-6"
-                                >
+                        <PanelTabsContent
+                            value="content"
+                            className="flex flex-col gap-6"
+                        >
                                     <Field
                                         data-invalid={
                                             form.invalid('content') || undefined
@@ -356,12 +343,12 @@ export default function PageForm({
                                                 : ''}
                                         </div>
                                     ) : null}
-                                </TabsContent>
+                        </PanelTabsContent>
 
-                                <TabsContent
-                                    value="seo"
-                                    className="flex flex-col gap-6"
-                                >
+                        <PanelTabsContent
+                            value="seo"
+                            className="flex flex-col gap-6"
+                        >
                                     <Field
                                         data-invalid={
                                             form.invalid('meta_title') ||
@@ -474,12 +461,12 @@ export default function PageForm({
                                             {form.error('meta_robots')}
                                         </FieldError>
                                     </Field>
-                                </TabsContent>
+                        </PanelTabsContent>
 
-                                <TabsContent
-                                    value="social"
-                                    className="flex flex-col gap-6"
-                                >
+                        <PanelTabsContent
+                            value="social"
+                            className="flex flex-col gap-6"
+                        >
                                     <Field
                                         data-invalid={
                                             form.invalid('og_title') ||
@@ -616,12 +603,12 @@ export default function PageForm({
                                             {form.error('og_url')}
                                         </FieldError>
                                     </Field>
-                                </TabsContent>
+                        </PanelTabsContent>
 
-                                <TabsContent
-                                    value="schema"
-                                    className="flex flex-col gap-4"
-                                >
+                        <PanelTabsContent
+                            value="schema"
+                            className="flex flex-col gap-4"
+                        >
                                     <Field
                                         data-invalid={
                                             form.invalid('schema') || undefined
@@ -649,10 +636,8 @@ export default function PageForm({
                                             {form.error('schema')}
                                         </FieldError>
                                     </Field>
-                                </TabsContent>
-                            </Tabs>
-                        </CardContent>
-                    </Card>
+                        </PanelTabsContent>
+                    </PanelTabs>
                 </div>
 
                 <div className="flex flex-col gap-4">
