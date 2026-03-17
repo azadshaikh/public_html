@@ -67,6 +67,11 @@ abstract class ScaffoldDefinition
     protected bool $requiresSuperUserAccess = false;
 
     /**
+     * Whether this scaffold should be treated as the canonical golden-path example.
+     */
+    protected bool $goldenPathExample = false;
+
+    /**
      * Default items per page
      */
     protected int $perPage = 10;
@@ -381,6 +386,14 @@ abstract class ScaffoldDefinition
     public function shouldValidateConventionalRouteNames(): bool
     {
         return true;
+    }
+
+    /**
+     * Determine whether this scaffold is the canonical golden-path example.
+     */
+    public function isGoldenPathExample(): bool
+    {
+        return $this->goldenPathExample;
     }
 
     /**

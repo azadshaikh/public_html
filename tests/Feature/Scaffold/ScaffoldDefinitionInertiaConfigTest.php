@@ -10,7 +10,9 @@ use App\Scaffold\Column;
 use App\Scaffold\Filter;
 use App\Scaffold\ScaffoldDefinition;
 use App\Scaffold\StatusTab;
+use Modules\Platform\Definitions\AgencyDefinition;
 use Modules\Todos\Definitions\TodoDefinition;
+use Tests\Support\InteractsWithModuleManifest;
 use Tests\TestCase;
 
 /**
@@ -98,13 +100,27 @@ class StubDefinition extends ScaffoldDefinition
 
 class ScaffoldDefinitionInertiaConfigTest extends TestCase
 {
+    use InteractsWithModuleManifest;
+
     private StubDefinition $definition;
 
     protected function setUp(): void
     {
         parent::setUp();
 
+        $this->setUpModuleManifest('scaffold-definition-modules.json', [
+            'Platform' => 'enabled',
+            'Todos' => 'enabled',
+        ]);
+
         $this->definition = new StubDefinition;
+    }
+
+    protected function tearDown(): void
+    {
+        $this->tearDownModuleManifest();
+
+        parent::tearDown();
     }
 
     // =========================================================================
@@ -207,6 +223,13 @@ class ScaffoldDefinitionInertiaConfigTest extends TestCase
         $this->assertSame([
             'crud' => base_path('modules/Todos/tests/Feature/TodoCrudTest.php'),
         ], $definition->expectedTestPaths());
+    }
+
+    public function test_golden_path_example_defaults_to_false_and_can_be_enabled_per_scaffold(): void
+    {
+        $this->assertFalse($this->definition->isGoldenPathExample());
+        $this->assertFalse((new TodoDefinition)->isGoldenPathExample());
+        $this->assertTrue((new AgencyDefinition)->isGoldenPathExample());
     }
 
     // =========================================================================

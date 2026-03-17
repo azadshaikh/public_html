@@ -19,6 +19,8 @@ class AgencyDefinition extends ScaffoldDefinition
 
     protected ?string $statusField = 'status';
 
+    protected bool $goldenPathExample = true;
+
     public function getModelClass(): string
     {
         return Agency::class;

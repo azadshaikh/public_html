@@ -49,6 +49,10 @@ class ScaffoldIntrospector
     {
         $needle = strtolower(trim($target));
 
+        if (class_exists($target) && is_subclass_of($target, ScaffoldController::class)) {
+            return [$target];
+        }
+
         return collect($this->discoverControllers())
             ->filter(function (string $controllerClass) use ($needle): bool {
                 if (in_array($needle, [
@@ -88,6 +92,7 @@ class ScaffoldIntrospector
      *     permission_prefix: string,
      *     inertia_page: string,
      *     expected_inertia_page: string,
+     *     golden_path_example: bool,
      *     uses_soft_deletes: bool,
      *     validate_conventional_route_names: bool,
      *     page_components: array<string, string>,
@@ -122,6 +127,7 @@ class ScaffoldIntrospector
             'permission_prefix' => $definition->getPermissionPrefix(),
             'inertia_page' => $inertiaPage,
             'expected_inertia_page' => $definition->getInertiaPagePrefix(),
+            'golden_path_example' => $definition->isGoldenPathExample(),
             'uses_soft_deletes' => $definition->usesSoftDeletes(),
             'validate_conventional_route_names' => $definition->shouldValidateConventionalRouteNames(),
             'page_components' => $definition->expectedPageComponents(),

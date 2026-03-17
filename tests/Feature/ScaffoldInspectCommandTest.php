@@ -2,11 +2,32 @@
 
 namespace Tests\Feature;
 
+use Modules\Platform\Http\Controllers\AgencyController;
 use Modules\Todos\Http\Controllers\TodoController;
+use Tests\Support\InteractsWithModuleManifest;
 use Tests\TestCase;
 
 class ScaffoldInspectCommandTest extends TestCase
 {
+    use InteractsWithModuleManifest;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->setUpModuleManifest('scaffold-inspect-modules.json', [
+            'Platform' => 'enabled',
+            'Todos' => 'enabled',
+        ]);
+    }
+
+    protected function tearDown(): void
+    {
+        $this->tearDownModuleManifest();
+
+        parent::tearDown();
+    }
+
     public function test_scaffold_inspect_can_render_json_for_a_specific_controller(): void
     {
         $this->artisan('scaffold:inspect', [
@@ -23,5 +44,15 @@ class ScaffoldInspectCommandTest extends TestCase
         ])
             ->expectsOutputToContain('No scaffold controller matched [DefinitelyMissingScaffold].')
             ->assertFailed();
+    }
+
+    public function test_scaffold_inspect_marks_the_golden_path_example_in_json_output(): void
+    {
+        $this->artisan('scaffold:inspect', [
+            'target' => AgencyController::class,
+            '--json' => true,
+        ])
+            ->expectsOutputToContain('"golden_path_example": true')
+            ->assertSuccessful();
     }
 }

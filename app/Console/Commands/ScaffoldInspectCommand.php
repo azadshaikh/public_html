@@ -93,7 +93,7 @@ class ScaffoldInspectCommand extends Command
         }
 
         $this->table(
-            ['Controller', 'Entity', 'Route Prefix', 'Inertia Page', 'Module'],
+            ['Controller', 'Entity', 'Route Prefix', 'Inertia Page', 'Module', 'Golden Path'],
             collect($inspections)
                 ->map(fn (array $inspection): array => [
                     $inspection['controller'],
@@ -101,6 +101,7 @@ class ScaffoldInspectCommand extends Command
                     $inspection['route_prefix'],
                     $inspection['expected_inertia_page'],
                     $inspection['module'] ?? 'App',
+                    $inspection['golden_path_example'] ? 'yes' : 'no',
                 ])
                 ->all(),
         );
@@ -125,6 +126,7 @@ class ScaffoldInspectCommand extends Command
             ['permission_prefix', $inspection['permission_prefix']],
             ['inertia_page', $inspection['inertia_page']],
             ['expected_inertia_page', $inspection['expected_inertia_page']],
+            ['golden_path_example', $inspection['golden_path_example'] ? 'yes' : 'no'],
             ['uses_soft_deletes', $inspection['uses_soft_deletes'] ? 'yes' : 'no'],
         ]);
 

@@ -15,14 +15,12 @@ import type {
     DatagridAction,
     DatagridBulkAction,
     DatagridColumn,
-    DatagridFilter,
-    DatagridTab,
 } from '@/components/datagrid/datagrid';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
-import { mapFilters, mapStatusTab } from '../../../lib/helpers';
+import { buildDatagridState } from '../../../lib/helpers';
 import type { PostIndexPageProps, PostListItem } from '../../types/cms';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -95,6 +93,12 @@ export default function PostsIndex({
     const canEditPosts = page.props.auth.abilities.editPosts;
     const canDeletePosts = page.props.auth.abilities.deletePosts;
     const canRestorePosts = page.props.auth.abilities.restorePosts;
+    const { currentStatus, gridFilters, perPage, sorting, statusTabs } = buildDatagridState(
+        config,
+        filters,
+        statistics,
+        'Search posts...',
+    );
 
     const handleBulkAction = (
         action: string,
@@ -107,7 +111,7 @@ export default function PostsIndex({
             {
                 action,
                 ids: selectedPosts.map((post) => post.id),
-                status: filters.status,
+                status: currentStatus,
             },
             {
                 preserveScroll: true,
@@ -115,16 +119,6 @@ export default function PostsIndex({
             },
         );
     };
-
-    // ----- Filters -----
-
-    const gridFilters = mapFilters(config.filters, filters, 'Search posts...');
-
-    // ----- Status Tabs -----
-
-    const statusTabs: DatagridTab[] = config.statusTabs.map((tab) =>
-        mapStatusTab(tab, statistics, filters.status),
-    );
 
     // ----- Columns -----
 
@@ -344,7 +338,7 @@ export default function PostsIndex({
     ];
 
     const visibleBulkActions =
-        filters.status === 'trash'
+        currentStatus === 'trash'
             ? bulkActions.filter((a) => a.key !== 'bulk-delete')
             : bulkActions.filter((a) => a.key === 'bulk-delete');
 
@@ -375,14 +369,8 @@ export default function PostsIndex({
                     rowActions={rowActions}
                     bulkActions={visibleBulkActions}
                     isRowSelectable={() => visibleBulkActions.length > 0}
-                    sorting={{
-                        sort: filters.sort,
-                        direction: filters.direction,
-                    }}
-                    perPage={{
-                        value: filters.per_page,
-                        options: [10, 25, 50, 100],
-                    }}
+                    sorting={sorting}
+                    perPage={perPage}
                     view={{
                         value: (filters.view as 'table' | 'cards') ?? 'table',
                         storageKey: 'cms-posts-datagrid-view',
