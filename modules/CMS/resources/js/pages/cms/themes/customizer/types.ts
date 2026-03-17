@@ -31,6 +31,17 @@ export type ThemeCustomizerTheme = {
     parent?: string | null;
 };
 
+export type ThemeCustomizerSnapshot = Record<string, string | number | boolean>;
+
+export type DeviceMode = 'desktop' | 'tablet' | 'mobile';
+
+export type CodeEditorState = {
+    fieldId: string;
+    label: string;
+    language: string;
+    value: string;
+};
+
 export type ThemeCustomizerPageProps = {
     activeTheme: ThemeCustomizerTheme;
     sections: Record<string, ThemeCustomizerSection>;
