@@ -1,510 +1,91 @@
 import { Link, useHttp, usePage } from '@inertiajs/react';
 import {
-    AlertCircleIcon,
     ArrowLeftIcon,
     CheckCircle2Icon,
-    ChevronDownIcon,
-    ChevronRightIcon,
+    ChevronsDownUpIcon,
     CodeIcon,
     CopyIcon,
     FileCodeIcon,
-    FileIcon,
+    FilesIcon,
     FolderIcon,
-    FolderOpenIcon,
     GitBranchIcon,
     GitCommitHorizontalIcon,
     HistoryIcon,
     InfoIcon,
     MoreHorizontalIcon,
+    PanelLeftCloseIcon,
+    PanelLeftOpenIcon,
     PencilIcon,
     PlusIcon,
     RefreshCwIcon,
     SaveIcon,
     SearchIcon,
+    SettingsIcon,
     Trash2Icon,
     UploadIcon,
     XIcon,
 } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { MonacoEditor } from '@/components/code-editor/monaco-editor';
 import { showAppToast } from '@/components/forms/form-success-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogMedia,
-    AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
+import { EditorContextMenu, type EditorContextMenuEntry } from '../../../../components/theme-editor/editor-context-menu';
 import {
     DropdownMenu,
     DropdownMenuContent,
-    DropdownMenuGroup,
     DropdownMenuItem,
-    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-    Empty,
-    EmptyDescription,
-    EmptyHeader,
-    EmptyMedia,
-    EmptyTitle,
-} from '@/components/ui/empty';
-import { Field, FieldDescription, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Spinner } from '@/components/ui/spinner';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import AppLayout from '@/layouts/app-layout';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
+import type { AuthenticatedSharedData } from '@/types';
+import {
+    CreateDialog,
+    DeleteConfirmDialog,
+    HistoryDialog,
+    RenameDialog,
+    UploadDialog,
+} from '../../../../components/theme-editor/editor-dialogs';
+import { FileTreeItem } from '../../../../components/theme-editor/file-tree-item';
+import ThemeEditorLayout from '../../../../components/theme-editor/theme-editor-layout';
+import type { ThemeEditorFileNode, ThemeEditorPageProps } from '../../../../types/cms';
 import type {
-    ThemeEditorFileNode,
-    ThemeEditorPageProps,
-} from '../../../../types/cms';
+    ActivityBarItem,
+    DeleteTarget,
+    EditorTab,
+    FileReadResponse,
+    FileTreeResponse,
+    GenericResponse,
+    GitChange,
+    GitCommit,
+    GitHistoryResponse,
+    GitMutationPayload,
+    GitStatusResponse,
+    NewEntityMode,
+    SearchGroup,
+    SearchPayload,
+    SearchResponse,
+    SidebarView,
+    UploadPayload,
+} from './types';
+import { findNodeByPath, formatBytes, getErrorMessage, getParentDirectory } from './utils';
 
-type GenericResponse = {
-    success?: boolean;
-    message?: string;
-    error?: string;
-};
-
-type FileTreeResponse = {
-    files: ThemeEditorFileNode[];
-    isChildTheme: boolean;
-    parentTheme: ThemeEditorPageProps['parentTheme'];
-};
-
-type FileReadResponse = {
-    content: string;
-    path: string;
-    size: number;
-    modified: number;
-    language: string;
-    inherited: boolean;
-    inheritedFrom: string | null;
-};
-
-type SearchMatch = {
-    path: string;
-    line: number;
-    column: number;
-    text: string;
-};
-
-type SearchGroup = {
-    path: string;
-    match_count: number;
-    matches: SearchMatch[];
-};
-
-type SearchResponse = {
-    results: SearchGroup[];
-    total_matches: number;
-};
-
-type GitChange = {
-    status: string;
-    index_status: string;
-    worktree_status: string;
-    status_label: string;
-    path: string;
-    old_path: string | null;
-    staged: boolean;
-    unstaged: boolean;
-};
-
-type GitStatusResponse = {
-    changes: GitChange[];
-    has_changes: boolean;
-};
-
-type GitCommit = {
-    hash: string;
-    author_name: string;
-    author_email: string;
-    date: string;
-    subject: string;
-};
-
-type GitHistoryResponse = {
-    success: boolean;
-    commits: GitCommit[];
-    has_more: boolean;
-    next_skip: number;
-};
-
-type EditorTab = {
-    path: string;
-    name: string;
-    content: string;
-    originalContent: string;
-    language: string;
-    size: number;
-    modified: number;
-    inherited: boolean;
-    inheritedFrom: string | null;
-};
-
-type NewEntityMode = 'file' | 'folder';
-
-type DeleteTarget = {
-    type: 'file' | 'folder';
-    path: string;
-    protected: boolean;
-};
-
-type UploadPayload = {
-    file: File | null;
-    path: string;
-    overwrite: boolean;
-};
-
-type SearchPayload = {
-    query: string;
-    case_sensitive: boolean;
-    use_regex: boolean;
-    max_results: number;
-};
-
-type GitMutationPayload = {
-    message?: string;
-    mode?: string;
-    paths?: string[];
-};
-
-const breadcrumbsBase: BreadcrumbItem[] = [
-    { title: 'Dashboard', href: route('dashboard') },
-    { title: 'Appearance', href: route('cms.appearance.themes.index') },
-    { title: 'Themes', href: route('cms.appearance.themes.index') },
+const activityBarItems: ActivityBarItem[] = [
+    { id: 'explorer', icon: FilesIcon, label: 'Explorer' },
+    { id: 'search', icon: SearchIcon, label: 'Search' },
+    { id: 'source-control', icon: GitBranchIcon, label: 'Source Control' },
 ];
-
-function formatBytes(bytes: number): string {
-    if (bytes <= 0) {
-        return '0 B';
-    }
-
-    const units = ['B', 'KB', 'MB', 'GB'];
-    let size = bytes;
-    let unitIndex = 0;
-
-    while (size >= 1024 && unitIndex < units.length - 1) {
-        size /= 1024;
-        unitIndex += 1;
-    }
-
-    return `${size.toFixed(size >= 10 || unitIndex === 0 ? 0 : 1)} ${units[unitIndex]}`;
-}
-
-function getErrorMessage(error: unknown, fallback: string): string {
-    if (error && typeof error === 'object' && 'response' in error) {
-        const response = (error as { response?: { data?: string } }).response;
-
-        if (typeof response?.data === 'string') {
-            try {
-                const payload = JSON.parse(response.data) as {
-                    message?: string;
-                    error?: string;
-                };
-
-                if (typeof payload.message === 'string' && payload.message !== '') {
-                    return payload.message;
-                }
-
-                if (typeof payload.error === 'string' && payload.error !== '') {
-                    return payload.error;
-                }
-            } catch {
-                return fallback;
-            }
-        }
-    }
-
-    if (error instanceof Error && error.message !== '') {
-        return error.message;
-    }
-
-    return fallback;
-}
-
-function getParentDirectory(path: string): string {
-    const segments = path.split('/').filter(Boolean);
-
-    if (segments.length <= 1) {
-        return '';
-    }
-
-    return segments.slice(0, -1).join('/');
-}
-
-function findNodeByPath(nodes: ThemeEditorFileNode[], path: string): ThemeEditorFileNode | null {
-    for (const node of nodes) {
-        if (node.path === path) {
-            return node;
-        }
-
-        if (node.type === 'directory' && node.children) {
-            const found = findNodeByPath(node.children, path);
-            if (found) {
-                return found;
-            }
-        }
-    }
-
-    return null;
-}
-
-function collectExpandablePaths(nodes: ThemeEditorFileNode[], depth = 0): string[] {
-    return nodes.flatMap((node) => {
-        if (node.type !== 'directory') {
-            return [];
-        }
-
-        const self = depth < 2 ? [node.path] : [];
-
-        return [...self, ...collectExpandablePaths(node.children ?? [], depth + 1)];
-    });
-}
-
-function TreeItemIcon({
-    isDirectory,
-    isExpanded,
-    extension,
-}: {
-    isDirectory: boolean;
-    isExpanded: boolean;
-    extension?: string;
-}) {
-    if (isDirectory) {
-        return isExpanded ? <FolderOpenIcon className="size-4 shrink-0" /> : <FolderIcon className="size-4 shrink-0" />;
-    }
-
-    if (extension === 'twig' || extension === 'html' || extension === 'xml') {
-        return <FileCodeIcon className="size-4 shrink-0" />;
-    }
-
-    if (extension === 'css' || extension === 'scss' || extension === 'sass') {
-        return <CodeIcon className="size-4 shrink-0" />;
-    }
-
-    if (extension === 'js' || extension === 'json' || extension === 'ts') {
-        return <CodeIcon className="size-4 shrink-0" />;
-    }
-
-    return <FileIcon className="size-4 shrink-0" />;
-}
-
-function SidebarSectionTitle({ title, action }: { title: string; action?: ReactNode }) {
-    return (
-        <div className="flex items-center justify-between gap-3 border-b px-3 py-2">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{title}</p>
-            {action}
-        </div>
-    );
-}
-
-function FileTreeItem({
-    node,
-    depth,
-    expandedPaths,
-    selectedPath,
-    activePath,
-    onToggle,
-    onOpen,
-    onSelect,
-    onCreateFile,
-    onCreateFolder,
-    onUpload,
-    onRename,
-    onDuplicate,
-    onDelete,
-}: {
-    node: ThemeEditorFileNode;
-    depth: number;
-    expandedPaths: Set<string>;
-    selectedPath: string | null;
-    activePath: string | null;
-    onToggle: (path: string) => void;
-    onOpen: (path: string) => void;
-    onSelect: (path: string) => void;
-    onCreateFile: (path: string) => void;
-    onCreateFolder: (path: string) => void;
-    onUpload: (path: string) => void;
-    onRename: (node: ThemeEditorFileNode) => void;
-    onDuplicate: (path: string) => void;
-    onDelete: (target: DeleteTarget) => void;
-}) {
-    const isDirectory = node.type === 'directory';
-    const isExpanded = expandedPaths.has(node.path);
-    const isSelected = selectedPath === node.path;
-    const isActive = activePath === node.path;
-
-    const content = (
-        <div
-            className={cn(
-                'group flex min-w-0 items-center gap-2 rounded-md px-2 py-1.5 text-sm',
-                isSelected || isActive ? 'bg-muted text-foreground' : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground',
-            )}
-            style={{ paddingLeft: `${depth * 16 + 8}px` }}
-        >
-            {isDirectory ? (
-                <button
-                    type="button"
-                    className="flex shrink-0 items-center text-muted-foreground"
-                    onClick={(event) => {
-                        event.stopPropagation();
-                        onToggle(node.path);
-                    }}
-                >
-                    {isExpanded ? <ChevronDownIcon className="size-4" /> : <ChevronRightIcon className="size-4" />}
-                </button>
-            ) : (
-                <span className="w-4 shrink-0" />
-            )}
-
-            <TreeItemIcon isDirectory={isDirectory} isExpanded={isExpanded} extension={node.extension} />
-
-            <button
-                type="button"
-                className="flex min-w-0 flex-1 items-center gap-2 text-left"
-                onClick={() => {
-                    onSelect(node.path);
-                    if (isDirectory) {
-                        onToggle(node.path);
-                    } else {
-                        onOpen(node.path);
-                    }
-                }}
-            >
-                <span className="truncate">{node.name}</span>
-                {node.inherited ? <Badge variant="outline">Inherited</Badge> : null}
-                {node.override ? <Badge variant="secondary">Override</Badge> : null}
-                {node.protected ? <Badge variant="outline">Protected</Badge> : null}
-            </button>
-
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="opacity-0 group-hover:opacity-100">
-                        <MoreHorizontalIcon />
-                        <span className="sr-only">Open actions</span>
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                    <DropdownMenuGroup>
-                        {isDirectory ? (
-                            <>
-                                <DropdownMenuItem onSelect={() => onCreateFile(node.path)}>
-                                    <PlusIcon />
-                                    New file
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => onCreateFolder(node.path)}>
-                                    <FolderIcon />
-                                    New folder
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => onUpload(node.path)}>
-                                    <UploadIcon />
-                                    Upload file
-                                </DropdownMenuItem>
-                            </>
-                        ) : (
-                            <>
-                                <DropdownMenuItem onSelect={() => onOpen(node.path)}>
-                                    <PencilIcon />
-                                    Open file
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => onDuplicate(node.path)}>
-                                    <CopyIcon />
-                                    Duplicate
-                                </DropdownMenuItem>
-                            </>
-                        )}
-                    </DropdownMenuGroup>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuGroup>
-                        {!node.protected ? (
-                            <DropdownMenuItem onSelect={() => onRename(node)}>
-                                <PencilIcon />
-                                Rename
-                            </DropdownMenuItem>
-                        ) : null}
-                        {!node.protected ? (
-                            <DropdownMenuItem
-                                variant="destructive"
-                                onSelect={() =>
-                                    onDelete({
-                                        type: isDirectory ? 'folder' : 'file',
-                                        path: node.path,
-                                        protected: Boolean(node.protected),
-                                    })
-                                }
-                            >
-                                <Trash2Icon />
-                                Delete
-                            </DropdownMenuItem>
-                        ) : null}
-                    </DropdownMenuGroup>
-                </DropdownMenuContent>
-            </DropdownMenu>
-        </div>
-    );
-
-    if (!isDirectory) {
-        return content;
-    }
-
-    return (
-        <div className="flex flex-col">
-            {content}
-            {isExpanded && node.children?.length ? (
-                <div className="flex flex-col">
-                    {node.children.map((child) => (
-                        <FileTreeItem
-                            key={child.path}
-                            node={child}
-                            depth={depth + 1}
-                            expandedPaths={expandedPaths}
-                            selectedPath={selectedPath}
-                            activePath={activePath}
-                            onToggle={onToggle}
-                            onOpen={onOpen}
-                            onSelect={onSelect}
-                            onCreateFile={onCreateFile}
-                            onCreateFolder={onCreateFolder}
-                            onUpload={onUpload}
-                            onRename={onRename}
-                            onDuplicate={onDuplicate}
-                            onDelete={onDelete}
-                        />
-                    ))}
-                </div>
-            ) : null}
-        </div>
-    );
-}
 
 export default function ThemeEditorIndex({
     theme,
@@ -517,17 +98,14 @@ export default function ThemeEditorIndex({
     const canEditThemes = page.props.auth.abilities.editThemes;
     const canDeleteThemes = page.props.auth.abilities.deleteThemes;
 
-    const breadcrumbs: BreadcrumbItem[] = [
-        ...breadcrumbsBase,
-        { title: theme.name, href: route('cms.appearance.themes.editor.index', { directory: themeDirectory }) },
-    ];
-
     const [tree, setTree] = useState<ThemeEditorFileNode[]>(files);
-    const [expandedPaths, setExpandedPaths] = useState<Set<string>>(() => new Set(collectExpandablePaths(files)));
+    const [expandedPaths, setExpandedPaths] = useState<Set<string>>(new Set());
     const [selectedPath, setSelectedPath] = useState<string | null>(null);
     const [openTabs, setOpenTabs] = useState<EditorTab[]>([]);
     const [activePath, setActivePath] = useState<string | null>(null);
-    const [sidebarView, setSidebarView] = useState<'explorer' | 'search' | 'source-control'>('explorer');
+    const [sidebarView, setSidebarView] = useState<SidebarView>('explorer');
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+    const activePathRef = useRef<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [searchOptions, setSearchOptions] = useState<Array<'case' | 'regex'>>([]);
     const [searchResults, setSearchResults] = useState<SearchGroup[]>([]);
@@ -547,8 +125,9 @@ export default function ThemeEditorIndex({
     const [historyItems, setHistoryItems] = useState<GitCommit[]>([]);
 
     const treeRequest = useHttp<Record<string, never>, FileTreeResponse>({});
-    const readRequest = useHttp<Record<string, never>, FileReadResponse>({});
-    const saveRequest = useHttp<{ content: string; label?: string }, GenericResponse>({
+    const readRequest = useHttp<{ path: string }, FileReadResponse>({ path: '' });
+    const saveRequest = useHttp<{ path: string; content: string; label?: string }, GenericResponse>({
+        path: '',
         content: '',
         label: '',
     });
@@ -635,7 +214,8 @@ export default function ThemeEditorIndex({
                 description: getErrorMessage(error, 'Unable to refresh the file tree.'),
             });
         }
-    }, [themeDirectory, treeRequest]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [themeDirectory]);
 
     const refreshGitStatus = useCallback(async () => {
         try {
@@ -650,7 +230,8 @@ export default function ThemeEditorIndex({
                 description: getErrorMessage(error, 'Unable to load git status.'),
             });
         }
-    }, [gitStatusRequest, themeDirectory]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [themeDirectory]);
 
     const loadHistory = useCallback(async () => {
         try {
@@ -666,7 +247,8 @@ export default function ThemeEditorIndex({
                 description: getErrorMessage(error, 'Unable to load commit history.'),
             });
         }
-    }, [historyRequest, themeDirectory]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [themeDirectory]);
 
     const openFile = useCallback(async (path: string) => {
         setSelectedPath(path);
@@ -678,10 +260,10 @@ export default function ThemeEditorIndex({
         }
 
         try {
-            const payload = await readRequest.get(
+            readRequest.transform(() => ({ path }));
+            const payload = await readRequest.post(
                 route('cms.appearance.themes.editor.file.read', {
                     directory: themeDirectory,
-                    path,
                 }),
             );
 
@@ -706,7 +288,8 @@ export default function ThemeEditorIndex({
                 description: getErrorMessage(error, 'Unable to open the selected file.'),
             });
         }
-    }, [openTabs, readRequest, themeDirectory]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [openTabs, themeDirectory]);
 
     const saveActiveTab = useCallback(async () => {
         if (!activeTab) {
@@ -715,14 +298,13 @@ export default function ThemeEditorIndex({
 
         try {
             saveRequest.transform(() => ({
+                path: activeTab.path,
                 content: activeTab.content,
                 label: activeTab.path,
             }));
-
-            const payload = await saveRequest.put(
+            const payload = await saveRequest.post(
                 route('cms.appearance.themes.editor.file.save', {
                     directory: themeDirectory,
-                    path: activeTab.path,
                 }),
             );
 
@@ -734,12 +316,12 @@ export default function ThemeEditorIndex({
                 prev.map((tab) =>
                     tab.path === activeTab.path
                         ? {
-                              ...tab,
-                              originalContent: tab.content,
-                              inherited: false,
-                              inheritedFrom: null,
-                              modified: Math.floor(Date.now() / 1000),
-                          }
+                            ...tab,
+                            originalContent: tab.content,
+                            inherited: false,
+                            inheritedFrom: null,
+                            modified: Math.floor(Date.now() / 1000),
+                        }
                         : tab,
                 ),
             );
@@ -758,7 +340,8 @@ export default function ThemeEditorIndex({
                 description: getErrorMessage(error, 'Unable to save the active file.'),
             });
         }
-    }, [activeTab, refreshGitStatus, refreshTree, saveRequest, themeDirectory]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [activeTab, refreshGitStatus, refreshTree, themeDirectory]);
 
     const closeTab = useCallback((path: string) => {
         const closingTab = openTabs.find((tab) => tab.path === path);
@@ -777,15 +360,69 @@ export default function ThemeEditorIndex({
         }
     }, [activePath, openTabs]);
 
-    const updateActiveTabContent = (value: string) => {
-        if (!activeTab) {
+    const closeOtherTabs = useCallback((keepPath: string) => {
+        const dirtyTabs = openTabs.filter((tab) => tab.path !== keepPath && tab.content !== tab.originalContent);
+        if (dirtyTabs.length > 0) {
+            const shouldClose = window.confirm(`Discard unsaved changes in ${dirtyTabs.length} file(s)?`);
+            if (!shouldClose) {
+                return;
+            }
+        }
+
+        setOpenTabs((prev) => prev.filter((tab) => tab.path === keepPath));
+        setActivePath(keepPath);
+    }, [openTabs]);
+
+    const closeAllTabs = useCallback(() => {
+        const dirtyTabs = openTabs.filter((tab) => tab.content !== tab.originalContent);
+        if (dirtyTabs.length > 0) {
+            const shouldClose = window.confirm(`Discard unsaved changes in ${dirtyTabs.length} file(s)?`);
+            if (!shouldClose) {
+                return;
+            }
+        }
+
+        setOpenTabs([]);
+        setActivePath(null);
+    }, [openTabs]);
+
+    const closeTabsToRight = useCallback((path: string) => {
+        const tabIndex = openTabs.findIndex((tab) => tab.path === path);
+        const rightTabs = openTabs.slice(tabIndex + 1);
+        const dirtyRight = rightTabs.filter((tab) => tab.content !== tab.originalContent);
+        if (dirtyRight.length > 0) {
+            const shouldClose = window.confirm(`Discard unsaved changes in ${dirtyRight.length} file(s)?`);
+            if (!shouldClose) {
+                return;
+            }
+        }
+
+        const kept = openTabs.slice(0, tabIndex + 1);
+        setOpenTabs(kept);
+        if (activePath && !kept.some((tab) => tab.path === activePath)) {
+            setActivePath(kept.at(-1)?.path ?? null);
+        }
+    }, [activePath, openTabs]);
+
+    const copyPathToClipboard = useCallback((path: string) => {
+        void navigator.clipboard.writeText(path);
+        showAppToast({ variant: 'success', title: 'Copied', description: 'Path copied to clipboard.' });
+    }, []);
+
+    useEffect(() => {
+        activePathRef.current = activePath;
+    }, [activePath]);
+
+    const updateActiveTabContent = useCallback((value: string) => {
+        const currentPath = activePathRef.current;
+        if (!currentPath) {
             return;
         }
 
         setOpenTabs((prev) =>
-            prev.map((tab) => (tab.path === activeTab.path ? { ...tab, content: value } : tab)),
+            prev.map((tab) => (tab.path === currentPath ? { ...tab, content: value } : tab)),
         );
-    };
+    }, []);
 
     const runSearch = useCallback(async () => {
         if (searchQuery.trim() === '') {
@@ -815,7 +452,8 @@ export default function ThemeEditorIndex({
                 description: getErrorMessage(error, 'Unable to search theme files.'),
             });
         }
-    }, [searchOptions, searchQuery, searchRequest, themeDirectory]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchOptions, searchQuery, themeDirectory]);
 
     const runGitAction = useCallback(async (method: 'post' | 'delete', url: string, payload: GitMutationPayload = {}, successTitle = 'Updated') => {
         try {
@@ -842,7 +480,8 @@ export default function ThemeEditorIndex({
                 description: getErrorMessage(error, 'Unable to complete the requested action.'),
             });
         }
-    }, [gitMutationRequest, refreshGitStatus, refreshTree]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [refreshGitStatus, refreshTree]);
 
     const createEntity = async () => {
         if (newEntityPath.trim() === '') {
@@ -968,13 +607,13 @@ export default function ThemeEditorIndex({
 
         const url = deleteTarget.type === 'file'
             ? route('cms.appearance.themes.editor.file.delete', {
-                  directory: themeDirectory,
-                  path: deleteTarget.path,
-              })
+                directory: themeDirectory,
+                path: deleteTarget.path,
+            })
             : route('cms.appearance.themes.editor.folder.delete', {
-                  directory: themeDirectory,
-                  path: deleteTarget.path,
-              });
+                directory: themeDirectory,
+                path: deleteTarget.path,
+            });
 
         try {
             const response = await deleteRequest.delete(url);
@@ -1082,575 +721,577 @@ export default function ThemeEditorIndex({
         };
     }, [hasDirtyTabs]);
 
+
+    const toggleSidebar = useCallback((view: SidebarView) => {
+        if (sidebarView === view && !sidebarCollapsed) {
+            setSidebarCollapsed(true);
+        } else {
+            setSidebarView(view);
+            setSidebarCollapsed(false);
+        }
+    }, [sidebarCollapsed, sidebarView]);
+
+    const isDirtyTab = activeTab ? activeTab.content !== activeTab.originalContent : false;
+
+
     return (
-        <AppLayout
-            breadcrumbs={breadcrumbs}
-            title={`${theme.name} editor`}
-            description="Edit theme files, search the codebase, and manage git-backed changes."
-            headerActions={
-                <div className="flex flex-wrap gap-3">
-                    <Button variant="outline" asChild>
-                        <Link href={route('cms.appearance.themes.index')}>
-                            <ArrowLeftIcon data-icon="inline-start" />
-                            Back to themes
-                        </Link>
-                    </Button>
-                    <Button variant="outline" onClick={() => void refreshTree()} disabled={treeRequest.processing}>
-                        {treeRequest.processing ? <Spinner /> : <RefreshCwIcon data-icon="inline-start" />}
-                        Refresh
-                    </Button>
-                    <Button onClick={() => void saveActiveTab()} disabled={!activeTab || activeTab.content === activeTab.originalContent || saveRequest.processing || !canEditThemes}>
-                        {saveRequest.processing ? <Spinner /> : <SaveIcon data-icon="inline-start" />}
-                        Save file
-                    </Button>
-                </div>
-            }
-        >
-            <div className="flex flex-col gap-4">
-                {isChildTheme && parentTheme ? (
-                    <Alert>
-                        <GitBranchIcon />
-                        <AlertTitle>Child theme editor</AlertTitle>
-                        <AlertDescription>
-                            You are editing a child theme of <strong>{parentTheme.name}</strong>. Inherited files can be opened directly, and saving them creates a local override.
-                        </AlertDescription>
-                    </Alert>
-                ) : null}
-
-                <Card className="overflow-hidden">
-                    <CardHeader className="border-b pb-4">
-                        <div className="flex flex-wrap items-start justify-between gap-4">
-                            <div className="space-y-2">
-                                <div className="flex flex-wrap items-center gap-2">
-                                    <CardTitle>{theme.name}</CardTitle>
-                                    {theme.is_active ? <Badge variant="success">Active</Badge> : null}
-                                    {isChildTheme ? <Badge variant="secondary">Child theme</Badge> : null}
-                                </div>
-                                <CardDescription>{theme.description || 'No description available for this theme.'}</CardDescription>
-                            </div>
-                            <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
-                                <Badge variant="outline">v{theme.version}</Badge>
-                                <Badge variant="outline">{theme.author || 'Unknown author'}</Badge>
-                            </div>
+        <ThemeEditorLayout title={`${theme.name} — Editor`} description="Theme file editor">
+            <TooltipProvider delayDuration={300}>
+                {/* Title bar */}
+                <div className="flex h-10 shrink-0 items-center justify-between border-b border-[#2b2b2b] bg-[#323233] px-2">
+                    <div className="flex items-center gap-2">
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon-sm" asChild>
+                                    <Link href={route('cms.appearance.themes.index')}>
+                                        <ArrowLeftIcon className="size-4" />
+                                    </Link>
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="bottom">Back to themes</TooltipContent>
+                        </Tooltip>
+                        <div className="flex items-center gap-2 text-sm">
+                            <span className="font-medium">{theme.name}</span>
+                            {theme.is_active ? <Badge variant="outline" className="text-[10px]">Active</Badge> : null}
+                            {isChildTheme ? <Badge variant="secondary" className="text-[10px]">Child</Badge> : null}
+                            <span className="text-muted-foreground">v{theme.version}</span>
                         </div>
-                    </CardHeader>
-                    <CardContent className="p-0">
-                        <div className="grid min-h-[70vh] grid-cols-1 xl:grid-cols-[360px_minmax(0,1fr)]">
-                            <div className="border-b xl:border-r xl:border-b-0">
-                                <div className="flex h-full flex-col bg-muted/20">
-                                    <div className="border-b p-3">
-                                        <ToggleGroup
-                                            type="single"
-                                            value={sidebarView}
-                                            onValueChange={(value) => {
-                                                if (value === 'explorer' || value === 'search' || value === 'source-control') {
-                                                    setSidebarView(value);
-                                                }
-                                            }}
-                                            variant="outline"
+                    </div>
+                    <div className="flex items-center gap-1">
+                        {isChildTheme && parentTheme ? (
+                            <span className="mr-2 text-xs text-muted-foreground">
+                                Child of <strong>{parentTheme.name}</strong>
+                            </span>
+                        ) : null}
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon-sm" onClick={() => void refreshTree()} disabled={treeRequest.processing}>
+                                    {treeRequest.processing ? <Spinner className="size-4" /> : <RefreshCwIcon className="size-4" />}
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="bottom">Refresh file tree</TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="icon-sm"
+                                    onClick={() => void saveActiveTab()}
+                                    disabled={!activeTab || !isDirtyTab || saveRequest.processing || !canEditThemes}
+                                >
+                                    {saveRequest.processing ? <Spinner className="size-4" /> : <SaveIcon className="size-4" />}
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="bottom">Save file (Ctrl+S)</TooltipContent>
+                        </Tooltip>
+                    </div>
+                </div>
+
+                {/* Main body */}
+                <div className="flex min-h-0 flex-1">
+                    {/* Activity bar */}
+                    <div className="flex w-12 shrink-0 flex-col items-center gap-1 border-r border-[#2b2b2b] bg-[#181818] pt-2 pb-2">
+                        {activityBarItems.map((item) => {
+                            const Icon = item.icon;
+                            const isActive = sidebarView === item.id && !sidebarCollapsed;
+                            return (
+                                <Tooltip key={item.id}>
+                                    <TooltipTrigger asChild>
+                                        <button
+                                            type="button"
+                                            className={cn(
+                                                'flex size-10 items-center justify-center rounded-md transition-colors',
+                                                isActive
+                                                    ? 'bg-accent text-accent-foreground'
+                                                    : 'text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground',
+                                            )}
+                                            onClick={() => toggleSidebar(item.id)}
                                         >
-                                            <ToggleGroupItem value="explorer">Explorer</ToggleGroupItem>
-                                            <ToggleGroupItem value="search">Search</ToggleGroupItem>
-                                            <ToggleGroupItem value="source-control">Git</ToggleGroupItem>
-                                        </ToggleGroup>
-                                    </div>
+                                            <Icon className="size-5" />
+                                        </button>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="right">{item.label}</TooltipContent>
+                                </Tooltip>
+                            );
+                        })}
+                        <div className="flex-1" />
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <button
+                                    type="button"
+                                    className="flex size-10 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent/50 hover:text-accent-foreground"
+                                    onClick={() => setSidebarCollapsed((prev) => !prev)}
+                                >
+                                    {sidebarCollapsed ? <PanelLeftOpenIcon className="size-5" /> : <PanelLeftCloseIcon className="size-5" />}
+                                </button>
+                            </TooltipTrigger>
+                            <TooltipContent side="right">{sidebarCollapsed ? 'Open sidebar' : 'Close sidebar'}</TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon-sm" asChild>
+                                    <Link href={route('cms.appearance.themes.index')}>
+                                        <SettingsIcon className="size-4" />
+                                    </Link>
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="right">Theme settings</TooltipContent>
+                        </Tooltip>
+                    </div>
 
+                    {/* Sidebar + Editor */}
+                    <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden">
+                        {!sidebarCollapsed ? (
+                            <div className="flex w-64 shrink-0 flex-col overflow-hidden border-r border-[#2b2b2b] bg-[#252526]">
+                                {/* Side panel header */}
+                                <div className="flex h-9 shrink-0 items-center justify-between border-b border-[#2b2b2b] px-3">
+                                    <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                                        {sidebarView === 'explorer' ? 'Explorer' : sidebarView === 'search' ? 'Search' : 'Source Control'}
+                                    </span>
                                     {sidebarView === 'explorer' ? (
-                                        <>
-                                            <SidebarSectionTitle
-                                                title="Explorer"
-                                                action={
-                                                    <div className="flex gap-1">
-                                                        <Button variant="ghost" onClick={() => { setNewEntityMode('file'); setNewEntityPath(selectedDirectory ? `${selectedDirectory}/` : ''); setNewEntityOpen(true); }} disabled={!canEditThemes}>
-                                                            <PlusIcon />
-                                                            <span className="sr-only">New file</span>
-                                                        </Button>
-                                                        <Button variant="ghost" onClick={() => { setNewEntityMode('folder'); setNewEntityPath(selectedDirectory ? `${selectedDirectory}/` : ''); setNewEntityOpen(true); }} disabled={!canEditThemes}>
-                                                            <FolderIcon />
-                                                            <span className="sr-only">New folder</span>
-                                                        </Button>
-                                                        <Button variant="ghost" onClick={() => { setUploadTargetPath(selectedDirectory); setUploadOpen(true); }} disabled={!canEditThemes}>
-                                                            <UploadIcon />
-                                                            <span className="sr-only">Upload</span>
-                                                        </Button>
-                                                    </div>
-                                                }
-                                            />
-                                            <ScrollArea className="flex-1">
-                                                <div className="flex flex-col p-2">
-                                                    {tree.length > 0 ? (
-                                                        tree.map((node) => (
-                                                            <FileTreeItem
-                                                                key={node.path}
-                                                                node={node}
-                                                                depth={0}
-                                                                expandedPaths={expandedPaths}
-                                                                selectedPath={selectedPath}
-                                                                activePath={activePath}
-                                                                onToggle={toggleFolder}
-                                                                onOpen={(path) => void openFile(path)}
-                                                                onSelect={setSelectedPath}
-                                                                onCreateFile={(path) => { setNewEntityMode('file'); setNewEntityPath(path ? `${path}/` : ''); setNewEntityOpen(true); }}
-                                                                onCreateFolder={(path) => { setNewEntityMode('folder'); setNewEntityPath(path ? `${path}/` : ''); setNewEntityOpen(true); }}
-                                                                onUpload={(path) => { setUploadTargetPath(path); setUploadOpen(true); }}
-                                                                onRename={(nodeToRename) => { setRenameSource(nodeToRename); setRenamePath(nodeToRename.path); setRenameOpen(true); }}
-                                                                onDuplicate={(path) => void handleDuplicate(path)}
-                                                                onDelete={setDeleteTarget}
-                                                            />
-                                                        ))
-                                                    ) : (
-                                                        <Empty className="border-0">
-                                                            <EmptyHeader>
-                                                                <EmptyMedia variant="icon"><FolderIcon /></EmptyMedia>
-                                                                <EmptyTitle>No files found</EmptyTitle>
-                                                                <EmptyDescription>This theme currently has no editable files.</EmptyDescription>
-                                                            </EmptyHeader>
-                                                        </Empty>
-                                                    )}
-                                                </div>
-                                            </ScrollArea>
-                                        </>
+                                        <div className="flex gap-0.5">
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <button type="button" className="flex size-6 items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-accent-foreground" onClick={() => { setNewEntityMode('file'); setNewEntityPath(selectedDirectory ? `${selectedDirectory}/` : ''); setNewEntityOpen(true); }} disabled={!canEditThemes}>
+                                                        <PlusIcon className="size-4" />
+                                                    </button>
+                                                </TooltipTrigger>
+                                                <TooltipContent side="bottom">New file</TooltipContent>
+                                            </Tooltip>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <button type="button" className="flex size-6 items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-accent-foreground" onClick={() => { setNewEntityMode('folder'); setNewEntityPath(selectedDirectory ? `${selectedDirectory}/` : ''); setNewEntityOpen(true); }} disabled={!canEditThemes}>
+                                                        <FolderIcon className="size-4" />
+                                                    </button>
+                                                </TooltipTrigger>
+                                                <TooltipContent side="bottom">New folder</TooltipContent>
+                                            </Tooltip>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <button type="button" className="flex size-6 items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-accent-foreground" onClick={() => { setUploadTargetPath(selectedDirectory); setUploadOpen(true); }} disabled={!canEditThemes}>
+                                                        <UploadIcon className="size-4" />
+                                                    </button>
+                                                </TooltipTrigger>
+                                                <TooltipContent side="bottom">Upload file</TooltipContent>
+                                            </Tooltip>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <button type="button" className="flex size-6 items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-accent-foreground" onClick={() => setExpandedPaths(new Set())}>
+                                                        <ChevronsDownUpIcon className="size-4" />
+                                                    </button>
+                                                </TooltipTrigger>
+                                                <TooltipContent side="bottom">Collapse all</TooltipContent>
+                                            </Tooltip>
+                                        </div>
                                     ) : null}
-
-                                    {sidebarView === 'search' ? (
-                                        <>
-                                            <SidebarSectionTitle title="Search" />
-                                            <div className="flex flex-col gap-3 border-b p-3">
-                                                <Input
-                                                    value={searchQuery}
-                                                    onChange={(event) => setSearchQuery(event.target.value)}
-                                                    placeholder="Search in files"
-                                                />
-                                                <div className="flex items-center justify-between gap-3">
-                                                    <ToggleGroup
-                                                        type="multiple"
-                                                        value={searchOptions}
-                                                        onValueChange={(value) => setSearchOptions(value as Array<'case' | 'regex'>)}
-                                                        variant="outline"
-                                                    >
-                                                        <ToggleGroupItem value="case">Case</ToggleGroupItem>
-                                                        <ToggleGroupItem value="regex">Regex</ToggleGroupItem>
-                                                    </ToggleGroup>
-                                                    <Button onClick={() => void runSearch()} disabled={searchRequest.processing || searchQuery.trim() === ''}>
-                                                        {searchRequest.processing ? <Spinner /> : <SearchIcon data-icon="inline-start" />}
-                                                        Search
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                            <ScrollArea className="flex-1">
-                                                <div className="flex flex-col gap-4 p-3">
-                                                    {searchQuery.trim() === '' ? (
-                                                        <Empty className="border-0">
-                                                            <EmptyHeader>
-                                                                <EmptyMedia variant="icon"><SearchIcon /></EmptyMedia>
-                                                                <EmptyTitle>Search theme files</EmptyTitle>
-                                                                <EmptyDescription>Use plain text or regex search across editable files.</EmptyDescription>
-                                                            </EmptyHeader>
-                                                        </Empty>
-                                                    ) : null}
-                                                    {searchQuery.trim() !== '' ? (
-                                                        <p className="text-sm text-muted-foreground">{searchTotal} matches</p>
-                                                    ) : null}
-                                                    {searchResults.map((group) => (
-                                                        <div key={group.path} className="rounded-lg border bg-background">
-                                                            <div className="border-b px-3 py-2 text-sm font-medium">{group.path}</div>
-                                                            <div className="flex flex-col">
-                                                                {group.matches.map((match) => (
-                                                                    <button
-                                                                        key={`${group.path}-${match.line}-${match.column}`}
-                                                                        type="button"
-                                                                        className="flex flex-col gap-1 px-3 py-2 text-left text-sm hover:bg-muted"
-                                                                        onClick={() => void openFile(match.path)}
-                                                                    >
-                                                                        <span className="text-xs text-muted-foreground">Line {match.line}</span>
-                                                                        <span className="truncate font-mono text-xs">{match.text}</span>
-                                                                    </button>
-                                                                ))}
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </ScrollArea>
-                                        </>
-                                    ) : null}
-
                                     {sidebarView === 'source-control' ? (
-                                        <>
-                                            <SidebarSectionTitle
-                                                title="Source control"
-                                                action={
-                                                    <div className="flex gap-1">
-                                                        <Button variant="ghost" onClick={() => void refreshGitStatus()} disabled={gitStatusRequest.processing}>
-                                                            <RefreshCwIcon />
-                                                            <span className="sr-only">Refresh git status</span>
-                                                        </Button>
-                                                        <Button variant="ghost" onClick={() => void loadHistory()} disabled={historyRequest.processing}>
-                                                            <HistoryIcon />
-                                                            <span className="sr-only">Open history</span>
-                                                        </Button>
-                                                    </div>
-                                                }
-                                            />
-                                            <ScrollArea className="flex-1">
-                                                <div className="flex flex-col gap-4 p-3">
-                                                    <div className="rounded-lg border bg-background p-3">
-                                                        <Field>
-                                                            <FieldLabel htmlFor="commit-message">Commit message</FieldLabel>
-                                                            <Input
-                                                                id="commit-message"
-                                                                value={commitMessage}
-                                                                onChange={(event) => setCommitMessage(event.target.value)}
-                                                                placeholder="Describe your changes"
-                                                            />
-                                                            <FieldDescription>Only staged changes are committed when files are already staged.</FieldDescription>
-                                                        </Field>
-                                                        <div className="mt-3 flex gap-2">
-                                                            <Button
-                                                                onClick={() => void runGitAction(
-                                                                    'post',
-                                                                    route('cms.appearance.themes.editor.git.commit', { directory: themeDirectory }),
-                                                                    {
-                                                                        message: commitMessage,
-                                                                        mode: stagedChanges.length > 0 ? 'staged' : 'all',
-                                                                    },
-                                                                    'Commit created',
-                                                                )}
-                                                                disabled={gitMutationRequest.processing || commitMessage.trim() === '' || gitChanges.length === 0 || !canEditThemes}
-                                                            >
-                                                                {gitMutationRequest.processing ? <Spinner /> : <GitCommitHorizontalIcon data-icon="inline-start" />}
-                                                                Commit changes
-                                                            </Button>
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="flex flex-col gap-3">
-                                                        <div className="rounded-lg border bg-background">
-                                                            <div className="border-b px-3 py-2 text-sm font-medium">Staged changes</div>
-                                                            {stagedChanges.length === 0 ? (
-                                                                <p className="px-3 py-4 text-sm text-muted-foreground">No staged changes.</p>
-                                                            ) : (
-                                                                stagedChanges.map((change) => (
-                                                                    <div key={`staged-${change.path}`} className="flex items-center gap-3 border-b px-3 py-2 last:border-b-0">
-                                                                        <button type="button" className="min-w-0 flex-1 text-left" onClick={() => void openFile(change.path)}>
-                                                                            <p className="truncate text-sm font-medium">{change.path}</p>
-                                                                            <p className="text-xs text-muted-foreground">{change.status_label}</p>
-                                                                        </button>
-                                                                        <Button
-                                                                            variant="ghost"
-                                                                            onClick={() => void runGitAction('post', route('cms.appearance.themes.editor.git.unstage', { directory: themeDirectory }), { paths: [change.path] }, 'Changes unstaged')}
-                                                                            disabled={gitMutationRequest.processing || !canEditThemes}
-                                                                        >
-                                                                            <XIcon />
-                                                                            <span className="sr-only">Unstage</span>
-                                                                        </Button>
-                                                                    </div>
-                                                                ))
-                                                            )}
-                                                        </div>
-
-                                                        <div className="rounded-lg border bg-background">
-                                                            <div className="border-b px-3 py-2 text-sm font-medium">Unstaged changes</div>
-                                                            {unstagedChanges.length === 0 ? (
-                                                                <p className="px-3 py-4 text-sm text-muted-foreground">No unstaged changes.</p>
-                                                            ) : (
-                                                                unstagedChanges.map((change) => (
-                                                                    <div key={`unstaged-${change.path}`} className="flex items-center gap-3 border-b px-3 py-2 last:border-b-0">
-                                                                        <button type="button" className="min-w-0 flex-1 text-left" onClick={() => void openFile(change.path)}>
-                                                                            <p className="truncate text-sm font-medium">{change.path}</p>
-                                                                            <p className="text-xs text-muted-foreground">{change.status_label}</p>
-                                                                        </button>
-                                                                        <div className="flex gap-1">
-                                                                            <Button
-                                                                                variant="ghost"
-                                                                                onClick={() => void runGitAction('post', route('cms.appearance.themes.editor.git.stage', { directory: themeDirectory }), { paths: [change.path] }, 'Changes staged')}
-                                                                                disabled={gitMutationRequest.processing || !canEditThemes}
-                                                                            >
-                                                                                <CheckCircle2Icon />
-                                                                                <span className="sr-only">Stage</span>
-                                                                            </Button>
-                                                                            {canDeleteThemes ? (
-                                                                                <Button
-                                                                                    variant="ghost"
-                                                                                    onClick={() => void runGitAction('post', route('cms.appearance.themes.editor.git.discard', { directory: themeDirectory }), { paths: [change.path] }, 'Changes discarded')}
-                                                                                    disabled={gitMutationRequest.processing}
-                                                                                >
-                                                                                    <Trash2Icon />
-                                                                                    <span className="sr-only">Discard</span>
-                                                                                </Button>
-                                                                            ) : null}
-                                                                        </div>
-                                                                    </div>
-                                                                ))
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </ScrollArea>
-                                        </>
+                                        <div className="flex gap-0.5">
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <button type="button" className="flex size-6 items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-accent-foreground" onClick={() => void refreshGitStatus()} disabled={gitStatusRequest.processing}>
+                                                        <RefreshCwIcon className="size-3.5" />
+                                                    </button>
+                                                </TooltipTrigger>
+                                                <TooltipContent side="bottom">Refresh</TooltipContent>
+                                            </Tooltip>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <button type="button" className="flex size-6 items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-accent-foreground" onClick={() => void loadHistory()} disabled={historyRequest.processing}>
+                                                        <HistoryIcon className="size-3.5" />
+                                                    </button>
+                                                </TooltipTrigger>
+                                                <TooltipContent side="bottom">History</TooltipContent>
+                                            </Tooltip>
+                                        </div>
                                     ) : null}
                                 </div>
-                            </div>
 
-                            <div>
-                                <div className="flex h-full flex-col">
-                                    <div className="border-b bg-muted/20">
-                                        <ScrollArea className="w-full whitespace-nowrap">
-                                            <div className="flex min-h-12 items-center gap-1 px-2 py-1">
-                                                {openTabs.length === 0 ? (
-                                                    <p className="px-2 text-sm text-muted-foreground">Open a file from the explorer to start editing.</p>
-                                                ) : (
-                                                    openTabs.map((tab) => {
-                                                        const isActive = tab.path === activePath;
-                                                        const isDirty = tab.content !== tab.originalContent;
+                                {/* Explorer */}
+                                {sidebarView === 'explorer' ? (
+                                    <ScrollArea className="min-h-0 flex-1">
+                                        <div className="flex flex-col py-1">
+                                            {tree.length > 0 ? (
+                                                tree.map((node) => (
+                                                    <FileTreeItem
+                                                        key={node.path}
+                                                        node={node}
+                                                        depth={0}
+                                                        expandedPaths={expandedPaths}
+                                                        selectedPath={selectedPath}
+                                                        activePath={activePath}
+                                                        onToggle={toggleFolder}
+                                                        onOpen={(path) => void openFile(path)}
+                                                        onSelect={setSelectedPath}
+                                                        onCreateFile={(path) => { setNewEntityMode('file'); setNewEntityPath(path ? `${path}/` : ''); setNewEntityOpen(true); }}
+                                                        onCreateFolder={(path) => { setNewEntityMode('folder'); setNewEntityPath(path ? `${path}/` : ''); setNewEntityOpen(true); }}
+                                                        onUpload={(path) => { setUploadTargetPath(path); setUploadOpen(true); }}
+                                                        onRename={(nodeToRename) => { setRenameSource(nodeToRename); setRenamePath(nodeToRename.path); setRenameOpen(true); }}
+                                                        onDuplicate={(path) => void handleDuplicate(path)}
+                                                        onDelete={setDeleteTarget}
+                                                    />
+                                                ))
+                                            ) : (
+                                                <div className="px-3 py-6 text-center text-xs text-muted-foreground">No editable files.</div>
+                                            )}
+                                        </div>
+                                    </ScrollArea>
+                                ) : null}
 
-                                                        return (
-                                                            <div
-                                                                key={tab.path}
-                                                                className={cn(
-                                                                    'flex items-center gap-2 rounded-md border px-3 py-2',
-                                                                    isActive ? 'border-border bg-background shadow-sm' : 'border-transparent bg-transparent text-muted-foreground hover:bg-muted',
-                                                                )}
+                                {/* Search */}
+                                {sidebarView === 'search' ? (
+                                    <div className="flex min-h-0 flex-1 flex-col">
+                                        <div className="flex flex-col gap-2 border-b px-3 py-2">
+                                            <Input
+                                                value={searchQuery}
+                                                onChange={(event) => setSearchQuery(event.target.value)}
+                                                placeholder="Search in files…"
+                                                onKeyDown={(event) => { if (event.key === 'Enter') { void runSearch(); } }}
+                                                className="h-7 text-xs"
+                                            />
+                                            <div className="flex items-center justify-between">
+                                                <ToggleGroup
+                                                    type="multiple"
+                                                    value={searchOptions}
+                                                    onValueChange={(value) => setSearchOptions(value as Array<'case' | 'regex'>)}
+                                                    variant="outline"
+                                                >
+                                                    <ToggleGroupItem value="case" className="h-6 px-2 text-[10px]">Aa</ToggleGroupItem>
+                                                    <ToggleGroupItem value="regex" className="h-6 px-2 text-[10px]">.*</ToggleGroupItem>
+                                                </ToggleGroup>
+                                                <Button size="sm" variant="ghost" onClick={() => void runSearch()} disabled={searchRequest.processing || searchQuery.trim() === ''} className="h-6 px-2 text-xs">
+                                                    {searchRequest.processing ? <Spinner className="size-3" /> : 'Search'}
+                                                </Button>
+                                            </div>
+                                        </div>
+                                        <ScrollArea className="min-h-0 flex-1">
+                                            <div className="flex flex-col">
+                                                {searchQuery.trim() !== '' ? (
+                                                    <div className="border-b px-3 py-1.5 text-[11px] text-muted-foreground">{searchTotal} results</div>
+                                                ) : null}
+                                                {searchResults.map((group) => (
+                                                    <div key={group.path}>
+                                                        <div className="bg-muted/40 px-3 py-1 text-[11px] font-medium">{group.path} <span className="text-muted-foreground">({group.match_count})</span></div>
+                                                        {group.matches.map((match) => (
+                                                            <button
+                                                                key={`${group.path}-${match.line}-${match.column}`}
+                                                                type="button"
+                                                                className="flex w-full items-baseline gap-2 px-3 py-1 text-left text-[11px] hover:bg-accent/50"
+                                                                onClick={() => void openFile(match.path)}
                                                             >
-                                                                <button
-                                                                    type="button"
-                                                                    className="flex items-center gap-2"
-                                                                    onClick={() => setActivePath(tab.path)}
-                                                                >
-                                                                    <FileCodeIcon className="size-4" />
-                                                                    <span className="max-w-44 truncate text-sm">{tab.name}</span>
-                                                                    {isDirty ? <span className="size-2 rounded-full bg-primary" /> : null}
-                                                                </button>
-                                                                <button
-                                                                    type="button"
-                                                                    className="text-muted-foreground hover:text-foreground"
-                                                                    onClick={() => closeTab(tab.path)}
-                                                                >
-                                                                    <XIcon className="size-4" />
-                                                                </button>
-                                                            </div>
-                                                        );
-                                                    })
-                                                )}
+                                                                <span className="shrink-0 text-muted-foreground">{match.line}</span>
+                                                                <span className="truncate font-mono">{match.text}</span>
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                ))}
+                                                {searchQuery.trim() === '' ? (
+                                                    <div className="px-3 py-6 text-center text-xs text-muted-foreground">Type to search across theme files.</div>
+                                                ) : null}
                                             </div>
                                         </ScrollArea>
                                     </div>
+                                ) : null}
 
-                                    {activeTab ? (
-                                        <div className="flex min-h-0 flex-1 flex-col">
-                                            <div className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-3">
-                                                <div className="flex min-w-0 flex-col gap-1">
-                                                    <div className="flex flex-wrap items-center gap-2">
-                                                        <h3 className="truncate text-sm font-medium">{activeTab.path}</h3>
-                                                        {activeTab.inherited ? <Badge variant="outline">Inherited from {activeTab.inheritedFrom}</Badge> : null}
-                                                    </div>
-                                                    <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-                                                        <span>{formatBytes(activeTab.size)}</span>
-                                                        <span>Language: {activeTab.language}</span>
-                                                        <span>Updated: {new Date(activeTab.modified * 1000).toLocaleString()}</span>
-                                                    </div>
-                                                </div>
-                                                <div className="flex flex-wrap gap-2">
-                                                    <Button variant="outline" onClick={() => { setRenameSource(findNodeByPath(tree, activeTab.path)); setRenamePath(activeTab.path); setRenameOpen(true); }} disabled={!canEditThemes}>
-                                                        <PencilIcon data-icon="inline-start" />
-                                                        Rename
-                                                    </Button>
-                                                    <Button variant="outline" onClick={() => void handleDuplicate(activeTab.path)} disabled={!canEditThemes}>
-                                                        <CopyIcon data-icon="inline-start" />
-                                                        Duplicate
-                                                    </Button>
-                                                    {canDeleteThemes ? (
-                                                        <Button variant="outline" onClick={() => setDeleteTarget({ type: 'file', path: activeTab.path, protected: false })}>
-                                                            <Trash2Icon data-icon="inline-start" />
-                                                            Delete
-                                                        </Button>
-                                                    ) : null}
-                                                </div>
+                                {/* Source control */}
+                                {sidebarView === 'source-control' ? (
+                                    <ScrollArea className="min-h-0 flex-1">
+                                        <div className="flex flex-col">
+                                            <div className="border-b px-3 py-2">
+                                                <Input
+                                                    value={commitMessage}
+                                                    onChange={(event) => setCommitMessage(event.target.value)}
+                                                    placeholder="Message (press Enter to commit)"
+                                                    className="h-7 text-xs"
+                                                    onKeyDown={(event) => {
+                                                        if (event.key === 'Enter' && commitMessage.trim() !== '' && gitChanges.length > 0 && canEditThemes) {
+                                                            void runGitAction(
+                                                                'post',
+                                                                route('cms.appearance.themes.editor.git.commit', { directory: themeDirectory }),
+                                                                { message: commitMessage, mode: stagedChanges.length > 0 ? 'staged' : 'all' },
+                                                                'Commit created',
+                                                            );
+                                                        }
+                                                    }}
+                                                />
+                                                <Button
+                                                    size="sm"
+                                                    className="mt-2 h-7 w-full text-xs"
+                                                    onClick={() => void runGitAction(
+                                                        'post',
+                                                        route('cms.appearance.themes.editor.git.commit', { directory: themeDirectory }),
+                                                        { message: commitMessage, mode: stagedChanges.length > 0 ? 'staged' : 'all' },
+                                                        'Commit created',
+                                                    )}
+                                                    disabled={gitMutationRequest.processing || commitMessage.trim() === '' || gitChanges.length === 0 || !canEditThemes}
+                                                >
+                                                    {gitMutationRequest.processing ? <Spinner className="size-3" /> : <GitCommitHorizontalIcon className="size-3" />}
+                                                    <span className="ml-1">Commit</span>
+                                                </Button>
                                             </div>
 
-                                            {activeTab.inherited ? (
-                                                <div className="border-b px-4 py-3">
-                                                    <Alert>
-                                                        <InfoIcon />
-                                                        <AlertTitle>Inherited file</AlertTitle>
-                                                        <AlertDescription>
-                                                            This file currently comes from <strong>{activeTab.inheritedFrom}</strong>. Saving it here creates a theme-specific override.
-                                                        </AlertDescription>
-                                                    </Alert>
+                                            {/* Staged */}
+                                            <div>
+                                                <div className="flex items-center justify-between bg-muted/40 px-3 py-1 text-[11px] font-medium">
+                                                    Staged Changes
+                                                    <Badge variant="outline" className="h-4 px-1 text-[10px]">{stagedChanges.length}</Badge>
                                                 </div>
-                                            ) : null}
+                                                {stagedChanges.map((change) => (
+                                                    <div key={`staged-${change.path}`} className="group flex items-center gap-1 px-3 py-0.5 text-[12px] hover:bg-accent/50">
+                                                        <button type="button" className="min-w-0 flex-1 truncate text-left" onClick={() => void openFile(change.path)}>
+                                                            {change.path}
+                                                        </button>
+                                                        <span className="shrink-0 text-[10px] text-muted-foreground">{change.status_label}</span>
+                                                        <button
+                                                            type="button"
+                                                            className="flex size-5 shrink-0 items-center justify-center rounded opacity-0 hover:bg-accent group-hover:opacity-100"
+                                                            onClick={() => void runGitAction('post', route('cms.appearance.themes.editor.git.unstage', { directory: themeDirectory }), { paths: [change.path] }, 'Changes unstaged')}
+                                                            disabled={gitMutationRequest.processing || !canEditThemes}
+                                                        >
+                                                            <XIcon className="size-3" />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                                {stagedChanges.length === 0 ? (
+                                                    <div className="px-3 py-2 text-[11px] text-muted-foreground">No staged changes</div>
+                                                ) : null}
+                                            </div>
 
-                                            <div className="min-h-0 flex-1">
-                                                <MonacoEditor
-                                                    value={activeTab.content}
-                                                    onChange={updateActiveTabContent}
-                                                    language={activeTab.language}
-                                                    height="100%"
-                                                    className="h-full"
-                                                    editorClassName="h-full"
-                                                    textareaClassName="h-full"
-                                                    disabled={!canEditThemes}
-                                                />
+                                            {/* Unstaged */}
+                                            <div>
+                                                <div className="flex items-center justify-between bg-muted/40 px-3 py-1 text-[11px] font-medium">
+                                                    Changes
+                                                    <Badge variant="outline" className="h-4 px-1 text-[10px]">{unstagedChanges.length}</Badge>
+                                                </div>
+                                                {unstagedChanges.map((change) => (
+                                                    <div key={`unstaged-${change.path}`} className="group flex items-center gap-1 px-3 py-0.5 text-[12px] hover:bg-accent/50">
+                                                        <button type="button" className="min-w-0 flex-1 truncate text-left" onClick={() => void openFile(change.path)}>
+                                                            {change.path}
+                                                        </button>
+                                                        <span className="shrink-0 text-[10px] text-muted-foreground">{change.status_label}</span>
+                                                        <div className="flex shrink-0 gap-0.5 opacity-0 group-hover:opacity-100">
+                                                            <button
+                                                                type="button"
+                                                                className="flex size-5 items-center justify-center rounded hover:bg-accent"
+                                                                onClick={() => void runGitAction('post', route('cms.appearance.themes.editor.git.stage', { directory: themeDirectory }), { paths: [change.path] }, 'Changes staged')}
+                                                                disabled={gitMutationRequest.processing || !canEditThemes}
+                                                            >
+                                                                <CheckCircle2Icon className="size-3" />
+                                                            </button>
+                                                            {canDeleteThemes ? (
+                                                                <button
+                                                                    type="button"
+                                                                    className="flex size-5 items-center justify-center rounded hover:bg-accent"
+                                                                    onClick={() => void runGitAction('post', route('cms.appearance.themes.editor.git.discard', { directory: themeDirectory }), { paths: [change.path] }, 'Changes discarded')}
+                                                                    disabled={gitMutationRequest.processing}
+                                                                >
+                                                                    <Trash2Icon className="size-3" />
+                                                                </button>
+                                                            ) : null}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                                {unstagedChanges.length === 0 ? (
+                                                    <div className="px-3 py-2 text-[11px] text-muted-foreground">No changes</div>
+                                                ) : null}
                                             </div>
                                         </div>
-                                    ) : (
-                                        <Empty className="m-6 flex-1">
-                                            <EmptyHeader>
-                                                <EmptyMedia variant="icon"><CodeIcon /></EmptyMedia>
-                                                <EmptyTitle>No file selected</EmptyTitle>
-                                                <EmptyDescription>Open a theme file from the explorer, search panel, or source control list.</EmptyDescription>
-                                            </EmptyHeader>
-                                        </Empty>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
-
-            <Dialog open={newEntityOpen} onOpenChange={setNewEntityOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>{newEntityMode === 'file' ? 'Create new file' : 'Create new folder'}</DialogTitle>
-                        <DialogDescription>
-                            Enter the full relative path. Use folders in the path if you want to nest the new item.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <Field>
-                        <FieldLabel htmlFor="new-entity-path">Relative path</FieldLabel>
-                        <Input id="new-entity-path" value={newEntityPath} onChange={(event) => setNewEntityPath(event.target.value)} placeholder={newEntityMode === 'file' ? 'templates/home.twig' : 'assets/images'} />
-                        <FieldDescription>
-                            {newEntityMode === 'file' ? 'Supported files: twig, css, js, json, md, html, xml, scss.' : 'Protected folders cannot be deleted later.'}
-                        </FieldDescription>
-                    </Field>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setNewEntityOpen(false)}>Cancel</Button>
-                        <Button onClick={() => void createEntity()} disabled={createRequest.processing || !canEditThemes || newEntityPath.trim() === ''}>
-                            {createRequest.processing ? <Spinner /> : <PlusIcon data-icon="inline-start" />}
-                            Create
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-
-            <Dialog open={renameOpen} onOpenChange={setRenameOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Rename item</DialogTitle>
-                        <DialogDescription>Update the full relative path for the selected file or folder.</DialogDescription>
-                    </DialogHeader>
-                    <Field>
-                        <FieldLabel htmlFor="rename-path">New path</FieldLabel>
-                        <Input id="rename-path" value={renamePath} onChange={(event) => setRenamePath(event.target.value)} />
-                    </Field>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setRenameOpen(false)}>Cancel</Button>
-                        <Button onClick={() => void handleRename()} disabled={renameRequest.processing || !canEditThemes || renamePath.trim() === ''}>
-                            {renameRequest.processing ? <Spinner /> : <PencilIcon data-icon="inline-start" />}
-                            Rename
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-
-            <Dialog open={uploadOpen} onOpenChange={setUploadOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Upload file</DialogTitle>
-                        <DialogDescription>Upload a file into the current theme directory structure.</DialogDescription>
-                    </DialogHeader>
-                    <div className="flex flex-col gap-4">
-                        <Field>
-                            <FieldLabel htmlFor="upload-path">Target folder</FieldLabel>
-                            <Input id="upload-path" value={uploadTargetPath} onChange={(event) => setUploadTargetPath(event.target.value)} placeholder="assets/images" />
-                            <FieldDescription>Leave blank to upload to the theme root.</FieldDescription>
-                        </Field>
-                        <Field>
-                            <FieldLabel htmlFor="upload-file">File</FieldLabel>
-                            <Input
-                                id="upload-file"
-                                type="file"
-                                onChange={(event) => {
-                                    uploadRequest.setData('file', event.currentTarget.files?.[0] ?? null);
-                                }}
-                            />
-                            <FieldDescription>Maximum upload size is 10MB.</FieldDescription>
-                        </Field>
-                        {uploadRequest.progress ? (
-                            <div className="flex flex-col gap-2">
-                                <div className="flex items-center justify-between text-sm text-muted-foreground">
-                                    <span>Uploading…</span>
-                                    <span>{uploadRequest.progress.percentage}%</span>
-                                </div>
-                                <Progress value={uploadRequest.progress.percentage} />
+                                    </ScrollArea>
+                                ) : null}
                             </div>
                         ) : null}
-                    </div>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setUploadOpen(false)}>Cancel</Button>
-                        <Button onClick={() => void submitUpload()} disabled={uploadRequest.processing || uploadRequest.data.file === null || !canEditThemes}>
-                            {uploadRequest.processing ? <Spinner /> : <UploadIcon data-icon="inline-start" />}
-                            Upload
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
 
-            <AlertDialog open={deleteTarget !== null} onOpenChange={(open) => !open && setDeleteTarget(null)}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogMedia><AlertCircleIcon className="size-5" /></AlertDialogMedia>
-                        <AlertDialogTitle>Delete {deleteTarget?.type ?? 'item'}?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            {deleteTarget ? `This will permanently remove ${deleteTarget.path}. This action cannot be undone.` : 'This action cannot be undone.'}
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel disabled={deleteRequest.processing}>Cancel</AlertDialogCancel>
-                        <AlertDialogAction variant="destructive" disabled={deleteRequest.processing || !canDeleteThemes} onClick={() => void confirmDelete()}>
-                            {deleteRequest.processing ? <Spinner /> : null}
-                            Delete
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
-
-            <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
-                <DialogContent className="sm:max-w-2xl">
-                    <DialogHeader>
-                        <DialogTitle>Theme history</DialogTitle>
-                        <DialogDescription>Recent git commits for {theme.name}.</DialogDescription>
-                    </DialogHeader>
-                    <ScrollArea className="max-h-[60vh]">
-                        <div className="flex flex-col gap-3 pr-4">
-                            {historyItems.length === 0 ? (
-                                <Empty className="border-0 px-0">
-                                    <EmptyHeader>
-                                        <EmptyMedia variant="icon"><HistoryIcon /></EmptyMedia>
-                                        <EmptyTitle>No commits yet</EmptyTitle>
-                                        <EmptyDescription>Once changes are committed, they will appear here.</EmptyDescription>
-                                    </EmptyHeader>
-                                </Empty>
-                            ) : (
-                                historyItems.map((commit) => (
-                                    <div key={commit.hash} className="rounded-lg border p-3">
-                                        <div className="flex flex-wrap items-start justify-between gap-3">
-                                            <div className="space-y-1">
-                                                <p className="font-medium">{commit.subject}</p>
-                                                <p className="text-xs text-muted-foreground">{commit.author_name} • {new Date(commit.date).toLocaleString()}</p>
-                                            </div>
-                                            <Badge variant="outline">{commit.hash.slice(0, 7)}</Badge>
-                                        </div>
+                        {/* Editor area */}
+                        <div className="flex min-w-0 flex-1 flex-col">
+                            {/* Tab bar */}
+                            <div className="flex h-9 shrink-0 items-center border-b border-[#2b2b2b] bg-[#252526]">
+                                <ScrollArea className="w-full whitespace-nowrap">
+                                    <div className="flex items-center">
+                                        {openTabs.map((tab, tabIndex) => {
+                                            const isTabActive = tab.path === activePath;
+                                            const isTabDirty = tab.content !== tab.originalContent;
+                                            const tabContextItems: EditorContextMenuEntry[] = [
+                                                { label: 'Close', onSelect: () => closeTab(tab.path) },
+                                                { label: 'Close Others', disabled: openTabs.length <= 1, onSelect: () => closeOtherTabs(tab.path) },
+                                                { label: 'Close to the Right', disabled: tabIndex >= openTabs.length - 1, onSelect: () => closeTabsToRight(tab.path) },
+                                                { label: 'Close All', onSelect: () => closeAllTabs() },
+                                                { type: 'separator' },
+                                                { label: 'Copy Path', onSelect: () => copyPathToClipboard(tab.path) },
+                                            ];
+                                            return (
+                                                <EditorContextMenu key={tab.path} items={tabContextItems}>
+                                                    <div
+                                                        className={cn(
+                                                            'group flex h-9 items-center gap-1 border-r border-[#2b2b2b] px-3 text-[13px]',
+                                                            isTabActive
+                                                                ? 'bg-[#1e1e1e] text-white'
+                                                                : 'bg-[#2d2d2d] text-[#969696] hover:bg-[#2d2d2d]/80',
+                                                        )}
+                                                    >
+                                                        <button
+                                                            type="button"
+                                                            className="flex items-center gap-1.5"
+                                                            onClick={() => setActivePath(tab.path)}
+                                                        >
+                                                            <FileCodeIcon className="size-3.5" />
+                                                            <span className="max-w-40 truncate">{tab.name}</span>
+                                                            {isTabDirty ? <span className="size-2 rounded-full bg-blue-500" /> : null}
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            className="ml-1 flex size-5 items-center justify-center rounded opacity-0 hover:bg-accent group-hover:opacity-100"
+                                                            onClick={() => closeTab(tab.path)}
+                                                        >
+                                                            <XIcon className="size-3" />
+                                                        </button>
+                                                    </div>
+                                                </EditorContextMenu>
+                                            );
+                                        })}
                                     </div>
-                                ))
+                                </ScrollArea>
+                            </div>
+
+                            {/* Editor content */}
+                            {activeTab ? (
+                                <div className="flex min-h-0 flex-1 flex-col">
+                                    {/* Breadcrumb bar */}
+                                    <div className="flex h-7 shrink-0 items-center gap-2 border-b border-[#2b2b2b] bg-[#1e1e1e] px-3 text-[11px] text-[#969696]">
+                                        <span className="truncate">{activeTab.path}</span>
+                                        {activeTab.inherited ? (
+                                            <Badge variant="outline" className="h-4 px-1 text-[10px]">Inherited from {activeTab.inheritedFrom}</Badge>
+                                        ) : null}
+                                        <div className="flex-1" />
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <button type="button" className="flex size-5 items-center justify-center rounded hover:bg-accent">
+                                                    <MoreHorizontalIcon className="size-3.5" />
+                                                </button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                <DropdownMenuItem onSelect={() => { setRenameSource(findNodeByPath(tree, activeTab.path)); setRenamePath(activeTab.path); setRenameOpen(true); }} disabled={!canEditThemes}>
+                                                    <PencilIcon />
+                                                    Rename
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem onSelect={() => void handleDuplicate(activeTab.path)} disabled={!canEditThemes}>
+                                                    <CopyIcon />
+                                                    Duplicate
+                                                </DropdownMenuItem>
+                                                {canDeleteThemes ? (
+                                                    <DropdownMenuItem variant="destructive" onSelect={() => setDeleteTarget({ type: 'file', path: activeTab.path, protected: false })}>
+                                                        <Trash2Icon />
+                                                        Delete
+                                                    </DropdownMenuItem>
+                                                ) : null}
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </div>
+
+                                    {activeTab.inherited ? (
+                                        <div className="border-b px-3 py-2">
+                                            <Alert>
+                                                <InfoIcon />
+                                                <AlertTitle>Inherited file</AlertTitle>
+                                                <AlertDescription>
+                                                    This file currently comes from <strong>{activeTab.inheritedFrom}</strong>. Saving it here creates a theme-specific override.
+                                                </AlertDescription>
+                                            </Alert>
+                                        </div>
+                                    ) : null}
+
+                                    <div className="min-h-0 flex-1">
+                                        <MonacoEditor
+                                            value={activeTab.content}
+                                            onChange={updateActiveTabContent}
+                                            language={activeTab.language}
+                                            height="100%"
+                                            className="h-full"
+                                            editorClassName="h-full rounded-none border-0"
+                                            textareaClassName="h-full"
+                                            disabled={!canEditThemes}
+                                        />
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="flex flex-1 items-center justify-center">
+                                    <div className="text-center text-muted-foreground">
+                                        <CodeIcon className="mx-auto mb-3 size-12 opacity-20" />
+                                        <p className="text-sm font-medium">No file open</p>
+                                        <p className="mt-1 text-xs">Select a file from the explorer to start editing</p>
+                                    </div>
+                                </div>
                             )}
                         </div>
-                    </ScrollArea>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setHistoryOpen(false)}>Close</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-        </AppLayout>
+                    </div>
+                </div>
+
+                {/* Status bar */}
+                <div className="flex h-6 shrink-0 items-center justify-between border-t border-[#2b2b2b] bg-[#007acc] px-3 text-[11px] text-white">
+                    <div className="flex items-center gap-3">
+                        <span className="flex items-center gap-1">
+                            <GitBranchIcon className="size-3" />
+                            {theme.directory}
+                        </span>
+                        {gitChanges.length > 0 ? (
+                            <span>{gitChanges.length} change{gitChanges.length !== 1 ? 's' : ''}</span>
+                        ) : null}
+                    </div>
+                    <div className="flex items-center gap-3">
+                        {activeTab ? (
+                            <>
+                                <span>{activeTab.language}</span>
+                                <span>{formatBytes(activeTab.size)}</span>
+                            </>
+                        ) : null}
+                    </div>
+                </div>
+            </TooltipProvider>
+
+            {/* Dialogs */}
+            <CreateDialog
+                open={newEntityOpen}
+                onOpenChange={setNewEntityOpen}
+                mode={newEntityMode}
+                path={newEntityPath}
+                onPathChange={setNewEntityPath}
+                onSubmit={() => void createEntity()}
+                processing={createRequest.processing}
+                canEdit={canEditThemes}
+            />
+
+            <RenameDialog
+                open={renameOpen}
+                onOpenChange={setRenameOpen}
+                path={renamePath}
+                onPathChange={setRenamePath}
+                onSubmit={() => void handleRename()}
+                processing={renameRequest.processing}
+                canEdit={canEditThemes}
+            />
+
+            <UploadDialog
+                open={uploadOpen}
+                onOpenChange={setUploadOpen}
+                targetPath={uploadTargetPath}
+                onTargetPathChange={setUploadTargetPath}
+                uploadRequest={uploadRequest}
+                onSubmit={() => void submitUpload()}
+                canEdit={canEditThemes}
+            />
+
+            <DeleteConfirmDialog
+                target={deleteTarget}
+                onOpenChange={() => setDeleteTarget(null)}
+                onConfirm={() => void confirmDelete()}
+                processing={deleteRequest.processing}
+                canDelete={canDeleteThemes}
+            />
+
+            <HistoryDialog
+                open={historyOpen}
+                onOpenChange={setHistoryOpen}
+                themeName={theme.name}
+                commits={historyItems}
+            />
+        </ThemeEditorLayout>
     );
 }

@@ -1,10 +1,30 @@
-import { Form } from '@inertiajs/react';
+import type { FormEvent } from 'react';
 import AppHead from '@/components/app-head';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
+import { useAppForm } from '@/hooks/use-app-form';
 import AuthLayout from '@/layouts/auth-layout';
 
 export default function VerifyEmail({ status }: { status?: string }) {
+    const resendForm = useAppForm({
+        defaults: {},
+        rememberKey: 'auth.verify-email.resend',
+    });
+
+    const logoutForm = useAppForm({
+        defaults: {},
+    });
+
+    const handleResend = (e: FormEvent) => {
+        e.preventDefault();
+        resendForm.submit('post', route('verification.send'));
+    };
+
+    const handleLogout = (e: FormEvent) => {
+        e.preventDefault();
+        logoutForm.submit('post', route('logout'));
+    };
+
     return (
         <AuthLayout
             title="Verify email"
@@ -35,36 +55,35 @@ export default function VerifyEmail({ status }: { status?: string }) {
                     a new one below.
                 </p>
 
-                <Form
-                    action={route('verification.send')}
-                    method="post"
-                    className="space-y-4"
-                >
-                    {({ processing }) => (
-                        <Button
-                            className="w-full"
-                            disabled={processing}
-                            variant="secondary"
-                        >
-                            {processing && <Spinner />}
-                            Resend verification email
-                        </Button>
-                    )}
-                </Form>
+                <form onSubmit={handleResend} className="space-y-4">
+                    <Button
+                        type="submit"
+                        className="w-full"
+                        disabled={resendForm.processing}
+                        variant="secondary"
+                        size="xl"
+                    >
+                        {resendForm.processing && (
+                            <Spinner className="mr-2 h-4 w-4" />
+                        )}
+                        Resend verification email
+                    </Button>
+                </form>
 
-                <Form action={route('logout')} method="post" className="w-full">
-                    {({ processing }) => (
-                        <Button
-                            type="submit"
-                            variant="outline"
-                            className="w-full"
-                            disabled={processing}
-                        >
-                            {processing && <Spinner />}
-                            Log out
-                        </Button>
-                    )}
-                </Form>
+                <form onSubmit={handleLogout} className="w-full">
+                    <Button
+                        type="submit"
+                        variant="outline"
+                        className="w-full"
+                        disabled={logoutForm.processing}
+                        size="xl"
+                    >
+                        {logoutForm.processing && (
+                            <Spinner className="mr-2 h-4 w-4" />
+                        )}
+                        Log out
+                    </Button>
+                </form>
             </div>
         </AuthLayout>
     );

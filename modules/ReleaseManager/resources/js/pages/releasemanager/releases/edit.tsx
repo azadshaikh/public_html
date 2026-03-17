@@ -1,9 +1,9 @@
+import { Link } from '@inertiajs/react';
+import { EyeIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import { ReleaseForm } from '../../../components/release-form';
-import { Button } from '@/components/ui/button';
-import { EyeIcon } from 'lucide-react';
-import { Link } from '@inertiajs/react';
 
 export default function ReleaseEdit({ release, initialValues, versionTypes, statusOptions, type }: any) {
     const title = `Edit Release ${initialValues.version}`;

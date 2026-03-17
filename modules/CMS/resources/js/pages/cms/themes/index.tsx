@@ -68,6 +68,7 @@ import { Separator } from '@/components/ui/separator';
 import { Spinner } from '@/components/ui/spinner';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import AppLayout from '@/layouts/app-layout';
+import { cn } from '@/lib/utils';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
 import type { ThemeIndexPageProps, ThemeListItem } from '../../../types/cms';
 
@@ -95,33 +96,36 @@ function formatSupportLabel(value: string): string {
 function ThemeScreenshot({ theme }: { theme: ThemeListItem }) {
     if (theme.screenshot) {
         return (
-            <img
-                src={theme.screenshot}
-                alt={`${theme.name} preview`}
-                className="h-44 w-full rounded-xl object-cover ring-1 ring-border"
-            />
+            <div className="relative overflow-hidden rounded-t-xl bg-muted">
+                <img
+                    src={theme.screenshot}
+                    alt={`${theme.name} preview`}
+                    className="aspect-video w-full object-cover transition-transform duration-300 hover:scale-105"
+                />
+                <div className="absolute top-3 left-3 flex flex-wrap gap-2">
+                    <ThemeBadges theme={theme} />
+                </div>
+            </div>
         );
     }
 
     return (
-        <div className="flex h-44 w-full items-center justify-center rounded-xl bg-muted ring-1 ring-border">
+        <div className="relative flex aspect-video w-full items-center justify-center rounded-t-xl bg-muted">
             <ImageIcon className="size-10 text-muted-foreground/50" />
+            <div className="absolute top-3 left-3 flex flex-wrap gap-2">
+                <ThemeBadges theme={theme} />
+            </div>
         </div>
     );
 }
 
 function ThemeBadges({ theme }: { theme: ThemeListItem }) {
     return (
-        <div className="flex flex-wrap gap-2">
-            {theme.is_active ? <Badge variant="success">Active</Badge> : null}
-            {theme.is_child ? <Badge variant="secondary">Child theme</Badge> : null}
-            {theme.has_children ? (
-                <Badge variant="outline">
-                    {theme.child_count} {theme.child_count === 1 ? 'child' : 'children'}
-                </Badge>
-            ) : null}
-            {theme.is_protected ? <Badge variant="outline">Protected</Badge> : null}
-        </div>
+        <>
+            {theme.is_active ? <Badge variant="success" className="shadow-sm">Active</Badge> : null}
+            {theme.is_child ? <Badge variant="secondary" className="shadow-sm bg-background/80 backdrop-blur-sm">Child</Badge> : null}
+            {theme.is_protected ? <Badge variant="outline" className="shadow-sm bg-background/80 backdrop-blur-sm">Protected</Badge> : null}
+        </>
     );
 }
 
@@ -168,11 +172,11 @@ function ThemeActionMenu({
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon" aria-label={`More actions for ${theme.name}`}>
-                    <MoreHorizontalIcon />
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" aria-label={`More actions for ${theme.name}`}>
+                    <MoreHorizontalIcon className="size-4" />
                 </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel>Theme actions</DropdownMenuLabel>
                 <DropdownMenuGroup>
                     <DropdownMenuItem asChild>
@@ -264,19 +268,27 @@ function ThemeCard({
     onAction: (action: PendingAction['type'], theme: ThemeListItem) => void;
 }) {
     return (
-        <Card className="flex h-full flex-col overflow-hidden">
-            <CardContent className="flex flex-1 flex-col gap-5 p-4">
-                <ThemeScreenshot theme={theme} />
-
-                <div className="flex flex-1 flex-col gap-4">
-                    <div className="flex flex-col gap-3">
-                        <div className="flex items-start justify-between gap-3">
-                            <div className="min-w-0 space-y-1">
-                                <h3 className="truncate text-lg font-semibold">{theme.name}</h3>
-                                <p className="text-sm text-muted-foreground">
-                                    Version {theme.version}
-                                </p>
+        <Card className={cn(
+            "flex h-full flex-col overflow-hidden transition-all duration-200 hover:shadow-md",
+            theme.is_active ? "border-success bg-success/5 shadow-sm ring-1 ring-success/20" : "border-border/50"
+        )}>
+            <ThemeScreenshot theme={theme} />
+            <CardContent className="flex flex-1 flex-col gap-4 p-5">
+                <div className="flex flex-1 flex-col gap-2">
+                    <div className="flex items-start justify-between gap-2">
+                        <div className="flex flex-col">
+                            <h3 className="line-clamp-1 text-lg font-semibold leading-tight tracking-tight">{theme.name}</h3>
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <span>v{theme.version}</span>
+                                {theme.author && (
+                                    <>
+                                        <span className="size-1 rounded-full bg-muted-foreground/30" />
+                                        <span className="line-clamp-1">By {theme.author}</span>
+                                    </>
+                                )}
                             </div>
+                        </div>
+                        <div className="-mr-2 -mt-1 shrink-0">
                             <ThemeActionMenu
                                 theme={theme}
                                 canAddThemes={canAddThemes}
@@ -285,91 +297,50 @@ function ThemeCard({
                                 onAction={onAction}
                             />
                         </div>
-
-                        <ThemeBadges theme={theme} />
-
-                        {theme.is_child && theme.parent ? (
-                            <p className="text-sm text-muted-foreground">
-                                Inherits from <span className="font-medium text-foreground">{theme.parent}</span>
-                            </p>
-                        ) : null}
                     </div>
 
-                    <p className="line-clamp-3 text-sm text-muted-foreground">
-                        {theme.description || 'No description provided for this theme.'}
+                    <p className="line-clamp-2 text-sm text-muted-foreground mt-1">
+                        {theme.description || 'No description provided.'}
                     </p>
 
-                    <div className="flex flex-col gap-2 text-sm text-muted-foreground">
-                        <p>
-                            <span className="font-medium text-foreground">Author:</span>{' '}
-                            {theme.author_uri ? (
-                                <a
-                                    href={theme.author_uri}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="underline underline-offset-4 hover:text-foreground"
-                                >
-                                    {theme.author || 'Unknown'}
-                                </a>
-                            ) : (
-                                <span>{theme.author || 'Unknown'}</span>
-                            )}
+                    {theme.is_child && theme.parent ? (
+                        <p className="text-xs text-muted-foreground mt-auto pt-2">
+                            Inherits from <span className="font-medium text-foreground">{theme.parent}</span>
                         </p>
-
-                        {theme.tags.length > 0 ? (
-                            <div className="flex flex-wrap gap-2">
-                                {theme.tags.slice(0, 4).map((tag) => (
-                                    <Badge key={tag} variant="secondary">
-                                        {tag}
-                                    </Badge>
-                                ))}
-                            </div>
-                        ) : null}
-
-                        {theme.supports.length > 0 ? (
-                            <div className="flex flex-wrap gap-2">
-                                {theme.supports.slice(0, 3).map((support) => (
-                                    <Badge key={support} variant="outline">
-                                        {formatSupportLabel(support)}
-                                    </Badge>
-                                ))}
-                            </div>
-                        ) : null}
-                    </div>
+                    ) : null}
                 </div>
             </CardContent>
 
-            <CardFooter className="grid gap-2 border-t bg-muted/30 p-4 sm:grid-cols-[1fr_auto]">
+            <CardFooter className="flex items-center gap-2 p-2 pt-2">
                 {theme.is_active ? (
-                    <Button asChild>
+                    <Button asChild variant="success" className="flex-1">
                         <a
                             href={route('cms.appearance.themes.customizer.index')}
                             target="_blank"
                             rel="noreferrer"
                         >
-                            <BrushIcon data-icon="inline-start" />
+                            <BrushIcon className="size-4 mr-2" />
                             Customize
                         </a>
                     </Button>
                 ) : canEditThemes ? (
-                    <Button onClick={() => onAction('activate', theme)}>
-                        <CheckCircle2Icon data-icon="inline-start" />
+                    <Button onClick={() => onAction('activate', theme)} variant="default" className="flex-1">
+                        <CheckCircle2Icon className="size-4 mr-2" />
                         Activate
                     </Button>
                 ) : (
-                    <Button variant="outline" disabled>
-                        No edit access
+                    <Button variant="outline" disabled className="flex-1">
+                        No access
                     </Button>
                 )}
 
-                <Button variant="outline" asChild>
+                <Button variant="outline" size="icon-lg" asChild title="Edit code">
                     <a
                         href={route('cms.appearance.themes.editor.index', theme.directory)}
                         target="_blank"
                         rel="noreferrer"
                     >
-                        <CodeIcon data-icon="inline-start" />
-                        Edit
+                        <CodeIcon className="size-4" />
                     </a>
                 </Button>
             </CardFooter>
@@ -439,7 +410,6 @@ export default function ThemesIndex({
     themes,
     activeTheme,
     filters,
-    statistics,
     availableSupports,
 }: ThemeIndexPageProps) {
     const page = usePage<AuthenticatedSharedData>();
@@ -572,38 +542,6 @@ export default function ThemesIndex({
             ) : undefined}
         >
             <div className="flex flex-col gap-6">
-                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-                    <StatisticCard
-                        title="Installed themes"
-                        value={statistics.total}
-                        description="All themes available on disk."
-                        icon={<PaletteIcon className="size-5" />}
-                    />
-                    <StatisticCard
-                        title="Active"
-                        value={statistics.active}
-                        description="Themes currently live or selected."
-                        icon={<CheckCircle2Icon className="size-5" />}
-                    />
-                    <StatisticCard
-                        title="Inactive"
-                        value={statistics.inactive}
-                        description="Installed themes ready to activate."
-                        icon={<SparklesIcon className="size-5" />}
-                    />
-                    <StatisticCard
-                        title="Child themes"
-                        value={statistics.child}
-                        description="Themes inheriting from a parent design."
-                        icon={<GitBranchIcon className="size-5" />}
-                    />
-                    <StatisticCard
-                        title="Protected"
-                        value={statistics.protected}
-                        description="System themes that cannot be deleted."
-                        icon={<ShieldIcon className="size-5" />}
-                    />
-                </div>
 
                 {activeTheme ? (
                     <Card className="overflow-hidden border-primary/40 bg-primary/5">
@@ -682,33 +620,6 @@ export default function ThemesIndex({
                                     </div>
                                 </div>
 
-                                {(activeTheme.tags.length > 0 || activeTheme.supports.length > 0) ? <Separator /> : null}
-
-                                <div className="grid gap-4 md:grid-cols-2">
-                                    {activeTheme.tags.length > 0 ? (
-                                        <div className="flex flex-col gap-2">
-                                            <p className="text-sm font-medium">Tags</p>
-                                            <div className="flex flex-wrap gap-2">
-                                                {activeTheme.tags.map((tag) => (
-                                                    <Badge key={tag} variant="secondary">{tag}</Badge>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    ) : null}
-
-                                    {activeTheme.supports.length > 0 ? (
-                                        <div className="flex flex-col gap-2">
-                                            <p className="text-sm font-medium">Supported features</p>
-                                            <div className="flex flex-wrap gap-2">
-                                                {activeTheme.supports.map((support) => (
-                                                    <Badge key={support} variant="outline">
-                                                        {formatSupportLabel(support)}
-                                                    </Badge>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    ) : null}
-                                </div>
                             </div>
                         </CardContent>
                     </Card>
@@ -716,7 +627,7 @@ export default function ThemesIndex({
 
                 <Card>
                     <CardHeader className="gap-4">
-                        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                             <div>
                                 <CardTitle>Browse installed themes</CardTitle>
                                 <CardDescription>
@@ -731,64 +642,45 @@ export default function ThemesIndex({
                             ) : null}
                         </div>
 
-                        <div className="flex flex-col gap-4">
-                            <form onSubmit={submitSearch} className="flex flex-col gap-3 lg:flex-row">
+                        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                            <form onSubmit={submitSearch} className="flex w-full flex-col gap-3 sm:flex-row sm:items-center lg:max-w-xl">
                                 <Input
                                     value={searchValue}
                                     onChange={(event) => setSearchValue(event.target.value)}
                                     placeholder="Search themes by name, author, or tag..."
-                                    className="lg:max-w-md"
+                                    className="flex-1"
                                 />
-                                <div className="flex flex-wrap gap-3">
-                                    <Button type="submit" variant="outline">
+                                <div className="flex items-center gap-2">
+                                    <Button type="submit" variant="secondary">
                                         <SearchIcon data-icon="inline-start" />
                                         Search
                                     </Button>
                                     <Button
                                         type="button"
                                         variant="ghost"
+                                        size="icon"
                                         onClick={() => {
                                             setSearchValue('');
                                             updateListing({ search: '' });
                                         }}
                                         disabled={!searchValue}
+                                        aria-label="Reset search"
                                     >
-                                        Reset search
+                                        <Trash2Icon />
                                     </Button>
                                 </div>
                             </form>
 
-                            <div className="flex flex-col gap-3">
-                                <ToggleGroup
-                                    type="single"
-                                    value={filters.filter === 'supports' ? 'all' : filters.filter}
-                                    onValueChange={handleStatusFilterChange}
-                                    variant="outline"
-                                >
-                                    <ToggleGroupItem value="all">All</ToggleGroupItem>
-                                    <ToggleGroupItem value="active">Active</ToggleGroupItem>
-                                    <ToggleGroupItem value="inactive">Inactive</ToggleGroupItem>
-                                </ToggleGroup>
-
-                                {availableSupports.length > 0 ? (
-                                    <div className="flex flex-col gap-2">
-                                        <p className="text-sm font-medium">Capability filters</p>
-                                        <ToggleGroup
-                                            type="multiple"
-                                            value={filters.supports}
-                                            onValueChange={handleSupportFilterChange}
-                                            variant="outline"
-                                            className="flex-wrap"
-                                        >
-                                            {availableSupports.map((support) => (
-                                                <ToggleGroupItem key={support} value={support}>
-                                                    {formatSupportLabel(support)}
-                                                </ToggleGroupItem>
-                                            ))}
-                                        </ToggleGroup>
-                                    </div>
-                                ) : null}
-                            </div>
+                            <ToggleGroup
+                                type="single"
+                                value={filters.filter === 'supports' ? 'all' : filters.filter}
+                                onValueChange={handleStatusFilterChange}
+                                variant="outline"
+                            >
+                                <ToggleGroupItem value="all">All</ToggleGroupItem>
+                                <ToggleGroupItem value="active">Active</ToggleGroupItem>
+                                <ToggleGroupItem value="inactive">Inactive</ToggleGroupItem>
+                            </ToggleGroup>
                         </div>
                     </CardHeader>
                 </Card>
@@ -814,7 +706,7 @@ export default function ThemesIndex({
                         ) : null}
                     </Empty>
                 ) : (
-                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                         {themes.map((theme) => (
                             <ThemeCard
                                 key={theme.directory}

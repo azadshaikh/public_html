@@ -1,11 +1,10 @@
-import { useForm } from '@inertiajs/react';
 import { ShieldIcon } from 'lucide-react';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import AppHead from '@/components/app-head';
-import InputError from '@/components/input-error';
 import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
+import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import {
     InputOTP,
@@ -14,6 +13,7 @@ import {
 } from '@/components/ui/input-otp';
 import { Spinner } from '@/components/ui/spinner';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useAppForm } from '@/hooks/use-app-form';
 import AuthLayout from '@/layouts/auth-layout';
 
 type Props = {
@@ -29,19 +29,23 @@ export default function TwoFactorChallenge({ email }: Props) {
     const [method, setMethod] = useState<'authenticator' | 'recovery'>(
         'authenticator',
     );
-    const form = useForm<TwoFactorChallengeFormData>({
-        code: '',
-        recovery_code: '',
+    const form = useAppForm<TwoFactorChallengeFormData>({
+        defaults: {
+            code: '',
+            recovery_code: '',
+        },
+        rememberKey: 'auth.two-factor-challenge',
     });
 
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
         form.transform((data) => ({
+            ...data,
             code: method === 'authenticator' ? data.code : data.recovery_code,
         }));
 
-        form.post(route('two-factor.challenge.store'), {
+        form.submit('post', route('two-factor.challenge.store'), {
             onFinish: () => {
                 form.transform((data) => data);
             },
@@ -92,17 +96,14 @@ export default function TwoFactorChallenge({ email }: Props) {
                     </Tabs>
 
                     {method === 'authenticator' ? (
-                        <div className="grid gap-2">
-                            <label
-                                htmlFor="code"
-                                className="text-sm font-medium"
-                            >
+                        <Field data-invalid={form.invalid('code') || undefined}>
+                            <FieldLabel htmlFor="code">
                                 Authentication code
-                            </label>
+                            </FieldLabel>
                             <InputOTP
                                 id="code"
                                 name="code"
-                                size="comfortable"
+                                size="xl"
                                 value={form.data.code}
                                 onChange={(value) =>
                                     form.setData(
@@ -133,16 +134,13 @@ export default function TwoFactorChallenge({ email }: Props) {
                                 Enter the current 6-digit code from your
                                 authenticator app.
                             </p>
-                            <InputError message={form.errors.code} />
-                        </div>
+                            <FieldError>{form.error('code')}</FieldError>
+                        </Field>
                     ) : (
-                        <div className="grid gap-2">
-                            <label
-                                htmlFor="recovery_code"
-                                className="text-sm font-medium"
-                            >
+                        <Field data-invalid={form.invalid('code') || undefined}>
+                            <FieldLabel htmlFor="recovery_code">
                                 Recovery code
-                            </label>
+                            </FieldLabel>
                             <Input
                                 id="recovery_code"
                                 name="recovery_code"
@@ -158,23 +156,27 @@ export default function TwoFactorChallenge({ email }: Props) {
                                 autoComplete="off"
                                 placeholder="Enter your recovery code"
                                 aria-invalid={Boolean(form.errors.code)}
-                                size="comfortable"
+                                size="xl"
                             />
                             <p className="text-sm text-muted-foreground">
                                 Use one of the backup recovery codes you saved
                                 when two-factor authentication was enabled.
                             </p>
-                            <InputError message={form.errors.code} />
-                        </div>
+                            <FieldError>{form.error('code')}</FieldError>
+                        </Field>
                     )}
 
                     <Button
                         type="submit"
-                        size="comfortable"
+                        size="xl"
                         className="w-full"
                         disabled={form.processing}
                     >
-                        {form.processing ? <Spinner /> : <ShieldIcon />}
+                        {form.processing ? (
+                            <Spinner className="mr-2 h-4 w-4" />
+                        ) : (
+                            <ShieldIcon className="mr-2 h-4 w-4" />
+                        )}
                         Continue
                     </Button>
 

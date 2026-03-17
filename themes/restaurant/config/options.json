@@ -23,5 +23,13 @@
         "name": "Footer",
         "id": "footer",
         "description": "Footer widgets"
-    }
+    },
+    "feature_1_title": "Fast Performance",
+    "feature_1_description": "Lightning-fast loading times and optimized performance.",
+    "feature_2_title": "Responsive Design",
+    "feature_2_description": "Perfect display on all devices and screen sizes.",
+    "feature_3_title": "Secure & Reliable",
+    "feature_3_description": "Built with security and reliability in mind.",
+    "newsletter_title": "Newsletter",
+    "newsletter_description": "Subscribe to our newsletter for updates."
 }

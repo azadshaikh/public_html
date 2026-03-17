@@ -27,7 +27,6 @@ class RegisterRequest extends FormRequest
         return [
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', Password::defaults()],
-            'terms' => ['accepted'],
         ];
     }
 
@@ -43,7 +42,6 @@ class RegisterRequest extends FormRequest
             'email.email' => 'Please enter a valid email address.',
             'email.unique' => 'An account with this email already exists.',
             'password.required' => 'Please create a password.',
-            'terms.accepted' => 'Please accept the terms of service to continue.',
         ];
     }
 }

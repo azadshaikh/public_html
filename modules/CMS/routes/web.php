@@ -154,10 +154,8 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
                 Route::prefix('editor')->name('editor.')->group(function (): void {
                     Route::get('/{directory}', [ThemeEditorController::class, 'index'])->name('index');
                     Route::get('/{directory}/files', [ThemeEditorController::class, 'files'])->name('files');
-                    Route::get('/{directory}/file/{path}', [ThemeEditorController::class, 'read'])
-                        ->where('path', '.*')->name('file.read');
-                    Route::put('/{directory}/file/{path}', [ThemeEditorController::class, 'save'])
-                        ->where('path', '.*')->name('file.save');
+                    Route::post('/{directory}/file-read', [ThemeEditorController::class, 'read'])->name('file.read');
+                    Route::post('/{directory}/file-save', [ThemeEditorController::class, 'save'])->name('file.save');
                     Route::post('/{directory}/file', [ThemeEditorController::class, 'create'])->name('file.create');
                     Route::post('/{directory}/upload', [ThemeEditorController::class, 'upload'])->name('upload');
                     Route::delete('/{directory}/file/{path}', [ThemeEditorController::class, 'delete'])

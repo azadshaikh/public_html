@@ -1,12 +1,13 @@
 import { useForm } from '@inertiajs/react';
-import { FormEvent, useState } from 'react';
+import { Loader2Icon, SettingsIcon } from 'lucide-react';
+import type { FormEvent} from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent } from '@/components/ui/card';
-import { Loader2Icon, SettingsIcon } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
 
 type ReleaseFormData = {
     package_identifier: string;

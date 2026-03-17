@@ -12,6 +12,14 @@ class SettingSeeder extends Seeder
      */
     public function run(): void
     {
+        // Branding settings are stored in .env, not the database.
+        set_env_values_bulk([
+            'BRANDING_NAME' => 'Astero',
+            'BRANDING_WEBSITE' => 'https://astero.in',
+            'BRANDING_LOGO' => 'https://test.astero.net.in/storage/01khsadnex76ph2e8bjacbcx5d/logo.svg',
+            'BRANDING_ICON' => 'https://test.astero.net.in/storage/01khsadnex76ph2e8bjacbcx5d/logo.svg',
+        ], false);
+
         $auditUserId = DB::table('users')->orderBy('id')->value('id');
 
         $settings = [

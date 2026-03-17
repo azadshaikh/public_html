@@ -276,8 +276,14 @@ class ThemeEditorController extends Controller implements HasMiddleware
     /**
      * Read a file's content
      */
-    public function read(string $directory, string $path): JsonResponse
+    public function read(Request $request, string $directory): JsonResponse
     {
+        $request->validate([
+            'path' => ['required', 'string', 'max:500'],
+        ]);
+
+        $path = (string) $request->input('path');
+
         if (! $this->validateFilePath($path)) {
             return response()->json(['error' => 'Invalid file path'], 403);
         }
@@ -336,12 +342,15 @@ class ThemeEditorController extends Controller implements HasMiddleware
     /**
      * Save a file's content
      */
-    public function save(Request $request, string $directory, string $path): JsonResponse
+    public function save(Request $request, string $directory): JsonResponse
     {
         $request->validate([
+            'path' => ['required', 'string', 'max:500'],
             'content' => ['required', 'string'],
             'label' => ['nullable', 'string', 'max:255'],
         ]);
+
+        $path = (string) $request->input('path');
 
         if (! $this->validateFilePath($path)) {
             Log::warning('SECURITY: Blocked theme editor save with invalid path', [

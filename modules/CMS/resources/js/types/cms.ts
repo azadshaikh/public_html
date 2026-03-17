@@ -848,7 +848,6 @@ export type ThemeIndexPageProps = {
     themes: ThemeListItem[];
     activeTheme: ThemeListItem | null;
     filters: ThemeIndexFilters;
-    statistics: ThemeIndexStatistics;
     availableSupports: string[];
 };
 
