@@ -10,6 +10,7 @@ use App\Scaffold\Column;
 use App\Scaffold\Filter;
 use App\Scaffold\ScaffoldDefinition;
 use App\Scaffold\StatusTab;
+use Modules\Todos\Definitions\TodoDefinition;
 use Tests\TestCase;
 
 /**
@@ -124,6 +125,88 @@ class ScaffoldDefinitionInertiaConfigTest extends TestCase
         foreach ($config as $key => $value) {
             $this->assertIsArray($value, "Top-level key '{$key}' must be an array.");
         }
+    }
+
+    public function test_inertia_page_prefix_is_derived_from_route_prefix(): void
+    {
+        $this->assertSame('widgets', $this->definition->getInertiaPagePrefix());
+    }
+
+    public function test_expected_page_components_follow_standard_crud_convention(): void
+    {
+        $this->assertSame([
+            'index' => 'widgets/index',
+            'create' => 'widgets/create',
+            'edit' => 'widgets/edit',
+            'show' => 'widgets/show',
+        ], $this->definition->expectedPageComponents());
+    }
+
+    public function test_expected_route_names_follow_standard_crud_convention(): void
+    {
+        $this->assertSame([
+            'index' => 'app.widgets.index',
+            'create' => 'app.widgets.create',
+            'store' => 'app.widgets.store',
+            'show' => 'app.widgets.show',
+            'edit' => 'app.widgets.edit',
+            'update' => 'app.widgets.update',
+            'destroy' => 'app.widgets.destroy',
+            'bulk-action' => 'app.widgets.bulk-action',
+        ], $this->definition->expectedRouteNames());
+    }
+
+    public function test_expected_permissions_and_ability_keys_are_derived_consistently(): void
+    {
+        $this->assertSame([
+            'view' => 'view_widgets',
+            'add' => 'add_widgets',
+            'edit' => 'edit_widgets',
+            'delete' => 'delete_widgets',
+        ], $this->definition->expectedPermissionNames());
+
+        $this->assertSame([
+            'viewWidgets' => 'view_widgets',
+            'addWidgets' => 'add_widgets',
+            'editWidgets' => 'edit_widgets',
+            'deleteWidgets' => 'delete_widgets',
+        ], $this->definition->expectedAbilityMap());
+    }
+
+    public function test_expected_file_paths_are_derived_for_app_scaffolds(): void
+    {
+        $this->assertSame([
+            'definition' => __FILE__,
+            'model' => base_path('app/Models/Widget.php'),
+            'page:index' => resource_path('js/pages/widgets/index.tsx'),
+            'page:create' => resource_path('js/pages/widgets/create.tsx'),
+            'page:edit' => resource_path('js/pages/widgets/edit.tsx'),
+            'page:show' => resource_path('js/pages/widgets/show.tsx'),
+        ], $this->definition->expectedFilePaths());
+
+        $this->assertSame([
+            'crud' => base_path('tests/Feature/WidgetCrudTest.php'),
+        ], $this->definition->expectedTestPaths());
+    }
+
+    public function test_expected_file_and_test_paths_are_derived_for_module_scaffolds(): void
+    {
+        $definition = new TodoDefinition;
+
+        $this->assertSame([
+            'definition' => base_path('modules/Todos/app/Definitions/TodoDefinition.php'),
+            'model' => base_path('modules/Todos/app/Models/Todo.php'),
+            'request' => base_path('modules/Todos/app/Http/Requests/TodoRequest.php'),
+            'page:index' => base_path('modules/Todos/resources/js/pages/todos/index.tsx'),
+            'page:create' => base_path('modules/Todos/resources/js/pages/todos/create.tsx'),
+            'page:edit' => base_path('modules/Todos/resources/js/pages/todos/edit.tsx'),
+            'page:show' => base_path('modules/Todos/resources/js/pages/todos/show.tsx'),
+            'abilities' => base_path('modules/Todos/config/abilities.php'),
+        ], $definition->expectedFilePaths());
+
+        $this->assertSame([
+            'crud' => base_path('modules/Todos/tests/Feature/TodoCrudTest.php'),
+        ], $definition->expectedTestPaths());
     }
 
     // =========================================================================

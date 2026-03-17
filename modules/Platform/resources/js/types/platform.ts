@@ -1,4 +1,11 @@
 import type { PaginatedData } from '@/types';
+import type {
+	ScaffoldActionConfig,
+	ScaffoldFilterState,
+	ScaffoldInertiaConfig,
+	ScaffoldRowActionPayload,
+	ScaffoldStatusTabConfig,
+} from '@/types/scaffold';
 
 export type PlatformOption = {
 	value: string | number;
@@ -12,50 +19,15 @@ export type PlatformActivity = {
 	causer_name: string | null;
 };
 
-export type PlatformActionPayload = {
-	key: string;
-	label: string;
-	url?: string;
-	method?: string;
-	confirm?: string;
-	variant?: string;
-	disabled?: boolean;
-	hidden?: boolean;
-};
+export type PlatformActionPayload = ScaffoldRowActionPayload;
 
-export type PlatformActionConfig = {
-	key: string;
-	label: string;
-	method?: string;
-	confirm?: string;
-	confirmBulk?: string;
-	scope?: 'row' | 'bulk' | 'both';
-	variant?: string;
-};
+export type PlatformActionConfig = ScaffoldActionConfig;
 
-export type PlatformStatusTabConfig = {
-	key: string;
-	label: string;
-	value?: string;
-	icon?: string;
-	color?: string;
-};
+export type PlatformStatusTabConfig = ScaffoldStatusTabConfig;
 
-export type PlatformScaffoldConfig = {
-	filters: Array<Record<string, unknown>>;
-	actions?: PlatformActionConfig[];
-	statusTabs: PlatformStatusTabConfig[];
-	settings: {
-		routePrefix: string;
-		entityName: string;
-		entityPlural: string;
-		perPage?: number;
-		defaultSort?: string;
-		defaultDirection?: 'asc' | 'desc';
-	};
-};
+export type PlatformScaffoldConfig = ScaffoldInertiaConfig;
 
-export type PlatformFilterState = Record<string, string | number | null | undefined>;
+export type PlatformFilterState = ScaffoldFilterState;
 
 export type PlatformIndexPageProps<T> = {
 	config: PlatformScaffoldConfig;

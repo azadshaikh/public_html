@@ -363,9 +363,58 @@ function SidebarSeparator({
   )
 }
 
+// Module-level state that persists across Inertia navigations
+let savedScrollTop = 0
+let hasInitiallyScrolled = false
+let isScrollingProgrammatically = false
+
 function SidebarContent({ className, ...props }: React.ComponentProps<"div">) {
+  const ref = React.useRef<HTMLDivElement>(null)
+
+  // Restore scroll position before paint (prevents jumps from React updates)
+  React.useLayoutEffect(() => {
+    const el = ref.current
+    if (!el) return
+
+    // Only restore if we've done initial scroll
+    if (hasInitiallyScrolled && el.scrollTop !== savedScrollTop) {
+      isScrollingProgrammatically = true
+      el.scrollTop = savedScrollTop
+      requestAnimationFrame(() => {
+        isScrollingProgrammatically = false
+      })
+    }
+  })
+
+  // Scroll to active item once on initial page load
+  React.useEffect(() => {
+    const el = ref.current
+    if (!el) return
+
+    // Only scroll once per JavaScript session (resets on page refresh)
+    if (hasInitiallyScrolled) return
+
+    // Wait for DOM and animations to settle
+    const timer = setTimeout(() => {
+      const active = el.querySelector('[data-active="true"]')
+      if (active) {
+        isScrollingProgrammatically = true
+        active.scrollIntoView({ block: "center", inline: "nearest" })
+        hasInitiallyScrolled = true
+        // Save after scrollIntoView completes
+        requestAnimationFrame(() => {
+          savedScrollTop = el.scrollTop
+          isScrollingProgrammatically = false
+        })
+      }
+    }, 150)
+
+    return () => clearTimeout(timer)
+  }, [])
+
   return (
     <div
+      ref={ref}
       data-slot="sidebar-content"
       data-sidebar="content"
       className={cn(
@@ -373,6 +422,13 @@ function SidebarContent({ className, ...props }: React.ComponentProps<"div">) {
         className
       )}
       {...props}
+      onScroll={(e) => {
+        // Don't save scroll position during programmatic scrolls
+        if (!isScrollingProgrammatically) {
+          savedScrollTop = e.currentTarget.scrollTop
+        }
+        props.onScroll?.(e)
+      }}
     />
   )
 }

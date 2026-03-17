@@ -1,12 +1,12 @@
 import { Link, usePage } from '@inertiajs/react';
 import { GlobeIcon, PlusIcon } from 'lucide-react';
 import { Datagrid } from '@/components/datagrid/datagrid';
-import type { DatagridColumn, DatagridTab } from '@/components/datagrid/datagrid';
+import type { DatagridColumn } from '@/components/datagrid/datagrid';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
-import { buildBulkActions, mapFilters, mapRowActions, mapStatusTab } from '../../../lib/helpers';
+import { buildBulkActions, buildDatagridState, mapRowActions } from '../../../lib/helpers';
 import type { PlatformIndexPageProps, WebsiteListItem } from '../../../types/platform';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -19,10 +19,7 @@ export default function WebsitesIndex({ config, rows, filters, statistics }: Pla
     const page = usePage<AuthenticatedSharedData>();
     const canAddWebsites = page.props.auth.abilities.addWebsites;
 
-    const gridFilters = mapFilters(config.filters, filters, 'Search websites...');
-    const statusTabs: DatagridTab[] = config.statusTabs.map((tab) =>
-        mapStatusTab(tab, statistics, String(filters.status ?? 'all')),
-    );
+    const { currentStatus, gridFilters, perPage, sorting, statusTabs } = buildDatagridState(config, filters, statistics, 'Search websites...');
 
     const columns: DatagridColumn<WebsiteListItem>[] = [
         {
@@ -94,31 +91,21 @@ export default function WebsitesIndex({ config, rows, filters, statistics }: Pla
             }
         >
             <Datagrid
-                action={route('platform.websites.index', { status: filters.status ?? 'all' })}
+                action={route('platform.websites.index', { status: currentStatus })}
                 rows={rows}
                 columns={columns}
                 filters={gridFilters}
                 tabs={{ name: 'status', items: statusTabs }}
                 getRowKey={(website) => website.id}
                 rowActions={(website) => mapRowActions(website.actions)}
-                bulkActions={buildBulkActions(config.actions, config.settings.routePrefix, String(filters.status ?? 'all'))}
+                bulkActions={buildBulkActions(config.actions, config.settings.routePrefix, currentStatus)}
                 empty={{
                     icon: <GlobeIcon className="size-5" />,
                     title: 'No websites found',
                     description: 'Create the first website to start automated provisioning and lifecycle tracking.',
                 }}
-                sorting={{
-                    sort: String(filters.sort ?? config.settings.defaultSort ?? 'created_at'),
-                    direction:
-                        String(filters.direction ?? config.settings.defaultDirection ?? 'desc') === 'asc'
-                            ? 'asc'
-                            : 'desc',
-                }}
-                perPage={{
-                    value: Number(filters.per_page ?? config.settings.perPage ?? rows.per_page),
-                    options: [15, 25, 50, 100],
-                    paramName: 'per_page',
-                }}
+                sorting={sorting}
+                perPage={perPage}
                 title="Provisioned websites"
                 description="Monitor deployment status, DNS routing, and customer associations for every site."
             />

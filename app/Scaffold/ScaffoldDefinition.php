@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace App\Scaffold;
 
 use App\Http\Middleware\EnsureSuperUserAccess;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Support\Str;
+use ReflectionClass;
 
 /**
  * ScaffoldDefinition - Defines a complete CRUD scaffold configuration
@@ -51,6 +54,12 @@ abstract class ScaffoldDefinition
      * Permission prefix for authorization
      */
     protected string $permissionPrefix = '';
+
+    /**
+     * Optional override for the Inertia page prefix when it intentionally differs
+     * from the route-derived convention.
+     */
+    protected ?string $inertiaPagePrefix = null;
 
     /**
      * Whether this scaffold is restricted to super users only.
@@ -350,6 +359,225 @@ abstract class ScaffoldDefinition
     public function getStatusField(): ?string
     {
         return $this->statusField;
+    }
+
+    /**
+     * Determine whether the scaffold model supports soft deletes.
+     */
+    public function usesSoftDeletes(): bool
+    {
+        $modelClass = $this->getModelClass();
+
+        if (! class_exists($modelClass)) {
+            return false;
+        }
+
+        return in_array(SoftDeletes::class, class_uses_recursive($modelClass), true);
+    }
+
+    /**
+     * Determine whether the scaffold should enforce conventional route names.
+     */
+    public function shouldValidateConventionalRouteNames(): bool
+    {
+        return true;
+    }
+
+    /**
+     * Derive the Inertia page prefix from the route prefix.
+     */
+    public function getInertiaPagePrefix(): string
+    {
+        if (is_string($this->inertiaPagePrefix) && $this->inertiaPagePrefix !== '') {
+            return $this->inertiaPagePrefix;
+        }
+
+        $segments = collect(explode('.', $this->getRoutePrefix()))
+            ->filter(fn (string $segment): bool => $segment !== '');
+
+        if ($segments->first() === 'app') {
+            $segments = $segments->slice(1)->values();
+        }
+
+        return $segments->implode('/');
+    }
+
+    /**
+     * @return array{index: string, create: string, edit: string, show: string}
+     */
+    public function expectedPageComponents(): array
+    {
+        $prefix = $this->getInertiaPagePrefix();
+
+        return [
+            'index' => $prefix.'/index',
+            'create' => $prefix.'/create',
+            'edit' => $prefix.'/edit',
+            'show' => $prefix.'/show',
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function expectedRouteNames(): array
+    {
+        $routePrefix = $this->getRoutePrefix();
+
+        $routes = [
+            'index' => $routePrefix.'.index',
+            'create' => $routePrefix.'.create',
+            'store' => $routePrefix.'.store',
+            'show' => $routePrefix.'.show',
+            'edit' => $routePrefix.'.edit',
+            'update' => $routePrefix.'.update',
+            'destroy' => $routePrefix.'.destroy',
+            'bulk-action' => $routePrefix.'.bulk-action',
+        ];
+
+        if ($this->usesSoftDeletes()) {
+            $routes['restore'] = $routePrefix.'.restore';
+            $routes['force-delete'] = $routePrefix.'.force-delete';
+        }
+
+        return $routes;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function expectedPermissionNames(): array
+    {
+        $prefix = $this->getPermissionPrefix();
+
+        $permissions = [
+            'view' => 'view_'.$prefix,
+            'add' => 'add_'.$prefix,
+            'edit' => 'edit_'.$prefix,
+            'delete' => 'delete_'.$prefix,
+        ];
+
+        if ($this->usesSoftDeletes()) {
+            $permissions['restore'] = 'restore_'.$prefix;
+        }
+
+        return $permissions;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function expectedAbilityMap(): array
+    {
+        return collect($this->expectedPermissionNames())
+            ->mapWithKeys(fn (string $permission): array => [Str::camel($permission) => $permission])
+            ->all();
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function expectedFilePaths(): array
+    {
+        $files = [
+            'definition' => $this->resolveClassFilePath(static::class),
+            'model' => $this->resolveClassFilePath($this->getModelClass()),
+        ];
+
+        $requestClass = $this->getRequestClass();
+
+        if (is_string($requestClass) && $requestClass !== '') {
+            $files['request'] = $this->resolveClassFilePath($requestClass);
+        }
+
+        $resourceClass = $this->getResourceClass();
+
+        if (is_string($resourceClass) && $resourceClass !== '') {
+            $files['resource'] = $this->resolveClassFilePath($resourceClass);
+        }
+
+        foreach ($this->expectedPageComponents() as $pageName => $component) {
+            $files['page:'.$pageName] = $this->resolvePageFilePath($component);
+        }
+
+        $moduleName = $this->getOwningModuleName();
+
+        if (is_string($moduleName) && $moduleName !== '') {
+            $files['abilities'] = base_path(sprintf('modules/%s/config/abilities.php', $moduleName));
+        }
+
+        return collect($files)
+            ->filter(fn (mixed $path): bool => is_string($path) && $path !== '')
+            ->all();
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function expectedTestPaths(): array
+    {
+        $entityTestName = Str::studly((string) Str::of($this->getEntityName())->singular()->replace(['-', '_'], ' '));
+        $moduleName = $this->getOwningModuleName();
+
+        if (is_string($moduleName) && $moduleName !== '') {
+            return [
+                'crud' => base_path(sprintf('modules/%s/tests/Feature/%sCrudTest.php', $moduleName, $entityTestName)),
+            ];
+        }
+
+        return [
+            'crud' => base_path(sprintf('tests/Feature/%sCrudTest.php', $entityTestName)),
+        ];
+    }
+
+    public function getOwningModuleName(): ?string
+    {
+        if (! str_starts_with(static::class, 'Modules\\')) {
+            return null;
+        }
+
+        $segments = explode('\\', static::class);
+
+        return $segments[1] ?? null;
+    }
+
+    protected function resolvePageFilePath(string $component): string
+    {
+        $moduleName = $this->getOwningModuleName();
+
+        if (is_string($moduleName) && $moduleName !== '') {
+            return base_path(sprintf('modules/%s/resources/js/pages/%s.tsx', $moduleName, $component));
+        }
+
+        return resource_path(sprintf('js/pages/%s.tsx', $component));
+    }
+
+    protected function resolveClassFilePath(string $class): ?string
+    {
+        if (class_exists($class)) {
+            $reflection = new ReflectionClass($class);
+            $filePath = $reflection->getFileName();
+
+            if (is_string($filePath) && $filePath !== '') {
+                return $filePath;
+            }
+        }
+
+        if (str_starts_with($class, 'App\\')) {
+            return base_path('app/'.str_replace('\\', '/', substr($class, strlen('App\\'))).'.php');
+        }
+
+        if (str_starts_with($class, 'Modules\\')) {
+            $segments = explode('\\', $class);
+            $moduleName = $segments[1] ?? null;
+            $relativePath = implode('/', array_slice($segments, 2));
+
+            if (is_string($moduleName) && $moduleName !== '' && $relativePath !== '') {
+                return base_path(sprintf('modules/%s/app/%s.php', $moduleName, $relativePath));
+            }
+        }
+
+        return null;
     }
 
     /**

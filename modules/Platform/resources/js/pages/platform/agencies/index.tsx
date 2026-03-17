@@ -1,12 +1,12 @@
 import { Link, usePage } from '@inertiajs/react';
 import { Building2Icon, PlusIcon } from 'lucide-react';
 import { Datagrid } from '@/components/datagrid/datagrid';
-import type { DatagridColumn, DatagridTab } from '@/components/datagrid/datagrid';
+import type { DatagridColumn } from '@/components/datagrid/datagrid';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
-import { buildBulkActions, mapFilters, mapRowActions, mapStatusTab } from '../../../lib/helpers';
+import { buildBulkActions, buildDatagridState, mapRowActions } from '../../../lib/helpers';
 import type { AgencyListItem, PlatformIndexPageProps } from '../../../types/platform';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -24,10 +24,7 @@ export default function AgenciesIndex({
     const page = usePage<AuthenticatedSharedData>();
     const canAddAgencies = page.props.auth.abilities.addAgencies;
 
-    const gridFilters = mapFilters(config.filters, filters, 'Search agencies...');
-    const statusTabs: DatagridTab[] = config.statusTabs.map((tab) =>
-        mapStatusTab(tab, statistics, String(filters.status ?? 'all')),
-    );
+    const { currentStatus, gridFilters, perPage, sorting, statusTabs } = buildDatagridState(config, filters, statistics, 'Search agencies...');
 
     const columns: DatagridColumn<AgencyListItem>[] = [
         {
@@ -104,31 +101,21 @@ export default function AgenciesIndex({
             }
         >
             <Datagrid
-                action={route('platform.agencies.index', { status: filters.status ?? 'all' })}
+                action={route('platform.agencies.index', { status: currentStatus })}
                 rows={rows}
                 columns={columns}
                 filters={gridFilters}
                 tabs={{ name: 'status', items: statusTabs }}
                 getRowKey={(agency) => agency.id}
                 rowActions={(agency) => mapRowActions(agency.actions)}
-                bulkActions={buildBulkActions(config.actions, config.settings.routePrefix, String(filters.status ?? 'all'))}
+                bulkActions={buildBulkActions(config.actions, config.settings.routePrefix, currentStatus)}
                 empty={{
                     icon: <Building2Icon className="size-5" />,
                     title: 'No agencies found',
                     description: 'Create the first agency to start organizing websites and servers.',
                 }}
-                sorting={{
-                    sort: String(filters.sort ?? config.settings.defaultSort ?? 'created_at'),
-                    direction:
-                        String(filters.direction ?? config.settings.defaultDirection ?? 'desc') === 'asc'
-                            ? 'asc'
-                            : 'desc',
-                }}
-                perPage={{
-                    value: Number(filters.per_page ?? config.settings.perPage ?? rows.per_page),
-                    options: [15, 25, 50, 100],
-                    paramName: 'per_page',
-                }}
+                sorting={sorting}
+                perPage={perPage}
                 title="Agency directory"
                 description="Track plan tiers, ownership, and agency-managed websites in one place."
             />

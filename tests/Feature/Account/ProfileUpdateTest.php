@@ -4,32 +4,28 @@ namespace Tests\Feature\Account;
 
 use App\Enums\Status;
 use App\Models\User;
-use App\Modules\ModuleManager;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
+use Tests\Support\InteractsWithModuleManifest;
 use Tests\TestCase;
 
 class ProfileUpdateTest extends TestCase
 {
+    use InteractsWithModuleManifest;
     use RefreshDatabase;
-
-    protected string $manifestPath;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->manifestPath = storage_path('framework/testing/profile-modules.json');
-
-        File::ensureDirectoryExists(dirname($this->manifestPath));
+        $this->setUpModuleManifest('profile-modules.json');
     }
 
     protected function tearDown(): void
     {
-        File::delete($this->manifestPath);
+        $this->tearDownModuleManifest();
 
         parent::tearDown();
     }
@@ -229,23 +225,5 @@ class ProfileUpdateTest extends TestCase
             'id' => $user->id,
             'deleted_at' => null,
         ]);
-    }
-
-    /**
-     * @param  array<string, string>  $statuses
-     */
-    private function setModuleStatuses(array $statuses): void
-    {
-        File::put(
-            $this->manifestPath,
-            json_encode($statuses, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR),
-        );
-
-        config()->set('modules.manifest', $this->manifestPath);
-        app()->forgetInstance(ModuleManager::class);
-        app()->singleton(ModuleManager::class, fn ($app): ModuleManager => new ModuleManager(
-            files: $app['files'],
-            config: $app['config'],
-        ));
     }
 }

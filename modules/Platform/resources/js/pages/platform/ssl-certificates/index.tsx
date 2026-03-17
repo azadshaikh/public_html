@@ -1,12 +1,12 @@
 import { Link, usePage } from '@inertiajs/react';
 import { PlusIcon, ShieldCheckIcon } from 'lucide-react';
 import { Datagrid } from '@/components/datagrid/datagrid';
-import type { DatagridColumn, DatagridTab } from '@/components/datagrid/datagrid';
+import type { DatagridColumn } from '@/components/datagrid/datagrid';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
-import { buildBulkActions, mapFilters, mapRowActions, mapStatusTab } from '../../../lib/helpers';
+import { buildBulkActions, buildDatagridState, mapRowActions } from '../../../lib/helpers';
 import type { PlatformIndexPageProps, SslCertificateListItem } from '../../../types/platform';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -24,10 +24,7 @@ export default function SslCertificatesIndex({
     const page = usePage<AuthenticatedSharedData>();
     const canEditDomains = page.props.auth.abilities.editDomains;
 
-    const gridFilters = mapFilters(config.filters, filters, 'Search certificates...');
-    const statusTabs: DatagridTab[] = config.statusTabs.map((tab) =>
-        mapStatusTab(tab, statistics, String(filters.status ?? 'all')),
-    );
+    const { currentStatus, gridFilters, perPage, sorting, statusTabs } = buildDatagridState(config, filters, statistics, 'Search certificates...');
 
     const columns: DatagridColumn<SslCertificateListItem>[] = [
         {
@@ -98,31 +95,21 @@ export default function SslCertificatesIndex({
             }
         >
             <Datagrid
-                action={route('platform.ssl-certificates.index', { status: filters.status ?? 'all' })}
+                action={route('platform.ssl-certificates.index', { status: currentStatus })}
                 rows={rows}
                 columns={columns}
                 filters={gridFilters}
                 tabs={{ name: 'status', items: statusTabs }}
                 getRowKey={(certificate) => certificate.id}
                 rowActions={(certificate) => mapRowActions(certificate.actions)}
-                bulkActions={buildBulkActions(config.actions, config.settings.routePrefix, String(filters.status ?? 'all'))}
+                bulkActions={buildBulkActions(config.actions, config.settings.routePrefix, currentStatus)}
                 empty={{
                     icon: <ShieldCheckIcon className="size-5" />,
                     title: 'No certificates found',
                     description: 'Certificates attached to domains will appear here with expiry and status details.',
                 }}
-                sorting={{
-                    sort: String(filters.sort ?? config.settings.defaultSort ?? 'created_at'),
-                    direction:
-                        String(filters.direction ?? config.settings.defaultDirection ?? 'desc') === 'asc'
-                            ? 'asc'
-                            : 'desc',
-                }}
-                perPage={{
-                    value: Number(filters.per_page ?? config.settings.perPage ?? rows.per_page),
-                    options: [15, 25, 50, 100],
-                    paramName: 'per_page',
-                }}
+                sorting={sorting}
+                perPage={perPage}
                 title="Global certificate inventory"
                 description="Use the domain links to inspect, replace, or generate certificates for specific domains."
             />

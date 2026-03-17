@@ -34,6 +34,11 @@ class ReleaseDefinition extends ScaffoldDefinition
         return ReleaseRequest::class;
     }
 
+    public function shouldValidateConventionalRouteNames(): bool
+    {
+        return false;
+    }
+
     public function columns(): array
     {
         return [

@@ -21,6 +21,8 @@ class DesignBlockDefinition extends ScaffoldDefinition
 
     protected string $permissionPrefix = 'design_blocks';
 
+    protected ?string $inertiaPagePrefix = 'cms/design-blocks';
+
     protected ?string $statusField = 'status';
 
     public function getModelClass(): string

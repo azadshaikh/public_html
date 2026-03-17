@@ -1,33 +1,29 @@
 import {
     CheckCircleIcon,
-    HourglassIcon,
-    ClockIcon,
-    GlobeIcon,
     CircleIcon,
+    ClockIcon,
     FileIcon,
+    GlobeIcon,
+    HourglassIcon,
     LayoutTemplateIcon,
     ListIcon,
     MenuIcon,
     PauseCircleIcon,
     Trash2Icon,
 } from 'lucide-react';
-import React from 'react';
+import type { LucideIcon } from 'lucide-react';
+import {
+    buildScaffoldDatagridState,
+    mapScaffoldFilters,
+    mapScaffoldStatusTab,
+} from '@/lib/scaffold-datagrid';
 import type {
-    DatagridFilter,
-    DatagridTab,
-} from '@/components/datagrid/datagrid';
-import type { StatusTabConfig } from '../types/cms';
+    ScaffoldFilterConfig,
+    ScaffoldFilterState,
+    ScaffoldStatusTabConfig,
+} from '@/types/scaffold';
 
-const COLOR_MAP: Record<string, DatagridTab['countVariant']> = {
-    primary: 'secondary',
-    success: 'success',
-    warning: 'warning',
-    info: 'info',
-    danger: 'danger',
-    secondary: 'secondary',
-};
-
-const REMIX_TO_LUCIDE: Record<string, React.FC<any>> = {
+const CMS_ICON_MAP: Record<string, LucideIcon> = {
     'ri-list-check': ListIcon,
     'ri-checkbox-circle-line': CheckCircleIcon,
     'ri-file-line': FileIcon,
@@ -41,84 +37,34 @@ const REMIX_TO_LUCIDE: Record<string, React.FC<any>> = {
     'ri-hourglass-line': HourglassIcon,
 };
 
-/**
- * Map a scaffold StatusTabConfig to a Datagrid tab definition.
- */
 export function mapStatusTab(
-    tab: StatusTabConfig,
+    tab: ScaffoldStatusTabConfig,
     statistics: Record<string, number>,
     currentStatus: string,
-): DatagridTab {
-    const value = tab.value ?? tab.key;
-    const count = value === 'all' ? undefined : (statistics[value] ?? 0);
-    const IconComponent = tab.icon ? REMIX_TO_LUCIDE[tab.icon] : undefined;
-
-    return {
-        label: tab.label,
-        value,
-        count,
-        icon: IconComponent
-            ? React.createElement(IconComponent, { className: 'size-4' })
-            : undefined,
-        active: currentStatus === value,
-        countVariant: COLOR_MAP[tab.color ?? 'secondary'] ?? 'secondary',
-    };
+) {
+    return mapScaffoldStatusTab(tab, statistics, currentStatus, CMS_ICON_MAP);
 }
 
 export function mapFilters(
-    configFilters: Record<string, any>[],
-    activeFilters: Record<string, any>,
-    searchPlaceholder: string = 'Search...',
-): DatagridFilter[] {
-    const filters: DatagridFilter[] = [];
+    configFilters: ScaffoldFilterConfig[],
+    activeFilters: ScaffoldFilterState,
+    searchPlaceholder = 'Search...',
+) {
+    return mapScaffoldFilters(configFilters, activeFilters, { searchPlaceholder });
+}
 
-    filters.push({
-        type: 'search',
-        name: 'search',
-        value: activeFilters.search ?? '',
-        placeholder: searchPlaceholder,
-        className: 'lg:min-w-80',
+export function buildDatagridState(
+    config: {
+        filters: ScaffoldFilterConfig[];
+        statusTabs: ScaffoldStatusTabConfig[];
+        settings: { perPage: number; defaultSort: string | null; defaultDirection: 'asc' | 'desc' };
+    },
+    filters: ScaffoldFilterState,
+    statistics: Record<string, number>,
+    searchPlaceholder: string,
+) {
+    return buildScaffoldDatagridState(config, filters, statistics, {
+        searchPlaceholder,
+        iconMap: CMS_ICON_MAP,
     });
-
-    if (!configFilters || !Array.isArray(configFilters)) {
-        return filters;
-    }
-
-    for (const f of configFilters) {
-        if (f.type === 'select') {
-            filters.push({
-                type: 'select',
-                name: f.key,
-                value: activeFilters[f.key] ?? '',
-                options: f.options ?? [],
-                multiple: f.multiple,
-            });
-        } else if (f.type === 'date_range') {
-            filters.push({
-                type: 'date_range',
-                name: f.key,
-                label: f.label,
-                value: activeFilters[f.key] ?? '',
-            });
-        } else if (f.type === 'boolean') {
-            filters.push({
-                type: 'boolean',
-                name: f.key,
-                label: f.label,
-                value: activeFilters[f.key] ?? '',
-                trueLabel: f.options?.['1'] ?? 'Yes',
-                falseLabel: f.options?.['0'] ?? 'No',
-            });
-        } else if (f.type === 'number') {
-            filters.push({
-                type: 'number',
-                name: f.key,
-                label: f.label,
-                value: activeFilters[f.key] ?? '',
-                placeholder: f.placeholder,
-            });
-        }
-    }
-
-    return filters;
 }

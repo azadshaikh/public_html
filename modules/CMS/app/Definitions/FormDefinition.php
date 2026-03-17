@@ -21,6 +21,8 @@ class FormDefinition extends ScaffoldDefinition
 
     protected string $permissionPrefix = 'cms_forms';
 
+    protected ?string $inertiaPagePrefix = 'cms/forms';
+
     protected ?string $statusField = 'status';
 
     public function getModelClass(): string

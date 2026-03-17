@@ -1,12 +1,12 @@
 import { Link, usePage } from '@inertiajs/react';
 import { HardDriveIcon, PlusIcon } from 'lucide-react';
 import { Datagrid } from '@/components/datagrid/datagrid';
-import type { DatagridColumn, DatagridTab } from '@/components/datagrid/datagrid';
+import type { DatagridColumn } from '@/components/datagrid/datagrid';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
-import { buildBulkActions, mapFilters, mapRowActions, mapStatusTab } from '../../../lib/helpers';
+import { buildBulkActions, buildDatagridState, mapRowActions } from '../../../lib/helpers';
 import type { PlatformIndexPageProps, ServerListItem } from '../../../types/platform';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -19,10 +19,7 @@ export default function ServersIndex({ config, rows, filters, statistics }: Plat
     const page = usePage<AuthenticatedSharedData>();
     const canAddServers = page.props.auth.abilities.addServers;
 
-    const gridFilters = mapFilters(config.filters, filters, 'Search servers...');
-    const statusTabs: DatagridTab[] = config.statusTabs.map((tab) =>
-        mapStatusTab(tab, statistics, String(filters.status ?? 'all')),
-    );
+    const { currentStatus, gridFilters, perPage, sorting, statusTabs } = buildDatagridState(config, filters, statistics, 'Search servers...');
 
     const columns: DatagridColumn<ServerListItem>[] = [
         {
@@ -93,31 +90,21 @@ export default function ServersIndex({ config, rows, filters, statistics }: Plat
             }
         >
             <Datagrid
-                action={route('platform.servers.index', { status: filters.status ?? 'all' })}
+                action={route('platform.servers.index', { status: currentStatus })}
                 rows={rows}
                 columns={columns}
                 filters={gridFilters}
                 tabs={{ name: 'status', items: statusTabs }}
                 getRowKey={(server) => server.id}
                 rowActions={(server) => mapRowActions(server.actions)}
-                bulkActions={buildBulkActions(config.actions, config.settings.routePrefix, String(filters.status ?? 'all'))}
+                bulkActions={buildBulkActions(config.actions, config.settings.routePrefix, currentStatus)}
                 empty={{
                     icon: <HardDriveIcon className="size-5" />,
                     title: 'No servers found',
                     description: 'Add an existing server or provision a fresh VPS to get started.',
                 }}
-                sorting={{
-                    sort: String(filters.sort ?? config.settings.defaultSort ?? 'created_at'),
-                    direction:
-                        String(filters.direction ?? config.settings.defaultDirection ?? 'desc') === 'asc'
-                            ? 'asc'
-                            : 'desc',
-                }}
-                perPage={{
-                    value: Number(filters.per_page ?? config.settings.perPage ?? rows.per_page),
-                    options: [15, 25, 50, 100],
-                    paramName: 'per_page',
-                }}
+                sorting={sorting}
+                perPage={perPage}
                 title="Infrastructure"
                 description="Watch provisioning status, provider coverage, and domain capacity across servers."
             />

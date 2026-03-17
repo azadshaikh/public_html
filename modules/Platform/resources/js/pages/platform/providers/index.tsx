@@ -1,12 +1,12 @@
 import { Link, usePage } from '@inertiajs/react';
 import { PlusIcon, ServerCogIcon } from 'lucide-react';
 import { Datagrid } from '@/components/datagrid/datagrid';
-import type { DatagridColumn, DatagridTab } from '@/components/datagrid/datagrid';
+import type { DatagridColumn } from '@/components/datagrid/datagrid';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
-import { buildBulkActions, mapFilters, mapRowActions, mapStatusTab } from '../../../lib/helpers';
+import { buildBulkActions, buildDatagridState, mapRowActions } from '../../../lib/helpers';
 import type { PlatformIndexPageProps, ProviderListItem } from '../../../types/platform';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -19,10 +19,7 @@ export default function ProvidersIndex({ config, rows, filters, statistics }: Pl
     const page = usePage<AuthenticatedSharedData>();
     const canAddProviders = page.props.auth.abilities.addProviders;
 
-    const gridFilters = mapFilters(config.filters, filters, 'Search providers...');
-    const statusTabs: DatagridTab[] = config.statusTabs.map((tab) =>
-        mapStatusTab(tab, statistics, String(filters.status ?? 'all')),
-    );
+    const { currentStatus, gridFilters, perPage, sorting, statusTabs } = buildDatagridState(config, filters, statistics, 'Search providers...');
 
     const columns: DatagridColumn<ProviderListItem>[] = [
         {
@@ -87,31 +84,21 @@ export default function ProvidersIndex({ config, rows, filters, statistics }: Pl
             }
         >
             <Datagrid
-                action={route('platform.providers.index', { status: filters.status ?? 'all' })}
+                action={route('platform.providers.index', { status: currentStatus })}
                 rows={rows}
                 columns={columns}
                 filters={gridFilters}
                 tabs={{ name: 'status', items: statusTabs }}
                 getRowKey={(provider) => provider.id}
                 rowActions={(provider) => mapRowActions(provider.actions)}
-                bulkActions={buildBulkActions(config.actions, config.settings.routePrefix, String(filters.status ?? 'all'))}
+                bulkActions={buildBulkActions(config.actions, config.settings.routePrefix, currentStatus)}
                 empty={{
                     icon: <ServerCogIcon className="size-5" />,
                     title: 'No providers found',
                     description: 'Create provider accounts for DNS, CDN, registrar, or cloud infrastructure integrations.',
                 }}
-                sorting={{
-                    sort: String(filters.sort ?? config.settings.defaultSort ?? 'created_at'),
-                    direction:
-                        String(filters.direction ?? config.settings.defaultDirection ?? 'desc') === 'asc'
-                            ? 'asc'
-                            : 'desc',
-                }}
-                perPage={{
-                    value: Number(filters.per_page ?? config.settings.perPage ?? rows.per_page),
-                    options: [15, 25, 50, 100],
-                    paramName: 'per_page',
-                }}
+                sorting={sorting}
+                perPage={perPage}
                 title="Connected providers"
                 description="Monitor upstream account coverage, vendor mix, and account status for every integration."
             />

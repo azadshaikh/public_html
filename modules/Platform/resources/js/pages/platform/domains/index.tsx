@@ -1,12 +1,12 @@
 import { Link, usePage } from '@inertiajs/react';
 import { GlobeIcon, PlusIcon } from 'lucide-react';
 import { Datagrid } from '@/components/datagrid/datagrid';
-import type { DatagridColumn, DatagridTab } from '@/components/datagrid/datagrid';
+import type { DatagridColumn } from '@/components/datagrid/datagrid';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
-import { buildBulkActions, mapFilters, mapRowActions, mapStatusTab } from '../../../lib/helpers';
+import { buildBulkActions, buildDatagridState, mapRowActions } from '../../../lib/helpers';
 import type { DomainListItem, PlatformIndexPageProps } from '../../../types/platform';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -19,10 +19,7 @@ export default function DomainsIndex({ config, rows, filters, statistics }: Plat
     const page = usePage<AuthenticatedSharedData>();
     const canAddDomains = page.props.auth.abilities.addDomains;
 
-    const gridFilters = mapFilters(config.filters, filters, 'Search domains...');
-    const statusTabs: DatagridTab[] = config.statusTabs.map((tab) =>
-        mapStatusTab(tab, statistics, String(filters.status ?? 'all')),
-    );
+    const { currentStatus, gridFilters, perPage, sorting, statusTabs } = buildDatagridState(config, filters, statistics, 'Search domains...');
 
     const columns: DatagridColumn<DomainListItem>[] = [
         {
@@ -88,31 +85,21 @@ export default function DomainsIndex({ config, rows, filters, statistics }: Plat
             }
         >
             <Datagrid
-                action={route('platform.domains.index', { status: filters.status ?? 'all' })}
+                action={route('platform.domains.index', { status: currentStatus })}
                 rows={rows}
                 columns={columns}
                 filters={gridFilters}
                 tabs={{ name: 'status', items: statusTabs }}
                 getRowKey={(domain) => domain.id}
                 rowActions={(domain) => mapRowActions(domain.actions)}
-                bulkActions={buildBulkActions(config.actions, config.settings.routePrefix, String(filters.status ?? 'all'))}
+                bulkActions={buildBulkActions(config.actions, config.settings.routePrefix, currentStatus)}
                 empty={{
                     icon: <GlobeIcon className="size-5" />,
                     title: 'No domains found',
                     description: 'Add a domain to start tracking registrar details, SSL coverage, and DNS records.',
                 }}
-                sorting={{
-                    sort: String(filters.sort ?? config.settings.defaultSort ?? 'created_at'),
-                    direction:
-                        String(filters.direction ?? config.settings.defaultDirection ?? 'desc') === 'asc'
-                            ? 'asc'
-                            : 'desc',
-                }}
-                perPage={{
-                    value: Number(filters.per_page ?? config.settings.perPage ?? rows.per_page),
-                    options: [15, 25, 50, 100],
-                    paramName: 'per_page',
-                }}
+                sorting={sorting}
+                perPage={perPage}
                 title="Registered domains"
                 description="Review expiration windows, registrar coverage, and agency ownership for every domain."
             />

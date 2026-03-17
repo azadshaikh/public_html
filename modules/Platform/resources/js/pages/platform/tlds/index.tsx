@@ -1,12 +1,12 @@
 import { Link, usePage } from '@inertiajs/react';
 import { Globe2Icon, PlusIcon } from 'lucide-react';
 import { Datagrid } from '@/components/datagrid/datagrid';
-import type { DatagridColumn, DatagridTab } from '@/components/datagrid/datagrid';
+import type { DatagridColumn } from '@/components/datagrid/datagrid';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
-import { buildBulkActions, mapFilters, mapRowActions, mapStatusTab } from '../../../lib/helpers';
+import { buildBulkActions, buildDatagridState, mapRowActions } from '../../../lib/helpers';
 import type { PlatformIndexPageProps, TldListItem } from '../../../types/platform';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -19,10 +19,7 @@ export default function TldsIndex({ config, rows, filters, statistics }: Platfor
     const page = usePage<AuthenticatedSharedData>();
     const canAddTlds = page.props.auth.abilities.addTlds;
 
-    const gridFilters = mapFilters(config.filters, filters, 'Search TLDs...');
-    const statusTabs: DatagridTab[] = config.statusTabs.map((tab) =>
-        mapStatusTab(tab, statistics, String(filters.status ?? 'all')),
-    );
+    const { currentStatus, gridFilters, perPage, sorting, statusTabs } = buildDatagridState(config, filters, statistics, 'Search TLDs...');
 
     const columns: DatagridColumn<TldListItem>[] = [
         {
@@ -87,31 +84,21 @@ export default function TldsIndex({ config, rows, filters, statistics }: Platfor
             }
         >
             <Datagrid
-                action={route('platform.tlds.index', { status: filters.status ?? 'all' })}
+                action={route('platform.tlds.index', { status: currentStatus })}
                 rows={rows}
                 columns={columns}
                 filters={gridFilters}
                 tabs={{ name: 'status', items: statusTabs }}
                 getRowKey={(item) => item.id}
                 rowActions={(item) => mapRowActions(item.actions)}
-                bulkActions={buildBulkActions(config.actions, config.settings.routePrefix, String(filters.status ?? 'all'))}
+                bulkActions={buildBulkActions(config.actions, config.settings.routePrefix, currentStatus)}
                 empty={{
                     icon: <Globe2Icon className="size-5" />,
                     title: 'No TLDs found',
                     description: 'Create TLD records to power domain search, pricing, and affiliate routing.',
                 }}
-                sorting={{
-                    sort: String(filters.sort ?? config.settings.defaultSort ?? 'created_at'),
-                    direction:
-                        String(filters.direction ?? config.settings.defaultDirection ?? 'desc') === 'asc'
-                            ? 'asc'
-                            : 'desc',
-                }}
-                perPage={{
-                    value: Number(filters.per_page ?? config.settings.perPage ?? rows.per_page),
-                    options: [15, 25, 50, 100],
-                    paramName: 'per_page',
-                }}
+                sorting={sorting}
+                perPage={perPage}
                 title="Managed TLDs"
                 description="Review pricing, WHOIS coverage, and suggested extension flags across your catalog."
             />

@@ -5,45 +5,33 @@ namespace App\Modules\Tests\Feature;
 use App\Enums\Status;
 use App\Models\Role;
 use App\Models\User;
-use App\Modules\ModuleManager;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\File;
 use Inertia\Testing\AssertableInertia as Assert;
+use Tests\Support\InteractsWithModuleManifest;
 use Tests\TestCase;
 
 class ModuleManagementTest extends TestCase
 {
+    use InteractsWithModuleManifest;
     use RefreshDatabase;
-
-    protected string $manifestPath;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->manifestPath = storage_path('framework/testing/modules-management.json');
-
-        File::ensureDirectoryExists(dirname($this->manifestPath));
-        File::put($this->manifestPath, json_encode([
+        $this->setUpModuleManifest('modules-management.json', [
             'CMS' => 'enabled',
             'ChatBot' => 'enabled',
             'Todos' => 'disabled',
-        ], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
-
-        config()->set('modules.manifest', $this->manifestPath);
-        app()->forgetInstance(ModuleManager::class);
-        app()->singleton(ModuleManager::class, fn ($app): ModuleManager => new ModuleManager(
-            files: $app['files'],
-            config: $app['config'],
-        ));
+        ]);
 
         $this->seed(RolesAndPermissionsSeeder::class);
     }
 
     protected function tearDown(): void
     {
-        File::delete($this->manifestPath);
+        $this->tearDownModuleManifest();
 
         parent::tearDown();
     }
@@ -68,7 +56,7 @@ class ModuleManagementTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page): Assert => $page
                 ->component('modules/index')
-                ->has('managedModules', 3)
+                ->has('managedModules', 5)
                 ->where('managedModules.0.name', 'CMS')
                 ->where('managedModules.0.version', '1.0.0')
                 ->where('managedModules.0.author', null)
@@ -84,8 +72,12 @@ class ModuleManagementTest extends TestCase
                 ->where('managedModules.1.homepage', 'https://asterodigital.com')
                 ->where('managedModules.1.icon', fn (string $icon): bool => str_contains($icon, '<svg'))
                 ->where('managedModules.1.status', 'enabled')
-                ->where('managedModules.2.name', 'Todos')
-                ->where('managedModules.2.status', 'disabled'));
+                ->where('managedModules.2.name', 'Platform')
+                ->where('managedModules.2.status', 'disabled')
+                ->where('managedModules.3.name', 'ReleaseManager')
+                ->where('managedModules.3.status', 'disabled')
+                ->where('managedModules.4.name', 'Todos')
+                ->where('managedModules.4.status', 'disabled'));
     }
 
     public function test_super_users_can_update_module_statuses(): void
@@ -111,8 +103,10 @@ class ModuleManagementTest extends TestCase
         $this->assertSame([
             'CMS' => 'disabled',
             'ChatBot' => 'enabled',
+            'Platform' => 'disabled',
+            'ReleaseManager' => 'disabled',
             'Todos' => 'enabled',
-        ], json_decode((string) File::get($this->manifestPath), true, 512, JSON_THROW_ON_ERROR));
+        ], json_decode((string) file_get_contents($this->moduleManifestPath), true, 512, JSON_THROW_ON_ERROR));
     }
 
     public function test_non_super_users_cannot_view_the_module_management_page(): void

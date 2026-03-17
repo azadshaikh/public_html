@@ -27,6 +27,8 @@ class MenuDefinition extends ScaffoldDefinition
 
     protected string $permissionPrefix = 'menus';
 
+    protected ?string $inertiaPagePrefix = 'cms/menus';
+
     protected ?string $statusField = null; // Uses is_active boolean, not status column
 
     public function getModelClass(): string

@@ -4,6 +4,11 @@ import type {
     UploadSettings,
 } from '@/types/media';
 import type { PaginatedData } from '@/types/pagination';
+import type {
+    ScaffoldFilterState,
+    ScaffoldInertiaConfig,
+    ScaffoldStatusTabConfig,
+} from '@/types/scaffold';
 
 // ================================================================
 // Common types
@@ -98,47 +103,15 @@ export type IntegrationsPageProps = {
 // Shared scaffold filter state (from collectRequestFilters)
 // ================================================================
 
-export type ScaffoldFilters = {
-    search: string;
-    status: string;
-    sort: string;
-    direction: 'asc' | 'desc';
-    per_page: number;
-    view?: string;
-    [key: string]: string | number | undefined;
-};
+export type ScaffoldFilters = ScaffoldFilterState;
 
 // ================================================================
 // Shared scaffold config types (from toInertiaConfig)
 // ================================================================
 
-export type StatusTabConfig = {
-    key: string;
-    label: string;
-    value?: string;
-    icon?: string;
-    color?: string;
-    default?: boolean;
-};
+export type StatusTabConfig = ScaffoldStatusTabConfig;
 
-export type InertiaConfig = {
-    columns: Record<string, unknown>[];
-    filters: Record<string, unknown>[];
-    actions: Record<string, unknown>[];
-    statusTabs: StatusTabConfig[];
-    settings: {
-        perPage: number;
-        defaultSort: string;
-        defaultDirection: 'asc' | 'desc';
-        enableBulkActions: boolean;
-        enableExport: boolean;
-        hasNotes: boolean;
-        entityName: string;
-        entityPlural: string;
-        routePrefix: string;
-        statusField: string | null;
-    };
-};
+export type InertiaConfig = ScaffoldInertiaConfig;
 
 export type EmptyStateConfig = {
     icon?: string;
