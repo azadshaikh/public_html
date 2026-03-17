@@ -51,7 +51,30 @@ function CategoryPreview({ category }: { category: CategoryListItem }) {
     );
 }
 
+function formatPermalinkLabel(
+    permalinkUrl: string | null,
+    slug: string,
+): string {
+    if (!permalinkUrl) {
+        return `/${slug}`;
+    }
+
+    try {
+        const parsedUrl = new URL(permalinkUrl, 'https://example.test');
+        const label = `${parsedUrl.pathname}${parsedUrl.search}${parsedUrl.hash}`;
+
+        return label === '' ? `/${slug}` : label;
+    } catch {
+        return permalinkUrl;
+    }
+}
+
 function CategoryMeta({ category }: { category: CategoryListItem }) {
+    const permalinkLabel = formatPermalinkLabel(
+        category.permalink_url,
+        category.slug,
+    );
+
     return (
         <div className="flex flex-wrap items-center gap-1.5 pt-1 text-sm sm:gap-2">
             {category.permalink_url ? (
@@ -62,12 +85,12 @@ function CategoryMeta({ category }: { category: CategoryListItem }) {
                     className="inline-flex max-w-[18rem] items-center gap-1 font-mono text-xs leading-none text-muted-foreground transition-colors hover:text-foreground"
                 >
                     <ExternalLinkIcon className="size-3.5 shrink-0" />
-                    <span className="truncate leading-none pt-1">/{category.slug}</span>
+                    <span className="truncate leading-none">{permalinkLabel}</span>
                 </a>
             ) : (
                 <span className="inline-flex max-w-[18rem] items-center gap-1 font-mono text-xs leading-none text-muted-foreground">
                     <ExternalLinkIcon className="size-3.5 shrink-0" />
-                    <span className="truncate leading-none">/{category.slug}</span>
+                    <span className="truncate leading-none">{permalinkLabel}</span>
                 </span>
             )}
             {category.parent_name ? (
@@ -170,7 +193,7 @@ export default function CategoriesIndex({
             cell: (cat) => (
                 <div className="space-y-0.5 text-sm">
                     <div className="text-xs text-muted-foreground">
-                        {getCategoryDateLabel(cat)}
+                        {getCategoryDateLabel()}
                     </div>
                     <div className="font-medium text-foreground">
                         {cat.display_date}
@@ -361,7 +384,7 @@ export default function CategoriesIndex({
                                 </div>
                                 <div className="rounded-lg border bg-muted/30 px-3 py-2">
                                     <div className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                                        {getCategoryDateLabel(cat)}
+                                        {getCategoryDateLabel()}
                                     </div>
                                     <div className="mt-1 text-sm font-medium text-foreground">
                                         {cat.display_date}
