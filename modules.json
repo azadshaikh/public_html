@@ -1,7 +1,3 @@
 {
-    "CMS": "enabled",
-    "ChatBot": "enabled",
-    "Platform": "enabled",
-    "ReleaseManager": "enabled",
-    "Todos": "enabled"
+    "CMS": "enabled"
 }
