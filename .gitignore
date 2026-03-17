@@ -28,3 +28,4 @@ yarn-error.log
 /.nova
 /.zed
 public/robots.txt
+/modules.json
