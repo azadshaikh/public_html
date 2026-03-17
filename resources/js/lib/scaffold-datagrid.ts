@@ -64,6 +64,11 @@ type BuildBulkActionOptions<T> = {
     extraPayload?: Record<string, unknown>;
 };
 
+type StatusCondition = [
+    '=' | '!=' | 'in' | 'not_in' | string,
+    string | string[],
+];
+
 const DEFAULT_COLOR_MAP: Record<string, DatagridTab['countVariant']> = {
     primary: 'secondary',
     success: 'success',
@@ -442,6 +447,31 @@ function normalizeString(value: unknown): string {
 
 function normalizeDirection(value: unknown): 'asc' | 'desc' {
     return String(value).toLowerCase() === 'asc' ? 'asc' : 'desc';
+}
+
+function matchesStatusCondition(
+    condition: StatusCondition | undefined,
+    currentStatus: string,
+): boolean {
+    if (!condition || !Array.isArray(condition)) {
+        return true;
+    }
+
+    const [operator, value] = condition;
+    const values = Array.isArray(value) ? value : [value];
+
+    switch (operator) {
+        case '=':
+            return currentStatus === values[0];
+        case '!=':
+            return currentStatus !== values[0];
+        case 'in':
+            return values.includes(currentStatus);
+        case 'not_in':
+            return !values.includes(currentStatus);
+        default:
+            return true;
+    }
 }
 
 function normalizeNumber(value: unknown, fallback: number): number {
