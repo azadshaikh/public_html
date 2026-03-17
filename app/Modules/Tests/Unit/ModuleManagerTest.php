@@ -20,7 +20,7 @@ class ModuleManagerTest extends TestCase
             ->map(fn (ModuleManifest $module): string => $module->slug)
             ->all();
 
-        $this->assertEqualsCanonicalizing(['chatbot', 'cms', 'todos'], $modules);
+        $this->assertEqualsCanonicalizing(['chatbot', 'cms', 'platform', 'releasemanager', 'todos'], $modules);
     }
 
     public function test_it_discovers_the_sample_cms_module(): void
@@ -31,7 +31,7 @@ class ModuleManagerTest extends TestCase
 
         $this->assertNotNull($module);
         $this->assertSame('CMS', $module->name);
-        $this->assertSame('Modules\\Cms\\', $module->namespace);
+        $this->assertSame('Modules\\CMS\\', $module->namespace);
         $this->assertNull($module->author);
         $this->assertNull($module->homepage);
         $this->assertNull($module->icon);
@@ -138,7 +138,7 @@ class ModuleManagerTest extends TestCase
 
     public function test_module_routes_are_registered_with_the_web_middleware_group(): void
     {
-        collect(['cms.index', 'chatbot.index', 'todos.index'])
+        collect(['cms.pages.index', 'chatbot.index', 'app.todos.index'])
             ->each(function (string $routeName): void {
                 $route = resolve(Router::class)->getRoutes()->getByName($routeName);
 

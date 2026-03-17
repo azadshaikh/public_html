@@ -25,6 +25,12 @@ return [
     'deleteDomains' => 'delete_domains',
     'restoreDomains' => 'restore_domains',
 
+    'viewDomainDnsRecords' => 'view_domain_dns_records',
+    'addDomainDnsRecords' => 'add_domain_dns_records',
+    'editDomainDnsRecords' => 'edit_domain_dns_records',
+    'deleteDomainDnsRecords' => 'delete_domain_dns_records',
+    'restoreDomainDnsRecords' => 'restore_domain_dns_records',
+
     'viewTlds' => 'view_tlds',
     'addTlds' => 'add_tlds',
     'editTlds' => 'edit_tlds',

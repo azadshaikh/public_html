@@ -169,7 +169,7 @@ class PostCrudMigrationTest extends TestCase
             ->assertInertia(fn (Assert $page): Assert => $page
                 ->component('cms/posts/edit')
                 ->where('pickerFilters.picker', '1')
-                ->where('uploadSettings.max_files_per_upload', config('media.max_files_per_upload', 10))
+                ->where('uploadSettings.max_files_per_upload', (int) config('media.max_files_per_upload', 10))
                 ->where('uploadSettings.upload_route', route('app.media.upload-media'))
             );
     }

@@ -26,7 +26,7 @@ class UserAvatarTest extends TestCase
         $avatar = new UserAvatar($user);
 
         $this->assertSame(
-            Storage::disk('public')->url('avatars/jane-doe.png'),
+            (string) get_media_url('avatars/jane-doe.png', get_storage_disk(), false),
             $avatar->toInertiaProperty($this->propertyContext()),
         );
     }

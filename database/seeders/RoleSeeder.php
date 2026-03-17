@@ -16,25 +16,7 @@ class RoleSeeder extends Seeder
         $roles = $this->getDefaultRoles();
 
         foreach ($roles as $roleData) {
-            DB::table('roles')->updateOrInsert(
-                [
-                    'name' => $roleData['name'],
-                    'guard_name' => $roleData['guard_name'],
-                ],
-                [
-                    'id' => $roleData['id'],
-                    'display_name' => $roleData['display_name'],
-                    'status' => 'active',
-                    'updated_at' => $now,
-                    'created_at' => $now,
-                    'deleted_at' => null,
-                ],
-            );
-
-            $roleId = (int) DB::table('roles')
-                ->where('name', $roleData['name'])
-                ->where('guard_name', $roleData['guard_name'])
-                ->value('id');
+            $roleId = $this->upsertRole($roleData, $now);
 
             $this->assignPermissionsToRole($roleId, $roleData['name']);
 
@@ -89,6 +71,43 @@ class RoleSeeder extends Seeder
                 'guard_name' => 'web',
             ],
         ];
+    }
+
+    /**
+     * @param  array{id:int,name:string,display_name:string,guard_name:string}  $roleData
+     */
+    private function upsertRole(array $roleData, mixed $now): int
+    {
+        $existingRole = DB::table('roles')
+            ->where('name', $roleData['name'])
+            ->where('guard_name', $roleData['guard_name'])
+            ->first();
+
+        if ($existingRole) {
+            DB::table('roles')
+                ->where('id', $existingRole->id)
+                ->update([
+                    'display_name' => $roleData['display_name'],
+                    'status' => 'active',
+                    'updated_at' => $now,
+                    'deleted_at' => null,
+                ]);
+
+            return (int) $existingRole->id;
+        }
+
+        DB::table('roles')->insert([
+            'id' => $roleData['id'],
+            'name' => $roleData['name'],
+            'guard_name' => $roleData['guard_name'],
+            'display_name' => $roleData['display_name'],
+            'status' => 'active',
+            'updated_at' => $now,
+            'created_at' => $now,
+            'deleted_at' => null,
+        ]);
+
+        return $roleData['id'];
     }
 
     /**

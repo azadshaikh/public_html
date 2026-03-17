@@ -26,7 +26,7 @@ class ReleaseCrudMigrationTest extends TestCase
 
         $this->assertIsString($contents);
         $this->assertIsString($indexPage);
-        $this->assertStringContainsString("route('releasemanager.releases.next-version'", $contents);
+        $this->assertStringContainsString('route(`${routeNamespace}.next-version`', $contents);
         $this->assertStringContainsString('type="date"', $contents);
         $this->assertStringContainsString('put(submitUrl);', $contents);
         $this->assertStringNotContainsString("import axios from 'axios';", $contents);

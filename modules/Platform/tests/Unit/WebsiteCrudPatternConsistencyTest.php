@@ -66,7 +66,7 @@ class WebsiteCrudPatternConsistencyTest extends TestCase
 
         $this->assertNotFalse($controllerContents, 'Failed to read modules/Platform/app/Http/Controllers/WebsiteController.php');
         $this->assertStringContainsString("auth()->user()?->can('edit_websites')", $controllerContents);
-        $this->assertStringContainsString("'secrets' => \$canRevealSecrets ? \$website->secrets()->orderBy('key')->get() : collect(),", $controllerContents);
+        $this->assertStringContainsString("'secrets' => (\$canRevealSecrets ? \$website->secrets()->orderBy('key')->get() : collect())", $controllerContents);
     }
 
     public function test_website_show_secret_reveal_fetch_uses_post_with_csrf(): void
@@ -76,7 +76,7 @@ class WebsiteCrudPatternConsistencyTest extends TestCase
 
         $this->assertNotFalse($viewContents, 'Failed to read modules/Platform/resources/views/websites/show.blade.php');
         $this->assertStringContainsString("method: 'POST'", $viewContents);
-        $this->assertStringContainsString("'X-CSRF-TOKEN': csrf()", $viewContents);
+        $this->assertStringContainsString("'X-CSRF-TOKEN': this.csrfToken", $viewContents);
         $this->assertStringNotContainsString("method: 'GET'", $viewContents);
     }
 }

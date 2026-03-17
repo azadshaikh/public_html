@@ -573,6 +573,31 @@ Route::prefix($adminPrefix)->group(function (): void {
 });
 
 // --- Authentication Routes ---
+if (app()->environment('testing')) {
+    Route::middleware(['web', 'auth', 'permission:view_users'])
+        ->get('/_test/authorization/view-users', fn () => response('ok'))
+        ->name('test.authorization.view-users');
+
+    Route::middleware(['web', 'auth', EnsureSuperUserAccess::class])
+        ->get('/_test/authorization/super-user-only', fn () => response('ok'))
+        ->name('test.authorization.super-user-only');
+
+    Route::middleware(['web', 'auth', 'role:administrator'])
+        ->get('/_test/authorization/admin-only', fn () => response('ok'))
+        ->name('test.authorization.admin-only');
+
+    Route::middleware('web')->prefix('/_test/errors')->group(function (): void {
+        Route::get('/401', fn () => abort(401))->name('test.errors.401');
+        Route::get('/402', fn () => abort(402, 'Billing access is required.'))->name('test.errors.402');
+        Route::get('/403', fn () => abort(403, 'You are not allowed to access this area.'))->name('test.errors.403');
+        Route::get('/419', fn () => abort(419))->name('test.errors.419');
+        Route::get('/429', fn () => abort(429))->name('test.errors.429');
+        Route::get('/500', fn () => abort(500))->name('test.errors.500');
+        Route::get('/503', fn () => abort(503))->name('test.errors.503');
+        Route::get('/418', fn () => abort(418))->name('test.errors.418');
+    });
+}
+
 require __DIR__.'/auth.php';
 
 // Catch-all route for 404 handling (must be absolute last)

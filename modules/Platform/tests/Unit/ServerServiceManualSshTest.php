@@ -47,6 +47,13 @@ class ServerServiceManualSshTest extends TestCase
         $server->name = 'EU Production Node';
 
         $server->shouldReceive('setSecret')
+            ->once()
+            ->with(
+                'ssh_private_key',
+                '-----BEGIN OPENSSH PRIVATE KEY-----test-----END OPENSSH PRIVATE KEY-----',
+                'ssh_key',
+                'EU Production Node',
+            )
             ->andReturn(Mockery::mock(Secret::class));
 
         $reflection = new ReflectionClass($service);

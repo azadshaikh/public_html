@@ -63,11 +63,17 @@ class PlatformModuleSeederTest extends TestCase
         $this->assertGreaterThan(0, $platformPermissionCount);
 
         $administratorRole = Role::query()->where('name', 'administrator')->where('guard_name', 'web')->first();
+        $seededServer = Server::query()->orderBy('id')->first();
+        $seededAgency = Agency::query()->where('email', 'platform-demo-agency@example.test')->first();
 
         $this->assertInstanceOf(Role::class, $administratorRole);
+        $this->assertInstanceOf(Server::class, $seededServer);
+        $this->assertInstanceOf(Agency::class, $seededAgency);
         $this->assertTrue($administratorRole->permissions()->where('name', 'view_websites')->exists());
-        $this->assertTrue(Server::query()->where('uid', 'SVR0001')->exists());
-        $this->assertTrue(Agency::query()->where('uid', 'AGY0001')->exists());
+        $this->assertSame('Platform Demo Server One', $seededServer->name);
+        $this->assertStringStartsWith('SVR', (string) $seededServer->uid);
+        $this->assertSame('Platform Demo Agency', $seededAgency->name);
+        $this->assertStringStartsWith('AGY', (string) $seededAgency->uid);
         $this->assertTrue(Tld::query()->where('tld', '.com')->exists());
 
         $this->seed(DatabaseSeeder::class);

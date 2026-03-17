@@ -19,10 +19,22 @@ class ModuleRuntimeServiceProvider extends ServiceProvider
         ));
 
         $moduleManager = $this->app->make(ModuleManager::class);
+        $enabledModules = $moduleManager->enabled();
 
-        ModuleAutoloader::register($moduleManager->enabled()->all());
+        $orderedModules = $enabledModules
+            ->reject(fn ($module): bool => $module->slug === 'cms')
+            ->values();
 
-        foreach ($moduleManager->enabled() as $module) {
+        $cmsModule = $enabledModules
+            ->first(fn ($module): bool => $module->slug === 'cms');
+
+        if ($cmsModule !== null) {
+            $orderedModules->push($cmsModule);
+        }
+
+        ModuleAutoloader::register($orderedModules->all());
+
+        foreach ($orderedModules as $module) {
             $this->app->register($module->provider);
         }
     }

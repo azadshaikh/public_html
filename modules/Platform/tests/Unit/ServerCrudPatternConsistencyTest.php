@@ -124,8 +124,8 @@ class ServerCrudPatternConsistencyTest extends TestCase
         $controllerPath = base_path('modules/Platform/app/Http/Controllers/ServerController.php');
         $controllerContents = file_get_contents($controllerPath);
         $this->assertNotFalse($controllerContents, 'Failed to read modules/Platform/app/Http/Controllers/ServerController.php');
-        $this->assertStringContainsString("new Middleware('permission:view_servers', only: ['index', 'show', 'data', 'websites'])", $controllerContents);
-        $this->assertStringContainsString("'reprovisionServer', 'stopProvisioning', 'revealSecret'])", $controllerContents);
+        $this->assertStringContainsString("new Middleware('permission:view_servers', only: ['index', 'show', 'data', 'websites', 'optimizationTool'])", $controllerContents);
+        $this->assertStringContainsString("'reprovisionServer', 'stopProvisioning', 'revealSecret', 'revealSshKeyPair', 'revealAccessKeySecret'])", $controllerContents);
 
         $routesPath = base_path('modules/Platform/routes/web.php');
         $routesContents = file_get_contents($routesPath);
@@ -154,7 +154,7 @@ class ServerCrudPatternConsistencyTest extends TestCase
         $configContents = file_get_contents($configPath);
         $this->assertNotFalse($configContents, 'Failed to read modules/Platform/config/config.php');
         $this->assertStringContainsString("'provisioner_ips' =>", $configContents);
-        $this->assertStringContainsString("env('PROVISIONER_IPS', (string) env('PROVISIONER_IP', ''))", $configContents);
+        $this->assertStringContainsString("config('astero.provisioner_ips', [])", $configContents);
 
         $jobPath = base_path('modules/Platform/app/Jobs/ServerProvision.php');
         $jobContents = file_get_contents($jobPath);

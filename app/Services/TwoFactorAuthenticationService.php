@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\User;
+use chillerlan\QRCode\Common\EccLevel;
 use chillerlan\QRCode\QRCode;
 use chillerlan\QRCode\QROptions;
 
@@ -106,7 +107,7 @@ class TwoFactorAuthenticationService
     public function getQrCodeDataUri(string $data): string
     {
         $options = new QROptions([
-            'eccLevel' => QRCode::ECC_M,
+            'eccLevel' => EccLevel::M,
             'scale' => 6,
             'outputBase64' => true,
         ]);

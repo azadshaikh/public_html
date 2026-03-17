@@ -2,6 +2,7 @@
 
 namespace Modules\Platform\Tests\Unit;
 
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Event;
 use Mockery;
@@ -119,7 +120,8 @@ class DnsSslCommandsTest extends TestCase
 
     public function test_expiry_filter_excludes_already_expired_certs(): void
     {
-        // Regression: diffInDays() is unsigned; without isFuture() check, expired certs match.
+        // Regression: Carbon day diff semantics changed, so compute the delta from
+        // the reference time to the expiry timestamp instead of the reverse order.
         $alreadyExpired = Mockery::mock(Secret::class)->makePartial();
         $alreadyExpired->shouldReceive('getAttribute')->with('expires_at')->andReturn(now()->subDays(3));
 
@@ -132,7 +134,7 @@ class DnsSslCommandsTest extends TestCase
         // Replicates the filter closure used in SslRenewExpiringCommand::handle()
         $filter = fn ($expiresAt) => $expiresAt
             && $expiresAt->isFuture()
-            && $expiresAt->diffInDays(now()) <= 15;
+            && now()->diffInDays($expiresAt) <= 15;
 
         $this->assertFalse($filter($expiredExpiresAt), 'Already-expired cert must be excluded from renewal.');
         $this->assertTrue($filter($validExpiresAt), 'Cert expiring in 7 days must be included for renewal.');
@@ -140,13 +142,14 @@ class DnsSslCommandsTest extends TestCase
 
     public function test_expiry_filter_excludes_certs_expiring_after_15_days(): void
     {
-        $expiresIn20Days = now()->addDays(20);
-        $expiresIn15Days = now()->addDays(15);
-        $expiresIn14Days = now()->addDays(14);
+        $reference = Carbon::create(2026, 3, 18, 12, 0, 0);
+        $expiresIn20Days = $reference->copy()->addDays(20);
+        $expiresIn15Days = $reference->copy()->addDays(15);
+        $expiresIn14Days = $reference->copy()->addDays(14);
 
         $filter = fn ($expiresAt) => $expiresAt
             && $expiresAt->isFuture()
-            && $expiresAt->diffInDays(now()) <= 15;
+            && $reference->diffInDays($expiresAt) <= 15;
 
         $this->assertFalse($filter($expiresIn20Days), 'Cert expiring in 20 days should not be renewed yet.');
         $this->assertTrue($filter($expiresIn15Days), 'Cert expiring in exactly 15 days should be renewed.');
@@ -177,7 +180,7 @@ class DnsSslCommandsTest extends TestCase
         $sslService = Mockery::mock(DomainSslCertificateService::class);
         $sslService->shouldReceive('getAllCertificates')
             ->with('expiring')
-            ->andReturn(collect([]));
+            ->andReturn(new EloquentCollection([]));
 
         $this->app->instance(DomainSslCertificateService::class, $sslService);
 

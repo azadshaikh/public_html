@@ -27,8 +27,8 @@ class ServerReleasesUpdatedNotificationTest extends TestCase
 
         $this->assertNotFalse($jobContents, 'Failed to read ServerUpdateReleases job');
         $this->assertNotFalse($controllerContents, 'Failed to read ServerController');
-        $this->assertStringContainsString('public ?int $initiatedById;', $jobContents);
+        $this->assertStringContainsString('public ?int $initiatedById = null', $jobContents);
         $this->assertStringContainsString('notify(new NotificationServerReleasesUpdated', $jobContents);
-        $this->assertStringContainsString('dispatch($server, auth()->id())', $controllerContents);
+        $this->assertStringContainsString('dispatch(new ServerUpdateReleases($server, auth()->id()))', $controllerContents);
     }
 }

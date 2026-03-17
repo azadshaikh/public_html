@@ -3,6 +3,7 @@
 namespace Modules\CMS\Database\Seeders;
 
 use App\Models\Settings;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 
 class SeoSettingSeeder extends Seeder
@@ -20,6 +21,8 @@ class SeoSettingSeeder extends Seeder
      */
     private function seedDefaultSeoSettings(): void
     {
+        $auditUserId = User::query()->orderBy('id')->value('id');
+
         $settings = [
             'seo' => [
                 ['key' => 'separator_character', 'value' => '|', 'type' => 'string'],
@@ -105,8 +108,10 @@ class SeoSettingSeeder extends Seeder
                 ], [
                     'value' => $settingData['value'],
                     'type' => $settingData['type'],
-                    'created_by' => 1,
-                    'updated_by' => 1,
+                    ...($auditUserId === null ? [] : [
+                        'created_by' => $auditUserId,
+                        'updated_by' => $auditUserId,
+                    ]),
                 ]);
             }
         }

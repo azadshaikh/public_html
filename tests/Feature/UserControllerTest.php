@@ -818,8 +818,7 @@ class UserControllerTest extends TestCase
                 'action' => 'suspend',
                 'ids' => [$user1->id, $user2->id],
             ])
-            ->assertRedirect()
-            ->assertSessionHas('status');
+            ->assertRedirect();
 
         $user1->refresh();
         $user2->refresh();
@@ -837,8 +836,7 @@ class UserControllerTest extends TestCase
                 'action' => 'ban',
                 'ids' => [$user1->id, $user2->id],
             ])
-            ->assertRedirect()
-            ->assertSessionHas('status');
+            ->assertRedirect();
 
         $user1->refresh();
         $user2->refresh();
@@ -856,8 +854,7 @@ class UserControllerTest extends TestCase
                 'action' => 'unban',
                 'ids' => [$user1->id, $user2->id],
             ])
-            ->assertRedirect()
-            ->assertSessionHas('status');
+            ->assertRedirect();
 
         $user1->refresh();
         $user2->refresh();

@@ -49,7 +49,7 @@ class WebsiteDeleteCleanupFlowTest extends TestCase
         $contents = file_get_contents($path);
 
         $this->assertNotFalse($contents, 'Failed to read modules/Platform/app/Console/HestiaDeleteExpiredWebsitesCommand.php');
-        $this->assertStringContainsString('WebsiteDelete::dispatch($website->id);', $contents);
+        $this->assertStringContainsString('dispatch(new WebsiteDelete($website->id));', $contents);
         $this->assertStringNotContainsString('WebsiteDelete::dispatch($website);', $contents);
     }
 
@@ -70,8 +70,9 @@ class WebsiteDeleteCleanupFlowTest extends TestCase
         $contents = file_get_contents($path);
 
         $this->assertNotFalse($contents, 'Failed to read modules/Platform/app/Services/WebsiteService.php');
-        $this->assertStringContainsString("if (\$action === 'force_delete') {", $contents);
-        $this->assertStringContainsString('WebsiteDelete::dispatch($website->id);', $contents);
+        $this->assertStringContainsString("['delete', 'restore', 'force_delete', 'suspend', 'unsuspend', 'remove_from_server']", $contents);
+        $this->assertStringContainsString('dispatch(new WebsiteDelete($website->id));', $contents);
+        $this->assertStringContainsString("'force_delete' => \$affected.' website(s) scheduled for deletion'", $contents);
         $this->assertStringNotContainsString('$website->status = WebsiteStatus::Deleted;', $contents);
     }
 }

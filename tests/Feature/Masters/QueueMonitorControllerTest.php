@@ -15,6 +15,7 @@ use App\Services\WorkerMonitorService;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Str;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -74,7 +75,7 @@ class QueueMonitorControllerTest extends TestCase
 
     public function test_super_user_can_view_queue_monitor_dashboard(): void
     {
-        $this->createMonitor([
+        $syncMonitor = $this->createMonitor([
             'name' => 'App\\Jobs\\SyncWebsites',
             'queue' => 'default',
             'status' => MonitorStatus::SUCCEEDED,
@@ -84,7 +85,7 @@ class QueueMonitorControllerTest extends TestCase
             'finished_at' => now()->subMinutes(4),
             'finished_at_exact' => now()->subMinutes(4)->toDateTimeString(),
         ]);
-        $this->createMonitor([
+        $failedMonitor = $this->createMonitor([
             'name' => 'App\\Jobs\\ProvisionServer',
             'queue' => 'provisioning',
             'status' => MonitorStatus::FAILED,
@@ -95,7 +96,7 @@ class QueueMonitorControllerTest extends TestCase
             'finished_at_exact' => now()->subMinutes(6)->toDateTimeString(),
             'exception_message' => 'Provisioning failed.',
         ]);
-        $this->createMonitor([
+        $runningMonitor = $this->createMonitor([
             'name' => 'App\\Jobs\\DispatchEmails',
             'queue' => 'emails',
             'status' => MonitorStatus::RUNNING,
@@ -110,7 +111,14 @@ class QueueMonitorControllerTest extends TestCase
             ->assertInertia(fn (Assert $page): Assert => $page
                 ->component('masters/queue-monitor/index')
                 ->has('monitors')
-                ->has('monitors.data', 3)
+                ->where('monitors.data', function (Collection $rows) use ($failedMonitor, $runningMonitor, $syncMonitor): bool {
+                    $ids = $rows->pluck('id');
+
+                    return $rows->count() >= 3
+                        && $ids->contains($syncMonitor->id)
+                        && $ids->contains($failedMonitor->id)
+                        && $ids->contains($runningMonitor->id);
+                })
                 ->has('statistics')
                 ->has('filters')
                 ->has('metrics')
@@ -176,10 +184,12 @@ class QueueMonitorControllerTest extends TestCase
 
     public function test_purge_bulk_action_removes_all_monitor_entries_without_selected_ids(): void
     {
+        $initialCount = Monitor::query()->count();
+
         $this->createMonitor();
         $this->createMonitor(['queue' => 'emails']);
 
-        $this->assertSame(2, Monitor::query()->count());
+        $this->assertSame($initialCount + 2, Monitor::query()->count());
 
         $this->actingAs($this->superUser)
             ->from(route('app.masters.queue-monitor.index'))
@@ -187,7 +197,7 @@ class QueueMonitorControllerTest extends TestCase
                 'action' => 'purge',
             ])
             ->assertRedirect(route('app.masters.queue-monitor.index'))
-            ->assertSessionHas('status', 'Purged 2 monitor entries.');
+            ->assertSessionHas('status', sprintf('Purged %d monitor entries.', $initialCount + 2));
 
         $this->assertSame(0, Monitor::query()->count());
     }

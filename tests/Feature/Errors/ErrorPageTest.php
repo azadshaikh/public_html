@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Errors;
 
-use Illuminate\Support\Facades\Route;
 use Inertia\Testing\AssertableInertia as Assert;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
@@ -14,17 +13,6 @@ class ErrorPageTest extends TestCase
         parent::setUp();
 
         config()->set('app.debug', false);
-
-        Route::middleware('web')->prefix('/_test/errors')->group(function (): void {
-            Route::get('/401', fn () => abort(401))->name('test.errors.401');
-            Route::get('/402', fn () => abort(402, 'Billing access is required.'))->name('test.errors.402');
-            Route::get('/403', fn () => abort(403, 'You are not allowed to access this area.'))->name('test.errors.403');
-            Route::get('/419', fn () => abort(419))->name('test.errors.419');
-            Route::get('/429', fn () => abort(429))->name('test.errors.429');
-            Route::get('/500', fn () => abort(500))->name('test.errors.500');
-            Route::get('/503', fn () => abort(503))->name('test.errors.503');
-            Route::get('/418', fn () => abort(418))->name('test.errors.418');
-        });
     }
 
     /**
@@ -66,7 +54,7 @@ class ErrorPageTest extends TestCase
             ->assertInertia(fn (Assert $page): Assert => $page
                 ->component('errors/404')
                 ->where('status', 404)
-                ->where('message', null)
+                ->where('message', 'The requested content could not be found.')
             );
     }
 

@@ -45,12 +45,11 @@ class SslRenewExpiringCommand extends Command
         $sslService = resolve(DomainSslCertificateService::class);
 
         // Get certs expiring within 30 days (service broadens the window), then narrow to
-        // certs that are still in the future AND within 15 days. Without isFuture() check,
-        // already-expired certs would also match since diffInDays() returns absolute values.
+        // certs that are still in the future AND within 15 days.
         $expiringCerts = $sslService->getAllCertificates('expiring')
             ->filter(fn (Secret $cert) => $cert->expires_at
                 && $cert->expires_at->isFuture()
-                && $cert->expires_at->diffInDays(now()) <= 15);
+            && now()->diffInDays($cert->expires_at) <= 15);
 
         if ($expiringCerts->isEmpty()) {
             $this->info('No SSL certificates expiring within 15 days.');
@@ -66,7 +65,7 @@ class SslRenewExpiringCommand extends Command
                 $cert->id,
                 $cert->getMetadata('name', $cert->key),
                 $cert->expires_at->toDateString(),
-                $cert->expires_at->diffInDays(now()),
+                now()->diffInDays($cert->expires_at),
             ])->toArray());
 
             return self::SUCCESS;
@@ -107,7 +106,7 @@ class SslRenewExpiringCommand extends Command
         $this->line(sprintf('→ Renewing cert for %s (expires %s, %d days left)...',
             $rootDomain,
             $cert->expires_at->toDateString(),
-            $cert->expires_at->diffInDays(now()),
+            now()->diffInDays($cert->expires_at),
         ));
 
         // Check ssl_auto_renew flag

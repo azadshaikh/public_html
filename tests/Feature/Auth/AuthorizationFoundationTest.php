@@ -2,15 +2,11 @@
 
 namespace Tests\Feature\Auth;
 
-use App\Enums\Status;
-use App\Http\Middleware\EnsureSuperUserAccess;
 use App\Models\Role;
 use App\Models\User;
-use Database\Seeders\LocalDatagridUsersSeeder;
-use Database\Seeders\LocalUserSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
+use Database\Seeders\UserSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
 class AuthorizationFoundationTest extends TestCase
@@ -20,18 +16,6 @@ class AuthorizationFoundationTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-
-        Route::middleware(['web', 'auth', 'permission:view_users'])
-            ->get('/_test/authorization/view-users', fn () => response('ok'))
-            ->name('test.authorization.view-users');
-
-        Route::middleware(['web', 'auth', EnsureSuperUserAccess::class])
-            ->get('/_test/authorization/super-user-only', fn () => response('ok'))
-            ->name('test.authorization.super-user-only');
-
-        Route::middleware(['web', 'auth', 'role:administrator'])
-            ->get('/_test/authorization/admin-only', fn () => response('ok'))
-            ->name('test.authorization.admin-only');
     }
 
     public function test_roles_and_permissions_seeder_creates_the_initial_foundation(): void
@@ -133,35 +117,22 @@ class AuthorizationFoundationTest extends TestCase
     public function test_local_user_seeder_assigns_the_super_user_role(): void
     {
         $this->seed(RolesAndPermissionsSeeder::class);
-        $this->seed(LocalUserSeeder::class);
+        $this->seed(UserSeeder::class);
 
         $user = User::query()->where('email', 'su@astero.in')->firstOrFail();
 
         $this->assertTrue($user->isSuperUser());
     }
 
-    public function test_local_datagrid_user_seeder_creates_datagrid_testing_users(): void
+    public function test_user_seeder_only_creates_the_super_user_outside_local_environment(): void
     {
         $this->seed(RolesAndPermissionsSeeder::class);
-        $this->seed(LocalDatagridUsersSeeder::class);
+        $this->seed(UserSeeder::class);
 
-        $users = User::query()
-            ->with('roles')
-            ->where('email', 'like', 'datagrid-user-%@example.test')
-            ->orderBy('email')
-            ->get();
+        $users = User::query()->with('roles')->orderBy('email')->get();
 
-        $this->assertCount(LocalDatagridUsersSeeder::USER_COUNT, $users);
-        $this->assertTrue($users->contains(fn (User $user): bool => $user->status !== Status::ACTIVE));
-        $this->assertTrue($users->contains(fn (User $user): bool => $user->email_verified_at === null));
-        $this->assertTrue($users->every(fn (User $user): bool => $user->roles->isNotEmpty()));
-        $this->assertFalse($users->contains(fn (User $user): bool => $user->isSuperUser()));
-
-        $this->seed(LocalDatagridUsersSeeder::class);
-
-        $this->assertSame(
-            LocalDatagridUsersSeeder::USER_COUNT,
-            User::query()->where('email', 'like', 'datagrid-user-%@example.test')->count(),
-        );
+        $this->assertCount(1, $users);
+        $this->assertSame('su@astero.in', $users->first()?->email);
+        $this->assertTrue($users->first()?->isSuperUser() ?? false);
     }
 }

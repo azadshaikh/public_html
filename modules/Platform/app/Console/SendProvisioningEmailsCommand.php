@@ -52,6 +52,9 @@ class SendProvisioningEmailsCommand extends BaseCommand
             'website_url' => 'https://'.$website->domain,
             'backend_url' => 'https://'.$website->domain.'/'.$adminSlug,
         ];
+        $ownerName = data_get($website, 'customer_data.name')
+            ?? data_get($website, 'owner.name')
+            ?? 'Admin';
 
         // Send to website admin
         if ($website->skip_email) {
@@ -62,7 +65,7 @@ class SendProvisioningEmailsCommand extends BaseCommand
                     $adminSecret['username'],
                     'Website Setup Completion Email (send to user)',
                     array_merge($baseVariables, [
-                        'first_name' => explode(' ', $website->customer_data['name'] ?? 'Admin')[0],
+                        'first_name' => explode(' ', $ownerName)[0],
                         'email' => $adminSecret['username'],
                         'password' => $adminSecret['value'] ?? '',
                     ])

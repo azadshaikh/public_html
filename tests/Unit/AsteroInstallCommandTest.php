@@ -7,8 +7,6 @@ use App\Modules\ModuleManager;
 use App\Services\InstallationPreCheckService;
 use App\Services\UserService;
 use Database\Seeders\DatabaseSeeder;
-use Database\Seeders\LocalDatagridUsersSeeder;
-use Database\Seeders\LocalUserSeeder;
 use Illuminate\Console\OutputStyle;
 use ReflectionMethod;
 use Symfony\Component\Console\Input\ArrayInput;
@@ -68,17 +66,17 @@ class AsteroInstallCommandTest extends TestCase
 
         $this->assertContains('Modules\\CMS\\Database\\Seeders\\DatabaseSeeder', $moduleSeeders);
         $this->assertContains('Modules\\ChatBot\\Database\\Seeders\\DatabaseSeeder', $moduleSeeders);
+        $this->assertContains('Modules\\Platform\\Database\\Seeders\\DatabaseSeeder', $moduleSeeders);
+        $this->assertContains('Modules\\ReleaseManager\\Database\\Seeders\\DatabaseSeeder', $moduleSeeders);
         $this->assertContains('Modules\\Todos\\Database\\Seeders\\DatabaseSeeder', $moduleSeeders);
-        $this->assertNotContains('Modules\\Platform\\Database\\Seeders\\DatabaseSeeder', $moduleSeeders);
-        $this->assertNotContains('Modules\\ReleaseManager\\Database\\Seeders\\DatabaseSeeder', $moduleSeeders);
     }
 
     public function test_database_seeder_does_not_include_local_only_seeders(): void
     {
         $seeders = (new DatabaseSeeder)->getSeeders();
 
-        $this->assertNotContains(LocalUserSeeder::class, $seeders);
-        $this->assertNotContains(LocalDatagridUsersSeeder::class, $seeders);
+        $this->assertNotContains('Database\\Seeders\\LocalUserSeeder', $seeders);
+        $this->assertNotContains('Database\\Seeders\\LocalDatagridUsersSeeder', $seeders);
     }
 
     private function callPrivateMethod(object $instance, string $method, array $arguments = []): mixed

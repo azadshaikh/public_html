@@ -44,7 +44,7 @@ class WebsiteAccountService
         // Note: If customer has no email, no admin account is created. This is intentional -
         // agencies may create websites without customer association (demo, internal, agency-managed).
         // The website will still have Super User access via the agency.
-        if (! empty($website->customer_data['email'])) {
+        if ($this->resolveOwnerEmail($website) !== null) {
             $createdAccounts[] = $this->createOwnerAccount($website);
         }
 
@@ -75,7 +75,7 @@ class WebsiteAccountService
      */
     private function createOwnerAccount(Website $website): ?array
     {
-        $customerEmail = $website->customer_data['email'] ?? null;
+        $customerEmail = $this->resolveOwnerEmail($website);
 
         if (! $customerEmail) {
             return null;
@@ -88,6 +88,21 @@ class WebsiteAccountService
             'Website Admin',
             'Website Admin Account Added.'
         );
+    }
+
+    private function resolveOwnerEmail(Website $website): ?string
+    {
+        $customerEmail = data_get($website, 'customer_data.email');
+
+        if (is_string($customerEmail) && $customerEmail !== '') {
+            return $customerEmail;
+        }
+
+        $ownerEmail = data_get($website, 'owner.email');
+
+        return is_string($ownerEmail) && $ownerEmail !== ''
+            ? $ownerEmail
+            : null;
     }
 
     /**

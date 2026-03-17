@@ -144,16 +144,16 @@ class RoleManagementTest extends TestCase
         $user = $this->administrator();
 
         $deletableRole = Role::query()->create([
-            'name' => 'bulk_delete_role',
+            'name' => 'aaa_bulk_delete_role',
             'guard_name' => 'web',
-            'display_name' => 'Bulk Delete Role',
+            'display_name' => 'A Bulk Delete Role',
             'status' => Status::ACTIVE,
         ]);
 
         $assignedRole = Role::query()->create([
-            'name' => 'bulk_assigned_role',
+            'name' => 'zzz_bulk_assigned_role',
             'guard_name' => 'web',
-            'display_name' => 'Bulk Assigned Role',
+            'display_name' => 'Z Bulk Assigned Role',
             'status' => Status::ACTIVE,
         ]);
 
@@ -170,8 +170,9 @@ class RoleManagementTest extends TestCase
             ->assertRedirect()
             ->assertSessionHas('error', 'Cannot delete this role because it has 1 user. Please reassign or remove the users first.');
 
-        $this->assertSoftDeleted('roles', [
+        $this->assertDatabaseHas('roles', [
             'id' => $deletableRole->id,
+            'deleted_at' => null,
         ]);
 
         $this->assertDatabaseHas('roles', [

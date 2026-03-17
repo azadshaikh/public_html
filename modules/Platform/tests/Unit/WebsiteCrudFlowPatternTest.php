@@ -12,7 +12,7 @@ class WebsiteCrudFlowPatternTest extends TestCase
         $contents = file_get_contents($path);
 
         $this->assertNotFalse($contents, 'Failed to read modules/Platform/app/Definitions/WebsiteDefinition.php');
-        $this->assertStringContainsString('->route("{$routePrefix}.remove-from-server")', $contents);
+        $this->assertStringContainsString("->route(\$routePrefix.'.remove-from-server')", $contents);
     }
 
     public function test_website_resource_uses_unsuspend_action_key_for_suspended_websites(): void

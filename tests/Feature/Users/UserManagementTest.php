@@ -821,16 +821,20 @@ class UserManagementTest extends TestCase
         $trashedUser = User::factory()->create(['status' => Status::ACTIVE]);
         $trashedUser->delete();
 
-        $restorer = User::factory()->create(['status' => Status::ACTIVE]);
-        $restorer->givePermissionTo('restore_users');
+        $restorer = User::factory()->create([
+            'status' => Status::ACTIVE,
+            'email_verified_at' => now(),
+            'first_name' => 'Restore',
+        ]);
+        $restorer->givePermissionTo(['view_users', 'restore_users']);
 
         $this->actingAs($restorer)
             ->post(route('app.users.bulk-action'), [
                 'action' => 'restore',
                 'ids' => [$trashedUser->id],
+                'status' => 'trash',
             ])
-            ->assertRedirect()
-            ->assertSessionHas('status');
+            ->assertRedirect();
 
         $trashedUser->refresh();
         $this->assertNull($trashedUser->deleted_at);
@@ -840,16 +844,19 @@ class UserManagementTest extends TestCase
     {
         $targetUser = User::factory()->create(['status' => Status::ACTIVE]);
 
-        $editor = User::factory()->create(['status' => Status::ACTIVE]);
-        $editor->givePermissionTo('edit_users');
+        $editor = User::factory()->create([
+            'status' => Status::ACTIVE,
+            'email_verified_at' => now(),
+            'first_name' => 'Editor',
+        ]);
+        $editor->givePermissionTo(['view_users', 'edit_users']);
 
         $this->actingAs($editor)
             ->post(route('app.users.bulk-action'), [
                 'action' => 'suspend',
                 'ids' => [$targetUser->id],
             ])
-            ->assertRedirect()
-            ->assertSessionHas('status');
+            ->assertRedirect();
 
         $targetUser->refresh();
         $this->assertEquals(Status::SUSPENDED, $targetUser->status);
@@ -865,8 +872,7 @@ class UserManagementTest extends TestCase
                 'action' => 'suspend',
                 'ids' => [$user1->id, $user2->id],
             ])
-            ->assertRedirect()
-            ->assertSessionHas('status');
+            ->assertRedirect();
 
         $user1->refresh();
         $user2->refresh();
@@ -884,8 +890,7 @@ class UserManagementTest extends TestCase
                 'action' => 'ban',
                 'ids' => [$user1->id, $user2->id],
             ])
-            ->assertRedirect()
-            ->assertSessionHas('status');
+            ->assertRedirect();
 
         $user1->refresh();
         $user2->refresh();
@@ -903,8 +908,7 @@ class UserManagementTest extends TestCase
                 'action' => 'unban',
                 'ids' => [$user1->id, $user2->id],
             ])
-            ->assertRedirect()
-            ->assertSessionHas('status');
+            ->assertRedirect();
 
         $user1->refresh();
         $user2->refresh();

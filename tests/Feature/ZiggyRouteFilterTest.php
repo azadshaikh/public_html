@@ -183,7 +183,7 @@ class ZiggyRouteFilterTest extends TestCase
 
         // Dashboard should be present (authenticated group).
         $this->assertStringContainsString('dashboard', $output);
-        $this->assertStringContainsString('cms.index', $output);
+        $this->assertStringContainsString('cms.pages.index', $output);
 
         // Users group should be present (has permission).
         $this->assertStringContainsString('app.users.index', $output);

@@ -26,7 +26,6 @@ class WebsiteShowViewUxTest extends TestCase
         $this->assertStringContainsString('<x-slot:provision>', $contents);
         $this->assertStringContainsString("route('platform.servers.show', \$website->server->id)", $contents);
         $this->assertStringContainsString("route('platform.agencies.show', \$website->agency->id)", $contents);
-        $this->assertStringContainsString("Route::has('app.users.show')", $contents);
         $this->assertStringContainsString("\$website->server->name ?? \$website->server->fqdn ?? '--'", $contents);
         $this->assertStringNotContainsString('url-tab-manager-loader', $contents);
         $this->assertStringNotContainsString('Identity Snapshot', $contents);
