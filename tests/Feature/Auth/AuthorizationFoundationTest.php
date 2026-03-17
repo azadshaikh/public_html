@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -16,6 +17,14 @@ class AuthorizationFoundationTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+    }
+
+    public function test_user_role_and_permission_relations_use_the_application_models(): void
+    {
+        $user = new User;
+
+        $this->assertSame(Role::class, $user->roles()->getRelated()::class);
+        $this->assertSame(Permission::class, $user->permissions()->getRelated()::class);
     }
 
     public function test_roles_and_permissions_seeder_creates_the_initial_foundation(): void
