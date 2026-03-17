@@ -36,7 +36,7 @@ function buildAnchorAttributes(
         rel:
             item.target === '_blank'
                 ? ((attributes.rel as string | undefined) ??
-                  'noreferrer noopener')
+                    'noreferrer noopener')
                 : attributes.rel,
     };
 }
@@ -137,7 +137,7 @@ function NavMainBranch({
         return (
             <Collapsible
                 asChild
-                defaultOpen={item.active}
+                defaultOpen={item.default_open || item.active}
                 className="group/collapsible"
             >
                 <SidebarMenuItem>
@@ -171,7 +171,7 @@ function NavMainBranch({
         <SidebarMenuSubItem>
             <Collapsible
                 asChild
-                defaultOpen={item.active}
+                defaultOpen={item.default_open || item.active}
                 className="group/sub-collapsible"
             >
                 <div>
