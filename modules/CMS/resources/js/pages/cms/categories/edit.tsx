@@ -6,11 +6,17 @@ import type { BreadcrumbItem } from '@/types';
 import CategoryForm from '../../../components/categories/category-form';
 import type { CategoryEditPageProps } from '../../../types/cms';
 
-export default function CategoriesEdit({ category, ...props }: CategoryEditPageProps) {
+export default function CategoriesEdit({
+    category,
+    ...props
+}: CategoryEditPageProps) {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: route('dashboard') },
         { title: 'Categories', href: route('cms.categories.index') },
-        { title: category.title, href: route('cms.categories.edit', category.id) },
+        {
+            title: category.title,
+            href: route('cms.categories.edit', category.id),
+        },
     ];
 
     return (

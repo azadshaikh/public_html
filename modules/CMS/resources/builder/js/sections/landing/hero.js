@@ -1,6 +1,8 @@
 Astero.Sections.add('hero/hero-1', {
     name: 'Hero 1',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/hero/hero-1-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/hero/hero-1-thumb.jpeg',
     html: `<header class="hero-1" title="hero-1">
 
   <div class="container">
@@ -45,7 +47,9 @@ Astero.Sections.add('hero/hero-1', {
 });
 Astero.Sections.add('hero/hero-2', {
     name: 'Hero 2',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/hero/hero-2-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/hero/hero-2-thumb.jpeg',
     html: `<header class="hero-2" title="hero-2">
 
   <div class="container">
@@ -98,7 +102,9 @@ Astero.Sections.add('hero/hero-2', {
 });
 Astero.Sections.add('hero/hero-3', {
     name: 'Hero 3',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/hero/hero-3-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/hero/hero-3-thumb.jpeg',
     html: `<header class="hero-3" title="hero-3">
 
   <div class="container">
@@ -152,7 +158,9 @@ Astero.Sections.add('hero/hero-3', {
 });
 Astero.Sections.add('hero/hero-4', {
     name: 'Hero 4',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/hero/hero-4-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/hero/hero-4-thumb.jpeg',
     html: `<header class="hero-4" title="hero-4">
 
   <div class="container">
@@ -203,7 +211,9 @@ Astero.Sections.add('hero/hero-4', {
 });
 Astero.Sections.add('hero/hero-5', {
     name: 'Hero 5',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/hero/hero-5-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/hero/hero-5-thumb.jpeg',
     html: `<header class="hero-5" title="hero-5">
 
   <div class="container" style="z-index:2">
@@ -253,7 +263,9 @@ Astero.Sections.add('hero/hero-5', {
 });
 Astero.Sections.add('hero/hero-6', {
     name: 'Hero 6',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/hero/hero-6-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/hero/hero-6-thumb.jpeg',
     html: `<header class="hero-6" title="hero-6">
 
   <div class="container">
@@ -308,7 +320,9 @@ Astero.Sections.add('hero/hero-6', {
 });
 Astero.Sections.add('hero/hero-7', {
     name: 'Hero 7',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/hero/hero-7-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/hero/hero-7-thumb.jpeg',
     html: `<header class="hero-7" title="hero-7">
 
   <div class="container">
@@ -364,7 +378,9 @@ Astero.Sections.add('hero/hero-7', {
 });
 Astero.Sections.add('hero/hero-slider', {
     name: 'Hero slider',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/hero/hero-slider-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/hero/hero-slider-thumb.jpeg',
     html: `<header class="hero-slider" title="hero-slider">
 
 

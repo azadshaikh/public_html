@@ -4,13 +4,36 @@ import type { FormEvent } from 'react';
 import { useEffect, useState } from 'react';
 import { FormErrorSummary } from '@/components/forms/form-error-summary';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
+import {
+    Field,
+    FieldDescription,
+    FieldError,
+    FieldGroup,
+    FieldLabel,
+} from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
 import { useAppForm } from '@/hooks/use-app-form';
-import type { PlatformOption, ProviderCredentialValues, ProviderFormValues } from '../../types/platform';
+import type {
+    PlatformOption,
+    ProviderCredentialValues,
+    ProviderFormValues,
+} from '../../types/platform';
 
 type ProviderFormProps = {
     mode: 'create' | 'edit';
@@ -43,13 +66,19 @@ export default function ProviderForm({
 }: ProviderFormProps) {
     const form = useAppForm<ProviderFormValues>({
         defaults: initialValues,
-        rememberKey: mode === 'create' ? 'platform.providers.create' : `platform.providers.edit.${provider?.id ?? 'new'}`,
+        rememberKey:
+            mode === 'create'
+                ? 'platform.providers.create'
+                : `platform.providers.edit.${provider?.id ?? 'new'}`,
         dirtyGuard: true,
     });
-    const [vendorOptionsByType, setVendorOptionsByType] = useState<Record<string, PlatformOption[]>>({});
+    const [vendorOptionsByType, setVendorOptionsByType] = useState<
+        Record<string, PlatformOption[]>
+    >({});
 
     const availableVendorOptions = form.data.type
-        ? (vendorOptionsByType[form.data.type] ?? (form.data.type === initialValues.type ? vendorOptions : []))
+        ? (vendorOptionsByType[form.data.type] ??
+          (form.data.type === initialValues.type ? vendorOptions : []))
         : vendorOptions;
 
     useEffect(() => {
@@ -73,7 +102,10 @@ export default function ProviderForm({
                     throw new Error('Unable to load vendors.');
                 }
 
-                return (await response.json()) as { success?: boolean; vendors?: PlatformOption[] };
+                return (await response.json()) as {
+                    success?: boolean;
+                    vendors?: PlatformOption[];
+                };
             })
             .then((payload) => {
                 if (!isMounted || !Array.isArray(payload.vendors)) {
@@ -87,7 +119,10 @@ export default function ProviderForm({
 
                 if (
                     form.data.vendor &&
-                    !payload.vendors.some((option) => String(option.value) === String(form.data.vendor))
+                    !payload.vendors.some(
+                        (option) =>
+                            String(option.value) === String(form.data.vendor),
+                    )
                 ) {
                     form.setField('vendor', '');
                 }
@@ -100,14 +135,20 @@ export default function ProviderForm({
         };
     }, [form, form.data.type, vendorOptionsByType]);
 
-    const setCredential = (key: keyof ProviderCredentialValues, value: string) => {
+    const setCredential = (
+        key: keyof ProviderCredentialValues,
+        value: string,
+    ) => {
         form.setField('credentials', {
             ...form.data.credentials,
             [key]: value,
         });
     };
 
-    const submitUrl = mode === 'create' ? route('platform.providers.store') : route('platform.providers.update', provider!.id);
+    const submitUrl =
+        mode === 'create'
+            ? route('platform.providers.store')
+            : route('platform.providers.update', provider!.id);
 
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -115,12 +156,19 @@ export default function ProviderForm({
         form.submit(mode === 'create' ? 'post' : 'put', submitUrl, {
             preserveScroll: true,
             setDefaultsOnSuccess: mode === 'edit',
-            successToast: mode === 'create' ? 'Provider created successfully.' : 'Provider updated successfully.',
+            successToast:
+                mode === 'create'
+                    ? 'Provider created successfully.'
+                    : 'Provider updated successfully.',
         });
     };
 
     return (
-        <form className="flex flex-col gap-6" onSubmit={handleSubmit} noValidate>
+        <form
+            className="flex flex-col gap-6"
+            onSubmit={handleSubmit}
+            noValidate
+        >
             {form.dirtyGuardDialog}
             <FormErrorSummary errors={form.errors} minMessages={2} />
 
@@ -130,97 +178,213 @@ export default function ProviderForm({
                         <CardHeader>
                             <CardTitle>Provider profile</CardTitle>
                             <CardDescription>
-                                Define the upstream service, vendor, and lifecycle state for this account.
+                                Define the upstream service, vendor, and
+                                lifecycle state for this account.
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
                             <FieldGroup>
                                 <div className="grid gap-4 md:grid-cols-2">
-                                    <Field data-invalid={form.invalid('name') || undefined}>
-                                        <FieldLabel htmlFor="name">Provider name</FieldLabel>
+                                    <Field
+                                        data-invalid={
+                                            form.invalid('name') || undefined
+                                        }
+                                    >
+                                        <FieldLabel htmlFor="name">
+                                            Provider name
+                                        </FieldLabel>
                                         <Input
                                             id="name"
                                             value={form.data.name}
-                                            onChange={(event) => form.setField('name', event.target.value)}
+                                            onChange={(event) =>
+                                                form.setField(
+                                                    'name',
+                                                    event.target.value,
+                                                )
+                                            }
                                             onBlur={() => form.touch('name')}
-                                            aria-invalid={form.invalid('name') || undefined}
+                                            aria-invalid={
+                                                form.invalid('name') ||
+                                                undefined
+                                            }
                                         />
-                                        <FieldError>{form.error('name')}</FieldError>
+                                        <FieldError>
+                                            {form.error('name')}
+                                        </FieldError>
                                     </Field>
 
-                                    <Field data-invalid={form.invalid('email') || undefined}>
-                                        <FieldLabel htmlFor="email">Contact email</FieldLabel>
+                                    <Field
+                                        data-invalid={
+                                            form.invalid('email') || undefined
+                                        }
+                                    >
+                                        <FieldLabel htmlFor="email">
+                                            Contact email
+                                        </FieldLabel>
                                         <Input
                                             id="email"
                                             type="email"
                                             value={form.data.email}
-                                            onChange={(event) => form.setField('email', event.target.value)}
+                                            onChange={(event) =>
+                                                form.setField(
+                                                    'email',
+                                                    event.target.value,
+                                                )
+                                            }
                                             onBlur={() => form.touch('email')}
-                                            aria-invalid={form.invalid('email') || undefined}
+                                            aria-invalid={
+                                                form.invalid('email') ||
+                                                undefined
+                                            }
                                         />
-                                        <FieldError>{form.error('email')}</FieldError>
+                                        <FieldError>
+                                            {form.error('email')}
+                                        </FieldError>
                                     </Field>
                                 </div>
 
                                 <div className="grid gap-4 md:grid-cols-3">
-                                    <Field data-invalid={form.invalid('type') || undefined}>
+                                    <Field
+                                        data-invalid={
+                                            form.invalid('type') || undefined
+                                        }
+                                    >
                                         <FieldLabel>Provider type</FieldLabel>
-                                        <Select value={form.data.type || undefined} onValueChange={(value) => form.setField('type', value)}>
-                                            <SelectTrigger className="w-full" aria-invalid={form.invalid('type') || undefined}>
+                                        <Select
+                                            value={form.data.type || undefined}
+                                            onValueChange={(value) =>
+                                                form.setField('type', value)
+                                            }
+                                        >
+                                            <SelectTrigger
+                                                className="w-full"
+                                                aria-invalid={
+                                                    form.invalid('type') ||
+                                                    undefined
+                                                }
+                                            >
                                                 <SelectValue placeholder="Select type" />
                                             </SelectTrigger>
                                             <SelectContent>
                                                 <SelectGroup>
-                                                    {typeOptions.map((option) => (
-                                                        <SelectItem key={String(option.value)} value={String(option.value)}>
-                                                            {option.label}
-                                                        </SelectItem>
-                                                    ))}
+                                                    {typeOptions.map(
+                                                        (option) => (
+                                                            <SelectItem
+                                                                key={String(
+                                                                    option.value,
+                                                                )}
+                                                                value={String(
+                                                                    option.value,
+                                                                )}
+                                                            >
+                                                                {option.label}
+                                                            </SelectItem>
+                                                        ),
+                                                    )}
                                                 </SelectGroup>
                                             </SelectContent>
                                         </Select>
-                                        <FieldError>{form.error('type')}</FieldError>
+                                        <FieldError>
+                                            {form.error('type')}
+                                        </FieldError>
                                     </Field>
 
-                                    <Field data-invalid={form.invalid('vendor') || undefined}>
+                                    <Field
+                                        data-invalid={
+                                            form.invalid('vendor') || undefined
+                                        }
+                                    >
                                         <FieldLabel>Vendor</FieldLabel>
-                                        <Select value={form.data.vendor || undefined} onValueChange={(value) => form.setField('vendor', value)}>
-                                            <SelectTrigger className="w-full" aria-invalid={form.invalid('vendor') || undefined}>
+                                        <Select
+                                            value={
+                                                form.data.vendor || undefined
+                                            }
+                                            onValueChange={(value) =>
+                                                form.setField('vendor', value)
+                                            }
+                                        >
+                                            <SelectTrigger
+                                                className="w-full"
+                                                aria-invalid={
+                                                    form.invalid('vendor') ||
+                                                    undefined
+                                                }
+                                            >
                                                 <SelectValue placeholder="Select vendor" />
                                             </SelectTrigger>
                                             <SelectContent>
                                                 <SelectGroup>
-                                                    {availableVendorOptions.map((option) => (
-                                                        <SelectItem key={String(option.value)} value={String(option.value)}>
-                                                            {option.label}
-                                                        </SelectItem>
-                                                    ))}
+                                                    {availableVendorOptions.map(
+                                                        (option) => (
+                                                            <SelectItem
+                                                                key={String(
+                                                                    option.value,
+                                                                )}
+                                                                value={String(
+                                                                    option.value,
+                                                                )}
+                                                            >
+                                                                {option.label}
+                                                            </SelectItem>
+                                                        ),
+                                                    )}
                                                 </SelectGroup>
                                             </SelectContent>
                                         </Select>
                                         <FieldDescription>
-                                            Vendor options update when you change the provider type.
+                                            Vendor options update when you
+                                            change the provider type.
                                         </FieldDescription>
-                                        <FieldError>{form.error('vendor')}</FieldError>
+                                        <FieldError>
+                                            {form.error('vendor')}
+                                        </FieldError>
                                     </Field>
 
-                                    <Field data-invalid={form.invalid('status') || undefined}>
+                                    <Field
+                                        data-invalid={
+                                            form.invalid('status') || undefined
+                                        }
+                                    >
                                         <FieldLabel>Status</FieldLabel>
-                                        <Select value={form.data.status || undefined} onValueChange={(value) => form.setField('status', value)}>
-                                            <SelectTrigger className="w-full" aria-invalid={form.invalid('status') || undefined}>
+                                        <Select
+                                            value={
+                                                form.data.status || undefined
+                                            }
+                                            onValueChange={(value) =>
+                                                form.setField('status', value)
+                                            }
+                                        >
+                                            <SelectTrigger
+                                                className="w-full"
+                                                aria-invalid={
+                                                    form.invalid('status') ||
+                                                    undefined
+                                                }
+                                            >
                                                 <SelectValue placeholder="Select status" />
                                             </SelectTrigger>
                                             <SelectContent>
                                                 <SelectGroup>
-                                                    {statusOptions.map((option) => (
-                                                        <SelectItem key={String(option.value)} value={String(option.value)}>
-                                                            {option.label}
-                                                        </SelectItem>
-                                                    ))}
+                                                    {statusOptions.map(
+                                                        (option) => (
+                                                            <SelectItem
+                                                                key={String(
+                                                                    option.value,
+                                                                )}
+                                                                value={String(
+                                                                    option.value,
+                                                                )}
+                                                            >
+                                                                {option.label}
+                                                            </SelectItem>
+                                                        ),
+                                                    )}
                                                 </SelectGroup>
                                             </SelectContent>
                                         </Select>
-                                        <FieldError>{form.error('status')}</FieldError>
+                                        <FieldError>
+                                            {form.error('status')}
+                                        </FieldError>
                                     </Field>
                                 </div>
                             </FieldGroup>
@@ -233,99 +397,340 @@ export default function ProviderForm({
                         <CardHeader>
                             <CardTitle>Credentials</CardTitle>
                             <CardDescription>
-                                Save the vendor API keys and identifiers needed for sync and provisioning tasks.
+                                Save the vendor API keys and identifiers needed
+                                for sync and provisioning tasks.
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
                             <FieldGroup>
                                 <div className="grid gap-4 md:grid-cols-2">
-                                    <Field data-invalid={Boolean(credentialError(form.errors, 'api_key')) || undefined}>
-                                        <FieldLabel htmlFor="credentials_api_key">API key</FieldLabel>
+                                    <Field
+                                        data-invalid={
+                                            Boolean(
+                                                credentialError(
+                                                    form.errors,
+                                                    'api_key',
+                                                ),
+                                            ) || undefined
+                                        }
+                                    >
+                                        <FieldLabel htmlFor="credentials_api_key">
+                                            API key
+                                        </FieldLabel>
                                         <Input
                                             id="credentials_api_key"
-                                            value={form.data.credentials.api_key}
-                                            onChange={(event) => setCredential('api_key', event.target.value)}
-                                            aria-invalid={Boolean(credentialError(form.errors, 'api_key')) || undefined}
+                                            value={
+                                                form.data.credentials.api_key
+                                            }
+                                            onChange={(event) =>
+                                                setCredential(
+                                                    'api_key',
+                                                    event.target.value,
+                                                )
+                                            }
+                                            aria-invalid={
+                                                Boolean(
+                                                    credentialError(
+                                                        form.errors,
+                                                        'api_key',
+                                                    ),
+                                                ) || undefined
+                                            }
                                         />
-                                        <FieldError>{credentialError(form.errors, 'api_key')}</FieldError>
+                                        <FieldError>
+                                            {credentialError(
+                                                form.errors,
+                                                'api_key',
+                                            )}
+                                        </FieldError>
                                     </Field>
 
-                                    <Field data-invalid={Boolean(credentialError(form.errors, 'api_token')) || undefined}>
-                                        <FieldLabel htmlFor="credentials_api_token">API token</FieldLabel>
+                                    <Field
+                                        data-invalid={
+                                            Boolean(
+                                                credentialError(
+                                                    form.errors,
+                                                    'api_token',
+                                                ),
+                                            ) || undefined
+                                        }
+                                    >
+                                        <FieldLabel htmlFor="credentials_api_token">
+                                            API token
+                                        </FieldLabel>
                                         <Input
                                             id="credentials_api_token"
-                                            value={form.data.credentials.api_token}
-                                            onChange={(event) => setCredential('api_token', event.target.value)}
-                                            aria-invalid={Boolean(credentialError(form.errors, 'api_token')) || undefined}
+                                            value={
+                                                form.data.credentials.api_token
+                                            }
+                                            onChange={(event) =>
+                                                setCredential(
+                                                    'api_token',
+                                                    event.target.value,
+                                                )
+                                            }
+                                            aria-invalid={
+                                                Boolean(
+                                                    credentialError(
+                                                        form.errors,
+                                                        'api_token',
+                                                    ),
+                                                ) || undefined
+                                            }
                                         />
-                                        <FieldError>{credentialError(form.errors, 'api_token')}</FieldError>
+                                        <FieldError>
+                                            {credentialError(
+                                                form.errors,
+                                                'api_token',
+                                            )}
+                                        </FieldError>
                                     </Field>
 
-                                    <Field data-invalid={Boolean(credentialError(form.errors, 'api_secret')) || undefined}>
-                                        <FieldLabel htmlFor="credentials_api_secret">API secret</FieldLabel>
+                                    <Field
+                                        data-invalid={
+                                            Boolean(
+                                                credentialError(
+                                                    form.errors,
+                                                    'api_secret',
+                                                ),
+                                            ) || undefined
+                                        }
+                                    >
+                                        <FieldLabel htmlFor="credentials_api_secret">
+                                            API secret
+                                        </FieldLabel>
                                         <Input
                                             id="credentials_api_secret"
                                             type="password"
-                                            value={form.data.credentials.api_secret}
-                                            onChange={(event) => setCredential('api_secret', event.target.value)}
-                                            aria-invalid={Boolean(credentialError(form.errors, 'api_secret')) || undefined}
+                                            value={
+                                                form.data.credentials.api_secret
+                                            }
+                                            onChange={(event) =>
+                                                setCredential(
+                                                    'api_secret',
+                                                    event.target.value,
+                                                )
+                                            }
+                                            aria-invalid={
+                                                Boolean(
+                                                    credentialError(
+                                                        form.errors,
+                                                        'api_secret',
+                                                    ),
+                                                ) || undefined
+                                            }
                                         />
-                                        <FieldError>{credentialError(form.errors, 'api_secret')}</FieldError>
+                                        <FieldError>
+                                            {credentialError(
+                                                form.errors,
+                                                'api_secret',
+                                            )}
+                                        </FieldError>
                                     </Field>
 
-                                    <Field data-invalid={Boolean(credentialError(form.errors, 'account_id')) || undefined}>
-                                        <FieldLabel htmlFor="credentials_account_id">Account ID</FieldLabel>
+                                    <Field
+                                        data-invalid={
+                                            Boolean(
+                                                credentialError(
+                                                    form.errors,
+                                                    'account_id',
+                                                ),
+                                            ) || undefined
+                                        }
+                                    >
+                                        <FieldLabel htmlFor="credentials_account_id">
+                                            Account ID
+                                        </FieldLabel>
                                         <Input
                                             id="credentials_account_id"
-                                            value={form.data.credentials.account_id}
-                                            onChange={(event) => setCredential('account_id', event.target.value)}
-                                            aria-invalid={Boolean(credentialError(form.errors, 'account_id')) || undefined}
+                                            value={
+                                                form.data.credentials.account_id
+                                            }
+                                            onChange={(event) =>
+                                                setCredential(
+                                                    'account_id',
+                                                    event.target.value,
+                                                )
+                                            }
+                                            aria-invalid={
+                                                Boolean(
+                                                    credentialError(
+                                                        form.errors,
+                                                        'account_id',
+                                                    ),
+                                                ) || undefined
+                                            }
                                         />
-                                        <FieldError>{credentialError(form.errors, 'account_id')}</FieldError>
+                                        <FieldError>
+                                            {credentialError(
+                                                form.errors,
+                                                'account_id',
+                                            )}
+                                        </FieldError>
                                     </Field>
 
-                                    <Field data-invalid={Boolean(credentialError(form.errors, 'api_user')) || undefined}>
-                                        <FieldLabel htmlFor="credentials_api_user">API user</FieldLabel>
+                                    <Field
+                                        data-invalid={
+                                            Boolean(
+                                                credentialError(
+                                                    form.errors,
+                                                    'api_user',
+                                                ),
+                                            ) || undefined
+                                        }
+                                    >
+                                        <FieldLabel htmlFor="credentials_api_user">
+                                            API user
+                                        </FieldLabel>
                                         <Input
                                             id="credentials_api_user"
-                                            value={form.data.credentials.api_user}
-                                            onChange={(event) => setCredential('api_user', event.target.value)}
-                                            aria-invalid={Boolean(credentialError(form.errors, 'api_user')) || undefined}
+                                            value={
+                                                form.data.credentials.api_user
+                                            }
+                                            onChange={(event) =>
+                                                setCredential(
+                                                    'api_user',
+                                                    event.target.value,
+                                                )
+                                            }
+                                            aria-invalid={
+                                                Boolean(
+                                                    credentialError(
+                                                        form.errors,
+                                                        'api_user',
+                                                    ),
+                                                ) || undefined
+                                            }
                                         />
-                                        <FieldError>{credentialError(form.errors, 'api_user')}</FieldError>
+                                        <FieldError>
+                                            {credentialError(
+                                                form.errors,
+                                                'api_user',
+                                            )}
+                                        </FieldError>
                                     </Field>
 
-                                    <Field data-invalid={Boolean(credentialError(form.errors, 'username')) || undefined}>
-                                        <FieldLabel htmlFor="credentials_username">Username</FieldLabel>
+                                    <Field
+                                        data-invalid={
+                                            Boolean(
+                                                credentialError(
+                                                    form.errors,
+                                                    'username',
+                                                ),
+                                            ) || undefined
+                                        }
+                                    >
+                                        <FieldLabel htmlFor="credentials_username">
+                                            Username
+                                        </FieldLabel>
                                         <Input
                                             id="credentials_username"
-                                            value={form.data.credentials.username}
-                                            onChange={(event) => setCredential('username', event.target.value)}
-                                            aria-invalid={Boolean(credentialError(form.errors, 'username')) || undefined}
+                                            value={
+                                                form.data.credentials.username
+                                            }
+                                            onChange={(event) =>
+                                                setCredential(
+                                                    'username',
+                                                    event.target.value,
+                                                )
+                                            }
+                                            aria-invalid={
+                                                Boolean(
+                                                    credentialError(
+                                                        form.errors,
+                                                        'username',
+                                                    ),
+                                                ) || undefined
+                                            }
                                         />
-                                        <FieldError>{credentialError(form.errors, 'username')}</FieldError>
+                                        <FieldError>
+                                            {credentialError(
+                                                form.errors,
+                                                'username',
+                                            )}
+                                        </FieldError>
                                     </Field>
 
-                                    <Field data-invalid={Boolean(credentialError(form.errors, 'zone_id')) || undefined}>
-                                        <FieldLabel htmlFor="credentials_zone_id">Zone ID</FieldLabel>
+                                    <Field
+                                        data-invalid={
+                                            Boolean(
+                                                credentialError(
+                                                    form.errors,
+                                                    'zone_id',
+                                                ),
+                                            ) || undefined
+                                        }
+                                    >
+                                        <FieldLabel htmlFor="credentials_zone_id">
+                                            Zone ID
+                                        </FieldLabel>
                                         <Input
                                             id="credentials_zone_id"
-                                            value={form.data.credentials.zone_id}
-                                            onChange={(event) => setCredential('zone_id', event.target.value)}
-                                            aria-invalid={Boolean(credentialError(form.errors, 'zone_id')) || undefined}
+                                            value={
+                                                form.data.credentials.zone_id
+                                            }
+                                            onChange={(event) =>
+                                                setCredential(
+                                                    'zone_id',
+                                                    event.target.value,
+                                                )
+                                            }
+                                            aria-invalid={
+                                                Boolean(
+                                                    credentialError(
+                                                        form.errors,
+                                                        'zone_id',
+                                                    ),
+                                                ) || undefined
+                                            }
                                         />
-                                        <FieldError>{credentialError(form.errors, 'zone_id')}</FieldError>
+                                        <FieldError>
+                                            {credentialError(
+                                                form.errors,
+                                                'zone_id',
+                                            )}
+                                        </FieldError>
                                     </Field>
 
-                                    <Field data-invalid={Boolean(credentialError(form.errors, 'client_ip')) || undefined}>
-                                        <FieldLabel htmlFor="credentials_client_ip">Client IP</FieldLabel>
+                                    <Field
+                                        data-invalid={
+                                            Boolean(
+                                                credentialError(
+                                                    form.errors,
+                                                    'client_ip',
+                                                ),
+                                            ) || undefined
+                                        }
+                                    >
+                                        <FieldLabel htmlFor="credentials_client_ip">
+                                            Client IP
+                                        </FieldLabel>
                                         <Input
                                             id="credentials_client_ip"
-                                            value={form.data.credentials.client_ip}
-                                            onChange={(event) => setCredential('client_ip', event.target.value)}
-                                            aria-invalid={Boolean(credentialError(form.errors, 'client_ip')) || undefined}
+                                            value={
+                                                form.data.credentials.client_ip
+                                            }
+                                            onChange={(event) =>
+                                                setCredential(
+                                                    'client_ip',
+                                                    event.target.value,
+                                                )
+                                            }
+                                            aria-invalid={
+                                                Boolean(
+                                                    credentialError(
+                                                        form.errors,
+                                                        'client_ip',
+                                                    ),
+                                                ) || undefined
+                                            }
                                         />
-                                        <FieldError>{credentialError(form.errors, 'client_ip')}</FieldError>
+                                        <FieldError>
+                                            {credentialError(
+                                                form.errors,
+                                                'client_ip',
+                                            )}
+                                        </FieldError>
                                     </Field>
                                 </div>
                             </FieldGroup>
@@ -336,14 +741,22 @@ export default function ProviderForm({
 
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <Button variant="outline" asChild>
-                    <Link href={route('platform.providers.index', { status: 'all' })}>
+                    <Link
+                        href={route('platform.providers.index', {
+                            status: 'all',
+                        })}
+                    >
                         <ArrowLeftIcon data-icon="inline-start" />
                         Back to providers
                     </Link>
                 </Button>
 
                 <Button type="submit" disabled={form.processing}>
-                    {form.processing ? <Spinner data-icon="inline-start" /> : <SaveIcon data-icon="inline-start" />}
+                    {form.processing ? (
+                        <Spinner data-icon="inline-start" />
+                    ) : (
+                        <SaveIcon data-icon="inline-start" />
+                    )}
                     {mode === 'create' ? 'Create provider' : 'Save changes'}
                 </Button>
             </div>

@@ -7,7 +7,11 @@ import { MediaPickerDialog } from '@/components/media/media-picker-dialog';
 import type { MediaPickerItem } from '@/components/media/media-picker-utils';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import type { MediaListItem, MediaPickerFilters, UploadSettings } from '@/types/media';
+import type {
+    MediaListItem,
+    MediaPickerFilters,
+    UploadSettings,
+} from '@/types/media';
 import type { PaginatedData } from '@/types/pagination';
 
 // ─── Types ───────────────────────────────────────────────────────────────
@@ -79,7 +83,8 @@ export function MediaPickerField({
     // 1. pickerPreview (just selected from picker) takes priority
     // 2. externalPreviewUrl (from server props) is next
     // 3. fetchedPreview (fetched for an id-only value) is last
-    const resolvedPreview = pickerPreview ?? externalPreviewUrl ?? fetchedPreview ?? null;
+    const resolvedPreview =
+        pickerPreview ?? externalPreviewUrl ?? fetchedPreview ?? null;
 
     // When value is set externally with no preview URL available,
     // fetch it. The async fetch callback is fine within useEffect.
@@ -111,8 +116,8 @@ export function MediaPickerField({
                 if (!cancelled && json.status === 1 && json.data) {
                     setFetchedPreview(
                         json.data.thumbnail_url ||
-                        json.data.media_url ||
-                        json.data.original_url,
+                            json.data.media_url ||
+                            json.data.original_url,
                     );
                 }
             } catch {
@@ -161,7 +166,12 @@ export function MediaPickerField({
             >
                 {hasValue && resolvedPreview ? (
                     /* ── Preview state ──────────────────────── */
-                    <div className={cn('relative overflow-hidden rounded-lg border bg-muted/30', previewHeight)}>
+                    <div
+                        className={cn(
+                            'relative overflow-hidden rounded-lg border bg-muted/30',
+                            previewHeight,
+                        )}
+                    >
                         <img
                             src={resolvedPreview}
                             alt="Selected media"

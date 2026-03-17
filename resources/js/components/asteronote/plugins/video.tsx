@@ -14,7 +14,12 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { Field, FieldGroup, FieldLabel, FieldDescription } from '@/components/ui/field';
+import {
+    Field,
+    FieldGroup,
+    FieldLabel,
+    FieldDescription,
+} from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 
 // Helper to check if URL is a supported video format to show preview
@@ -24,13 +29,19 @@ function isDirectVideo(url: string) {
 
 // Helper to extract Youtube ID
 function getYoutubeId(url: string) {
-    const match = /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/))([A-Za-z0-9_-]{6,})/i.exec(url);
+    const match =
+        /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/))([A-Za-z0-9_-]{6,})/i.exec(
+            url,
+        );
     return match ? match[1] : null;
 }
 
 // Helper to extract Vimeo ID
 function getVimeoId(url: string) {
-    const match = /vimeo\.com\/(?:channels\/\w+\/|groups\/\w+\/videos\/)?([0-9]+)/i.exec(url);
+    const match =
+        /vimeo\.com\/(?:channels\/\w+\/|groups\/\w+\/videos\/)?([0-9]+)/i.exec(
+            url,
+        );
     return match ? match[1] : null;
 }
 
@@ -56,10 +67,10 @@ export function VideoPluginControl({
         const ytId = getYoutubeId(url);
         if (ytId) {
             return (
-                <div className="aspect-video w-full rounded-md overflow-hidden bg-muted">
+                <div className="aspect-video w-full overflow-hidden rounded-md bg-muted">
                     <iframe
                         src={`https://www.youtube.com/embed/${ytId}`}
-                        className="w-full h-full border-0"
+                        className="h-full w-full border-0"
                         title="Video preview"
                         allowFullScreen
                     />
@@ -70,10 +81,10 @@ export function VideoPluginControl({
         const vmId = getVimeoId(url);
         if (vmId) {
             return (
-                <div className="aspect-video w-full rounded-md overflow-hidden bg-muted">
+                <div className="aspect-video w-full overflow-hidden rounded-md bg-muted">
                     <iframe
                         src={`https://player.vimeo.com/video/${vmId}`}
-                        className="w-full h-full border-0"
+                        className="h-full w-full border-0"
                         title="Video preview"
                         allowFullScreen
                     />
@@ -83,16 +94,20 @@ export function VideoPluginControl({
 
         if (isDirectVideo(url)) {
             return (
-                <div className="aspect-video w-full rounded-md overflow-hidden bg-black flex items-center justify-center">
-                    <video src={url} controls className="max-w-full max-h-full" />
+                <div className="flex aspect-video w-full items-center justify-center overflow-hidden rounded-md bg-black">
+                    <video
+                        src={url}
+                        controls
+                        className="max-h-full max-w-full"
+                    />
                 </div>
             );
         }
 
         // URL entered but format not recognized for preview
         return (
-            <div className="aspect-video w-full rounded-md border border-dashed border-muted-foreground/30 bg-muted/20 flex flex-col items-center justify-center text-muted-foreground">
-                <VideoIcon className="size-8 mb-2 opacity-50" />
+            <div className="flex aspect-video w-full flex-col items-center justify-center rounded-md border border-dashed border-muted-foreground/30 bg-muted/20 text-muted-foreground">
+                <VideoIcon className="mb-2 size-8 opacity-50" />
                 <span className="text-sm">No preview available</span>
             </div>
         );
@@ -117,36 +132,40 @@ export function VideoPluginControl({
                         <DialogHeader>
                             <DialogTitle>Insert Video</DialogTitle>
                             <DialogDescription>
-                                Add a YouTube, Vimeo, Dailymotion link, or a direct URL to an mp4/webm file.
+                                Add a YouTube, Vimeo, Dailymotion link, or a
+                                direct URL to an mp4/webm file.
                             </DialogDescription>
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
                             {url && (
-                                <div className="mb-2">
-                                    {renderPreview()}
-                                </div>
+                                <div className="mb-2">{renderPreview()}</div>
                             )}
                             <FieldGroup>
                                 <Field>
-                                    <FieldLabel htmlFor={`${editor.id}-video-url`}>
+                                    <FieldLabel
+                                        htmlFor={`${editor.id}-video-url`}
+                                    >
                                         Video URL
                                     </FieldLabel>
                                     <Input
                                         id={`${editor.id}-video-url`}
                                         type="url"
                                         value={url}
-                                        onChange={(event) => setUrl(event.target.value)}
+                                        onChange={(event) =>
+                                            setUrl(event.target.value)
+                                        }
                                         placeholder="https://www.youtube.com/watch?v=..."
                                         autoFocus
                                         required
                                     />
                                     <FieldDescription>
-                                        The video will be embedded responsively in the content.
+                                        The video will be embedded responsively
+                                        in the content.
                                     </FieldDescription>
                                 </Field>
                             </FieldGroup>
                         </div>
-                        <DialogFooter className="gap-2 sm:gap-0 mt-2">
+                        <DialogFooter className="mt-2 gap-2 sm:gap-0">
                             <Button
                                 type="button"
                                 variant="outline"
@@ -154,10 +173,7 @@ export function VideoPluginControl({
                             >
                                 Cancel
                             </Button>
-                            <Button
-                                type="submit"
-                                disabled={!url.trim()}
-                            >
+                            <Button type="submit" disabled={!url.trim()}>
                                 Insert Video
                             </Button>
                         </DialogFooter>

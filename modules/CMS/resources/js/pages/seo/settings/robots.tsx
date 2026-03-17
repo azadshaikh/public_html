@@ -11,12 +11,20 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field';
+import {
+    Field,
+    FieldDescription,
+    FieldError,
+    FieldLabel,
+} from '@/components/ui/field';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import { useAppForm } from '@/hooks/use-app-form';
 import SettingsLayout from '@/layouts/settings-layout';
-import { getSeoSettingsBreadcrumbs, getSeoSettingsNav } from '../../../lib/seo-settings';
+import {
+    getSeoSettingsBreadcrumbs,
+    getSeoSettingsNav,
+} from '../../../lib/seo-settings';
 import type { RobotsFormValues, RobotsPageProps } from '../../../types/seo';
 
 export default function SeoRobotsPage({
@@ -52,7 +60,11 @@ export default function SeoRobotsPage({
             activeSlug="robots"
             railLabel="SEO settings"
         >
-            <form className="flex flex-col gap-6" onSubmit={handleSubmit} noValidate>
+            <form
+                className="flex flex-col gap-6"
+                onSubmit={handleSubmit}
+                noValidate
+            >
                 {form.dirtyGuardDialog}
                 <FormErrorSummary errors={form.errors} minMessages={2} />
 
@@ -60,7 +72,8 @@ export default function SeoRobotsPage({
                     <BotIcon className="size-4" />
                     <AlertTitle>Recommended baseline</AlertTitle>
                     <AlertDescription>
-                        Keep your sitemap reference present unless you intentionally want crawlers to ignore discovery hints.
+                        Keep your sitemap reference present unless you
+                        intentionally want crawlers to ignore discovery hints.
                     </AlertDescription>
                 </Alert>
 
@@ -68,21 +81,33 @@ export default function SeoRobotsPage({
                     <CardHeader>
                         <CardTitle>Robots directives</CardTitle>
                         <CardDescription>
-                            Add or update crawler instructions. Leave the field empty to remove the custom file.
+                            Add or update crawler instructions. Leave the field
+                            empty to remove the custom file.
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="flex flex-col gap-6">
-                        <Field data-invalid={form.invalid('robots_txt') || undefined}>
-                            <FieldLabel htmlFor="robots_txt">File contents</FieldLabel>
+                        <Field
+                            data-invalid={
+                                form.invalid('robots_txt') || undefined
+                            }
+                        >
+                            <FieldLabel htmlFor="robots_txt">
+                                File contents
+                            </FieldLabel>
                             <Textarea
                                 id="robots_txt"
                                 rows={18}
                                 value={form.data.robots_txt}
                                 onChange={(event) =>
-                                    form.setField('robots_txt', event.target.value)
+                                    form.setField(
+                                        'robots_txt',
+                                        event.target.value,
+                                    )
                                 }
                                 onBlur={() => form.touch('robots_txt')}
-                                aria-invalid={form.invalid('robots_txt') || undefined}
+                                aria-invalid={
+                                    form.invalid('robots_txt') || undefined
+                                }
                                 spellCheck={false}
                                 autoCorrect="off"
                                 autoCapitalize="off"
@@ -90,14 +115,21 @@ export default function SeoRobotsPage({
                                 placeholder={`User-agent: *\nAllow: /\n\nSitemap: ${sitemapUrl}`}
                             />
                             <FieldDescription>
-                                Example: <span className="font-mono">Sitemap: {sitemapUrl}</span>
+                                Example:{' '}
+                                <span className="font-mono">
+                                    Sitemap: {sitemapUrl}
+                                </span>
                             </FieldDescription>
                             <FieldError>{form.error('robots_txt')}</FieldError>
                         </Field>
                     </CardContent>
                     <CardFooter className="flex flex-col justify-between gap-3 sm:flex-row">
                         <Button type="button" variant="outline" asChild>
-                            <a href={robotsUrl} target="_blank" rel="noopener noreferrer">
+                            <a
+                                href={robotsUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
                                 <ExternalLinkIcon data-icon="inline-start" />
                                 View current robots.txt
                             </a>

@@ -89,7 +89,10 @@ function loadAllDesignElements() {
 
                             // Add to blocks group (merge with existing if any)
                             if (Astero.BlocksGroup[category]) {
-                                Astero.BlocksGroup[category] = [...Astero.BlocksGroup[category], ...blockIds];
+                                Astero.BlocksGroup[category] = [
+                                    ...Astero.BlocksGroup[category],
+                                    ...blockIds,
+                                ];
                             } else {
                                 Astero.BlocksGroup[category] = blockIds;
                             }
@@ -118,7 +121,10 @@ function loadAllDesignElements() {
 
                             // Add to sections group (merge with existing if any)
                             if (Astero.SectionsGroup[category]) {
-                                Astero.SectionsGroup[category] = [...Astero.SectionsGroup[category], ...sectionIds];
+                                Astero.SectionsGroup[category] = [
+                                    ...Astero.SectionsGroup[category],
+                                    ...sectionIds,
+                                ];
                             } else {
                                 Astero.SectionsGroup[category] = sectionIds;
                             }
@@ -135,7 +141,10 @@ function loadAllDesignElements() {
 
                             components.forEach((component) => {
                                 // Add component to Astero.Components if it exists
-                                if (Astero.Components && Astero.Components.add) {
+                                if (
+                                    Astero.Components &&
+                                    Astero.Components.add
+                                ) {
                                     Astero.Components.add(component.id, {
                                         id: component.id,
                                         name: component.name,
@@ -165,7 +174,10 @@ function loadAllDesignElements() {
 
                     resolve();
                 } else {
-                    console.error('Failed to load design elements:', data.message || 'Request failed');
+                    console.error(
+                        'Failed to load design elements:',
+                        data.message || 'Request failed',
+                    );
                     reject(new Error(data.message || 'Request failed'));
                 }
             })
@@ -272,7 +284,9 @@ function initializeDesignElements() {
     // loadAllDesignElements().catch((error) => {
     //     console.error('Failed to preload design elements:', error);
     // });
-    console.log('[AsteroDesignBlocks] Legacy storage initialized. Blocks loaded on-demand via Registry.');
+    console.log(
+        '[AsteroDesignBlocks] Legacy storage initialized. Blocks loaded on-demand via Registry.',
+    );
 }
 
 // Initialize on DOM ready

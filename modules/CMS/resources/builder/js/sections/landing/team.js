@@ -1,6 +1,8 @@
 Astero.Sections.add('team/team-1', {
     name: 'Team 1',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/team/team-1-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/team/team-1-thumb.jpeg',
     html: `<section class="py-5" title="team-1">
   <div class="container">
     <div class="row justify-content-center mb-4">
@@ -203,7 +205,9 @@ Astero.Sections.add('team/team-1', {
 });
 Astero.Sections.add('team/team-2', {
     name: 'Team 2',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/team/team-2-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/team/team-2-thumb.jpeg',
     html: `<section class="py-5 team-2" title="team-2">
   <div class="container">
     <div class="row justify-content-center mb-4">
@@ -350,7 +354,9 @@ Astero.Sections.add('team/team-2', {
 });
 Astero.Sections.add('team/team-3', {
     name: 'Team 3',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/team/team-3-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/team/team-3-thumb.jpeg',
     html: `<section class="py-5" title="team-5">
   <div class="container">
     <div class="row justify-content-center mb-4">
@@ -542,7 +548,9 @@ Astero.Sections.add('team/team-3', {
 });
 Astero.Sections.add('team/team-4', {
     name: 'Team 4',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/team/team-4-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/team/team-4-thumb.jpeg',
     html: `<section class="py-5" title="team-6">
   <div class="container">
     <div class="row justify-content-center mb-4">
@@ -687,7 +695,9 @@ Astero.Sections.add('team/team-4', {
 });
 Astero.Sections.add('team/team-5', {
     name: 'Team 5',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/team/team-5-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/team/team-5-thumb.jpeg',
     html: `<section class="py-5" title="team-7">
   <div class="container">
     <div class="row justify-content-center mb-4">
@@ -890,7 +900,9 @@ Astero.Sections.add('team/team-5', {
 });
 Astero.Sections.add('team/team-6', {
     name: 'Team 6',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/team/team-6-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/team/team-6-thumb.jpeg',
     html: `<section class="p-4" title="team-11">
   <div class="container">
     <div class="row text-center">

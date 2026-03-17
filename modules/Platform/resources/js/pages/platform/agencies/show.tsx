@@ -1,11 +1,29 @@
 import { Link, router } from '@inertiajs/react';
-import { ActivityIcon, Building2Icon, GlobeIcon, PencilIcon, RefreshCwIcon, ServerIcon, ShieldIcon } from 'lucide-react';
+import {
+    ActivityIcon,
+    Building2Icon,
+    GlobeIcon,
+    PencilIcon,
+    RefreshCwIcon,
+    ServerIcon,
+    ShieldIcon,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
-import type { AgencyRelationItem, AgencyShowData, PlatformActivity } from '../../../types/platform';
+import type {
+    AgencyRelationItem,
+    AgencyShowData,
+    PlatformActivity,
+} from '../../../types/platform';
 
 type AgenciesShowPageProps = {
     agency: AgencyShowData;
@@ -16,11 +34,21 @@ type AgenciesShowPageProps = {
     activities: PlatformActivity[];
 };
 
-function OverviewItem({ label, value }: { label: string; value: string | number | null | undefined }) {
+function OverviewItem({
+    label,
+    value,
+}: {
+    label: string;
+    value: string | number | null | undefined;
+}) {
     return (
         <div className="flex flex-col gap-1 rounded-lg border bg-muted/20 p-4">
-            <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</span>
-            <span className="text-sm font-medium text-foreground">{value || '—'}</span>
+            <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                {label}
+            </span>
+            <span className="text-sm font-medium text-foreground">
+                {value || '—'}
+            </span>
         </div>
     );
 }
@@ -47,23 +75,39 @@ function RelationList({
             </CardHeader>
             <CardContent className="flex flex-col gap-3">
                 {items.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">No records yet.</p>
+                    <p className="text-sm text-muted-foreground">
+                        No records yet.
+                    </p>
                 ) : (
                     items.map((item) => (
-                        <div key={item.id} className="flex items-center justify-between gap-3 rounded-lg border p-3">
+                        <div
+                            key={item.id}
+                            className="flex items-center justify-between gap-3 rounded-lg border p-3"
+                        >
                             <div className="min-w-0">
                                 {item.href ? (
-                                    <Link href={item.href} className="font-medium text-foreground hover:text-primary">
+                                    <Link
+                                        href={item.href}
+                                        className="font-medium text-foreground hover:text-primary"
+                                    >
                                         {item.name}
                                     </Link>
                                 ) : (
-                                    <p className="font-medium text-foreground">{item.name}</p>
+                                    <p className="font-medium text-foreground">
+                                        {item.name}
+                                    </p>
                                 )}
                                 {item.subtitle ? (
-                                    <p className="truncate text-sm text-muted-foreground">{item.subtitle}</p>
+                                    <p className="truncate text-sm text-muted-foreground">
+                                        {item.subtitle}
+                                    </p>
                                 ) : null}
                             </div>
-                            {item.status ? <span className="text-xs text-muted-foreground">{item.status}</span> : null}
+                            {item.status ? (
+                                <span className="text-xs text-muted-foreground">
+                                    {item.status}
+                                </span>
+                            ) : null}
                         </div>
                     ))
                 )}
@@ -82,9 +126,18 @@ export default function AgenciesShow({
 }: AgenciesShowPageProps) {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: route('dashboard') },
-        { title: 'Platform', href: route('platform.agencies.index', { status: 'all' }) },
-        { title: 'Agencies', href: route('platform.agencies.index', { status: 'all' }) },
-        { title: agency.name, href: route('platform.agencies.show', agency.id) },
+        {
+            title: 'Platform',
+            href: route('platform.agencies.index', { status: 'all' }),
+        },
+        {
+            title: 'Agencies',
+            href: route('platform.agencies.index', { status: 'all' }),
+        },
+        {
+            title: agency.name,
+            href: route('platform.agencies.show', agency.id),
+        },
     ];
 
     return (
@@ -103,9 +156,16 @@ export default function AgenciesShow({
                     <Button
                         variant="outline"
                         onClick={() =>
-                            router.post(route('platform.agencies.regenerate-secret-key', agency.id), undefined, {
-                                preserveScroll: true,
-                            })
+                            router.post(
+                                route(
+                                    'platform.agencies.regenerate-secret-key',
+                                    agency.id,
+                                ),
+                                undefined,
+                                {
+                                    preserveScroll: true,
+                                },
+                            )
                         }
                     >
                         <RefreshCwIcon data-icon="inline-start" />
@@ -122,7 +182,8 @@ export default function AgenciesShow({
                             <CardTitle>Agency overview</CardTitle>
                         </div>
                         <CardDescription>
-                            Core profile, ownership, and routing defaults used for new websites.
+                            Core profile, ownership, and routing defaults used
+                            for new websites.
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -131,9 +192,18 @@ export default function AgenciesShow({
                         <OverviewItem label="Type" value={agency.type} />
                         <OverviewItem label="Plan" value={agency.plan} />
                         <OverviewItem label="Status" value={agency.status} />
-                        <OverviewItem label="Website prefix" value={agency.website_id_prefix} />
-                        <OverviewItem label="Zero padding" value={agency.website_id_zero_padding} />
-                        <OverviewItem label="Webhook URL" value={agency.webhook_url} />
+                        <OverviewItem
+                            label="Website prefix"
+                            value={agency.website_id_prefix}
+                        />
+                        <OverviewItem
+                            label="Zero padding"
+                            value={agency.website_id_zero_padding}
+                        />
+                        <OverviewItem
+                            label="Webhook URL"
+                            value={agency.webhook_url}
+                        />
                     </CardContent>
                 </Card>
 
@@ -141,30 +211,54 @@ export default function AgenciesShow({
                     <Card>
                         <CardHeader>
                             <CardTitle>Branding and contact</CardTitle>
-                            <CardDescription>Metadata delivered to agency-managed platform websites.</CardDescription>
+                            <CardDescription>
+                                Metadata delivered to agency-managed platform
+                                websites.
+                            </CardDescription>
                         </CardHeader>
                         <CardContent className="flex flex-col gap-4 text-sm">
                             <div>
-                                <p className="font-medium text-foreground">Primary email</p>
-                                <p className="text-muted-foreground">{agency.email || '—'}</p>
+                                <p className="font-medium text-foreground">
+                                    Primary email
+                                </p>
+                                <p className="text-muted-foreground">
+                                    {agency.email || '—'}
+                                </p>
                             </div>
                             <Separator />
                             <div>
-                                <p className="font-medium text-foreground">Brand name</p>
-                                <p className="text-muted-foreground">{agency.branding.name || '—'}</p>
-                            </div>
-                            <div>
-                                <p className="font-medium text-foreground">Brand website</p>
-                                <p className="text-muted-foreground">{agency.branding.website || '—'}</p>
-                            </div>
-                            <div>
-                                <p className="font-medium text-foreground">Phone</p>
+                                <p className="font-medium text-foreground">
+                                    Brand name
+                                </p>
                                 <p className="text-muted-foreground">
-                                    {[agency.address.phone_code, agency.address.phone].filter(Boolean).join(' ') || '—'}
+                                    {agency.branding.name || '—'}
                                 </p>
                             </div>
                             <div>
-                                <p className="font-medium text-foreground">Address</p>
+                                <p className="font-medium text-foreground">
+                                    Brand website
+                                </p>
+                                <p className="text-muted-foreground">
+                                    {agency.branding.website || '—'}
+                                </p>
+                            </div>
+                            <div>
+                                <p className="font-medium text-foreground">
+                                    Phone
+                                </p>
+                                <p className="text-muted-foreground">
+                                    {[
+                                        agency.address.phone_code,
+                                        agency.address.phone,
+                                    ]
+                                        .filter(Boolean)
+                                        .join(' ') || '—'}
+                                </p>
+                            </div>
+                            <div>
+                                <p className="font-medium text-foreground">
+                                    Address
+                                </p>
                                 <p className="text-muted-foreground">
                                     {[
                                         agency.address.address1,
@@ -186,18 +280,30 @@ export default function AgenciesShow({
                                 <ActivityIcon className="size-4 text-muted-foreground" />
                                 <CardTitle>Recent activity</CardTitle>
                             </div>
-                            <CardDescription>Latest operational events tied to this agency.</CardDescription>
+                            <CardDescription>
+                                Latest operational events tied to this agency.
+                            </CardDescription>
                         </CardHeader>
                         <CardContent className="flex flex-col gap-3">
                             {activities.length === 0 ? (
-                                <p className="text-sm text-muted-foreground">No recent activity.</p>
+                                <p className="text-sm text-muted-foreground">
+                                    No recent activity.
+                                </p>
                             ) : (
                                 activities.map((activity) => (
-                                    <div key={activity.id} className="rounded-lg border p-3">
-                                        <p className="text-sm font-medium text-foreground">{activity.description}</p>
+                                    <div
+                                        key={activity.id}
+                                        className="rounded-lg border p-3"
+                                    >
+                                        <p className="text-sm font-medium text-foreground">
+                                            {activity.description}
+                                        </p>
                                         <p className="text-xs text-muted-foreground">
-                                            {activity.causer_name ? `${activity.causer_name} · ` : ''}
-                                            {activity.created_at || 'Unknown time'}
+                                            {activity.causer_name
+                                                ? `${activity.causer_name} · `
+                                                : ''}
+                                            {activity.created_at ||
+                                                'Unknown time'}
                                         </p>
                                     </div>
                                 ))

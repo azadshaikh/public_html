@@ -22,10 +22,22 @@ type AgenciesEditPageProps = {
 export default function AgenciesEdit(props: AgenciesEditPageProps) {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: route('dashboard') },
-        { title: 'Platform', href: route('platform.agencies.index', { status: 'all' }) },
-        { title: 'Agencies', href: route('platform.agencies.index', { status: 'all' }) },
-        { title: props.agency.name, href: route('platform.agencies.show', props.agency.id) },
-        { title: 'Edit', href: route('platform.agencies.edit', props.agency.id) },
+        {
+            title: 'Platform',
+            href: route('platform.agencies.index', { status: 'all' }),
+        },
+        {
+            title: 'Agencies',
+            href: route('platform.agencies.index', { status: 'all' }),
+        },
+        {
+            title: props.agency.name,
+            href: route('platform.agencies.show', props.agency.id),
+        },
+        {
+            title: 'Edit',
+            href: route('platform.agencies.edit', props.agency.id),
+        },
     ];
 
     return (

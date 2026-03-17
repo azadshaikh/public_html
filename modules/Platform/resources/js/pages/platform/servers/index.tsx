@@ -6,20 +6,39 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
-import { buildBulkActions, buildDatagridState, mapRowActions } from '../../../lib/helpers';
-import type { PlatformIndexPageProps, ServerListItem } from '../../../types/platform';
+import {
+    buildBulkActions,
+    buildDatagridState,
+    mapRowActions,
+} from '../../../lib/helpers';
+import type {
+    PlatformIndexPageProps,
+    ServerListItem,
+} from '../../../types/platform';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: route('dashboard') },
-    { title: 'Platform', href: route('platform.servers.index', { status: 'all' }) },
-    { title: 'Servers', href: route('platform.servers.index', { status: 'all' }) },
+    {
+        title: 'Platform',
+        href: route('platform.servers.index', { status: 'all' }),
+    },
+    {
+        title: 'Servers',
+        href: route('platform.servers.index', { status: 'all' }),
+    },
 ];
 
-export default function ServersIndex({ config, rows, filters, statistics }: PlatformIndexPageProps<ServerListItem>) {
+export default function ServersIndex({
+    config,
+    rows,
+    filters,
+    statistics,
+}: PlatformIndexPageProps<ServerListItem>) {
     const page = usePage<AuthenticatedSharedData>();
     const canAddServers = page.props.auth.abilities.addServers;
 
-    const { currentStatus, gridFilters, perPage, sorting, statusTabs } = buildDatagridState(config, filters, statistics, 'Search servers...');
+    const { currentStatus, gridFilters, perPage, sorting, statusTabs } =
+        buildDatagridState(config, filters, statistics, 'Search servers...');
 
     const columns: DatagridColumn<ServerListItem>[] = [
         {
@@ -28,7 +47,10 @@ export default function ServersIndex({ config, rows, filters, statistics }: Plat
             sortable: true,
             cell: (server) => (
                 <div className="flex flex-col gap-1">
-                    <Link href={route('platform.servers.show', server.id)} className="font-medium text-foreground hover:text-primary">
+                    <Link
+                        href={route('platform.servers.show', server.id)}
+                        className="font-medium text-foreground hover:text-primary"
+                    >
                         {server.name}
                     </Link>
                     <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
@@ -45,7 +67,9 @@ export default function ServersIndex({ config, rows, filters, statistics }: Plat
         {
             key: 'type_label',
             header: 'Type',
-            cell: (server) => <Badge variant="secondary">{server.type_label}</Badge>,
+            cell: (server) => (
+                <Badge variant="secondary">{server.type_label}</Badge>
+            ),
         },
         {
             key: 'domain_usage_current',
@@ -55,7 +79,9 @@ export default function ServersIndex({ config, rows, filters, statistics }: Plat
             cell: (server) => (
                 <span className="font-medium">
                     {server.domain_usage_current}
-                    {server.domain_usage_max ? ` / ${server.domain_usage_max}` : ''}
+                    {server.domain_usage_max
+                        ? ` / ${server.domain_usage_max}`
+                        : ''}
                 </span>
             ),
         },
@@ -64,7 +90,13 @@ export default function ServersIndex({ config, rows, filters, statistics }: Plat
             header: 'Status',
             sortable: true,
             sortKey: 'status',
-            cell: (server) => <Badge variant={server.is_trashed ? 'destructive' : 'secondary'}>{server.status_label}</Badge>,
+            cell: (server) => (
+                <Badge
+                    variant={server.is_trashed ? 'destructive' : 'secondary'}
+                >
+                    {server.status_label}
+                </Badge>
+            ),
         },
         {
             key: 'created_at',
@@ -90,18 +122,25 @@ export default function ServersIndex({ config, rows, filters, statistics }: Plat
             }
         >
             <Datagrid
-                action={route('platform.servers.index', { status: currentStatus })}
+                action={route('platform.servers.index', {
+                    status: currentStatus,
+                })}
                 rows={rows}
                 columns={columns}
                 filters={gridFilters}
                 tabs={{ name: 'status', items: statusTabs }}
                 getRowKey={(server) => server.id}
                 rowActions={(server) => mapRowActions(server.actions)}
-                bulkActions={buildBulkActions(config.actions, config.settings.routePrefix, currentStatus)}
+                bulkActions={buildBulkActions(
+                    config.actions,
+                    config.settings.routePrefix,
+                    currentStatus,
+                )}
                 empty={{
                     icon: <HardDriveIcon className="size-5" />,
                     title: 'No servers found',
-                    description: 'Add an existing server or provision a fresh VPS to get started.',
+                    description:
+                        'Add an existing server or provision a fresh VPS to get started.',
                 }}
                 sorting={sorting}
                 perPage={perPage}

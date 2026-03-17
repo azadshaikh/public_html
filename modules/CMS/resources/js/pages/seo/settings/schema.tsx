@@ -16,7 +16,10 @@ import { Spinner } from '@/components/ui/spinner';
 import { Switch } from '@/components/ui/switch';
 import { useAppForm } from '@/hooks/use-app-form';
 import SettingsLayout from '@/layouts/settings-layout';
-import { getSeoSettingsBreadcrumbs, getSeoSettingsNav } from '../../../lib/seo-settings';
+import {
+    getSeoSettingsBreadcrumbs,
+    getSeoSettingsNav,
+} from '../../../lib/seo-settings';
 import type { SchemaFormValues, SchemaPageProps } from '../../../types/seo';
 
 export default function SeoSchemaPage({ initialValues }: SchemaPageProps) {
@@ -34,7 +37,8 @@ export default function SeoSchemaPage({ initialValues }: SchemaPageProps) {
             setDefaultsOnSuccess: true,
             successToast: {
                 title: 'Schema settings updated',
-                description: 'Structured data defaults were saved successfully.',
+                description:
+                    'Structured data defaults were saved successfully.',
             },
         });
     };
@@ -48,7 +52,11 @@ export default function SeoSchemaPage({ initialValues }: SchemaPageProps) {
             activeSlug="schema"
             railLabel="SEO settings"
         >
-            <form className="flex flex-col gap-6" onSubmit={handleSubmit} noValidate>
+            <form
+                className="flex flex-col gap-6"
+                onSubmit={handleSubmit}
+                noValidate
+            >
                 {form.dirtyGuardDialog}
                 <FormErrorSummary errors={form.errors} minMessages={2} />
 
@@ -56,7 +64,8 @@ export default function SeoSchemaPage({ initialValues }: SchemaPageProps) {
                     <BracesIcon className="size-4" />
                     <AlertTitle>Structured data at a glance</AlertTitle>
                     <AlertDescription>
-                        Schema improves how search engines interpret your content and can unlock richer result types.
+                        Schema improves how search engines interpret your
+                        content and can unlock richer result types.
                     </AlertDescription>
                 </Alert>
 
@@ -67,7 +76,8 @@ export default function SeoSchemaPage({ initialValues }: SchemaPageProps) {
                             <CardTitle>Site-wide schema defaults</CardTitle>
                         </div>
                         <CardDescription>
-                            Turn structured data features on or off for the entire site.
+                            Turn structured data features on or off for the
+                            entire site.
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="flex flex-col gap-6">
@@ -75,13 +85,18 @@ export default function SeoSchemaPage({ initialValues }: SchemaPageProps) {
                             <Switch
                                 checked={form.data.enable_article_schema}
                                 onCheckedChange={(checked) =>
-                                    form.setField('enable_article_schema', checked)
+                                    form.setField(
+                                        'enable_article_schema',
+                                        checked,
+                                    )
                                 }
                             />
                             <div className="flex flex-col gap-1">
                                 <FieldLabel>Enable article schema</FieldLabel>
                                 <FieldDescription>
-                                    Adds article-specific structured data to blog content for better rich result eligibility.
+                                    Adds article-specific structured data to
+                                    blog content for better rich result
+                                    eligibility.
                                 </FieldDescription>
                             </div>
                         </Field>
@@ -90,13 +105,19 @@ export default function SeoSchemaPage({ initialValues }: SchemaPageProps) {
                             <Switch
                                 checked={form.data.enable_breadcrumb_schema}
                                 onCheckedChange={(checked) =>
-                                    form.setField('enable_breadcrumb_schema', checked)
+                                    form.setField(
+                                        'enable_breadcrumb_schema',
+                                        checked,
+                                    )
                                 }
                             />
                             <div className="flex flex-col gap-1">
-                                <FieldLabel>Enable breadcrumb schema</FieldLabel>
+                                <FieldLabel>
+                                    Enable breadcrumb schema
+                                </FieldLabel>
                                 <FieldDescription>
-                                    Helps search engines understand hierarchy and can display breadcrumb paths in results.
+                                    Helps search engines understand hierarchy
+                                    and can display breadcrumb paths in results.
                                 </FieldDescription>
                             </div>
                         </Field>

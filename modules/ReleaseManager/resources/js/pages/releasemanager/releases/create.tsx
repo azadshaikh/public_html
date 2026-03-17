@@ -3,8 +3,20 @@ import type { BreadcrumbItem } from '@/types';
 import { ReleaseForm } from '../../../components/release-form';
 import { releaseRouteParams } from '../../../lib/helpers';
 
-export default function ReleaseCreate({ initialValues, versionTypes, statusOptions, type }: any) {
-    const title = type === 'application' ? 'Add Application Release' : 'Add Module Release';
+export default function ReleaseCreate({
+    initialValues,
+    versionTypes,
+    statusOptions,
+    type,
+}: any) {
+    const title =
+        type === 'application'
+            ? 'Add Application Release'
+            : 'Add Module Release';
+    const routeNamespace =
+        type === 'module'
+            ? 'releasemanager.module'
+            : 'releasemanager.application';
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: route('dashboard') },
@@ -13,7 +25,11 @@ export default function ReleaseCreate({ initialValues, versionTypes, statusOptio
     ];
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs} title={title} description="Create a new release or module version">
+        <AppLayout
+            breadcrumbs={breadcrumbs}
+            title={title}
+            description="Create a new release or module version"
+        >
             <ReleaseForm
                 initialValues={initialValues}
                 versionTypes={versionTypes}

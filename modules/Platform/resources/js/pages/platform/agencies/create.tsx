@@ -5,8 +5,14 @@ import type { AgencyFormValues, PlatformOption } from '../../../types/platform';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: route('dashboard') },
-    { title: 'Platform', href: route('platform.agencies.index', { status: 'all' }) },
-    { title: 'Agencies', href: route('platform.agencies.index', { status: 'all' }) },
+    {
+        title: 'Platform',
+        href: route('platform.agencies.index', { status: 'all' }),
+    },
+    {
+        title: 'Agencies',
+        href: route('platform.agencies.index', { status: 'all' }),
+    },
     { title: 'Create', href: route('platform.agencies.create') },
 ];
 

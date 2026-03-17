@@ -82,7 +82,9 @@ const BuilderMediaPlugin = {
             return;
         }
 
-        console.error('BuilderMediaPlugin: openBuilderMediaPicker is not available');
+        console.error(
+            'BuilderMediaPlugin: openBuilderMediaPicker is not available',
+        );
     },
 
     /**
@@ -206,11 +208,13 @@ window.ImageInput = {
          */
         setValue: function (value) {
             if (value && value.indexOf('data:image') == -1 && value != 'none') {
-                this.element[0].querySelector('input[type="text"]').value = value;
+                this.element[0].querySelector('input[type="text"]').value =
+                    value;
                 let src = this.resolveImageUrl(value);
                 this.element[0].querySelector(this.tag).src = src;
             } else {
-                this.element[0].querySelector(this.tag).src = '/assets/images/image-add-line.svg';
+                this.element[0].querySelector(this.tag).src =
+                    '/assets/images/image-add-line.svg';
             }
         },
 
@@ -253,12 +257,15 @@ window.ImageInput = {
 
             // Reselect image after loading to adjust highlight box size
             if (Astero.Builder.selectedEl) {
-                Astero.Builder.selectedEl.addEventListener('load', function onLoad() {
-                    if (Astero.Builder.selectedEl) {
-                        Astero.Builder.selectedEl.click();
-                    }
-                    this.removeEventListener('load', onLoad);
-                });
+                Astero.Builder.selectedEl.addEventListener(
+                    'load',
+                    function onLoad() {
+                        if (Astero.Builder.selectedEl) {
+                            Astero.Builder.selectedEl.click();
+                        }
+                        this.removeEventListener('load', onLoad);
+                    },
+                );
             }
         },
 
@@ -294,7 +301,8 @@ window.ImageInput = {
                             if (media.alt) {
                                 selectedEl.setAttribute('alt', media.alt);
                                 // Update the alt input in the right panel
-                                const altInput = document.querySelector('#input-alt');
+                                const altInput =
+                                    document.querySelector('#input-alt');
                                 if (altInput) {
                                     altInput.value = media.alt;
                                 }
@@ -304,7 +312,8 @@ window.ImageInput = {
                             if (title) {
                                 selectedEl.setAttribute('title', title);
                                 // Update the title input in the right panel if it exists
-                                const titleInput = document.querySelector('#input-title');
+                                const titleInput =
+                                    document.querySelector('#input-title');
                                 if (titleInput) {
                                     titleInput.value = title;
                                 }
@@ -312,12 +321,18 @@ window.ImageInput = {
                         }
 
                         // Trigger change event to update the builder
-                        input.dispatchEvent(new Event('change', { bubbles: true }));
-                        input.dispatchEvent(new Event('focusout', { bubbles: true }));
+                        input.dispatchEvent(
+                            new Event('change', { bubbles: true }),
+                        );
+                        input.dispatchEvent(
+                            new Event('focusout', { bubbles: true }),
+                        );
                     }
                 });
             } else {
-                console.warn('ImageInput: Could not find target input for media selection');
+                console.warn(
+                    'ImageInput: Could not find target input for media selection',
+                );
             }
         },
 
@@ -332,7 +347,9 @@ window.ImageInput = {
             // Check for data-target-input attribute which contains an ID selector
             const targetSelector =
                 el.getAttribute('data-target-input') ||
-                el.closest('[data-target-input]')?.getAttribute('data-target-input');
+                el
+                    .closest('[data-target-input]')
+                    ?.getAttribute('data-target-input');
             if (targetSelector) {
                 // The selector is like "#input-src" - query the document
                 const input = document.querySelector(targetSelector);
@@ -385,7 +402,8 @@ window.VideoInput = {
          */
         setValue: function (value) {
             if (value && value != 'none') {
-                this.element[0].querySelector('input[type="text"]').value = value;
+                this.element[0].querySelector('input[type="text"]').value =
+                    value;
                 let src = this.resolveVideoUrl(value);
                 this.element[0].querySelector(this.tag).src = src;
             } else {
@@ -400,7 +418,11 @@ window.VideoInput = {
          */
         resolveVideoUrl: function (value) {
             // Check if it's already an absolute URL or a media library path
-            if (value.indexOf('//') > -1 || value.indexOf('media/') > -1 || value.indexOf('storage/') > -1) {
+            if (
+                value.indexOf('//') > -1 ||
+                value.indexOf('media/') > -1 ||
+                value.indexOf('storage/') > -1
+            ) {
                 return value;
             }
             return Astero.builderAssetsUrl + value;
@@ -431,12 +453,18 @@ window.VideoInput = {
                             videoElement.src = url;
                         }
                         // Trigger change event to update the builder
-                        input.dispatchEvent(new Event('change', { bubbles: true }));
-                        input.dispatchEvent(new Event('focusout', { bubbles: true }));
+                        input.dispatchEvent(
+                            new Event('change', { bubbles: true }),
+                        );
+                        input.dispatchEvent(
+                            new Event('focusout', { bubbles: true }),
+                        );
                     }
                 });
             } else {
-                console.warn('VideoInput: Could not find target input for media selection');
+                console.warn(
+                    'VideoInput: Could not find target input for media selection',
+                );
             }
         },
 

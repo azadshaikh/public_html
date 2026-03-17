@@ -14,7 +14,8 @@ export class Toast {
     ensureContainer() {
         if (!this.container) {
             this.container = document.createElement('div');
-            this.container.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+            this.container.className =
+                'toast-container position-fixed bottom-0 end-0 p-3';
             this.container.style.zIndex = '1055';
             document.body.appendChild(this.container);
         }

@@ -31,34 +31,42 @@ const rowActions: Array<{
     label: string;
     icon: React.ReactNode;
 }> = [
-        {
-            action: 'add-row-above',
-            label: 'Add row above',
-            icon: <Rows2Icon className="mr-2 size-4" />,
-        },
-        {
-            action: 'add-row-below',
-            label: 'Add row below',
-            icon: <Rows2Icon className="mr-2 size-4" />,
-        },
-        {
-            action: 'add-column-left',
-            label: 'Add column left',
-            icon: <Columns2Icon className="mr-2 size-4" />,
-        },
-        {
-            action: 'add-column-right',
-            label: 'Add column right',
-            icon: <Columns2Icon className="mr-2 size-4" />,
-        },
-        { action: 'delete-row', label: 'Delete row', icon: <MinusIcon className="mr-2 size-4" /> },
-        {
-            action: 'delete-column',
-            label: 'Delete column',
-            icon: <MinusIcon className="mr-2 size-4" />,
-        },
-        { action: 'delete-table', label: 'Delete table', icon: <EraserIcon className="mr-2 size-4" /> },
-    ];
+    {
+        action: 'add-row-above',
+        label: 'Add row above',
+        icon: <Rows2Icon className="mr-2 size-4" />,
+    },
+    {
+        action: 'add-row-below',
+        label: 'Add row below',
+        icon: <Rows2Icon className="mr-2 size-4" />,
+    },
+    {
+        action: 'add-column-left',
+        label: 'Add column left',
+        icon: <Columns2Icon className="mr-2 size-4" />,
+    },
+    {
+        action: 'add-column-right',
+        label: 'Add column right',
+        icon: <Columns2Icon className="mr-2 size-4" />,
+    },
+    {
+        action: 'delete-row',
+        label: 'Delete row',
+        icon: <MinusIcon className="mr-2 size-4" />,
+    },
+    {
+        action: 'delete-column',
+        label: 'Delete column',
+        icon: <MinusIcon className="mr-2 size-4" />,
+    },
+    {
+        action: 'delete-table',
+        label: 'Delete table',
+        icon: <EraserIcon className="mr-2 size-4" />,
+    },
+];
 
 export function TablePluginControl({
     editor,
@@ -98,7 +106,11 @@ export function TablePluginControl({
                         event.preventDefault()
                     }
                     pressed={open || editor.formatState.inTable}
-                    tooltip={editor.formatState.inTable ? "Table Options" : "Insert Table"}
+                    tooltip={
+                        editor.formatState.inTable
+                            ? 'Table Options'
+                            : 'Insert Table'
+                    }
                 >
                     <Table2Icon />
                 </ToolbarButton>
@@ -111,16 +123,23 @@ export function TablePluginControl({
                 {!editor.formatState.inTable && (
                     <>
                         <DropdownMenuLabel>Insert table</DropdownMenuLabel>
-                        <form onSubmit={handleInsertTable} className="flex flex-col gap-3 p-2">
+                        <form
+                            onSubmit={handleInsertTable}
+                            className="flex flex-col gap-3 p-2"
+                        >
                             <div className="grid grid-cols-2 gap-3">
                                 <Field>
-                                    <FieldLabel htmlFor={`${editor.id}-table-rows`}>
+                                    <FieldLabel
+                                        htmlFor={`${editor.id}-table-rows`}
+                                    >
                                         Rows
                                     </FieldLabel>
                                     <Input
                                         id={`${editor.id}-table-rows`}
                                         value={rows}
-                                        onChange={(event) => setRows(event.target.value)}
+                                        onChange={(event) =>
+                                            setRows(event.target.value)
+                                        }
                                         inputMode="numeric"
                                         min={1}
                                         max={20}
@@ -129,13 +148,17 @@ export function TablePluginControl({
                                     />
                                 </Field>
                                 <Field>
-                                    <FieldLabel htmlFor={`${editor.id}-table-columns`}>
+                                    <FieldLabel
+                                        htmlFor={`${editor.id}-table-columns`}
+                                    >
                                         Columns
                                     </FieldLabel>
                                     <Input
                                         id={`${editor.id}-table-columns`}
                                         value={columns}
-                                        onChange={(event) => setColumns(event.target.value)}
+                                        onChange={(event) =>
+                                            setColumns(event.target.value)
+                                        }
                                         inputMode="numeric"
                                         min={1}
                                         max={12}
@@ -162,7 +185,11 @@ export function TablePluginControl({
                                     editor.updateTable(option.action);
                                     setOpen(false);
                                 }}
-                                className={option.action === 'delete-table' ? 'text-destructive focus:bg-destructive/10 focus:text-destructive' : ''}
+                                className={
+                                    option.action === 'delete-table'
+                                        ? 'text-destructive focus:bg-destructive/10 focus:text-destructive'
+                                        : ''
+                                }
                             >
                                 {option.icon}
                                 {option.label}

@@ -6,20 +6,39 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
-import { buildBulkActions, buildDatagridState, mapRowActions } from '../../../lib/helpers';
-import type { PlatformIndexPageProps, SecretListItem } from '../../../types/platform';
+import {
+    buildBulkActions,
+    buildDatagridState,
+    mapRowActions,
+} from '../../../lib/helpers';
+import type {
+    PlatformIndexPageProps,
+    SecretListItem,
+} from '../../../types/platform';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: route('dashboard') },
-    { title: 'Platform', href: route('platform.secrets.index', { status: 'all' }) },
-    { title: 'Secrets', href: route('platform.secrets.index', { status: 'all' }) },
+    {
+        title: 'Platform',
+        href: route('platform.secrets.index', { status: 'all' }),
+    },
+    {
+        title: 'Secrets',
+        href: route('platform.secrets.index', { status: 'all' }),
+    },
 ];
 
-export default function SecretsIndex({ config, rows, filters, statistics }: PlatformIndexPageProps<SecretListItem>) {
+export default function SecretsIndex({
+    config,
+    rows,
+    filters,
+    statistics,
+}: PlatformIndexPageProps<SecretListItem>) {
     const page = usePage<AuthenticatedSharedData>();
     const canAddSecrets = page.props.auth.abilities.addSecrets;
 
-    const { currentStatus, gridFilters, perPage, sorting, statusTabs } = buildDatagridState(config, filters, statistics, 'Search secrets...');
+    const { currentStatus, gridFilters, perPage, sorting, statusTabs } =
+        buildDatagridState(config, filters, statistics, 'Search secrets...');
 
     const columns: DatagridColumn<SecretListItem>[] = [
         {
@@ -28,10 +47,17 @@ export default function SecretsIndex({ config, rows, filters, statistics }: Plat
             sortable: true,
             cell: (secret) => (
                 <div className="flex flex-col gap-1">
-                    <Link href={route('platform.secrets.show', secret.id)} className="font-medium text-foreground hover:text-primary">
+                    <Link
+                        href={route('platform.secrets.show', secret.id)}
+                        className="font-medium text-foreground hover:text-primary"
+                    >
                         {secret.key}
                     </Link>
-                    {secret.username ? <span className="text-xs text-muted-foreground">{secret.username}</span> : null}
+                    {secret.username ? (
+                        <span className="text-xs text-muted-foreground">
+                            {secret.username}
+                        </span>
+                    ) : null}
                 </div>
             ),
         },
@@ -40,14 +66,26 @@ export default function SecretsIndex({ config, rows, filters, statistics }: Plat
             header: 'Type',
             sortable: true,
             sortKey: 'type',
-            cell: (secret) => <Badge variant="secondary">{secret.type_label}</Badge>,
+            cell: (secret) => (
+                <Badge variant="secondary">{secret.type_label}</Badge>
+            ),
         },
         {
             key: 'is_active_label',
             header: 'Active',
             sortable: true,
             sortKey: 'is_active',
-            cell: (secret) => <Badge variant={secret.is_active_label === 'Active' ? 'success' : 'outline'}>{secret.is_active_label}</Badge>,
+            cell: (secret) => (
+                <Badge
+                    variant={
+                        secret.is_active_label === 'Active'
+                            ? 'success'
+                            : 'outline'
+                    }
+                >
+                    {secret.is_active_label}
+                </Badge>
+            ),
         },
         {
             key: 'expires_at',
@@ -78,18 +116,25 @@ export default function SecretsIndex({ config, rows, filters, statistics }: Plat
             }
         >
             <Datagrid
-                action={route('platform.secrets.index', { status: currentStatus })}
+                action={route('platform.secrets.index', {
+                    status: currentStatus,
+                })}
                 rows={rows}
                 columns={columns}
                 filters={gridFilters}
                 tabs={{ name: 'status', items: statusTabs }}
                 getRowKey={(secret) => secret.id}
                 rowActions={(secret) => mapRowActions(secret.actions)}
-                bulkActions={buildBulkActions(config.actions, config.settings.routePrefix, currentStatus)}
+                bulkActions={buildBulkActions(
+                    config.actions,
+                    config.settings.routePrefix,
+                    currentStatus,
+                )}
                 empty={{
                     icon: <KeyRoundIcon className="size-5" />,
                     title: 'No secrets found',
-                    description: 'Create encrypted secret records for platform credentials, tokens, and certificates.',
+                    description:
+                        'Create encrypted secret records for platform credentials, tokens, and certificates.',
                 }}
                 sorting={sorting}
                 perPage={perPage}

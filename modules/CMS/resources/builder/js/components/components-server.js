@@ -91,9 +91,11 @@ Astero.Components.add('components/products', {
         });
 
         if (group) {
-            document.querySelectorAll('.mb-3[data-group="' + group + '"]').forEach((el) => {
-                el.style.display = '';
-            });
+            document
+                .querySelectorAll('.mb-3[data-group="' + group + '"]')
+                .forEach((el) => {
+                    el.style.display = '';
+                });
             return;
         }
 

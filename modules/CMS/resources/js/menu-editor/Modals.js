@@ -32,7 +32,9 @@ export class Modals {
             }
 
             if (this.elements.delete) {
-                this.instances.delete = new bootstrap.Modal(this.elements.delete);
+                this.instances.delete = new bootstrap.Modal(
+                    this.elements.delete,
+                );
             }
         } catch (error) {
             console.error('Modal initialization error:', error);
@@ -45,9 +47,12 @@ export class Modals {
         const accordion = modal.querySelector('.accordion');
         if (!accordion) return;
 
-        const basicCollapseEl = accordion.querySelector(`#${prefix}-collapse-basic`);
+        const basicCollapseEl = accordion.querySelector(
+            `#${prefix}-collapse-basic`,
+        );
         if (basicCollapseEl && typeof bootstrap !== 'undefined') {
-            const bsCollapse = bootstrap.Collapse.getOrCreateInstance(basicCollapseEl);
+            const bsCollapse =
+                bootstrap.Collapse.getOrCreateInstance(basicCollapseEl);
             bsCollapse.show();
         }
     }

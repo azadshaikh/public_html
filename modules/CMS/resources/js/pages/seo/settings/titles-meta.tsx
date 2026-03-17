@@ -33,17 +33,15 @@ import {
 } from '@/components/ui/native-select';
 import { Spinner } from '@/components/ui/spinner';
 import { Switch } from '@/components/ui/switch';
-import {
-    Tabs,
-    TabsContent,
-    TabsList,
-    TabsTrigger,
-} from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { useAppForm } from '@/hooks/use-app-form';
 import SettingsLayout from '@/layouts/settings-layout';
 import { formValidators } from '@/lib/forms';
-import { getSeoSettingsBreadcrumbs, getSeoSettingsNav } from '../../../lib/seo-settings';
+import {
+    getSeoSettingsBreadcrumbs,
+    getSeoSettingsNav,
+} from '../../../lib/seo-settings';
 import type {
     TitlesMetaGeneralValues,
     TitlesMetaPageProps,
@@ -87,13 +85,18 @@ function GeneralSettingsForm({
             setDefaultsOnSuccess: true,
             successToast: {
                 title: 'General SEO settings updated',
-                description: 'The title separator, URL, and indexing settings were saved.',
+                description:
+                    'The title separator, URL, and indexing settings were saved.',
             },
         });
     };
 
     return (
-        <form className="flex flex-col gap-6" onSubmit={handleSubmit} noValidate>
+        <form
+            className="flex flex-col gap-6"
+            onSubmit={handleSubmit}
+            noValidate
+        >
             {form.dirtyGuardDialog}
             <FormErrorSummary errors={form.errors} minMessages={2} />
 
@@ -102,7 +105,8 @@ function GeneralSettingsForm({
                     <AlertTriangleIcon className="size-4" />
                     <AlertTitle>Search engines are blocked</AlertTitle>
                     <AlertDescription>
-                        The site is currently set to $noindex, nofollow$. Switch visibility on when you are ready for indexing.
+                        The site is currently set to $noindex, nofollow$. Switch
+                        visibility on when you are ready for indexing.
                     </AlertDescription>
                 </Alert>
             ) : null}
@@ -114,26 +118,41 @@ function GeneralSettingsForm({
                         <CardTitle>Global SEO defaults</CardTitle>
                     </div>
                     <CardDescription>
-                        Define shared title separators, CMS URL structure, and overall crawl visibility.
+                        Define shared title separators, CMS URL structure, and
+                        overall crawl visibility.
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-col gap-6">
-                    <Field data-invalid={form.invalid('separator_character') || undefined}>
-                        <FieldLabel htmlFor="separator_character">Title separator</FieldLabel>
+                    <Field
+                        data-invalid={
+                            form.invalid('separator_character') || undefined
+                        }
+                    >
+                        <FieldLabel htmlFor="separator_character">
+                            Title separator
+                        </FieldLabel>
                         <Input
                             id="separator_character"
                             value={form.data.separator_character}
                             onChange={(event) =>
-                                form.setField('separator_character', event.target.value)
+                                form.setField(
+                                    'separator_character',
+                                    event.target.value,
+                                )
                             }
                             onBlur={() => form.touch('separator_character')}
-                            aria-invalid={form.invalid('separator_character') || undefined}
+                            aria-invalid={
+                                form.invalid('separator_character') || undefined
+                            }
                             placeholder="|"
                         />
                         <FieldDescription>
-                            Used between pieces of your page title, for example “Page Title | Site Name”.
+                            Used between pieces of your page title, for example
+                            “Page Title | Site Name”.
                         </FieldDescription>
-                        <FieldError>{form.error('separator_character')}</FieldError>
+                        <FieldError>
+                            {form.error('separator_character')}
+                        </FieldError>
                     </Field>
 
                     <Field>
@@ -149,11 +168,14 @@ function GeneralSettingsForm({
                                     event.target.value,
                                 )
                             }
-                            onBlur={() => form.touch('secondary_separator_character')}
+                            onBlur={() =>
+                                form.touch('secondary_separator_character')
+                            }
                             placeholder="·"
                         />
                         <FieldDescription>
-                            Optional fallback for breadcrumbs or secondary title formatting.
+                            Optional fallback for breadcrumbs or secondary title
+                            formatting.
                         </FieldDescription>
                         <FieldError>
                             {form.error('secondary_separator_character')}
@@ -161,28 +183,38 @@ function GeneralSettingsForm({
                     </Field>
 
                     <Field>
-                        <FieldLabel htmlFor="cms_base">CMS URL prefix</FieldLabel>
+                        <FieldLabel htmlFor="cms_base">
+                            CMS URL prefix
+                        </FieldLabel>
                         <Input
                             id="cms_base"
                             value={form.data.cms_base}
-                            onChange={(event) => form.setField('cms_base', event.target.value)}
+                            onChange={(event) =>
+                                form.setField('cms_base', event.target.value)
+                            }
                             onBlur={() => form.touch('cms_base')}
                             placeholder="blog"
                         />
                         <FieldDescription>
-                            Leave blank for root-level URLs or set a shared prefix like “blog” or “news”.
+                            Leave blank for root-level URLs or set a shared
+                            prefix like “blog” or “news”.
                         </FieldDescription>
                         <FieldError>{form.error('cms_base')}</FieldError>
                     </Field>
 
                     <Field>
-                        <FieldLabel htmlFor="url_extension">URL extension</FieldLabel>
+                        <FieldLabel htmlFor="url_extension">
+                            URL extension
+                        </FieldLabel>
                         <NativeSelect
                             id="url_extension"
                             className="w-full"
                             value={form.data.url_extension}
                             onChange={(event) =>
-                                form.setField('url_extension', event.target.value)
+                                form.setField(
+                                    'url_extension',
+                                    event.target.value,
+                                )
                             }
                             onBlur={() => form.touch('url_extension')}
                         >
@@ -205,13 +237,17 @@ function GeneralSettingsForm({
                         <Switch
                             checked={form.data.search_engine_visibility}
                             onCheckedChange={(checked) =>
-                                form.setField('search_engine_visibility', checked)
+                                form.setField(
+                                    'search_engine_visibility',
+                                    checked,
+                                )
                             }
                         />
                         <div className="flex flex-col gap-1">
                             <FieldLabel>Search engine visibility</FieldLabel>
                             <FieldDescription>
-                                Disable this during development or private launches. Enable it for production indexing.
+                                Disable this during development or private
+                                launches. Enable it for production indexing.
                             </FieldDescription>
                         </div>
                     </Field>
@@ -268,7 +304,11 @@ function TemplateSectionForm({
     };
 
     return (
-        <form className="flex flex-col gap-6" onSubmit={handleSubmit} noValidate>
+        <form
+            className="flex flex-col gap-6"
+            onSubmit={handleSubmit}
+            noValidate
+        >
             {form.dirtyGuardDialog}
             <FormErrorSummary errors={form.errors} minMessages={2} />
 
@@ -285,20 +325,27 @@ function TemplateSectionForm({
                         <Alert>
                             <FileSearchIcon className="size-4" />
                             <AlertTitle>Template tips</AlertTitle>
-                            <AlertDescription>{section.helperText}</AlertDescription>
+                            <AlertDescription>
+                                {section.helperText}
+                            </AlertDescription>
                         </Alert>
                     ) : null}
 
                     {section.supportsPermalinkBase ? (
                         <Field>
-                            <FieldLabel htmlFor={`${section.key}-permalink_base`}>
+                            <FieldLabel
+                                htmlFor={`${section.key}-permalink_base`}
+                            >
                                 URL prefix
                             </FieldLabel>
                             <Input
                                 id={`${section.key}-permalink_base`}
                                 value={form.data.permalink_base}
                                 onChange={(event) =>
-                                    form.setField('permalink_base', event.target.value)
+                                    form.setField(
+                                        'permalink_base',
+                                        event.target.value,
+                                    )
                                 }
                                 onBlur={() => form.touch('permalink_base')}
                                 placeholder="category"
@@ -307,11 +354,17 @@ function TemplateSectionForm({
                                 {section.previewPattern ??
                                     'Set a clean archive prefix or leave it empty for the default structure.'}
                             </FieldDescription>
-                            <FieldError>{form.error('permalink_base')}</FieldError>
+                            <FieldError>
+                                {form.error('permalink_base')}
+                            </FieldError>
                         </Field>
                     ) : null}
 
-                    <Field data-invalid={form.invalid('title_template') || undefined}>
+                    <Field
+                        data-invalid={
+                            form.invalid('title_template') || undefined
+                        }
+                    >
                         <FieldLabel htmlFor={`${section.key}-title_template`}>
                             Title template
                         </FieldLabel>
@@ -319,20 +372,28 @@ function TemplateSectionForm({
                             id={`${section.key}-title_template`}
                             value={form.data.title_template}
                             onChange={(event) =>
-                                form.setField('title_template', event.target.value)
+                                form.setField(
+                                    'title_template',
+                                    event.target.value,
+                                )
                             }
                             onBlur={() => form.touch('title_template')}
-                            aria-invalid={form.invalid('title_template') || undefined}
+                            aria-invalid={
+                                form.invalid('title_template') || undefined
+                            }
                             placeholder="%title% %separator% %site_title%"
                         />
                         <FieldDescription>
-                            Use placeholders like %title%, %site_title%, %separator%, and section-specific values.
+                            Use placeholders like %title%, %site_title%,
+                            %separator%, and section-specific values.
                         </FieldDescription>
                         <FieldError>{form.error('title_template')}</FieldError>
                     </Field>
 
                     <Field>
-                        <FieldLabel htmlFor={`${section.key}-description_template`}>
+                        <FieldLabel
+                            htmlFor={`${section.key}-description_template`}
+                        >
                             Meta description template
                         </FieldLabel>
                         <Textarea
@@ -349,9 +410,12 @@ function TemplateSectionForm({
                             placeholder="Use a concise template for search snippets"
                         />
                         <FieldDescription>
-                            Keep descriptions under roughly 160 characters for best snippet rendering.
+                            Keep descriptions under roughly 160 characters for
+                            best snippet rendering.
                         </FieldDescription>
-                        <FieldError>{form.error('description_template')}</FieldError>
+                        <FieldError>
+                            {form.error('description_template')}
+                        </FieldError>
                     </Field>
 
                     <Field>
@@ -363,7 +427,10 @@ function TemplateSectionForm({
                             className="w-full"
                             value={form.data.robots_default}
                             onChange={(event) =>
-                                form.setField('robots_default', event.target.value)
+                                form.setField(
+                                    'robots_default',
+                                    event.target.value,
+                                )
                             }
                             onBlur={() => form.touch('robots_default')}
                         >
@@ -380,7 +447,8 @@ function TemplateSectionForm({
                             ))}
                         </NativeSelect>
                         <FieldDescription>
-                            Choose the crawl default when content does not define its own robots rule.
+                            Choose the crawl default when content does not
+                            define its own robots rule.
                         </FieldDescription>
                         <FieldError>{form.error('robots_default')}</FieldError>
                     </Field>
@@ -412,7 +480,8 @@ function TemplateSectionForm({
                                     },
                                 ].map((option) => {
                                     const checked =
-                                        form.data.permalink_structure === option.value;
+                                        form.data.permalink_structure ===
+                                        option.value;
 
                                     return (
                                         <button
@@ -446,7 +515,8 @@ function TemplateSectionForm({
                                 })}
                             </div>
                             <FieldDescription>
-                                Simpler structures are usually easier to read and share.
+                                Simpler structures are usually easier to read
+                                and share.
                             </FieldDescription>
                         </Field>
                     ) : null}
@@ -456,13 +526,19 @@ function TemplateSectionForm({
                             <Switch
                                 checked={form.data.enable_multiple_categories}
                                 onCheckedChange={(checked) =>
-                                    form.setField('enable_multiple_categories', checked)
+                                    form.setField(
+                                        'enable_multiple_categories',
+                                        checked,
+                                    )
                                 }
                             />
                             <div className="flex flex-col gap-1">
-                                <FieldLabel>Allow multiple categories per post</FieldLabel>
+                                <FieldLabel>
+                                    Allow multiple categories per post
+                                </FieldLabel>
                                 <FieldDescription>
-                                    Enable this if editorial workflows rely on more than one category assignment.
+                                    Enable this if editorial workflows rely on
+                                    more than one category assignment.
                                 </FieldDescription>
                             </div>
                         </Field>
@@ -473,13 +549,17 @@ function TemplateSectionForm({
                             <Switch
                                 checked={form.data.enable_pagination_indexing}
                                 onCheckedChange={(checked) =>
-                                    form.setField('enable_pagination_indexing', checked)
+                                    form.setField(
+                                        'enable_pagination_indexing',
+                                        checked,
+                                    )
                                 }
                             />
                             <div className="flex flex-col gap-1">
                                 <FieldLabel>Index paginated pages</FieldLabel>
                                 <FieldDescription>
-                                    Usually disabled to avoid duplicate archive pages competing in search.
+                                    Usually disabled to avoid duplicate archive
+                                    pages competing in search.
                                 </FieldDescription>
                             </div>
                         </Field>
@@ -507,7 +587,8 @@ export default function SeoTitlesMetaPage({
     generalInitialValues,
     sections,
 }: TitlesMetaPageProps) {
-    const [currentSection, setCurrentSection] = useState<TitlesMetaSectionKey>(activeSection);
+    const [currentSection, setCurrentSection] =
+        useState<TitlesMetaSectionKey>(activeSection);
 
     useEffect(() => {
         setCurrentSection(activeSection);
@@ -524,7 +605,10 @@ export default function SeoTitlesMetaPage({
     }, [currentSection]);
 
     const sectionMap = useMemo(
-        () => Object.fromEntries(sections.map((section) => [section.key, section])),
+        () =>
+            Object.fromEntries(
+                sections.map((section) => [section.key, section]),
+            ),
         [sections],
     );
 
@@ -544,14 +628,28 @@ export default function SeoTitlesMetaPage({
                     <SearchIcon className="size-4" />
                     <AlertTitle>{activeLabel} templates</AlertTitle>
                     <AlertDescription>
-                        Keep templates readable, consistent, and focused on primary keywords. Content-specific overrides still win when provided.
+                        Keep templates readable, consistent, and focused on
+                        primary keywords. Content-specific overrides still win
+                        when provided.
                     </AlertDescription>
                 </Alert>
 
-                <Tabs value={currentSection} onValueChange={(value) => setCurrentSection(value as TitlesMetaSectionKey)}>
-                    <TabsList variant="line" className="flex h-auto flex-wrap gap-2 rounded-xl border bg-background p-2">
+                <Tabs
+                    value={currentSection}
+                    onValueChange={(value) =>
+                        setCurrentSection(value as TitlesMetaSectionKey)
+                    }
+                >
+                    <TabsList
+                        variant="line"
+                        className="flex h-auto flex-wrap gap-2 rounded-xl border bg-background p-2"
+                    >
                         {Object.entries(sectionLabels).map(([key, label]) => (
-                            <TabsTrigger key={key} value={key} className="rounded-lg px-3 py-2">
+                            <TabsTrigger
+                                key={key}
+                                value={key}
+                                className="rounded-lg px-3 py-2"
+                            >
                                 {label}
                             </TabsTrigger>
                         ))}
@@ -565,7 +663,11 @@ export default function SeoTitlesMetaPage({
                     </TabsContent>
 
                     {sections.map((section) => (
-                        <TabsContent key={section.key} value={section.key} className="mt-6">
+                        <TabsContent
+                            key={section.key}
+                            value={section.key}
+                            className="mt-6"
+                        >
                             <TemplateSectionForm
                                 section={sectionMap[section.key]}
                                 metaRobotsOptions={metaRobotsOptions}

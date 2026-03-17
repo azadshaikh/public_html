@@ -6,11 +6,17 @@ import type { BreadcrumbItem } from '@/types';
 import DesignBlockForm from '../../../components/design-blocks/design-block-form';
 import type { DesignBlockEditPageProps } from '../../../types/cms';
 
-export default function DesignBlocksEdit({ designBlock, ...props }: DesignBlockEditPageProps) {
+export default function DesignBlocksEdit({
+    designBlock,
+    ...props
+}: DesignBlockEditPageProps) {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: route('dashboard') },
         { title: 'Design Blocks', href: route('cms.designblock.index') },
-        { title: designBlock.title, href: route('cms.designblock.edit', designBlock.id) },
+        {
+            title: designBlock.title,
+            href: route('cms.designblock.edit', designBlock.id),
+        },
     ];
 
     return (

@@ -1,5 +1,16 @@
 import { Link, router } from '@inertiajs/react';
-import { AlertTriangleIcon, BellIcon, BellOffIcon, CheckCheckIcon, InboxIcon, ListIcon, MailIcon, MailOpenIcon, Settings2Icon, Trash2Icon } from 'lucide-react';
+import {
+    AlertTriangleIcon,
+    BellIcon,
+    BellOffIcon,
+    CheckCheckIcon,
+    InboxIcon,
+    ListIcon,
+    MailIcon,
+    MailOpenIcon,
+    Settings2Icon,
+    Trash2Icon,
+} from 'lucide-react';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { Datagrid } from '@/components/datagrid/datagrid';

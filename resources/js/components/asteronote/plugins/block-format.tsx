@@ -125,7 +125,9 @@ export function BlockFormatDropdown({
                 {blockTagLabel(block)}
             </span>
 
-            {selectedBlock === block ? <CheckIcon className="ml-auto size-4" /> : null}
+            {selectedBlock === block ? (
+                <CheckIcon className="ml-auto size-4" />
+            ) : null}
         </DropdownMenuItem>
     );
 

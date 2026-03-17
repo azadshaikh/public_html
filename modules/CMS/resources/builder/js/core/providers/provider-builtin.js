@@ -14,15 +14,18 @@ class BuiltinProvider extends Astero.BlockProvider {
             Hero: () => import('../../sections/landing/hero.js'),
             Features: () => import('../../sections/landing/features.js'),
             Base: () => import('../../sections/landing/base.js'),
-            'Contact form': () => import('../../sections/landing/contact-form.js'),
+            'Contact form': () =>
+                import('../../sections/landing/contact-form.js'),
             Footer: () => import('../../sections/landing/footer.js'),
             Navigation: () => import('../../sections/landing/navigation.js'),
             Posts: () => import('../../sections/landing/posts.js'),
-            'Pricing table': () => import('../../sections/landing/pricing-table.js'),
+            'Pricing table': () =>
+                import('../../sections/landing/pricing-table.js'),
             Products: () => import('../../sections/landing/products.js'),
             Showcase: () => import('../../sections/landing/showcase.js'),
             Team: () => import('../../sections/landing/team.js'),
-            Testimonials: () => import('../../sections/landing/testimonials.js'),
+            Testimonials: () =>
+                import('../../sections/landing/testimonials.js'),
         };
 
         this.blockImports = {
@@ -55,16 +58,25 @@ class BuiltinProvider extends Astero.BlockProvider {
         // Normalize Category Key (Case-insensitive matching)
         let exactCategory = category;
 
-        const imports = type === 'section' ? this.sectionImports : this.blockImports;
-        const groupObjGlobal = type === 'section' ? Astero.SectionsGroup : Astero.BlocksGroup;
+        const imports =
+            type === 'section' ? this.sectionImports : this.blockImports;
+        const groupObjGlobal =
+            type === 'section' ? Astero.SectionsGroup : Astero.BlocksGroup;
 
         // Find exact category name from known imports or loaded groups
-        const knownCategories = [...Object.keys(imports), ...Object.keys(groupObjGlobal || {})];
-        exactCategory = knownCategories.find((k) => k.toLowerCase() === category.toLowerCase()) || category;
+        const knownCategories = [
+            ...Object.keys(imports),
+            ...Object.keys(groupObjGlobal || {}),
+        ];
+        exactCategory =
+            knownCategories.find(
+                (k) => k.toLowerCase() === category.toLowerCase(),
+            ) || category;
 
         // Check if we need to load it
         // We check the global object freshly here in case it was just loaded
-        const currentGroupObj = type === 'section' ? Astero.SectionsGroup : Astero.BlocksGroup;
+        const currentGroupObj =
+            type === 'section' ? Astero.SectionsGroup : Astero.BlocksGroup;
 
         if (!currentGroupObj || !currentGroupObj[exactCategory]) {
             if (imports[exactCategory]) {
@@ -72,7 +84,10 @@ class BuiltinProvider extends Astero.BlockProvider {
                     // console.log(`[BuiltinProvider] Lazy loading ${type} category: ${exactCategory}`);
                     await imports[exactCategory]();
                 } catch (e) {
-                    console.error(`[BuiltinProvider] Failed to load ${exactCategory}`, e);
+                    console.error(
+                        `[BuiltinProvider] Failed to load ${exactCategory}`,
+                        e,
+                    );
                 }
             }
         }

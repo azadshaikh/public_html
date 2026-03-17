@@ -182,7 +182,9 @@ export default function TodosShow({ todo }: TodoShowPageProps) {
                                 <DetailRow
                                     label="Visibility"
                                     value={
-                                        todo.visibility.charAt(0).toUpperCase() +
+                                        todo.visibility
+                                            .charAt(0)
+                                            .toUpperCase() +
                                         todo.visibility.slice(1)
                                     }
                                 />

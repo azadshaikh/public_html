@@ -45,7 +45,11 @@ Astero.Undo = {
 			this.mutations.push(mutation);
 			this.undoIndex++;
 		*/
-        this.mutations.splice(++this.undoIndex, this.mutations.length - this.undoIndex, mutation);
+        this.mutations.splice(
+            ++this.undoIndex,
+            this.mutations.length - this.undoIndex,
+            mutation,
+        );
         const event = new CustomEvent('astero.undo.add', { detail: mutation });
         Astero.Builder.frameBody.dispatchEvent(event);
     },
@@ -66,7 +70,10 @@ Astero.Undo = {
                 if (addedNodes)
                     for (const node of addedNodes) {
                         if (mutation.nextSibling) {
-                            mutation.nextSibling.parentNode.insertBefore(node, mutation.nextSibling);
+                            mutation.nextSibling.parentNode.insertBefore(
+                                node,
+                                mutation.nextSibling,
+                            );
                         } else {
                             mutation.target.append(node);
                         }
@@ -97,12 +104,14 @@ Astero.Undo = {
                 }
                 break;
             case 'characterData':
-                mutation.target.innerHTML = undo ? mutation.oldValue : mutation.newValue;
-                break;
-            case 'style':
-                window.FrameDocument.getElementById('pagebuilder-styles').textContent = undo
+                mutation.target.innerHTML = undo
                     ? mutation.oldValue
                     : mutation.newValue;
+                break;
+            case 'style':
+                window.FrameDocument.getElementById(
+                    'pagebuilder-styles',
+                ).textContent = undo ? mutation.oldValue : mutation.newValue;
                 break;
             case 'attributes':
                 let value = undo ? mutation.oldValue : mutation.newValue;
@@ -114,7 +123,9 @@ Astero.Undo = {
                 break;
         }
 
-        const event = new CustomEvent('astero.undo.restore', { detail: mutation });
+        const event = new CustomEvent('astero.undo.restore', {
+            detail: mutation,
+        });
         Astero.Builder.frameBody.dispatchEvent(event);
     },
 

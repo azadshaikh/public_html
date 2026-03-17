@@ -123,7 +123,7 @@ Astero.Components.add('_base', {
                 data: [
                     ...[...document.querySelectorAll('[class]')].reduce(
                         (s, e) => (e.classList.forEach((c) => s.add(c)), s),
-                        new Set()
+                        new Set(),
                     ),
                 ].sort(),
             },
@@ -166,34 +166,47 @@ Astero.Components.extend('_base', '_base', {
                     }
                 } else {
                     inputElement.style.display = '';
-                    inputElement.querySelector('.elements-count').innerHTML = elements.length;
-                    inputElement.querySelector('.text-muted').innerHTML = selector;
+                    inputElement.querySelector('.elements-count').innerHTML =
+                        elements.length;
+                    inputElement.querySelector('.text-muted').innerHTML =
+                        selector;
 
-                    inputElement.querySelector('.id-input', inputElement).addEventListener('click', (event) => {
-                        document.querySelectorAll('.content-tab a').forEach((e) => e.click());
+                    inputElement
+                        .querySelector('.id-input', inputElement)
+                        .addEventListener('click', (event) => {
+                            document
+                                .querySelectorAll('.content-tab a')
+                                .forEach((e) => e.click());
 
-                        setTimeout(function () {
-                            let idInput = document.querySelectorAll('[name=id]');
-                            idInput.forEach((el) => {
-                                if (el.offsetParent) el.focus();
-                            }); /*
+                            setTimeout(function () {
+                                let idInput =
+                                    document.querySelectorAll('[name=id]');
+                                idInput.forEach((el) => {
+                                    if (el.offsetParent) el.focus();
+                                }); /*
 						idInput.forEach(el => el .dispatchEvent(new FocusEvent("focusin", {
 							bubbles: true,
 							cancelable: false
 						})));*/
-                        }, 700);
+                            }, 700);
 
-                        event.preventDefault();
-                        return false;
-                    });
+                            event.preventDefault();
+                            return false;
+                        });
 
-                    inputElement.querySelector('.linked-elements-hover').addEventListener('mouseenter', function () {
-                        elements.forEach((e) => (e.style.outline = '2px dotted blue'));
-                    });
+                    inputElement
+                        .querySelector('.linked-elements-hover')
+                        .addEventListener('mouseenter', function () {
+                            elements.forEach(
+                                (e) => (e.style.outline = '2px dotted blue'),
+                            );
+                        });
 
-                    inputElement.querySelector('.linked-elements-hover').addEventListener('mouseleave', function () {
-                        elements.forEach((e) => (e.style.outline = ''));
-                    });
+                    inputElement
+                        .querySelector('.linked-elements-hover')
+                        .addEventListener('mouseleave', function () {
+                            elements.forEach((e) => (e.style.outline = ''));
+                        });
                 }
             },
         },
@@ -1007,12 +1020,19 @@ Astero.Components.extend('_base', '_base', {
             inputtype: ImageInput,
 
             init: function (node) {
-                let image = node.style.backgroundImage.replace(/url\(['"]?([^"\)$]+?)['"]?\).*/, '$1');
+                let image = node.style.backgroundImage.replace(
+                    /url\(['"]?([^"\)$]+?)['"]?\).*/,
+                    '$1',
+                );
                 return image;
             },
 
             onChange: function (node, value) {
-                Astero.StyleManager.setStyle(node, 'background-image', 'url(' + value + ')');
+                Astero.StyleManager.setStyle(
+                    node,
+                    'background-image',
+                    'url(' + value + ')',
+                );
 
                 return node;
             },

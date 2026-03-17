@@ -35,11 +35,16 @@ Astero.Components.extend('_base', 'embeds/embed', {
                             iframe.setAttribute('height', height * ratio);
                         }
 
-                        let arr = node.querySelectorAll('script').forEach((script) => {
-                            let newScript = Astero.Builder.frameDoc.createElement('script');
-                            newScript.src = script.src;
-                            script.replaceWith(newScript);
-                        });
+                        let arr = node
+                            .querySelectorAll('script')
+                            .forEach((script) => {
+                                let newScript =
+                                    Astero.Builder.frameDoc.createElement(
+                                        'script',
+                                    );
+                                newScript.src = script.src;
+                                script.replaceWith(newScript);
+                            });
                     })
                     .catch((error) => console.log(error));
 

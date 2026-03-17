@@ -10,11 +10,17 @@ function getCustomizerLoginUrl() {
 
 function isLoginResponsePath(responseUrl) {
     try {
-        const loginUrl = new URL(getCustomizerLoginUrl(), window.location.origin);
+        const loginUrl = new URL(
+            getCustomizerLoginUrl(),
+            window.location.origin,
+        );
         const currentUrl = new URL(responseUrl, window.location.origin);
         return currentUrl.pathname === loginUrl.pathname;
     } catch (error) {
-        console.warn('ThemeCustomizer: Could not compare login URL path.', error);
+        console.warn(
+            'ThemeCustomizer: Could not compare login URL path.',
+            error,
+        );
         return false;
     }
 }
@@ -26,7 +32,11 @@ function createAuthExpiredError() {
 }
 
 function isAuthExpiredError(error) {
-    return Boolean(error && typeof error === 'object' && error.code === AUTH_EXPIRED_ERROR_CODE);
+    return Boolean(
+        error &&
+        typeof error === 'object' &&
+        error.code === AUTH_EXPIRED_ERROR_CODE,
+    );
 }
 
 function redirectToLogin() {
@@ -48,15 +58,22 @@ function shouldRedirectForAuthExpiry(response) {
         return true;
     }
 
-    const contentType = (response.headers.get('content-type') || '').toLowerCase();
-    const redirectedToLogin = response.redirected && isLoginResponsePath(response.url);
-    const loginHtmlResponse = contentType.includes('text/html') && isLoginResponsePath(response.url);
+    const contentType = (
+        response.headers.get('content-type') || ''
+    ).toLowerCase();
+    const redirectedToLogin =
+        response.redirected && isLoginResponsePath(response.url);
+    const loginHtmlResponse =
+        contentType.includes('text/html') && isLoginResponsePath(response.url);
 
     return redirectedToLogin || loginHtmlResponse;
 }
 
 function installAuthExpiryInterceptor() {
-    if (window.__themeCustomizerAuthInterceptorInstalled || typeof window.fetch !== 'function') {
+    if (
+        window.__themeCustomizerAuthInterceptorInstalled ||
+        typeof window.fetch !== 'function'
+    ) {
         return;
     }
 
@@ -81,7 +98,9 @@ class ThemeCustomizer {
         this.form = document.getElementById('customizer-form');
         this.iframe = document.getElementById('preview-iframe');
         this.previewContainer = document.getElementById('preview-container');
-        this.layoutContainer = document.querySelector('.customizer-flex-container');
+        this.layoutContainer = document.querySelector(
+            '.customizer-flex-container',
+        );
         this.debounceTimer = null;
         this.debounceDelay = 800; // Increased for better performance
         this.hasUnsavedChanges = false;
@@ -190,10 +209,14 @@ class ThemeCustomizer {
         // Inject CSS to hide admin bar once iframe loads
         this.iframe.addEventListener('load', () => {
             try {
-                const iframeDoc = this.iframe.contentDocument || this.iframe.contentWindow.document;
+                const iframeDoc =
+                    this.iframe.contentDocument ||
+                    this.iframe.contentWindow.document;
                 if (iframeDoc) {
                     // Check if admin bar exists and hide it
-                    const hideAdminBarStyle = iframeDoc.getElementById('customizer-hide-adminbar');
+                    const hideAdminBarStyle = iframeDoc.getElementById(
+                        'customizer-hide-adminbar',
+                    );
                     if (!hideAdminBarStyle) {
                         const style = iframeDoc.createElement('style');
                         style.id = 'customizer-hide-adminbar';
@@ -224,9 +247,13 @@ class ThemeCustomizer {
     setupSidebarToggle() {
         const sidebar = document.getElementById('customizer-sidebar');
         const overlay = document.getElementById('sidebar-overlay');
-        const showBtnHeader = document.getElementById('show-sidebar-btn-header');
+        const showBtnHeader = document.getElementById(
+            'show-sidebar-btn-header',
+        );
         const closeBtn = document.getElementById('toggle-sidebar-btn');
-        const desktopToggleBtn = document.getElementById('toggle-sidebar-desktop-btn');
+        const desktopToggleBtn = document.getElementById(
+            'toggle-sidebar-desktop-btn',
+        );
 
         // Mobile sidebar toggle (from header button)
         if (showBtnHeader) {
@@ -256,11 +283,16 @@ class ThemeCustomizer {
                 const isCollapsed = sidebar.classList.toggle('collapsed');
                 desktopToggleBtn.classList.toggle('collapsed', isCollapsed);
                 if (this.layoutContainer) {
-                    this.layoutContainer.classList.toggle('sidebar-collapsed', isCollapsed);
+                    this.layoutContainer.classList.toggle(
+                        'sidebar-collapsed',
+                        isCollapsed,
+                    );
                 }
 
                 // Update button title
-                desktopToggleBtn.title = isCollapsed ? 'Show Sidebar' : 'Hide Sidebar';
+                desktopToggleBtn.title = isCollapsed
+                    ? 'Show Sidebar'
+                    : 'Hide Sidebar';
 
                 // Wait for CSS transition to complete, then recalculate dimensions
                 setTimeout(() => {
@@ -329,7 +361,9 @@ class ThemeCustomizer {
         // Reset button (mobile dropdown)
         const resetBtnMobile = document.getElementById('reset-btn-mobile');
         if (resetBtnMobile) {
-            resetBtnMobile.addEventListener('click', () => this.resetSettings());
+            resetBtnMobile.addEventListener('click', () =>
+                this.resetSettings(),
+            );
         }
 
         // Export button (desktop)
@@ -341,7 +375,9 @@ class ThemeCustomizer {
         // Export button (mobile dropdown)
         const exportBtnMobile = document.getElementById('export-btn-mobile');
         if (exportBtnMobile) {
-            exportBtnMobile.addEventListener('click', () => this.exportSettings());
+            exportBtnMobile.addEventListener('click', () =>
+                this.exportSettings(),
+            );
         }
 
         // Import button (desktop)
@@ -353,13 +389,17 @@ class ThemeCustomizer {
         // Import button (mobile dropdown)
         const importBtnMobile = document.getElementById('import-btn-mobile');
         if (importBtnMobile) {
-            importBtnMobile.addEventListener('click', () => this.showImportModal());
+            importBtnMobile.addEventListener('click', () =>
+                this.showImportModal(),
+            );
         }
 
         // Import confirm
         const importConfirmBtn = document.getElementById('import-confirm-btn');
         if (importConfirmBtn) {
-            importConfirmBtn.addEventListener('click', () => this.importSettings());
+            importConfirmBtn.addEventListener('click', () =>
+                this.importSettings(),
+            );
         }
 
         // Device preview buttons
@@ -427,7 +467,9 @@ class ThemeCustomizer {
      */
     injectCSS(css) {
         try {
-            const iframeDoc = this.iframe.contentDocument || this.iframe.contentWindow.document;
+            const iframeDoc =
+                this.iframe.contentDocument ||
+                this.iframe.contentWindow.document;
 
             if (!iframeDoc) {
                 console.warn('Cannot access iframe document');
@@ -458,7 +500,8 @@ class ThemeCustomizer {
         if (!saveBtn) return;
 
         const originalHTML = saveBtn.innerHTML;
-        saveBtn.innerHTML = '<i class="ri-loader-4-line spin me-1"></i> Saving...';
+        saveBtn.innerHTML =
+            '<i class="ri-loader-4-line spin me-1"></i> Saving...';
         saveBtn.disabled = true;
 
         try {
@@ -482,7 +525,10 @@ class ThemeCustomizer {
 
             if (data.success) {
                 this.hasUnsavedChanges = false;
-                this.showNotification('Settings saved successfully!', 'success');
+                this.showNotification(
+                    'Settings saved successfully!',
+                    'success',
+                );
 
                 // Refresh preview to show saved changes
                 this.refreshPreview();
@@ -505,7 +551,11 @@ class ThemeCustomizer {
      * Reset settings to defaults
      */
     async resetSettings() {
-        if (!confirm('Are you sure you want to reset all settings to defaults? This action cannot be undone.')) {
+        if (
+            !confirm(
+                'Are you sure you want to reset all settings to defaults? This action cannot be undone.',
+            )
+        ) {
             return;
         }
 
@@ -527,7 +577,10 @@ class ThemeCustomizer {
             }
 
             if (data.success) {
-                this.showNotification('Settings reset successfully!', 'success');
+                this.showNotification(
+                    'Settings reset successfully!',
+                    'success',
+                );
                 setTimeout(() => location.reload(), 1000);
             } else {
                 throw new Error(data.message || 'Failed to reset settings');
@@ -563,7 +616,10 @@ class ThemeCustomizer {
 
             if (data.success) {
                 this.downloadFile(data.filename, data.data);
-                this.showNotification('Settings exported successfully!', 'success');
+                this.showNotification(
+                    'Settings exported successfully!',
+                    'success',
+                );
             } else {
                 throw new Error(data.message || 'Failed to export settings');
             }
@@ -572,7 +628,10 @@ class ThemeCustomizer {
                 return;
             }
             console.error('Export error:', error);
-            this.showNotification('Failed to export: ' + error.message, 'error');
+            this.showNotification(
+                'Failed to export: ' + error.message,
+                'error',
+            );
         }
     }
 
@@ -609,7 +668,10 @@ class ThemeCustomizer {
 
             if (data.success) {
                 this.hideImportModal();
-                this.showNotification('Settings imported successfully!', 'success');
+                this.showNotification(
+                    'Settings imported successfully!',
+                    'success',
+                );
                 setTimeout(() => location.reload(), 1000);
             } else {
                 throw new Error(data.message || 'Failed to import settings');
@@ -619,7 +681,10 @@ class ThemeCustomizer {
                 return;
             }
             console.error('Import error:', error);
-            this.showNotification('Failed to import: ' + error.message, 'error');
+            this.showNotification(
+                'Failed to import: ' + error.message,
+                'error',
+            );
         }
     }
 
@@ -694,7 +759,9 @@ class ThemeCustomizer {
      * Show import modal
      */
     showImportModal() {
-        const modal = new bootstrap.Modal(document.getElementById('importModal'));
+        const modal = new bootstrap.Modal(
+            document.getElementById('importModal'),
+        );
         modal.show();
     }
 
@@ -722,7 +789,9 @@ class ThemeCustomizer {
                 formData.set(input.name, input.checked ? 'true' : 'false');
             } else if (
                 input.type !== 'hidden' ||
-                !this.form.querySelector(`input[type="checkbox"][name="${input.name}"]`)
+                !this.form.querySelector(
+                    `input[type="checkbox"][name="${input.name}"]`,
+                )
             ) {
                 // For other inputs, add normally (skip hidden fields paired with checkboxes)
                 if (input.name) {
@@ -764,7 +833,8 @@ class ThemeCustomizer {
         const alertClass = type === 'error' ? 'danger' : type;
         const notification = document.createElement('div');
         notification.className = `alert alert-${alertClass} alert-dismissible fade show position-fixed`;
-        notification.style.cssText = 'top: 80px; right: 20px; z-index: 9999; min-width: 300px; max-width: 500px;';
+        notification.style.cssText =
+            'top: 80px; right: 20px; z-index: 9999; min-width: 300px; max-width: 500px;';
         notification.innerHTML = `
             <i class="ri-${type === 'success' ? 'check' : type === 'error' ? 'error-warning' : 'information'}-line me-2"></i>
             ${message}
@@ -789,7 +859,8 @@ class ThemeCustomizer {
         window.addEventListener('beforeunload', (e) => {
             if (this.hasUnsavedChanges) {
                 e.preventDefault();
-                e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+                e.returnValue =
+                    'You have unsaved changes. Are you sure you want to leave?';
                 return e.returnValue;
             }
         });
@@ -803,7 +874,9 @@ class ThemeCustomizer {
 window.selectImage = function (fieldId) {
     // Check if media picker is available
     if (typeof window.openMediaPicker !== 'function') {
-        console.error('Media picker not available. Make sure media-modal component is included.');
+        console.error(
+            'Media picker not available. Make sure media-modal component is included.',
+        );
         return;
     }
 
@@ -829,7 +902,9 @@ window.selectImage = function (fieldId) {
                 }
 
                 // Trigger change event for live preview
-                hiddenInput.dispatchEvent(new Event('input', { bubbles: true }));
+                hiddenInput.dispatchEvent(
+                    new Event('input', { bubbles: true }),
+                );
             }
         },
         onCancel: function () {
@@ -871,7 +946,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Set up routes (these should be set in the blade template)
         if (!window.customizerRoutes) {
-            console.error('customizerRoutes not defined! Set them in the blade template.');
+            console.error(
+                'customizerRoutes not defined! Set them in the blade template.',
+            );
         }
 
         new ThemeCustomizer();

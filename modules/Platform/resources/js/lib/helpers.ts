@@ -38,7 +38,12 @@ export function mapStatusTab(
     statistics: Record<string, number>,
     currentStatus: string,
 ) {
-    return mapScaffoldStatusTab(tab, statistics, currentStatus, PLATFORM_ICON_MAP);
+    return mapScaffoldStatusTab(
+        tab,
+        statistics,
+        currentStatus,
+        PLATFORM_ICON_MAP,
+    );
 }
 
 export function mapFilters(
@@ -46,11 +51,16 @@ export function mapFilters(
     activeFilters: ScaffoldFilterState,
     searchPlaceholder = 'Search...',
 ) {
-    return mapScaffoldFilters(configFilters, activeFilters, { searchPlaceholder });
+    return mapScaffoldFilters(configFilters, activeFilters, {
+        searchPlaceholder,
+    });
 }
 
 export function mapRowActions(
-    actions: Record<string, ScaffoldRowActionPayload> | ScaffoldRowActionPayload[] | undefined,
+    actions:
+        | Record<string, ScaffoldRowActionPayload>
+        | ScaffoldRowActionPayload[]
+        | undefined,
 ) {
     return mapScaffoldRowActions(actions, PLATFORM_ICON_MAP);
 }
@@ -71,7 +81,11 @@ export function buildDatagridState(
     config: {
         filters: ScaffoldFilterConfig[];
         statusTabs: ScaffoldStatusTabConfig[];
-        settings: { perPage: number; defaultSort: string | null; defaultDirection: 'asc' | 'desc' };
+        settings: {
+            perPage: number;
+            defaultSort: string | null;
+            defaultDirection: 'asc' | 'desc';
+        };
     },
     filters: ScaffoldFilterState,
     statistics: Record<string, number>,

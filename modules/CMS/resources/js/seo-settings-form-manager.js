@@ -91,7 +91,8 @@ class SettingsFormManager {
         if (!submitBtn) return;
 
         const btnIcon = submitBtn.querySelector('i');
-        const btnText = submitBtn.querySelector('.btn-text') || submitBtn.childNodes[1];
+        const btnText =
+            submitBtn.querySelector('.btn-text') || submitBtn.childNodes[1];
 
         if (!btnIcon || !btnText) return;
 
@@ -122,7 +123,7 @@ class SettingsFormManager {
                 }
                 btnIcon.className = originalIcon;
             },
-            true
+            true,
         );
     }
 
@@ -140,7 +141,9 @@ class SettingsFormManager {
             .map(
                 (field) =>
                     this.fieldLabels[field.name] ||
-                    field.name.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())
+                    field.name
+                        .replace(/_/g, ' ')
+                        .replace(/\b\w/g, (l) => l.toUpperCase()),
             )
             .filter((value, index, self) => self.indexOf(value) === index); // Remove duplicates
 
@@ -171,7 +174,9 @@ class SettingsFormManager {
      */
     showAlert(type, message) {
         // Don't show client-side alerts if server-side alerts are already present
-        const existingServerAlerts = document.querySelectorAll('#alert-container .alert:not(.client-alert)');
+        const existingServerAlerts = document.querySelectorAll(
+            '#alert-container .alert:not(.client-alert)',
+        );
         if (existingServerAlerts.length > 0) {
             return;
         }
@@ -180,9 +185,14 @@ class SettingsFormManager {
         const existingClientAlerts = document.querySelectorAll('.client-alert');
         existingClientAlerts.forEach((alert) => alert.remove());
 
-        const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
-        const iconClass = type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill';
-        const alertTitle = type === 'success' ? 'Success!' : 'Validation Error!';
+        const alertClass =
+            type === 'success' ? 'alert-success' : 'alert-danger';
+        const iconClass =
+            type === 'success'
+                ? 'bi-check-circle-fill'
+                : 'bi-exclamation-triangle-fill';
+        const alertTitle =
+            type === 'success' ? 'Success!' : 'Validation Error!';
 
         const alert = document.createElement('div');
         alert.className = `alert ${alertClass} alert-dismissible fade rounded-4 show mb-4 client-alert`;
@@ -206,7 +216,10 @@ class SettingsFormManager {
             alertContainer.appendChild(alert);
 
             // Scroll to alert
-            alertContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            alertContainer.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start',
+            });
         }
     }
 }
@@ -215,7 +228,9 @@ class SettingsFormManager {
  * Setup custom tab navigation for settings
  */
 function setupTabNavigation() {
-    const tabElements = document.querySelectorAll('[data-bs-toggle="tab"], [data-tab-target]');
+    const tabElements = document.querySelectorAll(
+        '[data-bs-toggle="tab"], [data-tab-target]',
+    );
 
     tabElements.forEach((tabElement) => {
         tabElement.addEventListener('click', (event) => {
@@ -224,7 +239,8 @@ function setupTabNavigation() {
             // Get target from either href or data-tab-target
             let targetId = event.currentTarget.getAttribute('href');
             if (!targetId || targetId === '#') {
-                const tabTarget = event.currentTarget.getAttribute('data-tab-target');
+                const tabTarget =
+                    event.currentTarget.getAttribute('data-tab-target');
                 if (tabTarget) {
                     targetId = `#${tabTarget}`;
                 }
@@ -235,7 +251,9 @@ function setupTabNavigation() {
             if (!targetPane) return;
 
             const tabContainer = targetPane.closest('.tab-content');
-            const currentActiveTab = tabContainer.querySelector('.tab-pane.show.active');
+            const currentActiveTab = tabContainer.querySelector(
+                '.tab-pane.show.active',
+            );
 
             // Toggle tab visibility
             if (currentActiveTab) {

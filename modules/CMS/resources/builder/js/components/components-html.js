@@ -1,4 +1,6 @@
-const PLACEHOLDER_IMAGE_URL = window.Astero?.mediaPlaceholderUrl || '/assets/images/placeholder-image.png';
+const PLACEHOLDER_IMAGE_URL =
+    window.Astero?.mediaPlaceholderUrl ||
+    '/assets/images/placeholder-image.png';
 
 Astero.ComponentsGroup['Base'] = [
     'html/heading',
@@ -236,7 +238,9 @@ Astero.Components.extend('_base', 'html/image', {
                 className: 'form-switch',
             },
             setGroup: (value) => {
-                let group = document.querySelectorAll('.mb-3[data-group="link"]');
+                let group = document.querySelectorAll(
+                    '.mb-3[data-group="link"]',
+                );
                 if (group.length) {
                     group.forEach((el) => {
                         if (value) {
@@ -273,7 +277,7 @@ Astero.Components.extend('_base', 'html/image', {
             a['parent'] = 'a';
             a['group'] = 'link';
             return a;
-        })
+        }),
     ),
 
     init(node) {
@@ -364,7 +368,13 @@ Astero.Components.extend('_base', 'html/hr', {
             name: 'Border',
             key: 'border-size',
             htmlAttr: 'class',
-            validValues: ['border-1', 'border-2', 'border-3', 'border-4', 'border-5'],
+            validValues: [
+                'border-1',
+                'border-2',
+                'border-3',
+                'border-4',
+                'border-5',
+            ],
             inputtype: SelectInput,
             data: {
                 options: [
@@ -399,7 +409,12 @@ Astero.Components.extend('_base', 'html/hr', {
             name: 'Opacity',
             key: 'opacity',
             htmlAttr: 'class',
-            validValues: ['opacity-25', 'opacity-50', 'opacity-75', 'opacity-100'],
+            validValues: [
+                'opacity-25',
+                'opacity-50',
+                'opacity-75',
+                'opacity-100',
+            ],
             inputtype: SelectInput,
             data: {
                 options: [
@@ -620,7 +635,8 @@ Astero.Components.extend('_base', 'html/selectinput', {
                         return node;
                     }
 
-                    if (input.name == 'value') option.setAttribute('value', value);
+                    if (input.name == 'value')
+                        option.setAttribute('value', value);
                     else if (input.name == 'text') option.textContent = value;
                     return node;
                 },
@@ -677,7 +693,9 @@ Astero.Components.extend('_base', 'html/selectinput', {
             inputtype: ButtonInput,
             data: { text: 'Add option', icon: 'la-plus' },
             onChange: function (node) {
-                node.append(generateElements('<option value="value">Text</option>')[0]);
+                node.append(
+                    generateElements('<option value="value">Text</option>')[0],
+                );
 
                 //render component properties again to include the new column inputs
                 Astero.Components.render('html/selectinput');
@@ -871,7 +889,8 @@ Astero.Components.extend('_base', 'html/video', {
     nodes: ['video'],
     name: 'Video',
     html: '<video width="320" height="240" playsinline loop autoplay muted src="../../media/demo/sample.webm" poster="../../media/sample.webp"><video>',
-    dragHtml: '<div class="text-center p-3"><i class="ri-video-line display-4 text-muted"></i></div>',
+    dragHtml:
+        '<div class="text-center p-3"><i class="ri-video-line display-4 text-muted"></i></div>',
     icon: 'ri-video-line',
     resizable: true, //show select box resize handlers
     properties: [

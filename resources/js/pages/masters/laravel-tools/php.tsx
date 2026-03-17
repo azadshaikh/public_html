@@ -115,10 +115,13 @@ export default function LaravelToolsPhp({
                                 </span>
                             </div>
                             <CardTitle className="text-2xl">
-                                {summary.opcache_enabled ? 'Enabled' : 'Disabled'}
+                                {summary.opcache_enabled
+                                    ? 'Enabled'
+                                    : 'Disabled'}
                             </CardTitle>
                             <CardDescription>
-                                Status of bytecode caching for the current runtime.
+                                Status of bytecode caching for the current
+                                runtime.
                             </CardDescription>
                         </CardHeader>
                     </Card>
@@ -128,7 +131,8 @@ export default function LaravelToolsPhp({
                     <CardHeader>
                         <CardTitle>Runtime details</CardTitle>
                         <CardDescription>
-                            Core ini details used by the PHP process serving Laravel.
+                            Core ini details used by the PHP process serving
+                            Laravel.
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="grid gap-4 md:grid-cols-2">
@@ -148,46 +152,49 @@ export default function LaravelToolsPhp({
                         <CardHeader>
                             <CardTitle>INI setting groups</CardTitle>
                             <CardDescription>
-                                Review commonly-tuned values grouped by runtime area.
+                                Review commonly-tuned values grouped by runtime
+                                area.
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="grid gap-6 xl:grid-cols-2">
-                            {Object.entries(settingGroups).map(([group, values]) => (
-                                <div
-                                    key={group}
-                                    className="overflow-hidden rounded-xl border"
-                                >
-                                    <div className="border-b bg-muted/40 px-4 py-3">
-                                        <p className="font-medium text-foreground">
-                                            {group}
-                                        </p>
+                            {Object.entries(settingGroups).map(
+                                ([group, values]) => (
+                                    <div
+                                        key={group}
+                                        className="overflow-hidden rounded-xl border"
+                                    >
+                                        <div className="border-b bg-muted/40 px-4 py-3">
+                                            <p className="font-medium text-foreground">
+                                                {group}
+                                            </p>
+                                        </div>
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead className="w-1/2">
+                                                        Setting
+                                                    </TableHead>
+                                                    <TableHead>Value</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {Object.entries(values).map(
+                                                    ([key, value]) => (
+                                                        <TableRow key={key}>
+                                                            <TableCell className="font-mono text-xs text-foreground">
+                                                                {key}
+                                                            </TableCell>
+                                                            <TableCell className="text-xs break-all text-muted-foreground">
+                                                                {value}
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    ),
+                                                )}
+                                            </TableBody>
+                                        </Table>
                                     </div>
-                                    <Table>
-                                        <TableHeader>
-                                            <TableRow>
-                                                <TableHead className="w-1/2">
-                                                    Setting
-                                                </TableHead>
-                                                <TableHead>Value</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {Object.entries(values).map(
-                                                ([key, value]) => (
-                                                    <TableRow key={key}>
-                                                        <TableCell className="font-mono text-xs text-foreground">
-                                                            {key}
-                                                        </TableCell>
-                                                        <TableCell className="break-all text-xs text-muted-foreground">
-                                                            {value}
-                                                        </TableCell>
-                                                    </TableRow>
-                                                ),
-                                            )}
-                                        </TableBody>
-                                    </Table>
-                                </div>
-                            ))}
+                                ),
+                            )}
                         </CardContent>
                     </Card>
 
@@ -206,9 +213,12 @@ export default function LaravelToolsPhp({
                                             <EmptyMedia variant="icon">
                                                 <DatabaseIcon />
                                             </EmptyMedia>
-                                            <EmptyTitle>No PDO drivers detected</EmptyTitle>
+                                            <EmptyTitle>
+                                                No PDO drivers detected
+                                            </EmptyTitle>
                                             <EmptyDescription>
-                                                PHP did not report any PDO drivers for this runtime.
+                                                PHP did not report any PDO
+                                                drivers for this runtime.
                                             </EmptyDescription>
                                         </EmptyHeader>
                                     </Empty>
@@ -228,7 +238,8 @@ export default function LaravelToolsPhp({
                             <CardHeader>
                                 <CardTitle>Loaded extensions</CardTitle>
                                 <CardDescription>
-                                    {extensions.length} extensions reported by PHP.
+                                    {extensions.length} extensions reported by
+                                    PHP.
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="grid gap-3 sm:grid-cols-2">
@@ -259,19 +270,13 @@ export default function LaravelToolsPhp({
     );
 }
 
-function RuntimeDetail({
-    label,
-    value,
-}: {
-    label: string;
-    value: string;
-}) {
+function RuntimeDetail({ label, value }: { label: string; value: string }) {
     return (
         <div className="rounded-xl border bg-muted/30 p-4">
             <p className="mb-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">
                 {label}
             </p>
-            <p className="break-all font-medium text-foreground">{value}</p>
+            <p className="font-medium break-all text-foreground">{value}</p>
         </div>
     );
 }

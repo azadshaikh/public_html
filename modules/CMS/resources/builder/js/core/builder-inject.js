@@ -22,7 +22,7 @@ Object.assign(Astero.Builder, {
                 let componentcss = component.css.trim();
                 let updateComponentcss = componentcss.replace(
                     '<style>',
-                    '<style data-componentid="' + component.id + '-style">'
+                    '<style data-componentid="' + component.id + '-style">',
                 );
                 this._injectCSS(updateComponentcss);
             }
@@ -32,7 +32,7 @@ Object.assign(Astero.Builder, {
                 let componentjs = component.js.trim();
                 let updateComponentJs = componentjs.replace(
                     '<script>',
-                    '<script data-componentid="' + component.id + '-script">'
+                    '<script data-componentid="' + component.id + '-script">',
                 );
                 this._injectJS(updateComponentJs);
             }
@@ -57,15 +57,21 @@ Object.assign(Astero.Builder, {
         }
 
         // Extract data-componentid from the style tag
-        let match = css.match(/<style[^>]*data-componentid=["']([^"']+)["'][^>]*>/);
+        let match = css.match(
+            /<style[^>]*data-componentid=["']([^"']+)["'][^>]*>/,
+        );
         let componentId = match ? match[1] : null;
 
         if (componentId) {
             // Check if a style block with this data-componentid already exists
-            let existingStyle = stylesElement.querySelector('style[data-componentid="' + componentId + '"]');
+            let existingStyle = stylesElement.querySelector(
+                'style[data-componentid="' + componentId + '"]',
+            );
             if (existingStyle) {
                 // Replace the content inside the style tag
-                let cssContentMatch = css.match(/<style[^>]*>[\s\S]*?<\/style>/);
+                let cssContentMatch = css.match(
+                    /<style[^>]*>[\s\S]*?<\/style>/,
+                );
                 if (cssContentMatch) {
                     // Extract only the CSS rules between <style>...</style>
                     let innerCss = css.replace(/<style[^>]*>|<\/style>/g, '');
@@ -90,7 +96,9 @@ Object.assign(Astero.Builder, {
     _injectJS: function (js) {
         if (!js || !this.frameDoc) return;
 
-        let scriptsElement = this.frameDoc.getElementById('pagebuilder-scripts');
+        let scriptsElement = this.frameDoc.getElementById(
+            'pagebuilder-scripts',
+        );
 
         // Create pagebuilder-scripts element if it doesn't exist
         if (!scriptsElement) {
@@ -116,7 +124,8 @@ Object.assign(Astero.Builder, {
      */
     getInjectedCSS: function () {
         if (!this.frameDoc) return '';
-        const stylesElement = this.frameDoc.getElementById('pagebuilder-styles');
+        const stylesElement =
+            this.frameDoc.getElementById('pagebuilder-styles');
         return stylesElement ? stylesElement.innerHTML : '';
     },
 
@@ -125,7 +134,9 @@ Object.assign(Astero.Builder, {
      */
     getInjectedJS: function () {
         if (!this.frameDoc) return '';
-        const scriptsElement = this.frameDoc.getElementById('pagebuilder-scripts');
+        const scriptsElement = this.frameDoc.getElementById(
+            'pagebuilder-scripts',
+        );
         return scriptsElement ? scriptsElement.innerHTML : '';
     },
 
@@ -135,12 +146,15 @@ Object.assign(Astero.Builder, {
     clearInjectedStyles: function () {
         if (!this.frameDoc) return;
 
-        const stylesElement = this.frameDoc.getElementById('pagebuilder-styles');
+        const stylesElement =
+            this.frameDoc.getElementById('pagebuilder-styles');
         if (stylesElement) {
             stylesElement.textContent = '';
         }
 
-        const scriptsElement = this.frameDoc.getElementById('pagebuilder-scripts');
+        const scriptsElement = this.frameDoc.getElementById(
+            'pagebuilder-scripts',
+        );
         if (scriptsElement) {
             scriptsElement.textContent = '';
         }

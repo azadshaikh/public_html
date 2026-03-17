@@ -79,10 +79,15 @@ class Registry {
 
         // Fetch from all providers in parallel
         const promises = providerKeys.map((key) => {
-            return this.providers[key].getBlocks(category, type).catch((err) => {
-                console.error(`[Registry] Error loading from provider ${key}:`, err);
-                return [];
-            });
+            return this.providers[key]
+                .getBlocks(category, type)
+                .catch((err) => {
+                    console.error(
+                        `[Registry] Error loading from provider ${key}:`,
+                        err,
+                    );
+                    return [];
+                });
         });
 
         const results = await Promise.all(promises);
@@ -113,7 +118,9 @@ class Registry {
         const blockMap = new Map();
 
         // Sort providers by priority (ascending) so higher priority overwrites lower
-        const sortedProviders = Object.values(this.providers).sort((a, b) => a.priority - b.priority);
+        const sortedProviders = Object.values(this.providers).sort(
+            (a, b) => a.priority - b.priority,
+        );
 
         for (const provider of sortedProviders) {
             const blocks = blocksByProvider[provider.name] || [];
@@ -165,7 +172,10 @@ class Registry {
                     return result.html;
                 }
             } catch (e) {
-                console.error(`[Registry] Failed to fetch HTML for ${block.slug}:`, e);
+                console.error(
+                    `[Registry] Failed to fetch HTML for ${block.slug}:`,
+                    e,
+                );
             }
         }
 

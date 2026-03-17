@@ -64,7 +64,7 @@ function getPostDateLabel(post: PostListItem): string {
 function PostPreview({ post }: { post: PostListItem }) {
     if (post.featured_image_url) {
         return (
-            <div className="flex h-12 w-18 shrink-0 overflow-hidden rounded-md border bg-muted">
+            <div className="flex h-16 w-24 shrink-0 overflow-hidden rounded-md border bg-muted">
                 <img
                     src={post.featured_image_url}
                     alt={post.title}
@@ -76,8 +76,8 @@ function PostPreview({ post }: { post: PostListItem }) {
     }
 
     return (
-        <div className="flex h-12 w-18 shrink-0 items-center justify-center rounded-md border bg-muted/50 text-muted-foreground">
-            <ImageIcon className="size-4" />
+        <div className="flex h-16 w-24 shrink-0 items-center justify-center rounded-md border bg-muted/50 text-muted-foreground">
+            <ImageIcon className="size-5" />
         </div>
     );
 }
@@ -93,12 +93,8 @@ export default function PostsIndex({
     const canEditPosts = page.props.auth.abilities.editPosts;
     const canDeletePosts = page.props.auth.abilities.deletePosts;
     const canRestorePosts = page.props.auth.abilities.restorePosts;
-    const { currentStatus, gridFilters, perPage, sorting, statusTabs } = buildDatagridState(
-        config,
-        filters,
-        statistics,
-        'Search posts...',
-    );
+    const { currentStatus, gridFilters, perPage, sorting, statusTabs } =
+        buildDatagridState(config, filters, statistics, 'Search posts...');
 
     const handleBulkAction = (
         action: string,
@@ -128,17 +124,22 @@ export default function PostsIndex({
             header: 'Title',
             sortable: true,
             cell: (post) => (
-                <Link
-                    href={post.edit_url}
-                    className="flex min-w-0 items-start gap-3 hover:opacity-80"
-                >
-                    <PostPreview post={post} />
+                <div className="flex min-w-0 items-start gap-4">
+                    <Link
+                        href={post.edit_url}
+                        className="shrink-0 transition-opacity hover:opacity-80"
+                    >
+                        <PostPreview post={post} />
+                    </Link>
 
-                    <div className="min-w-0 flex-1 space-y-1">
+                    <div className="min-w-0 flex-1 space-y-1.5 pt-0.5">
                         <div className="flex items-center gap-2">
-                            <span className="truncate font-medium text-foreground">
+                            <Link
+                                href={post.edit_url}
+                                className="truncate font-semibold text-foreground hover:underline"
+                            >
                                 {post.title}
-                            </span>
+                            </Link>
                             {post.is_featured ? (
                                 <Badge variant="outline" className="shrink-0">
                                     Featured
@@ -146,20 +147,31 @@ export default function PostsIndex({
                             ) : null}
                         </div>
 
-                        <div className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
-                            <span className="truncate">by {post.author_name}</span>
+                        <div className="flex min-w-0 items-center gap-2 text-sm">
+                            <span className="truncate font-medium text-foreground/80">
+                                {post.author_name}
+                            </span>
                             {getPostPath(post) ? (
                                 <>
-                                    <span className="text-muted-foreground/50">|</span>
-                                    <span className="flex min-w-0 items-center gap-1 truncate">
-                                        <ExternalLinkIcon className="size-3 shrink-0" />
-                                        <span className="truncate">{getPostPath(post)}</span>
+                                    <span className="text-muted-foreground/40">
+                                        •
                                     </span>
+                                    <a
+                                        href={post.permalink_url!}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="flex min-w-0 items-center gap-1 text-muted-foreground transition-colors hover:text-foreground"
+                                    >
+                                        <span className="truncate">
+                                            {getPostPath(post)}
+                                        </span>
+                                        <ExternalLinkIcon className="size-3.5 shrink-0" />
+                                    </a>
                                 </>
                             ) : null}
                         </div>
                     </div>
-                </Link>
+                </div>
             ),
         },
         {
@@ -171,7 +183,11 @@ export default function PostsIndex({
                 <div className="flex flex-wrap gap-1.5">
                     {post.categories.length > 0 ? (
                         post.categories.slice(0, 2).map((category) => (
-                            <Badge key={category.id} variant="secondary" className="max-w-full truncate">
+                            <Badge
+                                key={category.id}
+                                variant="secondary"
+                                className="max-w-full truncate"
+                            >
                                 {category.title}
                             </Badge>
                         ))
@@ -179,7 +195,9 @@ export default function PostsIndex({
                         <span className="text-sm text-muted-foreground">—</span>
                     )}
                     {post.categories.length > 2 ? (
-                        <Badge variant="outline">+{post.categories.length - 2}</Badge>
+                        <Badge variant="outline">
+                            +{post.categories.length - 2}
+                        </Badge>
                     ) : null}
                 </div>
             ),
@@ -194,7 +212,9 @@ export default function PostsIndex({
             cell: (post) => (
                 <Badge
                     variant={
-                        statusBadgeVariant(post.status) as Parameters<typeof Badge>[0]['variant']
+                        statusBadgeVariant(post.status) as Parameters<
+                            typeof Badge
+                        >[0]['variant']
                     }
                 >
                     {post.status_label}
@@ -210,8 +230,12 @@ export default function PostsIndex({
             sortKey: 'published_at',
             cell: (post) => (
                 <div className="space-y-0.5 text-sm">
-                    <div className="text-xs text-muted-foreground">{getPostDateLabel(post)}</div>
-                    <div className="font-medium text-foreground">{post.display_date}</div>
+                    <div className="text-xs text-muted-foreground">
+                        {getPostDateLabel(post)}
+                    </div>
+                    <div className="font-medium text-foreground">
+                        {post.display_date}
+                    </div>
                 </div>
             ),
         },
@@ -389,17 +413,25 @@ export default function PostsIndex({
                                             {post.title}
                                         </span>
                                         {post.is_featured ? (
-                                            <Badge variant="outline">Featured</Badge>
+                                            <Badge variant="outline">
+                                                Featured
+                                            </Badge>
                                         ) : null}
                                     </div>
                                     <div className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
-                                        <span className="truncate">by {post.author_name}</span>
+                                        <span className="truncate">
+                                            by {post.author_name}
+                                        </span>
                                         {getPostPath(post) ? (
                                             <>
-                                                <span className="text-muted-foreground/50">|</span>
+                                                <span className="text-muted-foreground/50">
+                                                    |
+                                                </span>
                                                 <span className="flex min-w-0 items-center gap-1 truncate">
                                                     <ExternalLinkIcon className="size-3 shrink-0" />
-                                                    <span className="truncate">{getPostPath(post)}</span>
+                                                    <span className="truncate">
+                                                        {getPostPath(post)}
+                                                    </span>
                                                 </span>
                                             </>
                                         ) : null}
@@ -408,23 +440,30 @@ export default function PostsIndex({
                             </Link>
                             <div className="grid gap-3 sm:grid-cols-3">
                                 <div className="rounded-lg border bg-muted/30 px-3 py-2">
-                                    <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                                    <div className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
                                         Categories
                                     </div>
                                     <div className="mt-2 flex flex-wrap gap-1.5">
                                         {post.categories.length > 0 ? (
-                                            post.categories.slice(0, 2).map((category) => (
-                                                <Badge key={category.id} variant="secondary">
-                                                    {category.title}
-                                                </Badge>
-                                            ))
+                                            post.categories
+                                                .slice(0, 2)
+                                                .map((category) => (
+                                                    <Badge
+                                                        key={category.id}
+                                                        variant="secondary"
+                                                    >
+                                                        {category.title}
+                                                    </Badge>
+                                                ))
                                         ) : (
-                                            <span className="text-sm text-muted-foreground">—</span>
+                                            <span className="text-sm text-muted-foreground">
+                                                —
+                                            </span>
                                         )}
                                     </div>
                                 </div>
                                 <div className="rounded-lg border bg-muted/30 px-3 py-2">
-                                    <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                                    <div className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
                                         Status
                                     </div>
                                     <div className="mt-1">
@@ -442,7 +481,7 @@ export default function PostsIndex({
                                     </div>
                                 </div>
                                 <div className="rounded-lg border bg-muted/30 px-3 py-2">
-                                    <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                                    <div className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
                                         {getPostDateLabel(post)}
                                     </div>
                                     <div className="mt-1 text-sm font-medium text-foreground">

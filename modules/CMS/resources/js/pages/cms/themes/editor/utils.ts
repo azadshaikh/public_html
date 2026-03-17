@@ -28,7 +28,10 @@ export function getErrorMessage(error: unknown, fallback: string): string {
                     error?: string;
                 };
 
-                if (typeof payload.message === 'string' && payload.message !== '') {
+                if (
+                    typeof payload.message === 'string' &&
+                    payload.message !== ''
+                ) {
                     return payload.message;
                 }
 
@@ -58,7 +61,10 @@ export function getParentDirectory(path: string): string {
     return segments.slice(0, -1).join('/');
 }
 
-export function findNodeByPath(nodes: ThemeEditorFileNode[], path: string): ThemeEditorFileNode | null {
+export function findNodeByPath(
+    nodes: ThemeEditorFileNode[],
+    path: string,
+): ThemeEditorFileNode | null {
     for (const node of nodes) {
         if (node.path === path) {
             return node;
@@ -75,7 +81,10 @@ export function findNodeByPath(nodes: ThemeEditorFileNode[], path: string): Them
     return null;
 }
 
-export function collectExpandablePaths(nodes: ThemeEditorFileNode[], depth = 0): string[] {
+export function collectExpandablePaths(
+    nodes: ThemeEditorFileNode[],
+    depth = 0,
+): string[] {
     return nodes.flatMap((node) => {
         if (node.type !== 'directory') {
             return [];
@@ -83,6 +92,9 @@ export function collectExpandablePaths(nodes: ThemeEditorFileNode[], depth = 0):
 
         const self = depth < 2 ? [node.path] : [];
 
-        return [...self, ...collectExpandablePaths(node.children ?? [], depth + 1)];
+        return [
+            ...self,
+            ...collectExpandablePaths(node.children ?? [], depth + 1),
+        ];
     });
 }

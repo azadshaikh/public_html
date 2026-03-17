@@ -1,7 +1,10 @@
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import WebsiteForm from '../../../components/websites/website-form';
-import type { PlatformOption, WebsiteFormValues } from '../../../types/platform';
+import type {
+    PlatformOption,
+    WebsiteFormValues,
+} from '../../../types/platform';
 
 type WebsitesEditPageProps = {
     website: {
@@ -22,10 +25,22 @@ type WebsitesEditPageProps = {
 export default function WebsitesEdit(props: WebsitesEditPageProps) {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: route('dashboard') },
-        { title: 'Platform', href: route('platform.websites.index', { status: 'all' }) },
-        { title: 'Websites', href: route('platform.websites.index', { status: 'all' }) },
-        { title: props.website.name, href: route('platform.websites.show', props.website.id) },
-        { title: 'Edit', href: route('platform.websites.edit', props.website.id) },
+        {
+            title: 'Platform',
+            href: route('platform.websites.index', { status: 'all' }),
+        },
+        {
+            title: 'Websites',
+            href: route('platform.websites.index', { status: 'all' }),
+        },
+        {
+            title: props.website.name,
+            href: route('platform.websites.show', props.website.id),
+        },
+        {
+            title: 'Edit',
+            href: route('platform.websites.edit', props.website.id),
+        },
     ];
 
     return (

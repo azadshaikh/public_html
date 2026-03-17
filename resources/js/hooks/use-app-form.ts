@@ -20,9 +20,9 @@ import type { FormFieldErrors, FormValidationRules } from '@/lib/forms';
 type DirtyGuardOptions =
     | boolean
     | {
-        enabled?: boolean;
-        message?: string;
-    };
+          enabled?: boolean;
+          message?: string;
+      };
 
 type UseAppFormOptions<T extends FormDataType<T>> = {
     defaults: T;

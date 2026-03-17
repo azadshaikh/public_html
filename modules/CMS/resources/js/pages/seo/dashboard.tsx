@@ -41,7 +41,7 @@ const quickLinkIcons = {
 } as const;
 
 function formatDate(value: string | null): string {
-    if (! value) {
+    if (!value) {
         return 'Not generated yet';
     }
 
@@ -70,7 +70,9 @@ export default function SeoDashboardPage({
             }
         >
             <div className="flex flex-col gap-6">
-                <Alert variant={searchEngineEnabled ? 'default' : 'destructive'}>
+                <Alert
+                    variant={searchEngineEnabled ? 'default' : 'destructive'}
+                >
                     {searchEngineEnabled ? (
                         <SearchCheckIcon className="size-4" />
                     ) : (
@@ -87,9 +89,17 @@ export default function SeoDashboardPage({
                                 ? 'Your current global SEO configuration allows crawlers to discover and index public pages.'
                                 : 'The site is sending noindex, nofollow defaults. Update Titles & Meta when you are ready to go live.'}
                         </span>
-                        <Button asChild size="default" variant={searchEngineEnabled ? 'outline' : 'secondary'}>
+                        <Button
+                            asChild
+                            size="default"
+                            variant={
+                                searchEngineEnabled ? 'outline' : 'secondary'
+                            }
+                        >
                             <Link href={titlesMetaHref}>
-                                {searchEngineEnabled ? 'Review indexing settings' : 'Enable indexing'}
+                                {searchEngineEnabled
+                                    ? 'Review indexing settings'
+                                    : 'Enable indexing'}
                             </Link>
                         </Button>
                     </AlertDescription>
@@ -100,9 +110,13 @@ export default function SeoDashboardPage({
                         <CardHeader>
                             <div className="flex items-start justify-between gap-3">
                                 <div>
-                                    <CardDescription>robots.txt</CardDescription>
+                                    <CardDescription>
+                                        robots.txt
+                                    </CardDescription>
                                     <CardTitle className="mt-2 text-2xl">
-                                        {stats.robots_txt_exists ? 'Present' : 'Missing'}
+                                        {stats.robots_txt_exists
+                                            ? 'Present'
+                                            : 'Missing'}
                                     </CardTitle>
                                 </div>
                                 <div className="rounded-xl border bg-muted/50 p-2">
@@ -111,8 +125,16 @@ export default function SeoDashboardPage({
                             </div>
                         </CardHeader>
                         <CardContent>
-                            <Badge variant={stats.robots_txt_exists ? 'secondary' : 'destructive'}>
-                                {stats.robots_txt_exists ? 'Crawler rules published' : 'Needs attention'}
+                            <Badge
+                                variant={
+                                    stats.robots_txt_exists
+                                        ? 'secondary'
+                                        : 'destructive'
+                                }
+                            >
+                                {stats.robots_txt_exists
+                                    ? 'Crawler rules published'
+                                    : 'Needs attention'}
                             </Badge>
                         </CardContent>
                     </Card>
@@ -123,7 +145,9 @@ export default function SeoDashboardPage({
                                 <div>
                                     <CardDescription>Sitemap</CardDescription>
                                     <CardTitle className="mt-2 text-2xl">
-                                        {stats.sitemap_exists ? sitemapStatus.total_urls : 0}
+                                        {stats.sitemap_exists
+                                            ? sitemapStatus.total_urls
+                                            : 0}
                                     </CardTitle>
                                 </div>
                                 <div className="rounded-xl border bg-muted/50 p-2">
@@ -132,8 +156,15 @@ export default function SeoDashboardPage({
                             </div>
                         </CardHeader>
                         <CardContent className="space-y-2 text-sm text-muted-foreground">
-                            <div>{stats.sitemap_exists ? 'URLs currently published in XML sitemaps' : 'No sitemap has been generated yet'}</div>
-                            <div>Last generated: {formatDate(stats.sitemap_last_generated)}</div>
+                            <div>
+                                {stats.sitemap_exists
+                                    ? 'URLs currently published in XML sitemaps'
+                                    : 'No sitemap has been generated yet'}
+                            </div>
+                            <div>
+                                Last generated:{' '}
+                                {formatDate(stats.sitemap_last_generated)}
+                            </div>
                         </CardContent>
                     </Card>
 
@@ -143,7 +174,9 @@ export default function SeoDashboardPage({
                                 <div>
                                     <CardDescription>Indexing</CardDescription>
                                     <CardTitle className="mt-2 text-2xl">
-                                        {searchEngineEnabled ? 'Enabled' : 'Blocked'}
+                                        {searchEngineEnabled
+                                            ? 'Enabled'
+                                            : 'Blocked'}
                                     </CardTitle>
                                 </div>
                                 <div className="rounded-xl border bg-muted/50 p-2">
@@ -156,8 +189,16 @@ export default function SeoDashboardPage({
                             </div>
                         </CardHeader>
                         <CardContent>
-                            <Badge variant={searchEngineEnabled ? 'secondary' : 'destructive'}>
-                                {searchEngineEnabled ? 'Production-ready visibility' : 'Hidden from search engines'}
+                            <Badge
+                                variant={
+                                    searchEngineEnabled
+                                        ? 'secondary'
+                                        : 'destructive'
+                                }
+                            >
+                                {searchEngineEnabled
+                                    ? 'Production-ready visibility'
+                                    : 'Hidden from search engines'}
                             </Badge>
                         </CardContent>
                     </Card>
@@ -167,7 +208,8 @@ export default function SeoDashboardPage({
                     <div className="space-y-1">
                         <h2 className="text-lg font-semibold">SEO settings</h2>
                         <p className="text-sm text-muted-foreground">
-                            Open any section to manage metadata, crawlers, social previews, and structured data.
+                            Open any section to manage metadata, crawlers,
+                            social previews, and structured data.
                         </p>
                     </div>
 
@@ -176,25 +218,43 @@ export default function SeoDashboardPage({
                             const Icon = quickLinkIcons[link.key];
 
                             return (
-                                <Card key={link.key} className="transition-colors hover:border-primary/40">
+                                <Card
+                                    key={link.key}
+                                    className="transition-colors hover:border-primary/40"
+                                >
                                     <CardHeader>
                                         <div className="flex items-start justify-between gap-3">
                                             <div className="rounded-xl border bg-muted/50 p-2">
                                                 <Icon className="size-5 text-primary" />
                                             </div>
-                                            <Button asChild variant="ghost" className="-mr-2">
-                                                <Link href={link.href} aria-label={`Open ${link.label}`}>
+                                            <Button
+                                                asChild
+                                                variant="ghost"
+                                                className="-mr-2"
+                                            >
+                                                <Link
+                                                    href={link.href}
+                                                    aria-label={`Open ${link.label}`}
+                                                >
                                                     <ArrowRightIcon className="size-4" />
                                                 </Link>
                                             </Button>
                                         </div>
                                         <div className="space-y-1">
-                                            <CardTitle className="text-base">{link.label}</CardTitle>
-                                            <CardDescription>{link.description}</CardDescription>
+                                            <CardTitle className="text-base">
+                                                {link.label}
+                                            </CardTitle>
+                                            <CardDescription>
+                                                {link.description}
+                                            </CardDescription>
                                         </div>
                                     </CardHeader>
                                     <CardContent>
-                                        <Button asChild variant="outline" className="w-full justify-between">
+                                        <Button
+                                            asChild
+                                            variant="outline"
+                                            className="w-full justify-between"
+                                        >
                                             <Link href={link.href}>
                                                 Manage {link.label}
                                                 <ArrowRightIcon className="size-4" />

@@ -2,9 +2,20 @@
     margin-right: var(--builder-right-panel-width);
     margin-left: var(--builder-left-panel-width);
     width: calc(
-        100vw - (var(--builder-left-panel-width) + var(--builder-right-panel-width) + var(--builder-canvas-margin))
+        100vw -
+            (
+                var(--builder-left-panel-width) +
+                    var(--builder-right-panel-width) +
+                    var(--builder-canvas-margin)
+            )
     );
-    height: calc(100vh - (var(--builder-header-top-height) + var(--builder-bottom-panel-height)));
+    height: calc(
+        100vh -
+            (
+                var(--builder-header-top-height) +
+                    var(--builder-bottom-panel-height)
+            )
+    );
     top: var(--builder-header-top-height);
     position: fixed;
     background-color: var(--bs-secondary-bg);
@@ -232,13 +243,17 @@
     border-radius: 3px;
 }
 
-#astero-builder #wysiwyg-editor.default-editor > input[type='color'].form-control-color::-moz-color-swatch {
+#astero-builder
+    #wysiwyg-editor.default-editor
+    > input[type='color'].form-control-color::-moz-color-swatch {
     border-radius: 3px;
     box-shadow: 1px 1px 5px 0px rgba(var(--bs-body-color-rgb), 0.25);
     border: none;
 }
 
-#astero-builder #wysiwyg-editor.default-editor > input[type='color'].form-control-color::-webkit-color-swatch {
+#astero-builder
+    #wysiwyg-editor.default-editor
+    > input[type='color'].form-control-color::-webkit-color-swatch {
     padding: 0;
     border-radius: 3px;
     box-shadow: 1px 1px 5px 0px rgba(var(--bs-body-color-rgb), 0.25);
@@ -253,7 +268,10 @@
     color: var(--bs-body-color);
 }
 
-#astero-builder #wysiwyg-editor.default-editor > div.dropdown .dropdown-toggle::after {
+#astero-builder
+    #wysiwyg-editor.default-editor
+    > div.dropdown
+    .dropdown-toggle::after {
     font-size: 50%;
     vertical-align: unset;
 }

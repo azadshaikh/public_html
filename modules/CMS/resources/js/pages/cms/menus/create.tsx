@@ -3,10 +3,25 @@ import { ArrowLeftIcon } from 'lucide-react';
 import type { FormEvent } from 'react';
 import { FormErrorSummary } from '@/components/forms/form-error-summary';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardFooter,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
+import {
+    Field,
+    FieldDescription,
+    FieldError,
+    FieldLabel,
+} from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import {
+    NativeSelect,
+    NativeSelectOption,
+} from '@/components/ui/native-select';
 import { Spinner } from '@/components/ui/spinner';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
@@ -36,7 +51,10 @@ const emptyValues: MenuCreateFormValues = {
     description: '',
 };
 
-export default function MenusCreate({ locationOptions, assignedMenus }: MenuCreatePageProps) {
+export default function MenusCreate({
+    locationOptions,
+    assignedMenus,
+}: MenuCreatePageProps) {
     const form = useAppForm<MenuCreateFormValues>({
         defaults: emptyValues,
         rememberKey: 'cms.menus.create',
@@ -79,16 +97,21 @@ export default function MenusCreate({ locationOptions, assignedMenus }: MenuCrea
                     <CardHeader>
                         <CardTitle>Menu Settings</CardTitle>
                         <CardDescription>
-                            Configure your menu. You can add items and set up the structure after creating it.
+                            Configure your menu. You can add items and set up
+                            the structure after creating it.
                         </CardDescription>
                     </CardHeader>
 
                     <CardContent className="flex flex-col gap-6">
-                        <FormErrorSummary errors={form.errors} minMessages={2} />
+                        <FormErrorSummary
+                            errors={form.errors}
+                            minMessages={2}
+                        />
 
                         <Field data-invalid={form.invalid('name') || undefined}>
                             <FieldLabel htmlFor="name">
-                                Menu Name <span className="text-destructive">*</span>
+                                Menu Name{' '}
+                                <span className="text-destructive">*</span>
                             </FieldLabel>
                             <Input
                                 id="name"
@@ -96,35 +119,53 @@ export default function MenusCreate({ locationOptions, assignedMenus }: MenuCrea
                                 placeholder="e.g. Main Navigation"
                                 aria-invalid={form.invalid('name') || undefined}
                                 value={form.data.name}
-                                onChange={(e) => form.setField('name', e.target.value)}
+                                onChange={(e) =>
+                                    form.setField('name', e.target.value)
+                                }
                                 onBlur={() => form.touch('name')}
                             />
                             <FieldError>{form.error('name')}</FieldError>
                         </Field>
 
-                        <Field data-invalid={form.invalid('location') || undefined}>
-                            <FieldLabel htmlFor="location">Theme Location</FieldLabel>
+                        <Field
+                            data-invalid={form.invalid('location') || undefined}
+                        >
+                            <FieldLabel htmlFor="location">
+                                Theme Location
+                            </FieldLabel>
                             <NativeSelect
                                 id="location"
-                                aria-invalid={form.invalid('location') || undefined}
+                                aria-invalid={
+                                    form.invalid('location') || undefined
+                                }
                                 value={form.data.location}
-                                onChange={(e) => form.setField('location', e.target.value)}
+                                onChange={(e) =>
+                                    form.setField('location', e.target.value)
+                                }
                                 onBlur={() => form.touch('location')}
                             >
-                                <NativeSelectOption value="">— No location —</NativeSelectOption>
+                                <NativeSelectOption value="">
+                                    — No location —
+                                </NativeSelectOption>
                                 {locationOptions.map((option) => (
-                                    <NativeSelectOption key={option.value} value={option.value}>
+                                    <NativeSelectOption
+                                        key={option.value}
+                                        value={option.value}
+                                    >
                                         {option.label}
                                     </NativeSelectOption>
                                 ))}
                             </NativeSelect>
                             {locationConflict ? (
                                 <FieldDescription className="text-amber-600 dark:text-amber-400">
-                                    <strong>{locationConflict.name}</strong> is already assigned to this location. Assigning this menu will unassign it.
+                                    <strong>{locationConflict.name}</strong> is
+                                    already assigned to this location. Assigning
+                                    this menu will unassign it.
                                 </FieldDescription>
                             ) : (
                                 <FieldDescription>
-                                    Assign this menu to a location defined by your active theme.
+                                    Assign this menu to a location defined by
+                                    your active theme.
                                 </FieldDescription>
                             )}
                             <FieldError>{form.error('location')}</FieldError>
@@ -133,25 +174,38 @@ export default function MenusCreate({ locationOptions, assignedMenus }: MenuCrea
                         <Field orientation="horizontal">
                             <Switch
                                 checked={form.data.is_active}
-                                onCheckedChange={(checked) => form.setField('is_active', checked)}
+                                onCheckedChange={(checked) =>
+                                    form.setField('is_active', checked)
+                                }
                             />
                             <div className="flex flex-col gap-1">
                                 <FieldLabel>Active</FieldLabel>
                                 <FieldDescription>
-                                    Inactive menus are hidden from the front end.
+                                    Inactive menus are hidden from the front
+                                    end.
                                 </FieldDescription>
                             </div>
                         </Field>
 
-                        <Field data-invalid={form.invalid('description') || undefined}>
-                            <FieldLabel htmlFor="description">Description</FieldLabel>
+                        <Field
+                            data-invalid={
+                                form.invalid('description') || undefined
+                            }
+                        >
+                            <FieldLabel htmlFor="description">
+                                Description
+                            </FieldLabel>
                             <Textarea
                                 id="description"
                                 placeholder="Optional internal notes about this menu…"
                                 rows={3}
-                                aria-invalid={form.invalid('description') || undefined}
+                                aria-invalid={
+                                    form.invalid('description') || undefined
+                                }
                                 value={form.data.description}
-                                onChange={(e) => form.setField('description', e.target.value)}
+                                onChange={(e) =>
+                                    form.setField('description', e.target.value)
+                                }
                                 onBlur={() => form.touch('description')}
                             />
                             <FieldError>{form.error('description')}</FieldError>
@@ -160,7 +214,9 @@ export default function MenusCreate({ locationOptions, assignedMenus }: MenuCrea
 
                     <CardFooter className="flex justify-end gap-3">
                         <Button variant="outline" type="button" asChild>
-                            <Link href={route('cms.appearance.menus.index')}>Cancel</Link>
+                            <Link href={route('cms.appearance.menus.index')}>
+                                Cancel
+                            </Link>
                         </Button>
                         <Button type="submit" disabled={form.processing}>
                             {form.processing && <Spinner />}

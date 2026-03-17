@@ -2,7 +2,8 @@
 import '@melloware/coloris/dist/coloris.css';
 import Coloris from '@melloware/coloris';
 
-const __ASTERO_GLOBAL__ = typeof globalThis !== 'undefined' ? globalThis : window;
+const __ASTERO_GLOBAL__ =
+    typeof globalThis !== 'undefined' ? globalThis : window;
 
 const colorisOptions = {
     el: '.coloris',
@@ -20,7 +21,9 @@ window.Coloris = Coloris;
 // Enhance the existing global ColorInput (defined in builder-inputs.js)
 // without redefining it from scratch.
 if (__ASTERO_GLOBAL__.ColorInput) {
-    const baseSetValue = __ASTERO_GLOBAL__.ColorInput.setValue?.bind(__ASTERO_GLOBAL__.ColorInput);
+    const baseSetValue = __ASTERO_GLOBAL__.ColorInput.setValue?.bind(
+        __ASTERO_GLOBAL__.ColorInput,
+    );
 
     __ASTERO_GLOBAL__.ColorInput = {
         ...__ASTERO_GLOBAL__.ColorInput,

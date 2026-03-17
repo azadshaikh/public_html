@@ -266,7 +266,9 @@ async function getOembed(url, maxwidth = 800, maxheight = 600, silent = false) {
     for (const service of oEmbedProviders) {
         if (service.regex.exec(url)) {
             let eurl = encodeURIComponent(url);
-            oembedUrl = service.url + `?url=${eurl}&maxwidth=${maxwidth}&maxheight=${maxheight}&format=json`;
+            oembedUrl =
+                service.url +
+                `?url=${eurl}&maxwidth=${maxwidth}&maxheight=${maxheight}&format=json`;
         }
     }
 
@@ -277,7 +279,9 @@ async function getOembed(url, maxwidth = 800, maxheight = 600, silent = false) {
                 if (matches) {
                     let newUrl = transforms.url;
                     for (let i = 0; i < matches.length; i++) {
-                        newUrl = newUrl.replace('$' + i, () => (matches[i] ? matches[i] : ''));
+                        newUrl = newUrl.replace('$' + i, () =>
+                            matches[i] ? matches[i] : '',
+                        );
                     }
                     return `<iframe src="https://${newUrl}" width="${maxwidth}" height="${maxheight}" style="border:0;" loading="lazy" ></iframe>`;
                 }
@@ -299,7 +303,10 @@ async function getOembed(url, maxwidth = 800, maxheight = 600, silent = false) {
 
     let remoteResponse;
     //try to fetch directly, if CORS error use proxy
-    for (url of [oembedUrl, oEmbedProxyUrl + '&url=' + encodeURIComponent(oembedUrl)]) {
+    for (url of [
+        oembedUrl,
+        oEmbedProxyUrl + '&url=' + encodeURIComponent(oembedUrl),
+    ]) {
         try {
             remoteResponse = await window.fetch(url);
 

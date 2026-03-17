@@ -18,10 +18,22 @@ type DomainsEditPageProps = {
 export default function DomainsEdit(props: DomainsEditPageProps) {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: route('dashboard') },
-        { title: 'Platform', href: route('platform.domains.index', { status: 'all' }) },
-        { title: 'Domains', href: route('platform.domains.index', { status: 'all' }) },
-        { title: props.domain.name, href: route('platform.domains.show', props.domain.id) },
-        { title: 'Edit', href: route('platform.domains.edit', props.domain.id) },
+        {
+            title: 'Platform',
+            href: route('platform.domains.index', { status: 'all' }),
+        },
+        {
+            title: 'Domains',
+            href: route('platform.domains.index', { status: 'all' }),
+        },
+        {
+            title: props.domain.name,
+            href: route('platform.domains.show', props.domain.id),
+        },
+        {
+            title: 'Edit',
+            href: route('platform.domains.edit', props.domain.id),
+        },
     ];
 
     return (

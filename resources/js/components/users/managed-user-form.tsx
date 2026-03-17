@@ -6,12 +6,7 @@ import {
     UploadIcon,
     UserCogIcon,
 } from 'lucide-react';
-import {
-    useEffect,
-    useMemo,
-    useRef,
-    useState,
-} from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
 import { FormErrorSummary } from '@/components/forms/form-error-summary';
 import { CountrySelect } from '@/components/geo/country-select';
@@ -104,8 +99,9 @@ export default function ManagedUserForm({
     const getInitials = useInitials();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const temporaryPreviewUrlRef = useRef<string | null>(null);
-    const [temporaryAvatarPreviewUrl, setTemporaryAvatarPreviewUrl] =
-        useState<string | null>(null);
+    const [temporaryAvatarPreviewUrl, setTemporaryAvatarPreviewUrl] = useState<
+        string | null
+    >(null);
 
     const form = useAppForm<ManagedUserFormValues>({
         defaults: initialValues,
@@ -188,7 +184,8 @@ export default function ManagedUserForm({
         ],
     );
 
-    const avatarPreviewUrl = temporaryAvatarPreviewUrl ?? user?.avatar_url ?? null;
+    const avatarPreviewUrl =
+        temporaryAvatarPreviewUrl ?? user?.avatar_url ?? null;
 
     useEffect(() => {
         return () => {
@@ -292,7 +289,11 @@ export default function ManagedUserForm({
     };
 
     return (
-        <form noValidate className="flex flex-col gap-6" onSubmit={handleSubmit}>
+        <form
+            noValidate
+            className="flex flex-col gap-6"
+            onSubmit={handleSubmit}
+        >
             {form.dirtyGuardDialog}
             <FormErrorSummary errors={form.errors} minMessages={2} />
 
@@ -302,84 +303,154 @@ export default function ManagedUserForm({
                         <CardHeader>
                             <CardTitle>Basic Information</CardTitle>
                             <CardDescription>
-                                Add core profile details and sign-in identity for this account.
+                                Add core profile details and sign-in identity
+                                for this account.
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="flex flex-col gap-6">
                             <FieldGroup className="md:grid md:grid-cols-2 md:gap-6">
-                                <Field data-invalid={form.invalid('first_name') || undefined}>
-                                    <FieldLabel htmlFor="first_name">First Name</FieldLabel>
+                                <Field
+                                    data-invalid={
+                                        form.invalid('first_name') || undefined
+                                    }
+                                >
+                                    <FieldLabel htmlFor="first_name">
+                                        First Name
+                                    </FieldLabel>
                                     <Input
                                         id="first_name"
                                         value={form.data.first_name}
                                         onChange={(event) => {
-                                            form.setField('first_name', event.target.value);
-                                            syncDerivedName({ first_name: event.target.value });
+                                            form.setField(
+                                                'first_name',
+                                                event.target.value,
+                                            );
+                                            syncDerivedName({
+                                                first_name: event.target.value,
+                                            });
                                         }}
                                         onBlur={() => form.touch('first_name')}
-                                        aria-invalid={form.invalid('first_name') || undefined}
+                                        aria-invalid={
+                                            form.invalid('first_name') ||
+                                            undefined
+                                        }
                                         placeholder="Enter first name"
                                     />
-                                    <FieldDescription>User&apos;s first name.</FieldDescription>
-                                    <FieldError>{form.error('first_name')}</FieldError>
+                                    <FieldDescription>
+                                        User&apos;s first name.
+                                    </FieldDescription>
+                                    <FieldError>
+                                        {form.error('first_name')}
+                                    </FieldError>
                                 </Field>
 
-                                <Field data-invalid={form.invalid('last_name') || undefined}>
-                                    <FieldLabel htmlFor="last_name">Last Name</FieldLabel>
+                                <Field
+                                    data-invalid={
+                                        form.invalid('last_name') || undefined
+                                    }
+                                >
+                                    <FieldLabel htmlFor="last_name">
+                                        Last Name
+                                    </FieldLabel>
                                     <Input
                                         id="last_name"
                                         value={form.data.last_name}
                                         onChange={(event) => {
-                                            form.setField('last_name', event.target.value);
-                                            syncDerivedName({ last_name: event.target.value });
+                                            form.setField(
+                                                'last_name',
+                                                event.target.value,
+                                            );
+                                            syncDerivedName({
+                                                last_name: event.target.value,
+                                            });
                                         }}
                                         onBlur={() => form.touch('last_name')}
-                                        aria-invalid={form.invalid('last_name') || undefined}
+                                        aria-invalid={
+                                            form.invalid('last_name') ||
+                                            undefined
+                                        }
                                         placeholder="Enter last name"
                                     />
-                                    <FieldDescription>User&apos;s last name.</FieldDescription>
-                                    <FieldError>{form.error('last_name')}</FieldError>
+                                    <FieldDescription>
+                                        User&apos;s last name.
+                                    </FieldDescription>
+                                    <FieldError>
+                                        {form.error('last_name')}
+                                    </FieldError>
                                 </Field>
                             </FieldGroup>
 
                             <FieldGroup className="md:grid md:grid-cols-2 md:gap-6">
-                                <Field data-invalid={form.invalid('email') || undefined}>
-                                    <RequiredLabel htmlFor="email">Email Address</RequiredLabel>
+                                <Field
+                                    data-invalid={
+                                        form.invalid('email') || undefined
+                                    }
+                                >
+                                    <RequiredLabel htmlFor="email">
+                                        Email Address
+                                    </RequiredLabel>
                                     <Input
                                         id="email"
                                         type="email"
                                         value={form.data.email}
                                         onChange={(event) => {
-                                            form.setField('email', event.target.value);
-                                            syncDerivedName({ email: event.target.value });
+                                            form.setField(
+                                                'email',
+                                                event.target.value,
+                                            );
+                                            syncDerivedName({
+                                                email: event.target.value,
+                                            });
                                         }}
                                         onBlur={() => form.touch('email')}
-                                        aria-invalid={form.invalid('email') || undefined}
+                                        aria-invalid={
+                                            form.invalid('email') || undefined
+                                        }
                                         placeholder="user@example.com"
                                     />
                                     <FieldDescription>
-                                        Primary email address for login and communications.
+                                        Primary email address for login and
+                                        communications.
                                     </FieldDescription>
-                                    <FieldError>{form.error('email')}</FieldError>
+                                    <FieldError>
+                                        {form.error('email')}
+                                    </FieldError>
                                 </Field>
 
-                                <Field data-invalid={form.invalid('username') || undefined}>
-                                    <FieldLabel htmlFor="username">Username</FieldLabel>
+                                <Field
+                                    data-invalid={
+                                        form.invalid('username') || undefined
+                                    }
+                                >
+                                    <FieldLabel htmlFor="username">
+                                        Username
+                                    </FieldLabel>
                                     <Input
                                         id="username"
                                         value={form.data.username}
                                         onChange={(event) => {
-                                            form.setField('username', event.target.value);
-                                            syncDerivedName({ username: event.target.value });
+                                            form.setField(
+                                                'username',
+                                                event.target.value,
+                                            );
+                                            syncDerivedName({
+                                                username: event.target.value,
+                                            });
                                         }}
                                         onBlur={() => form.touch('username')}
-                                        aria-invalid={form.invalid('username') || undefined}
+                                        aria-invalid={
+                                            form.invalid('username') ||
+                                            undefined
+                                        }
                                         placeholder="Enter username"
                                     />
                                     <FieldDescription>
-                                        Unique username for login (letters, numbers, underscores, and hyphens only).
+                                        Unique username for login (letters,
+                                        numbers, underscores, and hyphens only).
                                     </FieldDescription>
-                                    <FieldError>{form.error('username')}</FieldError>
+                                    <FieldError>
+                                        {form.error('username')}
+                                    </FieldError>
                                 </Field>
                             </FieldGroup>
                         </CardContent>
@@ -389,63 +460,113 @@ export default function ManagedUserForm({
                         <CardHeader>
                             <CardTitle>Contact Information</CardTitle>
                             <CardDescription>
-                                Capture the user&apos;s address and contact details.
+                                Capture the user&apos;s address and contact
+                                details.
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="flex flex-col gap-6">
                             <FieldGroup>
-                                <Field data-invalid={form.invalid('address1') || undefined}>
-                                    <FieldLabel htmlFor="address1">Address Line 1</FieldLabel>
+                                <Field
+                                    data-invalid={
+                                        form.invalid('address1') || undefined
+                                    }
+                                >
+                                    <FieldLabel htmlFor="address1">
+                                        Address Line 1
+                                    </FieldLabel>
                                     <Input
                                         id="address1"
                                         value={form.data.address1}
                                         onChange={(event) =>
-                                            form.setField('address1', event.target.value)
+                                            form.setField(
+                                                'address1',
+                                                event.target.value,
+                                            )
                                         }
                                         onBlur={() => form.touch('address1')}
-                                        aria-invalid={form.invalid('address1') || undefined}
+                                        aria-invalid={
+                                            form.invalid('address1') ||
+                                            undefined
+                                        }
                                         placeholder="Enter street address"
                                     />
-                                    <FieldDescription>Street address for the user.</FieldDescription>
-                                    <FieldError>{form.error('address1')}</FieldError>
+                                    <FieldDescription>
+                                        Street address for the user.
+                                    </FieldDescription>
+                                    <FieldError>
+                                        {form.error('address1')}
+                                    </FieldError>
                                 </Field>
 
-                                <Field data-invalid={form.invalid('address2') || undefined}>
-                                    <FieldLabel htmlFor="address2">Address Line 2</FieldLabel>
+                                <Field
+                                    data-invalid={
+                                        form.invalid('address2') || undefined
+                                    }
+                                >
+                                    <FieldLabel htmlFor="address2">
+                                        Address Line 2
+                                    </FieldLabel>
                                     <Input
                                         id="address2"
                                         value={form.data.address2}
                                         onChange={(event) =>
-                                            form.setField('address2', event.target.value)
+                                            form.setField(
+                                                'address2',
+                                                event.target.value,
+                                            )
                                         }
                                         onBlur={() => form.touch('address2')}
-                                        aria-invalid={form.invalid('address2') || undefined}
+                                        aria-invalid={
+                                            form.invalid('address2') ||
+                                            undefined
+                                        }
                                         placeholder="Apartment, suite, unit, building, floor, etc."
                                     />
-                                    <FieldDescription>Additional address details.</FieldDescription>
-                                    <FieldError>{form.error('address2')}</FieldError>
+                                    <FieldDescription>
+                                        Additional address details.
+                                    </FieldDescription>
+                                    <FieldError>
+                                        {form.error('address2')}
+                                    </FieldError>
                                 </Field>
                             </FieldGroup>
 
                             <FieldGroup className="lg:grid lg:grid-cols-3 lg:gap-6">
-                                <Field data-invalid={form.invalid('city') || undefined}>
+                                <Field
+                                    data-invalid={
+                                        form.invalid('city') || undefined
+                                    }
+                                >
                                     <FieldLabel htmlFor="city">City</FieldLabel>
                                     <Input
                                         id="city"
                                         value={form.data.city}
                                         onChange={(event) => {
-                                            form.setField('city', event.target.value);
+                                            form.setField(
+                                                'city',
+                                                event.target.value,
+                                            );
                                             form.setField('city_code', '');
                                         }}
                                         onBlur={() => form.touch('city')}
-                                        aria-invalid={form.invalid('city') || undefined}
+                                        aria-invalid={
+                                            form.invalid('city') || undefined
+                                        }
                                         placeholder="Enter city"
                                     />
-                                    <FieldDescription>City of residence.</FieldDescription>
-                                    <FieldError>{form.error('city')}</FieldError>
+                                    <FieldDescription>
+                                        City of residence.
+                                    </FieldDescription>
+                                    <FieldError>
+                                        {form.error('city')}
+                                    </FieldError>
                                 </Field>
 
-                                <Field data-invalid={form.invalid('state_code') || undefined}>
+                                <Field
+                                    data-invalid={
+                                        form.invalid('state_code') || undefined
+                                    }
+                                >
                                     <FieldLabel>State/Province</FieldLabel>
                                     <StateSelect
                                         countryCode={form.data.country_code}
@@ -454,31 +575,58 @@ export default function ManagedUserForm({
                                             form.setField('state_code', code);
                                             form.setField('state', name);
                                         }}
-                                        aria-invalid={form.invalid('state_code') || undefined}
+                                        aria-invalid={
+                                            form.invalid('state_code') ||
+                                            undefined
+                                        }
                                         className="w-full"
                                         placeholder="Select state"
                                     />
-                                    <FieldDescription>State or province.</FieldDescription>
-                                    <FieldError>{form.error('state_code')}</FieldError>
+                                    <FieldDescription>
+                                        State or province.
+                                    </FieldDescription>
+                                    <FieldError>
+                                        {form.error('state_code')}
+                                    </FieldError>
                                 </Field>
 
-                                <Field data-invalid={form.invalid('zip') || undefined}>
-                                    <FieldLabel htmlFor="zip">Postcode</FieldLabel>
+                                <Field
+                                    data-invalid={
+                                        form.invalid('zip') || undefined
+                                    }
+                                >
+                                    <FieldLabel htmlFor="zip">
+                                        Postcode
+                                    </FieldLabel>
                                     <Input
                                         id="zip"
                                         value={form.data.zip}
-                                        onChange={(event) => form.setField('zip', event.target.value)}
+                                        onChange={(event) =>
+                                            form.setField(
+                                                'zip',
+                                                event.target.value,
+                                            )
+                                        }
                                         onBlur={() => form.touch('zip')}
-                                        aria-invalid={form.invalid('zip') || undefined}
+                                        aria-invalid={
+                                            form.invalid('zip') || undefined
+                                        }
                                         placeholder="Enter postcode"
                                     />
-                                    <FieldDescription>ZIP or postal code.</FieldDescription>
+                                    <FieldDescription>
+                                        ZIP or postal code.
+                                    </FieldDescription>
                                     <FieldError>{form.error('zip')}</FieldError>
                                 </Field>
                             </FieldGroup>
 
                             <FieldGroup>
-                                <Field data-invalid={form.invalid('country_code') || undefined}>
+                                <Field
+                                    data-invalid={
+                                        form.invalid('country_code') ||
+                                        undefined
+                                    }
+                                >
                                     <FieldLabel>Country</FieldLabel>
                                     <CountrySelect
                                         value={form.data.country_code}
@@ -488,27 +636,51 @@ export default function ManagedUserForm({
                                             form.setField('state_code', '');
                                             form.setField('state', '');
                                         }}
-                                        aria-invalid={form.invalid('country_code') || undefined}
+                                        aria-invalid={
+                                            form.invalid('country_code') ||
+                                            undefined
+                                        }
                                         className="w-full"
                                         placeholder="Select country"
                                     />
-                                    <FieldDescription>Country of residence.</FieldDescription>
-                                    <FieldError>{form.error('country_code')}</FieldError>
+                                    <FieldDescription>
+                                        Country of residence.
+                                    </FieldDescription>
+                                    <FieldError>
+                                        {form.error('country_code')}
+                                    </FieldError>
                                 </Field>
 
-                                <Field data-invalid={form.invalid('phone') || undefined}>
-                                    <FieldLabel htmlFor="phone">Phone Number</FieldLabel>
+                                <Field
+                                    data-invalid={
+                                        form.invalid('phone') || undefined
+                                    }
+                                >
+                                    <FieldLabel htmlFor="phone">
+                                        Phone Number
+                                    </FieldLabel>
                                     <Input
                                         id="phone"
                                         type="tel"
                                         value={form.data.phone}
-                                        onChange={(event) => form.setField('phone', event.target.value)}
+                                        onChange={(event) =>
+                                            form.setField(
+                                                'phone',
+                                                event.target.value,
+                                            )
+                                        }
                                         onBlur={() => form.touch('phone')}
-                                        aria-invalid={form.invalid('phone') || undefined}
+                                        aria-invalid={
+                                            form.invalid('phone') || undefined
+                                        }
                                         placeholder="Enter phone number"
                                     />
-                                    <FieldDescription>Phone number for contact.</FieldDescription>
-                                    <FieldError>{form.error('phone')}</FieldError>
+                                    <FieldDescription>
+                                        Phone number for contact.
+                                    </FieldDescription>
+                                    <FieldError>
+                                        {form.error('phone')}
+                                    </FieldError>
                                 </Field>
                             </FieldGroup>
                         </CardContent>
@@ -523,22 +695,40 @@ export default function ManagedUserForm({
                         </CardHeader>
                         <CardContent>
                             <FieldGroup className="md:grid md:grid-cols-2 md:gap-6">
-                                <Field data-invalid={form.invalid('birth_date') || undefined}>
-                                    <FieldLabel htmlFor="birth_date">Date of Birth</FieldLabel>
+                                <Field
+                                    data-invalid={
+                                        form.invalid('birth_date') || undefined
+                                    }
+                                >
+                                    <FieldLabel htmlFor="birth_date">
+                                        Date of Birth
+                                    </FieldLabel>
                                     <Input
                                         id="birth_date"
                                         type="date"
                                         value={form.data.birth_date}
                                         onChange={(event) =>
-                                            form.setField('birth_date', event.target.value)
+                                            form.setField(
+                                                'birth_date',
+                                                event.target.value,
+                                            )
                                         }
                                         onBlur={() => form.touch('birth_date')}
-                                        aria-invalid={form.invalid('birth_date') || undefined}
+                                        aria-invalid={
+                                            form.invalid('birth_date') ||
+                                            undefined
+                                        }
                                     />
-                                    <FieldError>{form.error('birth_date')}</FieldError>
+                                    <FieldError>
+                                        {form.error('birth_date')}
+                                    </FieldError>
                                 </Field>
 
-                                <Field data-invalid={form.invalid('gender') || undefined}>
+                                <Field
+                                    data-invalid={
+                                        form.invalid('gender') || undefined
+                                    }
+                                >
                                     <FieldLabel>Gender</FieldLabel>
                                     <Select
                                         value={form.data.gender || undefined}
@@ -549,23 +739,39 @@ export default function ManagedUserForm({
                                             )
                                         }
                                     >
-                                        <SelectTrigger className="w-full" aria-invalid={form.invalid('gender') || undefined}>
+                                        <SelectTrigger
+                                            className="w-full"
+                                            aria-invalid={
+                                                form.invalid('gender') ||
+                                                undefined
+                                            }
+                                        >
                                             <SelectValue placeholder="Select Gender" />
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectGroup>
                                                 {genderOptions
-                                                    .filter((option) => option.value !== '')
+                                                    .filter(
+                                                        (option) =>
+                                                            option.value !== '',
+                                                    )
                                                     .map((option) => (
-                                                        <SelectItem key={option.value} value={option.value}>
+                                                        <SelectItem
+                                                            key={option.value}
+                                                            value={option.value}
+                                                        >
                                                             {option.label}
                                                         </SelectItem>
                                                     ))}
                                             </SelectGroup>
                                         </SelectContent>
                                     </Select>
-                                    <FieldDescription>Gender selection.</FieldDescription>
-                                    <FieldError>{form.error('gender')}</FieldError>
+                                    <FieldDescription>
+                                        Gender selection.
+                                    </FieldDescription>
+                                    <FieldError>
+                                        {form.error('gender')}
+                                    </FieldError>
                                 </Field>
                             </FieldGroup>
                         </CardContent>
@@ -575,18 +781,32 @@ export default function ManagedUserForm({
                         <CardHeader>
                             <CardTitle>Profile Information</CardTitle>
                             <CardDescription>
-                                Add optional profile copy shown elsewhere in the application.
+                                Add optional profile copy shown elsewhere in the
+                                application.
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="flex flex-col gap-6">
-                            <Field data-invalid={form.invalid('tagline') || undefined}>
-                                <FieldLabel htmlFor="tagline">Tagline</FieldLabel>
+                            <Field
+                                data-invalid={
+                                    form.invalid('tagline') || undefined
+                                }
+                            >
+                                <FieldLabel htmlFor="tagline">
+                                    Tagline
+                                </FieldLabel>
                                 <Input
                                     id="tagline"
                                     value={form.data.tagline}
-                                    onChange={(event) => form.setField('tagline', event.target.value)}
+                                    onChange={(event) =>
+                                        form.setField(
+                                            'tagline',
+                                            event.target.value,
+                                        )
+                                    }
                                     onBlur={() => form.touch('tagline')}
-                                    aria-invalid={form.invalid('tagline') || undefined}
+                                    aria-invalid={
+                                        form.invalid('tagline') || undefined
+                                    }
                                     placeholder="Enter a short tagline"
                                 />
                                 <FieldDescription>
@@ -595,18 +815,26 @@ export default function ManagedUserForm({
                                 <FieldError>{form.error('tagline')}</FieldError>
                             </Field>
 
-                            <Field data-invalid={form.invalid('bio') || undefined}>
+                            <Field
+                                data-invalid={form.invalid('bio') || undefined}
+                            >
                                 <FieldLabel htmlFor="bio">Bio</FieldLabel>
                                 <Textarea
                                     id="bio"
                                     rows={4}
                                     value={form.data.bio}
-                                    onChange={(event) => form.setField('bio', event.target.value)}
+                                    onChange={(event) =>
+                                        form.setField('bio', event.target.value)
+                                    }
                                     onBlur={() => form.touch('bio')}
-                                    aria-invalid={form.invalid('bio') || undefined}
+                                    aria-invalid={
+                                        form.invalid('bio') || undefined
+                                    }
                                     placeholder="Tell us about yourself"
                                 />
-                                <FieldDescription>A brief biography or description.</FieldDescription>
+                                <FieldDescription>
+                                    A brief biography or description.
+                                </FieldDescription>
                                 <FieldError>{form.error('bio')}</FieldError>
                             </Field>
                         </CardContent>
@@ -621,93 +849,169 @@ export default function ManagedUserForm({
                         </CardHeader>
                         <CardContent className="flex flex-col gap-6">
                             <FieldGroup className="md:grid md:grid-cols-2 md:gap-6">
-                                <Field data-invalid={form.invalid('website_url') || undefined}>
-                                    <FieldLabel htmlFor="website_url">Website URL</FieldLabel>
+                                <Field
+                                    data-invalid={
+                                        form.invalid('website_url') || undefined
+                                    }
+                                >
+                                    <FieldLabel htmlFor="website_url">
+                                        Website URL
+                                    </FieldLabel>
                                     <Input
                                         id="website_url"
                                         type="url"
                                         value={form.data.website_url}
                                         onChange={(event) =>
-                                            form.setField('website_url', event.target.value)
+                                            form.setField(
+                                                'website_url',
+                                                event.target.value,
+                                            )
                                         }
                                         onBlur={() => form.touch('website_url')}
-                                        aria-invalid={form.invalid('website_url') || undefined}
+                                        aria-invalid={
+                                            form.invalid('website_url') ||
+                                            undefined
+                                        }
                                         placeholder="https://example.com"
                                     />
                                     <FieldDescription>
                                         Personal or professional website URL.
                                     </FieldDescription>
-                                    <FieldError>{form.error('website_url')}</FieldError>
+                                    <FieldError>
+                                        {form.error('website_url')}
+                                    </FieldError>
                                 </Field>
 
-                                <Field data-invalid={form.invalid('twitter_url') || undefined}>
-                                    <FieldLabel htmlFor="twitter_url">X (Twitter) URL</FieldLabel>
+                                <Field
+                                    data-invalid={
+                                        form.invalid('twitter_url') || undefined
+                                    }
+                                >
+                                    <FieldLabel htmlFor="twitter_url">
+                                        X (Twitter) URL
+                                    </FieldLabel>
                                     <Input
                                         id="twitter_url"
                                         type="url"
                                         value={form.data.twitter_url}
                                         onChange={(event) =>
-                                            form.setField('twitter_url', event.target.value)
+                                            form.setField(
+                                                'twitter_url',
+                                                event.target.value,
+                                            )
                                         }
                                         onBlur={() => form.touch('twitter_url')}
-                                        aria-invalid={form.invalid('twitter_url') || undefined}
+                                        aria-invalid={
+                                            form.invalid('twitter_url') ||
+                                            undefined
+                                        }
                                         placeholder="https://x.com/username"
                                     />
                                     <FieldDescription>
                                         X (formerly Twitter) profile URL.
                                     </FieldDescription>
-                                    <FieldError>{form.error('twitter_url')}</FieldError>
+                                    <FieldError>
+                                        {form.error('twitter_url')}
+                                    </FieldError>
                                 </Field>
                             </FieldGroup>
 
                             <FieldGroup className="md:grid md:grid-cols-2 md:gap-6">
-                                <Field data-invalid={form.invalid('facebook_url') || undefined}>
-                                    <FieldLabel htmlFor="facebook_url">Facebook URL</FieldLabel>
+                                <Field
+                                    data-invalid={
+                                        form.invalid('facebook_url') ||
+                                        undefined
+                                    }
+                                >
+                                    <FieldLabel htmlFor="facebook_url">
+                                        Facebook URL
+                                    </FieldLabel>
                                     <Input
                                         id="facebook_url"
                                         type="url"
                                         value={form.data.facebook_url}
                                         onChange={(event) =>
-                                            form.setField('facebook_url', event.target.value)
+                                            form.setField(
+                                                'facebook_url',
+                                                event.target.value,
+                                            )
                                         }
-                                        onBlur={() => form.touch('facebook_url')}
-                                        aria-invalid={form.invalid('facebook_url') || undefined}
+                                        onBlur={() =>
+                                            form.touch('facebook_url')
+                                        }
+                                        aria-invalid={
+                                            form.invalid('facebook_url') ||
+                                            undefined
+                                        }
                                         placeholder="https://facebook.com/username"
                                     />
-                                    <FieldError>{form.error('facebook_url')}</FieldError>
+                                    <FieldError>
+                                        {form.error('facebook_url')}
+                                    </FieldError>
                                 </Field>
 
-                                <Field data-invalid={form.invalid('instagram_url') || undefined}>
-                                    <FieldLabel htmlFor="instagram_url">Instagram URL</FieldLabel>
+                                <Field
+                                    data-invalid={
+                                        form.invalid('instagram_url') ||
+                                        undefined
+                                    }
+                                >
+                                    <FieldLabel htmlFor="instagram_url">
+                                        Instagram URL
+                                    </FieldLabel>
                                     <Input
                                         id="instagram_url"
                                         type="url"
                                         value={form.data.instagram_url}
                                         onChange={(event) =>
-                                            form.setField('instagram_url', event.target.value)
+                                            form.setField(
+                                                'instagram_url',
+                                                event.target.value,
+                                            )
                                         }
-                                        onBlur={() => form.touch('instagram_url')}
-                                        aria-invalid={form.invalid('instagram_url') || undefined}
+                                        onBlur={() =>
+                                            form.touch('instagram_url')
+                                        }
+                                        aria-invalid={
+                                            form.invalid('instagram_url') ||
+                                            undefined
+                                        }
                                         placeholder="https://instagram.com/username"
                                     />
-                                    <FieldError>{form.error('instagram_url')}</FieldError>
+                                    <FieldError>
+                                        {form.error('instagram_url')}
+                                    </FieldError>
                                 </Field>
                             </FieldGroup>
 
-                            <Field data-invalid={form.invalid('linkedin_url') || undefined}>
-                                <FieldLabel htmlFor="linkedin_url">LinkedIn URL</FieldLabel>
+                            <Field
+                                data-invalid={
+                                    form.invalid('linkedin_url') || undefined
+                                }
+                            >
+                                <FieldLabel htmlFor="linkedin_url">
+                                    LinkedIn URL
+                                </FieldLabel>
                                 <Input
                                     id="linkedin_url"
                                     type="url"
                                     value={form.data.linkedin_url}
                                     onChange={(event) =>
-                                        form.setField('linkedin_url', event.target.value)
+                                        form.setField(
+                                            'linkedin_url',
+                                            event.target.value,
+                                        )
                                     }
                                     onBlur={() => form.touch('linkedin_url')}
-                                    aria-invalid={form.invalid('linkedin_url') || undefined}
+                                    aria-invalid={
+                                        form.invalid('linkedin_url') ||
+                                        undefined
+                                    }
                                     placeholder="https://linkedin.com/in/username"
                                 />
-                                <FieldError>{form.error('linkedin_url')}</FieldError>
+                                <FieldError>
+                                    {form.error('linkedin_url')}
+                                </FieldError>
                             </Field>
                         </CardContent>
                     </Card>
@@ -722,8 +1026,14 @@ export default function ManagedUserForm({
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="flex flex-col gap-6">
-                            <Field data-invalid={form.invalid('status') || undefined}>
-                                <RequiredLabel htmlFor="status">Status</RequiredLabel>
+                            <Field
+                                data-invalid={
+                                    form.invalid('status') || undefined
+                                }
+                            >
+                                <RequiredLabel htmlFor="status">
+                                    Status
+                                </RequiredLabel>
                                 <Select
                                     value={form.data.status}
                                     onValueChange={(value) =>
@@ -733,13 +1043,22 @@ export default function ManagedUserForm({
                                         )
                                     }
                                 >
-                                    <SelectTrigger id="status" className="w-full" aria-invalid={form.invalid('status') || undefined}>
+                                    <SelectTrigger
+                                        id="status"
+                                        className="w-full"
+                                        aria-invalid={
+                                            form.invalid('status') || undefined
+                                        }
+                                    >
                                         <SelectValue placeholder="Choose status..." />
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectGroup>
                                             {statusOptions.map((option) => (
-                                                <SelectItem key={option.value} value={option.value}>
+                                                <SelectItem
+                                                    key={option.value}
+                                                    value={option.value}
+                                                >
                                                     {option.label}
                                                 </SelectItem>
                                             ))}
@@ -754,17 +1073,30 @@ export default function ManagedUserForm({
                                 <FieldError>{form.error('status')}</FieldError>
                             </Field>
 
-                            <Field data-invalid={form.invalid('password') || undefined}>
+                            <Field
+                                data-invalid={
+                                    form.invalid('password') || undefined
+                                }
+                            >
                                 <RequiredLabel htmlFor="password">
-                                    {mode === 'create' ? 'Password' : 'New Password'}
+                                    {mode === 'create'
+                                        ? 'Password'
+                                        : 'New Password'}
                                 </RequiredLabel>
                                 <Input
                                     id="password"
                                     type="password"
                                     value={form.data.password}
-                                    onChange={(event) => form.setField('password', event.target.value)}
+                                    onChange={(event) =>
+                                        form.setField(
+                                            'password',
+                                            event.target.value,
+                                        )
+                                    }
                                     onBlur={() => form.touch('password')}
-                                    aria-invalid={form.invalid('password') || undefined}
+                                    aria-invalid={
+                                        form.invalid('password') || undefined
+                                    }
                                     autoComplete="new-password"
                                     placeholder={
                                         mode === 'create'
@@ -777,10 +1109,17 @@ export default function ManagedUserForm({
                                         ? 'Minimum 8 characters long.'
                                         : 'Leave blank to keep the current password. Minimum 8 characters if changing.'}
                                 </FieldDescription>
-                                <FieldError>{form.error('password')}</FieldError>
+                                <FieldError>
+                                    {form.error('password')}
+                                </FieldError>
                             </Field>
 
-                            <Field data-invalid={form.invalid('password_confirmation') || undefined}>
+                            <Field
+                                data-invalid={
+                                    form.invalid('password_confirmation') ||
+                                    undefined
+                                }
+                            >
                                 <RequiredLabel htmlFor="password_confirmation">
                                     Confirm Password
                                 </RequiredLabel>
@@ -789,11 +1128,17 @@ export default function ManagedUserForm({
                                     type="password"
                                     value={form.data.password_confirmation}
                                     onChange={(event) =>
-                                        form.setField('password_confirmation', event.target.value)
+                                        form.setField(
+                                            'password_confirmation',
+                                            event.target.value,
+                                        )
                                     }
-                                    onBlur={() => form.touch('password_confirmation')}
+                                    onBlur={() =>
+                                        form.touch('password_confirmation')
+                                    }
                                     aria-invalid={
-                                        form.invalid('password_confirmation') || undefined
+                                        form.invalid('password_confirmation') ||
+                                        undefined
                                     }
                                     autoComplete="new-password"
                                     placeholder="Confirm password"
@@ -801,7 +1146,9 @@ export default function ManagedUserForm({
                                 <FieldDescription>
                                     Re-enter the password for confirmation.
                                 </FieldDescription>
-                                <FieldError>{form.error('password_confirmation')}</FieldError>
+                                <FieldError>
+                                    {form.error('password_confirmation')}
+                                </FieldError>
                             </Field>
 
                             {user ? (
@@ -816,7 +1163,9 @@ export default function ManagedUserForm({
                                                 Verified email
                                             </div>
                                             <div className="mt-1 font-medium text-foreground">
-                                                {user.email_verified_at ? 'Yes' : 'No'}
+                                                {user.email_verified_at
+                                                    ? 'Yes'
+                                                    : 'No'}
                                             </div>
                                         </div>
                                         <div>
@@ -836,7 +1185,8 @@ export default function ManagedUserForm({
                                         Provisioning note
                                     </div>
                                     <p className="mt-3">
-                                        New accounts start with an unverified email address.
+                                        New accounts start with an unverified
+                                        email address.
                                     </p>
                                 </div>
                             )}
@@ -851,7 +1201,11 @@ export default function ManagedUserForm({
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <Field data-invalid={form.invalid('avatar') || undefined}>
+                            <Field
+                                data-invalid={
+                                    form.invalid('avatar') || undefined
+                                }
+                            >
                                 <div className="flex flex-col items-center gap-4 text-center">
                                     <Avatar className="size-24 overflow-hidden border border-dashed border-border/70 bg-muted/40">
                                         <AvatarImage
@@ -867,7 +1221,9 @@ export default function ManagedUserForm({
                                         <Button
                                             type="button"
                                             variant="outline"
-                                            onClick={() => fileInputRef.current?.click()}
+                                            onClick={() =>
+                                                fileInputRef.current?.click()
+                                            }
                                         >
                                             <UploadIcon data-icon="inline-start" />
                                             Select Profile Picture
@@ -885,9 +1241,12 @@ export default function ManagedUserForm({
                                         />
 
                                         <FieldDescription>
-                                            Upload a profile picture (JPG, PNG, GIF).
+                                            Upload a profile picture (JPG, PNG,
+                                            GIF).
                                         </FieldDescription>
-                                        <FieldError>{form.error('avatar')}</FieldError>
+                                        <FieldError>
+                                            {form.error('avatar')}
+                                        </FieldError>
                                     </div>
                                 </div>
                             </Field>
@@ -907,47 +1266,60 @@ export default function ManagedUserForm({
                                     <FieldSet>
                                         <FieldLegend>Assign Roles</FieldLegend>
                                         <FieldDescription>
-                                            Select one or more roles for this user.
+                                            Select one or more roles for this
+                                            user.
                                         </FieldDescription>
                                         <div className="grid gap-3 rounded-xl border p-3">
-                                            {availableRoles.map((roleOption) => {
-                                                const checked = form.data.roles.includes(
-                                                    roleOption.id,
-                                                );
+                                            {availableRoles.map(
+                                                (roleOption) => {
+                                                    const checked =
+                                                        form.data.roles.includes(
+                                                            roleOption.id,
+                                                        );
 
-                                                return (
-                                                    <label
-                                                        key={roleOption.id}
-                                                        className="flex gap-3 rounded-lg border px-3 py-2 transition-colors hover:bg-muted/30"
-                                                    >
-                                                        <Checkbox
-                                                            checked={checked}
-                                                            onCheckedChange={(value) =>
-                                                                toggleRole(
-                                                                    roleOption.id,
-                                                                    value === true,
-                                                                )
-                                                            }
-                                                            className="mt-0.5"
-                                                        />
-                                                        <div className="min-w-0 flex-1 text-left">
-                                                            <div className="flex flex-wrap items-center gap-2">
-                                                                <span className="font-medium text-foreground">
-                                                                    {roleOption.display_name}
-                                                                </span>
-                                                                {roleOption.is_system ? (
-                                                                    <Badge variant="secondary">
-                                                                        System
-                                                                    </Badge>
-                                                                ) : null}
+                                                    return (
+                                                        <label
+                                                            key={roleOption.id}
+                                                            className="flex gap-3 rounded-lg border px-3 py-2 transition-colors hover:bg-muted/30"
+                                                        >
+                                                            <Checkbox
+                                                                checked={
+                                                                    checked
+                                                                }
+                                                                onCheckedChange={(
+                                                                    value,
+                                                                ) =>
+                                                                    toggleRole(
+                                                                        roleOption.id,
+                                                                        value ===
+                                                                            true,
+                                                                    )
+                                                                }
+                                                                className="mt-0.5"
+                                                            />
+                                                            <div className="min-w-0 flex-1 text-left">
+                                                                <div className="flex flex-wrap items-center gap-2">
+                                                                    <span className="font-medium text-foreground">
+                                                                        {
+                                                                            roleOption.display_name
+                                                                        }
+                                                                    </span>
+                                                                    {roleOption.is_system ? (
+                                                                        <Badge variant="secondary">
+                                                                            System
+                                                                        </Badge>
+                                                                    ) : null}
+                                                                </div>
+                                                                <div className="text-xs text-muted-foreground">
+                                                                    {
+                                                                        roleOption.name
+                                                                    }
+                                                                </div>
                                                             </div>
-                                                            <div className="text-xs text-muted-foreground">
-                                                                {roleOption.name}
-                                                            </div>
-                                                        </div>
-                                                    </label>
-                                                );
-                                            })}
+                                                        </label>
+                                                    );
+                                                },
+                                            )}
                                         </div>
                                     </FieldSet>
                                 </Field>
@@ -964,7 +1336,10 @@ export default function ManagedUserForm({
                         </CardHeader>
                         <CardContent>
                             <div className="flex flex-col gap-3">
-                                <Button type="submit" disabled={form.processing}>
+                                <Button
+                                    type="submit"
+                                    disabled={form.processing}
+                                >
                                     {form.processing ? (
                                         <Spinner />
                                     ) : (

@@ -3,10 +3,22 @@
 import { router } from '@inertiajs/react';
 import { ImageIcon, Loader2Icon, UploadCloudIcon } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { MediaPickerItem, MediaPickerSelection } from '@/components/media/media-picker-utils';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import type {
+    MediaPickerItem,
+    MediaPickerSelection,
+} from '@/components/media/media-picker-utils';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import type { MediaListItem, MediaPickerFilters, UploadSettings } from '@/types/media';
+import type {
+    MediaListItem,
+    MediaPickerFilters,
+    UploadSettings,
+} from '@/types/media';
 import type { PaginatedData } from '@/types/pagination';
 import { MediaPickerDetailsPanel } from './media-picker-details-panel';
 import { MediaPickerGrid } from './media-picker-grid';
@@ -65,7 +77,9 @@ export function MediaPickerDialog({
     initialSelectedId = null,
 }: MediaPickerDialogProps) {
     const [tab, setTab] = useState<'upload' | 'library'>(defaultTab);
-    const [activeMediaId, setActiveMediaId] = useState<number | null>(initialSelectedId);
+    const [activeMediaId, setActiveMediaId] = useState<number | null>(
+        initialSelectedId,
+    );
     const [isEditing, setIsEditing] = useState(false);
     const [editedAltText, setEditedAltText] = useState('');
     const [editedTitle, setEditedTitle] = useState('');
@@ -106,7 +120,7 @@ export function MediaPickerDialog({
                 resetDialogState();
             } else {
                 // When opening, if there is a value prop passed from MediaPickerField,
-                // we want to select it by default (this is handled in useEffect below, 
+                // we want to select it by default (this is handled in useEffect below,
                 // but we need to ensure the grid can highlight it).
                 if (initialSelectedId) {
                     setActiveMediaId(initialSelectedId);
@@ -155,7 +169,9 @@ export function MediaPickerDialog({
 
     const handleSelectMedia = useCallback(() => {
         if (!activeMediaId) return;
-        const activeMedia = pickerMedia?.data.find((m) => m.id === activeMediaId);
+        const activeMedia = pickerMedia?.data.find(
+            (m) => m.id === activeMediaId,
+        );
         if (!activeMedia) return;
 
         // Close dialog after selection
@@ -181,7 +197,9 @@ export function MediaPickerDialog({
             if (file.size > uploadSettings.max_size_bytes) {
                 return `File exceeds ${uploadSettings.max_size_mb}MB limit`;
             }
-            const accepted = uploadSettings.accepted_mime_types.split(',').map((t) => t.trim());
+            const accepted = uploadSettings.accepted_mime_types
+                .split(',')
+                .map((t) => t.trim());
             const isAccepted = accepted.some((pattern) => {
                 if (pattern.endsWith('/*')) {
                     return file.type.startsWith(pattern.replace('/*', '/'));
@@ -210,28 +228,34 @@ export function MediaPickerDialog({
             }
 
             const incomingFiles = Array.from(fileList);
-            const newFiles: UploadingFile[] = incomingFiles.map((file, index) => {
-                const batchError =
-                    index >= uploadSettings.max_files_per_upload ? batchLimitMessage() : null;
-                const error = validateFile(file);
+            const newFiles: UploadingFile[] = incomingFiles.map(
+                (file, index) => {
+                    const batchError =
+                        index >= uploadSettings.max_files_per_upload
+                            ? batchLimitMessage()
+                            : null;
+                    const error = validateFile(file);
 
-                return {
-                    id: crypto.randomUUID(),
-                    file,
-                    name: file.name,
-                    size: file.size,
-                    type: file.type,
-                    progress: 0,
-                    status: batchError || error ? 'error' : 'staged',
-                    error: batchError ?? error ?? undefined,
-                    previewUrl: file.type.startsWith('image/')
-                        ? URL.createObjectURL(file)
-                        : undefined,
-                };
-            });
+                    return {
+                        id: crypto.randomUUID(),
+                        file,
+                        name: file.name,
+                        size: file.size,
+                        type: file.type,
+                        progress: 0,
+                        status: batchError || error ? 'error' : 'staged',
+                        error: batchError ?? error ?? undefined,
+                        previewUrl: file.type.startsWith('image/')
+                            ? URL.createObjectURL(file)
+                            : undefined,
+                    };
+                },
+            );
 
             setUploadFiles((prev) => {
-                const kept = prev.filter((f) => f.status !== 'success' && f.status !== 'error');
+                const kept = prev.filter(
+                    (f) => f.status !== 'success' && f.status !== 'error',
+                );
                 return [...kept, ...newFiles];
             });
         },
@@ -246,18 +270,26 @@ export function MediaPickerDialog({
             const formData = new FormData();
             formData.append('file', uf.file);
 
-            const csrfMeta = document.head.querySelector('meta[name="csrf-token"]');
+            const csrfMeta = document.head.querySelector(
+                'meta[name="csrf-token"]',
+            );
             const csrfToken = csrfMeta?.getAttribute('content');
 
             setUploadFiles((prev) =>
-                prev.map((f) => (f.id === uf.id ? { ...f, status: 'uploading', progress: 0 } : f)),
+                prev.map((f) =>
+                    f.id === uf.id
+                        ? { ...f, status: 'uploading', progress: 0 }
+                        : f,
+                ),
             );
 
             xhr.upload.onprogress = (e) => {
                 if (e.lengthComputable) {
                     const progress = Math.round((e.loaded * 100) / e.total);
                     setUploadFiles((prev) =>
-                        prev.map((f) => (f.id === uf.id ? { ...f, progress } : f)),
+                        prev.map((f) =>
+                            f.id === uf.id ? { ...f, progress } : f,
+                        ),
                     );
                 }
             };
@@ -265,16 +297,20 @@ export function MediaPickerDialog({
             xhr.onload = () => {
                 try {
                     const response = JSON.parse(xhr.responseText);
-                    if (xhr.status >= 200 && xhr.status < 300 && response.status === 1) {
+                    if (
+                        xhr.status >= 200 &&
+                        xhr.status < 300 &&
+                        response.status === 1
+                    ) {
                         setUploadFiles((prev) =>
                             prev.map((f) =>
                                 f.id === uf.id
                                     ? {
-                                        ...f,
-                                        progress: 100,
-                                        status: 'success',
-                                        result: response.file,
-                                    }
+                                          ...f,
+                                          progress: 100,
+                                          status: 'success',
+                                          result: response.file,
+                                      }
                                     : f,
                             ),
                         );
@@ -283,10 +319,11 @@ export function MediaPickerDialog({
                             prev.map((f) =>
                                 f.id === uf.id
                                     ? {
-                                        ...f,
-                                        status: 'error',
-                                        error: response.error || 'Upload failed',
-                                    }
+                                          ...f,
+                                          status: 'error',
+                                          error:
+                                              response.error || 'Upload failed',
+                                      }
                                     : f,
                             ),
                         );
@@ -295,7 +332,11 @@ export function MediaPickerDialog({
                     setUploadFiles((prev) =>
                         prev.map((f) =>
                             f.id === uf.id
-                                ? { ...f, status: 'error', error: 'Invalid response' }
+                                ? {
+                                      ...f,
+                                      status: 'error',
+                                      error: 'Invalid response',
+                                  }
                                 : f,
                         ),
                     );
@@ -305,7 +346,9 @@ export function MediaPickerDialog({
             xhr.onerror = () => {
                 setUploadFiles((prev) =>
                     prev.map((f) =>
-                        f.id === uf.id ? { ...f, status: 'error', error: 'Network error' } : f,
+                        f.id === uf.id
+                            ? { ...f, status: 'error', error: 'Network error' }
+                            : f,
                     ),
                 );
             };
@@ -323,7 +366,10 @@ export function MediaPickerDialog({
     // Fire uploads for pending files
     useEffect(() => {
         const pending = uploadFiles.filter(
-            (f) => f.status === 'pending' && !f.error && !uploadedIdsRef.current.has(f.id),
+            (f) =>
+                f.status === 'pending' &&
+                !f.error &&
+                !uploadedIdsRef.current.has(f.id),
         );
         pending.forEach((f) => {
             uploadedIdsRef.current.add(f.id);
@@ -343,7 +389,9 @@ export function MediaPickerDialog({
             return;
         }
 
-        const allDone = uploadFiles.every((f) => f.status === 'success' || f.status === 'error');
+        const allDone = uploadFiles.every(
+            (f) => f.status === 'success' || f.status === 'error',
+        );
         if (!allDone || refreshedAfterUploadRef.current) return;
 
         const hasErrors = uploadFiles.some((f) => f.status === 'error');
@@ -428,12 +476,17 @@ export function MediaPickerDialog({
 
     const totalProgress =
         activeFiles.length > 0
-            ? Math.round(activeFiles.reduce((sum, f) => sum + f.progress, 0) / activeFiles.length)
+            ? Math.round(
+                  activeFiles.reduce((sum, f) => sum + f.progress, 0) /
+                      activeFiles.length,
+              )
             : 0;
 
     const totalStagedSize = stagedFiles.reduce((sum, f) => sum + f.size, 0);
 
-    const canChooseMultipleFiles = uploadSettings ? uploadSettings.max_files_per_upload > 1 : true;
+    const canChooseMultipleFiles = uploadSettings
+        ? uploadSettings.max_files_per_upload > 1
+        : true;
 
     const clearAllStaged = useCallback(() => {
         setUploadFiles((prev) => {
@@ -449,11 +502,16 @@ export function MediaPickerDialog({
     const clearCompleted = useCallback(() => {
         setUploadFiles((prev) => {
             prev.forEach((f) => {
-                if ((f.status === 'success' || f.status === 'error') && f.previewUrl) {
+                if (
+                    (f.status === 'success' || f.status === 'error') &&
+                    f.previewUrl
+                ) {
                     URL.revokeObjectURL(f.previewUrl);
                 }
             });
-            return prev.filter((f) => f.status !== 'success' && f.status !== 'error');
+            return prev.filter(
+                (f) => f.status !== 'success' && f.status !== 'error',
+            );
         });
     }, []);
 
@@ -469,7 +527,9 @@ export function MediaPickerDialog({
 
     const startUpload = useCallback(() => {
         setUploadFiles((prev) =>
-            prev.map((f) => (f.status === 'staged' ? { ...f, status: 'pending' } : f)),
+            prev.map((f) =>
+                f.status === 'staged' ? { ...f, status: 'pending' } : f,
+            ),
         );
     }, []);
 
@@ -507,7 +567,10 @@ export function MediaPickerDialog({
                     </TabsList>
 
                     {/* ── Upload tab ───────────────────────────── */}
-                    <TabsContent value="upload" className="flex min-h-0 flex-1 flex-col">
+                    <TabsContent
+                        value="upload"
+                        className="flex min-h-0 flex-1 flex-col"
+                    >
                         <MediaPickerUploadTab
                             uploadSettings={uploadSettings}
                             uploadFiles={uploadFiles}
@@ -533,12 +596,17 @@ export function MediaPickerDialog({
                     </TabsContent>
 
                     {/* ── Library tab ──────────────────────────── */}
-                    <TabsContent value="library" className="flex min-h-0 flex-1 gap-4 overflow-hidden">
+                    <TabsContent
+                        value="library"
+                        className="flex min-h-0 flex-1 gap-4 overflow-hidden"
+                    >
                         {isLoading ? (
                             <div className="flex flex-1 items-center justify-center py-16">
                                 <div className="flex flex-col items-center gap-3 text-muted-foreground">
                                     <Loader2Icon className="size-8 animate-spin" />
-                                    <span className="text-sm">Loading media…</span>
+                                    <span className="text-sm">
+                                        Loading media…
+                                    </span>
                                 </div>
                             </div>
                         ) : (

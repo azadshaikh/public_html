@@ -6,13 +6,26 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
-import { buildBulkActions, buildDatagridState, mapRowActions } from '../../../lib/helpers';
-import type { AgencyListItem, PlatformIndexPageProps } from '../../../types/platform';
+import {
+    buildBulkActions,
+    buildDatagridState,
+    mapRowActions,
+} from '../../../lib/helpers';
+import type {
+    AgencyListItem,
+    PlatformIndexPageProps,
+} from '../../../types/platform';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: route('dashboard') },
-    { title: 'Platform', href: route('platform.agencies.index', { status: 'all' }) },
-    { title: 'Agencies', href: route('platform.agencies.index', { status: 'all' }) },
+    {
+        title: 'Platform',
+        href: route('platform.agencies.index', { status: 'all' }),
+    },
+    {
+        title: 'Agencies',
+        href: route('platform.agencies.index', { status: 'all' }),
+    },
 ];
 
 export default function AgenciesIndex({
@@ -24,7 +37,8 @@ export default function AgenciesIndex({
     const page = usePage<AuthenticatedSharedData>();
     const canAddAgencies = page.props.auth.abilities.addAgencies;
 
-    const { currentStatus, gridFilters, perPage, sorting, statusTabs } = buildDatagridState(config, filters, statistics, 'Search agencies...');
+    const { currentStatus, gridFilters, perPage, sorting, statusTabs } =
+        buildDatagridState(config, filters, statistics, 'Search agencies...');
 
     const columns: DatagridColumn<AgencyListItem>[] = [
         {
@@ -55,12 +69,16 @@ export default function AgenciesIndex({
         {
             key: 'type_label',
             header: 'Type',
-            cell: (agency) => <Badge variant="secondary">{agency.type_label}</Badge>,
+            cell: (agency) => (
+                <Badge variant="secondary">{agency.type_label}</Badge>
+            ),
         },
         {
             key: 'plan_label',
             header: 'Plan',
-            cell: (agency) => <Badge variant="outline">{agency.plan_label}</Badge>,
+            cell: (agency) => (
+                <Badge variant="outline">{agency.plan_label}</Badge>
+            ),
         },
         {
             key: 'websites_count',
@@ -68,14 +86,22 @@ export default function AgenciesIndex({
             sortable: true,
             cellClassName: 'w-28',
             headerClassName: 'w-28',
-            cell: (agency) => <span className="font-medium">{agency.websites_count}</span>,
+            cell: (agency) => (
+                <span className="font-medium">{agency.websites_count}</span>
+            ),
         },
         {
             key: 'status_label',
             header: 'Status',
             sortable: true,
             sortKey: 'status',
-            cell: (agency) => <Badge variant={agency.is_trashed ? 'destructive' : 'secondary'}>{agency.status_label}</Badge>,
+            cell: (agency) => (
+                <Badge
+                    variant={agency.is_trashed ? 'destructive' : 'secondary'}
+                >
+                    {agency.status_label}
+                </Badge>
+            ),
         },
         {
             key: 'created_at',
@@ -101,18 +127,25 @@ export default function AgenciesIndex({
             }
         >
             <Datagrid
-                action={route('platform.agencies.index', { status: currentStatus })}
+                action={route('platform.agencies.index', {
+                    status: currentStatus,
+                })}
                 rows={rows}
                 columns={columns}
                 filters={gridFilters}
                 tabs={{ name: 'status', items: statusTabs }}
                 getRowKey={(agency) => agency.id}
                 rowActions={(agency) => mapRowActions(agency.actions)}
-                bulkActions={buildBulkActions(config.actions, config.settings.routePrefix, currentStatus)}
+                bulkActions={buildBulkActions(
+                    config.actions,
+                    config.settings.routePrefix,
+                    currentStatus,
+                )}
                 empty={{
                     icon: <Building2Icon className="size-5" />,
                     title: 'No agencies found',
-                    description: 'Create the first agency to start organizing websites and servers.',
+                    description:
+                        'Create the first agency to start organizing websites and servers.',
                 }}
                 sorting={sorting}
                 perPage={perPage}

@@ -6,8 +6,11 @@
  */
 
 const escapeHtml = (value) => window.DataGrid.escape(value);
-const safeUrl = (value, fallback = '#') => window.DataGrid.safeUrl(value, fallback);
-const PLACEHOLDER_IMAGE_URL = window.Astero?.mediaPlaceholderUrl || '/assets/images/placeholder-image.png';
+const safeUrl = (value, fallback = '#') =>
+    window.DataGrid.safeUrl(value, fallback);
+const PLACEHOLDER_IMAGE_URL =
+    window.Astero?.mediaPlaceholderUrl ||
+    '/assets/images/placeholder-image.png';
 
 /**
  * Design Block DataGrid Templates
@@ -20,11 +23,18 @@ const designBlockDataGridTemplates = {
      * Title display template with preview image and formatted layout.
      */
     title_display: (value, row, column) => {
-        const editUrl = safeUrl(row.actions?.edit?.url || `#design-block-${row.id}`);
+        const editUrl = safeUrl(
+            row.actions?.edit?.url || `#design-block-${row.id}`,
+        );
         const title = row.title || 'Untitled Block';
-        const previewImageUrl = safeUrl(row.preview_image_url || PLACEHOLDER_IMAGE_URL, PLACEHOLDER_IMAGE_URL);
+        const previewImageUrl = safeUrl(
+            row.preview_image_url || PLACEHOLDER_IMAGE_URL,
+            PLACEHOLDER_IMAGE_URL,
+        );
         const creatorName = row.creator_name || 'Unknown Creator';
-        const viewUrl = row.actions?.view?.url ? safeUrl(row.actions.view.url, '') : '';
+        const viewUrl = row.actions?.view?.url
+            ? safeUrl(row.actions.view.url, '')
+            : '';
 
         return `
             <div class="d-flex align-items-center gap-3">
@@ -66,7 +76,10 @@ const designBlockDataGridTemplates = {
 
         const variant = statusMap[row.status] || 'secondary';
         const label =
-            row.status_label || (row.status ? row.status.charAt(0).toUpperCase() + row.status.slice(1) : 'Unknown');
+            row.status_label ||
+            (row.status
+                ? row.status.charAt(0).toUpperCase() + row.status.slice(1)
+                : 'Unknown');
 
         return `<span class="badge text-bg-${variant}">${escapeHtml(label)}</span>`;
     },
@@ -83,7 +96,9 @@ const designBlockDataGridTemplates = {
         };
 
         const variant = typeMap[row.design_type] || 'secondary';
-        const label = row.design_type ? row.design_type.charAt(0).toUpperCase() + row.design_type.slice(1) : 'Unknown';
+        const label = row.design_type
+            ? row.design_type.charAt(0).toUpperCase() + row.design_type.slice(1)
+            : 'Unknown';
 
         return `<span class="badge text-bg-${variant}">${escapeHtml(label)}</span>`;
     },
@@ -126,7 +141,8 @@ const designBlockDataGridTemplates = {
      * Date formatting template.
      */
     date_format: (value, row, column) => {
-        const dateValue = column.field === 'created_at' ? row.created_at : row.updated_at;
+        const dateValue =
+            column.field === 'created_at' ? row.created_at : row.updated_at;
 
         if (!dateValue) {
             return '<span class="text-muted">-</span>';
@@ -152,7 +168,13 @@ const designBlockDataGridTemplates = {
         let actionItems = '';
 
         // Define action order and styling
-        const actionOrder = ['view', 'edit', 'delete', 'restore', 'force_delete'];
+        const actionOrder = [
+            'view',
+            'edit',
+            'delete',
+            'restore',
+            'force_delete',
+        ];
         let hasDivider = false;
         const availableActions = Object.keys(actions);
 
@@ -161,8 +183,14 @@ const designBlockDataGridTemplates = {
             if (!actionData) return;
 
             // Add divider before destructive actions, but only if there are non-destructive actions above
-            const hasNonDestructiveActions = availableActions.some((key) => ['view', 'edit'].includes(key));
-            if (['delete', 'restore', 'force_delete'].includes(actionKey) && !hasDivider && hasNonDestructiveActions) {
+            const hasNonDestructiveActions = availableActions.some((key) =>
+                ['view', 'edit'].includes(key),
+            );
+            if (
+                ['delete', 'restore', 'force_delete'].includes(actionKey) &&
+                !hasDivider &&
+                hasNonDestructiveActions
+            ) {
                 actionItems += '<li><hr class="dropdown-divider"></li>';
                 hasDivider = true;
             }
@@ -184,7 +212,9 @@ const designBlockDataGridTemplates = {
                                      data-message="${escapeHtml(confirmData.message || 'Are you sure?')}"
                                      data-confirmButtonText="${escapeHtml(confirmData.button_text || 'Yes')}"
                                      data-loaderButtonText="${escapeHtml(confirmData.loader_text || 'Processing...')}"`;
-                const methodAttr = actionData.method ? `data-method="${escapeHtml(actionData.method)}"` : '';
+                const methodAttr = actionData.method
+                    ? `data-method="${escapeHtml(actionData.method)}"`
+                    : '';
 
                 actionItems += `
                     <li>
@@ -241,7 +271,9 @@ class DesignBlockDataGridManager {
     }
 
     findDataGridInstance() {
-        const instances = window.dataGridInstances ? Object.values(window.dataGridInstances) : [];
+        const instances = window.dataGridInstances
+            ? Object.values(window.dataGridInstances)
+            : [];
         if (instances.length === 1) {
             return instances[0];
         }
@@ -292,7 +324,10 @@ class DesignBlockDataGridManager {
                 this.dataGrid = dg;
 
                 // Register templates
-                if (dg.renderer && typeof dg.renderer.registerTemplate === 'function') {
+                if (
+                    dg.renderer &&
+                    typeof dg.renderer.registerTemplate === 'function'
+                ) {
                     Object.entries(this.templates).forEach(([name, fn]) => {
                         dg.renderer.registerTemplate(name, fn);
                     });
@@ -319,7 +354,10 @@ window.initializeDesignBlocksDataGrid = function () {
 
 // Auto-initialize if DOM is ready
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', window.initializeDesignBlocksDataGrid);
+    document.addEventListener(
+        'DOMContentLoaded',
+        window.initializeDesignBlocksDataGrid,
+    );
 } else {
     window.initializeDesignBlocksDataGrid();
 }

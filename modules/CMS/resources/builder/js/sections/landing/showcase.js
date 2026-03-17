@@ -1,6 +1,8 @@
 Astero.Sections.add('showcase/showcase-1', {
     name: 'Showcase 1',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/showcase/showcase-1-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/showcase/showcase-1-thumb.jpeg',
     html: `<section class="d-flex showcase-1" title="showcase-1">
   <div class="container">
     <div class="row align-items-center w-100">
@@ -21,7 +23,9 @@ Astero.Sections.add('showcase/showcase-1', {
 });
 Astero.Sections.add('showcase/showcase-2', {
     name: 'Showcase 2',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/showcase/showcase-2-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/showcase/showcase-2-thumb.jpeg',
     html: `<section class="d-flex showcase-2" title="showcase-2">
   <div class="container">
     <div class="row align-items-center w-100">
@@ -42,7 +46,9 @@ Astero.Sections.add('showcase/showcase-2', {
 });
 Astero.Sections.add('showcase/showcase-3', {
     name: 'Showcase 3',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/showcase/showcase-3-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/showcase/showcase-3-thumb.jpeg',
     html: `<section class="showcase-3" title="showcase-3">
   <div class="container">
     <div class="row g-1 justify-content-center">
@@ -107,7 +113,9 @@ Astero.Sections.add('showcase/showcase-3', {
 });
 Astero.Sections.add('showcase/showcase-4', {
     name: 'Showcase 4',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/showcase/showcase-4-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/showcase/showcase-4-thumb.jpeg',
     html: `<section class="showcase-4" title="showcase-4">
   <div class="container">
     <div class="row g-1 justify-content-center">
@@ -177,7 +185,9 @@ Astero.Sections.add('showcase/showcase-4', {
 });
 Astero.Sections.add('showcase/showcase-5', {
     name: 'Showcase 5',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/showcase/showcase-5-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/showcase/showcase-5-thumb.jpeg',
     html: `<section class="showcase-5" title="showcase-5">
   <div class="container">
     <div class="row justify-content-center">
@@ -247,7 +257,9 @@ Astero.Sections.add('showcase/showcase-5', {
 });
 Astero.Sections.add('showcase/showcase-6', {
     name: 'Showcase 6',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/showcase/showcase-6-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/showcase/showcase-6-thumb.jpeg',
     html: `<section class="showcase-6" title="showcase-6">
   <div class="separator top">
     <svg class="pricing-divider-img" enable-background="new 0 0 300 100" height="100px" id="Layer_1" fill="currentColor" preserveAspectRatio="none" version="1.1" viewBox="0 0 300 100" width="300px" x="0px" xml:space="preserve" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" y="0px">
@@ -338,7 +350,9 @@ Astero.Sections.add('showcase/showcase-6', {
 });
 Astero.Sections.add('showcase/showcase-7', {
     name: 'Showcase 7',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/showcase/showcase-7-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/showcase/showcase-7-thumb.jpeg',
     html: `<section class="showcase-7" title="showcase-7">
   <div class="container">
     <div class="row justify-content-center">
@@ -399,7 +413,9 @@ Astero.Sections.add('showcase/showcase-7', {
 });
 Astero.Sections.add('showcase/showcase-8', {
     name: 'Showcase 8',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/showcase/showcase-8-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/showcase/showcase-8-thumb.jpeg',
     html: `<section class="showcase-8" title="showcase-8">
   <div class="container">
     <div class="row justify-content-center">
@@ -425,7 +441,9 @@ Astero.Sections.add('showcase/showcase-8', {
 });
 Astero.Sections.add('showcase/showcase-9', {
     name: 'Showcase 9',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/showcase/showcase-9-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/showcase/showcase-9-thumb.jpeg',
     html: `<section class="showcase-8" title="showcase-9">
   <div class="container">
     <div class="row justify-content-center">
@@ -451,7 +469,9 @@ Astero.Sections.add('showcase/showcase-9', {
 });
 Astero.Sections.add('showcase/showcase-10', {
     name: 'Showcase 10',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/showcase/showcase-10-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/showcase/showcase-10-thumb.jpeg',
     html: `<section class="showcase-10" title="showcase-10">
   <div class="container">
     <div class="row justify-content-center">
@@ -477,7 +497,9 @@ Astero.Sections.add('showcase/showcase-10', {
 });
 Astero.Sections.add('showcase/showcase-11', {
     name: 'Showcase 11',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/showcase/showcase-11-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/showcase/showcase-11-thumb.jpeg',
     html: `<section class="pt-5 pb-5">
   <div class="container">
     <div class="row align-items-center justify-content-center">
@@ -513,7 +535,9 @@ Astero.Sections.add('showcase/showcase-11', {
 });
 Astero.Sections.add('showcase/showcase-12', {
     name: 'Showcase 12',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/showcase/showcase-12-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/showcase/showcase-12-thumb.jpeg',
     html: `<section class="showcase-12" title="showcase-12">
   <div class="container">
     <div class="row g-1 justify-content-center">

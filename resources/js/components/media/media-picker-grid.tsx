@@ -2,11 +2,19 @@ import { router } from '@inertiajs/react';
 import { CheckIcon, ImageIcon, ListIcon, Trash2Icon } from 'lucide-react';
 import { useCallback, useMemo } from 'react';
 import { Datagrid } from '@/components/datagrid/datagrid';
-import type { DatagridColumn, DatagridFilter, DatagridTab } from '@/components/datagrid/datagrid';
+import type {
+    DatagridColumn,
+    DatagridFilter,
+    DatagridTab,
+} from '@/components/datagrid/datagrid';
 import { cn } from '@/lib/utils';
 import type { MediaListItem, MediaPickerFilters } from '@/types/media';
 import type { PaginatedData } from '@/types/pagination';
-import { getFileExtension, getFileTypeIcon, isImageMime } from './media-picker-utils';
+import {
+    getFileExtension,
+    getFileTypeIcon,
+    isImageMime,
+} from './media-picker-utils';
 
 type MediaPickerGridProps = {
     pickerMedia: PaginatedData<MediaListItem> | null;
@@ -55,14 +63,18 @@ export function MediaPickerGrid({
                         className="flex min-w-0 items-center gap-3 text-left hover:opacity-80"
                     >
                         <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded bg-muted">
-                            {isImageMime(item.mime_type) && item.thumbnail_url ? (
+                            {isImageMime(item.mime_type) &&
+                            item.thumbnail_url ? (
                                 <img
                                     src={item.thumbnail_url}
                                     alt={item.alt_text || item.name}
                                     className="size-10 object-cover"
                                 />
                             ) : (
-                                getFileTypeIcon(item.mime_type, 'size-5 text-muted-foreground')
+                                getFileTypeIcon(
+                                    item.mime_type,
+                                    'size-5 text-muted-foreground',
+                                )
                             )}
                         </div>
                         <div className="min-w-0 flex-1">
@@ -188,11 +200,13 @@ export function MediaPickerGrid({
                                 onClick={() => onMediaClick(item)}
                                 className={cn(
                                     'group relative aspect-square w-full overflow-hidden rounded-lg bg-muted',
-                                    isActive && 'ring-2 ring-primary ring-offset-2',
+                                    isActive &&
+                                        'ring-2 ring-primary ring-offset-2',
                                 )}
                             >
                                 {/* Thumbnail or file icon */}
-                                {isImageMime(item.mime_type) && item.thumbnail_url ? (
+                                {isImageMime(item.mime_type) &&
+                                item.thumbnail_url ? (
                                     <img
                                         src={item.thumbnail_url}
                                         alt={item.alt_text || item.name}
@@ -222,7 +236,7 @@ export function MediaPickerGrid({
 
                                 {/* Extension badge */}
                                 <div className="absolute bottom-0 left-0">
-                                    <span className="inline-block rounded-tr-md bg-black/60 px-1.5 py-0.5 text-[10px] font-bold uppercase text-white">
+                                    <span className="inline-block rounded-tr-md bg-black/60 px-1.5 py-0.5 text-[10px] font-bold text-white uppercase">
                                         {getFileExtension(item.file_name)}
                                     </span>
                                 </div>

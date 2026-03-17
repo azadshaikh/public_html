@@ -200,7 +200,9 @@ Astero.Components.extend('_base', 'elements/svg-icon', {
                 return newElement;
             },
             data: {
-                url: Astero.baseUrl + '../../resources/svg/icons/{value}/index.html',
+                url:
+                    Astero.baseUrl +
+                    '../../resources/svg/icons/{value}/index.html',
                 clickElement: 'li',
                 insertElement: 'svg',
                 elements: 'Loading ...',
@@ -399,7 +401,16 @@ Astero.Components.extend('_base', 'elements/svg-icon', {
 });
 
 Astero.Components.add('elements/svg-element', {
-    nodes: ['path', 'line', 'polyline', 'polygon', 'rect', 'circle', 'ellipse', 'g'],
+    nodes: [
+        'path',
+        'line',
+        'polyline',
+        'polygon',
+        'rect',
+        'circle',
+        'ellipse',
+        'g',
+    ],
     name: 'Svg element',
     icon: 'ri-star-line',
     html: ``,
@@ -504,8 +515,12 @@ Astero.Components.add('elements/gallery', {
                 off: 'flex',
             },
             setGroup: (group) => {
-                document.querySelectorAll('.mb-3[data-group]').forEach((el) => (el.style.display = 'none'));
-                document.querySelector('.mb-3[data-group="' + group + '"]').style.display = '';
+                document
+                    .querySelectorAll('.mb-3[data-group]')
+                    .forEach((el) => (el.style.display = 'none'));
+                document.querySelector(
+                    '.mb-3[data-group="' + group + '"]',
+                ).style.display = '';
             },
             onChange: function (node, value, input) {
                 this.setGroup(value);
@@ -592,7 +607,11 @@ Astero.Components.add('elements/gallery', {
             inputtype: ButtonInput,
             data: { text: 'Add image', icon: 'ri-add-line' },
             onChange: function (node) {
-                node.append(generateElements('<div class="item"><a><img src="../../media/posts/1.jpg"></a></div>')[0]);
+                node.append(
+                    generateElements(
+                        '<div class="item"><a><img src="../../media/posts/1.jpg"></a></div>',
+                    )[0],
+                );
 
                 //render component properties again to include the new image
                 //Astero.Components.render("ellements/gallery");
@@ -602,7 +621,9 @@ Astero.Components.add('elements/gallery', {
         },
     ],
     init(node) {
-        document.querySelectorAll('.mb-3[data-group]').forEach((el) => (el.style.display = 'none'));
+        document
+            .querySelectorAll('.mb-3[data-group]')
+            .forEach((el) => (el.style.display = 'none'));
 
         let source = 'flex';
         if (node.classList.contains('masonry')) {
@@ -611,7 +632,9 @@ Astero.Components.add('elements/gallery', {
             source = 'flex';
         }
 
-        document.querySelector('.mb-3[data-group="' + source + '"]').style.display = '';
+        document.querySelector(
+            '.mb-3[data-group="' + source + '"]',
+        ).style.display = '';
     },
 });
 
@@ -723,14 +746,14 @@ Astero.Components.add('elements/tabs', {
 
                         nav.append(
                             generateElements(
-                                `<button class="nav-link" id="nav-tab-${tabsId}-${index}-${random}" data-bs-toggle="tab" data-bs-target="#tab-${tabsId}-${index}-${random}" type="button" role="tab" aria-controls="tab-${index}-${random}" aria-selected="false">Tab ${index}</button>`
-                            )[0]
+                                `<button class="nav-link" id="nav-tab-${tabsId}-${index}-${random}" data-bs-toggle="tab" data-bs-target="#tab-${tabsId}-${index}-${random}" type="button" role="tab" aria-controls="tab-${index}-${random}" aria-selected="false">Tab ${index}</button>`,
+                            )[0],
                         );
 
                         content.append(
                             generateElements(
-                                `<div class="tab-pane p-4" id="tab-${tabsId}-${index}-${random}" role="tabpanel" aria-labelledby="tab-${tabsId}-${index}-${random}" tabindex="0"><p>Never think of results, just do!</p></div>`
-                            )[0]
+                                `<div class="tab-pane p-4" id="tab-${tabsId}-${index}-${random}" role="tabpanel" aria-labelledby="tab-${tabsId}-${index}-${random}" tabindex="0"><p>Never think of results, just do!</p></div>`,
+                            )[0],
                         );
 
                         //temporary solution to better update list
@@ -739,11 +762,19 @@ Astero.Components.add('elements/tabs', {
 
                     let index = event.index + 1;
                     if (event.action == 'remove') {
-                        nav.querySelector('button:nth-child(' + index + ')').remove();
-                        content.querySelector('.tab-pane:nth-child(' + index + ')').remove();
+                        nav.querySelector(
+                            'button:nth-child(' + index + ')',
+                        ).remove();
+                        content
+                            .querySelector('.tab-pane:nth-child(' + index + ')')
+                            .remove();
                     } else if (event.action == 'select') {
-                        let tab = nav.querySelector('button:nth-child(' + index + ')');
-                        Astero.Builder.iframe.contentWindow.bootstrap.Tab.getOrCreateInstance(tab).show();
+                        let tab = nav.querySelector(
+                            'button:nth-child(' + index + ')',
+                        );
+                        Astero.Builder.iframe.contentWindow.bootstrap.Tab.getOrCreateInstance(
+                            tab,
+                        ).show();
                     }
                 }
 
@@ -840,7 +871,7 @@ Astero.Components.add('elements/accordion', {
 								<p>Begin with the possible; begin with one step.</p>
 							  </div>
 							</div>
-						  </div>`)[0]
+						  </div>`)[0],
                         );
 
                         //temporary solution to better update list
@@ -849,18 +880,22 @@ Astero.Components.add('elements/accordion', {
 
                     let index = event.index + 1;
                     if (event.action == 'remove') {
-                        node.querySelector(':scope > .accordion-item:nth-child(' + index + ')').remove();
+                        node.querySelector(
+                            ':scope > .accordion-item:nth-child(' + index + ')',
+                        ).remove();
                     } else if (event.action == 'select') {
-                        let el = node.querySelector(':scope > .accordion-item:nth-child(' + index + ')');
+                        let el = node.querySelector(
+                            ':scope > .accordion-item:nth-child(' + index + ')',
+                        );
                         let btn = el.querySelector('.accordion-button');
                         let collapse = el.querySelector(' .collapse');
 
-                        node.querySelectorAll(':scope > .accordion-item .collapse').forEach((e) =>
-                            e.classList.remove('show')
-                        );
-                        node.querySelectorAll(':scope > .accordion-item .accordion-button').forEach((btn) =>
-                            btn.classList.add('collapsed')
-                        );
+                        node.querySelectorAll(
+                            ':scope > .accordion-item .collapse',
+                        ).forEach((e) => e.classList.remove('show'));
+                        node.querySelectorAll(
+                            ':scope > .accordion-item .accordion-button',
+                        ).forEach((btn) => btn.classList.add('collapsed'));
                         collapse.classList.add('show');
                         btn.classList.remove('collapsed');
                         //el[0].click();
@@ -1045,16 +1080,20 @@ Astero.Components.add('elements/social-icons', {
 							<a href="https://twitter.com">
 								<i class="lab la-twitter la-2x"></i> <span>Twitter</span>
 							</a>
-						</li>`)[0]
+						</li>`)[0],
                         );
 
                         //temporary solution to better update list
                         Astero.Components.render('elements/social-icons');
                     }
                     if (event.action == 'remove') {
-                        node.querySelector(':scope > li:nth-child(' + event.index + ')').remove();
+                        node.querySelector(
+                            ':scope > li:nth-child(' + event.index + ')',
+                        ).remove();
                     } else if (event.action == 'select') {
-                        let el = node.querySelector(':scope > li:nth-child(' + event.index + ')');
+                        let el = node.querySelector(
+                            ':scope > li:nth-child(' + event.index + ')',
+                        );
                         //el[0].click();
                         //Astero.Builder.iframe.contentWindow.bootstrap.Collapse.getOrCreateInstance(el[0]).toggle();
                     }
@@ -1177,7 +1216,11 @@ Astero.Components.add('elements/carousel', {
     onChange: function (node, property, value, input, event) {
         let element = node;
         if (property.key == 'autoplay' && value == true) {
-            value = { waitForTransition: true, enabled: value, delay: element.dataset.delay };
+            value = {
+                waitForTransition: true,
+                enabled: value,
+                delay: element.dataset.delay,
+            };
         }
 
         element.swiper.params[property.key] = value;
@@ -1213,8 +1256,8 @@ Astero.Components.add('elements/carousel', {
                         let index = element.swiper.slides.length + 1;
                         element.swiper.appendSlide(
                             generateElements(
-                                `<div class="swiper-slide"><img src="../../media/posts/${random}.jpg" class="img-fluid"><p>Slide ${index}</p></div>`
-                            )[0]
+                                `<div class="swiper-slide"><img src="../../media/posts/${random}.jpg" class="img-fluid"><p>Slide ${index}</p></div>`,
+                            )[0],
                         );
                         element.swiper.slideTo(index);
                         //temporary solution to better update list
@@ -1310,7 +1353,14 @@ Astero.Components.add('elements/carousel', {
             inline: true,
             col: 4,
         },
-        { name: 'Loop', key: 'loop', htmlAttr: 'data-loop', inputtype: CheckboxInput, inline: true, col: 4 },
+        {
+            name: 'Loop',
+            key: 'loop',
+            htmlAttr: 'data-loop',
+            inputtype: CheckboxInput,
+            inline: true,
+            col: 4,
+        },
         {
             name: 'Mouse wheel',
             key: 'mousewheel',
@@ -1327,7 +1377,14 @@ Astero.Components.add('elements/carousel', {
             inline: true,
             col: 4,
         },
-        { name: 'Rewind', key: 'rewind', htmlAttr: 'data-rewind', inputtype: CheckboxInput, inline: true, col: 4 },
+        {
+            name: 'Rewind',
+            key: 'rewind',
+            htmlAttr: 'data-rewind',
+            inputtype: CheckboxInput,
+            inline: true,
+            col: 4,
+        },
         {
             name: 'Scrollbar',
             key: 'scrollbar',

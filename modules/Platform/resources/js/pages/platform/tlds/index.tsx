@@ -6,20 +6,36 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
-import { buildBulkActions, buildDatagridState, mapRowActions } from '../../../lib/helpers';
-import type { PlatformIndexPageProps, TldListItem } from '../../../types/platform';
+import {
+    buildBulkActions,
+    buildDatagridState,
+    mapRowActions,
+} from '../../../lib/helpers';
+import type {
+    PlatformIndexPageProps,
+    TldListItem,
+} from '../../../types/platform';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: route('dashboard') },
-    { title: 'Platform', href: route('platform.tlds.index', { status: 'all' }) },
+    {
+        title: 'Platform',
+        href: route('platform.tlds.index', { status: 'all' }),
+    },
     { title: 'TLDs', href: route('platform.tlds.index', { status: 'all' }) },
 ];
 
-export default function TldsIndex({ config, rows, filters, statistics }: PlatformIndexPageProps<TldListItem>) {
+export default function TldsIndex({
+    config,
+    rows,
+    filters,
+    statistics,
+}: PlatformIndexPageProps<TldListItem>) {
     const page = usePage<AuthenticatedSharedData>();
     const canAddTlds = page.props.auth.abilities.addTlds;
 
-    const { currentStatus, gridFilters, perPage, sorting, statusTabs } = buildDatagridState(config, filters, statistics, 'Search TLDs...');
+    const { currentStatus, gridFilters, perPage, sorting, statusTabs } =
+        buildDatagridState(config, filters, statistics, 'Search TLDs...');
 
     const columns: DatagridColumn<TldListItem>[] = [
         {
@@ -28,7 +44,10 @@ export default function TldsIndex({ config, rows, filters, statistics }: Platfor
             sortable: true,
             sortKey: 'tld_order',
             cell: (item) => (
-                <Link href={route('platform.tlds.show', item.id)} className="font-medium text-foreground hover:text-primary">
+                <Link
+                    href={route('platform.tlds.show', item.id)}
+                    className="font-medium text-foreground hover:text-primary"
+                >
                     {item.tld}
                 </Link>
             ),
@@ -51,14 +70,28 @@ export default function TldsIndex({ config, rows, filters, statistics }: Platfor
         {
             key: 'is_suggested_label',
             header: 'Suggested',
-            cell: (item) => <Badge variant={item.is_suggested_label === 'Yes' ? 'success' : 'outline'}>{item.is_suggested_label}</Badge>,
+            cell: (item) => (
+                <Badge
+                    variant={
+                        item.is_suggested_label === 'Yes'
+                            ? 'success'
+                            : 'outline'
+                    }
+                >
+                    {item.is_suggested_label}
+                </Badge>
+            ),
         },
         {
             key: 'status_label',
             header: 'Status',
             sortable: true,
             sortKey: 'status',
-            cell: (item) => <Badge variant={item.is_trashed ? 'destructive' : 'secondary'}>{item.status_label}</Badge>,
+            cell: (item) => (
+                <Badge variant={item.is_trashed ? 'destructive' : 'secondary'}>
+                    {item.status_label}
+                </Badge>
+            ),
         },
         {
             key: 'created_at',
@@ -91,11 +124,16 @@ export default function TldsIndex({ config, rows, filters, statistics }: Platfor
                 tabs={{ name: 'status', items: statusTabs }}
                 getRowKey={(item) => item.id}
                 rowActions={(item) => mapRowActions(item.actions)}
-                bulkActions={buildBulkActions(config.actions, config.settings.routePrefix, currentStatus)}
+                bulkActions={buildBulkActions(
+                    config.actions,
+                    config.settings.routePrefix,
+                    currentStatus,
+                )}
                 empty={{
                     icon: <Globe2Icon className="size-5" />,
                     title: 'No TLDs found',
-                    description: 'Create TLD records to power domain search, pricing, and affiliate routing.',
+                    description:
+                        'Create TLD records to power domain search, pricing, and affiliate routing.',
                 }}
                 sorting={sorting}
                 perPage={perPage}

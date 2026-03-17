@@ -53,7 +53,9 @@ export class ItemRenderer {
      * Update an existing widget's DOM representation
      */
     static updateDOM(widgetId, data) {
-        const widgetEl = document.querySelector(`.widget-item[data-widget-id="${widgetId}"]`);
+        const widgetEl = document.querySelector(
+            `.widget-item[data-widget-id="${widgetId}"]`,
+        );
         if (!widgetEl) return;
 
         // Update title

@@ -27,7 +27,10 @@ export class DragDrop {
             return;
         }
 
-        console.log('[WidgetDragDrop] Initializing on container:', this.container);
+        console.log(
+            '[WidgetDragDrop] Initializing on container:',
+            this.container,
+        );
         this.createDropIndicator();
         this.bindEvents();
     }
@@ -61,10 +64,22 @@ export class DragDrop {
         });
 
         // Use event delegation on container
-        this.container.addEventListener('dragstart', this.handleDragStart.bind(this));
-        this.container.addEventListener('dragend', this.handleDragEnd.bind(this));
-        this.container.addEventListener('dragover', this.handleDragOver.bind(this));
-        this.container.addEventListener('dragleave', this.handleDragLeave.bind(this));
+        this.container.addEventListener(
+            'dragstart',
+            this.handleDragStart.bind(this),
+        );
+        this.container.addEventListener(
+            'dragend',
+            this.handleDragEnd.bind(this),
+        );
+        this.container.addEventListener(
+            'dragover',
+            this.handleDragOver.bind(this),
+        );
+        this.container.addEventListener(
+            'dragleave',
+            this.handleDragLeave.bind(this),
+        );
         this.container.addEventListener('drop', this.handleDrop.bind(this));
     }
 
@@ -78,7 +93,10 @@ export class DragDrop {
             return;
         }
 
-        console.log('[WidgetDragDrop] Drag started:', widgetItem.dataset.widgetId);
+        console.log(
+            '[WidgetDragDrop] Drag started:',
+            widgetItem.dataset.widgetId,
+        );
 
         this.draggedItem = widgetItem;
         widgetItem.classList.add('is-dragging');
@@ -192,7 +210,10 @@ export class DragDrop {
                 break;
 
             case 'after':
-                targetItem.parentElement.insertBefore(draggedItem, targetItem.nextSibling);
+                targetItem.parentElement.insertBefore(
+                    draggedItem,
+                    targetItem.nextSibling,
+                );
                 break;
         }
     }

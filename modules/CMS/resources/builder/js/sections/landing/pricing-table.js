@@ -1,6 +1,8 @@
 Astero.Sections.add('pricing-table/pricing-table-3', {
     name: 'Pricing table 3',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/pricing-table/pricing-table-3-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/pricing-table/pricing-table-3-thumb.jpeg',
     html: `<section class="pricing-table-3" title="pricing-table-3">
   <div class="container">
     <div class="row justify-content-center pb-2">

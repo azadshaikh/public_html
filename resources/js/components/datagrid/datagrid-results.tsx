@@ -389,7 +389,8 @@ export function DatagridResults<T>({
                                                                   ? ((
                                                                         row as Record<
                                                                             string,
-                                                                            BadgeVariant | undefined
+                                                                            | BadgeVariant
+                                                                            | undefined
                                                                         >
                                                                     )[
                                                                         column

@@ -39,7 +39,11 @@ export function getFileTypeIcon(mimeType: string, className: string) {
     ) {
         return <FileTextIcon className={className} />;
     }
-    if (mimeType.includes('spreadsheet') || mimeType.includes('excel') || mimeType === 'text/csv') {
+    if (
+        mimeType.includes('spreadsheet') ||
+        mimeType.includes('excel') ||
+        mimeType === 'text/csv'
+    ) {
         return <FileSpreadsheetIcon className={className} />;
     }
     return <FileIcon className={className} />;

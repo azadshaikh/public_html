@@ -1,6 +1,8 @@
 Astero.Sections.add('contact-form/contact-form-1', {
     name: 'Contact form 1',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/contact-form/contact-form-1-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/contact-form/contact-form-1-thumb.jpeg',
     html: `<section class="contact-form-9" title="contact-form-9">
   <div class="container py-5 my-5">
     <div class="row py-5">
@@ -52,7 +54,9 @@ Astero.Sections.add('contact-form/contact-form-1', {
 });
 Astero.Sections.add('contact-form/contact-form-2', {
     name: 'Contact form 2',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/contact-form/contact-form-2-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/contact-form/contact-form-2-thumb.jpeg',
     html: `<section class="contact-form-11 pt-0" title="contact-form-11">
   <div class="container-fluid p-0 pb-5">
     <iframe loading="lazy" class="map" title="map" src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2848.8444388087937!2d26.101253041406952!3d44.43635311654287!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x40b1ff4770adb5b7%3A0x58147f39579fe6fa!2zR3J1cHVsIFN0YXR1YXIgIkPEg3J1yJthIEN1IFBhaWHIm2Ui!5e0!3m2!1sen!2sro!4v1507381157656" style="border:0" allowfullscreen="" width="100%" height="300" frameborder="0"></iframe>
@@ -104,7 +108,9 @@ Astero.Sections.add('contact-form/contact-form-2', {
 });
 Astero.Sections.add('contact-form/contact-form-3', {
     name: 'Contact form 3',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/contact-form/contact-form-3-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/contact-form/contact-form-3-thumb.jpeg',
     html: `<section class="contact-form-12 py-0" title="contact-form-12">
   <div class="container py-5" style="background-image: url(${Astero.builderAssetsUrl}/images/sections/contct-form-12.jpg);">
     <div class="row text-center justify-content-center">
@@ -156,7 +162,9 @@ Astero.Sections.add('contact-form/contact-form-3', {
 });
 Astero.Sections.add('contact-form/contact-form-4', {
     name: 'Contact form 4',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/contact-form/contact-form-4-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/contact-form/contact-form-4-thumb.jpeg',
     html: `<section class="contact-form-13" title="contact-form-13">
   <div class="container">
     <div class="row text-center justify-content-center">
@@ -210,7 +218,9 @@ Astero.Sections.add('contact-form/contact-form-4', {
 });
 Astero.Sections.add('contact-form/contact-form-5', {
     name: 'Contact form 5',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/contact-form/contact-form-5-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/contact-form/contact-form-5-thumb.jpeg',
     html: `<section class="contact-form-2 container-fluid px-5 my-5" title="contact-form-2">
   <div class="row justify-content-center">
     <div class="col-xl-10">
@@ -269,7 +279,9 @@ Astero.Sections.add('contact-form/contact-form-5', {
 });
 Astero.Sections.add('contact-form/contact-form-6', {
     name: 'Contact form 6',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/contact-form/contact-form-6-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/contact-form/contact-form-6-thumb.jpeg',
     html: `<section title="contact-form-6" class="contact-form-6">
   <div class="container-fluid g-0">
 
@@ -439,7 +451,9 @@ Astero.Sections.add('contact-form/contact-form-6', {
 });
 Astero.Sections.add('contact-form/contact-form-7', {
     name: 'Contact form 7',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/contact-form/contact-form-7-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/contact-form/contact-form-7-thumb.jpeg',
     html: `<section class="contact-form-8" title="contact-form-8">
   <div class="container">
     <div class="row text-center justify-content-center">
@@ -485,7 +499,9 @@ Astero.Sections.add('contact-form/contact-form-7', {
 });
 Astero.Sections.add('contact-form/contact-form-8', {
     name: 'Contact form 8',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/contact-form/contact-form-8-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/contact-form/contact-form-8-thumb.jpeg',
     html: `<section class="contact-form-8 pt-0" title="contact-form-8">
   <div class="container-fluid p-0 pb-3">
     <iframe loading="lazy" class="map" title="map" src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2848.8444388087937!2d26.101253041406952!3d44.43635311654287!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x40b1ff4770adb5b7%3A0x58147f39579fe6fa!2zR3J1cHVsIFN0YXR1YXIgIkPEg3J1yJthIEN1IFBhaWHIm2Ui!5e0!3m2!1sen!2sro!4v1507381157656" style="border:0" allowfullscreen="" width="100%" height="300" frameborder="0"></iframe>
@@ -577,7 +593,9 @@ Astero.Sections.add('contact-form/contact-form-8', {
 });
 Astero.Sections.add('contact-form/contact-form-9', {
     name: 'Contact form 9',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/contact-form/contact-form-9-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/contact-form/contact-form-9-thumb.jpeg',
     html: `<section class="contact-form-3 py-5" title="contact-form-3">
   <div class="row no-gutters">
     <div class="container">

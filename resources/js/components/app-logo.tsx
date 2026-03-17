@@ -30,15 +30,16 @@ export default function AppLogo() {
 
     if (isCmsEnabled) {
         return (
-            <a href="/" target="_blank" rel="noreferrer" className="flex items-center space-x-2">
+            <a
+                href="/"
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center space-x-2"
+            >
                 {content}
             </a>
         );
     }
 
-    return (
-        <div className="flex items-center">
-            {content}
-        </div>
-    );
+    return <div className="flex items-center">{content}</div>;
 }

@@ -107,9 +107,9 @@
 }
 
 .input-group.css-unit.auto
-    > :not(:first-child):not(.dropdown-menu):not(.valid-tooltip):not(.valid-feedback):not(.invalid-tooltip):not(
-        .invalid-feedback
-    ) {
+    > :not(:first-child):not(.dropdown-menu):not(.valid-tooltip):not(
+        .valid-feedback
+    ):not(.invalid-tooltip):not(.invalid-feedback) {
     border-top-left-radius: var(--bs-border-radius);
     border-bottom-left-radius: var(--bs-border-radius);
 }
@@ -162,7 +162,10 @@ div:has(> input.header_check:checked) > label.header .header-arrow .icon-minus {
     display: inline-block;
 }
 
-div:has(> input.header_check:not(:checked)) > label.header .header-arrow .icon-plus {
+div:has(> input.header_check:not(:checked))
+    > label.header
+    .header-arrow
+    .icon-plus {
     display: inline-block;
 }
 
@@ -409,7 +412,11 @@ input.header_check:not(:checked) + label .header-arrow .icon-plus {
     align-items: center;
 }
 
-#astero-builder #bottom-panel .breadcrumb-navigator .breadcrumb-item + .breadcrumb-item::before {
+#astero-builder
+    #bottom-panel
+    .breadcrumb-navigator
+    .breadcrumb-item
+    + .breadcrumb-item::before {
     font-size: 10px;
     color: var(--bs-secondary);
     padding-left: 0.3rem;
@@ -443,7 +450,9 @@ input.header_check:not(:checked) + label .header-arrow .icon-plus {
     display: block !important;
 }
 
-#astero-builder .monaco-editor-shell.monaco-fullscreen .monaco-fullscreen-close {
+#astero-builder
+    .monaco-editor-shell.monaco-fullscreen
+    .monaco-fullscreen-close {
     display: flex !important;
 }
 
@@ -480,10 +489,18 @@ textarea[data-monaco-editor-initialized='true'] {
     flex-shrink: 0;
 }
 
-#astero-builder.bottom-panel-expand #bottom-panel #astero-code-editor:not([style*='display: none']),
-#astero-builder.bottom-panel-expand #bottom-panel #astero-css-editor:not([style*='display: none']),
-#astero-builder.bottom-panel-expand #bottom-panel #astero-js-editor:not([style*='display: none']),
-#astero-builder.bottom-panel-expand #bottom-panel #astero-enabled-content-editor:not([style*='display: none']) {
+#astero-builder.bottom-panel-expand
+    #bottom-panel
+    #astero-code-editor:not([style*='display: none']),
+#astero-builder.bottom-panel-expand
+    #bottom-panel
+    #astero-css-editor:not([style*='display: none']),
+#astero-builder.bottom-panel-expand
+    #bottom-panel
+    #astero-js-editor:not([style*='display: none']),
+#astero-builder.bottom-panel-expand
+    #bottom-panel
+    #astero-enabled-content-editor:not([style*='display: none']) {
     flex: 1;
     display: flex !important;
     flex-direction: column;

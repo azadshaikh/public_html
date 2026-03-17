@@ -15,7 +15,7 @@ export default function AuthSimpleLayout({
 
     return (
         <div className="relative flex min-h-svh flex-col items-center justify-center gap-6 bg-background p-6 md:p-10">
-            <div className="absolute right-6 top-6">
+            <div className="absolute top-6 right-6">
                 <AppThemeToggle />
             </div>
 

@@ -43,19 +43,13 @@ import type { UsersShowPageProps } from '@/types/user-management';
  * Compact label + value row used inside the Command Center identity/lifecycle grids.
  * Renders "—" when value is null/undefined/empty so optional fields remain visible.
  */
-function InfoRow({
-    label,
-    value,
-}: {
-    label: string;
-    value: ReactNode;
-}) {
+function InfoRow({ label, value }: { label: string; value: ReactNode }) {
     return (
         <div className="flex items-start gap-2 py-1">
             <span className="w-28 shrink-0 text-xs text-muted-foreground">
                 {label}
             </span>
-            <span className="min-w-0 break-words text-xs font-medium text-foreground">
+            <span className="min-w-0 text-xs font-medium break-words text-foreground">
                 {value ?? '—'}
             </span>
         </div>
@@ -409,7 +403,7 @@ export default function UsersShow({
                                     {user.actions.ban && (
                                         <Button
                                             variant="outline"
-                                            className="border-destructive/30 w-full justify-start text-destructive hover:bg-destructive/5"
+                                            className="w-full justify-start border-destructive/30 text-destructive hover:bg-destructive/5"
                                             onClick={() => handleAction('ban')}
                                         >
                                             <BanIcon data-icon="inline-start" />
@@ -420,7 +414,7 @@ export default function UsersShow({
                                     {canDelete && user.actions.delete && (
                                         <Button
                                             variant="outline"
-                                            className="border-destructive/30 w-full justify-start text-destructive hover:bg-destructive/5"
+                                            className="w-full justify-start border-destructive/30 text-destructive hover:bg-destructive/5"
                                             onClick={() =>
                                                 handleAction('delete')
                                             }
@@ -451,7 +445,7 @@ export default function UsersShow({
                                     {canDelete && user.actions.force_delete && (
                                         <Button
                                             variant="outline"
-                                            className="border-destructive/30 w-full justify-start text-destructive hover:bg-destructive/5"
+                                            className="w-full justify-start border-destructive/30 text-destructive hover:bg-destructive/5"
                                             onClick={() =>
                                                 handleAction('force_delete')
                                             }
@@ -523,7 +517,7 @@ export default function UsersShow({
                                 </CardHeader>
                                 <CardContent>
                                     {user.bio ? (
-                                        <p className="whitespace-pre-wrap text-sm text-foreground">
+                                        <p className="text-sm whitespace-pre-wrap text-foreground">
                                             {user.bio}
                                         </p>
                                     ) : (
@@ -654,7 +648,7 @@ export default function UsersShow({
                                                 key={activity.id}
                                                 className="flex items-start gap-3 py-3"
                                             >
-                                                <div className="bg-muted mt-0.5 rounded-full p-1.5">
+                                                <div className="mt-0.5 rounded-full bg-muted p-1.5">
                                                     <GlobeIcon className="size-3.5 text-muted-foreground" />
                                                 </div>
                                                 <div className="flex min-w-0 flex-1 flex-col gap-0.5">

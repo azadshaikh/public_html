@@ -12,7 +12,9 @@ export function AppFooter() {
             <div className="mx-auto flex w-full max-w-7xl flex-col gap-2 px-4 py-3 text-sm text-muted-foreground sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                     <span>{`© ${currentYear} ${brandName}.`}</span>
-                    <span className="hidden text-sidebar-border lg:inline">|</span>
+                    <span className="hidden text-sidebar-border lg:inline">
+                        |
+                    </span>
                     <span>Powered by</span>
                     {brandWebsite !== '' ? (
                         <a

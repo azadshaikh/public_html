@@ -201,7 +201,10 @@ export type ManagedUserListItem = {
 };
 
 export type ManagedUserEditingTarget = ManagedUserListItem &
-    Omit<ManagedUserFormValues, 'password' | 'password_confirmation' | 'avatar'> & {
+    Omit<
+        ManagedUserFormValues,
+        'password' | 'password_confirmation' | 'avatar'
+    > & {
         avatar_url: string | null;
     };
 

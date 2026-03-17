@@ -1,5 +1,9 @@
 import { Link } from '@inertiajs/react';
-import { ArrowLeftIcon, ExternalLinkIcon, PanelsTopLeftIcon } from 'lucide-react';
+import {
+    ArrowLeftIcon,
+    ExternalLinkIcon,
+    PanelsTopLeftIcon,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';

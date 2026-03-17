@@ -38,7 +38,8 @@ const highlightCards = [
     {
         key: 'laravel',
         label: 'Laravel Version',
-        description: 'Framework version resolved from the application container.',
+        description:
+            'Framework version resolved from the application container.',
         valueKey: 'laravel_version' as const,
         icon: FlameIcon,
         tone: 'danger' as const,
@@ -125,7 +126,8 @@ export default function LaravelToolsIndex({
                                 {stats.debug_mode ? 'Enabled' : 'Disabled'}
                             </CardTitle>
                             <CardDescription>
-                                Keep production hardened by ensuring debug mode is only enabled when needed.
+                                Keep production hardened by ensuring debug mode
+                                is only enabled when needed.
                             </CardDescription>
                         </CardHeader>
                     </Card>
@@ -136,7 +138,8 @@ export default function LaravelToolsIndex({
                         <CardHeader>
                             <CardTitle>Maintenance toolkit</CardTitle>
                             <CardDescription>
-                                Each tool focuses on a single workflow so you can inspect, change, and validate safely.
+                                Each tool focuses on a single workflow so you
+                                can inspect, change, and validate safely.
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -180,7 +183,8 @@ export default function LaravelToolsIndex({
                         <CardHeader>
                             <CardTitle>System profile</CardTitle>
                             <CardDescription>
-                                Quick reference values pulled from the active Laravel runtime.
+                                Quick reference values pulled from the active
+                                Laravel runtime.
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="flex flex-col gap-4 text-sm">
@@ -234,7 +238,7 @@ function ProfileItem({
                 {icon}
                 <span>{label}</span>
             </div>
-            <p className="break-all text-sm font-medium text-foreground">
+            <p className="text-sm font-medium break-all text-foreground">
                 {value}
             </p>
         </div>

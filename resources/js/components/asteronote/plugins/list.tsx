@@ -144,7 +144,9 @@ export function ListPluginControl({
                                 </DropdownMenuItem>
                             );
                         })}
-                        {groupIdx < groupedOptions.length - 1 && <DropdownMenuSeparator />}
+                        {groupIdx < groupedOptions.length - 1 && (
+                            <DropdownMenuSeparator />
+                        )}
                     </React.Fragment>
                 ))}
             </DropdownMenuContent>

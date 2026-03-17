@@ -57,7 +57,9 @@ export default function LaravelToolsConfig({
     selectedConfig,
 }: LaravelToolsConfigPageProps) {
     const [currentFile, setCurrentFile] = useState<string | null>(selectedFile);
-    const [config, setConfig] = useState<LaravelConfigValue | null>(selectedConfig);
+    const [config, setConfig] = useState<LaravelConfigValue | null>(
+        selectedConfig,
+    );
     const [searchQuery, setSearchQuery] = useState('');
     const configRequest = useHttp<
         { file: string },
@@ -107,7 +109,9 @@ export default function LaravelToolsConfig({
             );
 
             if (!payload.success) {
-                throw new Error(payload.message || 'Unable to load configuration values.');
+                throw new Error(
+                    payload.message || 'Unable to load configuration values.',
+                );
             }
 
             setConfig(payload.config ?? null);
@@ -137,7 +141,8 @@ export default function LaravelToolsConfig({
                     <ShieldCheckIcon data-icon="inline-start" />
                     <AlertTitle>Sensitive values are masked</AlertTitle>
                     <AlertDescription>
-                        Keys such as passwords, tokens, and API secrets are replaced before rendering in the browser.
+                        Keys such as passwords, tokens, and API secrets are
+                        replaced before rendering in the browser.
                     </AlertDescription>
                 </Alert>
 
@@ -146,21 +151,25 @@ export default function LaravelToolsConfig({
                         <CardHeader>
                             <CardTitle>Configuration files</CardTitle>
                             <CardDescription>
-                                Choose a file to inspect its current resolved values.
+                                Choose a file to inspect its current resolved
+                                values.
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
                             <ScrollArea className="h-[38rem] pr-4">
                                 <div className="flex flex-col gap-3">
                                     {configFiles.map((file) => {
-                                        const isActive = currentFile === file.name;
+                                        const isActive =
+                                            currentFile === file.name;
 
                                         return (
                                             <button
                                                 key={file.name}
                                                 type="button"
                                                 onClick={() =>
-                                                    void loadConfigFile(file.name)
+                                                    void loadConfigFile(
+                                                        file.name,
+                                                    )
                                                 }
                                                 className={`rounded-xl border p-4 text-left transition-colors ${
                                                     isActive
@@ -177,7 +186,8 @@ export default function LaravelToolsConfig({
                                                             {file.name}.php
                                                         </span>
                                                         <span className="text-sm text-muted-foreground">
-                                                            config/{file.name}.php
+                                                            config/{file.name}
+                                                            .php
                                                         </span>
                                                     </div>
                                                 </div>
@@ -199,7 +209,8 @@ export default function LaravelToolsConfig({
                                             : 'Select a config file'}
                                     </CardTitle>
                                     <CardDescription>
-                                        Search across flattened dot-notation keys for faster inspection.
+                                        Search across flattened dot-notation
+                                        keys for faster inspection.
                                     </CardDescription>
                                 </div>
                                 <div className="flex flex-wrap items-center gap-2">
@@ -214,7 +225,9 @@ export default function LaravelToolsConfig({
                                         variant="outline"
                                         onClick={() =>
                                             currentFile
-                                                ? void loadConfigFile(currentFile)
+                                                ? void loadConfigFile(
+                                                      currentFile,
+                                                  )
                                                 : undefined
                                         }
                                         disabled={
@@ -252,9 +265,12 @@ export default function LaravelToolsConfig({
                                         <EmptyMedia variant="icon">
                                             <FileCode2Icon />
                                         </EmptyMedia>
-                                        <EmptyTitle>Select a config file</EmptyTitle>
+                                        <EmptyTitle>
+                                            Select a config file
+                                        </EmptyTitle>
                                         <EmptyDescription>
-                                            Pick a file from the left to load its resolved configuration values.
+                                            Pick a file from the left to load
+                                            its resolved configuration values.
                                         </EmptyDescription>
                                     </EmptyHeader>
                                 </Empty>
@@ -268,9 +284,12 @@ export default function LaravelToolsConfig({
                                         <EmptyMedia variant="icon">
                                             <SearchIcon />
                                         </EmptyMedia>
-                                        <EmptyTitle>No matching keys</EmptyTitle>
+                                        <EmptyTitle>
+                                            No matching keys
+                                        </EmptyTitle>
                                         <EmptyDescription>
-                                            Try a different search term or refresh the selected config file.
+                                            Try a different search term or
+                                            refresh the selected config file.
                                         </EmptyDescription>
                                     </EmptyHeader>
                                 </Empty>
@@ -290,29 +309,35 @@ export default function LaravelToolsConfig({
                                                 </TableRow>
                                             </TableHeader>
                                             <TableBody>
-                                                {filteredEntries.map((entry) => (
-                                                    <TableRow key={entry.key}>
-                                                        <TableCell className="align-top font-mono text-xs text-foreground">
-                                                            {entry.key}
-                                                        </TableCell>
-                                                        <TableCell className="align-top">
-                                                            <Badge
-                                                                variant={
-                                                                    entry.masked
-                                                                        ? 'warning'
-                                                                        : 'outline'
-                                                                }
-                                                            >
-                                                                {entry.type}
-                                                            </Badge>
-                                                        </TableCell>
-                                                        <TableCell className="align-top">
-                                                            <span className="break-all font-mono text-xs text-muted-foreground">
-                                                                {entry.value}
-                                                            </span>
-                                                        </TableCell>
-                                                    </TableRow>
-                                                ))}
+                                                {filteredEntries.map(
+                                                    (entry) => (
+                                                        <TableRow
+                                                            key={entry.key}
+                                                        >
+                                                            <TableCell className="align-top font-mono text-xs text-foreground">
+                                                                {entry.key}
+                                                            </TableCell>
+                                                            <TableCell className="align-top">
+                                                                <Badge
+                                                                    variant={
+                                                                        entry.masked
+                                                                            ? 'warning'
+                                                                            : 'outline'
+                                                                    }
+                                                                >
+                                                                    {entry.type}
+                                                                </Badge>
+                                                            </TableCell>
+                                                            <TableCell className="align-top">
+                                                                <span className="font-mono text-xs break-all text-muted-foreground">
+                                                                    {
+                                                                        entry.value
+                                                                    }
+                                                                </span>
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    ),
+                                                )}
                                             </TableBody>
                                         </Table>
                                     </ScrollArea>

@@ -14,7 +14,8 @@
  */
 
 // Ensure the builder global namespace exists
-const __ASTERO_GLOBAL__ = typeof globalThis !== 'undefined' ? globalThis : window;
+const __ASTERO_GLOBAL__ =
+    typeof globalThis !== 'undefined' ? globalThis : window;
 __ASTERO_GLOBAL__.Astero = __ASTERO_GLOBAL__.Astero || {};
 const Astero = __ASTERO_GLOBAL__.Astero;
 
@@ -62,7 +63,9 @@ Astero.Builder = {
         self.documentFrame = document.querySelector('#iframe-wrapper > iframe');
         self.canvas = document.getElementById('canvas');
 
-        self._loadIframe(url + (url.indexOf('?') > -1 ? '&r=' : '?r=') + Math.random());
+        self._loadIframe(
+            url + (url.indexOf('?') > -1 ? '&r=' : '?r=') + Math.random(),
+        );
         self._initBox();
 
         self.dragElement = null;
@@ -98,23 +101,31 @@ Astero.Builder = {
             highlightBox.style.display = 'none';
 
             // Warn before leaving with unsaved changes
-            window.FrameWindow.addEventListener('beforeunload', function (event) {
-                if (Astero.Undo.undoIndex >= 0) {
-                    let dialogText = 'You have unsaved changes';
-                    event.returnValue = dialogText;
-                    return dialogText;
-                }
-            });
+            window.FrameWindow.addEventListener(
+                'beforeunload',
+                function (event) {
+                    if (Astero.Undo.undoIndex >= 0) {
+                        let dialogText = 'You have unsaved changes';
+                        event.returnValue = dialogText;
+                        return dialogText;
+                    }
+                },
+            );
 
             // Show loading message when unloading
             window.FrameWindow.addEventListener('unload', function (event) {
-                document.querySelector('.loading-message').classList.add('active');
+                document
+                    .querySelector('.loading-message')
+                    .classList.add('active');
                 Astero.Undo.reset();
             });
 
             // Prevent accidental link clicks when editing text
             window.FrameDocument.addEventListener('click', function (event) {
-                if (Astero.WysiwygEditor.isActive && event.target.closest('a')) {
+                if (
+                    Astero.WysiwygEditor.isActive &&
+                    event.target.closest('a')
+                ) {
                     event.preventDefault();
                     return false;
                 }
@@ -129,11 +140,24 @@ Astero.Builder = {
 
                 if (target) {
                     pos = offset(target);
-                    SelectBox.style.top = pos.top - (self.frameDoc.scrollTop ?? 0) - self.selectPadding + 'px';
-                    SelectBox.style.left = pos.left - (self.frameDoc.scrollLeft ?? 0) - self.selectPadding + 'px';
-                    SelectBox.style.width = (target.offsetWidth ?? target.clientWidth) + self.selectPadding * 2 + 'px';
+                    SelectBox.style.top =
+                        pos.top -
+                        (self.frameDoc.scrollTop ?? 0) -
+                        self.selectPadding +
+                        'px';
+                    SelectBox.style.left =
+                        pos.left -
+                        (self.frameDoc.scrollLeft ?? 0) -
+                        self.selectPadding +
+                        'px';
+                    SelectBox.style.width =
+                        (target.offsetWidth ?? target.clientWidth) +
+                        self.selectPadding * 2 +
+                        'px';
                     SelectBox.style.height =
-                        (target.offsetHeight ?? target.clientHeight) + self.selectPadding * 2 + 'px';
+                        (target.offsetHeight ?? target.clientHeight) +
+                        self.selectPadding * 2 +
+                        'px';
                 }
             };
 
@@ -168,8 +192,10 @@ Astero.Builder = {
             if (iframeHelpersCssUrl) {
                 self.frameHead.append(
                     generateElements(
-                        '<link data-astero-helpers href="' + iframeHelpersCssUrl + '" rel="stylesheet">'
-                    )[0]
+                        '<link data-astero-helpers href="' +
+                            iframeHelpersCssUrl +
+                            '" rel="stylesheet">',
+                    )[0],
                 );
             }
         }
@@ -178,20 +204,32 @@ Astero.Builder = {
         self._initHighlight();
         self._initLinkProtection();
 
-        window.dispatchEvent(new CustomEvent('astero.iframe.loaded', { detail: self.frameDoc }));
+        window.dispatchEvent(
+            new CustomEvent('astero.iframe.loaded', { detail: self.frameDoc }),
+        );
         document.querySelector('.loading-message').classList.remove('active');
 
         // Enable save button only if changes are made
         let setSaveButtonState = function (e) {
             if (Astero.Undo.hasChanges()) {
-                document.querySelectorAll('#top-panel .save-btn').forEach((e) => e.removeAttribute('disabled'));
+                document
+                    .querySelectorAll('#top-panel .save-btn')
+                    .forEach((e) => e.removeAttribute('disabled'));
             } else {
-                document.querySelectorAll('#top-panel .save-btn').forEach((e) => e.setAttribute('disabled', 'true'));
+                document
+                    .querySelectorAll('#top-panel .save-btn')
+                    .forEach((e) => e.setAttribute('disabled', 'true'));
             }
         };
 
-        Astero.Builder.frameBody.addEventListener('astero.undo.add', setSaveButtonState);
-        Astero.Builder.frameBody.addEventListener('astero.undo.restore', setSaveButtonState);
+        Astero.Builder.frameBody.addEventListener(
+            'astero.undo.add',
+            setSaveButtonState,
+        );
+        Astero.Builder.frameBody.addEventListener(
+            'astero.undo.restore',
+            setSaveButtonState,
+        );
     },
 
     /**
@@ -217,7 +255,9 @@ Astero.Builder = {
 
                 if (nodeName.indexOf('data-v-') > -1) {
                     componentAttribute =
-                        (componentAttribute ? componentAttribute + ' - ' : '') + nodeName.replace('data-v-', '') + ' ';
+                        (componentAttribute ? componentAttribute + ' - ' : '') +
+                        nodeName.replace('data-v-', '') +
+                        ' ';
                 }
             }
         }
@@ -227,7 +267,10 @@ Astero.Builder = {
         if (el.id) {
             componentName = '#' + el.id;
         } else {
-            componentName = el.classList && el.classList.length ? '.' + el.classList[0] : '';
+            componentName =
+                el.classList && el.classList.length
+                    ? '.' + el.classList[0]
+                    : '';
         }
 
         return [componentName, el.tagName];
@@ -248,7 +291,9 @@ Astero.Builder = {
         this.selectedComponent = component;
 
         // Show properties tab if visible
-        let propertiesTab = document.querySelector('.component-properties-tab a');
+        let propertiesTab = document.querySelector(
+            '.component-properties-tab a',
+        );
         if (propertiesTab.offsetParent) {
             propertiesTab.style.display = '';
             const bsTab = bootstrap.Tab.getOrCreateInstance(propertiesTab);
@@ -347,7 +392,9 @@ Astero.Builder = {
         let self = this;
         let SelectActions = document.getElementById('select-actions');
         let AddSectionBtn = document.getElementById('add-section-btn');
-        let AddSectionBtnSelected = document.getElementById('add-section-btn-selected');
+        let AddSectionBtnSelected = document.getElementById(
+            'add-section-btn-selected',
+        );
         let elementType = this._getElementType(node);
 
         // Close text editor if switching nodes
@@ -363,7 +410,8 @@ Astero.Builder = {
         if (elementType[1] == 'BODY') {
             SelectActions.style.display = 'none';
             AddSectionBtn.style.display = 'none';
-            if (AddSectionBtnSelected) AddSectionBtnSelected.style.display = 'none';
+            if (AddSectionBtnSelected)
+                AddSectionBtnSelected.style.display = 'none';
         } else {
             SelectActions.style.display = '';
             AddSectionBtn.style.display = '';
@@ -375,12 +423,23 @@ Astero.Builder = {
 
         try {
             let pos = offset(target);
-            let top = pos.top - (self.frameDoc.scrollTop ?? 0) - self.selectPadding;
+            let top =
+                pos.top - (self.frameDoc.scrollTop ?? 0) - self.selectPadding;
 
             SelectBox.style.top = top + 'px';
-            SelectBox.style.left = pos.left - (self.frameDoc.scrollLeft ?? 0) - self.selectPadding + 'px';
-            SelectBox.style.width = (target.offsetWidth ?? target.clientWidth) + self.selectPadding * 2 + 'px';
-            SelectBox.style.height = (target.offsetHeight ?? target.clientHeight) + self.selectPadding * 2 + 'px';
+            SelectBox.style.left =
+                pos.left -
+                (self.frameDoc.scrollLeft ?? 0) -
+                self.selectPadding +
+                'px';
+            SelectBox.style.width =
+                (target.offsetWidth ?? target.clientWidth) +
+                self.selectPadding * 2 +
+                'px';
+            SelectBox.style.height =
+                (target.offsetHeight ?? target.clientHeight) +
+                self.selectPadding * 2 +
+                'px';
             SelectBox.style.display = 'block';
 
             // Move actions toolbar to bottom if no space on top
@@ -398,7 +457,9 @@ Astero.Builder = {
             return false;
         }
 
-        document.querySelector('#highlight-name .type').innerHTML = elementType[0];
-        document.querySelector('#highlight-name .name').innerHTML = elementType[1];
+        document.querySelector('#highlight-name .type').innerHTML =
+            elementType[0];
+        document.querySelector('#highlight-name .name').innerHTML =
+            elementType[1];
     },
 };

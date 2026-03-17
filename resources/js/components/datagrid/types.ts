@@ -76,14 +76,14 @@ export type DatagridTab = {
     icon?: ReactNode;
     /** Badge variant for the count pill. Supports all Badge variants. */
     countVariant?:
-    | 'default'
-    | 'secondary'
-    | 'success'
-    | 'warning'
-    | 'info'
-    | 'danger'
-    | 'destructive'
-    | 'outline';
+        | 'default'
+        | 'secondary'
+        | 'success'
+        | 'warning'
+        | 'info'
+        | 'danger'
+        | 'destructive'
+        | 'outline';
 };
 
 export type DatagridColumnType =

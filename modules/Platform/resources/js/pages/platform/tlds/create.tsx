@@ -5,7 +5,10 @@ import type { TldFormValues } from '../../../types/platform';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: route('dashboard') },
-    { title: 'Platform', href: route('platform.tlds.index', { status: 'all' }) },
+    {
+        title: 'Platform',
+        href: route('platform.tlds.index', { status: 'all' }),
+    },
     { title: 'TLDs', href: route('platform.tlds.index', { status: 'all' }) },
     { title: 'Create', href: route('platform.tlds.create') },
 ];

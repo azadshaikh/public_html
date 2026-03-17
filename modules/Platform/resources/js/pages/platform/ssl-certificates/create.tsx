@@ -1,7 +1,10 @@
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import SslCertificateForm from '../../../components/ssl-certificates/ssl-certificate-form';
-import type { PlatformOption, SslCertificateFormValues } from '../../../types/platform';
+import type {
+    PlatformOption,
+    SslCertificateFormValues,
+} from '../../../types/platform';
 
 type SslCertificatesCreatePageProps = {
     domain: {
@@ -12,13 +15,30 @@ type SslCertificatesCreatePageProps = {
     certificateAuthorityOptions: PlatformOption[];
 };
 
-export default function SslCertificatesCreate(props: SslCertificatesCreatePageProps) {
+export default function SslCertificatesCreate(
+    props: SslCertificatesCreatePageProps,
+) {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: route('dashboard') },
-        { title: 'Platform', href: route('platform.domains.index', { status: 'all' }) },
-        { title: 'Domains', href: route('platform.domains.index', { status: 'all' }) },
-        { title: props.domain.name, href: route('platform.domains.show', props.domain.id) },
-        { title: 'Add certificate', href: route('platform.domains.ssl-certificates.create', props.domain.id) },
+        {
+            title: 'Platform',
+            href: route('platform.domains.index', { status: 'all' }),
+        },
+        {
+            title: 'Domains',
+            href: route('platform.domains.index', { status: 'all' }),
+        },
+        {
+            title: props.domain.name,
+            href: route('platform.domains.show', props.domain.id),
+        },
+        {
+            title: 'Add certificate',
+            href: route(
+                'platform.domains.ssl-certificates.create',
+                props.domain.id,
+            ),
+        },
     ];
 
     return (

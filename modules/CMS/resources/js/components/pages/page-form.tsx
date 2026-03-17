@@ -1041,9 +1041,9 @@ export default function PageForm({
                                             event.target.value === ''
                                                 ? ''
                                                 : Number.parseInt(
-                                                    event.target.value,
-                                                    10,
-                                                ),
+                                                      event.target.value,
+                                                      10,
+                                                  ),
                                         )
                                     }
                                     onBlur={() => form.touch('author_id')}

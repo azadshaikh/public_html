@@ -31,7 +31,10 @@ import { showAppToast } from '@/components/forms/form-success-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { EditorContextMenu, type EditorContextMenuEntry } from '../../../../components/theme-editor/editor-context-menu';
+import {
+    EditorContextMenu,
+    type EditorContextMenuEntry,
+} from '../../../../components/theme-editor/editor-context-menu';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -59,7 +62,10 @@ import {
 } from '../../../../components/theme-editor/editor-dialogs';
 import { FileTreeItem } from '../../../../components/theme-editor/file-tree-item';
 import ThemeEditorLayout from '../../../../components/theme-editor/theme-editor-layout';
-import type { ThemeEditorFileNode, ThemeEditorPageProps } from '../../../../types/cms';
+import type {
+    ThemeEditorFileNode,
+    ThemeEditorPageProps,
+} from '../../../../types/cms';
 import type {
     ActivityBarItem,
     DeleteTarget,
@@ -79,7 +85,12 @@ import type {
     SidebarView,
     UploadPayload,
 } from './types';
-import { findNodeByPath, formatBytes, getErrorMessage, getParentDirectory } from './utils';
+import {
+    findNodeByPath,
+    formatBytes,
+    getErrorMessage,
+    getParentDirectory,
+} from './utils';
 
 const activityBarItems: ActivityBarItem[] = [
     { id: 'explorer', icon: FilesIcon, label: 'Explorer' },
@@ -107,7 +118,9 @@ export default function ThemeEditorIndex({
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const activePathRef = useRef<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
-    const [searchOptions, setSearchOptions] = useState<Array<'case' | 'regex'>>([]);
+    const [searchOptions, setSearchOptions] = useState<Array<'case' | 'regex'>>(
+        [],
+    );
     const [searchResults, setSearchResults] = useState<SearchGroup[]>([]);
     const [searchTotal, setSearchTotal] = useState(0);
     const [gitChanges, setGitChanges] = useState<GitChange[]>([]);
@@ -116,7 +129,8 @@ export default function ThemeEditorIndex({
     const [newEntityOpen, setNewEntityOpen] = useState(false);
     const [newEntityPath, setNewEntityPath] = useState('');
     const [renameOpen, setRenameOpen] = useState(false);
-    const [renameSource, setRenameSource] = useState<ThemeEditorFileNode | null>(null);
+    const [renameSource, setRenameSource] =
+        useState<ThemeEditorFileNode | null>(null);
     const [renamePath, setRenamePath] = useState('');
     const [uploadOpen, setUploadOpen] = useState(false);
     const [uploadTargetPath, setUploadTargetPath] = useState('');
@@ -125,13 +139,21 @@ export default function ThemeEditorIndex({
     const [historyItems, setHistoryItems] = useState<GitCommit[]>([]);
 
     const treeRequest = useHttp<Record<string, never>, FileTreeResponse>({});
-    const readRequest = useHttp<{ path: string }, FileReadResponse>({ path: '' });
-    const saveRequest = useHttp<{ path: string; content: string; label?: string }, GenericResponse>({
+    const readRequest = useHttp<{ path: string }, FileReadResponse>({
+        path: '',
+    });
+    const saveRequest = useHttp<
+        { path: string; content: string; label?: string },
+        GenericResponse
+    >({
         path: '',
         content: '',
         label: '',
     });
-    const createRequest = useHttp<{ path: string; content?: string }, GenericResponse>({
+    const createRequest = useHttp<
+        { path: string; content?: string },
+        GenericResponse
+    >({
         path: '',
         content: '',
     });
@@ -140,11 +162,16 @@ export default function ThemeEditorIndex({
         path: '',
         overwrite: false,
     });
-    const renameRequest = useHttp<{ old_path: string; new_path: string }, GenericResponse>({
+    const renameRequest = useHttp<
+        { old_path: string; new_path: string },
+        GenericResponse
+    >({
         old_path: '',
         new_path: '',
     });
-    const duplicateRequest = useHttp<{ path: string }, GenericResponse>({ path: '' });
+    const duplicateRequest = useHttp<{ path: string }, GenericResponse>({
+        path: '',
+    });
     const deleteRequest = useHttp<Record<string, never>, GenericResponse>({});
     const searchRequest = useHttp<SearchPayload, SearchResponse>({
         query: '',
@@ -152,9 +179,13 @@ export default function ThemeEditorIndex({
         use_regex: false,
         max_results: 200,
     });
-    const gitStatusRequest = useHttp<Record<string, never>, GitStatusResponse>({});
+    const gitStatusRequest = useHttp<Record<string, never>, GitStatusResponse>(
+        {},
+    );
     const gitMutationRequest = useHttp<GitMutationPayload, GenericResponse>({});
-    const historyRequest = useHttp<Record<string, never>, GitHistoryResponse>({});
+    const historyRequest = useHttp<Record<string, never>, GitHistoryResponse>(
+        {},
+    );
 
     const activeTab = useMemo(
         () => openTabs.find((tab) => tab.path === activePath) ?? null,
@@ -204,14 +235,19 @@ export default function ThemeEditorIndex({
     const refreshTree = useCallback(async () => {
         try {
             const payload = await treeRequest.get(
-                route('cms.appearance.themes.editor.files', { directory: themeDirectory }),
+                route('cms.appearance.themes.editor.files', {
+                    directory: themeDirectory,
+                }),
             );
             setTree(payload.files ?? []);
         } catch (error) {
             showAppToast({
                 variant: 'error',
                 title: 'Refresh failed',
-                description: getErrorMessage(error, 'Unable to refresh the file tree.'),
+                description: getErrorMessage(
+                    error,
+                    'Unable to refresh the file tree.',
+                ),
             });
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -220,14 +256,19 @@ export default function ThemeEditorIndex({
     const refreshGitStatus = useCallback(async () => {
         try {
             const payload = await gitStatusRequest.get(
-                route('cms.appearance.themes.editor.git.status', { directory: themeDirectory }),
+                route('cms.appearance.themes.editor.git.status', {
+                    directory: themeDirectory,
+                }),
             );
             setGitChanges(payload.changes ?? []);
         } catch (error) {
             showAppToast({
                 variant: 'error',
                 title: 'Source control failed',
-                description: getErrorMessage(error, 'Unable to load git status.'),
+                description: getErrorMessage(
+                    error,
+                    'Unable to load git status.',
+                ),
             });
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -236,7 +277,9 @@ export default function ThemeEditorIndex({
     const loadHistory = useCallback(async () => {
         try {
             const payload = await historyRequest.get(
-                route('cms.appearance.themes.editor.git.history.all', { directory: themeDirectory }),
+                route('cms.appearance.themes.editor.git.history.all', {
+                    directory: themeDirectory,
+                }),
             );
             setHistoryItems(payload.commits ?? []);
             setHistoryOpen(true);
@@ -244,52 +287,61 @@ export default function ThemeEditorIndex({
             showAppToast({
                 variant: 'error',
                 title: 'History failed',
-                description: getErrorMessage(error, 'Unable to load commit history.'),
+                description: getErrorMessage(
+                    error,
+                    'Unable to load commit history.',
+                ),
             });
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [themeDirectory]);
 
-    const openFile = useCallback(async (path: string) => {
-        setSelectedPath(path);
+    const openFile = useCallback(
+        async (path: string) => {
+            setSelectedPath(path);
 
-        const existing = openTabs.find((tab) => tab.path === path);
-        if (existing) {
-            setActivePath(path);
-            return;
-        }
+            const existing = openTabs.find((tab) => tab.path === path);
+            if (existing) {
+                setActivePath(path);
+                return;
+            }
 
-        try {
-            readRequest.transform(() => ({ path }));
-            const payload = await readRequest.post(
-                route('cms.appearance.themes.editor.file.read', {
-                    directory: themeDirectory,
-                }),
-            );
+            try {
+                readRequest.transform(() => ({ path }));
+                const payload = await readRequest.post(
+                    route('cms.appearance.themes.editor.file.read', {
+                        directory: themeDirectory,
+                    }),
+                );
 
-            const nextTab: EditorTab = {
-                path,
-                name: path.split('/').at(-1) ?? path,
-                content: payload.content,
-                originalContent: payload.content,
-                language: payload.language,
-                size: payload.size,
-                modified: payload.modified,
-                inherited: payload.inherited,
-                inheritedFrom: payload.inheritedFrom,
-            };
+                const nextTab: EditorTab = {
+                    path,
+                    name: path.split('/').at(-1) ?? path,
+                    content: payload.content,
+                    originalContent: payload.content,
+                    language: payload.language,
+                    size: payload.size,
+                    modified: payload.modified,
+                    inherited: payload.inherited,
+                    inheritedFrom: payload.inheritedFrom,
+                };
 
-            setOpenTabs((prev) => [...prev, nextTab]);
-            setActivePath(path);
-        } catch (error) {
-            showAppToast({
-                variant: 'error',
-                title: 'Open failed',
-                description: getErrorMessage(error, 'Unable to open the selected file.'),
-            });
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [openTabs, themeDirectory]);
+                setOpenTabs((prev) => [...prev, nextTab]);
+                setActivePath(path);
+            } catch (error) {
+                showAppToast({
+                    variant: 'error',
+                    title: 'Open failed',
+                    description: getErrorMessage(
+                        error,
+                        'Unable to open the selected file.',
+                    ),
+                });
+            }
+            // eslint-disable-next-line react-hooks/exhaustive-deps
+        },
+        [openTabs, themeDirectory],
+    );
 
     const saveActiveTab = useCallback(async () => {
         if (!activeTab) {
@@ -309,19 +361,21 @@ export default function ThemeEditorIndex({
             );
 
             if (payload.success === false) {
-                throw new Error(payload.message || payload.error || 'Save failed.');
+                throw new Error(
+                    payload.message || payload.error || 'Save failed.',
+                );
             }
 
             setOpenTabs((prev) =>
                 prev.map((tab) =>
                     tab.path === activeTab.path
                         ? {
-                            ...tab,
-                            originalContent: tab.content,
-                            inherited: false,
-                            inheritedFrom: null,
-                            modified: Math.floor(Date.now() / 1000),
-                        }
+                              ...tab,
+                              originalContent: tab.content,
+                              inherited: false,
+                              inheritedFrom: null,
+                              modified: Math.floor(Date.now() / 1000),
+                          }
                         : tab,
                 ),
             );
@@ -331,52 +385,78 @@ export default function ThemeEditorIndex({
             showAppToast({
                 variant: 'success',
                 title: 'File saved',
-                description: payload.message || `${activeTab.name} was saved successfully.`,
+                description:
+                    payload.message ||
+                    `${activeTab.name} was saved successfully.`,
             });
         } catch (error) {
             showAppToast({
                 variant: 'error',
                 title: 'Save failed',
-                description: getErrorMessage(error, 'Unable to save the active file.'),
+                description: getErrorMessage(
+                    error,
+                    'Unable to save the active file.',
+                ),
             });
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeTab, refreshGitStatus, refreshTree, themeDirectory]);
 
-    const closeTab = useCallback((path: string) => {
-        const closingTab = openTabs.find((tab) => tab.path === path);
-        if (closingTab && closingTab.content !== closingTab.originalContent) {
-            const shouldClose = window.confirm(`Discard unsaved changes in ${closingTab.name}?`);
-            if (!shouldClose) {
-                return;
+    const closeTab = useCallback(
+        (path: string) => {
+            const closingTab = openTabs.find((tab) => tab.path === path);
+            if (
+                closingTab &&
+                closingTab.content !== closingTab.originalContent
+            ) {
+                const shouldClose = window.confirm(
+                    `Discard unsaved changes in ${closingTab.name}?`,
+                );
+                if (!shouldClose) {
+                    return;
+                }
             }
-        }
 
-        const nextTabs = openTabs.filter((tab) => tab.path !== path);
-        setOpenTabs(nextTabs);
+            const nextTabs = openTabs.filter((tab) => tab.path !== path);
+            setOpenTabs(nextTabs);
 
-        if (activePath === path) {
-            setActivePath(nextTabs.at(-1)?.path ?? null);
-        }
-    }, [activePath, openTabs]);
-
-    const closeOtherTabs = useCallback((keepPath: string) => {
-        const dirtyTabs = openTabs.filter((tab) => tab.path !== keepPath && tab.content !== tab.originalContent);
-        if (dirtyTabs.length > 0) {
-            const shouldClose = window.confirm(`Discard unsaved changes in ${dirtyTabs.length} file(s)?`);
-            if (!shouldClose) {
-                return;
+            if (activePath === path) {
+                setActivePath(nextTabs.at(-1)?.path ?? null);
             }
-        }
+        },
+        [activePath, openTabs],
+    );
 
-        setOpenTabs((prev) => prev.filter((tab) => tab.path === keepPath));
-        setActivePath(keepPath);
-    }, [openTabs]);
+    const closeOtherTabs = useCallback(
+        (keepPath: string) => {
+            const dirtyTabs = openTabs.filter(
+                (tab) =>
+                    tab.path !== keepPath &&
+                    tab.content !== tab.originalContent,
+            );
+            if (dirtyTabs.length > 0) {
+                const shouldClose = window.confirm(
+                    `Discard unsaved changes in ${dirtyTabs.length} file(s)?`,
+                );
+                if (!shouldClose) {
+                    return;
+                }
+            }
+
+            setOpenTabs((prev) => prev.filter((tab) => tab.path === keepPath));
+            setActivePath(keepPath);
+        },
+        [openTabs],
+    );
 
     const closeAllTabs = useCallback(() => {
-        const dirtyTabs = openTabs.filter((tab) => tab.content !== tab.originalContent);
+        const dirtyTabs = openTabs.filter(
+            (tab) => tab.content !== tab.originalContent,
+        );
         if (dirtyTabs.length > 0) {
-            const shouldClose = window.confirm(`Discard unsaved changes in ${dirtyTabs.length} file(s)?`);
+            const shouldClose = window.confirm(
+                `Discard unsaved changes in ${dirtyTabs.length} file(s)?`,
+            );
             if (!shouldClose) {
                 return;
             }
@@ -386,27 +466,38 @@ export default function ThemeEditorIndex({
         setActivePath(null);
     }, [openTabs]);
 
-    const closeTabsToRight = useCallback((path: string) => {
-        const tabIndex = openTabs.findIndex((tab) => tab.path === path);
-        const rightTabs = openTabs.slice(tabIndex + 1);
-        const dirtyRight = rightTabs.filter((tab) => tab.content !== tab.originalContent);
-        if (dirtyRight.length > 0) {
-            const shouldClose = window.confirm(`Discard unsaved changes in ${dirtyRight.length} file(s)?`);
-            if (!shouldClose) {
-                return;
+    const closeTabsToRight = useCallback(
+        (path: string) => {
+            const tabIndex = openTabs.findIndex((tab) => tab.path === path);
+            const rightTabs = openTabs.slice(tabIndex + 1);
+            const dirtyRight = rightTabs.filter(
+                (tab) => tab.content !== tab.originalContent,
+            );
+            if (dirtyRight.length > 0) {
+                const shouldClose = window.confirm(
+                    `Discard unsaved changes in ${dirtyRight.length} file(s)?`,
+                );
+                if (!shouldClose) {
+                    return;
+                }
             }
-        }
 
-        const kept = openTabs.slice(0, tabIndex + 1);
-        setOpenTabs(kept);
-        if (activePath && !kept.some((tab) => tab.path === activePath)) {
-            setActivePath(kept.at(-1)?.path ?? null);
-        }
-    }, [activePath, openTabs]);
+            const kept = openTabs.slice(0, tabIndex + 1);
+            setOpenTabs(kept);
+            if (activePath && !kept.some((tab) => tab.path === activePath)) {
+                setActivePath(kept.at(-1)?.path ?? null);
+            }
+        },
+        [activePath, openTabs],
+    );
 
     const copyPathToClipboard = useCallback((path: string) => {
         void navigator.clipboard.writeText(path);
-        showAppToast({ variant: 'success', title: 'Copied', description: 'Path copied to clipboard.' });
+        showAppToast({
+            variant: 'success',
+            title: 'Copied',
+            description: 'Path copied to clipboard.',
+        });
     }, []);
 
     useEffect(() => {
@@ -420,7 +511,9 @@ export default function ThemeEditorIndex({
         }
 
         setOpenTabs((prev) =>
-            prev.map((tab) => (tab.path === currentPath ? { ...tab, content: value } : tab)),
+            prev.map((tab) =>
+                tab.path === currentPath ? { ...tab, content: value } : tab,
+            ),
         );
     }, []);
 
@@ -440,7 +533,9 @@ export default function ThemeEditorIndex({
             }));
 
             const payload = await searchRequest.post(
-                route('cms.appearance.themes.editor.search', { directory: themeDirectory }),
+                route('cms.appearance.themes.editor.search', {
+                    directory: themeDirectory,
+                }),
             );
 
             setSearchResults(payload.results ?? []);
@@ -449,39 +544,58 @@ export default function ThemeEditorIndex({
             showAppToast({
                 variant: 'error',
                 title: 'Search failed',
-                description: getErrorMessage(error, 'Unable to search theme files.'),
+                description: getErrorMessage(
+                    error,
+                    'Unable to search theme files.',
+                ),
             });
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchOptions, searchQuery, themeDirectory]);
 
-    const runGitAction = useCallback(async (method: 'post' | 'delete', url: string, payload: GitMutationPayload = {}, successTitle = 'Updated') => {
-        try {
-            gitMutationRequest.transform(() => payload);
-            const response = method === 'delete'
-                ? await gitMutationRequest.delete(url)
-                : await gitMutationRequest.post(url);
+    const runGitAction = useCallback(
+        async (
+            method: 'post' | 'delete',
+            url: string,
+            payload: GitMutationPayload = {},
+            successTitle = 'Updated',
+        ) => {
+            try {
+                gitMutationRequest.transform(() => payload);
+                const response =
+                    method === 'delete'
+                        ? await gitMutationRequest.delete(url)
+                        : await gitMutationRequest.post(url);
 
-            if (response.success === false) {
-                throw new Error(response.message || response.error || 'Action failed.');
+                if (response.success === false) {
+                    throw new Error(
+                        response.message || response.error || 'Action failed.',
+                    );
+                }
+
+                await Promise.all([refreshGitStatus(), refreshTree()]);
+
+                showAppToast({
+                    variant: 'success',
+                    title: successTitle,
+                    description:
+                        response.message ||
+                        'The requested action completed successfully.',
+                });
+            } catch (error) {
+                showAppToast({
+                    variant: 'error',
+                    title: 'Action failed',
+                    description: getErrorMessage(
+                        error,
+                        'Unable to complete the requested action.',
+                    ),
+                });
             }
-
-            await Promise.all([refreshGitStatus(), refreshTree()]);
-
-            showAppToast({
-                variant: 'success',
-                title: successTitle,
-                description: response.message || 'The requested action completed successfully.',
-            });
-        } catch (error) {
-            showAppToast({
-                variant: 'error',
-                title: 'Action failed',
-                description: getErrorMessage(error, 'Unable to complete the requested action.'),
-            });
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [refreshGitStatus, refreshTree]);
+            // eslint-disable-next-line react-hooks/exhaustive-deps
+        },
+        [refreshGitStatus, refreshTree],
+    );
 
     const createEntity = async () => {
         if (newEntityPath.trim() === '') {
@@ -490,13 +604,20 @@ export default function ThemeEditorIndex({
 
         try {
             createRequest.transform(() => ({ path: newEntityPath.trim() }));
-            const url = newEntityMode === 'file'
-                ? route('cms.appearance.themes.editor.file.create', { directory: themeDirectory })
-                : route('cms.appearance.themes.editor.folder.create', { directory: themeDirectory });
+            const url =
+                newEntityMode === 'file'
+                    ? route('cms.appearance.themes.editor.file.create', {
+                          directory: themeDirectory,
+                      })
+                    : route('cms.appearance.themes.editor.folder.create', {
+                          directory: themeDirectory,
+                      });
             const response = await createRequest.post(url);
 
             if (response.success === false) {
-                throw new Error(response.message || response.error || 'Creation failed.');
+                throw new Error(
+                    response.message || response.error || 'Creation failed.',
+                );
             }
 
             setNewEntityOpen(false);
@@ -509,14 +630,20 @@ export default function ThemeEditorIndex({
 
             showAppToast({
                 variant: 'success',
-                title: newEntityMode === 'file' ? 'File created' : 'Folder created',
+                title:
+                    newEntityMode === 'file'
+                        ? 'File created'
+                        : 'Folder created',
                 description: response.message || 'Created successfully.',
             });
         } catch (error) {
             showAppToast({
                 variant: 'error',
                 title: 'Creation failed',
-                description: getErrorMessage(error, 'Unable to create the requested item.'),
+                description: getErrorMessage(
+                    error,
+                    'Unable to create the requested item.',
+                ),
             });
         }
     };
@@ -532,18 +659,26 @@ export default function ThemeEditorIndex({
                 new_path: renamePath.trim(),
             }));
             const response = await renameRequest.post(
-                route('cms.appearance.themes.editor.rename', { directory: themeDirectory }),
+                route('cms.appearance.themes.editor.rename', {
+                    directory: themeDirectory,
+                }),
             );
 
             if (response.success === false) {
-                throw new Error(response.message || response.error || 'Rename failed.');
+                throw new Error(
+                    response.message || response.error || 'Rename failed.',
+                );
             }
 
             const nextPath = renamePath.trim();
             setOpenTabs((prev) =>
                 prev.map((tab) =>
                     tab.path === renameSource.path
-                        ? { ...tab, path: nextPath, name: nextPath.split('/').at(-1) ?? nextPath }
+                        ? {
+                              ...tab,
+                              path: nextPath,
+                              name: nextPath.split('/').at(-1) ?? nextPath,
+                          }
                         : tab,
                 ),
             );
@@ -568,7 +703,10 @@ export default function ThemeEditorIndex({
             showAppToast({
                 variant: 'error',
                 title: 'Rename failed',
-                description: getErrorMessage(error, 'Unable to rename the selected item.'),
+                description: getErrorMessage(
+                    error,
+                    'Unable to rename the selected item.',
+                ),
             });
         }
     };
@@ -577,11 +715,15 @@ export default function ThemeEditorIndex({
         try {
             duplicateRequest.transform(() => ({ path }));
             const response = await duplicateRequest.post(
-                route('cms.appearance.themes.editor.duplicate', { directory: themeDirectory }),
+                route('cms.appearance.themes.editor.duplicate', {
+                    directory: themeDirectory,
+                }),
             );
 
             if (response.success === false) {
-                throw new Error(response.message || response.error || 'Duplicate failed.');
+                throw new Error(
+                    response.message || response.error || 'Duplicate failed.',
+                );
             }
 
             await refreshTree();
@@ -589,13 +731,17 @@ export default function ThemeEditorIndex({
             showAppToast({
                 variant: 'success',
                 title: 'Duplicated',
-                description: response.message || 'File duplicated successfully.',
+                description:
+                    response.message || 'File duplicated successfully.',
             });
         } catch (error) {
             showAppToast({
                 variant: 'error',
                 title: 'Duplicate failed',
-                description: getErrorMessage(error, 'Unable to duplicate the selected file.'),
+                description: getErrorMessage(
+                    error,
+                    'Unable to duplicate the selected file.',
+                ),
             });
         }
     };
@@ -605,20 +751,23 @@ export default function ThemeEditorIndex({
             return;
         }
 
-        const url = deleteTarget.type === 'file'
-            ? route('cms.appearance.themes.editor.file.delete', {
-                directory: themeDirectory,
-                path: deleteTarget.path,
-            })
-            : route('cms.appearance.themes.editor.folder.delete', {
-                directory: themeDirectory,
-                path: deleteTarget.path,
-            });
+        const url =
+            deleteTarget.type === 'file'
+                ? route('cms.appearance.themes.editor.file.delete', {
+                      directory: themeDirectory,
+                      path: deleteTarget.path,
+                  })
+                : route('cms.appearance.themes.editor.folder.delete', {
+                      directory: themeDirectory,
+                      path: deleteTarget.path,
+                  });
 
         try {
             const response = await deleteRequest.delete(url);
             if (response.success === false) {
-                throw new Error(response.message || response.error || 'Delete failed.');
+                throw new Error(
+                    response.message || response.error || 'Delete failed.',
+                );
             }
 
             if (deleteTarget.type === 'file') {
@@ -638,7 +787,10 @@ export default function ThemeEditorIndex({
             showAppToast({
                 variant: 'error',
                 title: 'Delete failed',
-                description: getErrorMessage(error, 'Unable to delete the selected item.'),
+                description: getErrorMessage(
+                    error,
+                    'Unable to delete the selected item.',
+                ),
             });
         }
     };
@@ -655,11 +807,15 @@ export default function ThemeEditorIndex({
                 overwrite: uploadRequest.data.overwrite,
             }));
             const response = await uploadRequest.post(
-                route('cms.appearance.themes.editor.upload', { directory: themeDirectory }),
+                route('cms.appearance.themes.editor.upload', {
+                    directory: themeDirectory,
+                }),
             );
 
             if (response.success === false) {
-                throw new Error(response.message || response.error || 'Upload failed.');
+                throw new Error(
+                    response.message || response.error || 'Upload failed.',
+                );
             }
 
             setUploadOpen(false);
@@ -677,7 +833,10 @@ export default function ThemeEditorIndex({
             showAppToast({
                 variant: 'error',
                 title: 'Upload failed',
-                description: getErrorMessage(error, 'Unable to upload the selected file.'),
+                description: getErrorMessage(
+                    error,
+                    'Unable to upload the selected file.',
+                ),
             });
         }
     };
@@ -688,10 +847,17 @@ export default function ThemeEditorIndex({
 
     useEffect(() => {
         const handleKeydown = (event: KeyboardEvent) => {
-            if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 's') {
+            if (
+                (event.metaKey || event.ctrlKey) &&
+                event.key.toLowerCase() === 's'
+            ) {
                 event.preventDefault();
 
-                if (!saveRequest.processing && activeTab && activeTab.content !== activeTab.originalContent) {
+                if (
+                    !saveRequest.processing &&
+                    activeTab &&
+                    activeTab.content !== activeTab.originalContent
+                ) {
                     void saveActiveTab();
                 }
             }
@@ -721,21 +887,27 @@ export default function ThemeEditorIndex({
         };
     }, [hasDirtyTabs]);
 
+    const toggleSidebar = useCallback(
+        (view: SidebarView) => {
+            if (sidebarView === view && !sidebarCollapsed) {
+                setSidebarCollapsed(true);
+            } else {
+                setSidebarView(view);
+                setSidebarCollapsed(false);
+            }
+        },
+        [sidebarCollapsed, sidebarView],
+    );
 
-    const toggleSidebar = useCallback((view: SidebarView) => {
-        if (sidebarView === view && !sidebarCollapsed) {
-            setSidebarCollapsed(true);
-        } else {
-            setSidebarView(view);
-            setSidebarCollapsed(false);
-        }
-    }, [sidebarCollapsed, sidebarView]);
-
-    const isDirtyTab = activeTab ? activeTab.content !== activeTab.originalContent : false;
-
+    const isDirtyTab = activeTab
+        ? activeTab.content !== activeTab.originalContent
+        : false;
 
     return (
-        <ThemeEditorLayout title={`${theme.name} — Editor`} description="Theme file editor">
+        <ThemeEditorLayout
+            title={`${theme.name} — Editor`}
+            description="Theme file editor"
+        >
             <TooltipProvider delayDuration={300}>
                 {/* Title bar */}
                 <div className="flex h-10 shrink-0 items-center justify-between border-b border-[#2b2b2b] bg-[#323233] px-2">
@@ -743,18 +915,40 @@ export default function ThemeEditorIndex({
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <Button variant="ghost" size="icon-sm" asChild>
-                                    <Link href={route('cms.appearance.themes.index')}>
+                                    <Link
+                                        href={route(
+                                            'cms.appearance.themes.index',
+                                        )}
+                                    >
                                         <ArrowLeftIcon className="size-4" />
                                     </Link>
                                 </Button>
                             </TooltipTrigger>
-                            <TooltipContent side="bottom">Back to themes</TooltipContent>
+                            <TooltipContent side="bottom">
+                                Back to themes
+                            </TooltipContent>
                         </Tooltip>
                         <div className="flex items-center gap-2 text-sm">
                             <span className="font-medium">{theme.name}</span>
-                            {theme.is_active ? <Badge variant="outline" className="text-[10px]">Active</Badge> : null}
-                            {isChildTheme ? <Badge variant="secondary" className="text-[10px]">Child</Badge> : null}
-                            <span className="text-muted-foreground">v{theme.version}</span>
+                            {theme.is_active ? (
+                                <Badge
+                                    variant="outline"
+                                    className="text-[10px]"
+                                >
+                                    Active
+                                </Badge>
+                            ) : null}
+                            {isChildTheme ? (
+                                <Badge
+                                    variant="secondary"
+                                    className="text-[10px]"
+                                >
+                                    Child
+                                </Badge>
+                            ) : null}
+                            <span className="text-muted-foreground">
+                                v{theme.version}
+                            </span>
                         </div>
                     </div>
                     <div className="flex items-center gap-1">
@@ -765,11 +959,22 @@ export default function ThemeEditorIndex({
                         ) : null}
                         <Tooltip>
                             <TooltipTrigger asChild>
-                                <Button variant="ghost" size="icon-sm" onClick={() => void refreshTree()} disabled={treeRequest.processing}>
-                                    {treeRequest.processing ? <Spinner className="size-4" /> : <RefreshCwIcon className="size-4" />}
+                                <Button
+                                    variant="ghost"
+                                    size="icon-sm"
+                                    onClick={() => void refreshTree()}
+                                    disabled={treeRequest.processing}
+                                >
+                                    {treeRequest.processing ? (
+                                        <Spinner className="size-4" />
+                                    ) : (
+                                        <RefreshCwIcon className="size-4" />
+                                    )}
                                 </Button>
                             </TooltipTrigger>
-                            <TooltipContent side="bottom">Refresh file tree</TooltipContent>
+                            <TooltipContent side="bottom">
+                                Refresh file tree
+                            </TooltipContent>
                         </Tooltip>
                         <Tooltip>
                             <TooltipTrigger asChild>
@@ -777,12 +982,23 @@ export default function ThemeEditorIndex({
                                     variant="ghost"
                                     size="icon-sm"
                                     onClick={() => void saveActiveTab()}
-                                    disabled={!activeTab || !isDirtyTab || saveRequest.processing || !canEditThemes}
+                                    disabled={
+                                        !activeTab ||
+                                        !isDirtyTab ||
+                                        saveRequest.processing ||
+                                        !canEditThemes
+                                    }
                                 >
-                                    {saveRequest.processing ? <Spinner className="size-4" /> : <SaveIcon className="size-4" />}
+                                    {saveRequest.processing ? (
+                                        <Spinner className="size-4" />
+                                    ) : (
+                                        <SaveIcon className="size-4" />
+                                    )}
                                 </Button>
                             </TooltipTrigger>
-                            <TooltipContent side="bottom">Save file (Ctrl+S)</TooltipContent>
+                            <TooltipContent side="bottom">
+                                Save file (Ctrl+S)
+                            </TooltipContent>
                         </Tooltip>
                     </div>
                 </div>
@@ -793,7 +1009,8 @@ export default function ThemeEditorIndex({
                     <div className="flex w-12 shrink-0 flex-col items-center gap-1 border-r border-[#2b2b2b] bg-[#181818] pt-2 pb-2">
                         {activityBarItems.map((item) => {
                             const Icon = item.icon;
-                            const isActive = sidebarView === item.id && !sidebarCollapsed;
+                            const isActive =
+                                sidebarView === item.id && !sidebarCollapsed;
                             return (
                                 <Tooltip key={item.id}>
                                     <TooltipTrigger asChild>
@@ -805,12 +1022,16 @@ export default function ThemeEditorIndex({
                                                     ? 'bg-accent text-accent-foreground'
                                                     : 'text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground',
                                             )}
-                                            onClick={() => toggleSidebar(item.id)}
+                                            onClick={() =>
+                                                toggleSidebar(item.id)
+                                            }
                                         >
                                             <Icon className="size-5" />
                                         </button>
                                     </TooltipTrigger>
-                                    <TooltipContent side="right">{item.label}</TooltipContent>
+                                    <TooltipContent side="right">
+                                        {item.label}
+                                    </TooltipContent>
                                 </Tooltip>
                             );
                         })}
@@ -820,22 +1041,38 @@ export default function ThemeEditorIndex({
                                 <button
                                     type="button"
                                     className="flex size-10 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent/50 hover:text-accent-foreground"
-                                    onClick={() => setSidebarCollapsed((prev) => !prev)}
+                                    onClick={() =>
+                                        setSidebarCollapsed((prev) => !prev)
+                                    }
                                 >
-                                    {sidebarCollapsed ? <PanelLeftOpenIcon className="size-5" /> : <PanelLeftCloseIcon className="size-5" />}
+                                    {sidebarCollapsed ? (
+                                        <PanelLeftOpenIcon className="size-5" />
+                                    ) : (
+                                        <PanelLeftCloseIcon className="size-5" />
+                                    )}
                                 </button>
                             </TooltipTrigger>
-                            <TooltipContent side="right">{sidebarCollapsed ? 'Open sidebar' : 'Close sidebar'}</TooltipContent>
+                            <TooltipContent side="right">
+                                {sidebarCollapsed
+                                    ? 'Open sidebar'
+                                    : 'Close sidebar'}
+                            </TooltipContent>
                         </Tooltip>
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <Button variant="ghost" size="icon-sm" asChild>
-                                    <Link href={route('cms.appearance.themes.index')}>
+                                    <Link
+                                        href={route(
+                                            'cms.appearance.themes.index',
+                                        )}
+                                    >
                                         <SettingsIcon className="size-4" />
                                     </Link>
                                 </Button>
                             </TooltipTrigger>
-                            <TooltipContent side="right">Theme settings</TooltipContent>
+                            <TooltipContent side="right">
+                                Theme settings
+                            </TooltipContent>
                         </Tooltip>
                     </div>
 
@@ -845,42 +1082,112 @@ export default function ThemeEditorIndex({
                             <div className="flex w-64 shrink-0 flex-col overflow-hidden border-r border-[#2b2b2b] bg-[#252526]">
                                 {/* Side panel header */}
                                 <div className="flex h-9 shrink-0 items-center justify-between border-b border-[#2b2b2b] px-3">
-                                    <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                                        {sidebarView === 'explorer' ? 'Explorer' : sidebarView === 'search' ? 'Search' : 'Source Control'}
+                                    <span className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+                                        {sidebarView === 'explorer'
+                                            ? 'Explorer'
+                                            : sidebarView === 'search'
+                                              ? 'Search'
+                                              : 'Source Control'}
                                     </span>
                                     {sidebarView === 'explorer' ? (
                                         <div className="flex gap-0.5">
                                             <Tooltip>
                                                 <TooltipTrigger asChild>
-                                                    <button type="button" className="flex size-6 items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-accent-foreground" onClick={() => { setNewEntityMode('file'); setNewEntityPath(selectedDirectory ? `${selectedDirectory}/` : ''); setNewEntityOpen(true); }} disabled={!canEditThemes}>
+                                                    <button
+                                                        type="button"
+                                                        className="flex size-6 items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                                                        onClick={() => {
+                                                            setNewEntityMode(
+                                                                'file',
+                                                            );
+                                                            setNewEntityPath(
+                                                                selectedDirectory
+                                                                    ? `${selectedDirectory}/`
+                                                                    : '',
+                                                            );
+                                                            setNewEntityOpen(
+                                                                true,
+                                                            );
+                                                        }}
+                                                        disabled={
+                                                            !canEditThemes
+                                                        }
+                                                    >
                                                         <PlusIcon className="size-4" />
                                                     </button>
                                                 </TooltipTrigger>
-                                                <TooltipContent side="bottom">New file</TooltipContent>
+                                                <TooltipContent side="bottom">
+                                                    New file
+                                                </TooltipContent>
                                             </Tooltip>
                                             <Tooltip>
                                                 <TooltipTrigger asChild>
-                                                    <button type="button" className="flex size-6 items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-accent-foreground" onClick={() => { setNewEntityMode('folder'); setNewEntityPath(selectedDirectory ? `${selectedDirectory}/` : ''); setNewEntityOpen(true); }} disabled={!canEditThemes}>
+                                                    <button
+                                                        type="button"
+                                                        className="flex size-6 items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                                                        onClick={() => {
+                                                            setNewEntityMode(
+                                                                'folder',
+                                                            );
+                                                            setNewEntityPath(
+                                                                selectedDirectory
+                                                                    ? `${selectedDirectory}/`
+                                                                    : '',
+                                                            );
+                                                            setNewEntityOpen(
+                                                                true,
+                                                            );
+                                                        }}
+                                                        disabled={
+                                                            !canEditThemes
+                                                        }
+                                                    >
                                                         <FolderIcon className="size-4" />
                                                     </button>
                                                 </TooltipTrigger>
-                                                <TooltipContent side="bottom">New folder</TooltipContent>
+                                                <TooltipContent side="bottom">
+                                                    New folder
+                                                </TooltipContent>
                                             </Tooltip>
                                             <Tooltip>
                                                 <TooltipTrigger asChild>
-                                                    <button type="button" className="flex size-6 items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-accent-foreground" onClick={() => { setUploadTargetPath(selectedDirectory); setUploadOpen(true); }} disabled={!canEditThemes}>
+                                                    <button
+                                                        type="button"
+                                                        className="flex size-6 items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                                                        onClick={() => {
+                                                            setUploadTargetPath(
+                                                                selectedDirectory,
+                                                            );
+                                                            setUploadOpen(true);
+                                                        }}
+                                                        disabled={
+                                                            !canEditThemes
+                                                        }
+                                                    >
                                                         <UploadIcon className="size-4" />
                                                     </button>
                                                 </TooltipTrigger>
-                                                <TooltipContent side="bottom">Upload file</TooltipContent>
+                                                <TooltipContent side="bottom">
+                                                    Upload file
+                                                </TooltipContent>
                                             </Tooltip>
                                             <Tooltip>
                                                 <TooltipTrigger asChild>
-                                                    <button type="button" className="flex size-6 items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-accent-foreground" onClick={() => setExpandedPaths(new Set())}>
+                                                    <button
+                                                        type="button"
+                                                        className="flex size-6 items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                                                        onClick={() =>
+                                                            setExpandedPaths(
+                                                                new Set(),
+                                                            )
+                                                        }
+                                                    >
                                                         <ChevronsDownUpIcon className="size-4" />
                                                     </button>
                                                 </TooltipTrigger>
-                                                <TooltipContent side="bottom">Collapse all</TooltipContent>
+                                                <TooltipContent side="bottom">
+                                                    Collapse all
+                                                </TooltipContent>
                                             </Tooltip>
                                         </div>
                                     ) : null}
@@ -888,19 +1195,41 @@ export default function ThemeEditorIndex({
                                         <div className="flex gap-0.5">
                                             <Tooltip>
                                                 <TooltipTrigger asChild>
-                                                    <button type="button" className="flex size-6 items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-accent-foreground" onClick={() => void refreshGitStatus()} disabled={gitStatusRequest.processing}>
+                                                    <button
+                                                        type="button"
+                                                        className="flex size-6 items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                                                        onClick={() =>
+                                                            void refreshGitStatus()
+                                                        }
+                                                        disabled={
+                                                            gitStatusRequest.processing
+                                                        }
+                                                    >
                                                         <RefreshCwIcon className="size-3.5" />
                                                     </button>
                                                 </TooltipTrigger>
-                                                <TooltipContent side="bottom">Refresh</TooltipContent>
+                                                <TooltipContent side="bottom">
+                                                    Refresh
+                                                </TooltipContent>
                                             </Tooltip>
                                             <Tooltip>
                                                 <TooltipTrigger asChild>
-                                                    <button type="button" className="flex size-6 items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-accent-foreground" onClick={() => void loadHistory()} disabled={historyRequest.processing}>
+                                                    <button
+                                                        type="button"
+                                                        className="flex size-6 items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                                                        onClick={() =>
+                                                            void loadHistory()
+                                                        }
+                                                        disabled={
+                                                            historyRequest.processing
+                                                        }
+                                                    >
                                                         <HistoryIcon className="size-3.5" />
                                                     </button>
                                                 </TooltipTrigger>
-                                                <TooltipContent side="bottom">History</TooltipContent>
+                                                <TooltipContent side="bottom">
+                                                    History
+                                                </TooltipContent>
                                             </Tooltip>
                                         </div>
                                     ) : null}
@@ -916,22 +1245,81 @@ export default function ThemeEditorIndex({
                                                         key={node.path}
                                                         node={node}
                                                         depth={0}
-                                                        expandedPaths={expandedPaths}
-                                                        selectedPath={selectedPath}
+                                                        expandedPaths={
+                                                            expandedPaths
+                                                        }
+                                                        selectedPath={
+                                                            selectedPath
+                                                        }
                                                         activePath={activePath}
                                                         onToggle={toggleFolder}
-                                                        onOpen={(path) => void openFile(path)}
-                                                        onSelect={setSelectedPath}
-                                                        onCreateFile={(path) => { setNewEntityMode('file'); setNewEntityPath(path ? `${path}/` : ''); setNewEntityOpen(true); }}
-                                                        onCreateFolder={(path) => { setNewEntityMode('folder'); setNewEntityPath(path ? `${path}/` : ''); setNewEntityOpen(true); }}
-                                                        onUpload={(path) => { setUploadTargetPath(path); setUploadOpen(true); }}
-                                                        onRename={(nodeToRename) => { setRenameSource(nodeToRename); setRenamePath(nodeToRename.path); setRenameOpen(true); }}
-                                                        onDuplicate={(path) => void handleDuplicate(path)}
-                                                        onDelete={setDeleteTarget}
+                                                        onOpen={(path) =>
+                                                            void openFile(path)
+                                                        }
+                                                        onSelect={
+                                                            setSelectedPath
+                                                        }
+                                                        onCreateFile={(
+                                                            path,
+                                                        ) => {
+                                                            setNewEntityMode(
+                                                                'file',
+                                                            );
+                                                            setNewEntityPath(
+                                                                path
+                                                                    ? `${path}/`
+                                                                    : '',
+                                                            );
+                                                            setNewEntityOpen(
+                                                                true,
+                                                            );
+                                                        }}
+                                                        onCreateFolder={(
+                                                            path,
+                                                        ) => {
+                                                            setNewEntityMode(
+                                                                'folder',
+                                                            );
+                                                            setNewEntityPath(
+                                                                path
+                                                                    ? `${path}/`
+                                                                    : '',
+                                                            );
+                                                            setNewEntityOpen(
+                                                                true,
+                                                            );
+                                                        }}
+                                                        onUpload={(path) => {
+                                                            setUploadTargetPath(
+                                                                path,
+                                                            );
+                                                            setUploadOpen(true);
+                                                        }}
+                                                        onRename={(
+                                                            nodeToRename,
+                                                        ) => {
+                                                            setRenameSource(
+                                                                nodeToRename,
+                                                            );
+                                                            setRenamePath(
+                                                                nodeToRename.path,
+                                                            );
+                                                            setRenameOpen(true);
+                                                        }}
+                                                        onDuplicate={(path) =>
+                                                            void handleDuplicate(
+                                                                path,
+                                                            )
+                                                        }
+                                                        onDelete={
+                                                            setDeleteTarget
+                                                        }
                                                     />
                                                 ))
                                             ) : (
-                                                <div className="px-3 py-6 text-center text-xs text-muted-foreground">No editable files.</div>
+                                                <div className="px-3 py-6 text-center text-xs text-muted-foreground">
+                                                    No editable files.
+                                                </div>
                                             )}
                                         </div>
                                     </ScrollArea>
@@ -943,49 +1331,117 @@ export default function ThemeEditorIndex({
                                         <div className="flex flex-col gap-2 border-b px-3 py-2">
                                             <Input
                                                 value={searchQuery}
-                                                onChange={(event) => setSearchQuery(event.target.value)}
+                                                onChange={(event) =>
+                                                    setSearchQuery(
+                                                        event.target.value,
+                                                    )
+                                                }
                                                 placeholder="Search in files…"
-                                                onKeyDown={(event) => { if (event.key === 'Enter') { void runSearch(); } }}
+                                                onKeyDown={(event) => {
+                                                    if (event.key === 'Enter') {
+                                                        void runSearch();
+                                                    }
+                                                }}
                                                 className="h-7 text-xs"
                                             />
                                             <div className="flex items-center justify-between">
                                                 <ToggleGroup
                                                     type="multiple"
                                                     value={searchOptions}
-                                                    onValueChange={(value) => setSearchOptions(value as Array<'case' | 'regex'>)}
+                                                    onValueChange={(value) =>
+                                                        setSearchOptions(
+                                                            value as Array<
+                                                                'case' | 'regex'
+                                                            >,
+                                                        )
+                                                    }
                                                     variant="outline"
                                                 >
-                                                    <ToggleGroupItem value="case" className="h-6 px-2 text-[10px]">Aa</ToggleGroupItem>
-                                                    <ToggleGroupItem value="regex" className="h-6 px-2 text-[10px]">.*</ToggleGroupItem>
+                                                    <ToggleGroupItem
+                                                        value="case"
+                                                        className="h-6 px-2 text-[10px]"
+                                                    >
+                                                        Aa
+                                                    </ToggleGroupItem>
+                                                    <ToggleGroupItem
+                                                        value="regex"
+                                                        className="h-6 px-2 text-[10px]"
+                                                    >
+                                                        .*
+                                                    </ToggleGroupItem>
                                                 </ToggleGroup>
-                                                <Button size="sm" variant="ghost" onClick={() => void runSearch()} disabled={searchRequest.processing || searchQuery.trim() === ''} className="h-6 px-2 text-xs">
-                                                    {searchRequest.processing ? <Spinner className="size-3" /> : 'Search'}
+                                                <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    onClick={() =>
+                                                        void runSearch()
+                                                    }
+                                                    disabled={
+                                                        searchRequest.processing ||
+                                                        searchQuery.trim() ===
+                                                            ''
+                                                    }
+                                                    className="h-6 px-2 text-xs"
+                                                >
+                                                    {searchRequest.processing ? (
+                                                        <Spinner className="size-3" />
+                                                    ) : (
+                                                        'Search'
+                                                    )}
                                                 </Button>
                                             </div>
                                         </div>
                                         <ScrollArea className="min-h-0 flex-1">
                                             <div className="flex flex-col">
                                                 {searchQuery.trim() !== '' ? (
-                                                    <div className="border-b px-3 py-1.5 text-[11px] text-muted-foreground">{searchTotal} results</div>
+                                                    <div className="border-b px-3 py-1.5 text-[11px] text-muted-foreground">
+                                                        {searchTotal} results
+                                                    </div>
                                                 ) : null}
                                                 {searchResults.map((group) => (
                                                     <div key={group.path}>
-                                                        <div className="bg-muted/40 px-3 py-1 text-[11px] font-medium">{group.path} <span className="text-muted-foreground">({group.match_count})</span></div>
-                                                        {group.matches.map((match) => (
-                                                            <button
-                                                                key={`${group.path}-${match.line}-${match.column}`}
-                                                                type="button"
-                                                                className="flex w-full items-baseline gap-2 px-3 py-1 text-left text-[11px] hover:bg-accent/50"
-                                                                onClick={() => void openFile(match.path)}
-                                                            >
-                                                                <span className="shrink-0 text-muted-foreground">{match.line}</span>
-                                                                <span className="truncate font-mono">{match.text}</span>
-                                                            </button>
-                                                        ))}
+                                                        <div className="bg-muted/40 px-3 py-1 text-[11px] font-medium">
+                                                            {group.path}{' '}
+                                                            <span className="text-muted-foreground">
+                                                                (
+                                                                {
+                                                                    group.match_count
+                                                                }
+                                                                )
+                                                            </span>
+                                                        </div>
+                                                        {group.matches.map(
+                                                            (match) => (
+                                                                <button
+                                                                    key={`${group.path}-${match.line}-${match.column}`}
+                                                                    type="button"
+                                                                    className="flex w-full items-baseline gap-2 px-3 py-1 text-left text-[11px] hover:bg-accent/50"
+                                                                    onClick={() =>
+                                                                        void openFile(
+                                                                            match.path,
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    <span className="shrink-0 text-muted-foreground">
+                                                                        {
+                                                                            match.line
+                                                                        }
+                                                                    </span>
+                                                                    <span className="truncate font-mono">
+                                                                        {
+                                                                            match.text
+                                                                        }
+                                                                    </span>
+                                                                </button>
+                                                            ),
+                                                        )}
                                                     </div>
                                                 ))}
                                                 {searchQuery.trim() === '' ? (
-                                                    <div className="px-3 py-6 text-center text-xs text-muted-foreground">Type to search across theme files.</div>
+                                                    <div className="px-3 py-6 text-center text-xs text-muted-foreground">
+                                                        Type to search across
+                                                        theme files.
+                                                    </div>
                                                 ) : null}
                                             </div>
                                         </ScrollArea>
@@ -999,15 +1455,41 @@ export default function ThemeEditorIndex({
                                             <div className="border-b px-3 py-2">
                                                 <Input
                                                     value={commitMessage}
-                                                    onChange={(event) => setCommitMessage(event.target.value)}
+                                                    onChange={(event) =>
+                                                        setCommitMessage(
+                                                            event.target.value,
+                                                        )
+                                                    }
                                                     placeholder="Message (press Enter to commit)"
                                                     className="h-7 text-xs"
                                                     onKeyDown={(event) => {
-                                                        if (event.key === 'Enter' && commitMessage.trim() !== '' && gitChanges.length > 0 && canEditThemes) {
+                                                        if (
+                                                            event.key ===
+                                                                'Enter' &&
+                                                            commitMessage.trim() !==
+                                                                '' &&
+                                                            gitChanges.length >
+                                                                0 &&
+                                                            canEditThemes
+                                                        ) {
                                                             void runGitAction(
                                                                 'post',
-                                                                route('cms.appearance.themes.editor.git.commit', { directory: themeDirectory }),
-                                                                { message: commitMessage, mode: stagedChanges.length > 0 ? 'staged' : 'all' },
+                                                                route(
+                                                                    'cms.appearance.themes.editor.git.commit',
+                                                                    {
+                                                                        directory:
+                                                                            themeDirectory,
+                                                                    },
+                                                                ),
+                                                                {
+                                                                    message:
+                                                                        commitMessage,
+                                                                    mode:
+                                                                        stagedChanges.length >
+                                                                        0
+                                                                            ? 'staged'
+                                                                            : 'all',
+                                                                },
                                                                 'Commit created',
                                                             );
                                                         }
@@ -1016,16 +1498,45 @@ export default function ThemeEditorIndex({
                                                 <Button
                                                     size="sm"
                                                     className="mt-2 h-7 w-full text-xs"
-                                                    onClick={() => void runGitAction(
-                                                        'post',
-                                                        route('cms.appearance.themes.editor.git.commit', { directory: themeDirectory }),
-                                                        { message: commitMessage, mode: stagedChanges.length > 0 ? 'staged' : 'all' },
-                                                        'Commit created',
-                                                    )}
-                                                    disabled={gitMutationRequest.processing || commitMessage.trim() === '' || gitChanges.length === 0 || !canEditThemes}
+                                                    onClick={() =>
+                                                        void runGitAction(
+                                                            'post',
+                                                            route(
+                                                                'cms.appearance.themes.editor.git.commit',
+                                                                {
+                                                                    directory:
+                                                                        themeDirectory,
+                                                                },
+                                                            ),
+                                                            {
+                                                                message:
+                                                                    commitMessage,
+                                                                mode:
+                                                                    stagedChanges.length >
+                                                                    0
+                                                                        ? 'staged'
+                                                                        : 'all',
+                                                            },
+                                                            'Commit created',
+                                                        )
+                                                    }
+                                                    disabled={
+                                                        gitMutationRequest.processing ||
+                                                        commitMessage.trim() ===
+                                                            '' ||
+                                                        gitChanges.length ===
+                                                            0 ||
+                                                        !canEditThemes
+                                                    }
                                                 >
-                                                    {gitMutationRequest.processing ? <Spinner className="size-3" /> : <GitCommitHorizontalIcon className="size-3" />}
-                                                    <span className="ml-1">Commit</span>
+                                                    {gitMutationRequest.processing ? (
+                                                        <Spinner className="size-3" />
+                                                    ) : (
+                                                        <GitCommitHorizontalIcon className="size-3" />
+                                                    )}
+                                                    <span className="ml-1">
+                                                        Commit
+                                                    </span>
                                                 </Button>
                                             </div>
 
@@ -1033,26 +1544,68 @@ export default function ThemeEditorIndex({
                                             <div>
                                                 <div className="flex items-center justify-between bg-muted/40 px-3 py-1 text-[11px] font-medium">
                                                     Staged Changes
-                                                    <Badge variant="outline" className="h-4 px-1 text-[10px]">{stagedChanges.length}</Badge>
+                                                    <Badge
+                                                        variant="outline"
+                                                        className="h-4 px-1 text-[10px]"
+                                                    >
+                                                        {stagedChanges.length}
+                                                    </Badge>
                                                 </div>
                                                 {stagedChanges.map((change) => (
-                                                    <div key={`staged-${change.path}`} className="group flex items-center gap-1 px-3 py-0.5 text-[12px] hover:bg-accent/50">
-                                                        <button type="button" className="min-w-0 flex-1 truncate text-left" onClick={() => void openFile(change.path)}>
-                                                            {change.path}
-                                                        </button>
-                                                        <span className="shrink-0 text-[10px] text-muted-foreground">{change.status_label}</span>
+                                                    <div
+                                                        key={`staged-${change.path}`}
+                                                        className="group flex items-center gap-1 px-3 py-0.5 text-[12px] hover:bg-accent/50"
+                                                    >
                                                         <button
                                                             type="button"
-                                                            className="flex size-5 shrink-0 items-center justify-center rounded opacity-0 hover:bg-accent group-hover:opacity-100"
-                                                            onClick={() => void runGitAction('post', route('cms.appearance.themes.editor.git.unstage', { directory: themeDirectory }), { paths: [change.path] }, 'Changes unstaged')}
-                                                            disabled={gitMutationRequest.processing || !canEditThemes}
+                                                            className="min-w-0 flex-1 truncate text-left"
+                                                            onClick={() =>
+                                                                void openFile(
+                                                                    change.path,
+                                                                )
+                                                            }
+                                                        >
+                                                            {change.path}
+                                                        </button>
+                                                        <span className="shrink-0 text-[10px] text-muted-foreground">
+                                                            {
+                                                                change.status_label
+                                                            }
+                                                        </span>
+                                                        <button
+                                                            type="button"
+                                                            className="flex size-5 shrink-0 items-center justify-center rounded opacity-0 group-hover:opacity-100 hover:bg-accent"
+                                                            onClick={() =>
+                                                                void runGitAction(
+                                                                    'post',
+                                                                    route(
+                                                                        'cms.appearance.themes.editor.git.unstage',
+                                                                        {
+                                                                            directory:
+                                                                                themeDirectory,
+                                                                        },
+                                                                    ),
+                                                                    {
+                                                                        paths: [
+                                                                            change.path,
+                                                                        ],
+                                                                    },
+                                                                    'Changes unstaged',
+                                                                )
+                                                            }
+                                                            disabled={
+                                                                gitMutationRequest.processing ||
+                                                                !canEditThemes
+                                                            }
                                                         >
                                                             <XIcon className="size-3" />
                                                         </button>
                                                     </div>
                                                 ))}
                                                 {stagedChanges.length === 0 ? (
-                                                    <div className="px-3 py-2 text-[11px] text-muted-foreground">No staged changes</div>
+                                                    <div className="px-3 py-2 text-[11px] text-muted-foreground">
+                                                        No staged changes
+                                                    </div>
                                                 ) : null}
                                             </div>
 
@@ -1060,38 +1613,102 @@ export default function ThemeEditorIndex({
                                             <div>
                                                 <div className="flex items-center justify-between bg-muted/40 px-3 py-1 text-[11px] font-medium">
                                                     Changes
-                                                    <Badge variant="outline" className="h-4 px-1 text-[10px]">{unstagedChanges.length}</Badge>
+                                                    <Badge
+                                                        variant="outline"
+                                                        className="h-4 px-1 text-[10px]"
+                                                    >
+                                                        {unstagedChanges.length}
+                                                    </Badge>
                                                 </div>
-                                                {unstagedChanges.map((change) => (
-                                                    <div key={`unstaged-${change.path}`} className="group flex items-center gap-1 px-3 py-0.5 text-[12px] hover:bg-accent/50">
-                                                        <button type="button" className="min-w-0 flex-1 truncate text-left" onClick={() => void openFile(change.path)}>
-                                                            {change.path}
-                                                        </button>
-                                                        <span className="shrink-0 text-[10px] text-muted-foreground">{change.status_label}</span>
-                                                        <div className="flex shrink-0 gap-0.5 opacity-0 group-hover:opacity-100">
+                                                {unstagedChanges.map(
+                                                    (change) => (
+                                                        <div
+                                                            key={`unstaged-${change.path}`}
+                                                            className="group flex items-center gap-1 px-3 py-0.5 text-[12px] hover:bg-accent/50"
+                                                        >
                                                             <button
                                                                 type="button"
-                                                                className="flex size-5 items-center justify-center rounded hover:bg-accent"
-                                                                onClick={() => void runGitAction('post', route('cms.appearance.themes.editor.git.stage', { directory: themeDirectory }), { paths: [change.path] }, 'Changes staged')}
-                                                                disabled={gitMutationRequest.processing || !canEditThemes}
+                                                                className="min-w-0 flex-1 truncate text-left"
+                                                                onClick={() =>
+                                                                    void openFile(
+                                                                        change.path,
+                                                                    )
+                                                                }
                                                             >
-                                                                <CheckCircle2Icon className="size-3" />
+                                                                {change.path}
                                                             </button>
-                                                            {canDeleteThemes ? (
+                                                            <span className="shrink-0 text-[10px] text-muted-foreground">
+                                                                {
+                                                                    change.status_label
+                                                                }
+                                                            </span>
+                                                            <div className="flex shrink-0 gap-0.5 opacity-0 group-hover:opacity-100">
                                                                 <button
                                                                     type="button"
                                                                     className="flex size-5 items-center justify-center rounded hover:bg-accent"
-                                                                    onClick={() => void runGitAction('post', route('cms.appearance.themes.editor.git.discard', { directory: themeDirectory }), { paths: [change.path] }, 'Changes discarded')}
-                                                                    disabled={gitMutationRequest.processing}
+                                                                    onClick={() =>
+                                                                        void runGitAction(
+                                                                            'post',
+                                                                            route(
+                                                                                'cms.appearance.themes.editor.git.stage',
+                                                                                {
+                                                                                    directory:
+                                                                                        themeDirectory,
+                                                                                },
+                                                                            ),
+                                                                            {
+                                                                                paths: [
+                                                                                    change.path,
+                                                                                ],
+                                                                            },
+                                                                            'Changes staged',
+                                                                        )
+                                                                    }
+                                                                    disabled={
+                                                                        gitMutationRequest.processing ||
+                                                                        !canEditThemes
+                                                                    }
                                                                 >
-                                                                    <Trash2Icon className="size-3" />
+                                                                    <CheckCircle2Icon className="size-3" />
                                                                 </button>
-                                                            ) : null}
+                                                                {canDeleteThemes ? (
+                                                                    <button
+                                                                        type="button"
+                                                                        className="flex size-5 items-center justify-center rounded hover:bg-accent"
+                                                                        onClick={() =>
+                                                                            void runGitAction(
+                                                                                'post',
+                                                                                route(
+                                                                                    'cms.appearance.themes.editor.git.discard',
+                                                                                    {
+                                                                                        directory:
+                                                                                            themeDirectory,
+                                                                                    },
+                                                                                ),
+                                                                                {
+                                                                                    paths: [
+                                                                                        change.path,
+                                                                                    ],
+                                                                                },
+                                                                                'Changes discarded',
+                                                                            )
+                                                                        }
+                                                                        disabled={
+                                                                            gitMutationRequest.processing
+                                                                        }
+                                                                    >
+                                                                        <Trash2Icon className="size-3" />
+                                                                    </button>
+                                                                ) : null}
+                                                            </div>
                                                         </div>
+                                                    ),
+                                                )}
+                                                {unstagedChanges.length ===
+                                                0 ? (
+                                                    <div className="px-3 py-2 text-[11px] text-muted-foreground">
+                                                        No changes
                                                     </div>
-                                                ))}
-                                                {unstagedChanges.length === 0 ? (
-                                                    <div className="px-3 py-2 text-[11px] text-muted-foreground">No changes</div>
                                                 ) : null}
                                             </div>
                                         </div>
@@ -1107,18 +1724,57 @@ export default function ThemeEditorIndex({
                                 <ScrollArea className="w-full whitespace-nowrap">
                                     <div className="flex items-center">
                                         {openTabs.map((tab, tabIndex) => {
-                                            const isTabActive = tab.path === activePath;
-                                            const isTabDirty = tab.content !== tab.originalContent;
-                                            const tabContextItems: EditorContextMenuEntry[] = [
-                                                { label: 'Close', onSelect: () => closeTab(tab.path) },
-                                                { label: 'Close Others', disabled: openTabs.length <= 1, onSelect: () => closeOtherTabs(tab.path) },
-                                                { label: 'Close to the Right', disabled: tabIndex >= openTabs.length - 1, onSelect: () => closeTabsToRight(tab.path) },
-                                                { label: 'Close All', onSelect: () => closeAllTabs() },
-                                                { type: 'separator' },
-                                                { label: 'Copy Path', onSelect: () => copyPathToClipboard(tab.path) },
-                                            ];
+                                            const isTabActive =
+                                                tab.path === activePath;
+                                            const isTabDirty =
+                                                tab.content !==
+                                                tab.originalContent;
+                                            const tabContextItems: EditorContextMenuEntry[] =
+                                                [
+                                                    {
+                                                        label: 'Close',
+                                                        onSelect: () =>
+                                                            closeTab(tab.path),
+                                                    },
+                                                    {
+                                                        label: 'Close Others',
+                                                        disabled:
+                                                            openTabs.length <=
+                                                            1,
+                                                        onSelect: () =>
+                                                            closeOtherTabs(
+                                                                tab.path,
+                                                            ),
+                                                    },
+                                                    {
+                                                        label: 'Close to the Right',
+                                                        disabled:
+                                                            tabIndex >=
+                                                            openTabs.length - 1,
+                                                        onSelect: () =>
+                                                            closeTabsToRight(
+                                                                tab.path,
+                                                            ),
+                                                    },
+                                                    {
+                                                        label: 'Close All',
+                                                        onSelect: () =>
+                                                            closeAllTabs(),
+                                                    },
+                                                    { type: 'separator' },
+                                                    {
+                                                        label: 'Copy Path',
+                                                        onSelect: () =>
+                                                            copyPathToClipboard(
+                                                                tab.path,
+                                                            ),
+                                                    },
+                                                ];
                                             return (
-                                                <EditorContextMenu key={tab.path} items={tabContextItems}>
+                                                <EditorContextMenu
+                                                    key={tab.path}
+                                                    items={tabContextItems}
+                                                >
                                                     <div
                                                         className={cn(
                                                             'group flex h-9 items-center gap-1 border-r border-[#2b2b2b] px-3 text-[13px]',
@@ -1130,16 +1786,28 @@ export default function ThemeEditorIndex({
                                                         <button
                                                             type="button"
                                                             className="flex items-center gap-1.5"
-                                                            onClick={() => setActivePath(tab.path)}
+                                                            onClick={() =>
+                                                                setActivePath(
+                                                                    tab.path,
+                                                                )
+                                                            }
                                                         >
                                                             <FileCodeIcon className="size-3.5" />
-                                                            <span className="max-w-40 truncate">{tab.name}</span>
-                                                            {isTabDirty ? <span className="size-2 rounded-full bg-blue-500" /> : null}
+                                                            <span className="max-w-40 truncate">
+                                                                {tab.name}
+                                                            </span>
+                                                            {isTabDirty ? (
+                                                                <span className="size-2 rounded-full bg-blue-500" />
+                                                            ) : null}
                                                         </button>
                                                         <button
                                                             type="button"
-                                                            className="ml-1 flex size-5 items-center justify-center rounded opacity-0 hover:bg-accent group-hover:opacity-100"
-                                                            onClick={() => closeTab(tab.path)}
+                                                            className="ml-1 flex size-5 items-center justify-center rounded opacity-0 group-hover:opacity-100 hover:bg-accent"
+                                                            onClick={() =>
+                                                                closeTab(
+                                                                    tab.path,
+                                                                )
+                                                            }
                                                         >
                                                             <XIcon className="size-3" />
                                                         </button>
@@ -1156,28 +1824,69 @@ export default function ThemeEditorIndex({
                                 <div className="flex min-h-0 flex-1 flex-col">
                                     {/* Breadcrumb bar */}
                                     <div className="flex h-7 shrink-0 items-center gap-2 border-b border-[#2b2b2b] bg-[#1e1e1e] px-3 text-[11px] text-[#969696]">
-                                        <span className="truncate">{activeTab.path}</span>
+                                        <span className="truncate">
+                                            {activeTab.path}
+                                        </span>
                                         {activeTab.inherited ? (
-                                            <Badge variant="outline" className="h-4 px-1 text-[10px]">Inherited from {activeTab.inheritedFrom}</Badge>
+                                            <Badge
+                                                variant="outline"
+                                                className="h-4 px-1 text-[10px]"
+                                            >
+                                                Inherited from{' '}
+                                                {activeTab.inheritedFrom}
+                                            </Badge>
                                         ) : null}
                                         <div className="flex-1" />
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
-                                                <button type="button" className="flex size-5 items-center justify-center rounded hover:bg-accent">
+                                                <button
+                                                    type="button"
+                                                    className="flex size-5 items-center justify-center rounded hover:bg-accent"
+                                                >
                                                     <MoreHorizontalIcon className="size-3.5" />
                                                 </button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
-                                                <DropdownMenuItem onSelect={() => { setRenameSource(findNodeByPath(tree, activeTab.path)); setRenamePath(activeTab.path); setRenameOpen(true); }} disabled={!canEditThemes}>
+                                                <DropdownMenuItem
+                                                    onSelect={() => {
+                                                        setRenameSource(
+                                                            findNodeByPath(
+                                                                tree,
+                                                                activeTab.path,
+                                                            ),
+                                                        );
+                                                        setRenamePath(
+                                                            activeTab.path,
+                                                        );
+                                                        setRenameOpen(true);
+                                                    }}
+                                                    disabled={!canEditThemes}
+                                                >
                                                     <PencilIcon />
                                                     Rename
                                                 </DropdownMenuItem>
-                                                <DropdownMenuItem onSelect={() => void handleDuplicate(activeTab.path)} disabled={!canEditThemes}>
+                                                <DropdownMenuItem
+                                                    onSelect={() =>
+                                                        void handleDuplicate(
+                                                            activeTab.path,
+                                                        )
+                                                    }
+                                                    disabled={!canEditThemes}
+                                                >
                                                     <CopyIcon />
                                                     Duplicate
                                                 </DropdownMenuItem>
                                                 {canDeleteThemes ? (
-                                                    <DropdownMenuItem variant="destructive" onSelect={() => setDeleteTarget({ type: 'file', path: activeTab.path, protected: false })}>
+                                                    <DropdownMenuItem
+                                                        variant="destructive"
+                                                        onSelect={() =>
+                                                            setDeleteTarget({
+                                                                type: 'file',
+                                                                path: activeTab.path,
+                                                                protected: false,
+                                                            })
+                                                        }
+                                                    >
                                                         <Trash2Icon />
                                                         Delete
                                                     </DropdownMenuItem>
@@ -1190,9 +1899,19 @@ export default function ThemeEditorIndex({
                                         <div className="border-b px-3 py-2">
                                             <Alert>
                                                 <InfoIcon />
-                                                <AlertTitle>Inherited file</AlertTitle>
+                                                <AlertTitle>
+                                                    Inherited file
+                                                </AlertTitle>
                                                 <AlertDescription>
-                                                    This file currently comes from <strong>{activeTab.inheritedFrom}</strong>. Saving it here creates a theme-specific override.
+                                                    This file currently comes
+                                                    from{' '}
+                                                    <strong>
+                                                        {
+                                                            activeTab.inheritedFrom
+                                                        }
+                                                    </strong>
+                                                    . Saving it here creates a
+                                                    theme-specific override.
                                                 </AlertDescription>
                                             </Alert>
                                         </div>
@@ -1215,8 +1934,13 @@ export default function ThemeEditorIndex({
                                 <div className="flex flex-1 items-center justify-center">
                                     <div className="text-center text-muted-foreground">
                                         <CodeIcon className="mx-auto mb-3 size-12 opacity-20" />
-                                        <p className="text-sm font-medium">No file open</p>
-                                        <p className="mt-1 text-xs">Select a file from the explorer to start editing</p>
+                                        <p className="text-sm font-medium">
+                                            No file open
+                                        </p>
+                                        <p className="mt-1 text-xs">
+                                            Select a file from the explorer to
+                                            start editing
+                                        </p>
                                     </div>
                                 </div>
                             )}
@@ -1232,7 +1956,10 @@ export default function ThemeEditorIndex({
                             {theme.directory}
                         </span>
                         {gitChanges.length > 0 ? (
-                            <span>{gitChanges.length} change{gitChanges.length !== 1 ? 's' : ''}</span>
+                            <span>
+                                {gitChanges.length} change
+                                {gitChanges.length !== 1 ? 's' : ''}
+                            </span>
                         ) : null}
                     </div>
                     <div className="flex items-center gap-3">

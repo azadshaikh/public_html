@@ -7,7 +7,8 @@
     'use strict';
 
     const escapeHtml = (value) => window.DataGrid.escape(value);
-    const safeUrl = (value, fallback = '#') => window.DataGrid.safeUrl(value, fallback);
+    const safeUrl = (value, fallback = '#') =>
+        window.DataGrid.safeUrl(value, fallback);
 
     const ENTITY_ALIASES = {
         post: 'Post',
@@ -18,7 +19,9 @@
         redirection: 'Redirection',
     };
 
-    const PLACEHOLDER_IMAGE_URL = window.Astero?.mediaPlaceholderUrl || '/assets/images/placeholder-image.png';
+    const PLACEHOLDER_IMAGE_URL =
+        window.Astero?.mediaPlaceholderUrl ||
+        '/assets/images/placeholder-image.png';
 
     /**
      * Template helpers
@@ -31,14 +34,20 @@
             const imageAlt = `${entityLabel} Image`;
 
             return (value, row, column) => {
-                const editUrl = safeUrl(row.actions?.edit?.url || `#${entityLabel.toLowerCase()}-${row.id}`);
+                const editUrl = safeUrl(
+                    row.actions?.edit?.url ||
+                        `#${entityLabel.toLowerCase()}-${row.id}`,
+                );
                 const title = row.title || fallbackTitle;
                 const featuredImageUrl = safeUrl(
                     row.featured_image_url || PLACEHOLDER_IMAGE_URL,
-                    PLACEHOLDER_IMAGE_URL
+                    PLACEHOLDER_IMAGE_URL,
                 );
                 const authorName = row.author_name || fallbackAuthor;
-                const viewUrl = safeUrl(row.actions?.view?.url || row.permalink_url, '');
+                const viewUrl = safeUrl(
+                    row.actions?.view?.url || row.permalink_url,
+                    '',
+                );
 
                 return `
                     <div class="d-flex align-items-center gap-3" style="min-width: 400px;">
@@ -81,7 +90,10 @@
 
             const variant = statusMap[row.status] || 'secondary';
             const label =
-                row.status_label || (row.status ? row.status.charAt(0).toUpperCase() + row.status.slice(1) : 'Unknown');
+                row.status_label ||
+                (row.status
+                    ? row.status.charAt(0).toUpperCase() + row.status.slice(1)
+                    : 'Unknown');
 
             return `<span class="badge text-bg-${variant}">${escapeHtml(label)}</span>`;
         },
@@ -135,7 +147,11 @@
             const status = (row.status || '').toLowerCase();
 
             const fallbackLabel =
-                status === 'published' ? 'Published' : status === 'scheduled' ? 'Scheduled' : 'Last Modified';
+                status === 'published'
+                    ? 'Published'
+                    : status === 'scheduled'
+                      ? 'Scheduled'
+                      : 'Last Modified';
 
             const label = context?.label || fallbackLabel;
 
@@ -177,10 +193,19 @@
         },
         countBadgeTemplate({ keys, label = 'posts' }) {
             return (value, row, column) => {
-                const countValue = keys.reduce((acc, key) => acc ?? row[key], null);
-                const count = typeof countValue === 'number' ? countValue : parseInt(countValue || 0, 10);
+                const countValue = keys.reduce(
+                    (acc, key) => acc ?? row[key],
+                    null,
+                );
+                const count =
+                    typeof countValue === 'number'
+                        ? countValue
+                        : parseInt(countValue || 0, 10);
                 const safeCount = Number.isFinite(count) ? count : 0;
-                const badgeClass = safeCount > 0 ? 'bg-primary-subtle text-primary' : 'text-bg-secondary';
+                const badgeClass =
+                    safeCount > 0
+                        ? 'bg-primary-subtle text-primary'
+                        : 'text-bg-secondary';
 
                 return `<span class="badge ${badgeClass}">${safeCount} ${escapeHtml(label)}</span>`;
             };
@@ -189,7 +214,13 @@
             const actions = row.actions || {};
             let actionItems = '';
 
-            const actionOrder = ['view', 'edit', 'delete', 'restore', 'force_delete'];
+            const actionOrder = [
+                'view',
+                'edit',
+                'delete',
+                'restore',
+                'force_delete',
+            ];
             let hasDivider = false;
             const availableActions = Object.keys(actions);
 
@@ -197,7 +228,9 @@
                 const actionData = actions[actionKey];
                 if (!actionData) return;
 
-                const hasNonDestructiveActions = availableActions.some((key) => ['view', 'edit'].includes(key));
+                const hasNonDestructiveActions = availableActions.some((key) =>
+                    ['view', 'edit'].includes(key),
+                );
                 if (
                     ['delete', 'restore', 'force_delete'].includes(actionKey) &&
                     !hasDivider &&
@@ -222,7 +255,9 @@
                                          data-message="${escapeHtml(confirmData.message || 'Are you sure?')}"
                                          data-confirmButtonText="${escapeHtml(confirmData.button_text || 'Yes')}"
                                          data-loaderButtonText="${escapeHtml(confirmData.loader_text || 'Processing...')}"`;
-                    const methodAttr = actionData.method ? `data-method="${escapeHtml(actionData.method)}"` : '';
+                    const methodAttr = actionData.method
+                        ? `data-method="${escapeHtml(actionData.method)}"`
+                        : '';
 
                     actionItems += `
                         <li>
@@ -268,9 +303,13 @@
     const menuTemplates = {
         menu_title_display: (value, row, column) => {
             const name = row.name || 'Untitled Menu';
-            const description = row.description ? escapeHtml(row.description) : 'No description provided.';
+            const description = row.description
+                ? escapeHtml(row.description)
+                : 'No description provided.';
             const editUrl = safeUrl(row.actions?.edit?.url || '#');
-            const previewItems = Array.isArray(row.items_preview) ? row.items_preview : [];
+            const previewItems = Array.isArray(row.items_preview)
+                ? row.items_preview
+                : [];
 
             const previewHtml = previewItems.length
                 ? `<div class="d-flex flex-wrap gap-1 mt-2">${previewItems
@@ -296,7 +335,9 @@
         },
         menu_location_display: (value, row, column) => {
             const label = row.location_label || 'Unassigned';
-            const badgeClass = row.location_label ? 'bg-info-subtle text-info' : 'text-bg-warning';
+            const badgeClass = row.location_label
+                ? 'bg-info-subtle text-info'
+                : 'text-bg-warning';
 
             return `<span class="badge ${badgeClass}">${escapeHtml(label)}</span>`;
         },
@@ -308,8 +349,11 @@
         },
         menu_status_badge: (value, row, column) => {
             const isActive = row.status === 'active';
-            const badgeClass = isActive ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning';
-            const label = row.status_label || (isActive ? 'Active' : 'Inactive');
+            const badgeClass = isActive
+                ? 'bg-success-subtle text-success'
+                : 'bg-warning-subtle text-warning';
+            const label =
+                row.status_label || (isActive ? 'Active' : 'Inactive');
 
             return `<span class="badge ${badgeClass}">${escapeHtml(label)}</span>`;
         },
@@ -460,7 +504,9 @@
         },
         redirect_type: (value, row, column) => {
             const code = row.redirect_type ? String(row.redirect_type) : '—';
-            const label = row.redirect_type_label ? row.redirect_type_label.replace(/^\d+\s*/, '').trim() : '';
+            const label = row.redirect_type_label
+                ? row.redirect_type_label.replace(/^\d+\s*/, '').trim()
+                : '';
 
             const description = label || 'HTTP Redirect';
 
@@ -475,7 +521,10 @@
             const urlTypeValue = (row.url_type || '').toLowerCase();
             const label =
                 row.url_type_label ||
-                (urlTypeValue ? urlTypeValue.charAt(0).toUpperCase() + urlTypeValue.slice(1) : 'Unknown');
+                (urlTypeValue
+                    ? urlTypeValue.charAt(0).toUpperCase() +
+                      urlTypeValue.slice(1)
+                    : 'Unknown');
 
             const variant = urlTypeValue === 'external' ? 'warning' : 'primary';
             const badgeClass = `badge rounded-pill bg-${variant}-subtle text-${variant}`;
@@ -484,8 +533,17 @@
         },
         status_badge: (value, row, column) => {
             const status = (row.status || '').toLowerCase();
-            const label = row.status_label || (status ? status.charAt(0).toUpperCase() + status.slice(1) : 'Unknown');
-            const variant = status === 'active' ? 'success' : status === 'inactive' ? 'secondary' : 'danger';
+            const label =
+                row.status_label ||
+                (status
+                    ? status.charAt(0).toUpperCase() + status.slice(1)
+                    : 'Unknown');
+            const variant =
+                status === 'active'
+                    ? 'success'
+                    : status === 'inactive'
+                      ? 'secondary'
+                      : 'danger';
 
             return `<span class="badge text-bg-${variant}">${escapeHtml(label)}</span>`;
         },
@@ -510,21 +568,29 @@
     const CMS_CRUD_DATA_GRID_CONFIG = {
         post: {
             templates: {
-                title_display: templateHelpers.createTitleDisplayTemplate({ entityLabel: 'Post' }),
+                title_display: templateHelpers.createTitleDisplayTemplate({
+                    entityLabel: 'Post',
+                }),
                 status_badge: templateHelpers.statusBadgeTemplate,
                 categories_list: templateHelpers.categoriesListTemplate,
                 parent_name_display: templateHelpers.parentNameTemplate,
-                featured_image_thumbnail: templateHelpers.featuredImageTemplate({ entityLabel: 'Post' }),
+                featured_image_thumbnail: templateHelpers.featuredImageTemplate(
+                    { entityLabel: 'Post' },
+                ),
                 published_date_format: templateHelpers.publishedDateTemplate,
                 actions_dropdown: templateHelpers.actionsDropdownTemplate,
             },
         },
         page: {
             templates: {
-                title_display: templateHelpers.createTitleDisplayTemplate({ entityLabel: 'Page' }),
+                title_display: templateHelpers.createTitleDisplayTemplate({
+                    entityLabel: 'Page',
+                }),
                 status_badge: templateHelpers.statusBadgeTemplate,
                 parent_name_display: templateHelpers.parentNameTemplate,
-                featured_image_thumbnail: templateHelpers.featuredImageTemplate({ entityLabel: 'Page' }),
+                featured_image_thumbnail: templateHelpers.featuredImageTemplate(
+                    { entityLabel: 'Page' },
+                ),
                 published_date_format: templateHelpers.publishedDateTemplate,
                 actions_dropdown: templateHelpers.actionsDropdownTemplate,
             },
@@ -536,10 +602,16 @@
                     showAuthor: false,
                 }),
                 status_badge: templateHelpers.statusBadgeTemplate,
-                posts_count_badge: templateHelpers.countBadgeTemplate({ keys: ['posts_count', 'category_post_count'] }),
-                category_post_count_badge: templateHelpers.countBadgeTemplate({ keys: ['category_post_count'] }),
+                posts_count_badge: templateHelpers.countBadgeTemplate({
+                    keys: ['posts_count', 'category_post_count'],
+                }),
+                category_post_count_badge: templateHelpers.countBadgeTemplate({
+                    keys: ['category_post_count'],
+                }),
                 parent_name_display: templateHelpers.parentNameTemplate,
-                featured_image_thumbnail: templateHelpers.featuredImageTemplate({ entityLabel: 'Category' }),
+                featured_image_thumbnail: templateHelpers.featuredImageTemplate(
+                    { entityLabel: 'Category' },
+                ),
                 date_format: templateHelpers.dateFormatTemplate,
                 published_date_format: templateHelpers.publishedDateTemplate,
                 actions_dropdown: templateHelpers.actionsDropdownTemplate,
@@ -547,10 +619,17 @@
         },
         tag: {
             templates: {
-                title_display: templateHelpers.createTitleDisplayTemplate({ entityLabel: 'Tag', showAuthor: false }),
+                title_display: templateHelpers.createTitleDisplayTemplate({
+                    entityLabel: 'Tag',
+                    showAuthor: false,
+                }),
                 status_badge: templateHelpers.statusBadgeTemplate,
-                tag_post_count_badge: templateHelpers.countBadgeTemplate({ keys: ['tag_post_count'] }),
-                featured_image_thumbnail: templateHelpers.featuredImageTemplate({ entityLabel: 'Tag' }),
+                tag_post_count_badge: templateHelpers.countBadgeTemplate({
+                    keys: ['tag_post_count'],
+                }),
+                featured_image_thumbnail: templateHelpers.featuredImageTemplate(
+                    { entityLabel: 'Tag' },
+                ),
                 date_format: templateHelpers.dateFormatTemplate,
                 published_date_format: templateHelpers.publishedDateTemplate,
                 actions_dropdown: templateHelpers.actionsDropdownTemplate,
@@ -626,12 +705,16 @@
                 }
                 // Fallback: search through instances
                 const match = Object.values(instances).find((instance) => {
-                    const container = instance?.container || instance?.el || null;
-                    const element = container?.nodeType ? container : container?.[0] || null;
+                    const container =
+                        instance?.container || instance?.el || null;
+                    const element = container?.nodeType
+                        ? container
+                        : container?.[0] || null;
                     if (!element) {
                         return false;
                     }
-                    const candidateId = element.id || element.getAttribute?.('id') || '';
+                    const candidateId =
+                        element.id || element.getAttribute?.('id') || '';
                     return candidateId === this.config.containerId;
                 });
                 if (match) {
@@ -642,7 +725,10 @@
             if (this.config.urlFragment) {
                 const urlMatch = allInstances.find((instance) => {
                     const url = instance?.config?.get?.('url');
-                    return typeof url === 'string' && url.includes(this.config.urlFragment);
+                    return (
+                        typeof url === 'string' &&
+                        url.includes(this.config.urlFragment)
+                    );
                 });
                 if (urlMatch) {
                     return urlMatch;
@@ -654,7 +740,11 @@
                 return containers[0]._datagrid;
             }
 
-            return allInstances[this.config.dataGridIndex] || allInstances[0] || null;
+            return (
+                allInstances[this.config.dataGridIndex] ||
+                allInstances[0] ||
+                null
+            );
         }
 
         async waitForDataGrid(attempts = 10, interval = 200) {
@@ -681,7 +771,10 @@
                     this.dataGrid = dg;
 
                     // Register templates
-                    if (dg.renderer && typeof dg.renderer.registerTemplate === 'function') {
+                    if (
+                        dg.renderer &&
+                        typeof dg.renderer.registerTemplate === 'function'
+                    ) {
                         Object.entries(this.templates).forEach(([name, fn]) => {
                             dg.renderer.registerTemplate(name, fn);
                         });
@@ -695,7 +788,10 @@
                     window[`${this.alias}DataGridManager`] = this;
                 }
             } catch (error) {
-                console.error(`${this.alias} DataGrid initialization error:`, error);
+                console.error(
+                    `${this.alias} DataGrid initialization error:`,
+                    error,
+                );
             }
         }
     }
@@ -712,7 +808,8 @@
                 }
 
                 const hasSelection =
-                    (field.selectedOptions && field.selectedOptions.length > 0) ||
+                    (field.selectedOptions &&
+                        field.selectedOptions.length > 0) ||
                     (Array.isArray(field.value) && field.value.length > 0);
 
                 if (!hasSelection) {
@@ -760,12 +857,20 @@
                 editButtonResolver(manager) {
                     const status = manager.getStatusValue();
                     if (status === 'published') {
-                        return manager.form.querySelector('#update-btn') || manager.form.querySelector('#publish-btn');
+                        return (
+                            manager.form.querySelector('#update-btn') ||
+                            manager.form.querySelector('#publish-btn')
+                        );
                     }
                     return manager.form.querySelector('#save-draft-btn');
                 },
             },
-            validators: [validators.multiSelectNotEmpty('#categories', 'At least one category is required.')],
+            validators: [
+                validators.multiSelectNotEmpty(
+                    '#categories',
+                    'At least one category is required.',
+                ),
+            ],
         },
         page: {
             formId: 'page-form',
@@ -783,7 +888,10 @@
                 editButtonResolver(manager) {
                     const status = manager.getStatusValue();
                     if (status === 'published') {
-                        return manager.form.querySelector('#update-btn') || manager.form.querySelector('#publish-btn');
+                        return (
+                            manager.form.querySelector('#update-btn') ||
+                            manager.form.querySelector('#publish-btn')
+                        );
                     }
                     return manager.form.querySelector('#save-draft-btn');
                 },
@@ -851,7 +959,9 @@
 
             this.alias = alias;
             this.mode = this.config.mode;
-            this.validators = Array.isArray(this.config.validators) ? this.config.validators : [];
+            this.validators = Array.isArray(this.config.validators)
+                ? this.config.validators
+                : [];
             this.form = document.getElementById(this.config.formId);
 
             if (!window.CmsCrud) {
@@ -914,7 +1024,9 @@
         }
 
         setupSubmitButtons() {
-            const submitButtons = this.form.querySelectorAll('button[type="submit"]');
+            const submitButtons = this.form.querySelectorAll(
+                'button[type="submit"]',
+            );
 
             submitButtons.forEach((button) => {
                 button.addEventListener('click', (event) => {
@@ -946,12 +1058,20 @@
             }
 
             this.form.addEventListener('keydown', (event) => {
-                if (event.key !== 'Enter' || event.shiftKey || event.ctrlKey || event.altKey) {
+                if (
+                    event.key !== 'Enter' ||
+                    event.shiftKey ||
+                    event.ctrlKey ||
+                    event.altKey
+                ) {
                     return;
                 }
 
                 const activeElement = document.activeElement;
-                if (enterKeyConfig.skipEditable !== false && this.isEditableField(activeElement)) {
+                if (
+                    enterKeyConfig.skipEditable !== false &&
+                    this.isEditableField(activeElement)
+                ) {
                     return;
                 }
 
@@ -1013,7 +1133,9 @@
             }
 
             if (!this.isEditMode() && enterKeyConfig.createButtonSelector) {
-                return this.form.querySelector(enterKeyConfig.createButtonSelector);
+                return this.form.querySelector(
+                    enterKeyConfig.createButtonSelector,
+                );
             }
 
             if (this.isEditMode()) {
@@ -1022,7 +1144,9 @@
                 }
 
                 if (enterKeyConfig.editButtonSelector) {
-                    return this.form.querySelector(enterKeyConfig.editButtonSelector);
+                    return this.form.querySelector(
+                        enterKeyConfig.editButtonSelector,
+                    );
                 }
             }
 
@@ -1039,7 +1163,9 @@
         }
 
         getStatusField() {
-            return this.form.querySelector(this.config.statusFieldSelector || '#status');
+            return this.form.querySelector(
+                this.config.statusFieldSelector || '#status',
+            );
         }
 
         getStatusValue() {
@@ -1074,9 +1200,14 @@
             const friendlyFieldNames = Array.from(invalidFields)
                 .map(
                     (field) =>
-                        fieldLabels[field.name] || fieldLabels[field.id] || field.name.replace(/[_\[\]]+/g, ' ').trim()
+                        fieldLabels[field.name] ||
+                        fieldLabels[field.id] ||
+                        field.name.replace(/[_\[\]]+/g, ' ').trim(),
                 )
-                .filter((value, index, self) => value && self.indexOf(value) === index);
+                .filter(
+                    (value, index, self) =>
+                        value && self.indexOf(value) === index,
+                );
 
             if (friendlyFieldNames.length === 0) {
                 return;
@@ -1092,22 +1223,33 @@
             if (invalidFields.length > 0) {
                 const firstInvalid = invalidFields[0];
                 firstInvalid.focus();
-                firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                firstInvalid.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center',
+                });
             }
         }
 
         showAlert(type, message) {
-            const existingServerAlerts = document.querySelectorAll('.alert:not(.client-alert)');
+            const existingServerAlerts = document.querySelectorAll(
+                '.alert:not(.client-alert)',
+            );
             if (existingServerAlerts.length > 0) {
                 return;
             }
 
-            const existingClientAlerts = document.querySelectorAll('.client-alert');
+            const existingClientAlerts =
+                document.querySelectorAll('.client-alert');
             existingClientAlerts.forEach((alert) => alert.remove());
 
-            const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
-            const iconClass = type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill';
-            const alertTitle = type === 'success' ? 'Success!' : 'Validation Error!';
+            const alertClass =
+                type === 'success' ? 'alert-success' : 'alert-danger';
+            const iconClass =
+                type === 'success'
+                    ? 'bi-check-circle-fill'
+                    : 'bi-exclamation-triangle-fill';
+            const alertTitle =
+                type === 'success' ? 'Success!' : 'Validation Error!';
 
             const alert = document.createElement('div');
             alert.className = `alert ${alertClass} alert-dismissible fade rounded-4 show client-alert`;
@@ -1160,7 +1302,9 @@
         if (manager.form) {
             manager.init();
         } else {
-            console.warn(`CMS CRUD form not found for entity "${entity}" using form ID "${manager.config?.formId}"`);
+            console.warn(
+                `CMS CRUD form not found for entity "${entity}" using form ID "${manager.config?.formId}"`,
+            );
         }
         return manager;
     };

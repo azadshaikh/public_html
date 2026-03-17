@@ -13,7 +13,10 @@ import {
     Trash2Icon,
     UploadIcon,
 } from 'lucide-react';
-import { EditorContextMenu, type EditorContextMenuEntry } from './editor-context-menu';
+import {
+    EditorContextMenu,
+    type EditorContextMenuEntry,
+} from './editor-context-menu';
 import { cn } from '@/lib/utils';
 import type { ThemeEditorFileNode } from '../../../../types/cms';
 import type { DeleteTarget } from '../../pages/cms/themes/editor/types';
@@ -32,16 +35,25 @@ function TreeItemIcon({
     const base = 'size-4 shrink-0';
 
     if (isDirectory) {
-        return isExpanded
-            ? <FolderOpenIcon className={cn(base, 'text-[#dcb67a]')} />
-            : <FolderIcon className={cn(base, 'text-[#dcb67a]')} />;
+        return isExpanded ? (
+            <FolderOpenIcon className={cn(base, 'text-[#dcb67a]')} />
+        ) : (
+            <FolderIcon className={cn(base, 'text-[#dcb67a]')} />
+        );
     }
 
     const ext = extension?.toLowerCase();
     const fileName = name?.toLowerCase() ?? '';
 
     // HTML / Twig / Blade templates
-    if (ext === 'html' || ext === 'htm' || ext === 'twig' || ext === 'blade' || ext === 'xml' || ext === 'svg') {
+    if (
+        ext === 'html' ||
+        ext === 'htm' ||
+        ext === 'twig' ||
+        ext === 'blade' ||
+        ext === 'xml' ||
+        ext === 'svg'
+    ) {
         return <FileTextIcon className={cn(base, 'text-[#e37933]')} />;
     }
 
@@ -79,12 +91,26 @@ function TreeItemIcon({
     }
 
     // Images
-    if (ext === 'png' || ext === 'jpg' || ext === 'jpeg' || ext === 'gif' || ext === 'webp' || ext === 'ico' || ext === 'bmp') {
+    if (
+        ext === 'png' ||
+        ext === 'jpg' ||
+        ext === 'jpeg' ||
+        ext === 'gif' ||
+        ext === 'webp' ||
+        ext === 'ico' ||
+        ext === 'bmp'
+    ) {
         return <ImageIcon className={cn(base, 'text-[#a074c4]')} />;
     }
 
     // Fonts
-    if (ext === 'woff' || ext === 'woff2' || ext === 'ttf' || ext === 'otf' || ext === 'eot') {
+    if (
+        ext === 'woff' ||
+        ext === 'woff2' ||
+        ext === 'ttf' ||
+        ext === 'otf' ||
+        ext === 'eot'
+    ) {
         return <FileIcon className={cn(base, 'text-[#e37933]')} />;
     }
 
@@ -99,7 +125,11 @@ function TreeItemIcon({
     }
 
     // Config files by name
-    if (fileName === '.gitignore' || fileName === '.editorconfig' || fileName === '.htaccess') {
+    if (
+        fileName === '.gitignore' ||
+        fileName === '.editorconfig' ||
+        fileName === '.htaccess'
+    ) {
         return <FileIcon className={cn(base, 'text-[#6d8086]')} />;
     }
 
@@ -151,24 +181,76 @@ export function FileTreeItem({
 
     const contextItems: EditorContextMenuEntry[] = isDirectory
         ? [
-            { label: 'New file', icon: <PlusIcon />, onSelect: () => onCreateFile(node.path) },
-            { label: 'New folder', icon: <FolderIcon />, onSelect: () => onCreateFolder(node.path) },
-            { label: 'Upload file', icon: <UploadIcon />, onSelect: () => onUpload(node.path) },
-            ...(!node.protected ? [
-                { type: 'separator' as const },
-                { label: 'Rename', icon: <PencilIcon />, onSelect: () => onRename(node) },
-                { label: 'Delete', icon: <Trash2Icon />, variant: 'destructive' as const, onSelect: () => onDelete({ type: 'folder' as const, path: node.path, protected: false }) },
-            ] : []),
-        ]
+              {
+                  label: 'New file',
+                  icon: <PlusIcon />,
+                  onSelect: () => onCreateFile(node.path),
+              },
+              {
+                  label: 'New folder',
+                  icon: <FolderIcon />,
+                  onSelect: () => onCreateFolder(node.path),
+              },
+              {
+                  label: 'Upload file',
+                  icon: <UploadIcon />,
+                  onSelect: () => onUpload(node.path),
+              },
+              ...(!node.protected
+                  ? [
+                        { type: 'separator' as const },
+                        {
+                            label: 'Rename',
+                            icon: <PencilIcon />,
+                            onSelect: () => onRename(node),
+                        },
+                        {
+                            label: 'Delete',
+                            icon: <Trash2Icon />,
+                            variant: 'destructive' as const,
+                            onSelect: () =>
+                                onDelete({
+                                    type: 'folder' as const,
+                                    path: node.path,
+                                    protected: false,
+                                }),
+                        },
+                    ]
+                  : []),
+          ]
         : [
-            { label: 'Open file', icon: <PencilIcon />, onSelect: () => onOpen(node.path) },
-            { label: 'Duplicate', icon: <CopyIcon />, onSelect: () => onDuplicate(node.path) },
-            ...(!node.protected ? [
-                { type: 'separator' as const },
-                { label: 'Rename', icon: <PencilIcon />, onSelect: () => onRename(node) },
-                { label: 'Delete', icon: <Trash2Icon />, variant: 'destructive' as const, onSelect: () => onDelete({ type: 'file' as const, path: node.path, protected: false }) },
-            ] : []),
-        ];
+              {
+                  label: 'Open file',
+                  icon: <PencilIcon />,
+                  onSelect: () => onOpen(node.path),
+              },
+              {
+                  label: 'Duplicate',
+                  icon: <CopyIcon />,
+                  onSelect: () => onDuplicate(node.path),
+              },
+              ...(!node.protected
+                  ? [
+                        { type: 'separator' as const },
+                        {
+                            label: 'Rename',
+                            icon: <PencilIcon />,
+                            onSelect: () => onRename(node),
+                        },
+                        {
+                            label: 'Delete',
+                            icon: <Trash2Icon />,
+                            variant: 'destructive' as const,
+                            onSelect: () =>
+                                onDelete({
+                                    type: 'file' as const,
+                                    path: node.path,
+                                    protected: false,
+                                }),
+                        },
+                    ]
+                  : []),
+          ];
 
     const content = (
         <EditorContextMenu items={contextItems}>
@@ -190,13 +272,22 @@ export function FileTreeItem({
                             onToggle(node.path);
                         }}
                     >
-                        {isExpanded ? <ChevronDownIcon className="size-4" /> : <ChevronRightIcon className="size-4" />}
+                        {isExpanded ? (
+                            <ChevronDownIcon className="size-4" />
+                        ) : (
+                            <ChevronRightIcon className="size-4" />
+                        )}
                     </button>
                 ) : (
                     <span className="w-4 shrink-0" />
                 )}
 
-                <TreeItemIcon isDirectory={isDirectory} isExpanded={isExpanded} extension={node.extension} name={node.name} />
+                <TreeItemIcon
+                    isDirectory={isDirectory}
+                    isExpanded={isExpanded}
+                    extension={node.extension}
+                    name={node.name}
+                />
 
                 <button
                     type="button"
@@ -211,8 +302,16 @@ export function FileTreeItem({
                     }}
                 >
                     <span className="truncate">{node.name}</span>
-                    {node.inherited ? <span className="text-[10px] text-muted-foreground">inherited</span> : null}
-                    {node.override ? <span className="text-[10px] text-blue-500">override</span> : null}
+                    {node.inherited ? (
+                        <span className="text-[10px] text-muted-foreground">
+                            inherited
+                        </span>
+                    ) : null}
+                    {node.override ? (
+                        <span className="text-[10px] text-blue-500">
+                            override
+                        </span>
+                    ) : null}
                 </button>
             </div>
         </EditorContextMenu>

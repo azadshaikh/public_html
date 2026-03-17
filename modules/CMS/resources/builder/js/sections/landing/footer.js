@@ -1,6 +1,8 @@
 Astero.Sections.add('footer/footer-1', {
     name: 'Footer 1',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/footer/footer-1-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/footer/footer-1-thumb.jpeg',
     html: `<footer class="footer-1" title="footer-1">
   <div class="container" data-v-component-menu="footer" data-v-slug="main-footer">
 
@@ -125,7 +127,9 @@ Astero.Sections.add('footer/footer-1', {
 });
 Astero.Sections.add('footer/footer-2', {
     name: 'Footer 2',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/footer/footer-2-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/footer/footer-2-thumb.jpeg',
     html: `<footer class="bg-white" title="footer-2">
 
   <div class="container py-5">
@@ -216,7 +220,9 @@ Astero.Sections.add('footer/footer-2', {
 });
 Astero.Sections.add('footer/footer-3', {
     name: 'Footer 3',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/footer/footer-3-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/footer/footer-3-thumb.jpeg',
     html: `<footer class="footer-3 bg-dark text-white" title="footer-3">
   <div class="container" data-v-component-menu="footer" data-v-slug="main-menu">
 
@@ -304,4 +310,8 @@ Astero.Sections.add('footer/footer-3', {
 
 </footer>`,
 });
-Astero.SectionsGroup['Footer'] = ['footer/footer-1', 'footer/footer-2', 'footer/footer-3'];
+Astero.SectionsGroup['Footer'] = [
+    'footer/footer-1',
+    'footer/footer-2',
+    'footer/footer-3',
+];

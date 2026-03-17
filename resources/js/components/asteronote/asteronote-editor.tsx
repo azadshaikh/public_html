@@ -47,9 +47,7 @@ import {
     asteronotePluginMap,
     BubbleToolbar,
 } from '@/components/asteronote/plugins';
-import {
-    flattenToolbar,
-} from '@/components/asteronote/toolbar-utils';
+import { flattenToolbar } from '@/components/asteronote/toolbar-utils';
 import {
     FullscreenProvider,
     useFullscreen,
@@ -88,11 +86,11 @@ const KEYBOARD_SHORTCUTS: Array<{
     key: string;
     command: Parameters<AsteroNoteController['applyInlineCommand']>[0];
 }> = [
-        { ctrl: true, key: 'b', command: 'bold' },
-        { ctrl: true, key: 'i', command: 'italic' },
-        { ctrl: true, key: 'u', command: 'underline' },
-        { ctrl: true, shift: true, key: 's', command: 'strikeThrough' },
-    ];
+    { ctrl: true, key: 'b', command: 'bold' },
+    { ctrl: true, key: 'i', command: 'italic' },
+    { ctrl: true, key: 'u', command: 'underline' },
+    { ctrl: true, shift: true, key: 's', command: 'strikeThrough' },
+];
 
 function createGroupDefinitions(
     toolbar: AsteroNoteToolbar,
@@ -168,7 +166,8 @@ function AsteroNoteEditorInner({
     );
     const [isCodeView, setIsCodeView] = React.useState(false);
     const [isFocused, setIsFocused] = React.useState(false);
-    const [floatingPosition, setFloatingPosition] = React.useState<AsteroNoteFloatingPosition | null>(null);
+    const [floatingPosition, setFloatingPosition] =
+        React.useState<AsteroNoteFloatingPosition | null>(null);
     const [formatState, setFormatState] = React.useState(
         defaultAsteroNoteFormatState,
     );
@@ -287,9 +286,11 @@ function AsteroNoteEditorInner({
         // Relative to the viewport container that the `absolute` toolbar sits in.
         // `rect` is relative to viewport. `viewportRect` is relative to viewport.
         // The difference + scroll position gives the absolute position inside the scroll container.
-        const relativeLeft = rect.left - viewportRect.left + viewport.scrollLeft;
+        const relativeLeft =
+            rect.left - viewportRect.left + viewport.scrollLeft;
         const relativeTop = rect.top - viewportRect.top + viewport.scrollTop;
-        const relativeBottom = rect.bottom - viewportRect.top + viewport.scrollTop;
+        const relativeBottom =
+            rect.bottom - viewportRect.top + viewport.scrollTop;
 
         // Center of the selection
         const selectionCenterX = relativeLeft + rect.width / 2;
@@ -297,16 +298,24 @@ function AsteroNoteEditorInner({
         // Determine vertical placement
         const minTop = viewport.scrollTop + toolbarHeight + edgePadding;
         const placement = relativeTop >= minTop ? 'top' : 'bottom';
-        const finalTop = placement === 'top' ? relativeTop : relativeBottom + verticalOffset;
+        const finalTop =
+            placement === 'top' ? relativeTop : relativeBottom + verticalOffset;
 
         // Calculate horizontal position with bounds checking
         // The toolbar uses translateX(-50%) so we position it at the selection center
         const halfToolbarWidth = toolbarWidth / 2;
         const minLeft = viewport.scrollLeft + halfToolbarWidth + edgePadding;
-        const maxLeft = viewport.scrollLeft + viewport.clientWidth - halfToolbarWidth - edgePadding;
+        const maxLeft =
+            viewport.scrollLeft +
+            viewport.clientWidth -
+            halfToolbarWidth -
+            edgePadding;
 
         // Clamp the toolbar position to stay within bounds
-        const boundedCenterX = Math.min(Math.max(selectionCenterX, minLeft), maxLeft);
+        const boundedCenterX = Math.min(
+            Math.max(selectionCenterX, minLeft),
+            maxLeft,
+        );
 
         // Calculate arrow offset from toolbar center (50%)
         // If toolbar had to shift, arrow needs to point back to the actual selection center
@@ -935,16 +944,17 @@ function AsteroNoteEditorInner({
     return (
         <div
             className={cn(
-                'group/editor overflow-hidden rounded-lg border border-border bg-background focus-within:ring-1 focus-within:ring-ring focus-within:border-ring transition-shadow',
-                invalid && 'border-destructive ring-1 ring-destructive/20 focus-within:ring-destructive focus-within:border-destructive',
+                'group/editor overflow-hidden rounded-lg border border-border bg-background transition-shadow focus-within:border-ring focus-within:ring-1 focus-within:ring-ring',
+                invalid &&
+                    'border-destructive ring-1 ring-destructive/20 focus-within:border-destructive focus-within:ring-destructive',
                 isFullscreen &&
-                'fixed inset-0 z-50 flex flex-col rounded-none border-0 ring-0 focus-within:ring-0',
+                    'fixed inset-0 z-50 flex flex-col rounded-none border-0 ring-0 focus-within:ring-0',
                 className,
             )}
         >
-            <FixedToolbar className="rounded-t-[inherit] bg-muted/40 border-b border-border p-1 gap-1 flex-wrap overflow-y-auto max-h-[120px] scrollbar-thin">
-                <div className="flex w-full min-w-0 items-center flex-wrap gap-y-1">
-                    <div className="flex items-center flex-wrap gap-1 pr-1 border-r border-border/50">
+            <FixedToolbar className="scrollbar-thin max-h-[120px] flex-wrap gap-1 overflow-y-auto rounded-t-[inherit] border-b border-border bg-muted/40 p-1">
+                <div className="flex w-full min-w-0 flex-wrap items-center gap-y-1">
+                    <div className="flex flex-wrap items-center gap-1 border-r border-border/50 pr-1">
                         {toolbarGroups[0]?.map(({ action, Plugin }, index) => (
                             <Plugin
                                 key={`left-${action}-${index}`}
@@ -954,7 +964,7 @@ function AsteroNoteEditorInner({
                     </div>
 
                     {toolbarGroups[1]?.length ? (
-                        <div className="flex items-center flex-wrap gap-1 px-1 border-r border-border/50">
+                        <div className="flex flex-wrap items-center gap-1 border-r border-border/50 px-1">
                             {toolbarGroups[1].map(
                                 ({ action, Plugin }, index) => (
                                     <Plugin
@@ -967,7 +977,7 @@ function AsteroNoteEditorInner({
                     ) : null}
 
                     {toolbarGroups[2]?.length ? (
-                        <div className="flex items-center flex-wrap gap-1 pl-1">
+                        <div className="flex flex-wrap items-center gap-1 pl-1">
                             {toolbarGroups[2].map(
                                 ({ action, Plugin }, index) => (
                                     <Plugin
@@ -988,8 +998,8 @@ function AsteroNoteEditorInner({
                 )}
             >
                 {!isCodeView &&
-                    !isFocused &&
-                    !hasMeaningfulHtmlContent(htmlState) ? (
+                !isFocused &&
+                !hasMeaningfulHtmlContent(htmlState) ? (
                     <div className="pointer-events-none absolute inset-x-4 top-4 text-sm text-muted-foreground/80">
                         {placeholderText}
                     </div>

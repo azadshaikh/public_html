@@ -14,7 +14,12 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { Field, FieldGroup, FieldLabel, FieldDescription } from '@/components/ui/field';
+import {
+    Field,
+    FieldGroup,
+    FieldLabel,
+    FieldDescription,
+} from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 
@@ -74,21 +79,25 @@ export function ImagePluginControl({
                         <DialogHeader>
                             <DialogTitle>Insert Image</DialogTitle>
                             <DialogDescription>
-                                Add an image URL and optional responsive attributes.
+                                Add an image URL and optional responsive
+                                attributes.
                             </DialogDescription>
                         </DialogHeader>
 
-                        <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto px-1">
+                        <div className="grid max-h-[60vh] gap-4 overflow-y-auto px-1 py-4">
                             {src && (
-                                <div className="rounded-md border bg-muted/30 p-2 flex justify-center items-center mb-2 h-32 overflow-hidden relative">
+                                <div className="relative mb-2 flex h-32 items-center justify-center overflow-hidden rounded-md border bg-muted/30 p-2">
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
                                     <img
                                         src={src}
-                                        alt={alt || "Preview"}
+                                        alt={alt || 'Preview'}
                                         className="max-h-full max-w-full object-contain"
                                         onError={(e) => {
-                                            (e.target as HTMLImageElement).style.display = 'none';
-                                            e.currentTarget.parentElement!.innerHTML = '<span class="text-sm text-muted-foreground">Invalid image URL</span>';
+                                            (
+                                                e.target as HTMLImageElement
+                                            ).style.display = 'none';
+                                            e.currentTarget.parentElement!.innerHTML =
+                                                '<span class="text-sm text-muted-foreground">Invalid image URL</span>';
                                         }}
                                     />
                                 </div>
@@ -96,51 +105,70 @@ export function ImagePluginControl({
 
                             <FieldGroup>
                                 <Field>
-                                    <FieldLabel htmlFor={`${editor.id}-image-src`}>
-                                        Image URL <span className="text-destructive">*</span>
+                                    <FieldLabel
+                                        htmlFor={`${editor.id}-image-src`}
+                                    >
+                                        Image URL{' '}
+                                        <span className="text-destructive">
+                                            *
+                                        </span>
                                     </FieldLabel>
                                     <Input
                                         id={`${editor.id}-image-src`}
                                         type="url"
                                         value={src}
-                                        onChange={(event) => setSrc(event.target.value)}
+                                        onChange={(event) =>
+                                            setSrc(event.target.value)
+                                        }
                                         placeholder="https://example.com/image.jpg"
                                         autoFocus
                                         required
                                     />
                                 </Field>
                                 <Field>
-                                    <FieldLabel htmlFor={`${editor.id}-image-alt`}>
+                                    <FieldLabel
+                                        htmlFor={`${editor.id}-image-alt`}
+                                    >
                                         Alt text
                                     </FieldLabel>
                                     <Input
                                         id={`${editor.id}-image-alt`}
                                         value={alt}
-                                        onChange={(event) => setAlt(event.target.value)}
+                                        onChange={(event) =>
+                                            setAlt(event.target.value)
+                                        }
                                         placeholder="Describe the image for screen readers"
                                     />
                                 </Field>
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <Field>
-                                        <FieldLabel htmlFor={`${editor.id}-image-width`}>
+                                        <FieldLabel
+                                            htmlFor={`${editor.id}-image-width`}
+                                        >
                                             Width
                                         </FieldLabel>
                                         <Input
                                             id={`${editor.id}-image-width`}
                                             value={width}
-                                            onChange={(event) => setWidth(event.target.value)}
+                                            onChange={(event) =>
+                                                setWidth(event.target.value)
+                                            }
                                             placeholder="e.g. 800"
                                         />
                                     </Field>
                                     <Field>
-                                        <FieldLabel htmlFor={`${editor.id}-image-height`}>
+                                        <FieldLabel
+                                            htmlFor={`${editor.id}-image-height`}
+                                        >
                                             Height
                                         </FieldLabel>
                                         <Input
                                             id={`${editor.id}-image-height`}
                                             value={height}
-                                            onChange={(event) => setHeight(event.target.value)}
+                                            onChange={(event) =>
+                                                setHeight(event.target.value)
+                                            }
                                             placeholder="e.g. 600"
                                         />
                                     </Field>
@@ -153,37 +181,53 @@ export function ImagePluginControl({
                                         </span>
                                         Advanced responsive attributes
                                     </summary>
-                                    <div className="mt-4 flex flex-col gap-4 pl-4 border-l-2 border-muted">
+                                    <div className="mt-4 flex flex-col gap-4 border-l-2 border-muted pl-4">
                                         <Field>
-                                            <FieldLabel htmlFor={`${editor.id}-image-srcset`}>
+                                            <FieldLabel
+                                                htmlFor={`${editor.id}-image-srcset`}
+                                            >
                                                 srcset
                                             </FieldLabel>
                                             <Textarea
                                                 id={`${editor.id}-image-srcset`}
                                                 rows={2}
                                                 value={srcset}
-                                                onChange={(event) => setSrcset(event.target.value)}
+                                                onChange={(event) =>
+                                                    setSrcset(
+                                                        event.target.value,
+                                                    )
+                                                }
                                                 placeholder="image-320w.jpg 320w, image-480w.jpg 480w"
                                             />
-                                            <FieldDescription>Multiple resolutions for different screen sizes</FieldDescription>
+                                            <FieldDescription>
+                                                Multiple resolutions for
+                                                different screen sizes
+                                            </FieldDescription>
                                         </Field>
                                         <Field>
-                                            <FieldLabel htmlFor={`${editor.id}-image-sizes`}>
+                                            <FieldLabel
+                                                htmlFor={`${editor.id}-image-sizes`}
+                                            >
                                                 sizes
                                             </FieldLabel>
                                             <Input
                                                 id={`${editor.id}-image-sizes`}
                                                 value={sizes}
-                                                onChange={(event) => setSizes(event.target.value)}
+                                                onChange={(event) =>
+                                                    setSizes(event.target.value)
+                                                }
                                                 placeholder="(max-width: 320px) 280px, 800px"
                                             />
-                                            <FieldDescription>Media conditions indicating image layout width</FieldDescription>
+                                            <FieldDescription>
+                                                Media conditions indicating
+                                                image layout width
+                                            </FieldDescription>
                                         </Field>
                                     </div>
                                 </details>
                             </FieldGroup>
                         </div>
-                        <DialogFooter className="gap-2 sm:gap-0 mt-2">
+                        <DialogFooter className="mt-2 gap-2 sm:gap-0">
                             <Button
                                 type="button"
                                 variant="outline"
@@ -191,10 +235,7 @@ export function ImagePluginControl({
                             >
                                 Cancel
                             </Button>
-                            <Button
-                                type="submit"
-                                disabled={!src.trim()}
-                            >
+                            <Button type="submit" disabled={!src.trim()}>
                                 Insert Image
                             </Button>
                         </DialogFooter>

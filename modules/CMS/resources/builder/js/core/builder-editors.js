@@ -34,7 +34,10 @@ Astero.WysiwygEditor = {
 
         if (element && style) {
             for (const name in style) {
-                if (!style[name] || (toggle && element.style.getPropertyValue(name))) {
+                if (
+                    !style[name] ||
+                    (toggle && element.style.getPropertyValue(name))
+                ) {
                     element.style.removeProperty(name);
                 } else {
                     element.style.setProperty(name, style[name]);
@@ -43,8 +46,14 @@ Astero.WysiwygEditor = {
         }
 
         //if edited text is an empty span remove the span
-        if (element.tagName == 'SPAN' && element.style.length == 0 && element.attributes.length <= 1) {
-            let textNode = iframeWindow.document.createTextNode(element.innerText);
+        if (
+            element.tagName == 'SPAN' &&
+            element.style.length == 0 &&
+            element.attributes.length <= 1
+        ) {
+            let textNode = iframeWindow.document.createTextNode(
+                element.innerText,
+            );
             element.replaceWith(textNode);
             element = textNode;
 
@@ -96,7 +105,11 @@ Astero.WysiwygEditor = {
         bind('underline-btn', 'click', function (e) {
             //doc.execCommand('underline',false,null);
             //self.editorSetStyle("u", {"text-decoration" : "underline"}, true);
-            self.editorSetStyle(false, { 'text-decoration': 'underline' }, true);
+            self.editorSetStyle(
+                false,
+                { 'text-decoration': 'underline' },
+                true,
+            );
             e.preventDefault();
             return false;
         });
@@ -104,7 +117,11 @@ Astero.WysiwygEditor = {
         bind('strike-btn', 'click', function (e) {
             //doc.execCommand('strikeThrough',false,null);
             //self.editorSetStyle("strike",  {"text-decoration" : "line-through"}, true);
-            self.editorSetStyle(false, { 'text-decoration': 'line-through' }, true);
+            self.editorSetStyle(
+                false,
+                { 'text-decoration': 'line-through' },
+                true,
+            );
             e.preventDefault();
             return false;
         });
@@ -147,8 +164,14 @@ Astero.WysiwygEditor = {
 
         bind('font-family', 'change', function (e) {
             let option = this.options[this.selectedIndex];
-            let element = self.editorSetStyle(false, { 'font-family': this.value });
-            Astero.FontsManager.addFont(option?.dataset?.provider, this.value, element);
+            let element = self.editorSetStyle(false, {
+                'font-family': this.value,
+            });
+            Astero.FontsManager.addFont(
+                option?.dataset?.provider,
+                this.value,
+                element,
+            );
             //doc.execCommand('fontName',false,this.value);
             e.preventDefault();
             return false;
@@ -157,7 +180,8 @@ Astero.WysiwygEditor = {
         bind('justify-btn', 'click', function (e) {
             //let command = "justify" + this.dataset.value;
             //doc.execCommand(command,false,"#");
-            const value = e.currentTarget?.dataset?.value || e.target?.dataset?.value;
+            const value =
+                e.currentTarget?.dataset?.value || e.target?.dataset?.value;
             if (value) {
                 self.editorSetStyle(false, { 'text-align': value });
             }
@@ -203,11 +227,19 @@ Astero.WysiwygEditor = {
             const trimmed = String(value).trim();
             if (!trimmed) return '';
             const lowered = trimmed.toLowerCase();
-            if (['transparent', 'inherit', 'initial', 'unset'].includes(lowered)) return '';
-            if (typeof ColorInput !== 'undefined' && typeof ColorInput.rgb2hex === 'function') {
+            if (
+                ['transparent', 'inherit', 'initial', 'unset'].includes(lowered)
+            )
+                return '';
+            if (
+                typeof ColorInput !== 'undefined' &&
+                typeof ColorInput.rgb2hex === 'function'
+            ) {
                 return ColorInput.rgb2hex(trimmed);
             }
-            const rgb = trimmed.match(/^rgba?[\s+]?\([\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?/i);
+            const rgb = trimmed.match(
+                /^rgba?[\s+]?\([\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?/i,
+            );
             if (rgb && rgb.length === 4) {
                 return (
                     '#' +
@@ -221,17 +253,24 @@ Astero.WysiwygEditor = {
 
         const fontFamily = document.getElementById('font-family');
         if (fontFamily) {
-            fontFamily.value = Astero.StyleManager.getStyle(element, 'font-family');
+            fontFamily.value = Astero.StyleManager.getStyle(
+                element,
+                'font-family',
+            );
         }
         const foreColor = document.getElementById('fore-color');
         if (foreColor) {
             // Color inputs only accept hex.
-            foreColor.value = toHexColor(Astero.StyleManager.getStyle(element, 'color'));
+            foreColor.value = toHexColor(
+                Astero.StyleManager.getStyle(element, 'color'),
+            );
         }
         const backColor = document.getElementById('back-color');
         if (backColor) {
             // Color inputs only accept hex.
-            backColor.value = toHexColor(Astero.StyleManager.getStyle(element, 'background-color'));
+            backColor.value = toHexColor(
+                Astero.StyleManager.getStyle(element, 'background-color'),
+            );
         }
         element.focus();
     },
@@ -283,11 +322,17 @@ Astero.ModalCodeEditor = {
 
         let self = this;
 
-        this.modal.querySelector('.save-btn').addEventListener('click', function (event) {
-            window.dispatchEvent(new CustomEvent('astero.ModalCodeEditor.save', { detail: self.getValue() }));
-            self.hide();
-            return false;
-        });
+        this.modal
+            .querySelector('.save-btn')
+            .addEventListener('click', function (event) {
+                window.dispatchEvent(
+                    new CustomEvent('astero.ModalCodeEditor.save', {
+                        detail: self.getValue(),
+                    }),
+                );
+                self.hide();
+                return false;
+            });
     },
 
     show: function (value) {
@@ -319,7 +364,9 @@ Astero.ModalCodeEditor = {
             this.init();
         }
         //enable save button
-        document.querySelectorAll('#top-panel .save-btn').forEach((e) => e.removeAttribute('disabled'));
+        document
+            .querySelectorAll('#top-panel .save-btn')
+            .forEach((e) => e.removeAttribute('disabled'));
         this.editor.value = value;
         if (this.editor.monacoEditor) {
             this.editor.monacoEditor.setValue(value);
@@ -351,11 +398,17 @@ Astero.CodeEditor = {
         });
 
         //load code on document changes
-        Astero.Builder.frameBody?.addEventListener('astero.undo.add', () => Astero.CodeEditor.setValue());
-        Astero.Builder.frameBody?.addEventListener('astero.undo.restore', () => Astero.CodeEditor.setValue());
+        Astero.Builder.frameBody?.addEventListener('astero.undo.add', () =>
+            Astero.CodeEditor.setValue(),
+        );
+        Astero.Builder.frameBody?.addEventListener('astero.undo.restore', () =>
+            Astero.CodeEditor.setValue(),
+        );
 
         //load code when a new url is loaded
-        Astero.Builder.documentFrame?.addEventListener('load', () => Astero.CodeEditor.setValue());
+        Astero.Builder.documentFrame?.addEventListener('load', () =>
+            Astero.CodeEditor.setValue(),
+        );
 
         this.isActive = true;
     },
@@ -416,7 +469,9 @@ Astero.CssEditor = {
             delay(() => {
                 const value = e.detail?.value || self.textarea.value;
                 Astero.StyleManager.setCss(value);
-                document.querySelectorAll('#top-panel .save-btn').forEach((e) => e.removeAttribute('disabled'));
+                document
+                    .querySelectorAll('#top-panel .save-btn')
+                    .forEach((e) => e.removeAttribute('disabled'));
             }, 500);
         });
 
@@ -425,7 +480,9 @@ Astero.CssEditor = {
             if (!self.textarea.monacoEditor) {
                 delay(() => {
                     Astero.StyleManager.setCss(self.textarea.value);
-                    document.querySelectorAll('#top-panel .save-btn').forEach((e) => e.removeAttribute('disabled'));
+                    document
+                        .querySelectorAll('#top-panel .save-btn')
+                        .forEach((e) => e.removeAttribute('disabled'));
                 }, 500);
             }
         });
@@ -469,7 +526,7 @@ Astero.CssEditor = {
             let currentCss = Astero.StyleManager.getCss();
             console.log(
                 'CSS Editor (basic): Refreshing CSS content:',
-                currentCss ? currentCss.length + ' characters' : 'empty'
+                currentCss ? currentCss.length + ' characters' : 'empty',
             );
             this.setValue(currentCss);
         }
@@ -484,9 +541,13 @@ Astero.EnabledContentEditor = {
 
     init: function (doc) {
         console.log('EnabledContentEditor basic init called');
-        this.textarea = document.querySelector('#astero-enabled-content-editor textarea');
+        this.textarea = document.querySelector(
+            '#astero-enabled-content-editor textarea',
+        );
         if (!this.textarea) {
-            console.error('EnabledContentEditor: textarea not found at #astero-enabled-content-editor textarea');
+            console.error(
+                'EnabledContentEditor: textarea not found at #astero-enabled-content-editor textarea',
+            );
             return false;
         }
 
@@ -516,11 +577,17 @@ Astero.EnabledContentEditor = {
         });
 
         // Load content on document changes
-        Astero.Builder.frameBody?.addEventListener('astero.undo.add', () => self.setValue());
-        Astero.Builder.frameBody?.addEventListener('astero.undo.restore', () => self.setValue());
+        Astero.Builder.frameBody?.addEventListener('astero.undo.add', () =>
+            self.setValue(),
+        );
+        Astero.Builder.frameBody?.addEventListener('astero.undo.restore', () =>
+            self.setValue(),
+        );
 
         // Load content when a new url is loaded
-        Astero.Builder.documentFrame?.addEventListener('load', () => self.setValue());
+        Astero.Builder.documentFrame?.addEventListener('load', () =>
+            self.setValue(),
+        );
 
         this.isActive = true;
     },
@@ -552,11 +619,23 @@ Astero.EnabledContentEditor = {
         const indentStr = '  '; // 2 spaces
 
         // Self-closing and inline tags that shouldn't add newlines
-        const inlineTags = ['br', 'hr', 'img', 'input', 'meta', 'link', 'source', 'track', 'wbr'];
+        const inlineTags = [
+            'br',
+            'hr',
+            'img',
+            'input',
+            'meta',
+            'link',
+            'source',
+            'track',
+            'wbr',
+        ];
         // const preserveInlineTags = ['span', 'a', 'strong', 'em', 'b', 'i', 'u', 'small', 'mark', 'del', 'ins', 'sub', 'sup'];
 
         // Split by tags while keeping the tags
-        const parts = html.split(/(<[^>]+>)/g).filter((part) => part.length > 0);
+        const parts = html
+            .split(/(<[^>]+>)/g)
+            .filter((part) => part.length > 0);
 
         for (let i = 0; i < parts.length; i++) {
             const part = parts[i].trim();
@@ -570,7 +649,8 @@ Astero.EnabledContentEditor = {
                 // Opening tag or self-closing
                 const tagMatch = part.match(/^<(\/?)?(\w+)/);
                 const tagName = tagMatch ? tagMatch[2].toLowerCase() : '';
-                const isSelfClosing = part.endsWith('/>') || inlineTags.includes(tagName);
+                const isSelfClosing =
+                    part.endsWith('/>') || inlineTags.includes(tagName);
 
                 formatted += indentStr.repeat(indent) + part + '\n';
 
@@ -606,10 +686,16 @@ Astero.EnabledContentEditor = {
             enabledElements.innerHTML = htmlContent;
 
             // Enable save button
-            document.querySelectorAll('#top-panel .save-btn').forEach((e) => e.removeAttribute('disabled'));
+            document
+                .querySelectorAll('#top-panel .save-btn')
+                .forEach((e) => e.removeAttribute('disabled'));
 
             // Trigger change event
-            window.dispatchEvent(new CustomEvent('astero.EnabledContentEditor.change', { detail: htmlContent }));
+            window.dispatchEvent(
+                new CustomEvent('astero.EnabledContentEditor.change', {
+                    detail: htmlContent,
+                }),
+            );
         } catch (error) {
             console.error('EnabledContentEditor: Error setting content', error);
         }
@@ -632,7 +718,9 @@ Astero.EnabledContentEditor = {
     destroy: function () {
         this.isActive = false;
         // Also hide the UI and remove active class
-        let htmlEditor = document.getElementById('astero-enabled-content-editor');
+        let htmlEditor = document.getElementById(
+            'astero-enabled-content-editor',
+        );
         let htmlEditorBtn = document.getElementById('html-editor-btn');
         if (htmlEditor) {
             htmlEditor.style.display = 'none';
@@ -643,7 +731,10 @@ Astero.EnabledContentEditor = {
     },
 
     toggle: function () {
-        console.log('EnabledContentEditor.toggle called, isActive:', this.isActive);
+        console.log(
+            'EnabledContentEditor.toggle called, isActive:',
+            this.isActive,
+        );
         if (this.isActive !== true) {
             this.isActive = true;
             return this.init();
@@ -721,7 +812,9 @@ Astero.JsEditor = {
             delay(() => {
                 const value = e.detail?.value || self.textarea.value;
                 Astero.ScriptManager.setJs(value);
-                document.querySelectorAll('#top-panel .save-btn').forEach((e) => e.removeAttribute('disabled'));
+                document
+                    .querySelectorAll('#top-panel .save-btn')
+                    .forEach((e) => e.removeAttribute('disabled'));
             }, 500);
         });
 
@@ -730,7 +823,9 @@ Astero.JsEditor = {
             if (!self.textarea.monacoEditor) {
                 delay(() => {
                     Astero.ScriptManager.setJs(self.textarea.value);
-                    document.querySelectorAll('#top-panel .save-btn').forEach((e) => e.removeAttribute('disabled'));
+                    document
+                        .querySelectorAll('#top-panel .save-btn')
+                        .forEach((e) => e.removeAttribute('disabled'));
                 }, 500);
             }
         });
@@ -752,10 +847,13 @@ Astero.JsEditor = {
         }
         // Update Astero.ScriptManager.jsContainer
         if (Astero.ScriptManager.jsContainer) {
-            Astero.ScriptManager.jsContainer.innerHTML = value || this.getValue();
+            Astero.ScriptManager.jsContainer.innerHTML =
+                value || this.getValue();
         }
         // Update scriptDiv if it exists
-        let scriptDiv = this.doc ? this.doc.querySelector('div[id="pagebuilder-scripts"]') : null;
+        let scriptDiv = this.doc
+            ? this.doc.querySelector('div[id="pagebuilder-scripts"]')
+            : null;
         if (scriptDiv) {
             // console.log("JsEditor: Updating scriptDiv content");
             scriptDiv.innerHTML = value || this.getValue();
@@ -785,7 +883,7 @@ Astero.JsEditor = {
             let currentJs = Astero.ScriptManager.getJs();
             console.log(
                 'JS Editor (basic): Refreshing JS content:',
-                currentJs ? currentJs.length + ' characters' : 'empty'
+                currentJs ? currentJs.length + ' characters' : 'empty',
             );
             this.setValue(currentJs);
         }

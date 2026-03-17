@@ -13,12 +13,16 @@ The edited page should include the aos library https://github.com/michalsnik/aos
 //clean aos classes on save
 window.addEventListener('astero.getHtml.before', function (event) {
     let doc = event.detail;
-    doc.querySelectorAll('[data-aos]').forEach((e) => e.classList.remove('aos-animate', 'aos-init'));
+    doc.querySelectorAll('[data-aos]').forEach((e) =>
+        e.classList.remove('aos-animate', 'aos-init'),
+    );
 });
 
 window.addEventListener('astero.getHtml.after', function (event) {
     let doc = event.detail;
-    doc.querySelectorAll('[data-aos]').forEach((e) => e.classList.add('aos-animate', 'aos-init'));
+    doc.querySelectorAll('[data-aos]').forEach((e) =>
+        e.classList.add('aos-animate', 'aos-init'),
+    );
 });
 
 //ignore aos classes for styles
@@ -28,9 +32,13 @@ window.addEventListener('astero.getHtml.after', function (event) {
 
     if (!Astero) return;
     if (!Astero.Builder) Astero.Builder = {};
-    if (!Array.isArray(Astero.Builder.ignoreClasses)) Astero.Builder.ignoreClasses = [];
+    if (!Array.isArray(Astero.Builder.ignoreClasses))
+        Astero.Builder.ignoreClasses = [];
 
-    Astero.Builder.ignoreClasses = Astero.Builder.ignoreClasses.concat(['aos-init', 'aos-animate']);
+    Astero.Builder.ignoreClasses = Astero.Builder.ignoreClasses.concat([
+        'aos-init',
+        'aos-animate',
+    ]);
 })();
 
 // Legacy globals used below (this file originally ran in a single concatenated script).
@@ -260,12 +268,18 @@ let ComponentBaseAnimateScroll = {
             onChange: function (node, value) {
                 node.classList.remove('aos-init', 'aos-animate');
                 if (value == '') {
-                    node.removeAttribute('data-aos', 'data-aos-duration', 'data-aos-delay');
+                    node.removeAttribute(
+                        'data-aos',
+                        'data-aos-duration',
+                        'data-aos-delay',
+                    );
                 } else {
                     delay(
                         () => node.classList.add('aos-init', 'aos-animate'),
-                        node.dataset.aosDuration ? node.dataset.aosDuration : 1000,
-                        'aos-animation-change'
+                        node.dataset.aosDuration
+                            ? node.dataset.aosDuration
+                            : 1000,
+                        'aos-animation-change',
                     );
                 }
                 return node;
@@ -322,7 +336,7 @@ let ComponentBaseAnimateScroll = {
                 delay(
                     () => node.classList.add('aos-init', 'aos-animate'),
                     node.dataset.aosDuration ? node.dataset.aosDuration : 1000,
-                    'aos-animation-play'
+                    'aos-animation-play',
                 );
                 return node;
             },

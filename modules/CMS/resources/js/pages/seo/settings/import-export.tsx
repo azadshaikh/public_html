@@ -19,15 +19,25 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field';
+import {
+    Field,
+    FieldDescription,
+    FieldError,
+    FieldLabel,
+} from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import { useAppForm } from '@/hooks/use-app-form';
 import SettingsLayout from '@/layouts/settings-layout';
-import { getSeoSettingsBreadcrumbs, getSeoSettingsNav } from '../../../lib/seo-settings';
+import {
+    getSeoSettingsBreadcrumbs,
+    getSeoSettingsNav,
+} from '../../../lib/seo-settings';
 import type { ImportExportPageProps } from '../../../types/seo';
 
-export default function SeoImportExportPage({ seoGroups }: ImportExportPageProps) {
+export default function SeoImportExportPage({
+    seoGroups,
+}: ImportExportPageProps) {
     const [exporting, setExporting] = useState(false);
     const form = useAppForm<{ import_file: File | null }>({
         defaults: { import_file: null },
@@ -35,7 +45,8 @@ export default function SeoImportExportPage({ seoGroups }: ImportExportPageProps
         dontRemember: ['import_file'],
         rules: {
             import_file: [
-                (value) => (value ? undefined : 'A JSON export file is required.'),
+                (value) =>
+                    value ? undefined : 'A JSON export file is required.',
             ],
         },
     });
@@ -63,7 +74,11 @@ export default function SeoImportExportPage({ seoGroups }: ImportExportPageProps
                 jsondata?: string;
             };
 
-            if (!response.ok || result.status !== 'success' || !result.jsondata) {
+            if (
+                !response.ok ||
+                result.status !== 'success' ||
+                !result.jsondata
+            ) {
                 throw new Error(result.message || 'Export failed.');
             }
 
@@ -110,7 +125,8 @@ export default function SeoImportExportPage({ seoGroups }: ImportExportPageProps
             forceFormData: true,
             successToast: {
                 title: 'SEO settings imported',
-                description: 'The uploaded backup file was processed successfully.',
+                description:
+                    'The uploaded backup file was processed successfully.',
             },
         });
     };
@@ -129,7 +145,8 @@ export default function SeoImportExportPage({ seoGroups }: ImportExportPageProps
                     <FileArchiveIcon className="size-4" />
                     <AlertTitle>Backup before major changes</AlertTitle>
                     <AlertDescription>
-                        Exporting gives you a portable JSON snapshot of your SEO configuration, including sitemap and robots data.
+                        Exporting gives you a portable JSON snapshot of your SEO
+                        configuration, including sitemap and robots data.
                     </AlertDescription>
                 </Alert>
 
@@ -141,15 +158,20 @@ export default function SeoImportExportPage({ seoGroups }: ImportExportPageProps
                                 <CardTitle>Export settings</CardTitle>
                             </div>
                             <CardDescription>
-                                Download all SEO-related settings as a JSON file for safe keeping.
+                                Download all SEO-related settings as a JSON file
+                                for safe keeping.
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="flex flex-col gap-4 text-sm text-muted-foreground">
                             <p>
-                                The export includes {seoGroups.length} SEO-related setting groups currently stored in the database.
+                                The export includes {seoGroups.length}{' '}
+                                SEO-related setting groups currently stored in
+                                the database.
                             </p>
                             <div className="rounded-xl border bg-muted/30 p-4">
-                                <div className="mb-2 font-medium text-foreground">Included groups</div>
+                                <div className="mb-2 font-medium text-foreground">
+                                    Included groups
+                                </div>
                                 <div className="flex flex-wrap gap-2">
                                     {seoGroups.map((group) => (
                                         <span
@@ -163,7 +185,11 @@ export default function SeoImportExportPage({ seoGroups }: ImportExportPageProps
                             </div>
                         </CardContent>
                         <CardFooter>
-                            <Button type="button" onClick={handleExport} disabled={exporting}>
+                            <Button
+                                type="button"
+                                onClick={handleExport}
+                                disabled={exporting}
+                            >
                                 {exporting ? (
                                     <Spinner className="mr-2 size-4" />
                                 ) : (
@@ -181,37 +207,57 @@ export default function SeoImportExportPage({ seoGroups }: ImportExportPageProps
                                 <CardTitle>Import settings</CardTitle>
                             </div>
                             <CardDescription>
-                                Upload a previously exported JSON file to restore settings.
+                                Upload a previously exported JSON file to
+                                restore settings.
                             </CardDescription>
                         </CardHeader>
                         <form onSubmit={handleImport} noValidate>
                             {form.dirtyGuardDialog}
                             <CardContent className="flex flex-col gap-4">
-                                <FormErrorSummary errors={form.errors} minMessages={2} />
-                                <Field data-invalid={form.invalid('import_file') || undefined}>
-                                    <FieldLabel htmlFor="import_file">JSON backup file</FieldLabel>
+                                <FormErrorSummary
+                                    errors={form.errors}
+                                    minMessages={2}
+                                />
+                                <Field
+                                    data-invalid={
+                                        form.invalid('import_file') || undefined
+                                    }
+                                >
+                                    <FieldLabel htmlFor="import_file">
+                                        JSON backup file
+                                    </FieldLabel>
                                     <Input
                                         id="import_file"
                                         type="file"
                                         accept=".json,application/json"
                                         onChange={handleImportChange}
-                                        aria-invalid={form.invalid('import_file') || undefined}
+                                        aria-invalid={
+                                            form.invalid('import_file') ||
+                                            undefined
+                                        }
                                     />
                                     <FieldDescription>
-                                        Only files exported from this SEO settings area should be imported.
+                                        Only files exported from this SEO
+                                        settings area should be imported.
                                     </FieldDescription>
-                                    <FieldError>{form.error('import_file')}</FieldError>
+                                    <FieldError>
+                                        {form.error('import_file')}
+                                    </FieldError>
                                 </Field>
                                 <Alert>
                                     <FileJsonIcon className="size-4" />
                                     <AlertTitle>Import notes</AlertTitle>
                                     <AlertDescription>
-                                        Existing SEO keys are updated in place. Missing keys remain unchanged.
+                                        Existing SEO keys are updated in place.
+                                        Missing keys remain unchanged.
                                     </AlertDescription>
                                 </Alert>
                             </CardContent>
                             <CardFooter>
-                                <Button type="submit" disabled={form.processing}>
+                                <Button
+                                    type="submit"
+                                    disabled={form.processing}
+                                >
                                     {form.processing ? (
                                         <Spinner className="mr-2 size-4" />
                                     ) : (

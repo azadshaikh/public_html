@@ -12,7 +12,8 @@ Astero.Components.extend('_base', 'widgets/googlemaps', {
     name: 'Google Maps',
     attributes: ['data-component-maps'],
     icon: 'ri-map-pin-line',
-    dragHtml: '<div class="text-center p-3"><i class="ri-map-pin-line display-4 text-muted"></i></div>',
+    dragHtml:
+        '<div class="text-center p-3"><i class="ri-map-pin-line display-4 text-muted"></i></div>',
     html: '<div data-component-maps><iframe frameborder="0" src="https://maps.google.com/maps?q=Bucharest&z=15&t=q&key=&output=embed" width="100%" height="100%" style="width:100%;height:100%;left:0px"></iframe></div>',
     resizable: true, //show select box resize handlers
     resizeMode: 'css',
@@ -35,13 +36,21 @@ Astero.Components.extend('_base', 'widgets/googlemaps', {
         this.t = params.get('t');
         this.key = params.get('key');
 
-        const zoomInput = document.querySelector('.component-properties input[name=z]');
+        const zoomInput = document.querySelector(
+            '.component-properties input[name=z]',
+        );
         if (zoomInput) zoomInput.value = this.z || '';
-        const addressInput = document.querySelector('.component-properties input[name=q]');
+        const addressInput = document.querySelector(
+            '.component-properties input[name=q]',
+        );
         if (addressInput) addressInput.value = this.q || '';
-        const typeSelect = document.querySelector('.component-properties select[name=t]');
+        const typeSelect = document.querySelector(
+            '.component-properties select[name=t]',
+        );
         if (typeSelect) typeSelect.value = this.t || '';
-        const keyInput = document.querySelector('.component-properties input[name=key]');
+        const keyInput = document.querySelector(
+            '.component-properties input[name=key]',
+        );
         if (keyInput) keyInput.value = this.key || '';
     },
 
@@ -51,7 +60,14 @@ Astero.Components.extend('_base', 'widgets/googlemaps', {
 
         this[property.key] = value;
 
-        const mapUrl = 'https://maps.google.com/maps?q=' + this.q + '&z=' + this.z + '&t=' + this.t + '&output=embed';
+        const mapUrl =
+            'https://maps.google.com/maps?q=' +
+            this.q +
+            '&z=' +
+            this.z +
+            '&t=' +
+            this.t +
+            '&output=embed';
 
         mapIframe.setAttribute('src', mapUrl);
 
@@ -103,7 +119,8 @@ Astero.Components.extend('_base', 'widgets/openstreetmap', {
     name: 'Open Street Map',
     attributes: ['data-component-openstreetmap'],
     icon: 'ri-map-pin-line',
-    dragHtml: '<div class="text-center p-3"><i class="ri-map-pin-line display-4 text-muted"></i></div>',
+    dragHtml:
+        '<div class="text-center p-3"><i class="ri-map-pin-line display-4 text-muted"></i></div>',
     html: `<div data-component-openstreetmap><iframe width="100%" height="100%" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="https://www.openstreetmap.org/export/embed.html?bbox=-62.04673002474011%2C16.95487694424327%2C-61.60521696321666%2C17.196751341562923&layer=mapnik"></iframe></div>`,
     resizable: true, //show select box resize handlers
     resizeMode: 'css',
@@ -122,9 +139,13 @@ Astero.Components.extend('_base', 'widgets/openstreetmap', {
         this.bbox = params.get('bbox');
         this.layer = params.get('layer');
 
-        const bboxInput = document.querySelector('.component-properties input[name=bbox]');
+        const bboxInput = document.querySelector(
+            '.component-properties input[name=bbox]',
+        );
         if (bboxInput) bboxInput.value = this.bbox || '';
-        const layerInput = document.querySelector('.component-properties input[name=layer]');
+        const layerInput = document.querySelector(
+            '.component-properties input[name=layer]',
+        );
         if (layerInput) layerInput.value = this.layer || '';
     },
 
@@ -134,7 +155,11 @@ Astero.Components.extend('_base', 'widgets/openstreetmap', {
 
         this[property.key] = value;
 
-        const mapUrl = 'https://www.openstreetmap.org/export/embed.html?bbox=' + this.bbox + '&layer=' + this.layer;
+        const mapUrl =
+            'https://www.openstreetmap.org/export/embed.html?bbox=' +
+            this.bbox +
+            '&layer=' +
+            this.layer;
 
         mapIframe.setAttribute('src', mapUrl);
 
@@ -173,7 +198,8 @@ Astero.Components.extend('_base', 'widgets/embed-video', {
     name: 'Embed Video',
     attributes: ['data-component-video'],
     icon: 'ri-youtube-line',
-    dragHtml: '<div class="text-center p-3"><i class="ri-video-line display-4 text-muted"></i></div>', //use image for drag and swap with iframe on drop for drag performance
+    dragHtml:
+        '<div class="text-center p-3"><i class="ri-video-line display-4 text-muted"></i></div>', //use image for drag and swap with iframe on drop for drag performance
     html: '<div data-component-video style="width:640px;height:480px;"><iframe frameborder="0" src="https://player.vimeo.com/video/24253126?autoplay=false&controls=false&loop=false&playsinline=true&muted=false" width="100%" height="100%"></iframe></div>',
 
     //url parameters set with onChange
@@ -187,16 +213,21 @@ Astero.Components.extend('_base', 'widgets/embed-video', {
     muted: false,
     resizable: true, //show select box resize handlers
     resizeMode: 'css', //div unlike img/iframe etc does not have width,height attributes need to use css
-    youtubeRegex: /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]+)/i,
+    youtubeRegex:
+        /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]+)/i,
     vimeoRegex: /(?:vimeo\.com(?:[^\d]+))(\d+)/i,
 
     init: function (node) {
         const iframe = node.querySelector('iframe');
         const video = node.querySelector('video');
 
-        const urlField = document.querySelector('.component-properties [data-key=url]');
+        const urlField = document.querySelector(
+            '.component-properties [data-key=url]',
+        );
         if (urlField?.style) urlField.style.display = 'none';
-        const posterField = document.querySelector('.component-properties [data-key=poster]');
+        const posterField = document.querySelector(
+            '.component-properties [data-key=poster]',
+        );
         if (posterField?.style) posterField.style.display = 'none';
 
         //check if html5
@@ -207,11 +238,19 @@ Astero.Components.extend('_base', 'widgets/embed-video', {
             let src = iframe.getAttribute('src');
             let match;
 
-            if (src && src.indexOf('youtube') !== -1 && (match = src.match(this.youtubeRegex))) {
+            if (
+                src &&
+                src.indexOf('youtube') !== -1 &&
+                (match = src.match(this.youtubeRegex))
+            ) {
                 //youtube
                 this.video_id = match[1];
                 this.t = 'y';
-            } else if (src && src.indexOf('vimeo') !== -1 && (match = src.match(this.vimeoRegex))) {
+            } else if (
+                src &&
+                src.indexOf('vimeo') !== -1 &&
+                (match = src.match(this.vimeoRegex))
+            ) {
                 //vimeo
                 this.video_id = match[1];
                 this.t = 'v';
@@ -220,20 +259,32 @@ Astero.Components.extend('_base', 'widgets/embed-video', {
             }
         }
 
-        const idInput = document.querySelector('.component-properties input[name=video_id]');
+        const idInput = document.querySelector(
+            '.component-properties input[name=video_id]',
+        );
         if (idInput) idInput.value = this.video_id || '';
-        const urlInput = document.querySelector('.component-properties input[name=url]');
+        const urlInput = document.querySelector(
+            '.component-properties input[name=url]',
+        );
         if (urlInput) urlInput.value = this.url || '';
-        const typeSelect = document.querySelector('.component-properties select[name=t]');
+        const typeSelect = document.querySelector(
+            '.component-properties select[name=t]',
+        );
         if (typeSelect) typeSelect.value = this.t || '';
     },
 
     onChange: function (node, property, value, input, event) {
         this[property.key] = value;
         let newNode = null;
-        const videoIdField = document.querySelector('.component-properties [data-key=video_id]');
-        const urlField = document.querySelector('.component-properties [data-key=url]');
-        const posterField = document.querySelector('.component-properties [data-key=poster]');
+        const videoIdField = document.querySelector(
+            '.component-properties [data-key=video_id]',
+        );
+        const urlField = document.querySelector(
+            '.component-properties [data-key=url]',
+        );
+        const posterField = document.querySelector(
+            '.component-properties [data-key=poster]',
+        );
 
         switch (this.t) {
             case 'y':
@@ -270,7 +321,7 @@ Astero.Components.extend('_base', 'widgets/embed-video', {
                         (this.loop ? ' loop ' : '') +
                         (this.playsinline ? ' playsinline ' : '') +
                         (this.muted ? ' muted ' : '') +
-                        ' style="height: 100%; width: 100%;"></video>'
+                        ' style="height: 100%; width: 100%;"></video>',
                 )[0];
                 break;
         }
@@ -316,10 +367,17 @@ Astero.Components.extend('_base', 'widgets/embed-video', {
                 let id = false;
                 let t = false;
 
-                if (((id = value.match(youtube)) && (t = 'y')) || ((id = value.match(vimeo)) && (t = 'v'))) {
-                    const typeSelect = document.querySelector('.component-properties select[name=t]');
+                if (
+                    ((id = value.match(youtube)) && (t = 'y')) ||
+                    ((id = value.match(vimeo)) && (t = 'v'))
+                ) {
+                    const typeSelect = document.querySelector(
+                        '.component-properties select[name=t]',
+                    );
                     if (typeSelect) typeSelect.value = t;
-                    const idInput = document.querySelector('.component-properties input[name=video_id]');
+                    const idInput = document.querySelector(
+                        '.component-properties input[name=video_id]',
+                    );
                     if (idInput) idInput.value = id[1];
 
                     component.t = t;
@@ -423,7 +481,8 @@ Astero.Components.extend('_base', 'widgets/facebookcomments', {
     name: 'Facebook Comments',
     attributes: ['data-component-facebookcomments'],
     icon: 'ri-facebook-line',
-    dragHtml: '<div class="text-center p-3"><i class="ri-discuss-line display-4 text-muted"></i></div>',
+    dragHtml:
+        '<div class="text-center p-3"><i class="ri-discuss-line display-4 text-muted"></i></div>',
     html:
         '<div  data-component-facebookcomments><script>(function(d, s, id) {\
 			  let js, fjs = d.getElementsByTagName(s)[0];\
@@ -503,7 +562,8 @@ Astero.Components.extend('_base', 'widgets/twitter', {
     name: 'Twitter',
     attributes: ['data-component-twitter'],
     icon: 'ri-twitter-x-line',
-    dragHtml: '<div class="text-center p-3"><i class="ri-twitter-x-line display-4 text-muted"></i></div>',
+    dragHtml:
+        '<div class="text-center p-3"><i class="ri-twitter-x-line display-4 text-muted"></i></div>',
     html: '<div data-component-twitter><iframe width="100%" height="100%"src="https://platform.twitter.com/embed/Tweet.html?embedId=twitter-widget-0&frame=false&hideCard=false&hideThread=false&id=943901463998169088"></iframe></div>',
     resizable: true, //show select box resize handlers
     resizeMode: 'css',
@@ -525,7 +585,9 @@ Astero.Components.extend('_base', 'widgets/twitter', {
             }
         }
 
-        const tweetInput = document.querySelector('.component-properties input[name=tweet]');
+        const tweetInput = document.querySelector(
+            '.component-properties input[name=tweet]',
+        );
         if (tweetInput) tweetInput.value = this.tweet || '';
     },
 
@@ -556,7 +618,9 @@ Astero.Components.extend('_base', 'widgets/twitter', {
                 let id = false;
 
                 if ((id = value.match(twitterRegex))) {
-                    const tweetInput = document.querySelector('.component-properties input[name=tweet]');
+                    const tweetInput = document.querySelector(
+                        '.component-properties input[name=tweet]',
+                    );
                     if (tweetInput) tweetInput.value = id[1];
 
                     component.tweet = id[1];
@@ -631,7 +695,8 @@ Astero.Components.extend('_base', 'widgets/facebookpage', {
     name: 'Facebook Page Plugin',
     attributes: ['data-component-facebookpage'],
     icon: 'ri-facebook-line',
-    dropHtml: '<div class="text-center p-3"><i class="ri-facebook-box-line display-4 text-muted"></i></div>',
+    dropHtml:
+        '<div class="text-center p-3"><i class="ri-facebook-box-line display-4 text-muted"></i></div>',
     html: `<div data-component-facebookpage><div class="fb-page"
 			 data-href="https://www.facebook.com/facebook"
 			 data-tabs="timeline"
@@ -702,7 +767,9 @@ Astero.Components.extend('_base', 'widgets/facebookpage', {
 
         frameHead?.querySelector('[data-fbcssmodules]')?.remove();
         frameBody?.querySelector('[data-fbcssmodules]')?.remove();
-        frameHead?.querySelector("script[src^='https://connect.facebook.net']")?.remove();
+        frameHead
+            ?.querySelector("script[src^='https://connect.facebook.net']")
+            ?.remove();
 
         const parent = node?.parentElement;
         if (parent) {
@@ -717,7 +784,8 @@ Astero.Components.extend('_base', 'widgets/chartjs', {
     name: 'Chart.js',
     attributes: ['data-component-chartjs'],
     icon: 'ri-bar-chart-line',
-    dragHtml: '<div class="text-center p-3"><i class="ri-bar-chart-line display-4 text-muted"></i></div>',
+    dragHtml:
+        '<div class="text-center p-3"><i class="ri-bar-chart-line display-4 text-muted"></i></div>',
     html: '<div data-component-chartjs class="chartjs" data-chart=\'{\
 			"type": "line",\
 			"data": {\
@@ -766,7 +834,8 @@ Astero.Components.extend('_base', 'widgets/chartjs', {
             const code = frameDoc.createElement('script');
 
             lib.id = 'chartjs-script';
-            lib.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.bundle.min.js';
+            lib.src =
+                'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.bundle.min.js';
             code.text = `
                 function initCharts(onlyNew = false) {
                     if (typeof Chart === 'undefined') return;
@@ -890,7 +959,8 @@ function lottieAfterDrop(node) {
         let code = frameDoc.createElement('script');
         lib.id = 'lottie-js';
         lib.type = 'text/javascript';
-        lib.src = 'https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie.min.js';
+        lib.src =
+            'https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie.min.js';
         code.type = 'text/javascript';
         code.text = `
 		let lottie = [];
@@ -963,6 +1033,13 @@ Astero.Components.add('widgets/lottie', {
             inline: true,
             col: 4,
         },
-        { name: 'Loop', key: 'loop', htmlAttr: 'data-loop', inputtype: CheckboxInput, inline: true, col: 4 },
+        {
+            name: 'Loop',
+            key: 'loop',
+            htmlAttr: 'data-loop',
+            inputtype: CheckboxInput,
+            inline: true,
+            col: 4,
+        },
     ],
 });

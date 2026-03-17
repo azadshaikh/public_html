@@ -67,7 +67,8 @@ const emptyValues: FormFormValues = {
     css: '',
     store_in_database: true,
     confirmation_type: 'message',
-    confirmation_message: 'Thanks for contacting us. We will get back to you soon.',
+    confirmation_message:
+        'Thanks for contacting us. We will get back to you soon.',
     redirect_url: '',
     is_active: true,
     published_at: '',
@@ -242,7 +243,11 @@ export default function CmsForm({
     };
 
     return (
-        <form className="flex flex-col gap-6" onSubmit={handleSubmit} noValidate>
+        <form
+            className="flex flex-col gap-6"
+            onSubmit={handleSubmit}
+            noValidate
+        >
             {form.dirtyGuardDialog}
             <FormErrorSummary errors={form.errors} minMessages={2} />
 
@@ -255,28 +260,43 @@ export default function CmsForm({
                                 <CardTitle>Form builder</CardTitle>
                             </div>
                             <CardDescription>
-                                Configure the public details, markup, and confirmation behavior for
-                                this form.
+                                Configure the public details, markup, and
+                                confirmation behavior for this form.
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="flex flex-col gap-6">
-                            <Field data-invalid={form.invalid('title') || undefined}>
-                                <RequiredLabel htmlFor="title">Title</RequiredLabel>
+                            <Field
+                                data-invalid={
+                                    form.invalid('title') || undefined
+                                }
+                            >
+                                <RequiredLabel htmlFor="title">
+                                    Title
+                                </RequiredLabel>
                                 <Input
                                     id="title"
                                     value={form.data.title}
                                     onChange={(event) =>
-                                        form.setField('title', event.target.value)
+                                        form.setField(
+                                            'title',
+                                            event.target.value,
+                                        )
                                     }
                                     onBlur={() => form.touch('title')}
-                                    aria-invalid={form.invalid('title') || undefined}
+                                    aria-invalid={
+                                        form.invalid('title') || undefined
+                                    }
                                     placeholder="Contact us form"
                                 />
                                 <FieldError>{form.error('title')}</FieldError>
                             </Field>
 
                             <FieldGroup>
-                                <Field data-invalid={form.invalid('slug') || undefined}>
+                                <Field
+                                    data-invalid={
+                                        form.invalid('slug') || undefined
+                                    }
+                                >
                                     <FieldLabel htmlFor="slug">Slug</FieldLabel>
                                     <Input
                                         id="slug"
@@ -289,13 +309,17 @@ export default function CmsForm({
                                             );
                                         }}
                                         onBlur={() => form.touch('slug')}
-                                        aria-invalid={form.invalid('slug') || undefined}
+                                        aria-invalid={
+                                            form.invalid('slug') || undefined
+                                        }
                                         placeholder="contact-us-form"
                                     />
                                     <FieldDescription>
                                         Used for URLs and internal references.
                                     </FieldDescription>
-                                    <FieldError>{form.error('slug')}</FieldError>
+                                    <FieldError>
+                                        {form.error('slug')}
+                                    </FieldError>
                                 </Field>
 
                                 <Field
@@ -303,7 +327,9 @@ export default function CmsForm({
                                         form.invalid('shortcode') || undefined
                                     }
                                 >
-                                    <FieldLabel htmlFor="shortcode">Shortcode</FieldLabel>
+                                    <FieldLabel htmlFor="shortcode">
+                                        Shortcode
+                                    </FieldLabel>
                                     <Input
                                         id="shortcode"
                                         value={form.data.shortcode}
@@ -321,43 +347,63 @@ export default function CmsForm({
                                         }}
                                         onBlur={() => form.touch('shortcode')}
                                         aria-invalid={
-                                            form.invalid('shortcode') || undefined
+                                            form.invalid('shortcode') ||
+                                            undefined
                                         }
                                         placeholder="form_contact_us"
                                     />
                                     <FieldDescription>
                                         Embed this form using{' '}
                                         <span className="font-mono text-xs">
-                                            [{form.data.shortcode || 'form_shortcode'}]
+                                            [
+                                            {form.data.shortcode ||
+                                                'form_shortcode'}
+                                            ]
                                         </span>
                                         .
                                     </FieldDescription>
-                                    <FieldError>{form.error('shortcode')}</FieldError>
+                                    <FieldError>
+                                        {form.error('shortcode')}
+                                    </FieldError>
                                 </Field>
                             </FieldGroup>
 
-                            <Field data-invalid={form.invalid('html') || undefined}>
-                                <RequiredLabel htmlFor="html">Form HTML</RequiredLabel>
+                            <Field
+                                data-invalid={form.invalid('html') || undefined}
+                            >
+                                <RequiredLabel htmlFor="html">
+                                    Form HTML
+                                </RequiredLabel>
                                 <Textarea
                                     id="html"
                                     rows={14}
                                     value={form.data.html}
                                     onChange={(event) =>
-                                        form.setField('html', event.target.value)
+                                        form.setField(
+                                            'html',
+                                            event.target.value,
+                                        )
                                     }
                                     onBlur={() => form.touch('html')}
-                                    aria-invalid={form.invalid('html') || undefined}
+                                    aria-invalid={
+                                        form.invalid('html') || undefined
+                                    }
                                     placeholder="<form>...your fields...</form>"
                                     className="font-mono text-sm"
                                 />
                                 <FieldDescription>
-                                    Paste the rendered markup for the form fields and structure.
+                                    Paste the rendered markup for the form
+                                    fields and structure.
                                 </FieldDescription>
                                 <FieldError>{form.error('html')}</FieldError>
                             </Field>
 
-                            <Field data-invalid={form.invalid('css') || undefined}>
-                                <FieldLabel htmlFor="css">Custom CSS</FieldLabel>
+                            <Field
+                                data-invalid={form.invalid('css') || undefined}
+                            >
+                                <FieldLabel htmlFor="css">
+                                    Custom CSS
+                                </FieldLabel>
                                 <Textarea
                                     id="css"
                                     rows={10}
@@ -366,12 +412,15 @@ export default function CmsForm({
                                         form.setField('css', event.target.value)
                                     }
                                     onBlur={() => form.touch('css')}
-                                    aria-invalid={form.invalid('css') || undefined}
+                                    aria-invalid={
+                                        form.invalid('css') || undefined
+                                    }
                                     placeholder=".form-shell { display: grid; gap: 1rem; }"
                                     className="font-mono text-sm"
                                 />
                                 <FieldDescription>
-                                    Optional styles that apply only to this form.
+                                    Optional styles that apply only to this
+                                    form.
                                 </FieldDescription>
                                 <FieldError>{form.error('css')}</FieldError>
                             </Field>
@@ -385,7 +434,8 @@ export default function CmsForm({
                                 <CardTitle>Confirmation flow</CardTitle>
                             </div>
                             <CardDescription>
-                                Choose what happens after a successful submission.
+                                Choose what happens after a successful
+                                submission.
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="flex flex-col gap-6">
@@ -403,7 +453,9 @@ export default function CmsForm({
                                             event.target.value,
                                         )
                                     }
-                                    onBlur={() => form.touch('confirmation_type')}
+                                    onBlur={() =>
+                                        form.touch('confirmation_type')
+                                    }
                                 >
                                     <NativeSelectOption value="message">
                                         Success message
@@ -413,15 +465,16 @@ export default function CmsForm({
                                     </NativeSelectOption>
                                 </NativeSelect>
                                 <FieldDescription>
-                                    Use a thank-you message for standard flows or redirect to a
-                                    custom landing page.
+                                    Use a thank-you message for standard flows
+                                    or redirect to a custom landing page.
                                 </FieldDescription>
                             </Field>
 
                             {form.data.confirmation_type === 'message' ? (
                                 <Field
                                     data-invalid={
-                                        form.invalid('confirmation_message') || undefined
+                                        form.invalid('confirmation_message') ||
+                                        undefined
                                     }
                                 >
                                     <RequiredLabel htmlFor="confirmation_message">
@@ -441,8 +494,9 @@ export default function CmsForm({
                                             form.touch('confirmation_message')
                                         }
                                         aria-invalid={
-                                            form.invalid('confirmation_message') ||
-                                            undefined
+                                            form.invalid(
+                                                'confirmation_message',
+                                            ) || undefined
                                         }
                                         placeholder="Thanks for contacting us. We will reply shortly."
                                     />
@@ -453,7 +507,8 @@ export default function CmsForm({
                             ) : (
                                 <Field
                                     data-invalid={
-                                        form.invalid('redirect_url') || undefined
+                                        form.invalid('redirect_url') ||
+                                        undefined
                                     }
                                 >
                                     <RequiredLabel htmlFor="redirect_url">
@@ -463,19 +518,27 @@ export default function CmsForm({
                                         id="redirect_url"
                                         value={form.data.redirect_url}
                                         onChange={(event) =>
-                                            form.setField('redirect_url', event.target.value)
+                                            form.setField(
+                                                'redirect_url',
+                                                event.target.value,
+                                            )
                                         }
-                                        onBlur={() => form.touch('redirect_url')}
+                                        onBlur={() =>
+                                            form.touch('redirect_url')
+                                        }
                                         aria-invalid={
-                                            form.invalid('redirect_url') || undefined
+                                            form.invalid('redirect_url') ||
+                                            undefined
                                         }
                                         placeholder="https://example.com/thank-you"
                                     />
                                     <FieldDescription>
-                                        Send visitors to a confirmation or booking page after they
-                                        submit the form.
+                                        Send visitors to a confirmation or
+                                        booking page after they submit the form.
                                     </FieldDescription>
-                                    <FieldError>{form.error('redirect_url')}</FieldError>
+                                    <FieldError>
+                                        {form.error('redirect_url')}
+                                    </FieldError>
                                 </Field>
                             )}
 
@@ -483,8 +546,9 @@ export default function CmsForm({
                                 <InfoIcon className="size-4" />
                                 <AlertTitle>Submission storage</AlertTitle>
                                 <AlertDescription>
-                                    Turn off database storage only if the form is handled entirely
-                                    by a third-party integration.
+                                    Turn off database storage only if the form
+                                    is handled entirely by a third-party
+                                    integration.
                                 </AlertDescription>
                             </Alert>
 
@@ -492,13 +556,19 @@ export default function CmsForm({
                                 <Switch
                                     checked={form.data.store_in_database}
                                     onCheckedChange={(checked) =>
-                                        form.setField('store_in_database', checked)
+                                        form.setField(
+                                            'store_in_database',
+                                            checked,
+                                        )
                                     }
                                 />
                                 <div className="flex flex-col gap-1">
-                                    <FieldLabel>Store submissions in database</FieldLabel>
+                                    <FieldLabel>
+                                        Store submissions in database
+                                    </FieldLabel>
                                     <FieldDescription>
-                                        Keep entries available in the CMS for reporting and follow-up.
+                                        Keep entries available in the CMS for
+                                        reporting and follow-up.
                                     </FieldDescription>
                                 </div>
                             </Field>
@@ -514,21 +584,33 @@ export default function CmsForm({
                                 <CardTitle>Publishing</CardTitle>
                             </div>
                             <CardDescription>
-                                Control availability, presentation, and publication timing.
+                                Control availability, presentation, and
+                                publication timing.
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="flex flex-col gap-6">
-                            <Field data-invalid={form.invalid('template') || undefined}>
-                                <FieldLabel htmlFor="template">Template</FieldLabel>
+                            <Field
+                                data-invalid={
+                                    form.invalid('template') || undefined
+                                }
+                            >
+                                <FieldLabel htmlFor="template">
+                                    Template
+                                </FieldLabel>
                                 <NativeSelect
                                     id="template"
                                     className="w-full"
                                     value={form.data.template}
                                     onChange={(event) =>
-                                        form.setField('template', event.target.value)
+                                        form.setField(
+                                            'template',
+                                            event.target.value,
+                                        )
                                     }
                                     onBlur={() => form.touch('template')}
-                                    aria-invalid={form.invalid('template') || undefined}
+                                    aria-invalid={
+                                        form.invalid('template') || undefined
+                                    }
                                 >
                                     {templateOptions.map((option) => (
                                         <NativeSelectOption
@@ -544,20 +626,33 @@ export default function CmsForm({
                                         {selectedTemplate.description}
                                     </FieldDescription>
                                 ) : null}
-                                <FieldError>{form.error('template')}</FieldError>
+                                <FieldError>
+                                    {form.error('template')}
+                                </FieldError>
                             </Field>
 
-                            <Field data-invalid={form.invalid('form_type') || undefined}>
-                                <FieldLabel htmlFor="form_type">Form type</FieldLabel>
+                            <Field
+                                data-invalid={
+                                    form.invalid('form_type') || undefined
+                                }
+                            >
+                                <FieldLabel htmlFor="form_type">
+                                    Form type
+                                </FieldLabel>
                                 <NativeSelect
                                     id="form_type"
                                     className="w-full"
                                     value={form.data.form_type}
                                     onChange={(event) =>
-                                        form.setField('form_type', event.target.value)
+                                        form.setField(
+                                            'form_type',
+                                            event.target.value,
+                                        )
                                     }
                                     onBlur={() => form.touch('form_type')}
-                                    aria-invalid={form.invalid('form_type') || undefined}
+                                    aria-invalid={
+                                        form.invalid('form_type') || undefined
+                                    }
                                 >
                                     {formTypeOptions.map((option) => (
                                         <NativeSelectOption
@@ -573,20 +668,33 @@ export default function CmsForm({
                                         {selectedFormType.description}
                                     </FieldDescription>
                                 ) : null}
-                                <FieldError>{form.error('form_type')}</FieldError>
+                                <FieldError>
+                                    {form.error('form_type')}
+                                </FieldError>
                             </Field>
 
-                            <Field data-invalid={form.invalid('status') || undefined}>
-                                <RequiredLabel htmlFor="status">Status</RequiredLabel>
+                            <Field
+                                data-invalid={
+                                    form.invalid('status') || undefined
+                                }
+                            >
+                                <RequiredLabel htmlFor="status">
+                                    Status
+                                </RequiredLabel>
                                 <NativeSelect
                                     id="status"
                                     className="w-full"
                                     value={form.data.status}
                                     onChange={(event) =>
-                                        form.setField('status', event.target.value)
+                                        form.setField(
+                                            'status',
+                                            event.target.value,
+                                        )
                                     }
                                     onBlur={() => form.touch('status')}
-                                    aria-invalid={form.invalid('status') || undefined}
+                                    aria-invalid={
+                                        form.invalid('status') || undefined
+                                    }
                                 >
                                     {statusOptions.map((option) => (
                                         <NativeSelectOption
@@ -610,24 +718,32 @@ export default function CmsForm({
                                     form.invalid('published_at') || undefined
                                 }
                             >
-                                <FieldLabel htmlFor="published_at">Publish at</FieldLabel>
+                                <FieldLabel htmlFor="published_at">
+                                    Publish at
+                                </FieldLabel>
                                 <Input
                                     id="published_at"
                                     type="datetime-local"
                                     value={form.data.published_at}
                                     onChange={(event) =>
-                                        form.setField('published_at', event.target.value)
+                                        form.setField(
+                                            'published_at',
+                                            event.target.value,
+                                        )
                                     }
                                     onBlur={() => form.touch('published_at')}
                                     aria-invalid={
-                                        form.invalid('published_at') || undefined
+                                        form.invalid('published_at') ||
+                                        undefined
                                     }
                                 />
                                 <FieldDescription>
-                                    Leave empty to publish immediately when the status is set to
-                                    published.
+                                    Leave empty to publish immediately when the
+                                    status is set to published.
                                 </FieldDescription>
-                                <FieldError>{form.error('published_at')}</FieldError>
+                                <FieldError>
+                                    {form.error('published_at')}
+                                </FieldError>
                             </Field>
 
                             <Field orientation="horizontal">
@@ -638,9 +754,12 @@ export default function CmsForm({
                                     }
                                 />
                                 <div className="flex flex-col gap-1">
-                                    <FieldLabel>Accept new submissions</FieldLabel>
+                                    <FieldLabel>
+                                        Accept new submissions
+                                    </FieldLabel>
                                     <FieldDescription>
-                                        Inactive forms stay saved but stop accepting new entries.
+                                        Inactive forms stay saved but stop
+                                        accepting new entries.
                                     </FieldDescription>
                                 </div>
                             </Field>
@@ -654,40 +773,55 @@ export default function CmsForm({
                                 <CardTitle>Summary</CardTitle>
                             </div>
                             <CardDescription>
-                                Quick details for publishing, tracking, and embedding.
+                                Quick details for publishing, tracking, and
+                                embedding.
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="flex flex-col gap-4 text-sm">
                             {currentForm ? (
                                 <>
                                     <div className="flex items-start justify-between gap-3">
-                                        <span className="text-muted-foreground">Submissions</span>
+                                        <span className="text-muted-foreground">
+                                            Submissions
+                                        </span>
                                         <span className="font-medium tabular-nums">
                                             {currentForm.submissions_count}
                                         </span>
                                     </div>
                                     <div className="flex items-start justify-between gap-3">
-                                        <span className="text-muted-foreground">Views</span>
+                                        <span className="text-muted-foreground">
+                                            Views
+                                        </span>
                                         <span className="font-medium tabular-nums">
                                             {currentForm.views_count}
                                         </span>
                                     </div>
                                     <div className="flex items-start justify-between gap-3">
-                                        <span className="text-muted-foreground">Conversion</span>
+                                        <span className="text-muted-foreground">
+                                            Conversion
+                                        </span>
                                         <span className="font-medium">
-                                            {currentForm.conversion_rate_display}
+                                            {
+                                                currentForm.conversion_rate_display
+                                            }
                                         </span>
                                     </div>
                                     <div className="flex items-start justify-between gap-3">
-                                        <span className="text-muted-foreground">Published</span>
+                                        <span className="text-muted-foreground">
+                                            Published
+                                        </span>
                                         <span className="text-right font-medium">
-                                            {currentForm.published_at_formatted ?? 'Not scheduled'}
+                                            {currentForm.published_at_formatted ??
+                                                'Not scheduled'}
                                         </span>
                                     </div>
                                     <div className="flex items-start justify-between gap-3">
-                                        <span className="text-muted-foreground">Updated</span>
+                                        <span className="text-muted-foreground">
+                                            Updated
+                                        </span>
                                         <span className="text-right font-medium">
-                                            {currentForm.updated_at_formatted ?? 'Just now'}
+                                            {currentForm.updated_at_formatted ??
+                                                'Just now'}
                                         </span>
                                     </div>
                                 </>
@@ -696,14 +830,15 @@ export default function CmsForm({
                                     <ArrowUpRightIcon className="size-4" />
                                     <AlertTitle>Ready to publish</AlertTitle>
                                     <AlertDescription>
-                                        Create the form first, then return here to review submission
-                                        performance and publication history.
+                                        Create the form first, then return here
+                                        to review submission performance and
+                                        publication history.
                                     </AlertDescription>
                                 </Alert>
                             )}
 
                             <div className="rounded-lg border bg-muted/20 p-4">
-                                <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                                <div className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
                                     Embed shortcode
                                 </div>
                                 <div className="mt-2 font-mono text-sm text-foreground">
@@ -718,7 +853,11 @@ export default function CmsForm({
                             ) : null}
                         </CardContent>
                         <CardFooter className="flex flex-col gap-3">
-                            <Button type="submit" className="w-full" disabled={form.processing}>
+                            <Button
+                                type="submit"
+                                className="w-full"
+                                disabled={form.processing}
+                            >
                                 {form.processing ? (
                                     <Spinner className="mr-2 size-4" />
                                 ) : (
@@ -727,8 +866,14 @@ export default function CmsForm({
                                 {submitLabel}
                             </Button>
 
-                            <Button variant="outline" className="w-full" asChild>
-                                <Link href={route('cms.form.index')}>Back to Forms</Link>
+                            <Button
+                                variant="outline"
+                                className="w-full"
+                                asChild
+                            >
+                                <Link href={route('cms.form.index')}>
+                                    Back to Forms
+                                </Link>
                             </Button>
 
                             {currentForm ? (

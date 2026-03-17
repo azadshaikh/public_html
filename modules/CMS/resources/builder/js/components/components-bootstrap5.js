@@ -919,7 +919,11 @@ Astero.Components.extend('_base', 'html/gridcolumn', {
                 let match;
 
                 while ((match = reg.exec(_class)) != null) {
-                    let key = 'col' + (match[1] != undefined ? '_' + match[1].replace('-', '') : '');
+                    let key =
+                        'col' +
+                        (match[1] != undefined
+                            ? '_' + match[1].replace('-', '')
+                            : '');
                     this.data[key] = match[2] ?? '';
                 }
             },
@@ -963,7 +967,11 @@ Astero.Components.extend('_base', 'html/gridrow', {
             let data = {};
 
             while ((match = reg.exec(_class)) != null) {
-                let key = 'col' + (match[1] != undefined ? '_' + match[1].replace('-', '') : '');
+                let key =
+                    'col' +
+                    (match[1] != undefined
+                        ? '_' + match[1].replace('-', '')
+                        : '');
                 data[key] = match[2] ?? '';
             }
 
@@ -991,7 +999,10 @@ Astero.Components.extend('_base', 'html/gridrow', {
                     let _class = column.getAttribute('class');
 
                     //remove previous breakpoint column size
-                    _class = _class.replace(new RegExp(input.name + '-\\d+?'), '');
+                    _class = _class.replace(
+                        new RegExp(input.name + '-\\d+?'),
+                        '',
+                    );
                     //add new column size
                     if (value) _class += ' ' + input.name + '-' + value;
                     column.setAttribute('class', _class);
@@ -1007,7 +1018,9 @@ Astero.Components.extend('_base', 'html/gridrow', {
         });
 
         //add remaining properties to generated column properties, put first 2 align properties first
-        this.properties = this.properties.slice(0, 4).concat(properties, this.properties.slice(4));
+        this.properties = this.properties
+            .slice(0, 4)
+            .concat(properties, this.properties.slice(4));
 
         return node;
     },
@@ -1018,7 +1031,13 @@ Astero.Components.extend('_base', 'html/gridrow', {
             key: 'direction',
             htmlAttr: 'class',
             inline: false,
-            validValues: ['', 'flex-row', 'flex-row-reverse', 'flex-column', 'flex-column-reverse'],
+            validValues: [
+                '',
+                'flex-row',
+                'flex-row-reverse',
+                'flex-column',
+                'flex-column-reverse',
+            ],
             inputtype: RadioButtonInput,
             data: {
                 extraclass: 'btn-group-sm btn-group-fullwidth',
@@ -1243,7 +1262,11 @@ Astero.Components.extend('_base', 'html/gridrow', {
             inputtype: ButtonInput,
             data: { text: 'Add column', icon: 'ri-add-line' },
             onChange: function (node) {
-                node.append(generateElements('<div class="col-3"><h3>Col-3</h3></div>')[0]);
+                node.append(
+                    generateElements(
+                        '<div class="col-3"><h3>Col-3</h3></div>',
+                    )[0],
+                );
 
                 //render component properties again to include the new column inputs
                 Astero.Components.render('html/gridrow');

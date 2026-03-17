@@ -18,10 +18,22 @@ type ServersEditPageProps = {
 export default function ServersEdit(props: ServersEditPageProps) {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: route('dashboard') },
-        { title: 'Platform', href: route('platform.servers.index', { status: 'all' }) },
-        { title: 'Servers', href: route('platform.servers.index', { status: 'all' }) },
-        { title: props.server.name, href: route('platform.servers.show', props.server.id) },
-        { title: 'Edit', href: route('platform.servers.edit', props.server.id) },
+        {
+            title: 'Platform',
+            href: route('platform.servers.index', { status: 'all' }),
+        },
+        {
+            title: 'Servers',
+            href: route('platform.servers.index', { status: 'all' }),
+        },
+        {
+            title: props.server.name,
+            href: route('platform.servers.show', props.server.id),
+        },
+        {
+            title: 'Edit',
+            href: route('platform.servers.edit', props.server.id),
+        },
     ];
 
     return (

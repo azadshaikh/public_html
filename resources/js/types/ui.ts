@@ -8,7 +8,8 @@ export type BadgeVariant =
     | 'destructive'
     | 'outline'
     | 'ghost'
-    | 'link'; import type { ReactNode } from 'react';
+    | 'link';
+import type { ReactNode } from 'react';
 import type { BreadcrumbItem } from '@/types/navigation';
 
 export type AppLayoutProps = {

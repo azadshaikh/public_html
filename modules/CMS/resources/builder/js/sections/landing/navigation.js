@@ -1,6 +1,8 @@
 Astero.Sections.add('navigation/navigation-1', {
     name: 'Navigation 1',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/navigation/navigation-1-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/navigation/navigation-1-thumb.jpeg',
     html: `<nav class="navigation-1 clearfix">
 
   <div id="top" class="top-nav clearfix">
@@ -618,7 +620,9 @@ Astero.Sections.add('navigation/navigation-1', {
 });
 Astero.Sections.add('navigation/navigation-2', {
     name: 'Navigation 2',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/navigation/navigation-2-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/navigation/navigation-2-thumb.jpeg',
     html: `<nav class="navigation-2 clearfix fixed-top transparent" title="navigation-2">
 
   <div class="container">
@@ -1111,7 +1115,9 @@ Astero.Sections.add('navigation/navigation-2', {
 });
 Astero.Sections.add('navigation/navigation-3', {
     name: 'Navigation 3',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/navigation/navigation-3-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/navigation/navigation-3-thumb.jpeg',
     html: `<nav class="navigation-3 clearfix fixed-top transparent" title="navigation-3">
 
   <div id="top" class="top-nav clearfix" data-bs-theme="dark">
@@ -1764,7 +1770,9 @@ Astero.Sections.add('navigation/navigation-3', {
 });
 Astero.Sections.add('navigation/navigation-4', {
     name: 'Navigation 4',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/navigation/navigation-4-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/navigation/navigation-4-thumb.jpeg',
     html: `<nav class="navigation-4 clearfix">
 
   <div class="navbar navbar-expand-md">

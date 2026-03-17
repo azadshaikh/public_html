@@ -5,8 +5,14 @@ import type { PlatformOption, SecretFormValues } from '../../../types/platform';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: route('dashboard') },
-    { title: 'Platform', href: route('platform.secrets.index', { status: 'all' }) },
-    { title: 'Secrets', href: route('platform.secrets.index', { status: 'all' }) },
+    {
+        title: 'Platform',
+        href: route('platform.secrets.index', { status: 'all' }),
+    },
+    {
+        title: 'Secrets',
+        href: route('platform.secrets.index', { status: 'all' }),
+    },
     { title: 'Create', href: route('platform.secrets.create') },
 ];
 

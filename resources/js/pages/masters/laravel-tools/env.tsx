@@ -77,10 +77,7 @@ export default function LaravelToolsEnv({
     }, [initialBackups]);
 
     const hasChanges = content !== savedContent;
-    const lineCount = useMemo(
-        () => content.split(/\r?\n/).length,
-        [content],
-    );
+    const lineCount = useMemo(() => content.split(/\r?\n/).length, [content]);
 
     const refreshBackups = useCallback(async () => {
         try {
@@ -115,7 +112,9 @@ export default function LaravelToolsEnv({
             );
 
             if (!payload.success) {
-                throw new Error(payload.message || 'Unable to save the ENV file.');
+                throw new Error(
+                    payload.message || 'Unable to save the ENV file.',
+                );
             }
 
             showAppToast({
@@ -140,7 +139,10 @@ export default function LaravelToolsEnv({
 
     useEffect(() => {
         const handleKeydown = (event: KeyboardEvent) => {
-            if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 's') {
+            if (
+                (event.metaKey || event.ctrlKey) &&
+                event.key.toLowerCase() === 's'
+            ) {
                 event.preventDefault();
 
                 if (!saveRequest.processing && hasChanges) {
@@ -168,7 +170,9 @@ export default function LaravelToolsEnv({
             );
 
             if (!payload.success || typeof payload.content !== 'string') {
-                throw new Error(payload.message || 'Unable to restore the selected backup.');
+                throw new Error(
+                    payload.message || 'Unable to restore the selected backup.',
+                );
             }
 
             setContent(payload.content);
@@ -231,10 +235,13 @@ export default function LaravelToolsEnv({
                     <div className="flex flex-col gap-6">
                         <Alert>
                             <ShieldAlertIcon data-icon="inline-start" />
-                            <AlertTitle>Protected variables stay locked</AlertTitle>
+                            <AlertTitle>
+                                Protected variables stay locked
+                            </AlertTitle>
                             <AlertDescription>
-                                Changes to {protectedKeys.join(', ')} are blocked.
-                                Every successful save creates a fresh backup first.
+                                Changes to {protectedKeys.join(', ')} are
+                                blocked. Every successful save creates a fresh
+                                backup first.
                             </AlertDescription>
                         </Alert>
 
@@ -242,16 +249,31 @@ export default function LaravelToolsEnv({
                             <CardHeader className="gap-3">
                                 <div className="flex flex-wrap items-center justify-between gap-3">
                                     <div className="flex flex-col gap-1">
-                                        <CardTitle>.env configuration</CardTitle>
+                                        <CardTitle>
+                                            .env configuration
+                                        </CardTitle>
                                         <CardDescription>
-                                            Use <strong>Ctrl/Cmd + S</strong> to save. Monaco loads on demand and falls back to a plain textarea if the editor cannot initialize.
+                                            Use <strong>Ctrl/Cmd + S</strong> to
+                                            save. Monaco loads on demand and
+                                            falls back to a plain textarea if
+                                            the editor cannot initialize.
                                         </CardDescription>
                                     </div>
                                     <div className="flex flex-wrap items-center gap-2">
-                                        <Badge variant={hasChanges ? 'warning' : 'secondary'}>
-                                            {hasChanges ? 'Unsaved changes' : 'Saved'}
+                                        <Badge
+                                            variant={
+                                                hasChanges
+                                                    ? 'warning'
+                                                    : 'secondary'
+                                            }
+                                        >
+                                            {hasChanges
+                                                ? 'Unsaved changes'
+                                                : 'Saved'}
                                         </Badge>
-                                        <Badge variant="outline">{lineCount} lines</Badge>
+                                        <Badge variant="outline">
+                                            {lineCount} lines
+                                        </Badge>
                                     </div>
                                 </div>
                             </CardHeader>
@@ -268,14 +290,16 @@ export default function LaravelToolsEnv({
                                 />
                                 <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
                                     <p>
-                                        Save creates an automatic restore point in
-                                        storage/backups/env.
+                                        Save creates an automatic restore point
+                                        in storage/backups/env.
                                     </p>
                                     <div className="flex items-center gap-2">
                                         <Button
                                             type="button"
                                             variant="outline"
-                                            onClick={() => setContent(savedContent)}
+                                            onClick={() =>
+                                                setContent(savedContent)
+                                            }
                                             disabled={
                                                 !hasChanges ||
                                                 saveRequest.processing
@@ -310,7 +334,8 @@ export default function LaravelToolsEnv({
                             <CardHeader>
                                 <CardTitle>Protected keys</CardTitle>
                                 <CardDescription>
-                                    These variables cannot be modified from this interface.
+                                    These variables cannot be modified from this
+                                    interface.
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="flex flex-wrap gap-2">
@@ -328,7 +353,8 @@ export default function LaravelToolsEnv({
                                     <div className="flex flex-col gap-1">
                                         <CardTitle>Recent backups</CardTitle>
                                         <CardDescription>
-                                            Restore a previous snapshot if you need to roll back.
+                                            Restore a previous snapshot if you
+                                            need to roll back.
                                         </CardDescription>
                                     </div>
                                     <Button
@@ -353,9 +379,12 @@ export default function LaravelToolsEnv({
                                             <EmptyMedia variant="icon">
                                                 <HistoryIcon />
                                             </EmptyMedia>
-                                            <EmptyTitle>No backups yet</EmptyTitle>
+                                            <EmptyTitle>
+                                                No backups yet
+                                            </EmptyTitle>
                                             <EmptyDescription>
-                                                Save the ENV file once to create the first restore point.
+                                                Save the ENV file once to create
+                                                the first restore point.
                                             </EmptyDescription>
                                         </EmptyHeader>
                                     </Empty>
@@ -372,7 +401,10 @@ export default function LaravelToolsEnv({
                                                             {backup.name}
                                                         </p>
                                                         <p className="text-xs text-muted-foreground">
-                                                            {backup.date} · {formatBytes(backup.size)}
+                                                            {backup.date} ·{' '}
+                                                            {formatBytes(
+                                                                backup.size,
+                                                            )}
                                                         </p>
                                                     </div>
                                                     <Button
@@ -396,7 +428,8 @@ export default function LaravelToolsEnv({
                                                         )}
                                                         Restore backup
                                                     </Button>
-                                                    {index < backups.length - 1 ? (
+                                                    {index <
+                                                    backups.length - 1 ? (
                                                         <Separator />
                                                     ) : null}
                                                 </div>

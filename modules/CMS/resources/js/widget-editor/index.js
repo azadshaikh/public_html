@@ -32,7 +32,8 @@ if (document.readyState === 'loading') {
 // Warn about unsaved changes
 window.addEventListener('beforeunload', function (event) {
     if (window.widgetEditor?.hasUnsavedChanges()) {
-        const message = 'You have unsaved changes. Are you sure you want to leave?';
+        const message =
+            'You have unsaved changes. Are you sure you want to leave?';
         event.preventDefault();
         event.returnValue = message;
         return message;

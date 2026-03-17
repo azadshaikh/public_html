@@ -120,24 +120,38 @@ let SectionBackground = [
         },
         hideGroups: function () {
             document
-                .querySelectorAll('.mb-3[data-group="bg-image"],.mb-3[data-group="bg-video"]')
+                .querySelectorAll(
+                    '.mb-3[data-group="bg-image"],.mb-3[data-group="bg-video"]',
+                )
                 .forEach((e) => e.classList.add('d-none'));
         },
 
         onChange: function (node, value, input) {
             this.hideGroups();
-            document.querySelectorAll('.mb-3[data-group="' + input.value + '"].d-none').forEach((el, i) => {
-                el.classList.remove('d-none');
-            });
+            document
+                .querySelectorAll(
+                    '.mb-3[data-group="' + input.value + '"].d-none',
+                )
+                .forEach((el, i) => {
+                    el.classList.remove('d-none');
+                });
 
-            let container = node.querySelector(':scope > .background-container');
+            let container = node.querySelector(
+                ':scope > .background-container',
+            );
             if (!container) {
-                container = generateElements('<div class="background-container"></div>')[0];
+                container = generateElements(
+                    '<div class="background-container"></div>',
+                )[0];
                 node.appendChild(container);
             }
 
-            let img = node.querySelector(':scope > .background-container > img');
-            let video = node.querySelector(':scope > .background-container > video');
+            let img = node.querySelector(
+                ':scope > .background-container > img',
+            );
+            let video = node.querySelector(
+                ':scope > .background-container > video',
+            );
 
             container.querySelectorAll(':scope > *').forEach((el, i) => {
                 el.classList.add('d-none');
@@ -169,7 +183,9 @@ let SectionBackground = [
         init: function (node) {
             let selected = 'none';
             let img = node.querySelector(':scope > .background-container img');
-            let video = node.querySelector(':scope > .background-container video');
+            let video = node.querySelector(
+                ':scope > .background-container video',
+            );
 
             if (img?.offsetParent) {
                 selected = 'bg-image';
@@ -252,14 +268,18 @@ let SectionOverlay = [
             off: 'false',
         },
         onChange: function (node, value, input) {
-            let group = document.querySelectorAll('.mb-3[data-group="overlay"]');
+            let group = document.querySelectorAll(
+                '.mb-3[data-group="overlay"]',
+            );
             let overlay = node.querySelector(':scope > .overlay');
 
             if (value == 'true') {
                 group.forEach((e) => e.classList.remove('d-none'));
 
                 if (!overlay) {
-                    overlay = generateElements('<div class="overlay"></div>')[0];
+                    overlay = generateElements(
+                        '<div class="overlay"></div>',
+                    )[0];
                     node.appendChild(overlay);
                 } else {
                     overlay.classList.remove('d-none');
@@ -273,7 +293,9 @@ let SectionOverlay = [
         },
         init: function (node) {
             let overlay = node.querySelector(':scope > .overlay');
-            let group = document.querySelectorAll('.mb-3[data-group="overlay"]');
+            let group = document.querySelectorAll(
+                '.mb-3[data-group="overlay"]',
+            );
 
             if (overlay && overlay.offsetParent) {
                 group.forEach((e) => e.classList.remove('d-none'));
@@ -333,14 +355,20 @@ function sectionSeparatorProperties(name, title) {
                 off: 'false',
             },
             onChange: function (node, value, input) {
-                let group = document.querySelectorAll(`[data-group="${name}_separator"]`);
-                let separator = node.querySelector(`:scope > .${name}.separator`);
+                let group = document.querySelectorAll(
+                    `[data-group="${name}_separator"]`,
+                );
+                let separator = node.querySelector(
+                    `:scope > .${name}.separator`,
+                );
 
                 if (value == 'true') {
                     group.forEach((e) => e.classList.remove('d-none'));
 
                     if (!separator) {
-                        separator = generateElements(`<div class="separator ${name}">${defaultSeparatorSvg}</div>`)[0];
+                        separator = generateElements(
+                            `<div class="separator ${name}">${defaultSeparatorSvg}</div>`,
+                        )[0];
                         node.appendChild(separator);
                     } else {
                         separator.classList.remove('d-none');
@@ -353,8 +381,12 @@ function sectionSeparatorProperties(name, title) {
                 return element;
             },
             init: function (node) {
-                let group = node.querySelectorAll(`[data-group="${name}_separator"]`);
-                let separator = node.querySelector(`:scope > .${name}.separator`);
+                let group = node.querySelectorAll(
+                    `[data-group="${name}_separator"]`,
+                );
+                let separator = node.querySelector(
+                    `:scope > .${name}.separator`,
+                );
 
                 if (separator && separator.offsetParent) {
                     group.forEach((e) => e.classList.remove('d-none'));
@@ -389,7 +421,9 @@ function sectionSeparatorProperties(name, title) {
                 return newElement;
             },
             data: {
-                url: Astero.baseUrl + '../../resources/svg/separators/{value}/index.html',
+                url:
+                    Astero.baseUrl +
+                    '../../resources/svg/separators/{value}/index.html',
                 clickElement: 'li',
                 insertElement: 'svg',
                 elements: 'Loading ...',
@@ -633,7 +667,9 @@ let ComponentSectionAdvanced = []; /* [{
 }];*/
 
 function componentsInit(node) {
-    document.querySelectorAll('.mb-3[data-group]').forEach((e) => e.classList.add('d-none'));
+    document
+        .querySelectorAll('.mb-3[data-group]')
+        .forEach((e) => e.classList.add('d-none'));
 
     let img = node.querySelector(':scope > .background-container img');
     let video = node.querySelector(':scope > .background-container video');
@@ -651,7 +687,9 @@ function componentsInit(node) {
     }
 
     let showSection = function (section) {
-        document.querySelectorAll('.mb-3[data-group="' + section + '"]').forEach((e) => e.classList.remove('d-none'));
+        document
+            .querySelectorAll('.mb-3[data-group="' + section + '"]')
+            .forEach((e) => e.classList.remove('d-none'));
     };
 
     if (bg) {
@@ -681,7 +719,11 @@ Astero.Components.extend('_base', 'elements/section', {
 					<h1>Section</h1>
 				</div>
 			</section>`,
-    properties: [...ComponentSectionContent, ...ComponentSectionStyle, ...ComponentSectionAdvanced],
+    properties: [
+        ...ComponentSectionContent,
+        ...ComponentSectionStyle,
+        ...ComponentSectionAdvanced,
+    ],
     init: componentsInit,
 });
 
@@ -695,7 +737,11 @@ Astero.Components.extend('_base', 'elements/header', {
 					<h1>Section</h1>
 				</div>
 			</header>`,
-    properties: [...ComponentSectionContent, ...ComponentSectionStyle, ...ComponentSectionAdvanced],
+    properties: [
+        ...ComponentSectionContent,
+        ...ComponentSectionStyle,
+        ...ComponentSectionAdvanced,
+    ],
     init: componentsInit,
 });
 
@@ -709,6 +755,10 @@ Astero.Components.extend('_base', 'elements/footer', {
 					<h1>Section</h1>
 				</div>
 			</footer>`,
-    properties: [...ComponentSectionContent, ...ComponentSectionStyle, ...ComponentSectionAdvanced],
+    properties: [
+        ...ComponentSectionContent,
+        ...ComponentSectionStyle,
+        ...ComponentSectionAdvanced,
+    ],
     init: componentsInit,
 });

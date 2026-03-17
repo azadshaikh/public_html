@@ -159,8 +159,7 @@ function CreateNoteForm({
         rules: {
             content: [
                 (value) =>
-                    typeof value === 'string' &&
-                    hasMeaningfulNoteContent(value)
+                    typeof value === 'string' && hasMeaningfulNoteContent(value)
                         ? undefined
                         : 'Please enter a note.',
             ],
@@ -192,7 +191,11 @@ function CreateNoteForm({
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-5">
+                <form
+                    noValidate
+                    onSubmit={handleSubmit}
+                    className="flex flex-col gap-5"
+                >
                     <Field data-invalid={form.invalid('content') || undefined}>
                         <FieldLabel htmlFor={`note-content-${noteTarget.id}`}>
                             Note
@@ -208,7 +211,8 @@ function CreateNoteForm({
                             placeholder="Add context, follow-up details, or an internal reminder."
                         />
                         <FieldDescription>
-                            Notes stay attached to the record for future staff context.
+                            Notes stay attached to the record for future staff
+                            context.
                         </FieldDescription>
                         <FieldError>{form.error('content')}</FieldError>
                     </Field>
@@ -251,8 +255,7 @@ function EditNoteForm({
         rules: {
             content: [
                 (value) =>
-                    typeof value === 'string' &&
-                    hasMeaningfulNoteContent(value)
+                    typeof value === 'string' && hasMeaningfulNoteContent(value)
                         ? undefined
                         : 'Please enter a note.',
             ],
@@ -275,7 +278,11 @@ function EditNoteForm({
     };
 
     return (
-        <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-5">
+        <form
+            noValidate
+            onSubmit={handleSubmit}
+            className="flex flex-col gap-5"
+        >
             <Field data-invalid={form.invalid('content') || undefined}>
                 <FieldLabel htmlFor={`note-edit-content-${note.id}`}>
                     Edit note
@@ -283,7 +290,9 @@ function EditNoteForm({
                 <NoteRichTextEditor
                     id={`note-edit-content-${note.id}`}
                     value={form.data.content}
-                    onChange={(nextValue) => form.setField('content', nextValue)}
+                    onChange={(nextValue) =>
+                        form.setField('content', nextValue)
+                    }
                     onBlur={() => form.touch('content')}
                     invalid={form.invalid('content')}
                 />
@@ -373,11 +382,15 @@ function NoteCard({
                             <div className="flex min-w-0 items-start gap-3">
                                 <Avatar className="size-10">
                                     <AvatarImage
-                                        src={note.author?.avatar_url ?? undefined}
+                                        src={
+                                            note.author?.avatar_url ?? undefined
+                                        }
                                         alt={note.author?.name ?? 'System'}
                                     />
                                     <AvatarFallback>
-                                        {getInitials(note.author?.name ?? 'System')}
+                                        {getInitials(
+                                            note.author?.name ?? 'System',
+                                        )}
                                     </AvatarFallback>
                                 </Avatar>
 
@@ -495,9 +508,7 @@ export function NotesPanel({
             <Card>
                 <CardHeader>
                     <CardTitle>{title}</CardTitle>
-                    <CardDescription>
-                        {description}
-                    </CardDescription>
+                    <CardDescription>{description}</CardDescription>
                 </CardHeader>
                 <CardContent>
                     {notes.length === 0 ? (
@@ -508,7 +519,8 @@ export function NotesPanel({
                                 </EmptyMedia>
                                 <EmptyTitle>No notes yet</EmptyTitle>
                                 <EmptyDescription>
-                                    Add the first note to capture internal context for this record.
+                                    Add the first note to capture internal
+                                    context for this record.
                                 </EmptyDescription>
                             </EmptyHeader>
                         </Empty>
@@ -518,7 +530,9 @@ export function NotesPanel({
                                 <NoteCard
                                     key={note.id}
                                     note={note}
-                                    noteVisibilityOptions={noteVisibilityOptions}
+                                    noteVisibilityOptions={
+                                        noteVisibilityOptions
+                                    }
                                     readOnly={readOnly}
                                 />
                             ))}

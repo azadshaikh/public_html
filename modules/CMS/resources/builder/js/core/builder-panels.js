@@ -35,11 +35,13 @@ Object.assign(Astero.Builder, {
                             </label>
                             <input class="header_check" type="checkbox" id="${type}_comphead_${group}${count}" ${isChecked}>
                             <ol></ol>
-                        </li>`
-                    )[0]
+                        </li>`,
+                    )[0],
                 );
 
-                let componentsSubList = list.querySelector('li[data-section="' + group + '"] ol');
+                let componentsSubList = list.querySelector(
+                    'li[data-section="' + group + '"] ol',
+                );
                 const components = Astero.ComponentsGroup[group];
 
                 for (const idx in components) {
@@ -57,12 +59,16 @@ Object.assign(Astero.Builder, {
                             `<li data-section="${group}" data-drag-type="component" data-type="${componentType}" data-search="${component.name.toLowerCase()}">
                                 ${iconHtml}<span class="name">${component.name}</span>
                                 <div class="add-section-btn" title="Add component"><i class="ri-add-line"></i></div>
-                            </li>`
+                            </li>`,
                         )[0];
 
                         // Only use background image if no icon is set
                         if (!component.icon && component.image) {
-                            item.style.backgroundImage = 'url(' + Astero.imgBaseUrl + component.image + ')';
+                            item.style.backgroundImage =
+                                'url(' +
+                                Astero.imgBaseUrl +
+                                component.image +
+                                ')';
                             item.style.backgroundRepeat = 'no-repeat';
                         }
 
@@ -108,12 +114,19 @@ Object.assign(Astero.Builder, {
                         const key = c.toLowerCase();
                         const existing = categoryMap.get(key);
                         // Keep the version that's all-uppercase, or the first one we see
-                        if (!existing || (c === c.toUpperCase() && existing !== existing.toUpperCase())) {
+                        if (
+                            !existing ||
+                            (c === c.toUpperCase() &&
+                                existing !== existing.toUpperCase())
+                        ) {
                             categoryMap.set(key, c);
                         }
                     });
                 } catch (e) {
-                    console.error(`Error loading categories from ${provider.name}`, e);
+                    console.error(
+                        `Error loading categories from ${provider.name}`,
+                        e,
+                    );
                 }
             }
         }
@@ -140,7 +153,10 @@ Object.assign(Astero.Builder, {
 
             for (const { key: group, name: originalName } of sortedCategories) {
                 // Fetch blocks via Registry (Unified) - this already merges by priority
-                const sections = await Astero.Registry.loadCategory('section', group);
+                const sections = await Astero.Registry.loadCategory(
+                    'section',
+                    group,
+                );
 
                 if (sections.length === 0) continue;
 
@@ -161,16 +177,22 @@ Object.assign(Astero.Builder, {
                             </label>
                             <input class="header_check" type="checkbox" id="${type}_sectionhead_${group}" ${isChecked}>
                             <ol></ol>
-                        </li>`
-                    )[0]
+                        </li>`,
+                    )[0],
                 );
 
-                let sectionsSubList = list.querySelector('li[data-section="' + group + '"] ol');
+                let sectionsSubList = list.querySelector(
+                    'li[data-section="' + group + '"] ol',
+                );
 
                 sortedSections.forEach((section) => {
                     // Normalize image path
                     let image = section.image;
-                    if (image && image.indexOf('/') === -1 && image.indexOf('http') === -1) {
+                    if (
+                        image &&
+                        image.indexOf('/') === -1 &&
+                        image.indexOf('http') === -1
+                    ) {
                         image = Astero.imgBaseUrl + image;
                     }
 
@@ -181,7 +203,7 @@ Object.assign(Astero.Builder, {
                         `<li data-section="${group}" data-drag-type="section" data-type="${section.slug}" data-search="${section.name.toLowerCase()}" class="${noPreviewClass}">
                             <span class="name">${section.name}</span>
                             <div class="add-section-btn" title="Add section"><i class="ri-add-line"></i></div>
-                        </li>`
+                        </li>`,
                     )[0];
 
                     if (image) {
@@ -225,12 +247,19 @@ Object.assign(Astero.Builder, {
                     cats.forEach((c) => {
                         const key = c.toLowerCase();
                         const existing = categoryMap.get(key);
-                        if (!existing || (c === c.toUpperCase() && existing !== existing.toUpperCase())) {
+                        if (
+                            !existing ||
+                            (c === c.toUpperCase() &&
+                                existing !== existing.toUpperCase())
+                        ) {
                             categoryMap.set(key, c);
                         }
                     });
                 } catch (e) {
-                    console.error(`Error loading categories from ${provider.name}`, e);
+                    console.error(
+                        `Error loading categories from ${provider.name}`,
+                        e,
+                    );
                 }
             }
         }
@@ -254,7 +283,10 @@ Object.assign(Astero.Builder, {
             list.replaceChildren();
 
             for (const { key: group, name: originalName } of sortedCategories) {
-                const blocks = await Astero.Registry.loadCategory('block', group);
+                const blocks = await Astero.Registry.loadCategory(
+                    'block',
+                    group,
+                );
 
                 if (blocks.length === 0) continue;
 
@@ -275,11 +307,13 @@ Object.assign(Astero.Builder, {
                             </label>
                             <input class="header_check" type="checkbox" id="${type}_blockhead_${group}" ${isChecked}>
                             <ol></ol>
-                        </li>`
-                    )[0]
+                        </li>`,
+                    )[0],
                 );
 
-                let blocksSubList = list.querySelector('li[data-section="' + group + '"] ol');
+                let blocksSubList = list.querySelector(
+                    'li[data-section="' + group + '"] ol',
+                );
 
                 sortedBlocks.forEach((block) => {
                     // Add 'no-preview' class if no image
@@ -289,7 +323,7 @@ Object.assign(Astero.Builder, {
                         `<li data-section="${group}" data-drag-type="block" data-type="${block.slug}" data-search="${block.name.toLowerCase()}" class="${noPreviewClass}">
                             <span class="name">${block.name}</span>
                             <div class="add-section-btn" title="Add block"><i class="ri-add-line"></i></div>
-                        </li>`
+                        </li>`,
                     )[0];
 
                     if (block.image) {

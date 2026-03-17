@@ -145,8 +145,16 @@ body ::-webkit-scrollbar-thumb {
     transition: margin-right 0.1s linear;
     -moz-transition: margin-right 0.1s linear;
     -webkit-transition: margin-right 0.1s linear;
-    background: -moz-linear-gradient(to right, var(--bs-body-bg) 85%, #fafbfc 100%);
-    background: -webkit-linear-gradient(to right, var(--bs-body-bg) 85%, #fafbfc 100%);
+    background: -moz-linear-gradient(
+        to right,
+        var(--bs-body-bg) 85%,
+        #fafbfc 100%
+    );
+    background: -webkit-linear-gradient(
+        to right,
+        var(--bs-body-bg) 85%,
+        #fafbfc 100%
+    );
     background: linear-gradient(to right, var(--bs-body-bg) 85%, #fafbfc 100%);
     box-shadow: 1px -2px 2px var(--bs-border-color) inset;
     width: 15vw;

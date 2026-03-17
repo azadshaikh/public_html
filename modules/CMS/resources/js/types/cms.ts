@@ -766,14 +766,14 @@ export type WidgetArea = {
 
 export type WidgetSettingField = {
     type:
-    | 'text'
-    | 'textarea'
-    | 'select'
-    | 'checkbox'
-    | 'color'
-    | 'url'
-    | 'email'
-    | string;
+        | 'text'
+        | 'textarea'
+        | 'select'
+        | 'checkbox'
+        | 'color'
+        | 'url'
+        | 'email'
+        | string;
     label: string;
     default: string | boolean | number;
     description?: string;

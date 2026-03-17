@@ -40,7 +40,9 @@ Object.assign(Astero.Builder, {
 
             allLinks.forEach((link) => {
                 // Check if link is inside a data-astero-enabled area
-                const isInsideEnabledArea = link.closest('[data-astero-enabled]');
+                const isInsideEnabledArea = link.closest(
+                    '[data-astero-enabled]',
+                );
 
                 if (!isInsideEnabledArea) {
                     // Store original href for potential restore
@@ -57,7 +59,7 @@ Object.assign(Astero.Builder, {
             });
 
             console.log(
-                `Removed href from ${allLinks.length - this.frameDoc.querySelectorAll('[data-astero-enabled] a').length} links outside enabled areas`
+                `Removed href from ${allLinks.length - this.frameDoc.querySelectorAll('[data-astero-enabled] a').length} links outside enabled areas`,
             );
         } catch (error) {
             console.error('Error disabling links:', error);
@@ -71,7 +73,9 @@ Object.assign(Astero.Builder, {
         try {
             if (!this.frameDoc) return;
 
-            const disabledLinks = this.frameDoc.querySelectorAll('.astero-disabled-link');
+            const disabledLinks = this.frameDoc.querySelectorAll(
+                '.astero-disabled-link',
+            );
 
             disabledLinks.forEach((link) => {
                 // Restore original href if it exists

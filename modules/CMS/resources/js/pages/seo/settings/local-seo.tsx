@@ -39,7 +39,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAppForm } from '@/hooks/use-app-form';
 import SettingsLayout from '@/layouts/settings-layout';
 import { formValidators } from '@/lib/forms';
-import { getSeoSettingsBreadcrumbs, getSeoSettingsNav } from '../../../lib/seo-settings';
+import {
+    getSeoSettingsBreadcrumbs,
+    getSeoSettingsNav,
+} from '../../../lib/seo-settings';
 import type { LocalSeoFormValues, LocalSeoPageProps } from '../../../types/seo';
 
 function optionalUrlValidator(label: string) {
@@ -86,10 +89,22 @@ function buildScore(values: LocalSeoFormValues): {
     const completed =
         requiredFields.filter((value) => value.trim() !== '').length +
         (values.logo_image ? 1 : 0) +
-        (values.is_opening_hour_24_7 || values.opening_hour_day.some((day) => day.trim() !== '') ? 1 : 0);
+        (values.is_opening_hour_24_7 ||
+        values.opening_hour_day.some((day) => day.trim() !== '')
+            ? 1
+            : 0);
 
     const score = Math.round((completed / total) * 100);
-    const grade = score >= 90 ? 'A' : score >= 75 ? 'B' : score >= 60 ? 'C' : score >= 40 ? 'D' : 'F';
+    const grade =
+        score >= 90
+            ? 'A'
+            : score >= 75
+              ? 'B'
+              : score >= 60
+                ? 'C'
+                : score >= 40
+                  ? 'D'
+                  : 'F';
 
     return { score, grade, completed, total };
 }
@@ -136,7 +151,8 @@ export default function SeoLocalSeoPage({
             setDefaultsOnSuccess: true,
             successToast: {
                 title: 'Local SEO settings updated',
-                description: 'Business details, hours, and profile data were saved.',
+                description:
+                    'Business details, hours, and profile data were saved.',
             },
         });
     };
@@ -150,7 +166,9 @@ export default function SeoLocalSeoPage({
     const removeHourRow = (index: number) => {
         form.setField(
             'opening_hour_day',
-            form.data.opening_hour_day.filter((_, rowIndex) => rowIndex !== index),
+            form.data.opening_hour_day.filter(
+                (_, rowIndex) => rowIndex !== index,
+            ),
         );
         form.setField(
             'opening_hours',
@@ -173,7 +191,11 @@ export default function SeoLocalSeoPage({
             activeSlug="localseo"
             railLabel="SEO settings"
         >
-            <form className="flex flex-col gap-6" onSubmit={handleSubmit} noValidate>
+            <form
+                className="flex flex-col gap-6"
+                onSubmit={handleSubmit}
+                noValidate
+            >
                 {form.dirtyGuardDialog}
                 <FormErrorSummary errors={form.errors} minMessages={2} />
 
@@ -183,7 +205,9 @@ export default function SeoLocalSeoPage({
                             <SparklesIcon className="size-4" />
                             <AlertTitle>Improve local visibility</AlertTitle>
                             <AlertDescription>
-                                Complete profiles with consistent business details help search engines trust and surface your brand more often.
+                                Complete profiles with consistent business
+                                details help search engines trust and surface
+                                your brand more often.
                             </AlertDescription>
                         </Alert>
 
@@ -193,7 +217,9 @@ export default function SeoLocalSeoPage({
                                     <div>
                                         <CardTitle>Structured data</CardTitle>
                                         <CardDescription>
-                                            Enable schema markup and choose whether this profile represents an organisation or a person.
+                                            Enable schema markup and choose
+                                            whether this profile represents an
+                                            organisation or a person.
                                         </CardDescription>
                                     </div>
                                     <Switch
@@ -208,7 +234,9 @@ export default function SeoLocalSeoPage({
                                 <CardContent className="flex flex-col gap-6">
                                     <FieldGroup>
                                         <Field>
-                                            <FieldLabel htmlFor="type">Entity type</FieldLabel>
+                                            <FieldLabel htmlFor="type">
+                                                Entity type
+                                            </FieldLabel>
                                             <NativeSelect
                                                 id="type"
                                                 className="w-full"
@@ -216,7 +244,9 @@ export default function SeoLocalSeoPage({
                                                 onChange={(event) =>
                                                     form.setField(
                                                         'type',
-                                                        event.target.value as 'Organization' | 'Person',
+                                                        event.target.value as
+                                                            | 'Organization'
+                                                            | 'Person',
                                                     )
                                                 }
                                             >
@@ -237,7 +267,9 @@ export default function SeoLocalSeoPage({
                                                 <NativeSelect
                                                     id="business_type"
                                                     className="w-full"
-                                                    value={form.data.business_type}
+                                                    value={
+                                                        form.data.business_type
+                                                    }
                                                     onChange={(event) =>
                                                         form.setField(
                                                             'business_type',
@@ -245,14 +277,20 @@ export default function SeoLocalSeoPage({
                                                         )
                                                     }
                                                 >
-                                                    {businessTypeOptions.map((option) => (
-                                                        <NativeSelectOption
-                                                            key={String(option.value)}
-                                                            value={String(option.value)}
-                                                        >
-                                                            {option.label}
-                                                        </NativeSelectOption>
-                                                    ))}
+                                                    {businessTypeOptions.map(
+                                                        (option) => (
+                                                            <NativeSelectOption
+                                                                key={String(
+                                                                    option.value,
+                                                                )}
+                                                                value={String(
+                                                                    option.value,
+                                                                )}
+                                                            >
+                                                                {option.label}
+                                                            </NativeSelectOption>
+                                                        ),
+                                                    )}
                                                 </NativeSelect>
                                             </Field>
                                         ) : null}
@@ -267,69 +305,114 @@ export default function SeoLocalSeoPage({
                                     <CardHeader>
                                         <div className="flex items-center gap-2">
                                             <Building2Icon className="size-4 text-muted-foreground" />
-                                            <CardTitle>Basic identity</CardTitle>
+                                            <CardTitle>
+                                                Basic identity
+                                            </CardTitle>
                                         </div>
                                         <CardDescription>
-                                            Define the public name, URL, description, and logo used in structured data.
+                                            Define the public name, URL,
+                                            description, and logo used in
+                                            structured data.
                                         </CardDescription>
                                     </CardHeader>
                                     <CardContent className="flex flex-col gap-6">
                                         <FieldGroup>
-                                            <Field data-invalid={form.invalid('name') || undefined}>
-                                                <FieldLabel htmlFor="name">Business or person name</FieldLabel>
+                                            <Field
+                                                data-invalid={
+                                                    form.invalid('name') ||
+                                                    undefined
+                                                }
+                                            >
+                                                <FieldLabel htmlFor="name">
+                                                    Business or person name
+                                                </FieldLabel>
                                                 <Input
                                                     id="name"
                                                     value={form.data.name}
                                                     onChange={(event) =>
-                                                        form.setField('name', event.target.value)
+                                                        form.setField(
+                                                            'name',
+                                                            event.target.value,
+                                                        )
                                                     }
-                                                    onBlur={() => form.touch('name')}
-                                                    aria-invalid={form.invalid('name') || undefined}
+                                                    onBlur={() =>
+                                                        form.touch('name')
+                                                    }
+                                                    aria-invalid={
+                                                        form.invalid('name') ||
+                                                        undefined
+                                                    }
                                                     placeholder="Acme Studio"
                                                 />
-                                                <FieldError>{form.error('name')}</FieldError>
+                                                <FieldError>
+                                                    {form.error('name')}
+                                                </FieldError>
                                             </Field>
 
                                             <Field>
-                                                <FieldLabel htmlFor="url">Website URL</FieldLabel>
+                                                <FieldLabel htmlFor="url">
+                                                    Website URL
+                                                </FieldLabel>
                                                 <Input
                                                     id="url"
                                                     value={form.data.url}
                                                     onChange={(event) =>
-                                                        form.setField('url', event.target.value)
+                                                        form.setField(
+                                                            'url',
+                                                            event.target.value,
+                                                        )
                                                     }
-                                                    onBlur={() => form.touch('url')}
+                                                    onBlur={() =>
+                                                        form.touch('url')
+                                                    }
                                                     placeholder="https://example.com"
                                                 />
-                                                <FieldError>{form.error('url')}</FieldError>
+                                                <FieldError>
+                                                    {form.error('url')}
+                                                </FieldError>
                                             </Field>
                                         </FieldGroup>
 
                                         <Field>
-                                            <FieldLabel htmlFor="description">Description</FieldLabel>
+                                            <FieldLabel htmlFor="description">
+                                                Description
+                                            </FieldLabel>
                                             <Textarea
                                                 id="description"
                                                 rows={4}
                                                 value={form.data.description}
                                                 onChange={(event) =>
-                                                    form.setField('description', event.target.value)
+                                                    form.setField(
+                                                        'description',
+                                                        event.target.value,
+                                                    )
                                                 }
-                                                onBlur={() => form.touch('description')}
+                                                onBlur={() =>
+                                                    form.touch('description')
+                                                }
                                                 placeholder="Describe what the business offers and what makes it unique."
                                             />
                                             <FieldDescription>
-                                                Keep this concise and consistent with other business profiles.
+                                                Keep this concise and consistent
+                                                with other business profiles.
                                             </FieldDescription>
-                                            <FieldError>{form.error('description')}</FieldError>
+                                            <FieldError>
+                                                {form.error('description')}
+                                            </FieldError>
                                         </Field>
 
                                         <Field>
                                             <FieldLabel>Logo</FieldLabel>
                                             <MediaPickerField
-                                                value={form.data.logo_image || null}
+                                                value={
+                                                    form.data.logo_image || null
+                                                }
                                                 previewUrl={logoImageUrl}
                                                 onChange={(item) => {
-                                                    form.setField('logo_image', item ? item.id : '');
+                                                    form.setField(
+                                                        'logo_image',
+                                                        item ? item.id : '',
+                                                    );
                                                     form.touch('logo_image');
                                                 }}
                                                 dialogTitle="Select business logo"
@@ -337,13 +420,20 @@ export default function SeoLocalSeoPage({
                                                 pickerMedia={pickerMedia}
                                                 pickerFilters={pickerFilters}
                                                 uploadSettings={uploadSettings}
-                                                pickerStatistics={pickerStatistics}
-                                                pickerAction={route('seo.settings.localseo')}
+                                                pickerStatistics={
+                                                    pickerStatistics
+                                                }
+                                                pickerAction={route(
+                                                    'seo.settings.localseo',
+                                                )}
                                             />
                                             <FieldDescription>
-                                                Use a square logo whenever possible for better rendering.
+                                                Use a square logo whenever
+                                                possible for better rendering.
                                             </FieldDescription>
-                                            <FieldError>{form.error('logo_image')}</FieldError>
+                                            <FieldError>
+                                                {form.error('logo_image')}
+                                            </FieldError>
                                         </Field>
                                     </CardContent>
                                 </Card>
@@ -352,45 +442,69 @@ export default function SeoLocalSeoPage({
                                     <CardHeader>
                                         <div className="flex items-center gap-2">
                                             <MapPinIcon className="size-4 text-muted-foreground" />
-                                            <CardTitle>Contact and address</CardTitle>
+                                            <CardTitle>
+                                                Contact and address
+                                            </CardTitle>
                                         </div>
                                         <CardDescription>
-                                            Match your official NAP details so search engines can confidently associate local listings.
+                                            Match your official NAP details so
+                                            search engines can confidently
+                                            associate local listings.
                                         </CardDescription>
                                     </CardHeader>
                                     <CardContent className="flex flex-col gap-6">
                                         <FieldGroup>
                                             <Field>
-                                                <FieldLabel htmlFor="phone">Phone</FieldLabel>
+                                                <FieldLabel htmlFor="phone">
+                                                    Phone
+                                                </FieldLabel>
                                                 <Input
                                                     id="phone"
                                                     value={form.data.phone}
                                                     onChange={(event) =>
-                                                        form.setField('phone', event.target.value)
+                                                        form.setField(
+                                                            'phone',
+                                                            event.target.value,
+                                                        )
                                                     }
-                                                    onBlur={() => form.touch('phone')}
+                                                    onBlur={() =>
+                                                        form.touch('phone')
+                                                    }
                                                     placeholder="+1 (555) 123-4567"
                                                 />
-                                                <FieldError>{form.error('phone')}</FieldError>
+                                                <FieldError>
+                                                    {form.error('phone')}
+                                                </FieldError>
                                             </Field>
                                             <Field>
-                                                <FieldLabel htmlFor="email">Email</FieldLabel>
+                                                <FieldLabel htmlFor="email">
+                                                    Email
+                                                </FieldLabel>
                                                 <Input
                                                     id="email"
                                                     type="email"
                                                     value={form.data.email}
                                                     onChange={(event) =>
-                                                        form.setField('email', event.target.value)
+                                                        form.setField(
+                                                            'email',
+                                                            event.target.value,
+                                                        )
                                                     }
-                                                    onBlur={() => form.touch('email')}
+                                                    onBlur={() =>
+                                                        form.touch('email')
+                                                    }
                                                     placeholder="hello@example.com"
                                                 />
-                                                <FieldError>{form.error('email')}</FieldError>
+                                                <FieldError>
+                                                    {form.error('email')}
+                                                </FieldError>
                                             </Field>
                                         </FieldGroup>
 
                                         <Field>
-                                            <FieldLabel htmlFor="street_address">Street address</FieldLabel>
+                                            <FieldLabel htmlFor="street_address">
+                                                Street address
+                                            </FieldLabel>
                                             <Input
                                                 id="street_address"
                                                 value={form.data.street_address}
@@ -400,57 +514,95 @@ export default function SeoLocalSeoPage({
                                                         event.target.value,
                                                     )
                                                 }
-                                                onBlur={() => form.touch('street_address')}
+                                                onBlur={() =>
+                                                    form.touch('street_address')
+                                                }
                                                 placeholder="123 Main Street"
                                             />
                                         </Field>
 
                                         <FieldGroup>
                                             <Field>
-                                                <FieldLabel htmlFor="locality">City</FieldLabel>
+                                                <FieldLabel htmlFor="locality">
+                                                    City
+                                                </FieldLabel>
                                                 <Input
                                                     id="locality"
                                                     value={form.data.locality}
                                                     onChange={(event) =>
-                                                        form.setField('locality', event.target.value)
+                                                        form.setField(
+                                                            'locality',
+                                                            event.target.value,
+                                                        )
                                                     }
-                                                    onBlur={() => form.touch('locality')}
+                                                    onBlur={() =>
+                                                        form.touch('locality')
+                                                    }
                                                 />
                                             </Field>
                                             <Field>
-                                                <FieldLabel htmlFor="region">Region</FieldLabel>
+                                                <FieldLabel htmlFor="region">
+                                                    Region
+                                                </FieldLabel>
                                                 <Input
                                                     id="region"
                                                     value={form.data.region}
                                                     onChange={(event) =>
-                                                        form.setField('region', event.target.value)
+                                                        form.setField(
+                                                            'region',
+                                                            event.target.value,
+                                                        )
                                                     }
-                                                    onBlur={() => form.touch('region')}
+                                                    onBlur={() =>
+                                                        form.touch('region')
+                                                    }
                                                 />
                                             </Field>
                                         </FieldGroup>
 
                                         <FieldGroup>
                                             <Field>
-                                                <FieldLabel htmlFor="postal_code">Postal code</FieldLabel>
+                                                <FieldLabel htmlFor="postal_code">
+                                                    Postal code
+                                                </FieldLabel>
                                                 <Input
                                                     id="postal_code"
-                                                    value={form.data.postal_code}
-                                                    onChange={(event) =>
-                                                        form.setField('postal_code', event.target.value)
+                                                    value={
+                                                        form.data.postal_code
                                                     }
-                                                    onBlur={() => form.touch('postal_code')}
+                                                    onChange={(event) =>
+                                                        form.setField(
+                                                            'postal_code',
+                                                            event.target.value,
+                                                        )
+                                                    }
+                                                    onBlur={() =>
+                                                        form.touch(
+                                                            'postal_code',
+                                                        )
+                                                    }
                                                 />
                                             </Field>
                                             <Field>
-                                                <FieldLabel htmlFor="country_code">Country</FieldLabel>
+                                                <FieldLabel htmlFor="country_code">
+                                                    Country
+                                                </FieldLabel>
                                                 <Input
                                                     id="country_code"
-                                                    value={form.data.country_code}
-                                                    onChange={(event) =>
-                                                        form.setField('country_code', event.target.value)
+                                                    value={
+                                                        form.data.country_code
                                                     }
-                                                    onBlur={() => form.touch('country_code')}
+                                                    onChange={(event) =>
+                                                        form.setField(
+                                                            'country_code',
+                                                            event.target.value,
+                                                        )
+                                                    }
+                                                    onBlur={() =>
+                                                        form.touch(
+                                                            'country_code',
+                                                        )
+                                                    }
                                                     placeholder="US"
                                                 />
                                             </Field>
@@ -464,11 +616,15 @@ export default function SeoLocalSeoPage({
                                                     </FieldLabel>
                                                     <Input
                                                         id="geo_coordinates_latitude"
-                                                        value={form.data.geo_coordinates_latitude}
+                                                        value={
+                                                            form.data
+                                                                .geo_coordinates_latitude
+                                                        }
                                                         onChange={(event) =>
                                                             form.setField(
                                                                 'geo_coordinates_latitude',
-                                                                event.target.value,
+                                                                event.target
+                                                                    .value,
                                                             )
                                                         }
                                                         onBlur={() =>
@@ -485,11 +641,15 @@ export default function SeoLocalSeoPage({
                                                     </FieldLabel>
                                                     <Input
                                                         id="geo_coordinates_longitude"
-                                                        value={form.data.geo_coordinates_longitude}
+                                                        value={
+                                                            form.data
+                                                                .geo_coordinates_longitude
+                                                        }
                                                         onChange={(event) =>
                                                             form.setField(
                                                                 'geo_coordinates_longitude',
-                                                                event.target.value,
+                                                                event.target
+                                                                    .value,
                                                             )
                                                         }
                                                         onBlur={() =>
@@ -511,98 +671,191 @@ export default function SeoLocalSeoPage({
                                             <div className="flex items-center justify-between gap-4">
                                                 <div className="flex items-center gap-2">
                                                     <Clock3Icon className="size-4 text-muted-foreground" />
-                                                    <CardTitle>Business hours</CardTitle>
+                                                    <CardTitle>
+                                                        Business hours
+                                                    </CardTitle>
                                                 </div>
                                                 <Field orientation="horizontal">
                                                     <Switch
-                                                        checked={form.data.is_opening_hour_24_7}
-                                                        onCheckedChange={(checked) =>
+                                                        checked={
+                                                            form.data
+                                                                .is_opening_hour_24_7
+                                                        }
+                                                        onCheckedChange={(
+                                                            checked,
+                                                        ) =>
                                                             form.setField(
                                                                 'is_opening_hour_24_7',
                                                                 checked,
                                                             )
                                                         }
                                                     />
-                                                    <FieldLabel>Open 24/7</FieldLabel>
+                                                    <FieldLabel>
+                                                        Open 24/7
+                                                    </FieldLabel>
                                                 </Field>
                                             </div>
                                             <CardDescription>
-                                                Add one or more opening windows. Split shifts can be represented with multiple rows.
+                                                Add one or more opening windows.
+                                                Split shifts can be represented
+                                                with multiple rows.
                                             </CardDescription>
                                         </CardHeader>
                                         {!form.data.is_opening_hour_24_7 ? (
                                             <CardContent className="flex flex-col gap-4">
-                                                {Array.from({ length: rows }).map((_, index) => (
+                                                {Array.from({
+                                                    length: rows,
+                                                }).map((_, index) => (
                                                     <div
                                                         key={`hour-row-${index}`}
                                                         className="grid gap-3 rounded-xl border p-4 md:grid-cols-[1.2fr_1fr_1fr_auto]"
                                                     >
                                                         <Field>
-                                                            <FieldLabel htmlFor={`opening-day-${index}`}>
+                                                            <FieldLabel
+                                                                htmlFor={`opening-day-${index}`}
+                                                            >
                                                                 Day
                                                             </FieldLabel>
                                                             <NativeSelect
                                                                 id={`opening-day-${index}`}
                                                                 className="w-full"
-                                                                value={form.data.opening_hour_day[index] ?? ''}
-                                                                onChange={(event) => {
-                                                                    const next = [...form.data.opening_hour_day];
-                                                                    next[index] = event.target.value;
-                                                                    form.setField('opening_hour_day', next);
+                                                                value={
+                                                                    form.data
+                                                                        .opening_hour_day[
+                                                                        index
+                                                                    ] ?? ''
+                                                                }
+                                                                onChange={(
+                                                                    event,
+                                                                ) => {
+                                                                    const next =
+                                                                        [
+                                                                            ...form
+                                                                                .data
+                                                                                .opening_hour_day,
+                                                                        ];
+                                                                    next[
+                                                                        index
+                                                                    ] =
+                                                                        event.target.value;
+                                                                    form.setField(
+                                                                        'opening_hour_day',
+                                                                        next,
+                                                                    );
                                                                 }}
                                                             >
                                                                 <NativeSelectOption value="">
                                                                     Select day
                                                                 </NativeSelectOption>
-                                                                {openingDayOptions.map((option) => (
-                                                                    <NativeSelectOption
-                                                                        key={String(option.value)}
-                                                                        value={String(option.value)}
-                                                                    >
-                                                                        {option.label}
-                                                                    </NativeSelectOption>
-                                                                ))}
+                                                                {openingDayOptions.map(
+                                                                    (
+                                                                        option,
+                                                                    ) => (
+                                                                        <NativeSelectOption
+                                                                            key={String(
+                                                                                option.value,
+                                                                            )}
+                                                                            value={String(
+                                                                                option.value,
+                                                                            )}
+                                                                        >
+                                                                            {
+                                                                                option.label
+                                                                            }
+                                                                        </NativeSelectOption>
+                                                                    ),
+                                                                )}
                                                             </NativeSelect>
                                                         </Field>
                                                         <Field>
-                                                            <FieldLabel htmlFor={`opening-hours-${index}`}>
+                                                            <FieldLabel
+                                                                htmlFor={`opening-hours-${index}`}
+                                                            >
                                                                 Opens
                                                             </FieldLabel>
                                                             <Input
                                                                 id={`opening-hours-${index}`}
                                                                 type="time"
-                                                                value={form.data.opening_hours[index] ?? ''}
-                                                                onChange={(event) => {
-                                                                    const next = [...form.data.opening_hours];
-                                                                    next[index] = event.target.value;
-                                                                    form.setField('opening_hours', next);
+                                                                value={
+                                                                    form.data
+                                                                        .opening_hours[
+                                                                        index
+                                                                    ] ?? ''
+                                                                }
+                                                                onChange={(
+                                                                    event,
+                                                                ) => {
+                                                                    const next =
+                                                                        [
+                                                                            ...form
+                                                                                .data
+                                                                                .opening_hours,
+                                                                        ];
+                                                                    next[
+                                                                        index
+                                                                    ] =
+                                                                        event.target.value;
+                                                                    form.setField(
+                                                                        'opening_hours',
+                                                                        next,
+                                                                    );
                                                                 }}
                                                             />
                                                         </Field>
                                                         <Field>
-                                                            <FieldLabel htmlFor={`closing-hours-${index}`}>
+                                                            <FieldLabel
+                                                                htmlFor={`closing-hours-${index}`}
+                                                            >
                                                                 Closes
                                                             </FieldLabel>
                                                             <Input
                                                                 id={`closing-hours-${index}`}
                                                                 type="time"
-                                                                value={form.data.closing_hours[index] ?? ''}
-                                                                onChange={(event) => {
-                                                                    const next = [...form.data.closing_hours];
-                                                                    next[index] = event.target.value;
-                                                                    form.setField('closing_hours', next);
+                                                                value={
+                                                                    form.data
+                                                                        .closing_hours[
+                                                                        index
+                                                                    ] ?? ''
+                                                                }
+                                                                onChange={(
+                                                                    event,
+                                                                ) => {
+                                                                    const next =
+                                                                        [
+                                                                            ...form
+                                                                                .data
+                                                                                .closing_hours,
+                                                                        ];
+                                                                    next[
+                                                                        index
+                                                                    ] =
+                                                                        event.target.value;
+                                                                    form.setField(
+                                                                        'closing_hours',
+                                                                        next,
+                                                                    );
                                                                 }}
                                                             />
                                                         </Field>
                                                         <div className="flex items-end">
                                                             <Button
                                                                 type="button"
-                                                                variant={index === 0 ? 'outline' : 'destructive'}
+                                                                variant={
+                                                                    index === 0
+                                                                        ? 'outline'
+                                                                        : 'destructive'
+                                                                }
                                                                 onClick={() =>
-                                                                    index === 0 ? addHourRow() : removeHourRow(index)
+                                                                    index === 0
+                                                                        ? addHourRow()
+                                                                        : removeHourRow(
+                                                                              index,
+                                                                          )
                                                                 }
                                                             >
-                                                                {index === 0 ? 'Add row' : 'Remove'}
+                                                                {index === 0
+                                                                    ? 'Add row'
+                                                                    : 'Remove'}
                                                             </Button>
                                                         </div>
                                                     </div>
@@ -616,105 +869,190 @@ export default function SeoLocalSeoPage({
                                     <CardHeader>
                                         <div className="flex items-center gap-2">
                                             <Globe2Icon className="size-4 text-muted-foreground" />
-                                            <CardTitle>Social profiles and extras</CardTitle>
+                                            <CardTitle>
+                                                Social profiles and extras
+                                            </CardTitle>
                                         </div>
                                         <CardDescription>
-                                            Connect official profiles to strengthen entity matching across search engines and assistants.
+                                            Connect official profiles to
+                                            strengthen entity matching across
+                                            search engines and assistants.
                                         </CardDescription>
                                     </CardHeader>
                                     <CardContent className="flex flex-col gap-6">
                                         <FieldGroup>
                                             <Field>
-                                                <FieldLabel htmlFor="facebook_url">Facebook</FieldLabel>
+                                                <FieldLabel htmlFor="facebook_url">
+                                                    Facebook
+                                                </FieldLabel>
                                                 <Input
                                                     id="facebook_url"
-                                                    value={form.data.facebook_url}
-                                                    onChange={(event) =>
-                                                        form.setField('facebook_url', event.target.value)
+                                                    value={
+                                                        form.data.facebook_url
                                                     }
-                                                    onBlur={() => form.touch('facebook_url')}
+                                                    onChange={(event) =>
+                                                        form.setField(
+                                                            'facebook_url',
+                                                            event.target.value,
+                                                        )
+                                                    }
+                                                    onBlur={() =>
+                                                        form.touch(
+                                                            'facebook_url',
+                                                        )
+                                                    }
                                                     placeholder="https://facebook.com/yourpage"
                                                 />
-                                                <FieldError>{form.error('facebook_url')}</FieldError>
+                                                <FieldError>
+                                                    {form.error('facebook_url')}
+                                                </FieldError>
                                             </Field>
                                             <Field>
-                                                <FieldLabel htmlFor="twitter_url">X</FieldLabel>
+                                                <FieldLabel htmlFor="twitter_url">
+                                                    X
+                                                </FieldLabel>
                                                 <Input
                                                     id="twitter_url"
-                                                    value={form.data.twitter_url}
-                                                    onChange={(event) =>
-                                                        form.setField('twitter_url', event.target.value)
+                                                    value={
+                                                        form.data.twitter_url
                                                     }
-                                                    onBlur={() => form.touch('twitter_url')}
+                                                    onChange={(event) =>
+                                                        form.setField(
+                                                            'twitter_url',
+                                                            event.target.value,
+                                                        )
+                                                    }
+                                                    onBlur={() =>
+                                                        form.touch(
+                                                            'twitter_url',
+                                                        )
+                                                    }
                                                     placeholder="https://x.com/yourhandle"
                                                 />
-                                                <FieldError>{form.error('twitter_url')}</FieldError>
+                                                <FieldError>
+                                                    {form.error('twitter_url')}
+                                                </FieldError>
                                             </Field>
                                         </FieldGroup>
                                         <FieldGroup>
                                             <Field>
-                                                <FieldLabel htmlFor="linkedin_url">LinkedIn</FieldLabel>
+                                                <FieldLabel htmlFor="linkedin_url">
+                                                    LinkedIn
+                                                </FieldLabel>
                                                 <Input
                                                     id="linkedin_url"
-                                                    value={form.data.linkedin_url}
-                                                    onChange={(event) =>
-                                                        form.setField('linkedin_url', event.target.value)
+                                                    value={
+                                                        form.data.linkedin_url
                                                     }
-                                                    onBlur={() => form.touch('linkedin_url')}
+                                                    onChange={(event) =>
+                                                        form.setField(
+                                                            'linkedin_url',
+                                                            event.target.value,
+                                                        )
+                                                    }
+                                                    onBlur={() =>
+                                                        form.touch(
+                                                            'linkedin_url',
+                                                        )
+                                                    }
                                                     placeholder="https://linkedin.com/company/yourcompany"
                                                 />
-                                                <FieldError>{form.error('linkedin_url')}</FieldError>
+                                                <FieldError>
+                                                    {form.error('linkedin_url')}
+                                                </FieldError>
                                             </Field>
                                             <Field>
-                                                <FieldLabel htmlFor="instagram_url">Instagram</FieldLabel>
+                                                <FieldLabel htmlFor="instagram_url">
+                                                    Instagram
+                                                </FieldLabel>
                                                 <Input
                                                     id="instagram_url"
-                                                    value={form.data.instagram_url}
-                                                    onChange={(event) =>
-                                                        form.setField('instagram_url', event.target.value)
+                                                    value={
+                                                        form.data.instagram_url
                                                     }
-                                                    onBlur={() => form.touch('instagram_url')}
+                                                    onChange={(event) =>
+                                                        form.setField(
+                                                            'instagram_url',
+                                                            event.target.value,
+                                                        )
+                                                    }
+                                                    onBlur={() =>
+                                                        form.touch(
+                                                            'instagram_url',
+                                                        )
+                                                    }
                                                     placeholder="https://instagram.com/yourprofile"
                                                 />
-                                                <FieldError>{form.error('instagram_url')}</FieldError>
+                                                <FieldError>
+                                                    {form.error(
+                                                        'instagram_url',
+                                                    )}
+                                                </FieldError>
                                             </Field>
                                         </FieldGroup>
                                         <FieldGroup>
                                             <Field>
-                                                <FieldLabel htmlFor="youtube_url">YouTube</FieldLabel>
+                                                <FieldLabel htmlFor="youtube_url">
+                                                    YouTube
+                                                </FieldLabel>
                                                 <Input
                                                     id="youtube_url"
-                                                    value={form.data.youtube_url}
-                                                    onChange={(event) =>
-                                                        form.setField('youtube_url', event.target.value)
+                                                    value={
+                                                        form.data.youtube_url
                                                     }
-                                                    onBlur={() => form.touch('youtube_url')}
+                                                    onChange={(event) =>
+                                                        form.setField(
+                                                            'youtube_url',
+                                                            event.target.value,
+                                                        )
+                                                    }
+                                                    onBlur={() =>
+                                                        form.touch(
+                                                            'youtube_url',
+                                                        )
+                                                    }
                                                     placeholder="https://youtube.com/@yourchannel"
                                                 />
-                                                <FieldError>{form.error('youtube_url')}</FieldError>
+                                                <FieldError>
+                                                    {form.error('youtube_url')}
+                                                </FieldError>
                                             </Field>
                                             {organizationMode ? (
                                                 <>
                                                     <Field>
-                                                        <FieldLabel htmlFor="price_range">Price range</FieldLabel>
+                                                        <FieldLabel htmlFor="price_range">
+                                                            Price range
+                                                        </FieldLabel>
                                                         <NativeSelect
                                                             id="price_range"
                                                             className="w-full"
-                                                            value={form.data.price_range}
+                                                            value={
+                                                                form.data
+                                                                    .price_range
+                                                            }
                                                             onChange={(event) =>
                                                                 form.setField(
                                                                     'price_range',
-                                                                    event.target.value,
+                                                                    event.target
+                                                                        .value,
                                                                 )
                                                             }
                                                         >
                                                             <NativeSelectOption value="">
                                                                 Not specified
                                                             </NativeSelectOption>
-                                                            <NativeSelectOption value="$">$</NativeSelectOption>
-                                                            <NativeSelectOption value="$$">$$</NativeSelectOption>
-                                                            <NativeSelectOption value="$$$">$$$</NativeSelectOption>
-                                                            <NativeSelectOption value="$$$$">$$$$</NativeSelectOption>
+                                                            <NativeSelectOption value="$">
+                                                                $
+                                                            </NativeSelectOption>
+                                                            <NativeSelectOption value="$$">
+                                                                $$
+                                                            </NativeSelectOption>
+                                                            <NativeSelectOption value="$$$">
+                                                                $$$
+                                                            </NativeSelectOption>
+                                                            <NativeSelectOption value="$$$$">
+                                                                $$$$
+                                                            </NativeSelectOption>
                                                         </NativeSelect>
                                                     </Field>
                                                     <Field>
@@ -724,11 +1062,15 @@ export default function SeoLocalSeoPage({
                                                         <Input
                                                             id="founding_date"
                                                             type="date"
-                                                            value={form.data.founding_date}
+                                                            value={
+                                                                form.data
+                                                                    .founding_date
+                                                            }
                                                             onChange={(event) =>
                                                                 form.setField(
                                                                     'founding_date',
-                                                                    event.target.value,
+                                                                    event.target
+                                                                        .value,
                                                                 )
                                                             }
                                                         />
@@ -747,7 +1089,8 @@ export default function SeoLocalSeoPage({
                             <CardHeader>
                                 <CardTitle>Completion score</CardTitle>
                                 <CardDescription>
-                                    A quick view of how complete the local profile is for search engines.
+                                    A quick view of how complete the local
+                                    profile is for search engines.
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="flex flex-col gap-4">
@@ -755,13 +1098,18 @@ export default function SeoLocalSeoPage({
                                     <div>
                                         <div className="text-4xl font-semibold tabular-nums">
                                             {score.score}
-                                            <span className="text-lg text-muted-foreground">%</span>
+                                            <span className="text-lg text-muted-foreground">
+                                                %
+                                            </span>
                                         </div>
                                         <p className="text-sm text-muted-foreground">
-                                            {score.completed} of {score.total} recommended signals completed.
+                                            {score.completed} of {score.total}{' '}
+                                            recommended signals completed.
                                         </p>
                                     </div>
-                                    <Badge variant="secondary">Grade {score.grade}</Badge>
+                                    <Badge variant="secondary">
+                                        Grade {score.grade}
+                                    </Badge>
                                 </div>
                                 <div className="h-2 rounded-full bg-muted">
                                     <div
@@ -771,7 +1119,9 @@ export default function SeoLocalSeoPage({
                                 </div>
                                 <Alert>
                                     <SparklesIcon className="size-4" />
-                                    <AlertTitle>Recommended next step</AlertTitle>
+                                    <AlertTitle>
+                                        Recommended next step
+                                    </AlertTitle>
                                     <AlertDescription>
                                         {score.score >= 80
                                             ? 'Your profile is in strong shape. Keep hours and profile links updated.'
@@ -780,7 +1130,11 @@ export default function SeoLocalSeoPage({
                                 </Alert>
                             </CardContent>
                             <CardFooter>
-                                <Button type="submit" className="w-full" disabled={form.processing}>
+                                <Button
+                                    type="submit"
+                                    className="w-full"
+                                    disabled={form.processing}
+                                >
                                     {form.processing ? (
                                         <Spinner className="mr-2 size-4" />
                                     ) : (

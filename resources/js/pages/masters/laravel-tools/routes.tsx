@@ -123,7 +123,9 @@ export default function LaravelToolsRoutes({
                             rows={routes}
                             columns={columns}
                             filters={gridFilters}
-                            getRowKey={(item) => `${item.uri}-${item.method_label}-${item.name ?? 'unnamed'}`}
+                            getRowKey={(item) =>
+                                `${item.uri}-${item.method_label}-${item.name ?? 'unnamed'}`
+                            }
                             sorting={{
                                 sort: filters.sort,
                                 direction: filters.direction,
@@ -147,12 +149,9 @@ export default function LaravelToolsRoutes({
     );
 }
 
-function badgeVariantForMethod(method: string):
-    | 'success'
-    | 'info'
-    | 'warning'
-    | 'danger'
-    | 'secondary' {
+function badgeVariantForMethod(
+    method: string,
+): 'success' | 'info' | 'warning' | 'danger' | 'secondary' {
     switch (method) {
         case 'GET':
             return 'success';

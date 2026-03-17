@@ -50,14 +50,20 @@ export function mapFilters(
     activeFilters: ScaffoldFilterState,
     searchPlaceholder = 'Search...',
 ) {
-    return mapScaffoldFilters(configFilters, activeFilters, { searchPlaceholder });
+    return mapScaffoldFilters(configFilters, activeFilters, {
+        searchPlaceholder,
+    });
 }
 
 export function buildDatagridState(
     config: {
         filters: ScaffoldFilterConfig[];
         statusTabs: ScaffoldStatusTabConfig[];
-        settings: { perPage: number; defaultSort: string | null; defaultDirection: 'asc' | 'desc' };
+        settings: {
+            perPage: number;
+            defaultSort: string | null;
+            defaultDirection: 'asc' | 'desc';
+        };
     },
     filters: ScaffoldFilterState,
     statistics: Record<string, number>,

@@ -22,7 +22,10 @@ Object.assign(Astero.Builder, {
 
         // Remove helper attributes
         if (!keepHelperAttributes) {
-            html = html.replace(/\s*data-astero-\w+(=["'][^"']*["'])?\s*/gi, '');
+            html = html.replace(
+                /\s*data-astero-\w+(=["'][^"']*["'])?\s*/gi,
+                '',
+            );
         }
 
         html = html.replaceAll('astero-hidden', '');
@@ -38,22 +41,40 @@ Object.assign(Astero.Builder, {
         let html = '';
 
         // Clean up editing artifacts
-        doc.querySelectorAll('[contenteditable]').forEach((e) => e.removeAttribute('contenteditable'));
-        doc.querySelectorAll('[spellcheck="false"]').forEach((e) => e.removeAttribute('spellcheck'));
-        doc.querySelectorAll('[spellchecker]').forEach((e) => e.removeAttribute('spellchecker'));
-        doc.querySelectorAll('script[src^="chrome-extension://"]').forEach((e) => e.remove());
-        doc.querySelectorAll('script[src^="moz-extension://"]').forEach((e) => e.remove());
+        doc.querySelectorAll('[contenteditable]').forEach((e) =>
+            e.removeAttribute('contenteditable'),
+        );
+        doc.querySelectorAll('[spellcheck="false"]').forEach((e) =>
+            e.removeAttribute('spellcheck'),
+        );
+        doc.querySelectorAll('[spellchecker]').forEach((e) =>
+            e.removeAttribute('spellchecker'),
+        );
+        doc.querySelectorAll('script[src^="chrome-extension://"]').forEach(
+            (e) => e.remove(),
+        );
+        doc.querySelectorAll('script[src^="moz-extension://"]').forEach((e) =>
+            e.remove(),
+        );
 
-        window.dispatchEvent(new CustomEvent('astero.getHtml.before', { detail: doc }));
+        window.dispatchEvent(
+            new CustomEvent('astero.getHtml.before', { detail: doc }),
+        );
 
         // Build DOCTYPE if present
         if (hasDoctpe) {
             html =
                 '<!DOCTYPE ' +
                 doc.doctype.name +
-                (doc.doctype.publicId ? ' PUBLIC "' + doc.doctype.publicId + '"' : '') +
-                (!doc.doctype.publicId && doc.doctype.systemId ? ' SYSTEM' : '') +
-                (doc.doctype.systemId ? ' "' + doc.doctype.systemId + '"' : '') +
+                (doc.doctype.publicId
+                    ? ' PUBLIC "' + doc.doctype.publicId + '"'
+                    : '') +
+                (!doc.doctype.publicId && doc.doctype.systemId
+                    ? ' SYSTEM'
+                    : '') +
+                (doc.doctype.systemId
+                    ? ' "' + doc.doctype.systemId + '"'
+                    : '') +
                 '>\n';
         }
 
@@ -62,8 +83,12 @@ Object.assign(Astero.Builder, {
         html += doc.documentElement.outerHTML;
         html = this.removeHelpers(html, keepHelperAttributes);
 
-        window.dispatchEvent(new CustomEvent('astero.getHtml.after', { detail: doc }));
-        window.dispatchEvent(new CustomEvent('astero.getHtml.filter', { detail: html }));
+        window.dispatchEvent(
+            new CustomEvent('astero.getHtml.after', { detail: doc }),
+        );
+        window.dispatchEvent(
+            new CustomEvent('astero.getHtml.filter', { detail: html }),
+        );
 
         return html;
     },
@@ -130,7 +155,11 @@ Object.assign(Astero.Builder, {
             Astero.Builder.loadBlockGroups();
         }
 
-        displayToast('bg-success', 'Save', `${type} "${name}" saved to session`);
+        displayToast(
+            'bg-success',
+            'Save',
+            `${type} "${name}" saved to session`,
+        );
         if (callback) callback({ success: true });
     },
 });

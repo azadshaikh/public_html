@@ -40,9 +40,8 @@ import type {
 export default function LaravelToolsArtisan({
     commands,
 }: LaravelToolsArtisanPageProps) {
-    const [selectedCommand, setSelectedCommand] = useState<ArtisanCommand | null>(
-        commands[0] ?? null,
-    );
+    const [selectedCommand, setSelectedCommand] =
+        useState<ArtisanCommand | null>(commands[0] ?? null);
     const [runningCommand, setRunningCommand] = useState<string | null>(null);
     const [output, setOutput] = useState('');
     const [lastDuration, setLastDuration] = useState<number | null>(null);
@@ -75,10 +74,14 @@ export default function LaravelToolsArtisan({
             );
 
             if (!payload.success) {
-                throw new Error(payload.message || 'Unable to run the command.');
+                throw new Error(
+                    payload.message || 'Unable to run the command.',
+                );
             }
 
-            setOutput(payload.output || 'Command completed without console output.');
+            setOutput(
+                payload.output || 'Command completed without console output.',
+            );
             setLastDuration(payload.duration ?? null);
             showAppToast({
                 variant: 'success',
@@ -115,8 +118,9 @@ export default function LaravelToolsArtisan({
                     <TerminalSquareIcon data-icon="inline-start" />
                     <AlertTitle>Approved commands only</AlertTitle>
                     <AlertDescription>
-                        This runner only exposes a small allow-list of maintenance
-                        commands so critical workloads are not triggered from the browser.
+                        This runner only exposes a small allow-list of
+                        maintenance commands so critical workloads are not
+                        triggered from the browser.
                     </AlertDescription>
                 </Alert>
 
@@ -125,7 +129,8 @@ export default function LaravelToolsArtisan({
                         <CardHeader>
                             <CardTitle>Available commands</CardTitle>
                             <CardDescription>
-                                Select a command to review what it does before running it.
+                                Select a command to review what it does before
+                                running it.
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
@@ -133,7 +138,8 @@ export default function LaravelToolsArtisan({
                                 <div className="flex flex-col gap-3">
                                     {groupedCommands.map((command) => {
                                         const isSelected =
-                                            selectedCommand?.name === command.name;
+                                            selectedCommand?.name ===
+                                            command.name;
                                         const isRunning =
                                             runningCommand === command.name;
 
@@ -154,10 +160,13 @@ export default function LaravelToolsArtisan({
                                                     <div className="flex items-start justify-between gap-3">
                                                         <div className="flex min-w-0 flex-col gap-1">
                                                             <p className="truncate font-medium text-foreground">
-                                                                php artisan {command.name}
+                                                                php artisan{' '}
+                                                                {command.name}
                                                             </p>
                                                             <p className="text-sm text-muted-foreground">
-                                                                {command.description}
+                                                                {
+                                                                    command.description
+                                                                }
                                                             </p>
                                                         </div>
                                                         {isSelected ? (
@@ -174,7 +183,9 @@ export default function LaravelToolsArtisan({
                                                                     ? 'default'
                                                                     : 'outline'
                                                             }
-                                                            onClick={(event) => {
+                                                            onClick={(
+                                                                event,
+                                                            ) => {
                                                                 event.stopPropagation();
                                                                 void runCommand(
                                                                     command,
@@ -207,7 +218,9 @@ export default function LaravelToolsArtisan({
                                 <div className="flex flex-col gap-1">
                                     <CardTitle>Command output</CardTitle>
                                     <CardDescription>
-                                        Review the latest execution result and copy it into troubleshooting notes if needed.
+                                        Review the latest execution result and
+                                        copy it into troubleshooting notes if
+                                        needed.
                                     </CardDescription>
                                 </div>
                                 <div className="flex flex-wrap items-center gap-2">
@@ -238,7 +251,9 @@ export default function LaravelToolsArtisan({
                                         type="button"
                                         onClick={() =>
                                             selectedCommand
-                                                ? void runCommand(selectedCommand)
+                                                ? void runCommand(
+                                                      selectedCommand,
+                                                  )
                                                 : undefined
                                         }
                                         disabled={
@@ -267,7 +282,8 @@ export default function LaravelToolsArtisan({
                                             No command output yet
                                         </EmptyTitle>
                                         <EmptyDescription>
-                                            Choose a command from the left and run it to inspect the result.
+                                            Choose a command from the left and
+                                            run it to inspect the result.
                                         </EmptyDescription>
                                     </EmptyHeader>
                                 </Empty>
@@ -300,7 +316,7 @@ export default function LaravelToolsArtisan({
                                                 <Spinner />
                                             </div>
                                         ) : (
-                                            <pre className="whitespace-pre-wrap break-words font-mono text-sm leading-6 text-slate-100">
+                                            <pre className="font-mono text-sm leading-6 break-words whitespace-pre-wrap text-slate-100">
                                                 {output}
                                             </pre>
                                         )}

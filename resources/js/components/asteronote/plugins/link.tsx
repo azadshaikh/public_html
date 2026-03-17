@@ -49,8 +49,8 @@ export function LinkPluginControl({
         const selectedText = selection?.toString() ?? '';
         const link = document.getSelection()?.anchorNode
             ? (document
-                .getSelection()
-                ?.anchorNode?.parentElement?.closest('a') ?? null)
+                  .getSelection()
+                  ?.anchorNode?.parentElement?.closest('a') ?? null)
             : null;
 
         setUrl(link?.getAttribute('href') ?? '');
@@ -70,7 +70,7 @@ export function LinkPluginControl({
             text,
             url,
             target,
-            rel: rel === 'none' ? undefined : rel
+            rel: rel === 'none' ? undefined : rel,
         });
         setOpen(false);
     };
@@ -82,7 +82,7 @@ export function LinkPluginControl({
                 editor={editor}
                 icon={<Link2Icon />}
                 pressed={editor.formatState.link}
-                tooltip={isEditing ? "Edit link" : "Insert link"}
+                tooltip={isEditing ? 'Edit link' : 'Insert link'}
                 onPress={() => {
                     syncFromSelection();
                     setOpen(true);
@@ -106,29 +106,38 @@ export function LinkPluginControl({
                 <DialogContent className="sm:max-w-[425px]">
                     <form onSubmit={handleSubmit}>
                         <DialogHeader>
-                            <DialogTitle>{isEditing ? 'Edit Link' : 'Insert Link'}</DialogTitle>
+                            <DialogTitle>
+                                {isEditing ? 'Edit Link' : 'Insert Link'}
+                            </DialogTitle>
                             <DialogDescription>
-                                Add a destination URL and optional text to display.
+                                Add a destination URL and optional text to
+                                display.
                             </DialogDescription>
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
                             <FieldGroup>
                                 <Field>
-                                    <FieldLabel htmlFor={`${editor.id}-link-url`}>
+                                    <FieldLabel
+                                        htmlFor={`${editor.id}-link-url`}
+                                    >
                                         URL
                                     </FieldLabel>
                                     <Input
                                         id={`${editor.id}-link-url`}
                                         type="url"
                                         value={url}
-                                        onChange={(event) => setUrl(event.target.value)}
+                                        onChange={(event) =>
+                                            setUrl(event.target.value)
+                                        }
                                         placeholder="https://example.com"
                                         autoFocus
                                         required
                                     />
                                 </Field>
                                 <Field>
-                                    <FieldLabel htmlFor={`${editor.id}-link-text`}>
+                                    <FieldLabel
+                                        htmlFor={`${editor.id}-link-text`}
+                                    >
                                         Text to display
                                     </FieldLabel>
                                     <Input
@@ -140,43 +149,64 @@ export function LinkPluginControl({
                                         placeholder="Link text"
                                     />
                                     <FieldDescription>
-                                        Leave empty to keep the current selection.
+                                        Leave empty to keep the current
+                                        selection.
                                     </FieldDescription>
                                 </Field>
                                 <div className="grid grid-cols-2 gap-4">
                                     <Field>
-                                        <FieldLabel htmlFor={`${editor.id}-link-target`}>
+                                        <FieldLabel
+                                            htmlFor={`${editor.id}-link-target`}
+                                        >
                                             Open in
                                         </FieldLabel>
                                         <Select
                                             value={target}
                                             onValueChange={setTarget}
                                         >
-                                            <SelectTrigger id={`${editor.id}-link-target`}>
+                                            <SelectTrigger
+                                                id={`${editor.id}-link-target`}
+                                            >
                                                 <SelectValue placeholder="Select target" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="_self">Current tab</SelectItem>
-                                                <SelectItem value="_blank">New tab (_blank)</SelectItem>
+                                                <SelectItem value="_self">
+                                                    Current tab
+                                                </SelectItem>
+                                                <SelectItem value="_blank">
+                                                    New tab (_blank)
+                                                </SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </Field>
                                     <Field>
-                                        <FieldLabel htmlFor={`${editor.id}-link-rel`}>
+                                        <FieldLabel
+                                            htmlFor={`${editor.id}-link-rel`}
+                                        >
                                             Rel attribute
                                         </FieldLabel>
                                         <Select
                                             value={rel}
                                             onValueChange={setRel}
                                         >
-                                            <SelectTrigger id={`${editor.id}-link-rel`}>
+                                            <SelectTrigger
+                                                id={`${editor.id}-link-rel`}
+                                            >
                                                 <SelectValue placeholder="Select relation" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="none">None</SelectItem>
-                                                <SelectItem value="noopener noreferrer">noopener noreferrer</SelectItem>
-                                                <SelectItem value="nofollow">nofollow</SelectItem>
-                                                <SelectItem value="noopener noreferrer nofollow">All three</SelectItem>
+                                                <SelectItem value="none">
+                                                    None
+                                                </SelectItem>
+                                                <SelectItem value="noopener noreferrer">
+                                                    noopener noreferrer
+                                                </SelectItem>
+                                                <SelectItem value="nofollow">
+                                                    nofollow
+                                                </SelectItem>
+                                                <SelectItem value="noopener noreferrer nofollow">
+                                                    All three
+                                                </SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </Field>
@@ -191,10 +221,7 @@ export function LinkPluginControl({
                             >
                                 Cancel
                             </Button>
-                            <Button
-                                type="submit"
-                                disabled={!url.trim()}
-                            >
+                            <Button type="submit" disabled={!url.trim()}>
                                 {isEditing ? 'Update link' : 'Insert link'}
                             </Button>
                         </DialogFooter>

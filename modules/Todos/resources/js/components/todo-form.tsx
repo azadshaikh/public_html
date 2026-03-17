@@ -20,11 +20,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import { useAppForm } from '@/hooks/use-app-form';
 import { formValidators } from '@/lib/forms';
-import type {
-    TodoFormValues,
-    TodoOption,
-    TodoShowDetail,
-} from '../types/todo';
+import type { TodoFormValues, TodoOption, TodoShowDetail } from '../types/todo';
 
 type TodoFormProps = {
     mode: 'create' | 'edit';
@@ -138,7 +134,9 @@ export default function TodoForm({
                                         }
                                         placeholder="Enter todo title…"
                                     />
-                                    <FieldError>{form.error('title')}</FieldError>
+                                    <FieldError>
+                                        {form.error('title')}
+                                    </FieldError>
                                 </Field>
 
                                 {/* Description */}
@@ -160,9 +158,7 @@ export default function TodoForm({
                                                 e.target.value,
                                             )
                                         }
-                                        onBlur={() =>
-                                            form.touch('description')
-                                        }
+                                        onBlur={() => form.touch('description')}
                                         aria-invalid={
                                             form.invalid('description') ||
                                             undefined

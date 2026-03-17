@@ -11,7 +11,8 @@
  */
 
 // Ensure the builder global namespace exists early.
-const __ASTERO_GLOBAL__ = typeof globalThis !== 'undefined' ? globalThis : window;
+const __ASTERO_GLOBAL__ =
+    typeof globalThis !== 'undefined' ? globalThis : window;
 __ASTERO_GLOBAL__.Astero = __ASTERO_GLOBAL__.Astero || {};
 
 // =============================================
@@ -28,7 +29,8 @@ __ASTERO_GLOBAL__.Astero = __ASTERO_GLOBAL__.Astero || {};
 
     global.tmpl = function tmpl(str, data) {
         let fn = /^[-a-zA-Z0-9]+$/.test(str)
-            ? (cache[str] = cache[str] || tmpl(document.getElementById(str).innerHTML))
+            ? (cache[str] =
+                  cache[str] || tmpl(document.getElementById(str).innerHTML))
             : new Function(
                   'obj',
                   'let p=[],print=function(){p.push.apply(p,arguments);};' +
@@ -45,7 +47,7 @@ __ASTERO_GLOBAL__.Astero = __ASTERO_GLOBAL__.Astero || {};
                           .join("p.push('")
                           .split('\r')
                           .join("\\'") +
-                      "');}return p.join('');"
+                      "');}return p.join('');",
               );
         return data ? fn(data) : fn;
     };
@@ -64,7 +66,14 @@ function buildParams(prefix, obj, add) {
             if (rbracket.test(prefix)) {
                 add(prefix, v);
             } else {
-                buildParams(prefix + '[' + (typeof v === 'object' && v != null ? key : '') + ']', v, add);
+                buildParams(
+                    prefix +
+                        '[' +
+                        (typeof v === 'object' && v != null ? key : '') +
+                        ']',
+                    v,
+                    add,
+                );
             }
         }
     } else if (typeof obj === 'object') {
@@ -80,8 +89,14 @@ function nestedFormData(a) {
     let prefix,
         s = [],
         add = function (key, valueOrFunction) {
-            let value = typeof valueOrFunction === 'function' ? valueOrFunction() : valueOrFunction;
-            s[s.length] = encodeURIComponent(key) + '=' + encodeURIComponent(value == null ? '' : value);
+            let value =
+                typeof valueOrFunction === 'function'
+                    ? valueOrFunction()
+                    : valueOrFunction;
+            s[s.length] =
+                encodeURIComponent(key) +
+                '=' +
+                encodeURIComponent(value == null ? '' : value);
         };
 
     if (a == null) {
@@ -147,7 +162,7 @@ let delay = (function () {
             setTimeout(() => {
                 timers.delete(timerKey);
                 callback();
-            }, ms)
+            }, ms),
         );
     };
 })();
@@ -183,7 +198,9 @@ function confirmAction(options = {}) {
         }
 
         const confirmBtnClass = dangerous ? 'btn-danger' : 'btn-primary';
-        const iconClass = dangerous ? 'ri-error-warning-line text-danger' : 'ri-question-line text-warning';
+        const iconClass = dangerous
+            ? 'ri-error-warning-line text-danger'
+            : 'ri-question-line text-warning';
 
         const modalHtml = `
             <div class="modal fade" id="builder-confirm-modal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
@@ -216,10 +233,12 @@ function confirmAction(options = {}) {
         let confirmed = false;
 
         // Confirm button
-        modalEl.querySelector('[data-confirm-action]').addEventListener('click', () => {
-            confirmed = true;
-            modal.hide();
-        });
+        modalEl
+            .querySelector('[data-confirm-action]')
+            .addEventListener('click', () => {
+                confirmed = true;
+                modal.hide();
+            });
 
         // On hidden, call appropriate callback and cleanup
         modalEl.addEventListener(
@@ -228,7 +247,7 @@ function confirmAction(options = {}) {
                 modalEl.remove();
                 resolve(confirmed);
             },
-            { once: true }
+            { once: true },
         );
 
         modal.show();
@@ -242,7 +261,11 @@ function confirmAction(options = {}) {
  */
 function confirmDelete(itemName = 'this element') {
     return confirmAction({
-        title: 'Delete ' + itemName.charAt(0).toUpperCase() + itemName.slice(1) + '?',
+        title:
+            'Delete ' +
+            itemName.charAt(0).toUpperCase() +
+            itemName.slice(1) +
+            '?',
         message: `Are you sure you want to delete ${itemName}? You can undo this action.`,
         confirmText: 'Delete',
         cancelText: 'Cancel',

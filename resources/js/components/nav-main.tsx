@@ -44,16 +44,26 @@ function useOpenItems() {
 
 function OpenItemsProvider({ children }: { children: React.ReactNode }) {
     // Initialize React state from module-level storage
-    const [openItems, setOpenItems] = React.useState<Set<string>>(() => new Set(openItemsStorage));
-    const [closedItems, setClosedItems] = React.useState<Set<string>>(() => new Set(closedItemsStorage));
+    const [openItems, setOpenItems] = React.useState<Set<string>>(
+        () => new Set(openItemsStorage),
+    );
+    const [closedItems, setClosedItems] = React.useState<Set<string>>(
+        () => new Set(closedItemsStorage),
+    );
 
-    const isOpen = React.useCallback((key: string) => {
-        return openItems.has(key);
-    }, [openItems]);
+    const isOpen = React.useCallback(
+        (key: string) => {
+            return openItems.has(key);
+        },
+        [openItems],
+    );
 
-    const isClosed = React.useCallback((key: string) => {
-        return closedItems.has(key);
-    }, [closedItems]);
+    const isClosed = React.useCallback(
+        (key: string) => {
+            return closedItems.has(key);
+        },
+        [closedItems],
+    );
 
     const toggle = React.useCallback((key: string, open: boolean) => {
         // Update module-level storage first
@@ -91,7 +101,7 @@ function buildAnchorAttributes(
         rel:
             item.target === '_blank'
                 ? ((attributes.rel as string | undefined) ??
-                    'noreferrer noopener')
+                  'noreferrer noopener')
                 : attributes.rel,
     };
 }
@@ -101,46 +111,50 @@ type NavigationLinkProps = Omit<HTMLAttributes<HTMLElement>, 'onClick'> & {
     onClick?: (event: React.MouseEvent<Element>) => void;
 };
 
-const NavigationLink = React.forwardRef<
-    HTMLElement,
-    NavigationLinkProps
->(({ item, children, ...props }, ref) => {
-    if (!item.url) {
-        return <>{children}</>;
-    }
+const NavigationLink = React.forwardRef<HTMLElement, NavigationLinkProps>(
+    ({ item, children, ...props }, ref) => {
+        if (!item.url) {
+            return <>{children}</>;
+        }
 
-    const { onClick, ...restProps } = props;
-    const linkProps = {
-        ...restProps,
-        onClick,
-    } as React.ComponentProps<typeof Link>;
+        const { onClick, ...restProps } = props;
+        const linkProps = {
+            ...restProps,
+            onClick,
+        } as React.ComponentProps<typeof Link>;
 
-    const hasCustomAttributes = Object.keys(item.attributes ?? {}).length > 0;
-    const shouldUseAnchor =
-        item.hard_reload || item.target || hasCustomAttributes;
+        const hasCustomAttributes =
+            Object.keys(item.attributes ?? {}).length > 0;
+        const shouldUseAnchor =
+            item.hard_reload || item.target || hasCustomAttributes;
 
-    if (shouldUseAnchor) {
+        if (shouldUseAnchor) {
+            return (
+                <a
+                    ref={ref as React.Ref<HTMLAnchorElement>}
+                    href={item.url}
+                    {...buildAnchorAttributes(item)}
+                    {...restProps}
+                    onClick={
+                        onClick as React.MouseEventHandler<HTMLAnchorElement>
+                    }
+                >
+                    {children}
+                </a>
+            );
+        }
+
         return (
-            <a
-                ref={ref as React.Ref<HTMLAnchorElement>}
+            <Link
+                ref={ref as React.Ref<unknown>}
                 href={item.url}
-                {...buildAnchorAttributes(item)}
-                {...restProps}
-                onClick={
-                    onClick as React.MouseEventHandler<HTMLAnchorElement>
-                }
+                {...linkProps}
             >
                 {children}
-            </a>
+            </Link>
         );
-    }
-
-    return (
-        <Link ref={ref as React.Ref<unknown>} href={item.url} {...linkProps}>
-            {children}
-        </Link>
-    );
-});
+    },
+);
 NavigationLink.displayName = 'NavigationLink';
 
 function NavMainLeaf({ item, depth }: { item: NavigationItem; depth: number }) {
@@ -171,7 +185,11 @@ function NavMainLeaf({ item, depth }: { item: NavigationItem; depth: number }) {
 
     return (
         <SidebarMenuSubItem>
-            <SidebarMenuSubButton asChild isActive={item.active} className="scroll-m-0">
+            <SidebarMenuSubButton
+                asChild
+                isActive={item.active}
+                className="scroll-m-0"
+            >
                 <NavigationLink item={item}>
                     <span>{item.label}</span>
                 </NavigationLink>
@@ -211,7 +229,10 @@ function NavMainBranch({
             >
                 <SidebarMenuItem>
                     <CollapsibleTrigger asChild>
-                        <SidebarMenuButton tooltip={item.label} className="cursor-pointer scroll-m-0">
+                        <SidebarMenuButton
+                            tooltip={item.label}
+                            className="cursor-pointer scroll-m-0"
+                        >
                             <NavigationIcon svg={item.icon} />
                             <span>{item.label}</span>
                             {item.badge?.value ? (
@@ -246,7 +267,10 @@ function NavMainBranch({
             >
                 <div>
                     <CollapsibleTrigger asChild>
-                        <SidebarMenuSubButton isActive={item.active} className="cursor-pointer scroll-m-0">
+                        <SidebarMenuSubButton
+                            isActive={item.active}
+                            className="cursor-pointer scroll-m-0"
+                        >
                             <span>{item.label}</span>
                             <ChevronRightIcon className="ml-auto transition-transform duration-200 group-data-[state=open]/sub-collapsible:rotate-90" />
                         </SidebarMenuSubButton>

@@ -63,7 +63,11 @@ class DesignBlockFormManager {
         };
 
         const friendlyFieldNames = Array.from(invalidFields)
-            .map((field) => fieldLabels[field.name] || field.name.replace(/_/g, ' ').trim())
+            .map(
+                (field) =>
+                    fieldLabels[field.name] ||
+                    field.name.replace(/_/g, ' ').trim(),
+            )
             .filter((value, index, self) => self.indexOf(value) === index);
 
         if (friendlyFieldNames.length === 0) return;
@@ -77,20 +81,30 @@ class DesignBlockFormManager {
 
         if (invalidFields.length > 0) {
             invalidFields[0].focus();
-            invalidFields[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+            invalidFields[0].scrollIntoView({
+                behavior: 'smooth',
+                block: 'center',
+            });
         }
     }
 
     showAlert(type, message) {
-        const existingServerAlerts = document.querySelectorAll('.alert:not(.client-alert)');
+        const existingServerAlerts = document.querySelectorAll(
+            '.alert:not(.client-alert)',
+        );
         if (existingServerAlerts.length > 0) return;
 
         const existingClientAlerts = document.querySelectorAll('.client-alert');
         existingClientAlerts.forEach((alert) => alert.remove());
 
-        const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
-        const iconClass = type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill';
-        const alertTitle = type === 'success' ? 'Success!' : 'Validation Error!';
+        const alertClass =
+            type === 'success' ? 'alert-success' : 'alert-danger';
+        const iconClass =
+            type === 'success'
+                ? 'bi-check-circle-fill'
+                : 'bi-exclamation-triangle-fill';
+        const alertTitle =
+            type === 'success' ? 'Success!' : 'Validation Error!';
 
         const alert = document.createElement('div');
         alert.className = `alert ${alertClass} alert-dismissible fade rounded-4 show client-alert`;
@@ -119,7 +133,9 @@ class DesignBlockFormManager {
             if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
                 // Check if we're in a textarea or content editor
                 const isInTextarea = e.target.tagName === 'TEXTAREA';
-                const isInContentEditor = e.target.closest('.editor-container, .ck-editor, .tinymce');
+                const isInContentEditor = e.target.closest(
+                    '.editor-container, .ck-editor, .tinymce',
+                );
 
                 if (isInTextarea || isInContentEditor) {
                     // Don't prevent default in textareas - let them handle line breaks
@@ -184,7 +200,9 @@ class DesignBlockFormManager {
     }
 
     setupSubmitButtons() {
-        const submitButtons = this.form.querySelectorAll('button[type="submit"]');
+        const submitButtons = this.form.querySelectorAll(
+            'button[type="submit"]',
+        );
 
         submitButtons.forEach((button) => {
             button.addEventListener('click', (e) => {
@@ -230,7 +248,10 @@ class DesignBlockFormManager {
                     this.form.requestSubmit(button);
                 } else {
                     // Fallback for very old browsers
-                    const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
+                    const submitEvent = new Event('submit', {
+                        bubbles: true,
+                        cancelable: true,
+                    });
                     const notPrevented = this.form.dispatchEvent(submitEvent);
                     if (notPrevented) {
                         this.form.submit();
@@ -241,15 +262,22 @@ class DesignBlockFormManager {
     }
 
     showAlert(type, message) {
-        const existingServerAlerts = document.querySelectorAll('.alert:not(.client-alert)');
+        const existingServerAlerts = document.querySelectorAll(
+            '.alert:not(.client-alert)',
+        );
         if (existingServerAlerts.length > 0) return;
 
         const existingClientAlerts = document.querySelectorAll('.client-alert');
         existingClientAlerts.forEach((alert) => alert.remove());
 
-        const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
-        const iconClass = type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill';
-        const alertTitle = type === 'success' ? 'Success!' : 'Validation Error!';
+        const alertClass =
+            type === 'success' ? 'alert-success' : 'alert-danger';
+        const iconClass =
+            type === 'success'
+                ? 'bi-check-circle-fill'
+                : 'bi-exclamation-triangle-fill';
+        const alertTitle =
+            type === 'success' ? 'Success!' : 'Validation Error!';
 
         const alert = document.createElement('div');
         alert.className = `alert ${alertClass} alert-dismissible fade rounded-4 show client-alert`;
@@ -278,7 +306,9 @@ class DesignBlockFormManager {
             if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
                 // Check if we're in a textarea or content editor
                 const isInTextarea = e.target.tagName === 'TEXTAREA';
-                const isInContentEditor = e.target.closest('.editor-container, .ck-editor, .tinymce');
+                const isInContentEditor = e.target.closest(
+                    '.editor-container, .ck-editor, .tinymce',
+                );
 
                 if (isInTextarea || isInContentEditor) {
                     // Don't prevent default in textareas - let them handle line breaks
@@ -301,7 +331,8 @@ class DesignBlockFormManager {
                     if (currentStatus === 'published') {
                         targetButton = this.form.querySelector('#update-btn');
                     } else {
-                        targetButton = this.form.querySelector('#save-draft-btn');
+                        targetButton =
+                            this.form.querySelector('#save-draft-btn');
                     }
                 } else {
                     // For create forms, default to Save as Draft
@@ -350,7 +381,9 @@ class DesignBlockFormManager {
         // Do NOT manually submit the form.
         // Let Unpoly's AJAX form-handler handle submit (it marks the form clean on success).
         // Manual `form.submit()` bypasses submit events and triggers DirtyForms "Unsaved changes" modals.
-        const submitButtons = this.form.querySelectorAll('button[type="submit"]');
+        const submitButtons = this.form.querySelectorAll(
+            'button[type="submit"]',
+        );
         const statusField = this.form.querySelector('#status');
 
         // Ensure our hidden status mirrors whichever submit button was used.
@@ -366,7 +399,8 @@ class DesignBlockFormManager {
         // Also handle Enter-key submits / programmatic submits where possible.
         this.form.addEventListener('submit', (e) => {
             const submitter = e.submitter;
-            if (!submitter || typeof submitter.getAttribute !== 'function') return;
+            if (!submitter || typeof submitter.getAttribute !== 'function')
+                return;
             const statusValue = submitter.getAttribute('value');
             if (statusField && statusValue) {
                 statusField.value = statusValue;

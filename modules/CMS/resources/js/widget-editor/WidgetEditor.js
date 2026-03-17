@@ -7,14 +7,21 @@
 import { DragDrop } from './DragDrop.js';
 import { ItemRenderer } from './ItemRenderer.js';
 import { Toast } from './Toast.js';
-import { escapeHtml, generateWidgetId, getWidgetDisplayName, getDefaultSettings } from './utils.js';
+import {
+    escapeHtml,
+    generateWidgetId,
+    getWidgetDisplayName,
+    getDefaultSettings,
+} from './utils.js';
 
 export class WidgetEditor {
     constructor(options = {}) {
         this.widgetUrl = options.widgetUrl || window.widgetUrl;
         this.widgetAreas = options.widgetAreas || window.widgetAreas || [];
-        this.availableWidgets = options.availableWidgets || window.availableWidgets || {};
-        this.currentWidgets = options.currentWidgets || window.currentWidgets || {};
+        this.availableWidgets =
+            options.availableWidgets || window.availableWidgets || {};
+        this.currentWidgets =
+            options.currentWidgets || window.currentWidgets || {};
 
         // State
         this.widgets = new Map(); // areaId -> widgets[]
@@ -43,13 +50,18 @@ export class WidgetEditor {
 
             // Show session message if any
             if (window.sessionMessage) {
-                this.toast.show(window.sessionMessage.type, window.sessionMessage.message);
+                this.toast.show(
+                    window.sessionMessage.type,
+                    window.sessionMessage.message,
+                );
             }
 
             console.log('[WidgetEditor] Initialized successfully');
         } catch (error) {
             console.error('WidgetEditor initialization error:', error);
-            this.toast.error('Failed to initialize widget editor. Please refresh the page.');
+            this.toast.error(
+                'Failed to initialize widget editor. Please refresh the page.',
+            );
         }
     }
 
@@ -90,7 +102,8 @@ export class WidgetEditor {
                     type: widget.type,
                     title: widget.title || '',
                     settings: widget.settings || {},
-                    position: widget.position !== undefined ? widget.position : index,
+                    position:
+                        widget.position !== undefined ? widget.position : index,
                     isNew: false,
                     isModified: false,
                     isDeleted: false,
@@ -132,11 +145,15 @@ export class WidgetEditor {
 
     updateChangesIndicator() {
         if (this.elements.changesIndicator) {
-            this.elements.changesIndicator.style.display = this.hasChanges ? 'inline-block' : 'none';
+            this.elements.changesIndicator.style.display = this.hasChanges
+                ? 'inline-block'
+                : 'none';
         }
 
         if (this.elements.floatingSaveBar) {
-            this.elements.floatingSaveBar.style.display = this.hasChanges ? 'block' : 'none';
+            this.elements.floatingSaveBar.style.display = this.hasChanges
+                ? 'block'
+                : 'none';
         }
     }
 
@@ -146,7 +163,9 @@ export class WidgetEditor {
 
     findWidget(widgetId) {
         for (const [areaId, widgets] of this.widgets) {
-            const widget = widgets.find((w) => w.id === widgetId && !w.isDeleted);
+            const widget = widgets.find(
+                (w) => w.id === widgetId && !w.isDeleted,
+            );
             if (widget) return { widget, areaId };
         }
         return null;
@@ -164,7 +183,9 @@ export class WidgetEditor {
             return;
         }
 
-        const fallbackCountEl = document.querySelector(`[data-area-id="${areaId}"] .widget-count`);
+        const fallbackCountEl = document.querySelector(
+            `[data-area-id="${areaId}"] .widget-count`,
+        );
         if (fallbackCountEl) {
             fallbackCountEl.textContent = count;
         }
@@ -176,15 +197,22 @@ export class WidgetEditor {
 
     initDragDrop() {
         // Always query fresh
-        const container = document.querySelector('.widget-area-container[data-area-id]');
+        const container = document.querySelector(
+            '.widget-area-container[data-area-id]',
+        );
         if (!container) {
-            console.warn('[WidgetEditor] No widget area container found for drag-drop');
+            console.warn(
+                '[WidgetEditor] No widget area container found for drag-drop',
+            );
             return;
         }
 
         // Update cached reference
         this.elements.areaContainer = container;
-        console.log('[WidgetEditor] initDragDrop - container found:', container.getAttribute('data-area-id'));
+        console.log(
+            '[WidgetEditor] initDragDrop - container found:',
+            container.getAttribute('data-area-id'),
+        );
 
         this.dragDrop = new DragDrop({
             container,
@@ -196,7 +224,9 @@ export class WidgetEditor {
     }
 
     updateWidgetOrder() {
-        const container = document.querySelector('.widget-area-container[data-area-id]');
+        const container = document.querySelector(
+            '.widget-area-container[data-area-id]',
+        );
         if (!container) return;
 
         const areaId = container.getAttribute('data-area-id');
@@ -219,9 +249,13 @@ export class WidgetEditor {
 
     bindEvents() {
         // Delegate click events on the main container (always visible)
-        const mainContainer = document.querySelector('#widget-editor-container');
+        const mainContainer = document.querySelector(
+            '#widget-editor-container',
+        );
         if (mainContainer) {
-            mainContainer.addEventListener('click', (e) => this.handleContainerClick(e));
+            mainContainer.addEventListener('click', (e) =>
+                this.handleContainerClick(e),
+            );
         }
 
         // Available widget add buttons
@@ -233,9 +267,15 @@ export class WidgetEditor {
         });
 
         // Save button
-        this.elements.saveButton?.addEventListener('click', () => this.saveWidgets());
-        this.elements.saveFloatingButton?.addEventListener('click', () => this.saveWidgets());
-        this.elements.discardChangesButton?.addEventListener('click', () => this.discardChanges());
+        this.elements.saveButton?.addEventListener('click', () =>
+            this.saveWidgets(),
+        );
+        this.elements.saveFloatingButton?.addEventListener('click', () =>
+            this.saveWidgets(),
+        );
+        this.elements.discardChangesButton?.addEventListener('click', () =>
+            this.discardChanges(),
+        );
 
         // Initialize modals
         this.initReorderModal();
@@ -255,7 +295,8 @@ export class WidgetEditor {
             btn.addEventListener('click', () => {
                 if (btn.disabled) return;
 
-                const widgetId = document.querySelector('#reorder-widget-id').value;
+                const widgetId =
+                    document.querySelector('#reorder-widget-id').value;
                 const direction = btn.dataset.direction;
 
                 if (direction === 'up') {
@@ -305,17 +346,25 @@ export class WidgetEditor {
     }
 
     updateReorderButtonStates(widgetId) {
-        const widgetEl = document.querySelector(`.widget-item[data-widget-id="${widgetId}"]`);
+        const widgetEl = document.querySelector(
+            `.widget-item[data-widget-id="${widgetId}"]`,
+        );
         if (!widgetEl || !this.reorderModalEl) return;
 
         const parent = widgetEl.parentElement;
-        const siblings = Array.from(parent.querySelectorAll(':scope > .widget-item'));
+        const siblings = Array.from(
+            parent.querySelectorAll(':scope > .widget-item'),
+        );
         const currentIndex = siblings.indexOf(widgetEl);
         const isFirst = currentIndex === 0;
         const isLast = currentIndex === siblings.length - 1;
 
-        const upBtn = this.reorderModalEl.querySelector('[data-direction="up"]');
-        const downBtn = this.reorderModalEl.querySelector('[data-direction="down"]');
+        const upBtn = this.reorderModalEl.querySelector(
+            '[data-direction="up"]',
+        );
+        const downBtn = this.reorderModalEl.querySelector(
+            '[data-direction="down"]',
+        );
 
         if (upBtn) upBtn.disabled = isFirst;
         if (downBtn) downBtn.disabled = isLast;
@@ -356,13 +405,24 @@ export class WidgetEditor {
         const widgetKey = btn.dataset.widgetKey;
 
         // Always query fresh - don't rely on cached reference
-        const areaContainer = document.querySelector('.widget-area-container[data-area-id]');
+        const areaContainer = document.querySelector(
+            '.widget-area-container[data-area-id]',
+        );
         const areaId = areaContainer?.getAttribute('data-area-id');
 
-        console.log('[WidgetEditor] handleAddWidget:', widgetKey, areaId, areaContainer);
+        console.log(
+            '[WidgetEditor] handleAddWidget:',
+            widgetKey,
+            areaId,
+            areaContainer,
+        );
 
         if (!widgetKey || !areaId) {
-            console.error('[WidgetEditor] Missing widgetKey or areaId:', widgetKey, areaId);
+            console.error(
+                '[WidgetEditor] Missing widgetKey or areaId:',
+                widgetKey,
+                areaId,
+            );
             this.toast.error('Invalid widget configuration');
             return;
         }
@@ -373,7 +433,7 @@ export class WidgetEditor {
                 '[WidgetEditor] Widget type not found:',
                 widgetKey,
                 'Available:',
-                Object.keys(this.availableWidgets)
+                Object.keys(this.availableWidgets),
             );
             this.toast.error(`Widget type '${widgetKey}' is not available`);
             return;
@@ -392,11 +452,15 @@ export class WidgetEditor {
     }
 
     moveWidget(widgetId, direction) {
-        const widgetEl = document.querySelector(`.widget-item[data-widget-id="${widgetId}"]`);
+        const widgetEl = document.querySelector(
+            `.widget-item[data-widget-id="${widgetId}"]`,
+        );
         if (!widgetEl) return;
 
         const parent = widgetEl.parentElement;
-        const siblings = Array.from(parent.querySelectorAll(':scope > .widget-item'));
+        const siblings = Array.from(
+            parent.querySelectorAll(':scope > .widget-item'),
+        );
         const currentIndex = siblings.indexOf(widgetEl);
 
         if (direction === 'up' && currentIndex > 0) {
@@ -437,7 +501,9 @@ export class WidgetEditor {
         this.hideEmptyState(areaId);
         this.updateWidgetCount(areaId);
         this.markAsChanged();
-        this.toast.success(`${widgetInfo.name} added. Click "Save" to save changes.`);
+        this.toast.success(
+            `${widgetInfo.name} added. Click "Save" to save changes.`,
+        );
 
         // Auto-open edit modal for new widget
         setTimeout(() => this.openEditModal(newWidget.id), 100);
@@ -523,9 +589,14 @@ export class WidgetEditor {
         }
 
         // Generate settings form
-        const settingsContainer = document.querySelector('#widget-settings-container');
+        const settingsContainer = document.querySelector(
+            '#widget-settings-container',
+        );
         if (settingsContainer) {
-            settingsContainer.innerHTML = this.generateSettingsForm(widget.type, widget.settings);
+            settingsContainer.innerHTML = this.generateSettingsForm(
+                widget.type,
+                widget.settings,
+            );
         }
     }
 
@@ -544,9 +615,14 @@ export class WidgetEditor {
             if (fieldName === 'title') return;
 
             const fieldId = `widget-${fieldName}`;
-            const value = settings[fieldName] !== undefined ? settings[fieldName] : fieldConfig.default || '';
+            const value =
+                settings[fieldName] !== undefined
+                    ? settings[fieldName]
+                    : fieldConfig.default || '';
             const required = fieldConfig.required ? 'required' : '';
-            const requiredStar = fieldConfig.required ? '<span class="text-danger">*</span>' : '';
+            const requiredStar = fieldConfig.required
+                ? '<span class="text-danger">*</span>'
+                : '';
             const helpText = fieldConfig.description
                 ? `<div class="form-text">${escapeHtml(fieldConfig.description)}</div>`
                 : '';
@@ -588,10 +664,15 @@ export class WidgetEditor {
                 case 'select':
                     let optionsHTML = '';
                     if (fieldConfig.options) {
-                        Object.entries(fieldConfig.options).forEach(([optionValue, optionLabel]) => {
-                            const selected = String(value) === optionValue ? 'selected' : '';
-                            optionsHTML += `<option value="${escapeHtml(optionValue)}" ${selected}>${escapeHtml(optionLabel)}</option>`;
-                        });
+                        Object.entries(fieldConfig.options).forEach(
+                            ([optionValue, optionLabel]) => {
+                                const selected =
+                                    String(value) === optionValue
+                                        ? 'selected'
+                                        : '';
+                                optionsHTML += `<option value="${escapeHtml(optionValue)}" ${selected}>${escapeHtml(optionLabel)}</option>`;
+                            },
+                        );
                     }
                     formHTML += `
                         <div class="mb-3">
@@ -656,7 +737,10 @@ export class WidgetEditor {
             }
         });
 
-        return formHTML || '<p class="text-muted">No additional settings for this widget.</p>';
+        return (
+            formHTML ||
+            '<p class="text-muted">No additional settings for this widget.</p>'
+        );
     }
 
     handleEditFormSubmit() {
@@ -666,7 +750,8 @@ export class WidgetEditor {
 
         if (!title) {
             titleField?.classList.add('is-invalid');
-            document.querySelector('#widget-title-error').textContent = 'Title is required';
+            document.querySelector('#widget-title-error').textContent =
+                'Title is required';
             return;
         }
 
@@ -674,15 +759,22 @@ export class WidgetEditor {
 
         // Collect settings from form
         const settings = {};
-        const settingsContainer = document.querySelector('#widget-settings-container');
-        settingsContainer?.querySelectorAll('[data-setting]').forEach((input) => {
-            const settingName = input.dataset.setting;
-            if (input.dataset.type === 'checkbox' || input.type === 'checkbox') {
-                settings[settingName] = input.checked;
-            } else {
-                settings[settingName] = input.value;
-            }
-        });
+        const settingsContainer = document.querySelector(
+            '#widget-settings-container',
+        );
+        settingsContainer
+            ?.querySelectorAll('[data-setting]')
+            .forEach((input) => {
+                const settingName = input.dataset.setting;
+                if (
+                    input.dataset.type === 'checkbox' ||
+                    input.type === 'checkbox'
+                ) {
+                    settings[settingName] = input.checked;
+                } else {
+                    settings[settingName] = input.value;
+                }
+            });
 
         this.saveWidgetSettings(widgetId, title, settings);
         this.editModal?.hide();
@@ -717,7 +809,8 @@ export class WidgetEditor {
 
         // Set widget info in modal
         document.querySelector('#delete-widget-id').value = widgetId;
-        document.querySelector('#delete-widget-title').textContent = result.widget.title || 'this widget';
+        document.querySelector('#delete-widget-title').textContent =
+            result.widget.title || 'this widget';
 
         // Show modal
         if (this.deleteModal) {
@@ -741,7 +834,9 @@ export class WidgetEditor {
         }
 
         // Remove from DOM
-        const widgetEl = document.querySelector(`.widget-item[data-widget-id="${widgetId}"]`);
+        const widgetEl = document.querySelector(
+            `.widget-item[data-widget-id="${widgetId}"]`,
+        );
         if (widgetEl) {
             widgetEl.remove();
         }
@@ -773,13 +868,19 @@ export class WidgetEditor {
 
         this.pendingSave = true;
 
-        const saveButtons = [this.elements.saveButton, this.elements.saveFloatingButton].filter(Boolean);
-        const originalButtonContent = new Map(saveButtons.map((button) => [button, button.innerHTML]));
+        const saveButtons = [
+            this.elements.saveButton,
+            this.elements.saveFloatingButton,
+        ].filter(Boolean);
+        const originalButtonContent = new Map(
+            saveButtons.map((button) => [button, button.innerHTML]),
+        );
 
         try {
             saveButtons.forEach((button) => {
                 button.disabled = true;
-                button.innerHTML = '<i class="ri-loader-4-line spin me-1"></i> Saving...';
+                button.innerHTML =
+                    '<i class="ri-loader-4-line spin me-1"></i> Saving...';
             });
 
             const payload = this.buildSavePayload();
@@ -789,7 +890,9 @@ export class WidgetEditor {
                 this.hasChanges = false;
                 this.updateChangesIndicator();
                 this.updateOriginalState();
-                this.toast.success(response.message || 'Widgets saved successfully!');
+                this.toast.success(
+                    response.message || 'Widgets saved successfully!',
+                );
             } else {
                 throw new Error(response.message || 'Failed to save widgets');
             }
@@ -825,7 +928,9 @@ export class WidgetEditor {
     }
 
     async saveToServer(payload) {
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+        const csrfToken = document.querySelector(
+            'meta[name="csrf-token"]',
+        )?.content;
 
         const response = await fetch(this.widgetUrl, {
             method: 'POST',

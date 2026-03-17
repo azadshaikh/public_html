@@ -1,12 +1,7 @@
 'use client';
 
 import { Link, router } from '@inertiajs/react';
-import {
-    CodeIcon,
-    SaveIcon,
-    Settings2Icon,
-    Trash2Icon,
-} from 'lucide-react';
+import { CodeIcon, SaveIcon, Settings2Icon, Trash2Icon } from 'lucide-react';
 import type { FormEvent } from 'react';
 import { MonacoEditor } from '@/components/code-editor/monaco-editor';
 import { FormErrorSummary } from '@/components/forms/form-error-summary';
@@ -31,12 +26,7 @@ import {
     NativeSelectOption,
 } from '@/components/ui/native-select';
 import { Spinner } from '@/components/ui/spinner';
-import {
-    Tabs,
-    TabsContent,
-    TabsList,
-    TabsTrigger,
-} from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { useAppForm } from '@/hooks/use-app-form';
 import { formValidators } from '@/lib/forms';
@@ -117,7 +107,8 @@ export default function DesignBlockForm({
             ? route('cms.designblock.store')
             : route('cms.designblock.update', designBlock!.id);
 
-    const submitLabel = mode === 'create' ? 'Create Design Block' : 'Save Changes';
+    const submitLabel =
+        mode === 'create' ? 'Create Design Block' : 'Save Changes';
 
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -126,7 +117,10 @@ export default function DesignBlockForm({
             preserveScroll: true,
             setDefaultsOnSuccess: mode === 'edit',
             successToast: {
-                title: mode === 'create' ? 'Design block created' : 'Design block updated',
+                title:
+                    mode === 'create'
+                        ? 'Design block created'
+                        : 'Design block updated',
                 description:
                     mode === 'create'
                         ? 'The design block has been created successfully.'
@@ -150,7 +144,11 @@ export default function DesignBlockForm({
     };
 
     return (
-        <form className="flex flex-col gap-6" onSubmit={handleSubmit} noValidate>
+        <form
+            className="flex flex-col gap-6"
+            onSubmit={handleSubmit}
+            noValidate
+        >
             {form.dirtyGuardDialog}
             <FormErrorSummary errors={form.errors} minMessages={2} />
 
@@ -163,34 +161,54 @@ export default function DesignBlockForm({
                                 <CardTitle>Block content</CardTitle>
                             </div>
                             <CardDescription>
-                                Write the markup, styles, and scripts for this reusable design
-                                block.
+                                Write the markup, styles, and scripts for this
+                                reusable design block.
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="flex flex-col gap-6">
-                            <Field data-invalid={form.invalid('title') || undefined}>
-                                <RequiredLabel htmlFor="title">Title</RequiredLabel>
+                            <Field
+                                data-invalid={
+                                    form.invalid('title') || undefined
+                                }
+                            >
+                                <RequiredLabel htmlFor="title">
+                                    Title
+                                </RequiredLabel>
                                 <Input
                                     id="title"
                                     value={form.data.title}
                                     onChange={(event) =>
-                                        form.setField('title', event.target.value)
+                                        form.setField(
+                                            'title',
+                                            event.target.value,
+                                        )
                                     }
                                     onBlur={() => form.touch('title')}
-                                    aria-invalid={form.invalid('title') || undefined}
+                                    aria-invalid={
+                                        form.invalid('title') || undefined
+                                    }
                                     placeholder="Enter design block title"
                                 />
                                 <FieldError>{form.error('title')}</FieldError>
                             </Field>
 
-                            <Field data-invalid={form.invalid('description') || undefined}>
-                                <FieldLabel htmlFor="description">Description</FieldLabel>
+                            <Field
+                                data-invalid={
+                                    form.invalid('description') || undefined
+                                }
+                            >
+                                <FieldLabel htmlFor="description">
+                                    Description
+                                </FieldLabel>
                                 <Textarea
                                     id="description"
                                     rows={3}
                                     value={form.data.description}
                                     onChange={(event) =>
-                                        form.setField('description', event.target.value)
+                                        form.setField(
+                                            'description',
+                                            event.target.value,
+                                        )
                                     }
                                     onBlur={() => form.touch('description')}
                                     aria-invalid={
@@ -198,18 +216,26 @@ export default function DesignBlockForm({
                                     }
                                     placeholder="Brief description of this block's purpose and usage"
                                 />
-                                <FieldError>{form.error('description')}</FieldError>
+                                <FieldError>
+                                    {form.error('description')}
+                                </FieldError>
                             </Field>
 
                             <Tabs defaultValue="html">
                                 <TabsList variant="line">
                                     <TabsTrigger value="html">HTML</TabsTrigger>
                                     <TabsTrigger value="css">CSS</TabsTrigger>
-                                    <TabsTrigger value="scripts">Scripts</TabsTrigger>
+                                    <TabsTrigger value="scripts">
+                                        Scripts
+                                    </TabsTrigger>
                                 </TabsList>
 
                                 <TabsContent value="html">
-                                    <Field data-invalid={form.invalid('html') || undefined}>
+                                    <Field
+                                        data-invalid={
+                                            form.invalid('html') || undefined
+                                        }
+                                    >
                                         <MonacoEditor
                                             name="html"
                                             language="html"
@@ -221,12 +247,18 @@ export default function DesignBlockForm({
                                             onBlur={() => form.touch('html')}
                                             placeholder="Enter HTML markup"
                                         />
-                                        <FieldError>{form.error('html')}</FieldError>
+                                        <FieldError>
+                                            {form.error('html')}
+                                        </FieldError>
                                     </Field>
                                 </TabsContent>
 
                                 <TabsContent value="css">
-                                    <Field data-invalid={form.invalid('css') || undefined}>
+                                    <Field
+                                        data-invalid={
+                                            form.invalid('css') || undefined
+                                        }
+                                    >
                                         <MonacoEditor
                                             name="css"
                                             language="css"
@@ -241,12 +273,18 @@ export default function DesignBlockForm({
                                         <FieldDescription>
                                             Scoped styles for this block.
                                         </FieldDescription>
-                                        <FieldError>{form.error('css')}</FieldError>
+                                        <FieldError>
+                                            {form.error('css')}
+                                        </FieldError>
                                     </Field>
                                 </TabsContent>
 
                                 <TabsContent value="scripts">
-                                    <Field data-invalid={form.invalid('scripts') || undefined}>
+                                    <Field
+                                        data-invalid={
+                                            form.invalid('scripts') || undefined
+                                        }
+                                    >
                                         <MonacoEditor
                                             name="scripts"
                                             language="javascript"
@@ -259,16 +297,20 @@ export default function DesignBlockForm({
                                             placeholder="Enter JavaScript for this block"
                                         />
                                         <FieldDescription>
-                                            JavaScript executed when this block is rendered.
+                                            JavaScript executed when this block
+                                            is rendered.
                                         </FieldDescription>
-                                        <FieldError>{form.error('scripts')}</FieldError>
+                                        <FieldError>
+                                            {form.error('scripts')}
+                                        </FieldError>
                                     </Field>
                                 </TabsContent>
                             </Tabs>
 
                             {designBlock ? (
                                 <div className="text-sm text-muted-foreground">
-                                    Last updated {designBlock.updated_at_human ?? 'recently'}
+                                    Last updated{' '}
+                                    {designBlock.updated_at_human ?? 'recently'}
                                     {designBlock.updated_at_formatted
                                         ? ` (${designBlock.updated_at_formatted})`
                                         : ''}
@@ -286,18 +328,28 @@ export default function DesignBlockForm({
                                 <CardTitle>Classification</CardTitle>
                             </div>
                             <CardDescription>
-                                Categorise this block by type, category, and design system.
+                                Categorise this block by type, category, and
+                                design system.
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="flex flex-col gap-6">
-                            <Field data-invalid={form.invalid('design_type') || undefined}>
-                                <RequiredLabel htmlFor="design_type">Design type</RequiredLabel>
+                            <Field
+                                data-invalid={
+                                    form.invalid('design_type') || undefined
+                                }
+                            >
+                                <RequiredLabel htmlFor="design_type">
+                                    Design type
+                                </RequiredLabel>
                                 <NativeSelect
                                     id="design_type"
                                     className="w-full"
                                     value={form.data.design_type}
                                     onChange={(event) =>
-                                        form.setField('design_type', event.target.value)
+                                        form.setField(
+                                            'design_type',
+                                            event.target.value,
+                                        )
                                     }
                                     onBlur={() => form.touch('design_type')}
                                     aria-invalid={
@@ -313,17 +365,28 @@ export default function DesignBlockForm({
                                         </NativeSelectOption>
                                     ))}
                                 </NativeSelect>
-                                <FieldError>{form.error('design_type')}</FieldError>
+                                <FieldError>
+                                    {form.error('design_type')}
+                                </FieldError>
                             </Field>
 
-                            <Field data-invalid={form.invalid('category_id') || undefined}>
-                                <RequiredLabel htmlFor="category_id">Category</RequiredLabel>
+                            <Field
+                                data-invalid={
+                                    form.invalid('category_id') || undefined
+                                }
+                            >
+                                <RequiredLabel htmlFor="category_id">
+                                    Category
+                                </RequiredLabel>
                                 <NativeSelect
                                     id="category_id"
                                     className="w-full"
                                     value={form.data.category_id}
                                     onChange={(event) =>
-                                        form.setField('category_id', event.target.value)
+                                        form.setField(
+                                            'category_id',
+                                            event.target.value,
+                                        )
                                     }
                                     onBlur={() => form.touch('category_id')}
                                     aria-invalid={
@@ -339,10 +402,16 @@ export default function DesignBlockForm({
                                         </NativeSelectOption>
                                     ))}
                                 </NativeSelect>
-                                <FieldError>{form.error('category_id')}</FieldError>
+                                <FieldError>
+                                    {form.error('category_id')}
+                                </FieldError>
                             </Field>
 
-                            <Field data-invalid={form.invalid('design_system') || undefined}>
+                            <Field
+                                data-invalid={
+                                    form.invalid('design_system') || undefined
+                                }
+                            >
                                 <RequiredLabel htmlFor="design_system">
                                     Design system
                                 </RequiredLabel>
@@ -351,11 +420,15 @@ export default function DesignBlockForm({
                                     className="w-full"
                                     value={form.data.design_system}
                                     onChange={(event) =>
-                                        form.setField('design_system', event.target.value)
+                                        form.setField(
+                                            'design_system',
+                                            event.target.value,
+                                        )
                                     }
                                     onBlur={() => form.touch('design_system')}
                                     aria-invalid={
-                                        form.invalid('design_system') || undefined
+                                        form.invalid('design_system') ||
+                                        undefined
                                     }
                                 >
                                     {designSystemOptions.map((option) => (
@@ -367,11 +440,17 @@ export default function DesignBlockForm({
                                         </NativeSelectOption>
                                     ))}
                                 </NativeSelect>
-                                <FieldError>{form.error('design_system')}</FieldError>
+                                <FieldError>
+                                    {form.error('design_system')}
+                                </FieldError>
                             </Field>
 
                             {/* hidden block_type — always static */}
-                            <input type="hidden" name="block_type" value="static" />
+                            <input
+                                type="hidden"
+                                name="block_type"
+                                value="static"
+                            />
                         </CardContent>
                     </Card>
 
@@ -379,12 +458,20 @@ export default function DesignBlockForm({
                         <CardHeader>
                             <CardTitle>Preview image</CardTitle>
                             <CardDescription>
-                                URL of a screenshot or preview image for this block.
+                                URL of a screenshot or preview image for this
+                                block.
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <Field data-invalid={form.invalid('preview_image_url') || undefined}>
-                                <FieldLabel htmlFor="preview_image_url">Image URL</FieldLabel>
+                            <Field
+                                data-invalid={
+                                    form.invalid('preview_image_url') ||
+                                    undefined
+                                }
+                            >
+                                <FieldLabel htmlFor="preview_image_url">
+                                    Image URL
+                                </FieldLabel>
                                 <Input
                                     id="preview_image_url"
                                     type="url"
@@ -395,13 +482,18 @@ export default function DesignBlockForm({
                                             event.target.value,
                                         )
                                     }
-                                    onBlur={() => form.touch('preview_image_url')}
+                                    onBlur={() =>
+                                        form.touch('preview_image_url')
+                                    }
                                     aria-invalid={
-                                        form.invalid('preview_image_url') || undefined
+                                        form.invalid('preview_image_url') ||
+                                        undefined
                                     }
                                     placeholder="https://example.com/preview.png"
                                 />
-                                <FieldError>{form.error('preview_image_url')}</FieldError>
+                                <FieldError>
+                                    {form.error('preview_image_url')}
+                                </FieldError>
                             </Field>
                         </CardContent>
                     </Card>
@@ -411,17 +503,28 @@ export default function DesignBlockForm({
                             <CardTitle>Publish settings</CardTitle>
                         </CardHeader>
                         <CardContent className="flex flex-col gap-6">
-                            <Field data-invalid={form.invalid('status') || undefined}>
-                                <RequiredLabel htmlFor="status">Status</RequiredLabel>
+                            <Field
+                                data-invalid={
+                                    form.invalid('status') || undefined
+                                }
+                            >
+                                <RequiredLabel htmlFor="status">
+                                    Status
+                                </RequiredLabel>
                                 <NativeSelect
                                     id="status"
                                     className="w-full"
                                     value={form.data.status}
                                     onChange={(event) =>
-                                        form.setField('status', event.target.value)
+                                        form.setField(
+                                            'status',
+                                            event.target.value,
+                                        )
                                     }
                                     onBlur={() => form.touch('status')}
-                                    aria-invalid={form.invalid('status') || undefined}
+                                    aria-invalid={
+                                        form.invalid('status') || undefined
+                                    }
                                 >
                                     {statusOptions.map((option) => (
                                         <NativeSelectOption
@@ -435,21 +538,28 @@ export default function DesignBlockForm({
                                 <FieldError>{form.error('status')}</FieldError>
                             </Field>
 
-                            <Field data-invalid={form.invalid('slug') || undefined}>
+                            <Field
+                                data-invalid={form.invalid('slug') || undefined}
+                            >
                                 <FieldLabel htmlFor="slug">Slug</FieldLabel>
                                 <Input
                                     id="slug"
                                     value={form.data.slug}
                                     onChange={(event) =>
-                                        form.setField('slug', event.target.value)
+                                        form.setField(
+                                            'slug',
+                                            event.target.value,
+                                        )
                                     }
                                     onBlur={() => form.touch('slug')}
-                                    aria-invalid={form.invalid('slug') || undefined}
+                                    aria-invalid={
+                                        form.invalid('slug') || undefined
+                                    }
                                     placeholder="optional-block-identifier"
                                 />
                                 <FieldDescription>
-                                    Optional unique identifier for referencing this block
-                                    programmatically.
+                                    Optional unique identifier for referencing
+                                    this block programmatically.
                                 </FieldDescription>
                                 <FieldError>{form.error('slug')}</FieldError>
                             </Field>
@@ -461,7 +571,11 @@ export default function DesignBlockForm({
                             <CardTitle>{submitLabel}</CardTitle>
                         </CardHeader>
                         <CardFooter className="flex-col gap-3">
-                            <Button type="submit" className="w-full" disabled={form.processing}>
+                            <Button
+                                type="submit"
+                                className="w-full"
+                                disabled={form.processing}
+                            >
                                 {form.processing ? (
                                     <Spinner className="size-4" />
                                 ) : (
@@ -469,7 +583,12 @@ export default function DesignBlockForm({
                                 )}
                                 {submitLabel}
                             </Button>
-                            <Button type="button" variant="outline" className="w-full" asChild>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                className="w-full"
+                                asChild
+                            >
                                 <Link href={route('cms.designblock.index')}>
                                     Back to Design Blocks
                                 </Link>
@@ -482,7 +601,8 @@ export default function DesignBlockForm({
                             <CardHeader>
                                 <CardTitle>Danger zone</CardTitle>
                                 <CardDescription>
-                                    Move this design block to trash. You can restore it later.
+                                    Move this design block to trash. You can
+                                    restore it later.
                                 </CardDescription>
                             </CardHeader>
                             <CardFooter>

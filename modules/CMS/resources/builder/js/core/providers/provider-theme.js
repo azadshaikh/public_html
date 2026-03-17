@@ -27,7 +27,9 @@ class ThemeProvider extends Astero.BlockProvider {
         // Get current theme from builder configuration or global Astero object
         // Astero.config.theme should be populated by the builder backend load
         this.themeName = window.Astero?.config?.theme || 'default';
-        console.log(`[ThemeProvider] Initializing for theme: ${this.themeName}`);
+        console.log(
+            `[ThemeProvider] Initializing for theme: ${this.themeName}`,
+        );
 
         try {
             // Load manifests in parallel
@@ -50,20 +52,26 @@ class ThemeProvider extends Astero.BlockProvider {
             if (sectionsRes.ok) {
                 this.sectionsManifest = await sectionsRes.json();
             } else {
-                console.warn('[ThemeProvider] Failed to load sections manifest', sectionsRes.statusText);
+                console.warn(
+                    '[ThemeProvider] Failed to load sections manifest',
+                    sectionsRes.statusText,
+                );
                 this.sectionsManifest = { items: [] };
             }
 
             if (blocksRes.ok) {
                 this.blocksManifest = await blocksRes.json();
             } else {
-                console.warn('[ThemeProvider] Failed to load blocks manifest', blocksRes.statusText);
+                console.warn(
+                    '[ThemeProvider] Failed to load blocks manifest',
+                    blocksRes.statusText,
+                );
                 this.blocksManifest = { items: [] };
             }
 
             this.initialized = true;
             console.log(
-                `[ThemeProvider] Found ${this.sectionsManifest.items.length} sections, ${this.blocksManifest.items.length} blocks`
+                `[ThemeProvider] Found ${this.sectionsManifest.items.length} sections, ${this.blocksManifest.items.length} blocks`,
             );
         } catch (e) {
             console.error('[ThemeProvider] Initialization failed', e);
@@ -78,7 +86,8 @@ class ThemeProvider extends Astero.BlockProvider {
     async getCategories(type) {
         if (!this.initialized) await this.init();
 
-        const manifest = type === 'section' ? this.sectionsManifest : this.blocksManifest;
+        const manifest =
+            type === 'section' ? this.sectionsManifest : this.blocksManifest;
         if (!manifest || !manifest.items) return [];
 
         return [...new Set(manifest.items.map((item) => item.category))];
@@ -90,12 +99,16 @@ class ThemeProvider extends Astero.BlockProvider {
     async getBlocks(category, type) {
         if (!this.initialized) await this.init();
 
-        const manifest = type === 'section' ? this.sectionsManifest : this.blocksManifest;
+        const manifest =
+            type === 'section' ? this.sectionsManifest : this.blocksManifest;
         if (!manifest || !manifest.items) return [];
 
         // Filter and map to Registry format
         return manifest.items
-            .filter((item) => item.category.toLowerCase() === category.toLowerCase())
+            .filter(
+                (item) =>
+                    item.category.toLowerCase() === category.toLowerCase(),
+            )
             .map((item) => {
                 const mappedItem = {
                     slug: item.slug, // "category/name"
@@ -133,17 +146,24 @@ class ThemeProvider extends Astero.BlockProvider {
     async getBlock(slug) {
         if (!this.initialized) await this.init();
 
-        const type = this.sectionsManifest?.items.find((i) => i.slug === slug) ? 'sections' : 'blocks';
+        const type = this.sectionsManifest?.items.find((i) => i.slug === slug)
+            ? 'sections'
+            : 'blocks';
 
         // Check cache
         const cacheKey = `${type}:${slug}`;
         if (this.htmlCache.has(cacheKey)) {
             // Merge cached HTML with manifest data
-            return this._mergeWithManifest(slug, type, this.htmlCache.get(cacheKey));
+            return this._mergeWithManifest(
+                slug,
+                type,
+                this.htmlCache.get(cacheKey),
+            );
         }
 
         // If manifest already has HTML, return it
-        const manifest = type === 'sections' ? this.sectionsManifest : this.blocksManifest;
+        const manifest =
+            type === 'sections' ? this.sectionsManifest : this.blocksManifest;
         const item = manifest.items.find((i) => i.slug === slug);
         if (item && item.html) {
             return this._mergeWithManifest(slug, type, item.html);
@@ -155,7 +175,9 @@ class ThemeProvider extends Astero.BlockProvider {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
+                    'X-CSRF-TOKEN': document
+                        .querySelector('meta[name="csrf-token"]')
+                        ?.getAttribute('content'),
                 },
                 body: JSON.stringify({
                     theme: this.themeName,
@@ -183,10 +205,16 @@ class ThemeProvider extends Astero.BlockProvider {
     }
 
     _mergeWithManifest(slug, type, html) {
-        const manifest = type === 'sections' ? this.sectionsManifest : this.blocksManifest;
+        const manifest =
+            type === 'sections' ? this.sectionsManifest : this.blocksManifest;
         const item = manifest.items.find((i) => i.slug === slug);
 
-        if (!item) return { slug, html, type: type === 'sections' ? 'section' : 'block' };
+        if (!item)
+            return {
+                slug,
+                html,
+                type: type === 'sections' ? 'section' : 'block',
+            };
 
         return {
             slug: item.slug,
@@ -220,7 +248,10 @@ class ThemeProvider extends Astero.BlockProvider {
         }
 
         // Check if manifest already has HTML
-        const manifest = apiType === 'sections' ? this.sectionsManifest : this.blocksManifest;
+        const manifest =
+            apiType === 'sections'
+                ? this.sectionsManifest
+                : this.blocksManifest;
         const item = manifest?.items?.find((i) => i.slug === slug);
         if (item?.html) {
             return { html: item.html };
@@ -233,7 +264,9 @@ class ThemeProvider extends Astero.BlockProvider {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
+                    'X-CSRF-TOKEN': document
+                        .querySelector('meta[name="csrf-token"]')
+                        ?.getAttribute('content'),
                 },
                 body: JSON.stringify({
                     theme: this.themeName,
@@ -241,7 +274,8 @@ class ThemeProvider extends Astero.BlockProvider {
                 }),
             });
 
-            if (!response.ok) throw new Error(`Render failed: ${response.status}`);
+            if (!response.ok)
+                throw new Error(`Render failed: ${response.status}`);
 
             const data = await response.json();
             this.htmlCache.set(cacheKey, data.html);
@@ -257,7 +291,10 @@ class ThemeProvider extends Astero.BlockProvider {
 
             return { html: data.html };
         } catch (e) {
-            console.error(`[ThemeProvider] Failed to fetch HTML for ${slug}:`, e);
+            console.error(
+                `[ThemeProvider] Failed to fetch HTML for ${slug}:`,
+                e,
+            );
             return null;
         }
     }

@@ -6,13 +6,26 @@ import type { BreadcrumbItem } from '@/types';
 import { ReleaseForm } from '../../../components/release-form';
 import { releaseRouteParams } from '../../../lib/helpers';
 
-export default function ReleaseEdit({ release, initialValues, versionTypes, statusOptions, type }: any) {
+export default function ReleaseEdit({
+    release,
+    initialValues,
+    versionTypes,
+    statusOptions,
+    type,
+}: any) {
     const title = `Edit Release ${initialValues.version}`;
+    const routeNamespace =
+        type === 'module'
+            ? 'releasemanager.module'
+            : 'releasemanager.application';
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: route('dashboard') },
-        { title: 'Releases', href: route('releasemanager.releases.index', releaseRouteParams(type, { status: 'all' })) },
-        { title, href: route('releasemanager.releases.edit', releaseRouteParams(type, { release: release.id })) },
+        { title: 'Releases', href: route(`${routeNamespace}.index`) },
+        {
+            title,
+            href: route(`${routeNamespace}.edit`, { release: release.id }),
+        },
     ];
 
     return (
@@ -22,7 +35,11 @@ export default function ReleaseEdit({ release, initialValues, versionTypes, stat
             description="Manage this release version."
             headerActions={
                 <Button variant="outline" asChild>
-                    <Link href={route('releasemanager.releases.show', releaseRouteParams(type, { release: release.id }))}>
+                    <Link
+                        href={route(`${routeNamespace}.show`, {
+                            release: release.id,
+                        })}
+                    >
                         <EyeIcon data-icon="inline-start" />
                         View Page
                     </Link>
@@ -34,7 +51,9 @@ export default function ReleaseEdit({ release, initialValues, versionTypes, stat
                 versionTypes={versionTypes}
                 statusOptions={statusOptions}
                 type={type}
-                submitUrl={route('releasemanager.releases.update', releaseRouteParams(type, { release: release.id }))}
+                submitUrl={route(`${routeNamespace}.update`, {
+                    release: release.id,
+                })}
                 method="put"
             />
         </AppLayout>

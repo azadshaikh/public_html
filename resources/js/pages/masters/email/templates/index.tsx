@@ -1,5 +1,15 @@
 import { Link, router, usePage } from '@inertiajs/react';
-import { CheckCircleIcon, EyeIcon, FileTextIcon, ListIcon, PencilIcon, PlusIcon, RefreshCwIcon, SlashIcon, Trash2Icon } from 'lucide-react';
+import {
+    CheckCircleIcon,
+    EyeIcon,
+    FileTextIcon,
+    ListIcon,
+    PencilIcon,
+    PlusIcon,
+    RefreshCwIcon,
+    SlashIcon,
+    Trash2Icon,
+} from 'lucide-react';
 import { Datagrid } from '@/components/datagrid/datagrid';
 import type {
     DatagridAction,

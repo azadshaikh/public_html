@@ -23,10 +23,19 @@ import { Spinner } from '@/components/ui/spinner';
 import { Switch } from '@/components/ui/switch';
 import { useAppForm } from '@/hooks/use-app-form';
 import SettingsLayout from '@/layouts/settings-layout';
-import { getSeoSettingsBreadcrumbs, getSeoSettingsNav } from '../../../lib/seo-settings';
+import {
+    getSeoSettingsBreadcrumbs,
+    getSeoSettingsNav,
+} from '../../../lib/seo-settings';
 import type { SitemapFormValues, SitemapPageProps } from '../../../types/seo';
 
-const labels: Record<keyof Omit<SitemapFormValues, 'enabled' | 'links_per_file' | 'auto_regenerate'>, string> = {
+const labels: Record<
+    keyof Omit<
+        SitemapFormValues,
+        'enabled' | 'links_per_file' | 'auto_regenerate'
+    >,
+    string
+> = {
     posts_enabled: 'Posts',
     pages_enabled: 'Pages',
     categories_enabled: 'Categories',
@@ -80,7 +89,11 @@ export default function SeoSitemapPage({
             activeSlug="sitemap"
             railLabel="SEO settings"
         >
-            <form className="flex flex-col gap-6" onSubmit={handleSubmit} noValidate>
+            <form
+                className="flex flex-col gap-6"
+                onSubmit={handleSubmit}
+                noValidate
+            >
                 {form.dirtyGuardDialog}
                 <FormErrorSummary errors={form.errors} minMessages={2} />
 
@@ -90,9 +103,13 @@ export default function SeoSitemapPage({
                             <CardHeader>
                                 <div className="flex items-center justify-between gap-4">
                                     <div>
-                                        <CardTitle>XML sitemap visibility</CardTitle>
+                                        <CardTitle>
+                                            XML sitemap visibility
+                                        </CardTitle>
                                         <CardDescription>
-                                            Enable sitemap generation and choose which public content types should be included.
+                                            Enable sitemap generation and choose
+                                            which public content types should be
+                                            included.
                                         </CardDescription>
                                     </div>
                                     <Switch
@@ -109,11 +126,16 @@ export default function SeoSitemapPage({
                                         Object.keys(labels) as Array<
                                             keyof Omit<
                                                 SitemapFormValues,
-                                                'enabled' | 'links_per_file' | 'auto_regenerate'
+                                                | 'enabled'
+                                                | 'links_per_file'
+                                                | 'auto_regenerate'
                                             >
                                         >
                                     ).map((key) => (
-                                        <Field key={key} orientation="horizontal">
+                                        <Field
+                                            key={key}
+                                            orientation="horizontal"
+                                        >
                                             <Switch
                                                 checked={form.data[key]}
                                                 onCheckedChange={(checked) =>
@@ -121,9 +143,13 @@ export default function SeoSitemapPage({
                                                 }
                                             />
                                             <div className="flex flex-col gap-1">
-                                                <FieldLabel>{labels[key]}</FieldLabel>
+                                                <FieldLabel>
+                                                    {labels[key]}
+                                                </FieldLabel>
                                                 <FieldDescription>
-                                                    Include {labels[key].toLowerCase()} URLs in generated sitemaps.
+                                                    Include{' '}
+                                                    {labels[key].toLowerCase()}{' '}
+                                                    URLs in generated sitemaps.
                                                 </FieldDescription>
                                             </div>
                                         </Field>
@@ -133,13 +159,19 @@ export default function SeoSitemapPage({
                                         <Switch
                                             checked={form.data.auto_regenerate}
                                             onCheckedChange={(checked) =>
-                                                form.setField('auto_regenerate', checked)
+                                                form.setField(
+                                                    'auto_regenerate',
+                                                    checked,
+                                                )
                                             }
                                         />
                                         <div className="flex flex-col gap-1">
-                                            <FieldLabel>Auto-regenerate</FieldLabel>
+                                            <FieldLabel>
+                                                Auto-regenerate
+                                            </FieldLabel>
                                             <FieldDescription>
-                                                Rebuild sitemaps automatically when content changes.
+                                                Rebuild sitemaps automatically
+                                                when content changes.
                                             </FieldDescription>
                                         </div>
                                     </Field>
@@ -157,18 +189,25 @@ export default function SeoSitemapPage({
                                             onChange={(event) =>
                                                 form.setField(
                                                     'links_per_file',
-                                                    Number(event.target.value || 0),
+                                                    Number(
+                                                        event.target.value || 0,
+                                                    ),
                                                 )
                                             }
                                         />
                                         <FieldDescription>
-                                            Keep files compact for faster regeneration. The safe range is 100–50,000.
+                                            Keep files compact for faster
+                                            regeneration. The safe range is
+                                            100–50,000.
                                         </FieldDescription>
                                     </Field>
                                 </CardContent>
                             ) : null}
                             <CardFooter className="justify-end">
-                                <Button type="submit" disabled={form.processing}>
+                                <Button
+                                    type="submit"
+                                    disabled={form.processing}
+                                >
                                     {form.processing ? (
                                         <Spinner className="mr-2 size-4" />
                                     ) : (
@@ -188,24 +227,32 @@ export default function SeoSitemapPage({
                                     <CardTitle>Current status</CardTitle>
                                 </div>
                                 <CardDescription>
-                                    Review generation history and URL counts before you publish changes.
+                                    Review generation history and URL counts
+                                    before you publish changes.
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="flex flex-col gap-4 text-sm">
                                 <div className="flex items-start justify-between gap-3">
-                                    <span className="text-muted-foreground">Enabled</span>
+                                    <span className="text-muted-foreground">
+                                        Enabled
+                                    </span>
                                     <span className="font-medium">
                                         {sitemapStatus.enabled ? 'Yes' : 'No'}
                                     </span>
                                 </div>
                                 <div className="flex items-start justify-between gap-3">
-                                    <span className="text-muted-foreground">Last generated</span>
+                                    <span className="text-muted-foreground">
+                                        Last generated
+                                    </span>
                                     <span className="text-right font-medium">
-                                        {sitemapStatus.last_generated_at ?? 'Never'}
+                                        {sitemapStatus.last_generated_at ??
+                                            'Never'}
                                     </span>
                                 </div>
                                 <div className="flex items-start justify-between gap-3">
-                                    <span className="text-muted-foreground">Total URLs</span>
+                                    <span className="text-muted-foreground">
+                                        Total URLs
+                                    </span>
                                     <span className="font-medium tabular-nums">
                                         {sitemapStatus.total_urls}
                                     </span>
@@ -226,8 +273,17 @@ export default function SeoSitemapPage({
                                     )}
                                     Regenerate now
                                 </Button>
-                                <Button type="button" variant="outline" className="w-full" asChild>
-                                    <a href={route('sitemap')} target="_blank" rel="noopener noreferrer">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    className="w-full"
+                                    asChild
+                                >
+                                    <a
+                                        href={route('sitemap')}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                    >
                                         <ExternalLinkIcon data-icon="inline-start" />
                                         View sitemap
                                     </a>
@@ -240,17 +296,21 @@ export default function SeoSitemapPage({
                                 <CardTitle>Type breakdown</CardTitle>
                             </CardHeader>
                             <CardContent className="flex flex-col gap-3 text-sm">
-                                {Object.entries(sitemapStatus.types).map(([key, item]) => (
-                                    <div
-                                        key={key}
-                                        className="flex items-center justify-between rounded-lg border px-3 py-2"
-                                    >
-                                        <span>{item.label}</span>
-                                        <span className="font-medium tabular-nums">
-                                            {item.enabled ? `${item.count} URLs` : 'Disabled'}
-                                        </span>
-                                    </div>
-                                ))}
+                                {Object.entries(sitemapStatus.types).map(
+                                    ([key, item]) => (
+                                        <div
+                                            key={key}
+                                            className="flex items-center justify-between rounded-lg border px-3 py-2"
+                                        >
+                                            <span>{item.label}</span>
+                                            <span className="font-medium tabular-nums">
+                                                {item.enabled
+                                                    ? `${item.count} URLs`
+                                                    : 'Disabled'}
+                                            </span>
+                                        </div>
+                                    ),
+                                )}
                             </CardContent>
                         </Card>
                     </div>

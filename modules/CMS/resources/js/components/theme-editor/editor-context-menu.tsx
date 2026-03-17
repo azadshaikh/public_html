@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import {
+    useCallback,
+    useEffect,
+    useRef,
+    useState,
+    type ReactNode,
+} from 'react';
 import { createPortal } from 'react-dom';
 import { cn } from '@/lib/utils';
 
@@ -17,7 +23,9 @@ type EditorContextMenuSeparatorDef = {
     type: 'separator';
 };
 
-export type EditorContextMenuEntry = EditorContextMenuItemDef | EditorContextMenuSeparatorDef;
+export type EditorContextMenuEntry =
+    | EditorContextMenuItemDef
+    | EditorContextMenuSeparatorDef;
 
 type EditorContextMenuProps = {
     children: ReactNode;
@@ -63,7 +71,10 @@ function MenuContent({
         };
 
         const handleClickOutside = (event: MouseEvent) => {
-            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+            if (
+                menuRef.current &&
+                !menuRef.current.contains(event.target as Node)
+            ) {
                 onClose();
             }
         };
@@ -91,7 +102,9 @@ function MenuContent({
         >
             {items.map((entry, index) => {
                 if (entry.type === 'separator') {
-                    return <div key={index} className="my-1 h-px bg-[#3c3c3c]" />;
+                    return (
+                        <div key={index} className="my-1 h-px bg-[#3c3c3c]" />
+                    );
                 }
 
                 const item = entry as EditorContextMenuItemDef;
@@ -107,8 +120,8 @@ function MenuContent({
                             item.disabled
                                 ? 'cursor-default text-[#6a6a6a]'
                                 : isDestructive
-                                    ? 'text-[#f48771] hover:bg-[#04395e] hover:text-[#f48771]'
-                                    : 'text-[#cccccc] hover:bg-[#04395e] hover:text-white',
+                                  ? 'text-[#f48771] hover:bg-[#04395e] hover:text-[#f48771]'
+                                  : 'text-[#cccccc] hover:bg-[#04395e] hover:text-white',
                         )}
                         onClick={() => {
                             if (!item.disabled) {
@@ -117,7 +130,11 @@ function MenuContent({
                             }
                         }}
                     >
-                        {item.icon ? <span className="flex size-4 shrink-0 items-center justify-center [&>svg]:size-4">{item.icon}</span> : null}
+                        {item.icon ? (
+                            <span className="flex size-4 shrink-0 items-center justify-center [&>svg]:size-4">
+                                {item.icon}
+                            </span>
+                        ) : null}
                         <span>{item.label}</span>
                     </button>
                 );
@@ -130,21 +147,20 @@ function MenuContent({
 export function EditorContextMenu({ children, items }: EditorContextMenuProps) {
     const [menu, setMenu] = useState<Position | null>(null);
 
-    const handleContextMenu = useCallback(
-        (event: React.MouseEvent) => {
-            event.preventDefault();
-            event.stopPropagation();
-            setMenu({ x: event.clientX, y: event.clientY });
-        },
-        [],
-    );
+    const handleContextMenu = useCallback((event: React.MouseEvent) => {
+        event.preventDefault();
+        event.stopPropagation();
+        setMenu({ x: event.clientX, y: event.clientY });
+    }, []);
 
     const close = useCallback(() => setMenu(null), []);
 
     return (
         <>
             <div onContextMenu={handleContextMenu}>{children}</div>
-            {menu ? <MenuContent items={items} position={menu} onClose={close} /> : null}
+            {menu ? (
+                <MenuContent items={items} position={menu} onClose={close} />
+            ) : null}
         </>
     );
 }

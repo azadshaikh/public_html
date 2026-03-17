@@ -26,8 +26,8 @@ export function BubbleToolbar({ editor }: { editor: AsteroNoteController }) {
     return (
         <div
             className={cn(
-                "absolute z-50 rounded-md border border-border/40 bg-popover/95 px-0.5 py-0.5 shadow-md backdrop-blur-md transition-all duration-150 animate-in fade-in zoom-in-95",
-                isAbove ? "origin-bottom" : "origin-top"
+                'absolute z-50 animate-in rounded-md border border-border/40 bg-popover/95 px-0.5 py-0.5 shadow-md backdrop-blur-md transition-all duration-150 zoom-in-95 fade-in',
+                isAbove ? 'origin-bottom' : 'origin-top',
             )}
             style={{
                 top: top,

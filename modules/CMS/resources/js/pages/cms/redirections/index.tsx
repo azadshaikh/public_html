@@ -40,7 +40,13 @@ export default function RedirectionsIndex({
     const canDeleteRedirections = page.props.auth.abilities.deleteRedirections;
     const canRestoreRedirections =
         page.props.auth.abilities.restoreRedirections;
-    const { currentStatus, gridFilters, perPage, sorting, statusTabs } = buildDatagridState(config, filters, statistics, 'Search redirections...');
+    const { currentStatus, gridFilters, perPage, sorting, statusTabs } =
+        buildDatagridState(
+            config,
+            filters,
+            statistics,
+            'Search redirections...',
+        );
 
     const handleBulkAction = (
         action: string,

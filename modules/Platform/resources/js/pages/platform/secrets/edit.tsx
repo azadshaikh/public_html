@@ -16,10 +16,22 @@ type SecretsEditPageProps = {
 export default function SecretsEdit(props: SecretsEditPageProps) {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: route('dashboard') },
-        { title: 'Platform', href: route('platform.secrets.index', { status: 'all' }) },
-        { title: 'Secrets', href: route('platform.secrets.index', { status: 'all' }) },
-        { title: props.secret.key, href: route('platform.secrets.show', props.secret.id) },
-        { title: 'Edit', href: route('platform.secrets.edit', props.secret.id) },
+        {
+            title: 'Platform',
+            href: route('platform.secrets.index', { status: 'all' }),
+        },
+        {
+            title: 'Secrets',
+            href: route('platform.secrets.index', { status: 'all' }),
+        },
+        {
+            title: props.secret.key,
+            href: route('platform.secrets.show', props.secret.id),
+        },
+        {
+            title: 'Edit',
+            href: route('platform.secrets.edit', props.secret.id),
+        },
     ];
 
     return (

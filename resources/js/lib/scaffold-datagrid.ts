@@ -117,14 +117,18 @@ export function mapScaffoldStatusTab(
         count,
         active: currentStatus === value,
         icon: resolveIcon(tab.icon, iconMap),
-        countVariant: DEFAULT_COLOR_MAP[tab.color ?? 'secondary'] ?? 'secondary',
+        countVariant:
+            DEFAULT_COLOR_MAP[tab.color ?? 'secondary'] ?? 'secondary',
     };
 }
 
 export function mapScaffoldFilters(
     configFilters: ScaffoldFilterConfig[] | undefined,
     activeFilters: Record<string, unknown>,
-    options: Pick<BuildDatagridStateOptions, 'searchPlaceholder' | 'searchClassName' | 'includeSearch'> = {},
+    options: Pick<
+        BuildDatagridStateOptions,
+        'searchPlaceholder' | 'searchClassName' | 'includeSearch'
+    > = {},
 ): DatagridFilter[] {
     const filters: DatagridFilter[] = [];
 
@@ -214,7 +218,10 @@ export function mapScaffoldFilters(
 }
 
 export function mapScaffoldRowActions(
-    actions: Record<string, ScaffoldRowActionPayload> | ScaffoldRowActionPayload[] | undefined,
+    actions:
+        | Record<string, ScaffoldRowActionPayload>
+        | ScaffoldRowActionPayload[]
+        | undefined,
     iconMap: IconMap = {},
 ): DatagridAction[] {
     if (!actions) {
@@ -232,7 +239,9 @@ export function mapScaffoldRowActions(
             method: normalizeMethod(action.method),
             confirm: action.confirm,
             disabled: action.disabled,
-            variant: isDestructiveVariant(action.variant) ? 'destructive' : 'default',
+            variant: isDestructiveVariant(action.variant)
+                ? 'destructive'
+                : 'default',
         }));
 }
 
@@ -251,14 +260,18 @@ export function buildScaffoldBulkActions<T extends { id: string | number }>(
             key: action.key,
             label: action.label,
             icon: resolveIcon(action.icon, options.iconMap),
-            variant: isDestructiveVariant(action.variant) ? 'destructive' : 'default',
+            variant: isDestructiveVariant(action.variant)
+                ? 'destructive'
+                : 'default',
             confirm: action.confirmBulk ?? action.confirm,
             onSelect: (rows, clearSelection) => {
                 router.post(
                     route(`${options.routePrefix}.bulk-action`),
                     {
                         action: action.key,
-                        ids: rows.map((row) => (options.getRowId ? options.getRowId(row) : row.id)),
+                        ids: rows.map((row) =>
+                            options.getRowId ? options.getRowId(row) : row.id,
+                        ),
                         status: options.currentStatus,
                         ...options.extraPayload,
                     },
@@ -293,21 +306,37 @@ export function buildScaffoldDatagridState(
         currentStatus,
         gridFilters: mapScaffoldFilters(config.filters, filters, options),
         statusTabs: (config.statusTabs ?? []).map((tab) =>
-            mapScaffoldStatusTab(tab, statistics, currentStatus, options.iconMap),
+            mapScaffoldStatusTab(
+                tab,
+                statistics,
+                currentStatus,
+                options.iconMap,
+            ),
         ),
         sorting: {
-            sort: normalizeString(filters[sortParamName]) || config.settings.defaultSort || 'created_at',
-            direction: normalizeDirection(filters[directionParamName] ?? config.settings.defaultDirection),
+            sort:
+                normalizeString(filters[sortParamName]) ||
+                config.settings.defaultSort ||
+                'created_at',
+            direction: normalizeDirection(
+                filters[directionParamName] ?? config.settings.defaultDirection,
+            ),
         },
         perPage: {
-            value: normalizeNumber(filters[perPageParamName], config.settings.perPage),
+            value: normalizeNumber(
+                filters[perPageParamName],
+                config.settings.perPage,
+            ),
             options: options.perPageOptions ?? [10, 25, 50, 100],
             paramName: perPageParamName,
         },
     };
 }
 
-function resolveIcon(icon: string | null | undefined, iconMap: IconMap = {}): ReactNode | undefined {
+function resolveIcon(
+    icon: string | null | undefined,
+    iconMap: IconMap = {},
+): ReactNode | undefined {
     if (!icon) {
         return undefined;
     }
@@ -321,32 +350,9 @@ function resolveIcon(icon: string | null | undefined, iconMap: IconMap = {}): Re
     return createElement(IconComponent, { className: 'size-4' });
 }
 
-function matchesStatusCondition(
-    condition: [string, string | string[]] | undefined,
-    currentStatus: string,
-): boolean {
-    if (!condition) {
-        return true;
-    }
-
-    const [operator, rawValue] = condition;
-    const values = Array.isArray(rawValue) ? rawValue : [rawValue];
-
-    switch (operator) {
-        case '=':
-            return currentStatus === values[0];
-        case '!=':
-            return currentStatus !== values[0];
-        case 'in':
-            return values.includes(currentStatus);
-        case 'not_in':
-            return !values.includes(currentStatus);
-        default:
-            return true;
-    }
-}
-
-function normalizeOptions(options: ScaffoldFilterConfig['options']): DatagridFilterOption[] {
+function normalizeOptions(
+    options: ScaffoldFilterConfig['options'],
+): DatagridFilterOption[] {
     if (Array.isArray(options)) {
         return options
             .map((option) => {
@@ -359,38 +365,55 @@ function normalizeOptions(options: ScaffoldFilterConfig['options']): DatagridFil
                     label: String(option.label ?? ''),
                 } satisfies DatagridFilterOption;
             })
-            .filter((option): option is DatagridFilterOption => option !== null && option.value !== '' && option.label !== '');
+            .filter(
+                (option): option is DatagridFilterOption =>
+                    option !== null &&
+                    option.value !== '' &&
+                    option.label !== '',
+            );
     }
 
     if (!options || typeof options !== 'object') {
         return [];
     }
 
-    return Object.entries(options)
-        .map(([value, label]) => ({
-            value,
-            label: String(label ?? value),
-        }));
+    return Object.entries(options).map(([value, label]) => ({
+        value,
+        label: String(label ?? value),
+    }));
 }
 
-function normalizeOptionRecord(options: ScaffoldFilterConfig['options']): Record<string, string> {
+function normalizeOptionRecord(
+    options: ScaffoldFilterConfig['options'],
+): Record<string, string> {
     if (!options || typeof options !== 'object' || Array.isArray(options)) {
         return {};
     }
 
     return Object.fromEntries(
-        Object.entries(options).map(([key, value]) => [key, String(value ?? '')]),
+        Object.entries(options).map(([key, value]) => [
+            key,
+            String(value ?? ''),
+        ]),
     );
 }
 
-function normalizeMethod(method: string | undefined): DatagridAction['method'] | undefined {
+function normalizeMethod(
+    method: string | undefined,
+): DatagridAction['method'] | undefined {
     if (!method) {
         return undefined;
     }
 
     const normalizedMethod = method.toUpperCase();
 
-    if (normalizedMethod === 'GET' || normalizedMethod === 'POST' || normalizedMethod === 'PUT' || normalizedMethod === 'PATCH' || normalizedMethod === 'DELETE') {
+    if (
+        normalizedMethod === 'GET' ||
+        normalizedMethod === 'POST' ||
+        normalizedMethod === 'PUT' ||
+        normalizedMethod === 'PATCH' ||
+        normalizedMethod === 'DELETE'
+    ) {
         return normalizedMethod;
     }
 

@@ -16,10 +16,15 @@ Object.assign(Astero.Builder, {
 
         // Mouse move handler for highlighting
         let highlightMove = function (event) {
-            if (self.highlightEnabled == true && event.target && isElement(event.target)) {
+            if (
+                self.highlightEnabled == true &&
+                event.target &&
+                isElement(event.target)
+            ) {
                 // Opt-in editing model: only highlight elements within data-astero-enabled areas
                 if (!event.target.closest('[data-astero-enabled]')) {
-                    document.getElementById('highlight-box').style.display = 'none';
+                    document.getElementById('highlight-box').style.display =
+                        'none';
                     return;
                 }
 
@@ -37,7 +42,9 @@ Object.assign(Astero.Builder, {
 
         // Mouse up handler
         let highlightUp = function (event) {
-            document.querySelectorAll('#section-actions, #highlight-name').forEach((el) => (el.style.display = ''));
+            document
+                .querySelectorAll('#section-actions, #highlight-name')
+                .forEach((el) => (el.style.display = ''));
         };
 
         self.frameBody.addEventListener('mouseup', highlightUp);
@@ -65,7 +72,10 @@ Object.assign(Astero.Builder, {
     _handleHighlightMove: function (event, pos, width, height) {
         let self = this;
 
-        if (Astero.WysiwygEditor.isActive && self.texteditEl.contains(event.target)) {
+        if (
+            Astero.WysiwygEditor.isActive &&
+            self.texteditEl.contains(event.target)
+        ) {
             return true;
         }
 
@@ -77,18 +87,22 @@ Object.assign(Astero.Builder, {
             left:${pos.left - (self.frameDoc.scrollLeft ?? 0)}px;
             width:${width}px;
             height:${height}px;
-            display:${event.target.hasAttribute('contenteditable') ? 'none' : 'block'};`
+            display:${event.target.hasAttribute('contenteditable') ? 'none' : 'block'};`,
         );
 
         if (height < 50) {
             document.getElementById('section-actions').classList.add('outside');
         } else {
-            document.getElementById('section-actions').classList.remove('outside');
+            document
+                .getElementById('section-actions')
+                .classList.remove('outside');
         }
 
         let elementType = self._getElementType(event.target);
-        document.querySelector('#highlight-name .type').innerHTML = elementType[0];
-        document.querySelector('#highlight-name .name').innerHTML = elementType[1];
+        document.querySelector('#highlight-name .type').innerHTML =
+            elementType[0];
+        document.querySelector('#highlight-name .name').innerHTML =
+            elementType[1];
     },
 
     /**
@@ -106,10 +120,20 @@ Object.assign(Astero.Builder, {
             let pos = offset(self.selectedEl);
             let SelectBox = document.getElementById('select-box');
 
-            SelectBox.style.top = pos.top - (self.frameDoc.scrollTop ?? 0) - self.selectPadding + 'px';
-            SelectBox.style.left = pos.left - (self.frameDoc.scrollLeft ?? 0) - self.selectPadding + 'px';
-            SelectBox.style.width = self.texteditEl.offsetWidth + self.selectPadding * 2 + 'px';
-            SelectBox.style.height = self.texteditEl.offsetHeight + self.selectPadding * 2 + 'px';
+            SelectBox.style.top =
+                pos.top -
+                (self.frameDoc.scrollTop ?? 0) -
+                self.selectPadding +
+                'px';
+            SelectBox.style.left =
+                pos.left -
+                (self.frameDoc.scrollLeft ?? 0) -
+                self.selectPadding +
+                'px';
+            SelectBox.style.width =
+                self.texteditEl.offsetWidth + self.selectPadding * 2 + 'px';
+            SelectBox.style.height =
+                self.texteditEl.offsetHeight + self.selectPadding * 2 + 'px';
             SelectBox.style.display = 'block';
         };
 
@@ -155,7 +179,9 @@ Object.assign(Astero.Builder, {
             if (!self.texteditEl || !self.texteditEl.contains(event.target)) {
                 if (self._textEditCleanup) self._textEditCleanup();
                 Astero.WysiwygEditor.destroy(self.texteditEl);
-                document.getElementById('select-box').classList.remove('text-edit');
+                document
+                    .getElementById('select-box')
+                    .classList.remove('text-edit');
                 document.getElementById('select-actions').style.display = '';
                 document.getElementById('highlight-box').style.display = '';
                 self.texteditEl = null;
@@ -190,7 +216,8 @@ Object.assign(Astero.Builder, {
             self.loadNodeComponent(element);
 
             if (document.getElementById('add-section-box')) {
-                document.getElementById('add-section-box').style.display = 'none';
+                document.getElementById('add-section-box').style.display =
+                    'none';
             }
             event.preventDefault();
             return false;

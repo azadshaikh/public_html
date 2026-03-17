@@ -6,20 +6,39 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
-import { buildBulkActions, buildDatagridState, mapRowActions } from '../../../lib/helpers';
-import type { PlatformIndexPageProps, ProviderListItem } from '../../../types/platform';
+import {
+    buildBulkActions,
+    buildDatagridState,
+    mapRowActions,
+} from '../../../lib/helpers';
+import type {
+    PlatformIndexPageProps,
+    ProviderListItem,
+} from '../../../types/platform';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: route('dashboard') },
-    { title: 'Platform', href: route('platform.providers.index', { status: 'all' }) },
-    { title: 'Providers', href: route('platform.providers.index', { status: 'all' }) },
+    {
+        title: 'Platform',
+        href: route('platform.providers.index', { status: 'all' }),
+    },
+    {
+        title: 'Providers',
+        href: route('platform.providers.index', { status: 'all' }),
+    },
 ];
 
-export default function ProvidersIndex({ config, rows, filters, statistics }: PlatformIndexPageProps<ProviderListItem>) {
+export default function ProvidersIndex({
+    config,
+    rows,
+    filters,
+    statistics,
+}: PlatformIndexPageProps<ProviderListItem>) {
     const page = usePage<AuthenticatedSharedData>();
     const canAddProviders = page.props.auth.abilities.addProviders;
 
-    const { currentStatus, gridFilters, perPage, sorting, statusTabs } = buildDatagridState(config, filters, statistics, 'Search providers...');
+    const { currentStatus, gridFilters, perPage, sorting, statusTabs } =
+        buildDatagridState(config, filters, statistics, 'Search providers...');
 
     const columns: DatagridColumn<ProviderListItem>[] = [
         {
@@ -28,10 +47,17 @@ export default function ProvidersIndex({ config, rows, filters, statistics }: Pl
             sortable: true,
             cell: (provider) => (
                 <div className="flex flex-col gap-1">
-                    <Link href={route('platform.providers.show', provider.id)} className="font-medium text-foreground hover:text-primary">
+                    <Link
+                        href={route('platform.providers.show', provider.id)}
+                        className="font-medium text-foreground hover:text-primary"
+                    >
                         {provider.name}
                     </Link>
-                    {provider.email ? <span className="text-xs text-muted-foreground">{provider.email}</span> : null}
+                    {provider.email ? (
+                        <span className="text-xs text-muted-foreground">
+                            {provider.email}
+                        </span>
+                    ) : null}
                 </div>
             ),
         },
@@ -40,14 +66,18 @@ export default function ProvidersIndex({ config, rows, filters, statistics }: Pl
             header: 'Type',
             sortable: true,
             sortKey: 'type',
-            cell: (provider) => <Badge variant="secondary">{provider.type_label}</Badge>,
+            cell: (provider) => (
+                <Badge variant="secondary">{provider.type_label}</Badge>
+            ),
         },
         {
             key: 'vendor_label',
             header: 'Vendor',
             sortable: true,
             sortKey: 'vendor',
-            cell: (provider) => <Badge variant="outline">{provider.vendor_label}</Badge>,
+            cell: (provider) => (
+                <Badge variant="outline">{provider.vendor_label}</Badge>
+            ),
         },
         {
             key: 'email',
@@ -58,7 +88,13 @@ export default function ProvidersIndex({ config, rows, filters, statistics }: Pl
             header: 'Status',
             sortable: true,
             sortKey: 'status',
-            cell: (provider) => <Badge variant={provider.is_trashed ? 'destructive' : 'secondary'}>{provider.status_label}</Badge>,
+            cell: (provider) => (
+                <Badge
+                    variant={provider.is_trashed ? 'destructive' : 'secondary'}
+                >
+                    {provider.status_label}
+                </Badge>
+            ),
         },
         {
             key: 'created_at',
@@ -84,18 +120,25 @@ export default function ProvidersIndex({ config, rows, filters, statistics }: Pl
             }
         >
             <Datagrid
-                action={route('platform.providers.index', { status: currentStatus })}
+                action={route('platform.providers.index', {
+                    status: currentStatus,
+                })}
                 rows={rows}
                 columns={columns}
                 filters={gridFilters}
                 tabs={{ name: 'status', items: statusTabs }}
                 getRowKey={(provider) => provider.id}
                 rowActions={(provider) => mapRowActions(provider.actions)}
-                bulkActions={buildBulkActions(config.actions, config.settings.routePrefix, currentStatus)}
+                bulkActions={buildBulkActions(
+                    config.actions,
+                    config.settings.routePrefix,
+                    currentStatus,
+                )}
                 empty={{
                     icon: <ServerCogIcon className="size-5" />,
                     title: 'No providers found',
-                    description: 'Create provider accounts for DNS, CDN, registrar, or cloud infrastructure integrations.',
+                    description:
+                        'Create provider accounts for DNS, CDN, registrar, or cloud infrastructure integrations.',
                 }}
                 sorting={sorting}
                 perPage={perPage}

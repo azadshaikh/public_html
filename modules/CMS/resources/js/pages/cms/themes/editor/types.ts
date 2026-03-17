@@ -1,5 +1,8 @@
 import type { FilesIcon } from 'lucide-react';
-import type { ThemeEditorFileNode, ThemeEditorPageProps } from '../../../../types/cms';
+import type {
+    ThemeEditorFileNode,
+    ThemeEditorPageProps,
+} from '../../../../types/cms';
 
 export type GenericResponse = {
     success?: boolean;

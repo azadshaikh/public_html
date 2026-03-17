@@ -111,12 +111,12 @@ export function MediaUploadDropzone({
                             prev.map((f) =>
                                 f.id === uploadFile.id
                                     ? {
-                                        ...f,
-                                        progress: 100,
-                                        status: 'success',
-                                        mediaId: response.file?.id,
-                                        thumbnailUrl: response.file?.thumb,
-                                    }
+                                          ...f,
+                                          progress: 100,
+                                          status: 'success',
+                                          mediaId: response.file?.id,
+                                          thumbnailUrl: response.file?.thumb,
+                                      }
                                     : f,
                             ),
                         );
@@ -125,11 +125,11 @@ export function MediaUploadDropzone({
                             prev.map((f) =>
                                 f.id === uploadFile.id
                                     ? {
-                                        ...f,
-                                        status: 'error',
-                                        error:
-                                            response.error || 'Upload failed',
-                                    }
+                                          ...f,
+                                          status: 'error',
+                                          error:
+                                              response.error || 'Upload failed',
+                                      }
                                     : f,
                             ),
                         );
@@ -139,10 +139,10 @@ export function MediaUploadDropzone({
                         prev.map((f) =>
                             f.id === uploadFile.id
                                 ? {
-                                    ...f,
-                                    status: 'error',
-                                    error: 'Invalid server response',
-                                }
+                                      ...f,
+                                      status: 'error',
+                                      error: 'Invalid server response',
+                                  }
                                 : f,
                         ),
                     );
@@ -154,10 +154,10 @@ export function MediaUploadDropzone({
                     prev.map((f) =>
                         f.id === uploadFile.id
                             ? {
-                                ...f,
-                                status: 'error',
-                                error: 'Network error',
-                            }
+                                  ...f,
+                                  status: 'error',
+                                  error: 'Network error',
+                              }
                             : f,
                     ),
                 );
@@ -207,7 +207,12 @@ export function MediaUploadDropzone({
             });
             setIsUploading(false);
         },
-        [validateFile, createPreview, uploadSettings.max_files_per_upload, batchLimitMessage],
+        [
+            validateFile,
+            createPreview,
+            uploadSettings.max_files_per_upload,
+            batchLimitMessage,
+        ],
     );
 
     // ── Start uploading all staged files ─────────────────────────────
@@ -325,9 +330,9 @@ export function MediaUploadDropzone({
     const totalProgress =
         activeFiles.length > 0
             ? Math.round(
-                activeFiles.reduce((sum, f) => sum + f.progress, 0) /
-                activeFiles.length,
-            )
+                  activeFiles.reduce((sum, f) => sum + f.progress, 0) /
+                      activeFiles.length,
+              )
             : 0;
 
     return (
@@ -339,10 +344,11 @@ export function MediaUploadDropzone({
                 onDragOver={handleDragOver}
                 onDrop={handleDrop}
                 onClick={() => fileInputRef.current?.click()}
-                className={`flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-8 transition-colors ${isDragOver
+                className={`flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-8 transition-colors ${
+                    isDragOver
                         ? 'border-primary bg-primary/5'
                         : 'border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/50'
-                    }`}
+                }`}
             >
                 <UploadCloudIcon
                     className={`mb-3 size-10 ${isDragOver ? 'text-primary' : 'text-muted-foreground'}`}
@@ -481,7 +487,8 @@ export function MediaUploadDropzone({
                             >
                                 {/* Preview */}
                                 <div className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded bg-muted">
-                                    {f.type.startsWith('image/') && (f.thumbnailUrl || f.previewUrl) ? (
+                                    {f.type.startsWith('image/') &&
+                                    (f.thumbnailUrl || f.previewUrl) ? (
                                         <img
                                             src={f.thumbnailUrl || f.previewUrl}
                                             alt={f.name}

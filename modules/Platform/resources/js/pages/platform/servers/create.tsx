@@ -7,8 +7,14 @@ import type { PlatformOption, ServerFormValues } from '../../../types/platform';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: route('dashboard') },
-    { title: 'Platform', href: route('platform.servers.index', { status: 'all' }) },
-    { title: 'Servers', href: route('platform.servers.index', { status: 'all' }) },
+    {
+        title: 'Platform',
+        href: route('platform.servers.index', { status: 'all' }),
+    },
+    {
+        title: 'Servers',
+        href: route('platform.servers.index', { status: 'all' }),
+    },
     { title: 'Create', href: route('platform.servers.create') },
 ];
 
@@ -30,17 +36,24 @@ export default function ServersCreate(props: ServersCreatePageProps) {
             <div className="flex flex-col gap-6">
                 <Alert>
                     <KeyRoundIcon />
-                    <AlertTitle>SSH keys are pre-generated for provision mode</AlertTitle>
+                    <AlertTitle>
+                        SSH keys are pre-generated for provision mode
+                    </AlertTitle>
                     <AlertDescription>
-                        Manual mode expects existing Hestia API credentials. Provision mode uses the generated SSH key pair to bootstrap the target host.
+                        Manual mode expects existing Hestia API credentials.
+                        Provision mode uses the generated SSH key pair to
+                        bootstrap the target host.
                     </AlertDescription>
                 </Alert>
 
                 <Alert>
                     <AlertCircleIcon />
-                    <AlertTitle>Provisioning can take several minutes</AlertTitle>
+                    <AlertTitle>
+                        Provisioning can take several minutes
+                    </AlertTitle>
                     <AlertDescription>
-                        After creation, the server detail page will show step-by-step progress and synchronization status.
+                        After creation, the server detail page will show
+                        step-by-step progress and synchronization status.
                     </AlertDescription>
                 </Alert>
 

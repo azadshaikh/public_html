@@ -35,12 +35,7 @@ import {
     NativeSelectOption,
 } from '@/components/ui/native-select';
 import { Spinner } from '@/components/ui/spinner';
-import {
-    Tabs,
-    TabsContent,
-    TabsList,
-    TabsTrigger,
-} from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { useAppForm } from '@/hooks/use-app-form';
 import { formValidators } from '@/lib/forms';
@@ -88,7 +83,11 @@ function slugify(value: string): string {
         .replace(/-+$/, '');
 }
 
-function buildPermalink(baseUrl: string, preSlug: string, slug: string): string {
+function buildPermalink(
+    baseUrl: string,
+    preSlug: string,
+    slug: string,
+): string {
     const base = baseUrl.replace(/\/$/, '');
     const cleanedSlug = slug.trim() === '' ? 'your-slug-here' : slug.trim();
 
@@ -133,7 +132,9 @@ export default function CategoryForm({
     const form = useAppForm<CategoryFormValues>({
         defaults: initialValues || emptyValues,
         rememberKey:
-            mode === 'create' ? 'cms.categories.create.form' : `cms.categories.edit.${category?.id}`,
+            mode === 'create'
+                ? 'cms.categories.create.form'
+                : `cms.categories.edit.${category?.id}`,
         dirtyGuard: { enabled: true },
         rules: {
             title: [formValidators.required('Title')],
@@ -180,7 +181,8 @@ export default function CategoryForm({
             preserveScroll: true,
             setDefaultsOnSuccess: mode === 'edit',
             successToast: {
-                title: mode === 'create' ? 'Category created' : 'Category updated',
+                title:
+                    mode === 'create' ? 'Category created' : 'Category updated',
                 description:
                     mode === 'create'
                         ? 'The category has been created successfully.'
@@ -204,7 +206,11 @@ export default function CategoryForm({
     };
 
     return (
-        <form className="flex flex-col gap-6" onSubmit={handleSubmit} noValidate>
+        <form
+            className="flex flex-col gap-6"
+            onSubmit={handleSubmit}
+            noValidate
+        >
             {form.dirtyGuardDialog}
             <FormErrorSummary errors={form.errors} minMessages={2} />
 
@@ -214,21 +220,32 @@ export default function CategoryForm({
                         <CardHeader>
                             <CardTitle>Category content</CardTitle>
                             <CardDescription>
-                                Write the description, summary, and SEO metadata for this
-                                category.
+                                Write the description, summary, and SEO metadata
+                                for this category.
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="flex flex-col gap-6">
-                            <Field data-invalid={form.invalid('title') || undefined}>
-                                <RequiredLabel htmlFor="title">Title</RequiredLabel>
+                            <Field
+                                data-invalid={
+                                    form.invalid('title') || undefined
+                                }
+                            >
+                                <RequiredLabel htmlFor="title">
+                                    Title
+                                </RequiredLabel>
                                 <Input
                                     id="title"
                                     value={form.data.title}
                                     onChange={(event) =>
-                                        form.setField('title', event.target.value)
+                                        form.setField(
+                                            'title',
+                                            event.target.value,
+                                        )
                                     }
                                     onBlur={() => form.touch('title')}
-                                    aria-invalid={form.invalid('title') || undefined}
+                                    aria-invalid={
+                                        form.invalid('title') || undefined
+                                    }
                                     placeholder="Enter category title"
                                 />
                                 <FieldError>{form.error('title')}</FieldError>
@@ -236,13 +253,24 @@ export default function CategoryForm({
 
                             <Tabs defaultValue="content">
                                 <TabsList variant="line">
-                                    <TabsTrigger value="content">Content</TabsTrigger>
+                                    <TabsTrigger value="content">
+                                        Content
+                                    </TabsTrigger>
                                     <TabsTrigger value="seo">SEO</TabsTrigger>
                                 </TabsList>
 
-                                <TabsContent value="content" className="flex flex-col gap-6">
-                                    <Field data-invalid={form.invalid('content') || undefined}>
-                                        <FieldLabel htmlFor="content">Description</FieldLabel>
+                                <TabsContent
+                                    value="content"
+                                    className="flex flex-col gap-6"
+                                >
+                                    <Field
+                                        data-invalid={
+                                            form.invalid('content') || undefined
+                                        }
+                                    >
+                                        <FieldLabel htmlFor="content">
+                                            Description
+                                        </FieldLabel>
                                         <AsteroNote
                                             id="content"
                                             value={form.data.content}
@@ -251,35 +279,55 @@ export default function CategoryForm({
                                             }
                                             onBlur={() => form.touch('content')}
                                             placeholder="Write the category description"
-                                            invalid={form.invalid('content') || undefined}
+                                            invalid={
+                                                form.invalid('content') ||
+                                                undefined
+                                            }
                                         />
-                                        <FieldError>{form.error('content')}</FieldError>
+                                        <FieldError>
+                                            {form.error('content')}
+                                        </FieldError>
                                     </Field>
 
-                                    <Field data-invalid={form.invalid('excerpt') || undefined}>
-                                        <FieldLabel htmlFor="excerpt">Excerpt</FieldLabel>
+                                    <Field
+                                        data-invalid={
+                                            form.invalid('excerpt') || undefined
+                                        }
+                                    >
+                                        <FieldLabel htmlFor="excerpt">
+                                            Excerpt
+                                        </FieldLabel>
                                         <Textarea
                                             id="excerpt"
                                             rows={4}
                                             value={form.data.excerpt}
                                             onChange={(event) =>
-                                                form.setField('excerpt', event.target.value)
+                                                form.setField(
+                                                    'excerpt',
+                                                    event.target.value,
+                                                )
                                             }
                                             onBlur={() => form.touch('excerpt')}
                                             aria-invalid={
-                                                form.invalid('excerpt') || undefined
+                                                form.invalid('excerpt') ||
+                                                undefined
                                             }
                                             placeholder="Enter a short excerpt"
                                         />
                                         <FieldDescription>
-                                            Used in listings, previews, and search snippets.
+                                            Used in listings, previews, and
+                                            search snippets.
                                         </FieldDescription>
-                                        <FieldError>{form.error('excerpt')}</FieldError>
+                                        <FieldError>
+                                            {form.error('excerpt')}
+                                        </FieldError>
                                     </Field>
 
                                     {category ? (
                                         <div className="text-sm text-muted-foreground">
-                                            Last updated {category.updated_at_human ?? 'recently'}
+                                            Last updated{' '}
+                                            {category.updated_at_human ??
+                                                'recently'}
                                             {category.updated_at_formatted
                                                 ? ` (${category.updated_at_formatted})`
                                                 : ''}
@@ -287,30 +335,50 @@ export default function CategoryForm({
                                     ) : null}
                                 </TabsContent>
 
-                                <TabsContent value="seo" className="flex flex-col gap-6">
-                                    <Field data-invalid={form.invalid('meta_title') || undefined}>
-                                        <FieldLabel htmlFor="meta_title">Meta title</FieldLabel>
+                                <TabsContent
+                                    value="seo"
+                                    className="flex flex-col gap-6"
+                                >
+                                    <Field
+                                        data-invalid={
+                                            form.invalid('meta_title') ||
+                                            undefined
+                                        }
+                                    >
+                                        <FieldLabel htmlFor="meta_title">
+                                            Meta title
+                                        </FieldLabel>
                                         <Input
                                             id="meta_title"
                                             value={form.data.meta_title}
                                             onChange={(event) =>
-                                                form.setField('meta_title', event.target.value)
+                                                form.setField(
+                                                    'meta_title',
+                                                    event.target.value,
+                                                )
                                             }
-                                            onBlur={() => form.touch('meta_title')}
+                                            onBlur={() =>
+                                                form.touch('meta_title')
+                                            }
                                             aria-invalid={
-                                                form.invalid('meta_title') || undefined
+                                                form.invalid('meta_title') ||
+                                                undefined
                                             }
                                             placeholder="Enter meta title"
                                         />
                                         <FieldDescription>
-                                            Recommended length: 50–60 characters.
+                                            Recommended length: 50–60
+                                            characters.
                                         </FieldDescription>
-                                        <FieldError>{form.error('meta_title')}</FieldError>
+                                        <FieldError>
+                                            {form.error('meta_title')}
+                                        </FieldError>
                                     </Field>
 
                                     <Field
                                         data-invalid={
-                                            form.invalid('meta_description') || undefined
+                                            form.invalid('meta_description') ||
+                                            undefined
                                         }
                                     >
                                         <FieldLabel htmlFor="meta_description">
@@ -330,8 +398,9 @@ export default function CategoryForm({
                                                 form.touch('meta_description')
                                             }
                                             aria-invalid={
-                                                form.invalid('meta_description') ||
-                                                undefined
+                                                form.invalid(
+                                                    'meta_description',
+                                                ) || undefined
                                             }
                                             placeholder="Enter meta description"
                                         />
@@ -340,18 +409,31 @@ export default function CategoryForm({
                                         </FieldError>
                                     </Field>
 
-                                    <Field data-invalid={form.invalid('meta_robots') || undefined}>
-                                        <FieldLabel htmlFor="meta_robots">Meta robots</FieldLabel>
+                                    <Field
+                                        data-invalid={
+                                            form.invalid('meta_robots') ||
+                                            undefined
+                                        }
+                                    >
+                                        <FieldLabel htmlFor="meta_robots">
+                                            Meta robots
+                                        </FieldLabel>
                                         <NativeSelect
                                             id="meta_robots"
                                             className="w-full"
                                             value={form.data.meta_robots}
                                             onChange={(event) =>
-                                                form.setField('meta_robots', event.target.value)
+                                                form.setField(
+                                                    'meta_robots',
+                                                    event.target.value,
+                                                )
                                             }
-                                            onBlur={() => form.touch('meta_robots')}
+                                            onBlur={() =>
+                                                form.touch('meta_robots')
+                                            }
                                             aria-invalid={
-                                                form.invalid('meta_robots') || undefined
+                                                form.invalid('meta_robots') ||
+                                                undefined
                                             }
                                         >
                                             {metaRobotsOptions.map((option) => (
@@ -363,7 +445,9 @@ export default function CategoryForm({
                                                 </NativeSelectOption>
                                             ))}
                                         </NativeSelect>
-                                        <FieldError>{form.error('meta_robots')}</FieldError>
+                                        <FieldError>
+                                            {form.error('meta_robots')}
+                                        </FieldError>
                                     </Field>
                                 </TabsContent>
                             </Tabs>
@@ -402,10 +486,15 @@ export default function CategoryForm({
                                 pickerAction={
                                     mode === 'create'
                                         ? route('cms.categories.create')
-                                        : route('cms.categories.edit', category!.id)
+                                        : route(
+                                              'cms.categories.edit',
+                                              category!.id,
+                                          )
                                 }
                             />
-                            <FieldError>{form.error('feature_image')}</FieldError>
+                            <FieldError>
+                                {form.error('feature_image')}
+                            </FieldError>
                         </CardContent>
                     </Card>
 
@@ -421,14 +510,23 @@ export default function CategoryForm({
                         </CardHeader>
                         <CardContent className="flex flex-col gap-6">
                             <FieldGroup>
-                                <Field data-invalid={form.invalid('status') || undefined}>
-                                    <RequiredLabel htmlFor="status">Status</RequiredLabel>
+                                <Field
+                                    data-invalid={
+                                        form.invalid('status') || undefined
+                                    }
+                                >
+                                    <RequiredLabel htmlFor="status">
+                                        Status
+                                    </RequiredLabel>
                                     <NativeSelect
                                         id="status"
                                         className="w-full"
                                         value={form.data.status}
                                         onChange={(event) =>
-                                            form.setField('status', event.target.value)
+                                            form.setField(
+                                                'status',
+                                                event.target.value,
+                                            )
                                         }
                                         onBlur={() => form.touch('status')}
                                         aria-invalid={
@@ -444,34 +542,57 @@ export default function CategoryForm({
                                             </NativeSelectOption>
                                         ))}
                                     </NativeSelect>
-                                    <FieldError>{form.error('status')}</FieldError>
+                                    <FieldError>
+                                        {form.error('status')}
+                                    </FieldError>
                                 </Field>
 
                                 {parentCategoryOptions.length > 1 ? (
-                                    <Field data-invalid={form.invalid('parent_id') || undefined}>
-                                        <FieldLabel htmlFor="parent_id">Parent category</FieldLabel>
+                                    <Field
+                                        data-invalid={
+                                            form.invalid('parent_id') ||
+                                            undefined
+                                        }
+                                    >
+                                        <FieldLabel htmlFor="parent_id">
+                                            Parent category
+                                        </FieldLabel>
                                         <NativeSelect
                                             id="parent_id"
                                             className="w-full"
                                             value={String(form.data.parent_id)}
                                             onChange={(event) =>
-                                                form.setField('parent_id', event.target.value)
+                                                form.setField(
+                                                    'parent_id',
+                                                    event.target.value,
+                                                )
                                             }
-                                            onBlur={() => form.touch('parent_id')}
+                                            onBlur={() =>
+                                                form.touch('parent_id')
+                                            }
                                             aria-invalid={
-                                                form.invalid('parent_id') || undefined
+                                                form.invalid('parent_id') ||
+                                                undefined
                                             }
                                         >
-                                            {parentCategoryOptions.map((option) => (
-                                                <NativeSelectOption
-                                                    key={String(option.value)}
-                                                    value={String(option.value)}
-                                                >
-                                                    {option.label}
-                                                </NativeSelectOption>
-                                            ))}
+                                            {parentCategoryOptions.map(
+                                                (option) => (
+                                                    <NativeSelectOption
+                                                        key={String(
+                                                            option.value,
+                                                        )}
+                                                        value={String(
+                                                            option.value,
+                                                        )}
+                                                    >
+                                                        {option.label}
+                                                    </NativeSelectOption>
+                                                ),
+                                            )}
                                         </NativeSelect>
-                                        <FieldError>{form.error('parent_id')}</FieldError>
+                                        <FieldError>
+                                            {form.error('parent_id')}
+                                        </FieldError>
                                     </Field>
                                 ) : null}
                             </FieldGroup>
@@ -489,8 +610,12 @@ export default function CategoryForm({
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="flex flex-col gap-6">
-                            <Field data-invalid={form.invalid('slug') || undefined}>
-                                <FieldLabel htmlFor="slug">Permalink</FieldLabel>
+                            <Field
+                                data-invalid={form.invalid('slug') || undefined}
+                            >
+                                <FieldLabel htmlFor="slug">
+                                    Permalink
+                                </FieldLabel>
                                 <div className="flex items-center rounded-lg border bg-muted/20 pl-3">
                                     <span className="shrink-0 text-sm text-muted-foreground">
                                         {preSlug}
@@ -501,10 +626,15 @@ export default function CategoryForm({
                                         value={form.data.slug}
                                         onChange={(event) => {
                                             setSlugTouched(true);
-                                            form.setField('slug', slugify(event.target.value));
+                                            form.setField(
+                                                'slug',
+                                                slugify(event.target.value),
+                                            );
                                         }}
                                         onBlur={() => form.touch('slug')}
-                                        aria-invalid={form.invalid('slug') || undefined}
+                                        aria-invalid={
+                                            form.invalid('slug') || undefined
+                                        }
                                         placeholder="auto-generated-from-title"
                                     />
                                 </div>
@@ -515,28 +645,42 @@ export default function CategoryForm({
                                         rel="noopener noreferrer"
                                         className="inline-flex items-center gap-1 text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
                                     >
-                                        <span className="truncate">{permalinkPreview}</span>
+                                        <span className="truncate">
+                                            {permalinkPreview}
+                                        </span>
                                         <ExternalLinkIcon className="size-3.5 shrink-0" />
                                     </a>
                                 ) : (
-                                    <FieldDescription>{permalinkPreview}</FieldDescription>
+                                    <FieldDescription>
+                                        {permalinkPreview}
+                                    </FieldDescription>
                                 )}
                                 <FieldError>{form.error('slug')}</FieldError>
                             </Field>
 
                             {showTemplateField ? (
-                                <Field data-invalid={form.invalid('template') || undefined}>
-                                    <FieldLabel htmlFor="template">Template</FieldLabel>
+                                <Field
+                                    data-invalid={
+                                        form.invalid('template') || undefined
+                                    }
+                                >
+                                    <FieldLabel htmlFor="template">
+                                        Template
+                                    </FieldLabel>
                                     <NativeSelect
                                         id="template"
                                         className="w-full"
                                         value={form.data.template}
                                         onChange={(event) =>
-                                            form.setField('template', event.target.value)
+                                            form.setField(
+                                                'template',
+                                                event.target.value,
+                                            )
                                         }
                                         onBlur={() => form.touch('template')}
                                         aria-invalid={
-                                            form.invalid('template') || undefined
+                                            form.invalid('template') ||
+                                            undefined
                                         }
                                     >
                                         {templateOptions.map((option) => (
@@ -549,9 +693,12 @@ export default function CategoryForm({
                                         ))}
                                     </NativeSelect>
                                     <FieldDescription>
-                                        Choose a different presentation template for this category.
+                                        Choose a different presentation template
+                                        for this category.
                                     </FieldDescription>
-                                    <FieldError>{form.error('template')}</FieldError>
+                                    <FieldError>
+                                        {form.error('template')}
+                                    </FieldError>
                                 </Field>
                             ) : null}
                         </CardContent>
@@ -565,7 +712,11 @@ export default function CategoryForm({
                             </CardDescription>
                         </CardHeader>
                         <CardFooter className="flex-col gap-3">
-                            <Button type="submit" className="w-full" disabled={form.processing}>
+                            <Button
+                                type="submit"
+                                className="w-full"
+                                disabled={form.processing}
+                            >
                                 {form.processing ? (
                                     <Spinner className="size-4" />
                                 ) : (
@@ -573,8 +724,15 @@ export default function CategoryForm({
                                 )}
                                 {submitLabel}
                             </Button>
-                            <Button type="button" variant="outline" className="w-full" asChild>
-                                <Link href={route('cms.categories.index')}>Back to Categories</Link>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                className="w-full"
+                                asChild
+                            >
+                                <Link href={route('cms.categories.index')}>
+                                    Back to Categories
+                                </Link>
                             </Button>
                         </CardFooter>
                     </Card>
@@ -584,8 +742,8 @@ export default function CategoryForm({
                             <CardHeader>
                                 <CardTitle>Danger zone</CardTitle>
                                 <CardDescription>
-                                    Move this category to trash. You can restore it later from the
-                                    trash tab.
+                                    Move this category to trash. You can restore
+                                    it later from the trash tab.
                                 </CardDescription>
                             </CardHeader>
                             <CardFooter>

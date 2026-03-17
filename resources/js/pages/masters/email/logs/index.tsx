@@ -1,5 +1,12 @@
 import { Link } from '@inertiajs/react';
-import { CheckCircleIcon, Clock3Icon, EyeIcon, ListIcon, MailSearchIcon, XCircleIcon } from 'lucide-react';
+import {
+    CheckCircleIcon,
+    Clock3Icon,
+    EyeIcon,
+    ListIcon,
+    MailSearchIcon,
+    XCircleIcon,
+} from 'lucide-react';
 import { Datagrid } from '@/components/datagrid/datagrid';
 import type {
     DatagridAction,

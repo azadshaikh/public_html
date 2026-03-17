@@ -1,5 +1,18 @@
 import { Link, router, usePage } from '@inertiajs/react';
-import { AlertCircleIcon, CheckCircleIcon, ClipboardListIcon, EyeIcon, ListIcon, PauseCircleIcon, PencilIcon, PlusIcon, RefreshCwIcon, TimerIcon, Trash2Icon, XCircleIcon } from 'lucide-react';
+import {
+    AlertCircleIcon,
+    CheckCircleIcon,
+    ClipboardListIcon,
+    EyeIcon,
+    ListIcon,
+    PauseCircleIcon,
+    PencilIcon,
+    PlusIcon,
+    RefreshCwIcon,
+    TimerIcon,
+    Trash2Icon,
+    XCircleIcon,
+} from 'lucide-react';
 import { Datagrid } from '@/components/datagrid/datagrid';
 import type {
     DatagridAction,
@@ -416,8 +429,9 @@ export default function TodosIndex({
                                     <div className="mt-1">
                                         <Badge
                                             variant={
-                                                (todo.status_badge as Parameters<typeof Badge>[0]['variant']) ??
-                                                'outline'
+                                                (todo.status_badge as Parameters<
+                                                    typeof Badge
+                                                >[0]['variant']) ?? 'outline'
                                             }
                                         >
                                             {todo.status_label}
@@ -431,8 +445,9 @@ export default function TodosIndex({
                                     <div className="mt-1">
                                         <Badge
                                             variant={
-                                                (todo.priority_badge as Parameters<typeof Badge>[0]['variant']) ??
-                                                'outline'
+                                                (todo.priority_badge as Parameters<
+                                                    typeof Badge
+                                                >[0]['variant']) ?? 'outline'
                                             }
                                         >
                                             {todo.priority_label}

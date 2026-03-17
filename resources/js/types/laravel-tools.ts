@@ -1,11 +1,6 @@
 import type { PaginatedData } from '@/types';
 
-export type LaravelToolKey =
-    | 'env'
-    | 'artisan'
-    | 'config'
-    | 'routes'
-    | 'php';
+export type LaravelToolKey = 'env' | 'artisan' | 'config' | 'routes' | 'php';
 
 export type LaravelToolsStats = {
     php_version: string;

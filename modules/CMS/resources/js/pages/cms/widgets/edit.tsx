@@ -9,15 +9,23 @@ import {
     SaveIcon,
     Trash2Icon,
 } from 'lucide-react';
-import {  useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type {DragEvent} from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { DragEvent } from 'react';
 import { showAppToast } from '@/components/forms/form-success-toast';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import {
+    Accordion,
+    AccordionContent,
+    AccordionItem,
+    AccordionTrigger,
+} from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Field, FieldDescription, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import {
+    NativeSelect,
+    NativeSelectOption,
+} from '@/components/ui/native-select';
 import {
     Sheet,
     SheetContent,
@@ -60,10 +68,14 @@ type WidgetLibraryGroup = Array<{ key: string; widget: AvailableWidget }>;
 // ----------------------------------------------------------------
 
 function generateId(): string {
-    return 'widget-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+    return (
+        'widget-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8)
+    );
 }
 
-function buildDefaultSettings(schema: Record<string, WidgetSettingField>): Record<string, string | boolean | number> {
+function buildDefaultSettings(
+    schema: Record<string, WidgetSettingField>,
+): Record<string, string | boolean | number> {
     const defaults: Record<string, string | boolean | number> = {};
     for (const [key, field] of Object.entries(schema)) {
         defaults[key] = field.default ?? '';
@@ -123,7 +135,9 @@ function SettingField({
                         onCheckedChange={(checked) => onChange(checked)}
                     />
                     {field.description && (
-                        <FieldDescription className="text-xs">{field.description}</FieldDescription>
+                        <FieldDescription className="text-xs">
+                            {field.description}
+                        </FieldDescription>
                     )}
                 </div>
             ) : field.type === 'color' ? (
@@ -145,7 +159,13 @@ function SettingField({
             ) : (
                 <Input
                     id={id}
-                    type={field.type === 'url' ? 'url' : field.type === 'email' ? 'email' : 'text'}
+                    type={
+                        field.type === 'url'
+                            ? 'url'
+                            : field.type === 'email'
+                              ? 'email'
+                              : 'text'
+                    }
                     value={String(value)}
                     onChange={(e) => onChange(e.target.value)}
                     placeholder={field.description}
@@ -222,11 +242,15 @@ function WidgetRow({
             </button>
 
             <div className="min-w-0 flex-1">
-                <p className="truncate font-medium text-sm">{widget.title || 'Untitled Widget'}</p>
+                <p className="truncate text-sm font-medium">
+                    {widget.title || 'Untitled Widget'}
+                </p>
                 <p className="truncate text-xs text-muted-foreground">
                     {typeName}
                     {category && (
-                        <span className="ml-1 text-muted-foreground/60">· {category}</span>
+                        <span className="ml-1 text-muted-foreground/60">
+                            · {category}
+                        </span>
                     )}
                 </p>
             </div>
@@ -285,12 +309,21 @@ function WidgetRow({
 // Main component
 // ----------------------------------------------------------------
 
-export default function WidgetsEdit({ widgetArea, currentWidgets, availableWidgets }: WidgetEditPageProps) {
+export default function WidgetsEdit({
+    widgetArea,
+    currentWidgets,
+    availableWidgets,
+}: WidgetEditPageProps) {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: route('dashboard') },
         { title: 'Appearance', href: route('cms.appearance.themes.index') },
         { title: 'Widgets', href: route('cms.appearance.widgets.index') },
-        { title: widgetArea.name, href: route('cms.appearance.widgets.edit', { area_id: widgetArea.id }) },
+        {
+            title: widgetArea.name,
+            href: route('cms.appearance.widgets.edit', {
+                area_id: widgetArea.id,
+            }),
+        },
     ];
 
     // ---- State ----
@@ -304,13 +337,19 @@ export default function WidgetsEdit({ widgetArea, currentWidgets, availableWidge
     const [dropTargetId, setDropTargetId] = useState<string | null>(null);
 
     // Settings sheet state
-    const [editingWidget, setEditingWidget] = useState<DraftWidget | null>(null);
+    const [editingWidget, setEditingWidget] = useState<DraftWidget | null>(
+        null,
+    );
     const [sheetOpen, setSheetOpen] = useState(false);
     const [editTitle, setEditTitle] = useState('');
-    const [editSettings, setEditSettings] = useState<Record<string, string | boolean | number>>({});
+    const [editSettings, setEditSettings] = useState<
+        Record<string, string | boolean | number>
+    >({});
     const saveRequest = useHttp<SavePayload, SaveResponse>({
         widgets: {
-            [widgetArea.id]: [...currentWidgets].sort((a, b) => a.position - b.position),
+            [widgetArea.id]: [...currentWidgets].sort(
+                (a, b) => a.position - b.position,
+            ),
         },
     });
 
@@ -329,7 +368,9 @@ export default function WidgetsEdit({ widgetArea, currentWidgets, availableWidge
     // ---- Grouped widgets for library ----
     const groupedWidgets = useMemo(() => {
         const groups: Record<string, WidgetLibraryGroup> = {};
-        for (const [key, widget] of Object.entries(availableWidgets) as Array<[string, AvailableWidget]>) {
+        for (const [key, widget] of Object.entries(availableWidgets) as Array<
+            [string, AvailableWidget]
+        >) {
             const cat = widget.category || 'General';
             if (!groups[cat]) {
                 groups[cat] = [];
@@ -388,17 +429,23 @@ export default function WidgetsEdit({ widgetArea, currentWidgets, availableWidge
     }, []);
 
     // ---- DnD ----
-    const handleDragStart = useCallback((e: DragEvent<HTMLDivElement>, id: string) => {
-        dragId.current = id;
-        e.dataTransfer.effectAllowed = 'move';
-    }, []);
+    const handleDragStart = useCallback(
+        (e: DragEvent<HTMLDivElement>, id: string) => {
+            dragId.current = id;
+            e.dataTransfer.effectAllowed = 'move';
+        },
+        [],
+    );
 
-    const handleDragOver = useCallback((e: DragEvent<HTMLDivElement>, id: string) => {
-        e.preventDefault();
-        if (dragId.current !== id) {
-            setDropTargetId(id);
-        }
-    }, []);
+    const handleDragOver = useCallback(
+        (e: DragEvent<HTMLDivElement>, id: string) => {
+            e.preventDefault();
+            if (dragId.current !== id) {
+                setDropTargetId(id);
+            }
+        },
+        [],
+    );
 
     const handleDragEnd = useCallback(() => {
         dragId.current = null;
@@ -453,9 +500,12 @@ export default function WidgetsEdit({ widgetArea, currentWidgets, availableWidge
         setEditingWidget(null);
     }, [editingWidget, editTitle, editSettings]);
 
-    const handleSettingChange = useCallback((key: string, value: string | boolean | number) => {
-        setEditSettings((prev) => ({ ...prev, [key]: value }));
-    }, []);
+    const handleSettingChange = useCallback(
+        (key: string, value: string | boolean | number) => {
+            setEditSettings((prev) => ({ ...prev, [key]: value }));
+        },
+        [],
+    );
 
     // ---- Save ----
     const handleSave = useCallback(async () => {
@@ -485,7 +535,9 @@ export default function WidgetsEdit({ widgetArea, currentWidgets, availableWidge
             });
         } catch (error) {
             const message =
-                error instanceof Error ? error.message : 'An unexpected error occurred.';
+                error instanceof Error
+                    ? error.message
+                    : 'An unexpected error occurred.';
             showAppToast({
                 variant: 'error',
                 title: 'Save failed',
@@ -499,7 +551,12 @@ export default function WidgetsEdit({ widgetArea, currentWidgets, availableWidge
     // ---- Keyboard shortcut Ctrl+S ----
     useEffect(() => {
         const handler = (e: KeyboardEvent) => {
-            if ((e.ctrlKey || e.metaKey) && e.key === 's' && isDirty && !isSaving) {
+            if (
+                (e.ctrlKey || e.metaKey) &&
+                e.key === 's' &&
+                isDirty &&
+                !isSaving
+            ) {
                 e.preventDefault();
                 handleSave();
             }
@@ -517,7 +574,10 @@ export default function WidgetsEdit({ widgetArea, currentWidgets, availableWidge
         <AppLayout
             breadcrumbs={breadcrumbs}
             title={`Edit Widget Area: ${widgetArea.name}`}
-            description={widgetArea.description || 'Configure widget content for this theme area.'}
+            description={
+                widgetArea.description ||
+                'Configure widget content for this theme area.'
+            }
             headerActions={
                 <div className="flex items-center gap-2">
                     <Button variant="outline" asChild>
@@ -526,8 +586,15 @@ export default function WidgetsEdit({ widgetArea, currentWidgets, availableWidge
                             Back
                         </Link>
                     </Button>
-                    <Button onClick={handleSave} disabled={!isDirty || isSaving}>
-                        {isSaving ? <Spinner /> : <SaveIcon data-icon="inline-start" />}
+                    <Button
+                        onClick={handleSave}
+                        disabled={!isDirty || isSaving}
+                    >
+                        {isSaving ? (
+                            <Spinner />
+                        ) : (
+                            <SaveIcon data-icon="inline-start" />
+                        )}
                         Save
                     </Button>
                 </div>
@@ -542,7 +609,8 @@ export default function WidgetsEdit({ widgetArea, currentWidgets, availableWidge
                                 <CardTitle className="text-base">
                                     Widget Structure
                                     <span className="ml-2 text-sm font-normal text-muted-foreground">
-                                        {items.length} {items.length === 1 ? 'item' : 'items'}
+                                        {items.length}{' '}
+                                        {items.length === 1 ? 'item' : 'items'}
                                     </span>
                                 </CardTitle>
                                 {isDirty && (
@@ -555,9 +623,12 @@ export default function WidgetsEdit({ widgetArea, currentWidgets, availableWidge
                         <CardContent>
                             {items.length === 0 ? (
                                 <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
-                                    <p className="text-sm font-medium">No widgets in this area</p>
+                                    <p className="text-sm font-medium">
+                                        No widgets in this area
+                                    </p>
                                     <p className="text-xs text-muted-foreground">
-                                        Add widgets from the library panel on the right.
+                                        Add widgets from the library panel on
+                                        the right.
                                     </p>
                                 </div>
                             ) : (
@@ -569,16 +640,32 @@ export default function WidgetsEdit({ widgetArea, currentWidgets, availableWidge
                                             availableWidgets={availableWidgets}
                                             index={index}
                                             total={items.length}
-                                            isDragging={dragId.current === widget.id}
-                                            isDropTarget={dropTargetId === widget.id}
-                                            onEdit={() => handleOpenEdit(widget)}
-                                            onRemove={() => handleRemove(widget.id)}
+                                            isDragging={
+                                                dragId.current === widget.id
+                                            }
+                                            isDropTarget={
+                                                dropTargetId === widget.id
+                                            }
+                                            onEdit={() =>
+                                                handleOpenEdit(widget)
+                                            }
+                                            onRemove={() =>
+                                                handleRemove(widget.id)
+                                            }
                                             onMoveUp={() => handleMoveUp(index)}
-                                            onMoveDown={() => handleMoveDown(index)}
-                                            onDragStart={(e) => handleDragStart(e, widget.id)}
-                                            onDragOver={(e) => handleDragOver(e, widget.id)}
+                                            onMoveDown={() =>
+                                                handleMoveDown(index)
+                                            }
+                                            onDragStart={(e) =>
+                                                handleDragStart(e, widget.id)
+                                            }
+                                            onDragOver={(e) =>
+                                                handleDragOver(e, widget.id)
+                                            }
                                             onDragEnd={handleDragEnd}
-                                            onDrop={(e) => handleDrop(e, widget.id)}
+                                            onDrop={(e) =>
+                                                handleDrop(e, widget.id)
+                                            }
                                         />
                                     ))}
                                 </div>
@@ -591,47 +678,78 @@ export default function WidgetsEdit({ widgetArea, currentWidgets, availableWidge
                 <div>
                     <Card className="sticky top-4">
                         <CardHeader className="pb-3">
-                            <CardTitle className="text-base">Widget Library</CardTitle>
+                            <CardTitle className="text-base">
+                                Widget Library
+                            </CardTitle>
                         </CardHeader>
                         <CardContent className="pt-0">
                             {Object.keys(availableWidgets).length === 0 ? (
                                 <p className="text-sm text-muted-foreground">
-                                    No widgets available. Check your theme's widgets folder.
+                                    No widgets available. Check your theme's
+                                    widgets folder.
                                 </p>
                             ) : (
-                                <Accordion type="multiple" defaultValue={Object.keys(groupedWidgets).slice(0, 1)}>
-                                    {Object.entries(groupedWidgets).map(([category, widgets]) => (
-                                        <AccordionItem key={category} value={category}>
-                                            <AccordionTrigger className="py-2 text-sm capitalize">
-                                                {category}
-                                                <span className="ml-auto mr-2 text-xs text-muted-foreground">
-                                                    {widgets.length}
-                                                </span>
-                                            </AccordionTrigger>
-                                            <AccordionContent>
-                                                <div className="flex flex-col gap-1 pb-1">
-                                                    {widgets.map(({ key, widget: w }) => (
-                                                        <button
-                                                            key={key}
-                                                            type="button"
-                                                            onClick={() => handleAddWidget(key)}
-                                                            className="flex items-center gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-accent"
-                                                        >
-                                                            <PlusIcon className="size-3.5 shrink-0 text-primary" />
-                                                            <span className="min-w-0 flex-1 truncate">{w.name}</span>
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            </AccordionContent>
-                                        </AccordionItem>
-                                    ))}
+                                <Accordion
+                                    type="multiple"
+                                    defaultValue={Object.keys(
+                                        groupedWidgets,
+                                    ).slice(0, 1)}
+                                >
+                                    {Object.entries(groupedWidgets).map(
+                                        ([category, widgets]) => (
+                                            <AccordionItem
+                                                key={category}
+                                                value={category}
+                                            >
+                                                <AccordionTrigger className="py-2 text-sm capitalize">
+                                                    {category}
+                                                    <span className="mr-2 ml-auto text-xs text-muted-foreground">
+                                                        {widgets.length}
+                                                    </span>
+                                                </AccordionTrigger>
+                                                <AccordionContent>
+                                                    <div className="flex flex-col gap-1 pb-1">
+                                                        {widgets.map(
+                                                            ({
+                                                                key,
+                                                                widget: w,
+                                                            }) => (
+                                                                <button
+                                                                    key={key}
+                                                                    type="button"
+                                                                    onClick={() =>
+                                                                        handleAddWidget(
+                                                                            key,
+                                                                        )
+                                                                    }
+                                                                    className="flex items-center gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-accent"
+                                                                >
+                                                                    <PlusIcon className="size-3.5 shrink-0 text-primary" />
+                                                                    <span className="min-w-0 flex-1 truncate">
+                                                                        {w.name}
+                                                                    </span>
+                                                                </button>
+                                                            ),
+                                                        )}
+                                                    </div>
+                                                </AccordionContent>
+                                            </AccordionItem>
+                                        ),
+                                    )}
                                 </Accordion>
                             )}
 
                             <p className="mt-3 text-xs text-muted-foreground">
-                                Click a widget to add it. Drag items in the list to reorder. Use{' '}
-                                <kbd className="rounded border px-1 font-mono text-xs">Ctrl</kbd>+
-                                <kbd className="rounded border px-1 font-mono text-xs">S</kbd> to save.
+                                Click a widget to add it. Drag items in the list
+                                to reorder. Use{' '}
+                                <kbd className="rounded border px-1 font-mono text-xs">
+                                    Ctrl
+                                </kbd>
+                                +
+                                <kbd className="rounded border px-1 font-mono text-xs">
+                                    S
+                                </kbd>{' '}
+                                to save.
                             </p>
                         </CardContent>
                     </Card>
@@ -642,21 +760,35 @@ export default function WidgetsEdit({ widgetArea, currentWidgets, availableWidge
             {isDirty && (
                 <div className="fixed inset-x-0 bottom-0 z-50 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
                     <div className="mx-auto flex max-w-screen-xl items-center justify-between gap-4 px-4 py-3">
-                        <p className="text-sm font-medium text-amber-600">You have unsaved widget changes.</p>
+                        <p className="text-sm font-medium text-amber-600">
+                            You have unsaved widget changes.
+                        </p>
                         <div className="flex gap-2">
                             <Button
                                 variant="outline"
                                 size="sm"
                                 disabled={isSaving}
                                 onClick={() => {
-                                    setItems([...currentWidgets].sort((a, b) => a.position - b.position));
+                                    setItems(
+                                        [...currentWidgets].sort(
+                                            (a, b) => a.position - b.position,
+                                        ),
+                                    );
                                     setIsDirty(false);
                                 }}
                             >
                                 Discard
                             </Button>
-                            <Button size="sm" disabled={isSaving} onClick={handleSave}>
-                                {isSaving ? <Spinner /> : <SaveIcon data-icon="inline-start" />}
+                            <Button
+                                size="sm"
+                                disabled={isSaving}
+                                onClick={handleSave}
+                            >
+                                {isSaving ? (
+                                    <Spinner />
+                                ) : (
+                                    <SaveIcon data-icon="inline-start" />
+                                )}
                                 Save Widgets
                             </Button>
                         </div>
@@ -666,11 +798,15 @@ export default function WidgetsEdit({ widgetArea, currentWidgets, availableWidge
 
             {/* ---- Settings sheet ---- */}
             <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-                <SheetContent side="right" className="flex w-full flex-col sm:max-w-md">
+                <SheetContent
+                    side="right"
+                    className="flex w-full flex-col sm:max-w-md"
+                >
                     <SheetHeader>
                         <SheetTitle>
                             {editingWidget
-                                ? (availableWidgets[editingWidget.type]?.name ?? editingWidget.type)
+                                ? (availableWidgets[editingWidget.type]?.name ??
+                                  editingWidget.type)
                                 : 'Widget Settings'}
                         </SheetTitle>
                         <SheetDescription>
@@ -682,7 +818,8 @@ export default function WidgetsEdit({ widgetArea, currentWidgets, availableWidge
                         {/* Always-present title field */}
                         <Field>
                             <FieldLabel htmlFor="widget-title">
-                                Widget Title <span className="text-destructive">*</span>
+                                Widget Title{' '}
+                                <span className="text-destructive">*</span>
                             </FieldLabel>
                             <Input
                                 id="widget-title"
@@ -693,19 +830,28 @@ export default function WidgetsEdit({ widgetArea, currentWidgets, availableWidge
                         </Field>
 
                         {/* Dynamic settings fields */}
-                        {(Object.entries(editingSchema) as Array<[string, WidgetSettingField]>).map(([key, field]) => (
+                        {(
+                            Object.entries(editingSchema) as Array<
+                                [string, WidgetSettingField]
+                            >
+                        ).map(([key, field]) => (
                             <SettingField
                                 key={key}
                                 fieldKey={key}
                                 field={field}
                                 value={editSettings[key] ?? field.default ?? ''}
-                                onChange={(val) => handleSettingChange(key, val)}
+                                onChange={(val) =>
+                                    handleSettingChange(key, val)
+                                }
                             />
                         ))}
                     </div>
 
                     <SheetFooter>
-                        <Button variant="outline" onClick={() => setSheetOpen(false)}>
+                        <Button
+                            variant="outline"
+                            onClick={() => setSheetOpen(false)}
+                        >
                             Cancel
                         </Button>
                         <Button onClick={handleSaveSettings}>

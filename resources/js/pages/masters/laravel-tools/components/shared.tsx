@@ -11,10 +11,7 @@ import type { LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import type { BreadcrumbItem } from '@/types';
-import type {
-    LaravelConfigValue,
-    LaravelToolKey,
-} from '@/types/laravel-tools';
+import type { LaravelConfigValue, LaravelToolKey } from '@/types/laravel-tools';
 
 type ToolDefinition = {
     key: LaravelToolKey;
@@ -115,7 +112,8 @@ export function LaravelToolsNavigation({
                         Tool navigation
                     </p>
                     <p className="text-sm text-muted-foreground">
-                        Move between diagnostics, maintenance, and configuration views.
+                        Move between diagnostics, maintenance, and configuration
+                        views.
                     </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -128,7 +126,9 @@ export function LaravelToolsNavigation({
                         <Button
                             key={tool.key}
                             asChild
-                            variant={current === tool.key ? 'default' : 'outline'}
+                            variant={
+                                current === tool.key ? 'default' : 'outline'
+                            }
                         >
                             <Link href={tool.href}>{tool.title}</Link>
                         </Button>
@@ -203,7 +203,10 @@ export function flattenConfigEntries(
         }
 
         return value.flatMap((item, index) =>
-            flattenConfigEntries(item, prefix ? `${prefix}.${index}` : `${index}`),
+            flattenConfigEntries(
+                item,
+                prefix ? `${prefix}.${index}` : `${index}`,
+            ),
         );
     }
 
@@ -230,7 +233,10 @@ export function flattenConfigEntries(
         {
             key: prefix || '(root)',
             value: formatConfigValue(value),
-            type: value === null ? 'null' : (typeof value as FlattenedConfigEntry['type']),
+            type:
+                value === null
+                    ? 'null'
+                    : (typeof value as FlattenedConfigEntry['type']),
             masked: value === '********',
         },
     ];
@@ -260,12 +266,9 @@ export function formatConfigValue(value: LaravelConfigValue): string {
     return JSON.stringify(value);
 }
 
-export function logBadgeVariant(color: string):
-    | 'danger'
-    | 'warning'
-    | 'info'
-    | 'secondary'
-    | 'outline' {
+export function logBadgeVariant(
+    color: string,
+): 'danger' | 'warning' | 'info' | 'secondary' | 'outline' {
     if (color === 'danger') {
         return 'danger';
     }

@@ -21,7 +21,9 @@ export function escapeHtml(text) {
  * Generate unique widget ID
  */
 export function generateWidgetId() {
-    return 'widget-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6);
+    return (
+        'widget-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6)
+    );
 }
 
 /**
@@ -128,7 +130,10 @@ export function validateWidgetSettings(type, settings) {
         const value = settings[fieldName];
 
         // Check required fields
-        if (fieldConfig.required && (!value || (typeof value === 'string' && value.trim() === ''))) {
+        if (
+            fieldConfig.required &&
+            (!value || (typeof value === 'string' && value.trim() === ''))
+        ) {
             errors.push(`${fieldConfig.label || fieldName} is required`);
             continue;
         }
@@ -142,47 +147,71 @@ export function validateWidgetSettings(type, settings) {
         switch (fieldConfig.type) {
             case 'text':
                 if (typeof value !== 'string') {
-                    errors.push(`${fieldConfig.label || fieldName} must be text`);
+                    errors.push(
+                        `${fieldConfig.label || fieldName} must be text`,
+                    );
                 } else if (value.length > 255) {
-                    errors.push(`${fieldConfig.label || fieldName} cannot exceed 255 characters`);
+                    errors.push(
+                        `${fieldConfig.label || fieldName} cannot exceed 255 characters`,
+                    );
                 }
                 break;
 
             case 'textarea':
                 if (typeof value !== 'string') {
-                    errors.push(`${fieldConfig.label || fieldName} must be text`);
+                    errors.push(
+                        `${fieldConfig.label || fieldName} must be text`,
+                    );
                 } else if (value.length > 5000) {
-                    errors.push(`${fieldConfig.label || fieldName} cannot exceed 5000 characters`);
+                    errors.push(
+                        `${fieldConfig.label || fieldName} cannot exceed 5000 characters`,
+                    );
                 }
                 break;
 
             case 'url':
                 if (typeof value !== 'string') {
-                    errors.push(`${fieldConfig.label || fieldName} must be a valid URL`);
+                    errors.push(
+                        `${fieldConfig.label || fieldName} must be a valid URL`,
+                    );
                 } else {
                     try {
                         new URL(value);
                     } catch {
-                        errors.push(`${fieldConfig.label || fieldName} must be a valid URL`);
+                        errors.push(
+                            `${fieldConfig.label || fieldName} must be a valid URL`,
+                        );
                     }
                 }
                 break;
 
             case 'color':
-                if (typeof value !== 'string' || !/^#[0-9A-F]{6}$/i.test(value)) {
-                    errors.push(`${fieldConfig.label || fieldName} must be a valid color`);
+                if (
+                    typeof value !== 'string' ||
+                    !/^#[0-9A-F]{6}$/i.test(value)
+                ) {
+                    errors.push(
+                        `${fieldConfig.label || fieldName} must be a valid color`,
+                    );
                 }
                 break;
 
             case 'select':
-                if (fieldConfig.options && !fieldConfig.options.hasOwnProperty(value)) {
-                    errors.push(`${fieldConfig.label || fieldName} has an invalid value`);
+                if (
+                    fieldConfig.options &&
+                    !fieldConfig.options.hasOwnProperty(value)
+                ) {
+                    errors.push(
+                        `${fieldConfig.label || fieldName} has an invalid value`,
+                    );
                 }
                 break;
 
             case 'checkbox':
                 if (typeof value !== 'boolean') {
-                    errors.push(`${fieldConfig.label || fieldName} must be true or false`);
+                    errors.push(
+                        `${fieldConfig.label || fieldName} must be true or false`,
+                    );
                 }
                 break;
         }
@@ -205,7 +234,9 @@ export function getDefaultSettings(type) {
     }
 
     const defaults = {};
-    for (const [fieldName, fieldConfig] of Object.entries(widgetInfo.settings_schema)) {
+    for (const [fieldName, fieldConfig] of Object.entries(
+        widgetInfo.settings_schema,
+    )) {
         if (fieldConfig.default !== undefined) {
             defaults[fieldName] = fieldConfig.default;
         }

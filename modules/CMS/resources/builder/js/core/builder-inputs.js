@@ -1,4 +1,5 @@
-const __ASTERO_INPUTS_ROOT__ = typeof globalThis !== 'undefined' ? globalThis : window;
+const __ASTERO_INPUTS_ROOT__ =
+    typeof globalThis !== 'undefined' ? globalThis : window;
 const tmpl = __ASTERO_INPUTS_ROOT__.tmpl;
 const generateElements = window.generateElements;
 
@@ -8,7 +9,11 @@ let Input = {
     onChange: function (event, node, input) {
         if (event && event.target) {
             const e = new CustomEvent('propertyChange', {
-                detail: { value: input.value ?? this.value, input: this, origEvent: event },
+                detail: {
+                    value: input.value ?? this.value,
+                    input: this,
+                    origEvent: event,
+                },
             });
             event.currentTarget.dispatchEvent(e);
         }
@@ -46,7 +51,7 @@ let Input = {
                             //target, event, element, input
                             return fun.call(event.target, event, target, this);
                         }
-                    }.bind(this, ev, el, fun, this.element[0])
+                    }.bind(this, ev, el, fun, this.element[0]),
                 );
             }
 
@@ -185,7 +190,7 @@ let HtmlListSelectInput = {
                 new KeyboardEvent('keyup', {
                     bubbles: true,
                     cancelable: true,
-                })
+                }),
             );
         },
 
@@ -239,7 +244,11 @@ let HtmlListSelectInput = {
                     })
                     .catch((error) => {
                         console.log(error.statusText);
-                        displayToast('bg-danger', 'Error', 'Error loading list');
+                        displayToast(
+                            'bg-danger',
+                            'Error',
+                            'Error loading list',
+                        );
                     });
             }
         },
@@ -295,8 +304,10 @@ let RangeInput = {
         events: [['change', 'onRangeChange', 'input']],
 
         onRangeChange: function (event, node, input) {
-            this.parentNode.querySelector('input[type=number]').value = this.value;
-            this.parentNode.querySelector('input[type=range]').value = this.value;
+            this.parentNode.querySelector('input[type=number]').value =
+                this.value;
+            this.parentNode.querySelector('input[type=range]').value =
+                this.value;
             return input.onChange.call(this, event, node, input);
         },
 
@@ -384,14 +395,22 @@ let ColorInput = {
             if (value) {
                 value = value.trim();
 
-                const rgb = value.match(/^rgba?[\s+]?\([\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?/i);
+                const rgb = value.match(
+                    /^rgba?[\s+]?\([\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?/i,
+                );
 
                 if (rgb) {
                     return rgb && rgb.length === 4
                         ? '#' +
-                              ('0' + parseInt(rgb[1], 10).toString(16)).slice(-2) +
-                              ('0' + parseInt(rgb[2], 10).toString(16)).slice(-2) +
-                              ('0' + parseInt(rgb[3], 10).toString(16)).slice(-2)
+                              ('0' + parseInt(rgb[1], 10).toString(16)).slice(
+                                  -2,
+                              ) +
+                              ('0' + parseInt(rgb[2], 10).toString(16)).slice(
+                                  -2,
+                              ) +
+                              ('0' + parseInt(rgb[3], 10).toString(16)).slice(
+                                  -2,
+                              )
                         : rgb;
                 }
             }
@@ -423,7 +442,8 @@ let ColorInput = {
 };
 
 // Expose inputs needed by plugin modules.
-(typeof globalThis !== 'undefined' ? globalThis : window).ColorInput = ColorInput;
+(typeof globalThis !== 'undefined' ? globalThis : window).ColorInput =
+    ColorInput;
 
 let VideoInput = {
     ...TextInput,
@@ -446,8 +466,13 @@ let ImageInput = {
 
         setValue: function (value) {
             //don't set blob value to avoid slowing down the page
-            if (this.element?.[0] && value && value.indexOf('data:image') == -1) {
-                const input = this.element[0].querySelector('input[type="text"]');
+            if (
+                this.element?.[0] &&
+                value &&
+                value.indexOf('data:image') == -1
+            ) {
+                const input =
+                    this.element[0].querySelector('input[type="text"]');
                 if (input) {
                     input.value = value;
                 }
@@ -487,7 +512,8 @@ let ImageInput = {
                         input.value = data;
                         input.onChange.call(this, event, node, input);
 
-                        const textInput = node?.querySelector('input[type="text"]');
+                        const textInput =
+                            node?.querySelector('input[type="text"]');
                         if (textInput) {
                             textInput.value = data;
                         }
@@ -507,7 +533,8 @@ let ImageInput = {
 };
 
 // Expose inputs needed by plugin modules.
-(typeof globalThis !== 'undefined' ? globalThis : window).ImageInput = ImageInput;
+(typeof globalThis !== 'undefined' ? globalThis : window).ImageInput =
+    ImageInput;
 
 let FileUploadInput = {
     ...TextInput,
@@ -582,7 +609,9 @@ let ToggleInput = {
         events: [['change', 'onToggleChange', 'input']],
 
         onToggleChange: function (event, node, input) {
-            input.value = this.checked ? this.getAttribute('data-value-on') : this.getAttribute('data-value-off');
+            input.value = this.checked
+                ? this.getAttribute('data-value-on')
+                : this.getAttribute('data-value-off');
             return input.onChange.call(this, event, node, input);
         },
 
@@ -734,15 +763,20 @@ let ListInput = {
 
         remove: function (event, node, input) {
             let sectionItem = this.closest('.section-item');
-            let index = [...sectionItem.parentNode.children].indexOf(sectionItem); //sectionItem.index();
+            let index = [...sectionItem.parentNode.children].indexOf(
+                sectionItem,
+            ); //sectionItem.index();
             let data = input.data;
 
             if (data.removeElement) {
                 let container = input.node;
                 if (data.container) {
-                    container = container.querySelector(data.container) || container;
+                    container =
+                        container.querySelector(data.container) || container;
                 }
-                const target = container?.querySelector(data.selector + ':nth-child(' + (index + 1) + ')');
+                const target = container?.querySelector(
+                    data.selector + ':nth-child(' + (index + 1) + ')',
+                );
                 target?.remove();
             }
             sectionItem.remove();
@@ -760,7 +794,8 @@ let ListInput = {
             if (newElement) {
                 let container = input.node;
                 if (data.container) {
-                    container = container.querySelector(data.container) || container;
+                    container =
+                        container.querySelector(data.container) || container;
                 }
                 if (container) {
                     container.append(generateElements(newElement)[0]);
@@ -775,7 +810,9 @@ let ListInput = {
         select: function (event, node, input) {
             let sectionItem = this.closest('.section-item');
             if (sectionItem.parentNode) {
-                let index = [...sectionItem.parentNode.children].indexOf(sectionItem); //sectionItem.index();
+                let index = [...sectionItem.parentNode.children].indexOf(
+                    sectionItem,
+                ); //sectionItem.index();
 
                 event.action = 'select';
                 event.index = index;
@@ -791,7 +828,9 @@ let ListInput = {
             this.selector = data.selector;
             this.node = node;
 
-            let elements = this.node.querySelectorAll(data.container + ' ' + this.selector);
+            let elements = this.node.querySelectorAll(
+                data.container + ' ' + this.selector,
+            );
             let options = [];
 
             elements.forEach(function (e, i) {
@@ -801,7 +840,9 @@ let ListInput = {
                 }
                 let nameSource = element?.textContent || '';
                 let useText = data.name === 'text' || !data.name;
-                let name = useText ? nameSource.substr(0, 15) : element?.id || '';
+                let name = useText
+                    ? nameSource.substr(0, 15)
+                    : element?.id || '';
                 options.push({
                     name: name,
                     type: (data.prefix ?? '') + (i + 1) + (data.suffix ?? ''),
@@ -898,7 +939,8 @@ let NoticeInput = {
 };
 
 // Expose input types for legacy plugins and cross-module access.
-const __ASTERO_INPUTS_GLOBAL__ = typeof globalThis !== 'undefined' ? globalThis : window;
+const __ASTERO_INPUTS_GLOBAL__ =
+    typeof globalThis !== 'undefined' ? globalThis : window;
 Object.assign(__ASTERO_INPUTS_GLOBAL__, {
     Input,
     TextInput,

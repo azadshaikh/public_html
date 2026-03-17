@@ -86,7 +86,7 @@ export function MediaPickerUploadTab({
                     isDragOver
                         ? 'border-primary bg-primary/5'
                         : 'border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/50',
-                    isUploading && 'opacity-50 pointer-events-none',
+                    isUploading && 'pointer-events-none opacity-50',
                 )}
             >
                 <UploadCloudIcon
@@ -125,7 +125,10 @@ export function MediaPickerUploadTab({
                     {/* Thumbnail Grid */}
                     <div className="flex flex-wrap gap-3">
                         {stagedFiles.map((f) => (
-                            <div key={f.id} className="group relative w-24 shrink-0">
+                            <div
+                                key={f.id}
+                                className="group relative w-24 shrink-0"
+                            >
                                 {/* Remove button */}
                                 <button
                                     type="button"
@@ -173,13 +176,18 @@ export function MediaPickerUploadTab({
                     <div className="mt-4 flex items-center justify-between border-t pt-4">
                         <p className="text-sm font-medium text-foreground">
                             {stagedFiles.length} file
-                            {stagedFiles.length !== 1 ? 's' : ''} ready to upload
+                            {stagedFiles.length !== 1 ? 's' : ''} ready to
+                            upload
                             <span className="ml-1.5 text-muted-foreground">
                                 {formatSize(totalStagedSize)}
                             </span>
                         </p>
                         <div className="flex items-center gap-2">
-                            <Button variant="outline" size="sm" onClick={clearAllStaged}>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={clearAllStaged}
+                            >
                                 <Trash2Icon className="mr-1.5 size-3.5" />
                                 Clear
                             </Button>
@@ -210,8 +218,12 @@ export function MediaPickerUploadTab({
                             )}
                             <div className="flex items-center gap-3">
                                 <span className="text-muted-foreground">
-                                    {activeFiles.filter((f) => f.status === 'success').length} /{' '}
-                                    {activeFiles.length} complete
+                                    {
+                                        activeFiles.filter(
+                                            (f) => f.status === 'success',
+                                        ).length
+                                    }{' '}
+                                    / {activeFiles.length} complete
                                 </span>
                                 {!isUploading && activeFiles.length > 0 && (
                                     <Button
@@ -239,21 +251,25 @@ export function MediaPickerUploadTab({
                                     className={cn(
                                         'flex items-center gap-3 rounded-lg border p-2.5',
                                         uf.status === 'success' &&
-                                        'border-green-200 bg-green-50/50 dark:border-green-900 dark:bg-green-950/30',
+                                            'border-green-200 bg-green-50/50 dark:border-green-900 dark:bg-green-950/30',
                                         uf.status === 'error' &&
-                                        'border-destructive/30 bg-destructive/5',
+                                            'border-destructive/30 bg-destructive/5',
                                     )}
                                 >
                                     {/* Preview */}
                                     <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded bg-muted">
-                                        {uf.type.startsWith('image/') && uf.previewUrl ? (
+                                        {uf.type.startsWith('image/') &&
+                                        uf.previewUrl ? (
                                             <img
                                                 src={uf.previewUrl}
                                                 alt={uf.name}
                                                 className="size-10 object-cover"
                                             />
                                         ) : (
-                                            getFileTypeIcon(uf.type, 'size-5 text-muted-foreground')
+                                            getFileTypeIcon(
+                                                uf.type,
+                                                'size-5 text-muted-foreground',
+                                            )
                                         )}
                                     </div>
 
@@ -271,7 +287,9 @@ export function MediaPickerUploadTab({
                                             <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-muted">
                                                 <div
                                                     className="h-full bg-primary transition-all duration-300"
-                                                    style={{ width: `${uf.progress}%` }}
+                                                    style={{
+                                                        width: `${uf.progress}%`,
+                                                    }}
                                                 />
                                             </div>
                                         )}
@@ -306,7 +324,9 @@ export function MediaPickerUploadTab({
                                                 }}
                                             >
                                                 <XIcon />
-                                                <span className="sr-only">Remove</span>
+                                                <span className="sr-only">
+                                                    Remove
+                                                </span>
                                             </Button>
                                         )}
                                     </div>

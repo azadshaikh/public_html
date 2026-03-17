@@ -166,12 +166,12 @@
     }
 
     /* Prevent scroll container from auto-scrolling when children change */
-    [data-sidebar="content"] {
+    [data-sidebar='content'] {
         overflow-anchor: none;
     }
 
     /* Re-enable anchor for children so scroll position is maintained correctly */
-    [data-sidebar="content"] * {
+    [data-sidebar='content'] * {
         overflow-anchor: none;
     }
 }

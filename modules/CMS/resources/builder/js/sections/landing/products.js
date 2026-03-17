@@ -1,6 +1,8 @@
 Astero.Sections.add('products/products-1', {
     name: 'Products 1',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/products/products-1-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/products/products-1-thumb.jpeg',
     html: `<section class="products-1" title="latest-products-1">
   <div class="container">
     <div class="row">

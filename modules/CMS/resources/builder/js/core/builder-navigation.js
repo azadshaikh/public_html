@@ -11,15 +11,26 @@ function getNodeTree(node, parent, allowedComponents, idToNode = {}) {
 
                 let element;
                 let matchChild;
-                if (child && child['attributes'] != undefined && (matchChild = Astero.Components.matchNode(child))) {
-                    if (Array.isArray(allowedComponents) && allowedComponents.indexOf(matchChild.type) == -1) {
+                if (
+                    child &&
+                    child['attributes'] != undefined &&
+                    (matchChild = Astero.Components.matchNode(child))
+                ) {
+                    if (
+                        Array.isArray(allowedComponents) &&
+                        allowedComponents.indexOf(matchChild.type) == -1
+                    ) {
                         element = getNodeTreeTraverse(child, parent);
                         continue;
                     }
 
                     let title = '';
                     //if (matchChild.type === "elements/section") {
-                    title = child.id ? child.id : child.title ? child.title : (child.ariaLabel ?? '');
+                    title = child.id
+                        ? child.id
+                        : child.title
+                          ? child.title
+                          : (child.ariaLabel ?? '');
                     //}
 
                     element = {
@@ -36,7 +47,11 @@ function getNodeTree(node, parent, allowedComponents, idToNode = {}) {
                     parent.push(element);
                     idToNode[id + '-' + j] = child;
 
-                    element = getNodeTreeTraverse(child, element.children, id + '-' + j);
+                    element = getNodeTreeTraverse(
+                        child,
+                        element.children,
+                        id + '-' + j,
+                    );
                 } else {
                     element = getNodeTreeTraverse(child, parent, id + '-' + j);
                 }
@@ -66,7 +81,9 @@ function drawComponentsTree(tree) {
                 id = prefix + '-' + j + '-' + i;
             }
 
-            let title = node.title ? friendlyName(node.title.substr(0, 21)) : '';
+            let title = node.title
+                ? friendlyName(node.title.substr(0, 21))
+                : '';
             if (title) {
                 title = ` - <span class="text-secondary">${title}</span>`;
             }
@@ -91,7 +108,7 @@ function drawComponentsTree(tree) {
                                 <input type="checkbox" id="id' +
                         id +
                         '">\
-                            </li>'
+                            </li>',
                 )[0];
                 li.append(drawComponentsTreeTraverse(node.children));
             } else {
@@ -114,7 +131,7 @@ function drawComponentsTree(tree) {
                             <input type="checkbox" id="id' +
                         id +
                         '">\
-                            </li>'
+                            </li>',
                 )[0];
             }
 
@@ -153,7 +170,11 @@ Astero.SectionList = {
             if (element) {
                 let node = element._node;
                 if (node) {
-                    node.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+                    node.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'center',
+                        inline: 'center',
+                    });
                     Astero.Builder.selectNode(node);
                     Astero.Builder.loadNodeComponent(node);
                 }
@@ -173,7 +194,11 @@ Astero.SectionList = {
             if (element) {
                 let node = element.parentNode._node;
                 if (node) {
-                    node.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+                    node.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'center',
+                        inline: 'center',
+                    });
                     node.click();
                 }
             }
@@ -195,7 +220,8 @@ Astero.SectionList = {
                 const node = element.parentNode._node;
                 if (node && node.style) {
                     node.style.outline = '';
-                    if (node.getAttribute('style') === '') node.removeAttribute('style');
+                    if (node.getAttribute('style') === '')
+                        node.removeAttribute('style');
                 }
             }
         });
@@ -208,9 +234,15 @@ Astero.SectionList = {
 
                 // Check if the element to be deleted is within an enabled area
                 if (!node.closest('[data-astero-enabled]')) {
-                    console.warn('Cannot delete: element is outside enabled area');
+                    console.warn(
+                        'Cannot delete: element is outside enabled area',
+                    );
                     if (typeof displayToast !== 'undefined') {
-                        displayToast('bg-warning', 'Cannot Delete', 'Cannot delete elements outside enabled areas.');
+                        displayToast(
+                            'bg-warning',
+                            'Cannot Delete',
+                            'Cannot delete elements outside enabled areas.',
+                        );
                     } else {
                         alert('Cannot delete: element is outside enabled area');
                     }
@@ -221,15 +253,19 @@ Astero.SectionList = {
 
                 // Prevent deletion of elements with data-astero-enabled attribute
                 if (node.hasAttribute('data-astero-enabled')) {
-                    console.warn('Cannot delete: this element is an editable container and cannot be removed');
+                    console.warn(
+                        'Cannot delete: this element is an editable container and cannot be removed',
+                    );
                     if (typeof displayToast !== 'undefined') {
                         displayToast(
                             'bg-warning',
                             'Cannot Delete',
-                            'Cannot delete editable containers. This would break the editing functionality.'
+                            'Cannot delete editable containers. This would break the editing functionality.',
                         );
                     } else {
-                        alert('Cannot delete: this element is an editable container and cannot be removed');
+                        alert(
+                            'Cannot delete: this element is an editable container and cannot be removed',
+                        );
                     }
                     e.stopPropagation();
                     e.preventDefault();
@@ -285,7 +321,7 @@ Astero.SectionList = {
                     }
                 }
             },
-            true
+            true,
         ); // Use capture phase to ensure we catch the event
 
         // Hide preview on mouseleave from the entire sections list
@@ -347,7 +383,7 @@ Astero.SectionList = {
                     }, 150);
                 }
             },
-            true
+            true,
         );
 
         // Move section up
@@ -369,7 +405,11 @@ Astero.SectionList = {
                 Astero.TreeList.loadComponents();
 
                 // Scroll to the moved section in the canvas
-                node.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+                node.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center',
+                    inline: 'center',
+                });
 
                 e.preventDefault();
                 e.stopPropagation();
@@ -395,7 +435,11 @@ Astero.SectionList = {
                 Astero.TreeList.loadComponents();
 
                 // Scroll to the moved section in the canvas
-                node.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+                node.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center',
+                    inline: 'center',
+                });
 
                 e.preventDefault();
                 e.stopPropagation();
@@ -421,19 +465,30 @@ Astero.SectionList = {
                         if (category) {
                             const cacheKey = 'section:' + category;
                             let list = Astero.Registry.cache?.[cacheKey] || [];
-                            block = list.find((b) => b.slug === slug || b.id === slug) || null;
+                            block =
+                                list.find(
+                                    (b) => b.slug === slug || b.id === slug,
+                                ) || null;
 
                             if (!block) {
-                                await Astero.Registry.loadCategory('section', category);
+                                await Astero.Registry.loadCategory(
+                                    'section',
+                                    category,
+                                );
                                 list = Astero.Registry.cache?.[cacheKey] || [];
-                                block = list.find((b) => b.slug === slug || b.id === slug) || null;
+                                block =
+                                    list.find(
+                                        (b) => b.slug === slug || b.id === slug,
+                                    ) || null;
                             }
                         }
 
                         // If still not found (no category / not cached), ask providers directly
                         if (!block) {
-                            const providers = Object.values(Astero.Registry.providers || {}).sort(
-                                (a, b) => (b.priority ?? 0) - (a.priority ?? 0)
+                            const providers = Object.values(
+                                Astero.Registry.providers || {},
+                            ).sort(
+                                (a, b) => (b.priority ?? 0) - (a.priority ?? 0),
                             );
                             for (const provider of providers) {
                                 block = await provider.getBlock?.(slug);
@@ -448,14 +503,24 @@ Astero.SectionList = {
                             html = await Astero.Registry.getBlockHtml(section);
                         }
                     } catch (err) {
-                        console.error('[Navigation] Failed to fetch section HTML:', err);
+                        console.error(
+                            '[Navigation] Failed to fetch section HTML:',
+                            err,
+                        );
                     }
                 }
 
                 if (!html) {
-                    console.warn('Cannot add section: no HTML available for', slug);
+                    console.warn(
+                        'Cannot add section: no HTML available for',
+                        slug,
+                    );
                     if (typeof displayToast !== 'undefined') {
-                        displayToast('bg-warning', 'Cannot Add Section', 'Section template not available.');
+                        displayToast(
+                            'bg-warning',
+                            'Cannot Add Section',
+                            'Section template not available.',
+                        );
                     }
                     e.preventDefault();
                     return;
@@ -465,19 +530,24 @@ Astero.SectionList = {
                 let sectionType = node.tagName.toLowerCase();
 
                 // Find the first editable area to add the section
-                let editableArea = Astero.Builder.frameBody.querySelector('[data-astero-enabled]');
-                if (!editableArea || editableArea.hasAttribute('data-astero-disabled')) {
+                let editableArea = Astero.Builder.frameBody.querySelector(
+                    '[data-astero-enabled]',
+                );
+                if (
+                    !editableArea ||
+                    editableArea.hasAttribute('data-astero-disabled')
+                ) {
                     // Show error message if no editable area found
                     console.warn('Cannot add section: no editable area found');
                     if (typeof displayToast !== 'undefined') {
                         displayToast(
                             'bg-warning',
                             'Cannot Add Section',
-                            "No editable area found. Add 'data-astero-enabled' attribute to a container element."
+                            "No editable area found. Add 'data-astero-enabled' attribute to a container element.",
                         );
                     } else {
                         alert(
-                            'Cannot add section: No editable area found. Add data-astero-enabled attribute to a container element.'
+                            'Cannot add section: No editable area found. Add data-astero-enabled attribute to a container element.',
                         );
                     }
                     e.preventDefault();
@@ -485,7 +555,9 @@ Astero.SectionList = {
                 }
 
                 // Add the section to the editable area instead of directly to body
-                let afterSection = editableArea.querySelector(':scope > ' + sectionType + ':last-of-type');
+                let afterSection = editableArea.querySelector(
+                    ':scope > ' + sectionType + ':last-of-type',
+                );
 
                 if (afterSection) {
                     afterSection.after(node);
@@ -493,7 +565,7 @@ Astero.SectionList = {
                     // For sections like nav/header, try to maintain proper order within the editable area
                     if (sectionType == 'nav') {
                         let existingNav = editableArea.querySelector(
-                            ':scope > nav:first, :scope > header:last-of-type'
+                            ':scope > nav:first, :scope > header:last-of-type',
                         );
                         if (existingNav) {
                             existingNav.before(node);
@@ -501,7 +573,9 @@ Astero.SectionList = {
                             editableArea.prepend(node);
                         }
                     } else if (sectionType != 'footer') {
-                        let footer = editableArea.querySelector(':scope > footer:last-of-type');
+                        let footer = editableArea.querySelector(
+                            ':scope > footer:last-of-type',
+                        );
                         if (footer) {
                             footer.before(node);
                         } else {
@@ -533,159 +607,221 @@ Astero.SectionList = {
                 self.loadSections();
                 Astero.TreeList.loadComponents();
                 Astero.TreeList.selectComponent(node);
-                node.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+                node.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center',
+                    inline: 'center',
+                });
 
                 e.preventDefault();
             }
         });
 
         // Click handler for blocks list add button
-        document.querySelector('.blocks-list')?.addEventListener('click', async function (e) {
-            let element = e.target.closest('.add-section-btn');
-            if (element) {
-                let item = element.closest('li');
-                const slug = item.dataset.type;
-                const category = item.dataset.section;
+        document
+            .querySelector('.blocks-list')
+            ?.addEventListener('click', async function (e) {
+                let element = e.target.closest('.add-section-btn');
+                if (element) {
+                    let item = element.closest('li');
+                    const slug = item.dataset.type;
+                    const category = item.dataset.section;
 
-                // Prefer Registry (supports Theme/Database/Builtin). Fall back to legacy storage.
-                let block = Astero.Blocks.get(slug);
-                let html = block?.html;
+                    // Prefer Registry (supports Theme/Database/Builtin). Fall back to legacy storage.
+                    let block = Astero.Blocks.get(slug);
+                    let html = block?.html;
 
-                if ((!html || !block) && Astero.Registry) {
-                    try {
-                        let resolved = null;
-                        if (category) {
-                            const cacheKey = 'block:' + category;
-                            let list = Astero.Registry.cache?.[cacheKey] || [];
-                            resolved = list.find((b) => b.slug === slug || b.id === slug) || null;
+                    if ((!html || !block) && Astero.Registry) {
+                        try {
+                            let resolved = null;
+                            if (category) {
+                                const cacheKey = 'block:' + category;
+                                let list =
+                                    Astero.Registry.cache?.[cacheKey] || [];
+                                resolved =
+                                    list.find(
+                                        (b) => b.slug === slug || b.id === slug,
+                                    ) || null;
+
+                                if (!resolved) {
+                                    await Astero.Registry.loadCategory(
+                                        'block',
+                                        category,
+                                    );
+                                    list =
+                                        Astero.Registry.cache?.[cacheKey] || [];
+                                    resolved =
+                                        list.find(
+                                            (b) =>
+                                                b.slug === slug ||
+                                                b.id === slug,
+                                        ) || null;
+                                }
+                            }
 
                             if (!resolved) {
-                                await Astero.Registry.loadCategory('block', category);
-                                list = Astero.Registry.cache?.[cacheKey] || [];
-                                resolved = list.find((b) => b.slug === slug || b.id === slug) || null;
+                                const providers = Object.values(
+                                    Astero.Registry.providers || {},
+                                ).sort(
+                                    (a, b) =>
+                                        (b.priority ?? 0) - (a.priority ?? 0),
+                                );
+                                for (const provider of providers) {
+                                    resolved = await provider.getBlock?.(slug);
+                                    if (resolved) break;
+                                }
                             }
-                        }
 
-                        if (!resolved) {
-                            const providers = Object.values(Astero.Registry.providers || {}).sort(
-                                (a, b) => (b.priority ?? 0) - (a.priority ?? 0)
+                            if (resolved) {
+                                html =
+                                    await Astero.Registry.getBlockHtml(
+                                        resolved,
+                                    );
+                            } else if (block) {
+                                html =
+                                    await Astero.Registry.getBlockHtml(block);
+                            }
+                        } catch (err) {
+                            console.error(
+                                '[Navigation] Failed to fetch block HTML:',
+                                err,
                             );
-                            for (const provider of providers) {
-                                resolved = await provider.getBlock?.(slug);
-                                if (resolved) break;
-                            }
                         }
+                    }
 
-                        if (resolved) {
-                            html = await Astero.Registry.getBlockHtml(resolved);
-                        } else if (block) {
-                            html = await Astero.Registry.getBlockHtml(block);
+                    if (!html) {
+                        console.warn(
+                            'Cannot add block: no HTML available for',
+                            slug,
+                        );
+                        if (typeof displayToast !== 'undefined') {
+                            displayToast(
+                                'bg-warning',
+                                'Cannot Add Block',
+                                'Block template not available.',
+                            );
                         }
-                    } catch (err) {
-                        console.error('[Navigation] Failed to fetch block HTML:', err);
+                        e.preventDefault();
+                        return;
                     }
-                }
 
-                if (!html) {
-                    console.warn('Cannot add block: no HTML available for', slug);
-                    if (typeof displayToast !== 'undefined') {
-                        displayToast('bg-warning', 'Cannot Add Block', 'Block template not available.');
+                    let node = generateElements(html)[0];
+
+                    // Find the selected element or editable area to add the block
+                    let targetElement = Astero.Builder.selectedEl;
+                    if (!targetElement) {
+                        targetElement = Astero.Builder.frameBody.querySelector(
+                            '[data-astero-enabled]',
+                        );
                     }
+
+                    if (!targetElement) {
+                        console.warn(
+                            'Cannot add block: no target element found',
+                        );
+                        if (typeof displayToast !== 'undefined') {
+                            displayToast(
+                                'bg-warning',
+                                'Cannot Add Block',
+                                'Please select an element first.',
+                            );
+                        }
+                        e.preventDefault();
+                        return;
+                    }
+
+                    // Add block after the selected element or append to target
+                    if (Astero.Builder.selectedEl) {
+                        Astero.Builder.selectedEl.after(node);
+                    } else {
+                        targetElement.append(node);
+                    }
+
+                    Astero.Builder.selectNode(node);
+                    Astero.Builder.loadNodeComponent(node);
+
+                    Astero.Undo.addMutation({
+                        type: 'childList',
+                        target: node.parentNode,
+                        addedNodes: [node],
+                        nextSibling: node.nextSibling,
+                    });
+
+                    Astero.TreeList.loadComponents();
+                    Astero.TreeList.selectComponent(node);
+                    node.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'center',
+                        inline: 'center',
+                    });
+
                     e.preventDefault();
-                    return;
                 }
-
-                let node = generateElements(html)[0];
-
-                // Find the selected element or editable area to add the block
-                let targetElement = Astero.Builder.selectedEl;
-                if (!targetElement) {
-                    targetElement = Astero.Builder.frameBody.querySelector('[data-astero-enabled]');
-                }
-
-                if (!targetElement) {
-                    console.warn('Cannot add block: no target element found');
-                    if (typeof displayToast !== 'undefined') {
-                        displayToast('bg-warning', 'Cannot Add Block', 'Please select an element first.');
-                    }
-                    e.preventDefault();
-                    return;
-                }
-
-                // Add block after the selected element or append to target
-                if (Astero.Builder.selectedEl) {
-                    Astero.Builder.selectedEl.after(node);
-                } else {
-                    targetElement.append(node);
-                }
-
-                Astero.Builder.selectNode(node);
-                Astero.Builder.loadNodeComponent(node);
-
-                Astero.Undo.addMutation({
-                    type: 'childList',
-                    target: node.parentNode,
-                    addedNodes: [node],
-                    nextSibling: node.nextSibling,
-                });
-
-                Astero.TreeList.loadComponents();
-                Astero.TreeList.selectComponent(node);
-                node.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
-
-                e.preventDefault();
-            }
-        });
+            });
 
         // Click handler for components list add button
-        document.querySelector('.components-list')?.addEventListener('click', function (e) {
-            let element = e.target.closest('.add-section-btn');
-            if (element) {
-                let item = element.closest('li');
-                let component = Astero.Components.get(item.dataset.type);
-                if (!component || !component.html) return;
+        document
+            .querySelector('.components-list')
+            ?.addEventListener('click', function (e) {
+                let element = e.target.closest('.add-section-btn');
+                if (element) {
+                    let item = element.closest('li');
+                    let component = Astero.Components.get(item.dataset.type);
+                    if (!component || !component.html) return;
 
-                let node = generateElements(component.html)[0];
+                    let node = generateElements(component.html)[0];
 
-                // Find the selected element or editable area to add the component
-                let targetElement = Astero.Builder.selectedEl;
-                if (!targetElement) {
-                    targetElement = Astero.Builder.frameBody.querySelector('[data-astero-enabled]');
-                }
-
-                if (!targetElement) {
-                    console.warn('Cannot add component: no target element found');
-                    if (typeof displayToast !== 'undefined') {
-                        displayToast('bg-warning', 'Cannot Add Component', 'Please select an element first.');
+                    // Find the selected element or editable area to add the component
+                    let targetElement = Astero.Builder.selectedEl;
+                    if (!targetElement) {
+                        targetElement = Astero.Builder.frameBody.querySelector(
+                            '[data-astero-enabled]',
+                        );
                     }
+
+                    if (!targetElement) {
+                        console.warn(
+                            'Cannot add component: no target element found',
+                        );
+                        if (typeof displayToast !== 'undefined') {
+                            displayToast(
+                                'bg-warning',
+                                'Cannot Add Component',
+                                'Please select an element first.',
+                            );
+                        }
+                        e.preventDefault();
+                        return;
+                    }
+
+                    // Add component after the selected element or append to target
+                    if (Astero.Builder.selectedEl) {
+                        Astero.Builder.selectedEl.after(node);
+                    } else {
+                        targetElement.append(node);
+                    }
+
+                    Astero.Builder.selectNode(node);
+                    Astero.Builder.loadNodeComponent(node);
+
+                    Astero.Undo.addMutation({
+                        type: 'childList',
+                        target: node.parentNode,
+                        addedNodes: [node],
+                        nextSibling: node.nextSibling,
+                    });
+
+                    Astero.TreeList.loadComponents();
+                    Astero.TreeList.selectComponent(node);
+                    node.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'center',
+                        inline: 'center',
+                    });
+
                     e.preventDefault();
-                    return;
                 }
-
-                // Add component after the selected element or append to target
-                if (Astero.Builder.selectedEl) {
-                    Astero.Builder.selectedEl.after(node);
-                } else {
-                    targetElement.append(node);
-                }
-
-                Astero.Builder.selectNode(node);
-                Astero.Builder.loadNodeComponent(node);
-
-                Astero.Undo.addMutation({
-                    type: 'childList',
-                    target: node.parentNode,
-                    addedNodes: [node],
-                    nextSibling: node.nextSibling,
-                });
-
-                Astero.TreeList.loadComponents();
-                Astero.TreeList.selectComponent(node);
-                node.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
-
-                e.preventDefault();
-            }
-        });
+            });
 
         container.addEventListener('click', function (e) {
             let element = e.target.closest('.properties-btn');
@@ -693,7 +829,11 @@ Astero.SectionList = {
                 let section = element.closest('.section-item');
                 let node = section._node;
 
-                node.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+                node.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center',
+                    inline: 'center',
+                });
                 Astero.Builder.selectNode(node);
                 Astero.Builder.loadNodeComponent(node);
 
@@ -706,7 +846,9 @@ Astero.SectionList = {
     getSections: function () {
         let sections = [];
         // Query only within enabled areas
-        let enabledAreas = window.FrameDocument.body.querySelectorAll('[data-astero-enabled]');
+        let enabledAreas = window.FrameDocument.body.querySelectorAll(
+            '[data-astero-enabled]',
+        );
         let sectionListQuery = 'section, header, footer, main, nav';
         let sectionList = [];
 
@@ -716,7 +858,8 @@ Astero.SectionList = {
             });
         } else {
             // Fallback to the old behavior if no enabled areas are found, to avoid breaking pages without it.
-            sectionList = window.FrameDocument.body.querySelectorAll(sectionListQuery);
+            sectionList =
+                window.FrameDocument.body.querySelectorAll(sectionListQuery);
         }
 
         sectionList.forEach(function (node, i) {
@@ -750,7 +893,11 @@ Astero.SectionList = {
             // Final fallback: element type + index
             if (!name) {
                 let type = node.tagName.toLowerCase();
-                name = type.charAt(0).toUpperCase() + type.slice(1) + ' ' + (i + 1);
+                name =
+                    type.charAt(0).toUpperCase() +
+                    type.slice(1) +
+                    ' ' +
+                    (i + 1);
             }
 
             let section = {
@@ -765,7 +912,11 @@ Astero.SectionList = {
         return sections;
     },
 
-    loadComponents: function (sectionListItem, section, allowedComponents = {}) {
+    loadComponents: function (
+        sectionListItem,
+        section,
+        allowedComponents = {},
+    ) {
         let tree = [];
         getNodeTree(section, tree, allowedComponents);
 
@@ -820,10 +971,13 @@ Astero.TreeList = {
                 if (e.which == 1) {
                     //left click
                     isDown = true;
-                    offset = [self.container.offsetLeft - e.clientX, self.container.offsetTop - e.clientY];
+                    offset = [
+                        self.container.offsetLeft - e.clientX,
+                        self.container.offsetTop - e.clientY,
+                    ];
                 }
             },
-            true
+            true,
         );
 
         document.addEventListener(
@@ -831,7 +985,7 @@ Astero.TreeList = {
             function () {
                 isDown = false;
             },
-            true
+            true,
         );
 
         document.addEventListener('mousemove', function (event) {
@@ -840,40 +994,56 @@ Astero.TreeList = {
                 let left = Math.max(event.clientX + offset[0], 0);
                 let top = Math.max(event.clientY + offset[1], 0);
 
-                if (left >= 0 && left < window.innerWidth - self.container.clientWidth)
+                if (
+                    left >= 0 &&
+                    left < window.innerWidth - self.container.clientWidth
+                )
                     self.container.style.left = left + 'px';
-                if (top >= 0 && top < window.innerHeight - self.container.clientHeight)
+                if (
+                    top >= 0 &&
+                    top < window.innerHeight - self.container.clientHeight
+                )
                     self.container.style.top = top + 'px';
             }
         });
 
-        document.querySelector(this.selector)?.addEventListener('click', function (e) {
-            let element = e.target.closest('li[data-component]');
-            if (element) {
-                const node = element._treeNode;
-                node.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
-                //node.click();
-                Astero.Builder.selectNode(node);
-                Astero.Builder.loadNodeComponent(node);
+        document
+            .querySelector(this.selector)
+            ?.addEventListener('click', function (e) {
+                let element = e.target.closest('li[data-component]');
+                if (element) {
+                    const node = element._treeNode;
+                    node.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'center',
+                        inline: 'center',
+                    });
+                    //node.click();
+                    Astero.Builder.selectNode(node);
+                    Astero.Builder.loadNodeComponent(node);
 
-                document.querySelector(self.selector + ' .active')?.classList.remove('active');
-                element.querySelector('label').classList.add('active');
-            }
-        });
+                    document
+                        .querySelector(self.selector + ' .active')
+                        ?.classList.remove('active');
+                    element.querySelector('label').classList.add('active');
+                }
+            });
 
-        document.querySelector(this.selector)?.addEventListener('mousemove', function (e) {
-            let element = e.target.closest('li[data-component]');
-            if (element) {
-                const node = element._treeNode;
+        document
+            .querySelector(this.selector)
+            ?.addEventListener('mousemove', function (e) {
+                let element = e.target.closest('li[data-component]');
+                if (element) {
+                    const node = element._treeNode;
 
-                node.dispatchEvent(
-                    new MouseEvent('mousemove', {
-                        bubbles: true,
-                        cancelable: true,
-                    })
-                );
-            }
-        });
+                    node.dispatchEvent(
+                        new MouseEvent('mousemove', {
+                            bubbles: true,
+                            cancelable: true,
+                        }),
+                    );
+                }
+            });
     },
 
     selectComponent: function (node) {
@@ -891,7 +1061,9 @@ Astero.TreeList = {
 
             this.container.querySelector('.active')?.classList.remove('active');
             //collapse all
-            let checkboxes = this.container.querySelectorAll('input[type=checkbox]:checked');
+            let checkboxes = this.container.querySelectorAll(
+                'input[type=checkbox]:checked',
+            );
             for (let i = 0, len = checkboxes.length; i < len; i++) {
                 checkboxes[i].checked = false;
                 let label = checkboxes[i].labels[0];
@@ -907,14 +1079,22 @@ Astero.TreeList = {
                 while ((parent = current.closest('li'))) {
                     current = parent.parentNode;
                     let input = parent.querySelector('input');
-                    if (input && input.hasAttribute('type') && input.type == 'checkbox') {
+                    if (
+                        input &&
+                        input.hasAttribute('type') &&
+                        input.type == 'checkbox'
+                    ) {
                         input.checked = true;
                     }
                 }
 
                 element.checked = true;
                 element.labels[0].classList.add('active');
-                element.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+                element.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center',
+                    inline: 'center',
+                });
             }
         }
 
@@ -928,7 +1108,9 @@ Astero.TreeList = {
         this.tree = [];
         this.idToNode = {};
 
-        const enabledAreas = window.FrameDocument.body.querySelectorAll('[data-astero-enabled]');
+        const enabledAreas = window.FrameDocument.body.querySelectorAll(
+            '[data-astero-enabled]',
+        );
 
         if (enabledAreas.length > 0) {
             enabledAreas.forEach((area) => {
@@ -936,7 +1118,12 @@ Astero.TreeList = {
             });
         } else {
             // Fallback to scanning the whole body if no enabled areas are found
-            getNodeTree(window.FrameDocument.body, this.tree, {}, this.idToNode);
+            getNodeTree(
+                window.FrameDocument.body,
+                this.tree,
+                {},
+                this.idToNode,
+            );
         }
 
         let ol = drawComponentsTree(this.tree);
@@ -950,7 +1137,9 @@ Astero.Breadcrumb = {
     tree: false,
 
     init: function () {
-        this.tree = document.querySelector('.breadcrumb-navigator > .breadcrumb');
+        this.tree = document.querySelector(
+            '.breadcrumb-navigator > .breadcrumb',
+        );
         if (!this.tree) return;
         this.tree.replaceChildren();
 
@@ -962,7 +1151,11 @@ Astero.Breadcrumb = {
                     //node.click();
                     Astero.Builder.selectNode(node);
                     Astero.Builder.loadNodeComponent(node);
-                    node.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+                    node.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'center',
+                        inline: 'center',
+                    });
                 }
 
                 e.preventDefault();
@@ -982,14 +1175,16 @@ Astero.Breadcrumb = {
                     new MouseEvent('mousemove', {
                         bubbles: true,
                         cancelable: true,
-                    })
+                    }),
                 );
             }
         });
     },
 
     addElement: function (data, element) {
-        let li = generateElements(tmpl('astero-breadcrumb-navigaton-item', data))[0];
+        let li = generateElements(
+            tmpl('astero-breadcrumb-navigaton-item', data),
+        )[0];
         li._node = element;
         this.tree.prepend(li);
     },
@@ -1007,12 +1202,16 @@ Astero.Breadcrumb = {
                     name: el + ' ' + elementType[0],
                     className: 'el-' + el,
                 },
-                currentElement
+                currentElement,
             );
 
             // Stop if we hit the editable container or body/html
             if (currentElement.hasAttribute('data-astero-enabled')) break;
-            if (currentElement.tagName === 'BODY' || currentElement.tagName === 'HTML') break;
+            if (
+                currentElement.tagName === 'BODY' ||
+                currentElement.tagName === 'HTML'
+            )
+                break;
 
             currentElement = currentElement.parentElement;
         }

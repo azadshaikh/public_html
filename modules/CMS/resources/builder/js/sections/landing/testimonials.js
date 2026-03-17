@@ -1,6 +1,8 @@
 Astero.Sections.add('testimonials/testimonials-1', {
     name: 'Testimonials 1',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/testimonials/testimonials-1-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/testimonials/testimonials-1-thumb.jpeg',
     html: `<section class="testimonials-1 bg-alternate" title="testimonials-1">
   <div class="container">
     <div class="row justify-content-center mb-4">
@@ -95,7 +97,9 @@ Astero.Sections.add('testimonials/testimonials-1', {
 });
 Astero.Sections.add('testimonials/testimonials-2', {
     name: 'Testimonials 2',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/testimonials/testimonials-2-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/testimonials/testimonials-2-thumb.jpeg',
     html: `<section class="py-5" title="testimonials-2">
   <div class="container">
     <div class="row justify-content-center mb-4">
@@ -227,7 +231,9 @@ Astero.Sections.add('testimonials/testimonials-2', {
 });
 Astero.Sections.add('testimonials/testimonials-3', {
     name: 'Testimonials 3',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/testimonials/testimonials-3-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/testimonials/testimonials-3-thumb.jpeg',
     html: `<section class="py-5 team-2" title="testimonials-3">
   <div class="container">
     <div class="row justify-content-center mb-4">

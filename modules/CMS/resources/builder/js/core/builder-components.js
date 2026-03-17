@@ -25,13 +25,16 @@ Astero.Components = {
         let properties = this._components[type]['properties'];
         for (let property in properties) {
             if (key == properties[property]['key']) {
-                return (this._components[type]['properties'][property] = Object.assign(properties[property], value));
+                return (this._components[type]['properties'][property] =
+                    Object.assign(properties[property], value));
             }
         }
     },
 
     getProperty: function (type, key) {
-        let properties = this._components[type] ? this._components[type]['properties'] : [];
+        let properties = this._components[type]
+            ? this._components[type]['properties']
+            : [];
         for (let property in properties) {
             if (key == properties[property]['key']) {
                 return properties[property];
@@ -61,7 +64,10 @@ Astero.Components = {
                         this._attributesLookup[i] = {};
                     }
 
-                    if (typeof this._attributesLookup[i][data.attributes[i]] === 'undefined') {
+                    if (
+                        typeof this._attributesLookup[i][data.attributes[i]] ===
+                        'undefined'
+                    ) {
                         this._attributesLookup[i][data.attributes[i]] = {};
                     }
 
@@ -90,9 +96,9 @@ Astero.Components = {
 
         if ((inheritData = this._components[inheritType])) {
             newData = { ...inheritData, ...data };
-            newData.properties = (data.properties ? data.properties : []).concat(
-                inheritData.properties ? inheritData.properties : []
-            );
+            newData.properties = (
+                data.properties ? data.properties : []
+            ).concat(inheritData.properties ? inheritData.properties : []);
         }
 
         //sort by order
@@ -145,7 +151,8 @@ Astero.Components = {
                     const classes = value.split(' ');
 
                     for (const j in classes) {
-                        if (classes[j] in this._classesLookup) return this._classesLookup[classes[j]];
+                        if (classes[j] in this._classesLookup)
+                            return this._classesLookup[classes[j]];
                     }
 
                     for (const regex in this._classesRegexLookup) {
@@ -183,7 +190,7 @@ Astero.Components = {
             for (const item of el.querySelectorAll(
                 'label:not([data-header="default"]) + input,' +
                     'label:not([data-header="default"]),' +
-                    '.section:not([data-section="default"])'
+                    '.section:not([data-section="default"])',
             )) {
                 item.remove();
             }
@@ -194,10 +201,15 @@ Astero.Components = {
             return;
         }
 
-        let section = defaultPanel.querySelector('.section[data-section="default"]');
+        let section = defaultPanel.querySelector(
+            '.section[data-section="default"]',
+        );
 
         if (!(Astero.preservePropertySections && section)) {
-            let template = tmpl('astero-input-sectioninput', { key: 'default', header: component.name });
+            let template = tmpl('astero-input-sectioninput', {
+                key: 'default',
+                header: component.name,
+            });
 
             defaultPanel.replaceChildren();
             defaultPanel.append(generateElements(template)[0]);
@@ -205,13 +217,16 @@ Astero.Components = {
             section = defaultPanel.querySelector('.section');
         }
 
-        const defaultHeader = defaultPanel.querySelector('[data-header="default"] span');
+        const defaultHeader = defaultPanel.querySelector(
+            '[data-header="default"] span',
+        );
         if (defaultHeader) {
             defaultHeader.innerHTML = component.name;
         }
         section?.replaceChildren();
 
-        if (component.beforeInit) component.beforeInit(Astero.Builder.selectedEl);
+        if (component.beforeInit)
+            component.beforeInit(Astero.Builder.selectedEl);
 
         let element;
         let selectedElement;
@@ -235,11 +250,19 @@ Astero.Components = {
                     let oldStyle = null;
                     let mutation = null;
 
-                    if (property.child) element = element.querySelector(property.child);
-                    if (property.parent && element) element = element.closest(property.parent);
+                    if (property.child)
+                        element = element.querySelector(property.child);
+                    if (property.parent && element)
+                        element = element.closest(property.parent);
 
                     if (property.onChange) {
-                        let ret = property.onChange(element, value, input, component, origEvent);
+                        let ret = property.onChange(
+                            element,
+                            value,
+                            input,
+                            component,
+                            origEvent,
+                        );
                         //if on change returns an object then is returning the dom node otherwise is returning the new value
                         if (typeof ret == 'object') {
                             element = ret;
@@ -250,21 +273,46 @@ Astero.Components = {
                     if (property.htmlAttr && element) {
                         oldValue = element.getAttribute(property.htmlAttr);
 
-                        if (property.htmlAttr == 'class' && property.validValues && element) {
+                        if (
+                            property.htmlAttr == 'class' &&
+                            property.validValues &&
+                            element
+                        ) {
                             if (property.validValues) {
-                                element.classList.remove(...property.validValues.filter((v) => v));
+                                element.classList.remove(
+                                    ...property.validValues.filter((v) => v),
+                                );
                             }
                             if (value) {
                                 element.classList.add(...value.split(' '));
                             }
                         } else if (property.htmlAttr == 'style' && element) {
                             //keep old style for undo
-                            oldStyle = window.FrameDocument.getElementById('pagebuilder-styles').textContent;
-                            element = Astero.StyleManager.setStyle(element, property.key, value);
-                        } else if (property.htmlAttr == 'innerHTML' && element) {
-                            element = Astero.ContentManager.setHtml(element, value);
-                        } else if (property.htmlAttr == 'innerText' && element) {
-                            element = Astero.ContentManager.setText(element, value);
+                            oldStyle =
+                                window.FrameDocument.getElementById(
+                                    'pagebuilder-styles',
+                                ).textContent;
+                            element = Astero.StyleManager.setStyle(
+                                element,
+                                property.key,
+                                value,
+                            );
+                        } else if (
+                            property.htmlAttr == 'innerHTML' &&
+                            element
+                        ) {
+                            element = Astero.ContentManager.setHtml(
+                                element,
+                                value,
+                            );
+                        } else if (
+                            property.htmlAttr == 'innerText' &&
+                            element
+                        ) {
+                            element = Astero.ContentManager.setText(
+                                element,
+                                value,
+                            );
                         } else if (element) {
                             //if value is empty then remove attribute useful for attributes without values like disabled
                             if (value) {
@@ -280,7 +328,10 @@ Astero.Components = {
                                 target: element,
                                 attributeName: property.htmlAttr,
                                 oldValue: oldStyle,
-                                newValue: window.FrameDocument.getElementById('pagebuilder-styles').textContent,
+                                newValue:
+                                    window.FrameDocument.getElementById(
+                                        'pagebuilder-styles',
+                                    ).textContent,
                             };
 
                             Astero.Undo.addMutation(mutation);
@@ -290,7 +341,9 @@ Astero.Components = {
                                 target: element,
                                 attributeName: property.htmlAttr,
                                 oldValue: oldValue,
-                                newValue: element.getAttribute(property.htmlAttr),
+                                newValue: element.getAttribute(
+                                    property.htmlAttr,
+                                ),
                             });
                         }
                     }
@@ -298,8 +351,20 @@ Astero.Components = {
                     if (component.onChange && element) {
                         const ret =
                             component.onChange.length >= 4
-                                ? component.onChange(element, property, value, input, origEvent)
-                                : component.onChange(element, value, input, component, origEvent);
+                                ? component.onChange(
+                                      element,
+                                      property,
+                                      value,
+                                      input,
+                                      origEvent,
+                                  )
+                                : component.onChange(
+                                      element,
+                                      value,
+                                      input,
+                                      component,
+                                      origEvent,
+                                  );
                         if (typeof ret !== 'undefined') {
                             element = ret;
                         }
@@ -326,8 +391,10 @@ Astero.Components = {
 
             if (property.beforeInit) property.beforeInit(element);
 
-            if (property.child) element = element.querySelector(property.child) ?? element;
-            if (property.parent) element = element.closest(property.parent) ?? element;
+            if (property.child)
+                element = element.querySelector(property.child) ?? element;
+            if (property.parent)
+                element = element.closest(property.parent) ?? element;
 
             if (property.data) {
                 property.data['key'] = property.key;
@@ -355,7 +422,11 @@ Astero.Components = {
                 }
 
                 //if attribute is class check if one of valid values is included as class to set the select
-                if (value && property.htmlAttr == 'class' && property.validValues) {
+                if (
+                    value &&
+                    property.htmlAttr == 'class' &&
+                    property.validValues
+                ) {
                     let valid = value.split(' ').filter(function (el) {
                         return property.validValues.indexOf(el) != -1;
                     });
@@ -387,20 +458,27 @@ Astero.Components = {
                 propertySection = property.section;
             }
 
-            const targetPanel = componentsPanelSections[propertySection] || defaultPanel;
+            const targetPanel =
+                componentsPanelSections[propertySection] || defaultPanel;
             if (!targetPanel) continue;
 
             if (property.inputtype == SectionInput) {
-                section = targetPanel.querySelector('.section[data-section="' + property.key + '"]');
+                section = targetPanel.querySelector(
+                    '.section[data-section="' + property.key + '"]',
+                );
 
                 if (Astero.preservePropertySections && section) {
                     section.replaceChildren();
                 } else {
                     targetPanel.append(property.input);
-                    section = targetPanel.querySelector('.section[data-section="' + property.key + '"]');
+                    section = targetPanel.querySelector(
+                        '.section[data-section="' + property.key + '"]',
+                    );
                 }
             } else {
-                let row = generateElements(tmpl('astero-property', property))[0];
+                let row = generateElements(
+                    tmpl('astero-property', property),
+                )[0];
                 row.querySelector('.input').append(property.input);
                 section?.append(row);
             }

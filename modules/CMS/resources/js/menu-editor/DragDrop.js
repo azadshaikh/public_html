@@ -10,7 +10,10 @@ import { getItemDepth } from './utils.js';
 export class DragDrop {
     constructor(options = {}) {
         this.container = options.container;
-        this.settings = options.settings || { supportsHierarchy: true, maxDepth: 3 };
+        this.settings = options.settings || {
+            supportsHierarchy: true,
+            maxDepth: 3,
+        };
         this.onReorder = options.onReorder || (() => {});
 
         // State
@@ -64,10 +67,22 @@ export class DragDrop {
         });
 
         // Use event delegation on container
-        this.container.addEventListener('dragstart', this.handleDragStart.bind(this));
-        this.container.addEventListener('dragend', this.handleDragEnd.bind(this));
-        this.container.addEventListener('dragover', this.handleDragOver.bind(this));
-        this.container.addEventListener('dragleave', this.handleDragLeave.bind(this));
+        this.container.addEventListener(
+            'dragstart',
+            this.handleDragStart.bind(this),
+        );
+        this.container.addEventListener(
+            'dragend',
+            this.handleDragEnd.bind(this),
+        );
+        this.container.addEventListener(
+            'dragover',
+            this.handleDragOver.bind(this),
+        );
+        this.container.addEventListener(
+            'dragleave',
+            this.handleDragLeave.bind(this),
+        );
         this.container.addEventListener('drop', this.handleDrop.bind(this));
     }
 
@@ -99,7 +114,9 @@ export class DragDrop {
     }
 
     createDragImage(menuItem) {
-        const title = menuItem.querySelector('.menu-item-title')?.textContent || 'Menu Item';
+        const title =
+            menuItem.querySelector('.menu-item-title')?.textContent ||
+            'Menu Item';
         const dragImage = document.createElement('div');
         dragImage.className = 'menu-drag-image';
         dragImage.style.cssText = `
@@ -213,16 +230,22 @@ export class DragDrop {
                 break;
 
             case 'after':
-                targetItem.parentElement.insertBefore(draggedItem, targetItem.nextSibling);
+                targetItem.parentElement.insertBefore(
+                    draggedItem,
+                    targetItem.nextSibling,
+                );
                 break;
 
             case 'child':
                 // Get or create children container
-                let childrenContainer = targetItem.querySelector(':scope > .menu-children');
+                let childrenContainer = targetItem.querySelector(
+                    ':scope > .menu-children',
+                );
                 if (!childrenContainer) {
                     childrenContainer = document.createElement('div');
                     childrenContainer.className = 'menu-children';
-                    childrenContainer.dataset.level = getItemDepth(targetItem) + 1;
+                    childrenContainer.dataset.level =
+                        getItemDepth(targetItem) + 1;
                     targetItem.appendChild(childrenContainer);
                 }
                 childrenContainer.appendChild(draggedItem);
@@ -234,13 +257,17 @@ export class DragDrop {
     }
 
     cleanupEmptyContainers() {
-        this.container.querySelectorAll('.menu-children:empty').forEach((el) => el.remove());
+        this.container
+            .querySelectorAll('.menu-children:empty')
+            .forEach((el) => el.remove());
     }
 
     showDropIndicator(targetItem, position) {
         const rect = targetItem.getBoundingClientRect();
         const contentEl = targetItem.querySelector('.menu-item-content');
-        const contentRect = contentEl ? contentEl.getBoundingClientRect() : rect;
+        const contentRect = contentEl
+            ? contentEl.getBoundingClientRect()
+            : rect;
 
         let top, left, width;
 
@@ -280,7 +307,12 @@ export class DragDrop {
 
     clearDropTargets() {
         this.container.querySelectorAll('.drop-target').forEach((el) => {
-            el.classList.remove('drop-target', 'drop-before', 'drop-after', 'drop-child');
+            el.classList.remove(
+                'drop-target',
+                'drop-before',
+                'drop-after',
+                'drop-child',
+            );
         });
     }
 

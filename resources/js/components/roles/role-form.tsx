@@ -307,7 +307,9 @@ export default function RoleForm({
                                             </>
                                         )}
                                     </FieldDescription>
-                                    <FieldError>{form.error('name')}</FieldError>
+                                    <FieldError>
+                                        {form.error('name')}
+                                    </FieldError>
                                 </Field>
 
                                 <Field
@@ -378,7 +380,9 @@ export default function RoleForm({
                                     variant="outline"
                                     size="sm"
                                     className="shrink-0"
-                                    onClick={allCollapsed ? expandAll : collapseAll}
+                                    onClick={
+                                        allCollapsed ? expandAll : collapseAll
+                                    }
                                 >
                                     {allCollapsed ? (
                                         <>
@@ -615,10 +619,7 @@ export default function RoleForm({
                                     {totalPermissions}
                                 </span>
                             </div>
-                            <Progress
-                                value={selectedPercent}
-                                className="h-2"
-                            />
+                            <Progress value={selectedPercent} className="h-2" />
                             <p className="text-center text-xs text-muted-foreground">
                                 {selectedPercent}% selected
                             </p>

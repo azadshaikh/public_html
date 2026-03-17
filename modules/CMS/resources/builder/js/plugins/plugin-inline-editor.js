@@ -15,7 +15,9 @@ import '../../../../../../resources/css/asteronote-inline.css';
  */
 export function initBuilderInlineEditor() {
     const Astero = window.Astero || (window.Astero = {});
-    const iframeEl = Astero.Builder?.iframe || document.querySelector('#iframe-wrapper > iframe');
+    const iframeEl =
+        Astero.Builder?.iframe ||
+        document.querySelector('#iframe-wrapper > iframe');
 
     // Create the inline editor instance
     const inlineEditor = createInlineEditor({
@@ -71,7 +73,9 @@ export class BuilderInlineEditorAdapter {
     init(doc) {
         const Astero = window.Astero || (window.Astero = {});
         const iframeEl =
-            this.options.iframe || Astero.Builder?.iframe || document.querySelector('#iframe-wrapper > iframe');
+            this.options.iframe ||
+            Astero.Builder?.iframe ||
+            document.querySelector('#iframe-wrapper > iframe');
 
         this.doc = doc;
 
@@ -100,7 +104,9 @@ export class BuilderInlineEditorAdapter {
                 callbacks: {
                     onChange: (content) => {
                         // Enable save button when content changes
-                        document.querySelectorAll('#top-panel .save-btn').forEach((e) => e.removeAttribute('disabled'));
+                        document
+                            .querySelectorAll('#top-panel .save-btn')
+                            .forEach((e) => e.removeAttribute('disabled'));
                     },
                 },
             });

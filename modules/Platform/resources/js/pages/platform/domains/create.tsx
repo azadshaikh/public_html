@@ -5,8 +5,14 @@ import type { DomainFormValues, PlatformOption } from '../../../types/platform';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: route('dashboard') },
-    { title: 'Platform', href: route('platform.domains.index', { status: 'all' }) },
-    { title: 'Domains', href: route('platform.domains.index', { status: 'all' }) },
+    {
+        title: 'Platform',
+        href: route('platform.domains.index', { status: 'all' }),
+    },
+    {
+        title: 'Domains',
+        href: route('platform.domains.index', { status: 'all' }),
+    },
     { title: 'Create', href: route('platform.domains.create') },
 ];
 

@@ -1,12 +1,21 @@
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import ProviderForm from '../../../components/providers/provider-form';
-import type { PlatformOption, ProviderFormValues } from '../../../types/platform';
+import type {
+    PlatformOption,
+    ProviderFormValues,
+} from '../../../types/platform';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: route('dashboard') },
-    { title: 'Platform', href: route('platform.providers.index', { status: 'all' }) },
-    { title: 'Providers', href: route('platform.providers.index', { status: 'all' }) },
+    {
+        title: 'Platform',
+        href: route('platform.providers.index', { status: 'all' }),
+    },
+    {
+        title: 'Providers',
+        href: route('platform.providers.index', { status: 'all' }),
+    },
     { title: 'Create', href: route('platform.providers.create') },
 ];
 

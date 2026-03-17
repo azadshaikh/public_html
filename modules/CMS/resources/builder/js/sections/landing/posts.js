@@ -1,6 +1,8 @@
 Astero.Sections.add('posts/posts-1', {
     name: 'Posts 1',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/posts/posts-1-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/posts/posts-1-thumb.jpeg',
     html: `<section class="posts-1" title="latest-post-1">
   <div class="container">
     <div class="row">
@@ -112,7 +114,9 @@ Astero.Sections.add('posts/posts-1', {
 });
 Astero.Sections.add('posts/posts-2', {
     name: 'Posts 2',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/posts/posts-2-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/posts/posts-2-thumb.jpeg',
     html: `<section class="pt-5 pb-5" title="posts-2">
   <div class="container">
     <div class="row">
@@ -267,7 +271,9 @@ Astero.Sections.add('posts/posts-2', {
 });
 Astero.Sections.add('posts/posts-3', {
     name: 'Posts 3',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/posts/posts-3-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/posts/posts-3-thumb.jpeg',
     html: `<section class="posts-3 py-5" title="posts-3">
   <div class="container">
 
@@ -342,4 +348,8 @@ Astero.Sections.add('posts/posts-3', {
   </div>
 </section>`,
 });
-Astero.SectionsGroup['Posts'] = ['posts/posts-1', 'posts/posts-2', 'posts/posts-3'];
+Astero.SectionsGroup['Posts'] = [
+    'posts/posts-1',
+    'posts/posts-2',
+    'posts/posts-3',
+];

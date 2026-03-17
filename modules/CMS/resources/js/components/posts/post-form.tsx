@@ -190,8 +190,10 @@ function PostSingleSelectCombobox({
     emptyMessage = 'No results found.',
     searchPlaceholder = 'Search...',
 }: PostSingleSelectComboboxProps) {
-    const selectedOption = useMemo(
-        () => options.find((option) => String(option.value) === String(value)) ?? null,
+    const selectedOption = React.useMemo(
+        () =>
+            options.find((option) => String(option.value) === String(value)) ??
+            null,
         [options, value],
     );
 
@@ -201,7 +203,9 @@ function PostSingleSelectCombobox({
             value={selectedOption}
             disabled={disabled}
             itemToStringLabel={(item) => item?.label ?? ''}
-            itemToStringValue={(item) => item ? [item.label, item.value].join(' ') : ''}
+            itemToStringValue={(item) =>
+                item ? [item.label, item.value].join(' ') : ''
+            }
             onValueChange={(newValue) => {
                 onChange(newValue ? newValue.value : null);
                 onBlur?.();
@@ -209,7 +213,11 @@ function PostSingleSelectCombobox({
         >
             <ComboboxTrigger
                 id={id}
-                className={!selectedOption ? `text-muted-foreground ${className || ''}` : className}
+                className={
+                    !selectedOption
+                        ? `text-muted-foreground ${className || ''}`
+                        : className
+                }
                 aria-invalid={invalid || undefined}
                 onBlur={onBlur}
                 render={
@@ -616,7 +624,10 @@ export default function PostForm({
                                     value={form.data.meta_robots}
                                     options={metaRobotsSelectOptions}
                                     onChange={(value) =>
-                                        form.setField('meta_robots', value ?? '')
+                                        form.setField(
+                                            'meta_robots',
+                                            value ?? '',
+                                        )
                                     }
                                     onBlur={() => form.touch('meta_robots')}
                                     placeholder="Select meta robots"
@@ -775,7 +786,10 @@ export default function PostForm({
                                     rows={12}
                                     value={form.data.schema}
                                     onChange={(event) =>
-                                        form.setField('schema', event.target.value)
+                                        form.setField(
+                                            'schema',
+                                            event.target.value,
+                                        )
                                     }
                                     onBlur={() => form.touch('schema')}
                                     aria-invalid={
@@ -976,10 +990,24 @@ export default function PostForm({
                                 </FieldDescription>
                                 <PostSingleSelectCombobox
                                     id="categories"
-                                    value={form.data.categories.length > 0 ? String(form.data.categories[0]) : null}
-                                    options={categorySelectOptions.map(opt => ({ ...opt, value: String(opt.value) }))}
+                                    value={
+                                        form.data.categories.length > 0
+                                            ? String(form.data.categories[0])
+                                            : null
+                                    }
+                                    options={categorySelectOptions.map(
+                                        (opt) => ({
+                                            ...opt,
+                                            value: String(opt.value),
+                                        }),
+                                    )}
                                     onChange={(value) =>
-                                        form.setField('categories', value ? [Number.parseInt(value, 10)] : [])
+                                        form.setField(
+                                            'categories',
+                                            value
+                                                ? [Number.parseInt(value, 10)]
+                                                : [],
+                                        )
                                     }
                                     onBlur={() => form.touch('categories')}
                                     placeholder="Select category"
@@ -1119,9 +1147,9 @@ export default function PostForm({
                                             value === ''
                                                 ? ''
                                                 : Number.parseInt(
-                                                    String(value),
-                                                    10,
-                                                ),
+                                                      String(value),
+                                                      10,
+                                                  ),
                                         )
                                     }
                                     onBlur={() => form.touch('author_id')}
@@ -1152,7 +1180,10 @@ export default function PostForm({
                                         value={form.data.template}
                                         options={templateSelectOptions}
                                         onChange={(value) =>
-                                            form.setField('template', value ?? '')
+                                            form.setField(
+                                                'template',
+                                                value ?? '',
+                                            )
                                         }
                                         onBlur={() => form.touch('template')}
                                         placeholder="Select template"

@@ -39,7 +39,10 @@ class DatabaseProvider extends Astero.BlockProvider {
                         this.loaded = true;
                         resolve();
                     } else {
-                        console.error('[DatabaseProvider] Failed to load:', data.message);
+                        console.error(
+                            '[DatabaseProvider] Failed to load:',
+                            data.message,
+                        );
                         resolve(); // Resolve anyway to avoid blocking
                     }
                 })
@@ -60,7 +63,9 @@ class DatabaseProvider extends Astero.BlockProvider {
         if (data.blocks) {
             Object.keys(data.blocks).forEach((category) => {
                 this.cache.categories.blocks.push(category);
-                this.cache.blocks[category] = data.blocks[category].map((item) => this.mapItem(item, 'block'));
+                this.cache.blocks[category] = data.blocks[category].map(
+                    (item) => this.mapItem(item, 'block'),
+                );
             });
         }
 
@@ -68,7 +73,9 @@ class DatabaseProvider extends Astero.BlockProvider {
         if (data.sections) {
             Object.keys(data.sections).forEach((category) => {
                 this.cache.categories.sections.push(category);
-                this.cache.sections[category] = data.sections[category].map((item) => this.mapItem(item, 'section'));
+                this.cache.sections[category] = data.sections[category].map(
+                    (item) => this.mapItem(item, 'section'),
+                );
             });
         }
     }
@@ -116,7 +123,9 @@ class DatabaseProvider extends Astero.BlockProvider {
         else if (type === 'block') pool = this.cache.blocks;
 
         // Case-insensitive lookup
-        const key = Object.keys(pool).find((k) => k.toLowerCase() === category.toLowerCase());
+        const key = Object.keys(pool).find(
+            (k) => k.toLowerCase() === category.toLowerCase(),
+        );
 
         return key ? pool[key] : [];
     }
@@ -128,7 +137,10 @@ class DatabaseProvider extends Astero.BlockProvider {
         await this.loadData();
 
         // Scan all sections and blocks
-        const all = [...Object.values(this.cache.sections).flat(), ...Object.values(this.cache.blocks).flat()];
+        const all = [
+            ...Object.values(this.cache.sections).flat(),
+            ...Object.values(this.cache.blocks).flat(),
+        ];
 
         return all.find((b) => b.slug === slug) || null;
     }

@@ -11,7 +11,8 @@ import { escapeHtml, getItemDepth } from './utils.js';
 export class MenuEditor {
     constructor(options = {}) {
         this.menuUrl = options.menuUrl || window.menuUrl;
-        this.settings = options.settings || window.menuSettings || { supportsHierarchy: true, maxDepth: 3 };
+        this.settings = options.settings ||
+            window.menuSettings || { supportsHierarchy: true, maxDepth: 3 };
 
         // State
         this.items = [];
@@ -45,7 +46,10 @@ export class MenuEditor {
 
         // Show session message if any
         if (window.sessionMessage) {
-            this.toast.show(window.sessionMessage.type, window.sessionMessage.message);
+            this.toast.show(
+                window.sessionMessage.type,
+                window.sessionMessage.message,
+            );
         }
     }
 
@@ -82,21 +86,30 @@ export class MenuEditor {
     // =========================================================================
 
     initializeState() {
-        const existingItems = document.querySelectorAll('#menu-builder .menu-item');
-        this.items = Array.from(existingItems).map((element) => this.parseItemFromDOM(element));
+        const existingItems = document.querySelectorAll(
+            '#menu-builder .menu-item',
+        );
+        this.items = Array.from(existingItems).map((element) =>
+            this.parseItemFromDOM(element),
+        );
     }
 
     parseItemFromDOM(element) {
         return {
             id: parseInt(element.dataset.id),
-            title: element.querySelector('.menu-item-title')?.textContent?.trim() || '',
+            title:
+                element
+                    .querySelector('.menu-item-title')
+                    ?.textContent?.trim() || '',
             url: element.dataset.url || '',
             type: element.dataset.type || 'custom',
             is_active: element.dataset.isActive === '1',
             target: element.dataset.target || '_self',
             css_classes: element.dataset.cssClasses || '',
             description: element.dataset.description || '',
-            object_id: element.dataset.objectId ? parseInt(element.dataset.objectId) : null,
+            object_id: element.dataset.objectId
+                ? parseInt(element.dataset.objectId)
+                : null,
             link_title: element.dataset.linkTitle || '',
             link_rel: element.dataset.linkRel || '',
             icon: element.dataset.icon || '',
@@ -124,11 +137,15 @@ export class MenuEditor {
 
     updateChangesIndicator() {
         if (this.elements.changesIndicator) {
-            this.elements.changesIndicator.style.display = this.hasChanges ? 'inline-block' : 'none';
+            this.elements.changesIndicator.style.display = this.hasChanges
+                ? 'inline-block'
+                : 'none';
         }
 
         if (this.elements.floatingSaveBar) {
-            this.elements.floatingSaveBar.style.display = this.hasChanges ? 'block' : 'none';
+            this.elements.floatingSaveBar.style.display = this.hasChanges
+                ? 'block'
+                : 'none';
         }
     }
 
@@ -153,8 +170,14 @@ export class MenuEditor {
 
     initDragDrop() {
         const container = this.elements.menuItems || this.elements.menuBuilder;
-        console.log('[MenuEditor] initDragDrop - menuItems:', this.elements.menuItems);
-        console.log('[MenuEditor] initDragDrop - menuBuilder:', this.elements.menuBuilder);
+        console.log(
+            '[MenuEditor] initDragDrop - menuItems:',
+            this.elements.menuItems,
+        );
+        console.log(
+            '[MenuEditor] initDragDrop - menuBuilder:',
+            this.elements.menuBuilder,
+        );
         console.log('[MenuEditor] initDragDrop - using container:', container);
 
         if (!container) {
@@ -177,7 +200,9 @@ export class MenuEditor {
 
     bindEvents() {
         // Delegate click events on menu builder
-        this.elements.menuBuilder?.addEventListener('click', (e) => this.handleMenuBuilderClick(e));
+        this.elements.menuBuilder?.addEventListener('click', (e) =>
+            this.handleMenuBuilderClick(e),
+        );
 
         // Custom item form
         if (this.elements.customForm) {
@@ -198,15 +223,29 @@ export class MenuEditor {
         });
 
         // Save buttons
-        this.elements.saveButton?.addEventListener('click', () => this.saveMenu());
-        this.elements.saveInlineButton?.addEventListener('click', () => this.saveMenu());
-        this.elements.saveFloatingButton?.addEventListener('click', () => this.saveMenu());
-        this.elements.discardChangesButton?.addEventListener('click', () => this.discardChanges());
+        this.elements.saveButton?.addEventListener('click', () =>
+            this.saveMenu(),
+        );
+        this.elements.saveInlineButton?.addEventListener('click', () =>
+            this.saveMenu(),
+        );
+        this.elements.saveFloatingButton?.addEventListener('click', () =>
+            this.saveMenu(),
+        );
+        this.elements.discardChangesButton?.addEventListener('click', () =>
+            this.discardChanges(),
+        );
 
         // Modal buttons
-        document.querySelector('#save-item-btn')?.addEventListener('click', () => this.saveMenuItem());
-        document.querySelector('#add-item-btn')?.addEventListener('click', () => this.handleAddFromModal());
-        document.querySelector('#confirm-delete-btn')?.addEventListener('click', () => this.executeDelete());
+        document
+            .querySelector('#save-item-btn')
+            ?.addEventListener('click', () => this.saveMenuItem());
+        document
+            .querySelector('#add-item-btn')
+            ?.addEventListener('click', () => this.handleAddFromModal());
+        document
+            .querySelector('#confirm-delete-btn')
+            ?.addEventListener('click', () => this.executeDelete());
 
         // Track settings changes
         ['name', 'location', 'is_active', 'description'].forEach((id) => {
@@ -220,7 +259,9 @@ export class MenuEditor {
         this.bindSearchFilters();
 
         // Inline editing
-        this.elements.menuBuilder?.addEventListener('dblclick', (e) => this.handleInlineEdit(e));
+        this.elements.menuBuilder?.addEventListener('dblclick', (e) =>
+            this.handleInlineEdit(e),
+        );
 
         // Mobile reorder modal
         this.initReorderModal();
@@ -294,24 +335,40 @@ export class MenuEditor {
     }
 
     updateReorderButtonStates(itemId) {
-        const itemEl = document.querySelector(`.menu-item[data-id="${itemId}"]`);
+        const itemEl = document.querySelector(
+            `.menu-item[data-id="${itemId}"]`,
+        );
         if (!itemEl || !this.reorderModalEl) return;
 
         const parent = itemEl.parentElement;
-        const siblings = Array.from(parent.querySelectorAll(':scope > .menu-item'));
+        const siblings = Array.from(
+            parent.querySelectorAll(':scope > .menu-item'),
+        );
         const currentIndex = siblings.indexOf(itemEl);
         const isFirst = currentIndex === 0;
         const isLast = currentIndex === siblings.length - 1;
         const isAtRoot = parent.id === 'menu-items';
-        const hasPrevSibling = itemEl.previousElementSibling?.classList.contains('menu-item');
+        const hasPrevSibling =
+            itemEl.previousElementSibling?.classList.contains('menu-item');
         const currentDepth = getItemDepth(itemEl);
-        const canIndent = hasPrevSibling && currentDepth < this.settings.maxDepth && this.settings.supportsHierarchy;
+        const canIndent =
+            hasPrevSibling &&
+            currentDepth < this.settings.maxDepth &&
+            this.settings.supportsHierarchy;
 
         // Update button states
-        const upBtn = this.reorderModalEl.querySelector('[data-direction="up"]');
-        const downBtn = this.reorderModalEl.querySelector('[data-direction="down"]');
-        const leftBtn = this.reorderModalEl.querySelector('[data-direction="left"]');
-        const rightBtn = this.reorderModalEl.querySelector('[data-direction="right"]');
+        const upBtn = this.reorderModalEl.querySelector(
+            '[data-direction="up"]',
+        );
+        const downBtn = this.reorderModalEl.querySelector(
+            '[data-direction="down"]',
+        );
+        const leftBtn = this.reorderModalEl.querySelector(
+            '[data-direction="left"]',
+        );
+        const rightBtn = this.reorderModalEl.querySelector(
+            '[data-direction="right"]',
+        );
 
         if (upBtn) upBtn.disabled = isFirst;
         if (downBtn) downBtn.disabled = isLast;
@@ -321,18 +378,25 @@ export class MenuEditor {
 
     bindSearchFilters() {
         // Bind all search inputs with data-list attribute
-        document.querySelectorAll('.search-filter[data-list]').forEach((searchEl) => {
-            const listEl = document.querySelector(searchEl.dataset.list);
-            if (!listEl) return;
+        document
+            .querySelectorAll('.search-filter[data-list]')
+            .forEach((searchEl) => {
+                const listEl = document.querySelector(searchEl.dataset.list);
+                if (!listEl) return;
 
-            searchEl.addEventListener('input', (e) => {
-                const query = e.target.value.toLowerCase().trim();
-                listEl.querySelectorAll('.add-item-btn').forEach((item) => {
-                    const title = item.querySelector('.item-title')?.textContent.toLowerCase() || '';
-                    item.style.display = title.includes(query) ? '' : 'none';
+                searchEl.addEventListener('input', (e) => {
+                    const query = e.target.value.toLowerCase().trim();
+                    listEl.querySelectorAll('.add-item-btn').forEach((item) => {
+                        const title =
+                            item
+                                .querySelector('.item-title')
+                                ?.textContent.toLowerCase() || '';
+                        item.style.display = title.includes(query)
+                            ? ''
+                            : 'none';
+                    });
                 });
             });
-        });
     }
 
     bindKeyboardShortcuts() {
@@ -373,11 +437,15 @@ export class MenuEditor {
      * Move item up or down within its parent container
      */
     moveItem(itemId, direction) {
-        const itemEl = document.querySelector(`.menu-item[data-id="${itemId}"]`);
+        const itemEl = document.querySelector(
+            `.menu-item[data-id="${itemId}"]`,
+        );
         if (!itemEl) return;
 
         const parent = itemEl.parentElement;
-        const siblings = Array.from(parent.querySelectorAll(':scope > .menu-item'));
+        const siblings = Array.from(
+            parent.querySelectorAll(':scope > .menu-item'),
+        );
         const currentIndex = siblings.indexOf(itemEl);
 
         if (direction === 'up' && currentIndex > 0) {
@@ -398,7 +466,9 @@ export class MenuEditor {
             return;
         }
 
-        const itemEl = document.querySelector(`.menu-item[data-id="${itemId}"]`);
+        const itemEl = document.querySelector(
+            `.menu-item[data-id="${itemId}"]`,
+        );
         if (!itemEl) return;
 
         // Find previous sibling to become parent
@@ -411,12 +481,16 @@ export class MenuEditor {
         // Check depth limit
         const currentDepth = getItemDepth(itemEl);
         if (currentDepth >= this.settings.maxDepth) {
-            this.toast.warning(`Maximum nesting depth (${this.settings.maxDepth}) reached.`);
+            this.toast.warning(
+                `Maximum nesting depth (${this.settings.maxDepth}) reached.`,
+            );
             return;
         }
 
         // Get or create children container in previous sibling
-        let childrenContainer = prevSibling.querySelector(':scope > .menu-children');
+        let childrenContainer = prevSibling.querySelector(
+            ':scope > .menu-children',
+        );
         if (!childrenContainer) {
             childrenContainer = document.createElement('div');
             childrenContainer.className = 'menu-children';
@@ -432,12 +506,16 @@ export class MenuEditor {
      * Outdent item (move it to parent's level)
      */
     outdentItem(itemId) {
-        const itemEl = document.querySelector(`.menu-item[data-id="${itemId}"]`);
+        const itemEl = document.querySelector(
+            `.menu-item[data-id="${itemId}"]`,
+        );
         if (!itemEl) return;
 
         const parentContainer = itemEl.parentElement;
         if (!parentContainer.classList.contains('menu-children')) {
-            this.toast.info('Cannot outdent: item is already at the top level.');
+            this.toast.info(
+                'Cannot outdent: item is already at the top level.',
+            );
             return;
         }
 
@@ -514,9 +592,12 @@ export class MenuEditor {
             url: form.querySelector('#add-url')?.value.trim() || '#',
             type: form.querySelector('#add-type')?.value || 'custom',
             target: form.querySelector('#add-target')?.value || '_self',
-            css_classes: form.querySelector('#add-css-classes')?.value.trim() || '',
-            description: form.querySelector('#add-description')?.value.trim() || '',
-            link_title: form.querySelector('#add-link-title')?.value.trim() || '',
+            css_classes:
+                form.querySelector('#add-css-classes')?.value.trim() || '',
+            description:
+                form.querySelector('#add-description')?.value.trim() || '',
+            link_title:
+                form.querySelector('#add-link-title')?.value.trim() || '',
             link_rel: form.querySelector('#add-link-rel')?.value.trim() || '',
             icon: form.querySelector('#add-icon')?.value.trim() || '',
             object_id: form.querySelector('#add-object-id')?.value || null,
@@ -642,21 +723,32 @@ export class MenuEditor {
             return;
         }
 
-        const itemEl = document.querySelector(`.menu-item[data-id="${itemId}"]`);
+        const itemEl = document.querySelector(
+            `.menu-item[data-id="${itemId}"]`,
+        );
         const form = document.querySelector('#edit-item-form');
         if (!form) return;
 
         // Populate form
         form.querySelector('#edit-item-id').value = itemId;
         form.querySelector('#edit-title').value =
-            item.title || itemEl?.querySelector('.menu-item-title')?.textContent?.trim() || '';
-        form.querySelector('#edit-url').value = item.url || itemEl?.dataset.url || '';
-        form.querySelector('#edit-target').value = item.target || itemEl?.dataset.target || '_self';
-        form.querySelector('#edit-css-classes').value = item.css_classes || itemEl?.dataset.cssClasses || '';
-        form.querySelector('#edit-description').value = item.description || itemEl?.dataset.description || '';
-        form.querySelector('#edit-link-title').value = item.link_title || itemEl?.dataset.linkTitle || '';
-        form.querySelector('#edit-link-rel').value = item.link_rel || itemEl?.dataset.linkRel || '';
-        form.querySelector('#edit-icon').value = item.icon || itemEl?.dataset.icon || '';
+            item.title ||
+            itemEl?.querySelector('.menu-item-title')?.textContent?.trim() ||
+            '';
+        form.querySelector('#edit-url').value =
+            item.url || itemEl?.dataset.url || '';
+        form.querySelector('#edit-target').value =
+            item.target || itemEl?.dataset.target || '_self';
+        form.querySelector('#edit-css-classes').value =
+            item.css_classes || itemEl?.dataset.cssClasses || '';
+        form.querySelector('#edit-description').value =
+            item.description || itemEl?.dataset.description || '';
+        form.querySelector('#edit-link-title').value =
+            item.link_title || itemEl?.dataset.linkTitle || '';
+        form.querySelector('#edit-link-rel').value =
+            item.link_rel || itemEl?.dataset.linkRel || '';
+        form.querySelector('#edit-icon').value =
+            item.icon || itemEl?.dataset.icon || '';
         form.querySelector('#edit-is-active').checked = item.is_active;
 
         // Update icon preview
@@ -686,7 +778,8 @@ export class MenuEditor {
             target: form.querySelector('#edit-target').value,
             css_classes: form.querySelector('#edit-css-classes').value.trim(),
             description: form.querySelector('#edit-description').value.trim(),
-            link_title: form.querySelector('#edit-link-title')?.value.trim() || '',
+            link_title:
+                form.querySelector('#edit-link-title')?.value.trim() || '',
             link_rel: form.querySelector('#edit-link-rel')?.value.trim() || '',
             icon: form.querySelector('#edit-icon')?.value.trim() || '',
             is_active: form.querySelector('#edit-is-active').checked,
@@ -718,7 +811,8 @@ export class MenuEditor {
         this.itemToDelete = itemId;
 
         document.querySelector('#delete-item-title').textContent = item.title;
-        document.querySelector('#delete-item-url').textContent = item.url || '#';
+        document.querySelector('#delete-item-url').textContent =
+            item.url || '#';
 
         this.modals.show('delete');
     }
@@ -732,7 +826,9 @@ export class MenuEditor {
         this.markItemDeleted(itemId);
 
         // Remove from DOM
-        const itemEl = document.querySelector(`.menu-item[data-id="${itemId}"]`);
+        const itemEl = document.querySelector(
+            `.menu-item[data-id="${itemId}"]`,
+        );
         if (itemEl) {
             itemEl.remove();
         }
@@ -750,7 +846,9 @@ export class MenuEditor {
     }
 
     markItemDeleted(itemId) {
-        const itemEl = document.querySelector(`.menu-item[data-id="${itemId}"]`);
+        const itemEl = document.querySelector(
+            `.menu-item[data-id="${itemId}"]`,
+        );
         if (itemEl) {
             const children = itemEl.querySelectorAll('.menu-item');
             children.forEach((child) => {
@@ -758,7 +856,9 @@ export class MenuEditor {
                 const childItem = this.items.find((i) => i.id == childId);
                 if (childItem) {
                     if (childItem.isNew) {
-                        const idx = this.items.findIndex((i) => i.id == childId);
+                        const idx = this.items.findIndex(
+                            (i) => i.id == childId,
+                        );
                         if (idx !== -1) this.items.splice(idx, 1);
                     } else {
                         childItem.isDeleted = true;
@@ -809,12 +909,15 @@ export class MenuEditor {
             this.elements.saveInlineButton,
             this.elements.saveFloatingButton,
         ].filter(Boolean);
-        const originalButtonContent = new Map(saveButtons.map((button) => [button, button.innerHTML]));
+        const originalButtonContent = new Map(
+            saveButtons.map((button) => [button, button.innerHTML]),
+        );
 
         try {
             saveButtons.forEach((button) => {
                 button.disabled = true;
-                button.innerHTML = '<i class="ri-loader-4-line spin me-1"></i> Saving...';
+                button.innerHTML =
+                    '<i class="ri-loader-4-line spin me-1"></i> Saving...';
             });
 
             const payload = this.buildSavePayload();
@@ -825,7 +928,9 @@ export class MenuEditor {
                 this.hasChanges = false;
                 this.initialSettings = this.getCurrentSettings();
                 this.updateChangesIndicator();
-                this.toast.success(response.message || 'Menu saved successfully!');
+                this.toast.success(
+                    response.message || 'Menu saved successfully!',
+                );
             } else {
                 throw new Error(response.message || 'Failed to save menu');
             }
@@ -859,7 +964,9 @@ export class MenuEditor {
                 }
 
                 // Process children
-                const childrenContainer = itemEl.querySelector(':scope > .menu-children');
+                const childrenContainer = itemEl.querySelector(
+                    ':scope > .menu-children',
+                );
                 if (childrenContainer) {
                     processLevel(childrenContainer, itemId);
                 }
@@ -877,7 +984,9 @@ export class MenuEditor {
             settings: this.getCurrentSettings(),
             items: {
                 new: this.items.filter((i) => i.isNew && !i.isDeleted),
-                updated: this.items.filter((i) => i.isModified && !i.isNew && !i.isDeleted),
+                updated: this.items.filter(
+                    (i) => i.isModified && !i.isNew && !i.isDeleted,
+                ),
                 deleted: this.items.filter((i) => i.isDeleted && !i.isNew),
                 order: this.items
                     .filter((i) => !i.isDeleted)
@@ -891,7 +1000,9 @@ export class MenuEditor {
     }
 
     async saveToServer(payload) {
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+        const csrfToken = document.querySelector(
+            'meta[name="csrf-token"]',
+        )?.content;
 
         const response = await fetch(this.menuUrl, {
             method: 'POST',
@@ -944,7 +1055,9 @@ export class MenuEditor {
         idMap.forEach((newId, tempId) => {
             const tempIdAsString = String(tempId);
             const newIdAsString = String(newId);
-            const itemEl = document.querySelector(`.menu-item[data-id="${tempIdAsString}"]`);
+            const itemEl = document.querySelector(
+                `.menu-item[data-id="${tempIdAsString}"]`,
+            );
 
             if (!itemEl) {
                 return;
@@ -952,13 +1065,16 @@ export class MenuEditor {
 
             itemEl.dataset.id = newIdAsString;
             itemEl.dataset.parentId =
-                itemEl.dataset.parentId && idMap.has(parseInt(itemEl.dataset.parentId, 10))
+                itemEl.dataset.parentId &&
+                idMap.has(parseInt(itemEl.dataset.parentId, 10))
                     ? String(idMap.get(parseInt(itemEl.dataset.parentId, 10)))
                     : itemEl.dataset.parentId;
 
-            itemEl.querySelectorAll(`[data-id="${tempIdAsString}"]`).forEach((el) => {
-                el.dataset.id = newIdAsString;
-            });
+            itemEl
+                .querySelectorAll(`[data-id="${tempIdAsString}"]`)
+                .forEach((el) => {
+                    el.dataset.id = newIdAsString;
+                });
         });
 
         // Remove persisted deletions and clear dirty flags after successful save.
@@ -975,7 +1091,9 @@ export class MenuEditor {
     }
 
     handleValidationErrors(errors) {
-        document.querySelectorAll('.is-invalid').forEach((el) => el.classList.remove('is-invalid'));
+        document
+            .querySelectorAll('.is-invalid')
+            .forEach((el) => el.classList.remove('is-invalid'));
 
         const fieldMap = {
             'settings.name': '#name',
@@ -1028,7 +1146,8 @@ export class MenuEditor {
         if (this.elements.emptyState) {
             this.elements.emptyState.style.display = 'block';
         } else if (this.elements.menuBuilder) {
-            this.elements.menuBuilder.innerHTML = ItemRenderer.renderEmptyState();
+            this.elements.menuBuilder.innerHTML =
+                ItemRenderer.renderEmptyState();
             this.elements.emptyState = document.querySelector('#empty-state');
         }
     }

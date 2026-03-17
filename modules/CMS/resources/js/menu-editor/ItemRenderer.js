@@ -9,7 +9,8 @@ export class ItemRenderer {
      * Render a new menu item HTML
      */
     static render(item) {
-        const badgeClass = TYPE_BADGE_CLASSES[item.type] || 'bg-light text-dark';
+        const badgeClass =
+            TYPE_BADGE_CLASSES[item.type] || 'bg-light text-dark';
 
         return `
             <div class="menu-item" data-id="${item.id}" data-type="${item.type}"
@@ -58,7 +59,9 @@ export class ItemRenderer {
      * Update an existing item's DOM representation
      */
     static updateDOM(itemId, data) {
-        const itemEl = document.querySelector(`.menu-item[data-id="${itemId}"]`);
+        const itemEl = document.querySelector(
+            `.menu-item[data-id="${itemId}"]`,
+        );
         if (!itemEl) return;
 
         // Update title
@@ -82,7 +85,9 @@ export class ItemRenderer {
                 iconContainer.querySelector('i').className = data.icon;
             } else {
                 const newIconHtml = `<div class="menu-item-icon"><i class="${escapeHtml(data.icon)}"></i></div>`;
-                const dragHandle = itemEl.querySelector('.menu-item-drag-handle');
+                const dragHandle = itemEl.querySelector(
+                    '.menu-item-drag-handle',
+                );
                 if (dragHandle) {
                     dragHandle.insertAdjacentHTML('afterend', newIconHtml);
                 }
@@ -106,12 +111,14 @@ export class ItemRenderer {
         if (!badgesContainer) return;
 
         // External link badge
-        let externalBadge = badgesContainer.querySelector('.menu-badge-external');
+        let externalBadge = badgesContainer.querySelector(
+            '.menu-badge-external',
+        );
         if (data.target === '_blank') {
             if (!externalBadge) {
                 badgesContainer.insertAdjacentHTML(
                     'beforeend',
-                    '<span class="badge bg-info-subtle text-info menu-badge-external" title="Opens in new tab"><i class="ri-external-link-line"></i></span>'
+                    '<span class="badge bg-info-subtle text-info menu-badge-external" title="Opens in new tab"><i class="ri-external-link-line"></i></span>',
                 );
             }
         } else if (externalBadge) {
@@ -124,7 +131,7 @@ export class ItemRenderer {
             if (!hiddenBadge) {
                 badgesContainer.insertAdjacentHTML(
                     'beforeend',
-                    '<span class="badge bg-warning-subtle text-warning menu-badge-hidden"><i class="ri-eye-off-line me-1"></i>Hidden</span>'
+                    '<span class="badge bg-warning-subtle text-warning menu-badge-hidden"><i class="ri-eye-off-line me-1"></i>Hidden</span>',
                 );
             }
         } else if (hiddenBadge) {

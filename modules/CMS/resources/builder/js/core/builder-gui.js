@@ -1,5 +1,7 @@
 function displayToast(bg, title, message, id = 'top-toast') {
-    const toastBody = document.querySelector('#' + id + ' .toast-body .message');
+    const toastBody = document.querySelector(
+        '#' + id + ' .toast-body .message',
+    );
     const header = document.querySelector('#' + id + ' .toast-header');
     const toast = document.querySelector('#' + id + ' .toast');
     if (!toastBody || !header || !toast) return;
@@ -21,15 +23,22 @@ window.displayToast = displayToast;
 
 Astero.Gui = {
     init: function () {
-        document.querySelectorAll('[data-astero-action]').forEach(function (el, i) {
-            const on = el.dataset.asteroOn ?? 'click';
-            const actionName = el.dataset.asteroAction;
-            if (typeof Astero.Gui[actionName] === 'function') {
-                el.addEventListener(on, Astero.Gui[actionName].bind(Astero.Gui));
-            } else {
-                console.error(`Action ${actionName} not found in Astero.Gui`);
-            }
-        });
+        document
+            .querySelectorAll('[data-astero-action]')
+            .forEach(function (el, i) {
+                const on = el.dataset.asteroOn ?? 'click';
+                const actionName = el.dataset.asteroAction;
+                if (typeof Astero.Gui[actionName] === 'function') {
+                    el.addEventListener(
+                        on,
+                        Astero.Gui[actionName].bind(Astero.Gui),
+                    );
+                } else {
+                    console.error(
+                        `Action ${actionName} not found in Astero.Gui`,
+                    );
+                }
+            });
 
         this.shortcuts();
         this.initEditorButtons();
@@ -49,7 +58,9 @@ Astero.Gui = {
 
         // Ensure all editors are hidden initially
         let codeEditor = document.getElementById('astero-code-editor');
-        let htmlEditor = document.getElementById('astero-enabled-content-editor');
+        let htmlEditor = document.getElementById(
+            'astero-enabled-content-editor',
+        );
         let cssEditor = document.getElementById('astero-css-editor');
         let jsEditor = document.getElementById('astero-js-editor');
 
@@ -95,7 +106,10 @@ Astero.Gui = {
         // Handle shortcuts from main window and iframe
         document.addEventListener('keydown', handleShortcuts);
         window.addEventListener('astero.iframe.loaded', () => {
-            Astero.Builder.frameBody?.addEventListener('keydown', handleShortcuts);
+            Astero.Builder.frameBody?.addEventListener(
+                'keydown',
+                handleShortcuts,
+            );
         });
     },
 
@@ -122,14 +136,20 @@ Astero.Gui = {
     // Post HTML content via AJAX to save to database
     // Overridden in builder.blade.php for Laravel integration
     saveAjax: function (event, saveUrl = null, saveBtn = null) {
-        console.warn('Astero.Gui.saveAjax: No save handler configured. Override this in your blade template.');
+        console.warn(
+            'Astero.Gui.saveAjax: No save handler configured. Override this in your blade template.',
+        );
     },
 
     viewport: function (event) {
         const element = event ? event.currentTarget : this;
-        document.getElementById('canvas').setAttribute('class', element.dataset.view);
+        document
+            .getElementById('canvas')
+            .setAttribute('class', element.dataset.view);
         document.getElementById('iframe1').removeAttribute('style');
-        document.querySelectorAll('.responsive-btns .active').forEach((e) => e.classList.remove('active'));
+        document
+            .querySelectorAll('.responsive-btns .active')
+            .forEach((e) => e.classList.remove('active'));
         if (element.dataset.view) element.classList.add('active');
     },
 
@@ -138,26 +158,43 @@ Astero.Gui = {
         let codeEditor = document.getElementById('astero-code-editor');
         let codeEditorBtn = document.getElementById('code-editor-btn');
         let toggleJsExecute = document.getElementById('toggleEditorJsExecute');
-        let breadcrumb = document.querySelector('.breadcrumb-navigator .breadcrumb');
+        let breadcrumb = document.querySelector(
+            '.breadcrumb-navigator .breadcrumb',
+        );
 
         if (!asteroBuilder || !codeEditor || !codeEditorBtn) {
             return;
         }
 
-        let isExpanding = !asteroBuilder.classList.contains('bottom-panel-expand');
+        let isExpanding = !asteroBuilder.classList.contains(
+            'bottom-panel-expand',
+        );
 
         // If any tab editor (HTML/CSS/JS) is active, close it and switch to code editor
         const tabEditors = [
-            { panel: 'astero-enabled-content-editor', btn: 'html-editor-btn', obj: Astero.EnabledContentEditor },
-            { panel: 'astero-css-editor', btn: 'css-editor-btn', obj: Astero.CssEditor },
-            { panel: 'astero-js-editor', btn: 'js-editor-btn', obj: Astero.JsEditor },
+            {
+                panel: 'astero-enabled-content-editor',
+                btn: 'html-editor-btn',
+                obj: Astero.EnabledContentEditor,
+            },
+            {
+                panel: 'astero-css-editor',
+                btn: 'css-editor-btn',
+                obj: Astero.CssEditor,
+            },
+            {
+                panel: 'astero-js-editor',
+                btn: 'js-editor-btn',
+                obj: Astero.JsEditor,
+            },
         ];
 
         for (const editor of tabEditors) {
             const panelEl = document.getElementById(editor.panel);
             if (panelEl && panelEl.style.display === 'block') {
                 panelEl.style.display = 'none';
-                if (editor.obj?.isActive && editor.obj.destroy) editor.obj.destroy();
+                if (editor.obj?.isActive && editor.obj.destroy)
+                    editor.obj.destroy();
                 document.getElementById(editor.btn)?.classList.remove('active');
 
                 // Open code editor
@@ -250,9 +287,14 @@ Astero.Gui = {
 
         // Exit fullscreen mode if active
         let asteroBuilder = document.getElementById('astero-builder');
-        if (asteroBuilder && asteroBuilder.classList.contains('editor-fullscreen')) {
+        if (
+            asteroBuilder &&
+            asteroBuilder.classList.contains('editor-fullscreen')
+        ) {
             asteroBuilder.classList.remove('editor-fullscreen');
-            let fullscreenBtn = document.getElementById('fullscreen-editor-btn');
+            let fullscreenBtn = document.getElementById(
+                'fullscreen-editor-btn',
+            );
             let icon = fullscreenBtn?.querySelector('i');
             if (icon) {
                 icon.className = 'ri-fullscreen-line';
@@ -283,19 +325,28 @@ Astero.Gui = {
             html: {
                 btn: document.getElementById('html-editor-btn'),
                 panel: document.getElementById('astero-enabled-content-editor'),
-                editorObj: typeof Astero.EnabledContentEditor !== 'undefined' ? Astero.EnabledContentEditor : null,
+                editorObj:
+                    typeof Astero.EnabledContentEditor !== 'undefined'
+                        ? Astero.EnabledContentEditor
+                        : null,
                 showJsToggle: false,
             },
             css: {
                 btn: document.getElementById('css-editor-btn'),
                 panel: document.getElementById('astero-css-editor'),
-                editorObj: typeof Astero.CssEditor !== 'undefined' ? Astero.CssEditor : null,
+                editorObj:
+                    typeof Astero.CssEditor !== 'undefined'
+                        ? Astero.CssEditor
+                        : null,
                 showJsToggle: false,
             },
             js: {
                 btn: document.getElementById('js-editor-btn'),
                 panel: document.getElementById('astero-js-editor'),
-                editorObj: typeof Astero.JsEditor !== 'undefined' ? Astero.JsEditor : null,
+                editorObj:
+                    typeof Astero.JsEditor !== 'undefined'
+                        ? Astero.JsEditor
+                        : null,
                 showJsToggle: true,
             },
         };
@@ -335,7 +386,9 @@ Astero.Gui = {
     closeAllEditors: function () {
         let asteroBuilder = document.getElementById('astero-builder');
         let codeEditor = document.getElementById('astero-code-editor');
-        let htmlEditor = document.getElementById('astero-enabled-content-editor');
+        let htmlEditor = document.getElementById(
+            'astero-enabled-content-editor',
+        );
         let cssEditor = document.getElementById('astero-css-editor');
         let jsEditor = document.getElementById('astero-js-editor');
         let toggleJsExecute = document.getElementById('toggleEditorJsExecute');
@@ -360,7 +413,10 @@ Astero.Gui = {
         if (Astero.CodeEditor && Astero.CodeEditor.isActive) {
             Astero.CodeEditor.destroy();
         }
-        if (typeof Astero.EnabledContentEditor !== 'undefined' && Astero.EnabledContentEditor.isActive) {
+        if (
+            typeof Astero.EnabledContentEditor !== 'undefined' &&
+            Astero.EnabledContentEditor.isActive
+        ) {
             Astero.EnabledContentEditor.destroy();
         }
         if (Astero.CssEditor && Astero.CssEditor.destroy) {
@@ -439,7 +495,7 @@ Astero.Gui = {
         if (searchText !== '') {
             targetList.querySelectorAll('li.header').forEach(function (header) {
                 let hasVisibleChildren = header.querySelector(
-                    'ol li[data-search][style=""], ol li[data-search]:not([style*="display: none"])'
+                    'ol li[data-search][style=""], ol li[data-search]:not([style*="display: none"])',
                 );
                 header.style.display = hasVisibleChildren ? '' : 'none';
             });
@@ -453,24 +509,30 @@ Astero.Gui = {
 
         if (!searchContainer) return;
 
-        let input = searchContainer.querySelector("input[data-astero-action='search']");
+        let input = searchContainer.querySelector(
+            "input[data-astero-action='search']",
+        );
         if (input) {
             input.value = '';
             input.dispatchEvent(
                 new KeyboardEvent('keyup', {
                     bubbles: true,
                     cancelable: true,
-                })
+                }),
             );
         }
     },
 
     expandAllSettings: function () {
-        document.querySelectorAll('#right-panel .tab-pane.active .header_check').forEach((el) => (el.checked = true));
+        document
+            .querySelectorAll('#right-panel .tab-pane.active .header_check')
+            .forEach((el) => (el.checked = true));
     },
 
     collapseAllSettings: function () {
-        document.querySelectorAll('#right-panel .tab-pane.active .header_check').forEach((el) => (el.checked = false));
+        document
+            .querySelectorAll('#right-panel .tab-pane.active .header_check')
+            .forEach((el) => (el.checked = false));
     },
 
     expand: function (e) {
@@ -520,13 +582,21 @@ Astero.Gui = {
     },
 
     toggleRightColumn: function (rightColumnEnabled = null) {
-        rightColumnEnabled = Astero.Gui.togglePanel('#right-panel', '--builder-right-panel-width');
+        rightColumnEnabled = Astero.Gui.togglePanel(
+            '#right-panel',
+            '--builder-right-panel-width',
+        );
 
-        document.getElementById('astero-builder').classList.toggle('no-right-panel');
-        document.querySelector('.component-properties-tab').classList.toggle('d-none');
+        document
+            .getElementById('astero-builder')
+            .classList.toggle('no-right-panel');
+        document
+            .querySelector('.component-properties-tab')
+            .classList.toggle('d-none');
 
         Astero.Components.componentPropertiesElement =
-            (rightColumnEnabled ? '#right-panel' : '#left-panel #properties') + ' .component-properties';
+            (rightColumnEnabled ? '#right-panel' : '#left-panel #properties') +
+            ' .component-properties';
         let componentTab = document.querySelector('#components-tab');
 
         if (document.getElementById('properties').offsetParent) {
@@ -551,7 +621,11 @@ Astero.Gui = {
             toggleButton.classList.add('active');
             toggleButton.setAttribute('aria-pressed', 'true');
             // If navigator was hidden and is now visible, load components
-            if (wasHidden && Astero.TreeList && Astero.TreeList.loadComponents) {
+            if (
+                wasHidden &&
+                Astero.TreeList &&
+                Astero.TreeList.loadComponents
+            ) {
                 Astero.TreeList.loadComponents();
             }
         }
@@ -559,7 +633,9 @@ Astero.Gui = {
 
     treeListRight: function () {
         let treeList = document.getElementById('tree-list');
-        let btnIcon = document.querySelector("[data-astero-action='treeListRight'] i");
+        let btnIcon = document.querySelector(
+            "[data-astero-action='treeListRight'] i",
+        );
         if (treeList.style.height) {
             treeList.style.height = '';
             treeList.style.right = '';
@@ -601,10 +677,12 @@ Astero.Gui = {
         }
 
         // Trigger Monaco layout update for all editors
-        document.querySelectorAll('#bottom-panel textarea').forEach((textarea) => {
-            if (textarea.monacoEditor) {
-                setTimeout(() => textarea.monacoEditor.layout(), 100);
-            }
-        });
+        document
+            .querySelectorAll('#bottom-panel textarea')
+            .forEach((textarea) => {
+                if (textarea.monacoEditor) {
+                    setTimeout(() => textarea.monacoEditor.layout(), 100);
+                }
+            });
     },
 };

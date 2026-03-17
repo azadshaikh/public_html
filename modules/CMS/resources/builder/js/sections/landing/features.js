@@ -1,6 +1,8 @@
 Astero.Sections.add('features/features-1', {
     name: 'Features 1',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/features/features-1-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/features/features-1-thumb.jpeg',
     html: `<section class="features-1 bg-alternate" title="features-1">
   <div class="container">
     <div class="row wrap">
@@ -48,7 +50,9 @@ Astero.Sections.add('features/features-1', {
 });
 Astero.Sections.add('features/features-2', {
     name: 'Features 2',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/features/features-2-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/features/features-2-thumb.jpeg',
     html: `<section class="features-2 py-5 bg-alternate" title="features-2">
 
   <div class="row no-gutters">
@@ -87,7 +91,9 @@ Astero.Sections.add('features/features-2', {
 });
 Astero.Sections.add('features/features-3', {
     name: 'Features 3',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/features/features-3-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/features/features-3-thumb.jpeg',
     html: `<section class="features-3 py-5 bg-alternate" title="features-3">
   <div class="container">
 
@@ -163,7 +169,9 @@ Astero.Sections.add('features/features-3', {
 });
 Astero.Sections.add('features/features-4', {
     name: 'Features 4',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/features/features-4-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/features/features-4-thumb.jpeg',
     html: `<section class="features-4 py-5 bg-primary bg-gradient text-white" title="features-4">
 
   <div class="container">
@@ -233,7 +241,9 @@ Astero.Sections.add('features/features-4', {
 });
 Astero.Sections.add('features/features-5', {
     name: 'Features 5',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/features/features-5-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/features/features-5-thumb.jpeg',
     html: `<section class="features-5 py-5 bg-alternate" title="features-5">
 
   <div class="container">
@@ -281,7 +291,9 @@ Astero.Sections.add('features/features-5', {
 });
 Astero.Sections.add('features/features-6', {
     name: 'Features 6',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/features/features-6-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/features/features-6-thumb.jpeg',
     html: `<section class="features-6 py-5 bg-alternate" title="features-6">
   <div class="container">
     <div class="row text-center">
@@ -325,7 +337,9 @@ Astero.Sections.add('features/features-6', {
 });
 Astero.Sections.add('features/features-7', {
     name: 'Features 7',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/features/features-7-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/features/features-7-thumb.jpeg',
     html: `<section class="features-7 py-5 bg-alternate" title="features-7">
   <div class="container">
     <div class="row text-center">
@@ -379,7 +393,9 @@ Astero.Sections.add('features/features-7', {
 });
 Astero.Sections.add('features/features-8', {
     name: 'Features 8',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/features/features-8-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/features/features-8-thumb.jpeg',
     html: `<section class="features-8 py-5 bg-alternate" title="features-8">
   <div class="container">
     <div class="row text-center">
@@ -473,7 +489,9 @@ Astero.Sections.add('features/features-8', {
 });
 Astero.Sections.add('features/features-9', {
     name: 'Features 9',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/features/features-9-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/features/features-9-thumb.jpeg',
     html: `<section class="features-9 py-5 bg-alternate" title="features-9">
   <div class="container">
     <div class="row text-center">
@@ -588,7 +606,9 @@ Astero.Sections.add('features/features-9', {
 });
 Astero.Sections.add('features/features-10', {
     name: 'Features 10',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/features/features-10-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/features/features-10-thumb.jpeg',
     html: `<section class="features-10 py-5 bg-alternate" title="features-10">
   <div class="container">
     <div class="row text-end align-items-center">
@@ -640,7 +660,9 @@ Astero.Sections.add('features/features-10', {
 });
 Astero.Sections.add('features/features-11', {
     name: 'Features 11',
-    image: Astero.builderAssetsUrl + '/screenshots/sections/features/features-11-thumb.jpeg',
+    image:
+        Astero.builderAssetsUrl +
+        '/screenshots/sections/features/features-11-thumb.jpeg',
     html: `<section class="features-11 py-5 bg-alternate" title="features-11">
   <div class="container">
     <div class="row text-center">

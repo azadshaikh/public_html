@@ -33,7 +33,9 @@ Astero.StyleManager = {
             // }
 
             // Remove legacy div containers if present
-            let styleDivs = doc.querySelectorAll('div[id="pagebuilder-styles"]');
+            let styleDivs = doc.querySelectorAll(
+                'div[id="pagebuilder-styles"]',
+            );
             styleDivs.forEach((div) => div.parentNode.removeChild(div));
 
             // Look for the style tag
@@ -138,7 +140,11 @@ Astero.StyleManager = {
             const node = element;
 
             // Force inline styles for all editor-applied styles.
-            if (value === '' || value === null || typeof value === 'undefined') {
+            if (
+                value === '' ||
+                value === null ||
+                typeof value === 'undefined'
+            ) {
                 node.style.removeProperty(styleProp);
             } else {
                 node.style.setProperty(styleProp, value);
@@ -151,7 +157,11 @@ Astero.StyleManager = {
         // Only use CSS styles when element is passed as string selector.
         if (this.inlineCSS && Astero.Builder?.selectedEl) {
             const node = Astero.Builder.selectedEl;
-            if (value === '' || value === null || typeof value === 'undefined') {
+            if (
+                value === '' ||
+                value === null ||
+                typeof value === 'undefined'
+            ) {
                 node.style.removeProperty(styleProp);
             } else {
                 node.style.setProperty(styleProp, value);
@@ -161,7 +171,9 @@ Astero.StyleManager = {
 
         selector = this.addSelectorState(selector);
 
-        const media = document.getElementById('canvas').classList.contains('tablet')
+        const media = document
+            .getElementById('canvas')
+            .classList.contains('tablet')
             ? 'tablet'
             : document.getElementById('canvas').classList.contains('mobile')
               ? 'mobile'
@@ -279,7 +291,9 @@ Astero.StyleManager = {
             }
         } else if (window.getComputedStyle) {
             value = document.defaultView.getDefaultComputedStyle
-                ? document.defaultView.getDefaultComputedStyle(el, null).getPropertyValue(styleProp)
+                ? document.defaultView
+                      .getDefaultComputedStyle(el, null)
+                      .getPropertyValue(styleProp)
                 : window.getComputedStyle(el, null).getPropertyValue(styleProp);
         }
 
@@ -334,7 +348,9 @@ Astero.ScriptManager = {
             }
 
             // Remove any duplicate elements
-            const allScriptContainers = doc.querySelectorAll('[id="pagebuilder-scripts"]');
+            const allScriptContainers = doc.querySelectorAll(
+                '[id="pagebuilder-scripts"]',
+            );
             allScriptContainers.forEach((el) => {
                 if (el !== script) {
                     el.parentNode.removeChild(el);
@@ -368,7 +384,9 @@ Astero.ScriptManager = {
             this.scriptContainer.textContent = scriptContent;
             this.scripts['main'] = scriptContent;
         }
-        let scriptsEl = this.doc ? this.doc.getElementById('pagebuilder-scripts') : null;
+        let scriptsEl = this.doc
+            ? this.doc.getElementById('pagebuilder-scripts')
+            : null;
         if (scriptsEl) {
             return (scriptsEl.textContent = scriptContent);
         }
@@ -376,7 +394,9 @@ Astero.ScriptManager = {
 
     getScript: function (element) {
         // Always read from pagebuilder-scripts if available
-        let scriptsEl = this.doc ? this.doc.getElementById('pagebuilder-scripts') : null;
+        let scriptsEl = this.doc
+            ? this.doc.getElementById('pagebuilder-scripts')
+            : null;
         if (scriptsEl) {
             return scriptsEl.textContent || '';
         }
@@ -440,9 +460,15 @@ Astero.FontsManager = {
         let fonts = {};
         let fontNames = [];
 
-        let fontSelect = generateElements("<optgroup label='" + groupName + "'></optgroup>")[0];
+        let fontSelect = generateElements(
+            "<optgroup label='" + groupName + "'></optgroup>",
+        )[0];
         for (const font in fontList) {
-            fontNames.push({ text: font, value: font, 'data-provider': provider });
+            fontNames.push({
+                text: font,
+                value: font,
+                'data-provider': provider,
+            });
             let option = new Option(font, font);
             option.dataset.provider = provider;
             //option.style.setProperty("font-family", font);//font preview if the fonts are loaded in editor
@@ -459,14 +485,20 @@ Astero.FontsManager = {
         if (list) {
             list.onChange = function (node, value, input, component) {
                 let option = input.options[input.selectedIndex];
-                Astero.FontsManager.addFont(option.dataset.provider, value, node);
+                Astero.FontsManager.addFont(
+                    option.dataset.provider,
+                    value,
+                    node,
+                );
                 return node;
             };
 
             list.data.options.push({ optgroup: groupName });
             list.data.options = list.data.options.concat(fontNames);
 
-            Astero.Components.updateProperty('_base', 'font-family', { data: list.data });
+            Astero.Components.updateProperty('_base', 'font-family', {
+                data: list.data,
+            });
 
             //update default font list
             fontList = list.data.options;
@@ -503,10 +535,15 @@ Astero.FontsManager = {
             let elementFont = this.activeFonts[i];
             if (elementFont.element) {
                 if (
-                    Astero.StyleManager.getStyle(elementFont.element, 'font-family').replaceAll('"', '') !=
-                    elementFont.fontFamily
+                    Astero.StyleManager.getStyle(
+                        elementFont.element,
+                        'font-family',
+                    ).replaceAll('"', '') != elementFont.fontFamily
                 ) {
-                    this.removeFont(elementFont.provider, elementFont.fontFamily);
+                    this.removeFont(
+                        elementFont.provider,
+                        elementFont.fontFamily,
+                    );
                 }
             }
         }

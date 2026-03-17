@@ -108,16 +108,7 @@ export function initModulePageFilter(
     modules: { items: SharedModuleDescriptor[] } | undefined,
 ): void {
     if (modules?.items) {
-        enabledModuleIdentifiers = new Set(
-            modules.items
-                .flatMap((module) => [
-                    module.name,
-                    module.slug,
-                    module.inertiaNamespace,
-                ])
-                .filter((identifier): identifier is string => typeof identifier === 'string' && identifier.trim() !== '')
-                .map(normalizeModuleIdentifier),
-        );
+        enabledModuleNames = new Set(modules.items.map((m) => m.name));
     }
 
     // (Re)build the page registry with the now-known enabled set.

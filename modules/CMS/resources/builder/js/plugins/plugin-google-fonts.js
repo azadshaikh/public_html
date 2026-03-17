@@ -7,7 +7,8 @@ window.GoogleFontsManager = {
         const Astero = root.Astero;
         if (!Astero?.Builder?.frameHead) return;
 
-        let googleFontsLink = Astero.Builder.frameHead.querySelector('#google-fonts-link');
+        let googleFontsLink =
+            Astero.Builder.frameHead.querySelector('#google-fonts-link');
 
         if (this.activeFonts.length == 0) {
             if (googleFontsLink) googleFontsLink.remove();
@@ -15,11 +16,16 @@ window.GoogleFontsManager = {
         }
 
         if (!googleFontsLink) {
-            googleFontsLink = generateElements(`<link id="google-fonts-link" href="" rel="stylesheet">`)[0];
+            googleFontsLink = generateElements(
+                `<link id="google-fonts-link" href="" rel="stylesheet">`,
+            )[0];
             Astero.Builder.frameHead.append(googleFontsLink);
         }
 
-        googleFontsLink.setAttribute('href', this.url + this.activeFonts.join('&family='));
+        googleFontsLink.setAttribute(
+            'href',
+            this.url + this.activeFonts.join('&family='),
+        );
     },
 
     removeFont: function (fontName) {
@@ -52,7 +58,10 @@ let googlefontNames = [];
     const Astero = root.Astero;
     if (!Astero?.FontsManager?.addFontList) return;
 
-    const googleFontsUrl = new URL('/resources/google-fonts.json', window.location.origin).toString();
+    const googleFontsUrl = new URL(
+        '/resources/google-fonts.json',
+        window.location.origin,
+    ).toString();
 
     fetch(googleFontsUrl)
         .then((response) => {
@@ -65,9 +74,16 @@ let googlefontNames = [];
             Astero.FontsManager.addFontList('google', 'Google Fonts', data);
         })
         .catch((error) => {
-            console.warn('[GoogleFonts] Failed to load google-fonts.json', error);
+            console.warn(
+                '[GoogleFonts] Failed to load google-fonts.json',
+                error,
+            );
             if (typeof window.displayToast === 'function') {
-                window.displayToast('bg-danger', 'Error', 'Error loading google fonts!');
+                window.displayToast(
+                    'bg-danger',
+                    'Error',
+                    'Error loading google fonts!',
+                );
             } else if (Astero?.Gui?.notify) {
                 Astero.Gui.notify('Error loading google fonts!', 'error');
             }
