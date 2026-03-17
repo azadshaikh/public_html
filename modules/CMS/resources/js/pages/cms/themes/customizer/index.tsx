@@ -19,7 +19,6 @@ import {
 } from 'lucide-react';
 import {
     FormEvent,
-    KeyboardEvent as ReactKeyboardEvent,
     useCallback,
     useEffect,
     useMemo,
@@ -273,6 +272,18 @@ export default function ThemeCustomizerIndex({
             ) as Record<string, string | number | boolean>,
         [initialValues],
     );
+    const defaultValues = useMemo(
+        () =>
+            Object.fromEntries(
+                Object.entries(sections).flatMap(([, section]) =>
+                    Object.entries(section.settings ?? {}).map(([fieldId, field]) => [
+                        fieldId,
+                        normalizeFieldValue(field.default),
+                    ]),
+                ),
+            ) as Record<string, string | number | boolean>,
+        [sections],
+    );
     const [values, setValues] = useState<Record<string, string | number | boolean>>(
         normalizedInitialValues,
     );
@@ -334,6 +345,14 @@ export default function ThemeCustomizerIndex({
                 [fieldId]: value,
             }));
         },
+    );
+
+    const applySnapshot = useCallback(
+        (snapshot: Record<string, string | number | boolean>) => {
+            setValues(snapshot);
+            initialSerialized.current = JSON.stringify(snapshot);
+        },
+        [],
     );
 
     const injectPreviewCss = useCallback((css: string) => {
@@ -474,7 +493,7 @@ export default function ThemeCustomizerIndex({
         return () => {
             window.removeEventListener('keydown', onKeyDown);
         };
-    });
+    }, [handleSave]);
 
     const handlePreviewLoad = useCallback(() => {
         injectPreviewCss(latestPreviewCssRef.current);
@@ -559,8 +578,8 @@ export default function ThemeCustomizerIndex({
                 title: 'Customizer reset',
                 description: payload.message || 'Theme settings were reset to defaults.',
             });
-            initialSerialized.current = JSON.stringify(normalizedInitialValues);
-            router.reload();
+            applySnapshot(defaultValues);
+            refreshPreview();
         } catch (error) {
             showAppToast({
                 variant: 'error',
@@ -571,7 +590,7 @@ export default function ThemeCustomizerIndex({
                         : 'Unable to reset theme settings.',
             });
         }
-    }, [normalizedInitialValues]);
+    }, [applySnapshot, defaultValues, refreshPreview]);
 
     const handleExport = useCallback(async () => {
         try {
@@ -639,6 +658,29 @@ export default function ThemeCustomizerIndex({
             formData.append('settings_file', importFile);
 
             try {
+                const importedText = await importFile.text();
+                const importedJson = JSON.parse(importedText) as Record<
+                    string,
+                    string | number | boolean | null
+                >;
+                const importedSnapshot = Object.fromEntries(
+                    Object.entries(importedJson).map(([key, value]) => {
+                        const field = Object.values(sections)
+                            .flatMap((section) => Object.entries(section.settings ?? {}))
+                            .find(([fieldId]) => fieldId === key)?.[1];
+
+                        if (field?.type === 'code_editor' && typeof value === 'string') {
+                            try {
+                                return [key, atob(value)];
+                            } catch {
+                                return [key, value];
+                            }
+                        }
+
+                        return [key, normalizeFieldValue(value)];
+                    }),
+                ) as Record<string, string | number | boolean>;
+
                 const response = await fetch(route('cms.appearance.themes.customizer.import'), {
                     method: 'POST',
                     body: formData,
@@ -660,12 +702,16 @@ export default function ThemeCustomizerIndex({
 
                 setImportDialogOpen(false);
                 setImportFile(null);
+                applySnapshot({
+                    ...defaultValues,
+                    ...importedSnapshot,
+                });
                 showAppToast({
                     variant: 'success',
                     title: 'Customizer imported',
                     description: payload.message || 'Theme settings were imported successfully.',
                 });
-                router.reload();
+                refreshPreview();
             } catch (error) {
                 showAppToast({
                     variant: 'error',
@@ -677,7 +723,7 @@ export default function ThemeCustomizerIndex({
                 });
             }
         },
-        [importFile],
+        [applySnapshot, defaultValues, importFile, refreshPreview, sections],
     );
 
     const openCodeEditor = useCallback((fieldId: string, field: ThemeCustomizerField) => {
