@@ -22,18 +22,17 @@ class ReleaseResource extends ScaffoldResource
         return (string) ($this->release_type ?? request()->route('type') ?? request()->input('type', 'application'));
     }
 
-    private function routeNamespace(string $type): string
+    private function releaseRouteParameters(string $type, array $parameters = []): array
     {
-        return $type === 'module'
-            ? 'releasemanager.module'
-            : 'releasemanager.application';
+        return [
+            'type' => $type,
+            ...$parameters,
+        ];
     }
 
     protected function definition(): ScaffoldDefinition
     {
-        $type = $this->currentType();
-
-        return new ReleaseDefinition($type);
+        return new ReleaseDefinition;
     }
 
     protected function customFields(): array
@@ -65,7 +64,7 @@ class ReleaseResource extends ScaffoldResource
         };
 
         $data = [
-            'show_url' => route($this->routeNamespace($type).'.show', ['release' => $this->id]),
+            'show_url' => route('releasemanager.releases.show', $this->releaseRouteParameters($type, ['release' => $this->id])),
 
             'status_label' => $statusLabel,
             'status_class' => $statusClass,
@@ -83,7 +82,7 @@ class ReleaseResource extends ScaffoldResource
     }
 
     /**
-     * Release routes are nested under /{type}/..., so we must build action URLs with both params.
+     * Release routes are type-scoped, so row actions must include the current type.
      */
     protected function getActions(): array
     {
@@ -109,7 +108,7 @@ class ReleaseResource extends ScaffoldResource
 
             try {
                 $suffix = str($actionData['route'])->afterLast('.')->value();
-                $url = route($this->routeNamespace($type).'.'.$suffix, ['release' => $id]);
+                $url = route('releasemanager.releases.'.$suffix, $this->releaseRouteParameters($type, ['release' => $id]));
             } catch (Throwable) {
                 continue;
             }

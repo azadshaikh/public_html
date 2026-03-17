@@ -13,10 +13,10 @@ class ReleaseCrudMigrationTest extends TestCase
         $contents = file_get_contents(base_path('modules/ReleaseManager/routes/web.php'));
 
         $this->assertIsString($contents);
-        $this->assertStringContainsString("\$registerReleaseRoutes('application', 'application', 'application');", $contents);
-        $this->assertStringContainsString("\$registerReleaseRoutes('module', 'module', 'module');", $contents);
-        $this->assertStringContainsString("->defaults('type', \$type)->name('index');", $contents);
-        $this->assertStringContainsString("admin_slug'), '/').'/releasemanager/application", $contents);
+        $this->assertStringContainsString("'prefix' => 'releases/{type}'", $contents);
+        $this->assertStringContainsString("'as' => 'releases.'", $contents);
+        $this->assertStringContainsString("'where' => ['type' => \$releaseTypePattern]", $contents);
+        $this->assertStringContainsString("->where('status', \$statusPattern)", $contents);
     }
 
     public function test_release_form_uses_supported_frontend_dependencies(): void
@@ -26,12 +26,12 @@ class ReleaseCrudMigrationTest extends TestCase
 
         $this->assertIsString($contents);
         $this->assertIsString($indexPage);
-        $this->assertStringContainsString('const routeNamespace = type === \'module\' ? \'releasemanager.module\' : \'releasemanager.application\';', $contents);
+        $this->assertStringContainsString("route('releasemanager.releases.next-version'", $contents);
         $this->assertStringContainsString('type="date"', $contents);
         $this->assertStringContainsString('put(submitUrl);', $contents);
         $this->assertStringNotContainsString("import axios from 'axios';", $contents);
         $this->assertStringNotContainsString('@/components/ui/date-picker', $contents);
-        $this->assertStringContainsString('route(`${routeNamespace}.index`)', $indexPage);
+        $this->assertStringContainsString("route('releasemanager.releases.index'", $indexPage);
     }
 
     public function test_release_backend_preserves_type_query_and_release_parameter_names(): void
@@ -44,10 +44,24 @@ class ReleaseCrudMigrationTest extends TestCase
         $this->assertIsString($resource);
         $this->assertIsString($navigation);
 
-        $this->assertStringContainsString('private function routeNamespace(): string', $controller);
+        $this->assertStringContainsString('private function releaseRouteParameters(array $parameters = []): array', $controller);
         $this->assertStringContainsString("request()->route('type')", $controller);
-        $this->assertStringContainsString("route(\$this->routeNamespace(\$type).'.show'", $resource);
-        $this->assertStringContainsString("'active_patterns' => [\$routeGroup.'.*']", $navigation);
+        $this->assertStringContainsString("route('releasemanager.releases.show'", $resource);
+        $this->assertStringContainsString("['route' => 'releasemanager.releases.index', 'params' => ['type' => \$typeValue]]", $navigation);
         $this->assertStringContainsString("'sections' => [", $navigation);
+    }
+
+    public function test_release_controller_uses_type_scoped_method_signatures_for_nested_routes(): void
+    {
+        $controller = file_get_contents(base_path('modules/ReleaseManager/app/Http/Controllers/ReleaseController.php'));
+
+        $this->assertIsString($controller);
+        $this->assertStringContainsString('public function show(int|string $id, int|string|null $release = null): Response', $controller);
+        $this->assertStringContainsString('public function edit(int|string $id, int|string|null $release = null): Response', $controller);
+        $this->assertStringContainsString('public function update(Request $request, int|string $id, int|string|null $release = null): RedirectResponse', $controller);
+        $this->assertStringContainsString('public function destroy(int|string $id, int|string|null $release = null): RedirectResponse', $controller);
+        $this->assertStringContainsString('public function restore(int|string $id, int|string|null $release = null): RedirectResponse', $controller);
+        $this->assertStringContainsString('public function forceDelete(int|string $id, int|string|null $release = null): RedirectResponse', $controller);
+        $this->assertStringContainsString('private function resolveReleaseId(int|string $id, int|string|null $release = null): int|string', $controller);
     }
 }

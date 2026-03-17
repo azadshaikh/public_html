@@ -65,3 +65,13 @@ export function buildDatagridState(
         iconMap: RELEASE_MANAGER_ICON_MAP,
     });
 }
+
+export function releaseRouteParams(
+    type: string,
+    params: Record<string, string | number | undefined> = {},
+) {
+    return {
+        type,
+        ...params,
+    };
+}

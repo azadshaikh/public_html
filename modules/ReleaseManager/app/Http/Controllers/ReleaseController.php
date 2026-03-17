@@ -14,6 +14,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use Inertia\Inertia;
+use Inertia\Response;
 use Modules\ReleaseManager\Services\ReleaseService;
 use RuntimeException;
 
@@ -36,6 +38,8 @@ class ReleaseController extends ScaffoldController implements HasMiddleware
 
     protected function service(): ReleaseService
     {
+        $this->releaseService->setReleaseType($this->currentType());
+
         return $this->releaseService;
     }
 
@@ -86,7 +90,31 @@ class ReleaseController extends ScaffoldController implements HasMiddleware
 
     protected function getAfterStoreRedirectUrl(Model $model): string
     {
-        return $this->typedRoute('edit', ['release' => $model->getKey()]);
+        return route('releasemanager.releases.edit', $this->releaseRouteParameters(['release' => $model->getKey()]));
+    }
+
+    public function show(int|string $id, int|string|null $release = null): Response
+    {
+        $this->enforcePermission('view');
+
+        $model = $this->findModel($this->resolveReleaseId($id, $release));
+
+        return Inertia::render($this->inertiaPage().'/show', [
+            $this->getModelKey() => $this->transformModelForShow($model),
+            ...$this->getShowViewData($model),
+        ]);
+    }
+
+    public function edit(int|string $id, int|string|null $release = null): Response
+    {
+        $this->enforcePermission('edit');
+
+        $model = $this->findModel($this->resolveReleaseId($id, $release));
+
+        return Inertia::render($this->inertiaPage().'/edit', [
+            $this->getModelKey() => $this->transformModelForEdit($model),
+            ...$this->getFormViewData($model),
+        ]);
     }
 
     public function getNextVersion(Request $request): JsonResponse
@@ -100,11 +128,11 @@ class ReleaseController extends ScaffoldController implements HasMiddleware
         ]);
     }
 
-    public function update(Request $request, int|string $id): RedirectResponse
+    public function update(Request $request, int|string $id, int|string|null $release = null): RedirectResponse
     {
         $this->enforcePermission('edit');
 
-        $model = $this->findModel($id);
+        $model = $this->findModel($this->resolveReleaseId($id, $release));
         $previousValues = $this->capturePreviousValues($model);
         $validatedData = $this->validateRequest($request);
 
@@ -121,18 +149,18 @@ class ReleaseController extends ScaffoldController implements HasMiddleware
         );
 
         return redirect()
-            ->to($this->typedRoute('edit', ['release' => $updatedModel->getKey()]))
+            ->to(route('releasemanager.releases.edit', $this->releaseRouteParameters(['release' => $updatedModel->getKey()])))
             ->with('status', $this->buildUpdateSuccessMessage($updatedModel));
     }
 
-    public function destroy(int|string $id): RedirectResponse
+    public function destroy(int|string $id, int|string|null $release = null): RedirectResponse
     {
         $this->enforcePermission('delete');
 
         try {
-            $model = $this->findModel($id);
+            $model = $this->findModel($this->resolveReleaseId($id, $release));
         } catch (ModelNotFoundException) {
-            return redirect()->to($this->typedIndexUrl())
+            return redirect()->to(route('releasemanager.releases.index', $this->releaseRouteParameters()))
                 ->with('status', $this->getEntityName().' already deleted.');
         }
 
@@ -148,18 +176,33 @@ class ReleaseController extends ScaffoldController implements HasMiddleware
         $this->handleDeletionSideEffects($model);
         $this->logActivity($model, ActivityAction::DELETE, $this->getEntityName().' moved to trash');
 
-        return redirect()->to($this->typedIndexUrl())
+        return redirect()->to(route('releasemanager.releases.index', $this->releaseRouteParameters()))
             ->with('status', $this->getEntityName().' moved to trash.');
     }
 
-    public function forceDelete(int|string $id): RedirectResponse
+    public function restore(int|string $id, int|string|null $release = null): RedirectResponse
+    {
+        $this->enforcePermission('restore');
+
+        $model = $this->service()->restore($this->resolveReleaseId($id, $release));
+
+        CacheInvalidation::touchForModel($model, $this->getEntityName().' restored');
+
+        $this->handleRestorationSideEffects($model);
+        $this->logActivity($model, ActivityAction::RESTORE, $this->getEntityName().' restored');
+
+        return back()
+            ->with('status', $this->getEntityName().' restored successfully.');
+    }
+
+    public function forceDelete(int|string $id, int|string|null $release = null): RedirectResponse
     {
         $this->enforcePermission('delete');
 
         try {
-            $model = $this->findModel($id);
+            $model = $this->findModel($this->resolveReleaseId($id, $release));
         } catch (ModelNotFoundException) {
-            return redirect()->to($this->typedIndexUrl())
+            return redirect()->to(route('releasemanager.releases.index', $this->releaseRouteParameters()))
                 ->with('status', $this->getEntityName().' already deleted.');
         }
 
@@ -178,25 +221,21 @@ class ReleaseController extends ScaffoldController implements HasMiddleware
         CacheInvalidation::touchForModel($model, $this->getEntityName().' permanently deleted');
         $this->logActivity($model, ActivityAction::FORCE_DELETE, $this->getEntityName().' permanently deleted');
 
-        return redirect()->to($this->typedIndexUrl())
+        return redirect()->to(route('releasemanager.releases.index', $this->releaseRouteParameters()))
             ->with('status', $this->getEntityName().' permanently deleted.');
     }
 
-    private function typedIndexUrl(): string
+    private function releaseRouteParameters(array $parameters = []): array
     {
-        return $this->typedRoute('index');
+        return [
+            'type' => $this->currentType(),
+            ...$parameters,
+        ];
     }
 
-    private function typedRoute(string $routeSuffix, array $parameters = []): string
+    private function resolveReleaseId(int|string $id, int|string|null $release = null): int|string
     {
-        return route($this->routeNamespace().'.'.$routeSuffix, $parameters);
-    }
-
-    private function routeNamespace(): string
-    {
-        return $this->currentType() === 'module'
-            ? 'releasemanager.module'
-            : 'releasemanager.application';
+        return $release ?? $id;
     }
 
     private function currentType(): string

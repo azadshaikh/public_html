@@ -24,14 +24,17 @@ foreach ($releaseTypes as $data) {
     }
 
     $typeIcon = $data['icon'] ?? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/></svg>';
-    $routeGroup = $typeValue === 'module' ? 'releasemanager.module' : 'releasemanager.application';
-
     $releaseTypeMenus['rm_type_'.$typeValue] = [
         'label' => $data['label'] ?? ucfirst($typeValue),
         'icon' => $typeIcon,
         'permission' => 'view_releases',
-        'active_patterns' => [$routeGroup.'.*'],
-        'route' => ['name' => $routeGroup.'.index', 'params' => ['status' => 'all']],
+        'active_patterns' => [
+            ['route' => 'releasemanager.releases.index', 'params' => ['type' => $typeValue]],
+            ['route' => 'releasemanager.releases.create', 'params' => ['type' => $typeValue]],
+            ['route' => 'releasemanager.releases.show', 'params' => ['type' => $typeValue]],
+            ['route' => 'releasemanager.releases.edit', 'params' => ['type' => $typeValue]],
+        ],
+        'route' => ['name' => 'releasemanager.releases.index', 'params' => ['type' => $typeValue, 'status' => 'all']],
     ];
 }
 

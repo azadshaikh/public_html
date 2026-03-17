@@ -15,11 +15,10 @@ import type {
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
-import { buildDatagridState } from '../../../lib/helpers';
+import { buildDatagridState, releaseRouteParams } from '../../../lib/helpers';
 
 export default function ReleasesIndex({ config, rows, filters, statistics, type }: any) {
     const page = usePage<AuthenticatedSharedData>();
-    const routeNamespace = type === 'module' ? 'releasemanager.module' : 'releasemanager.application';
     const abilities = page.props.auth.abilities || {};
     // Ensure fallback abilities in case they aren't matching exact strings
     const canAddReleases = abilities.addReleases ?? true;
@@ -29,19 +28,19 @@ export default function ReleasesIndex({ config, rows, filters, statistics, type 
     const { currentStatus, gridFilters, perPage, sorting, statusTabs } = buildDatagridState(config, filters, statistics, 'Search releases...');
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: route('dashboard') },
-        { title: 'Releases', href: route(`${routeNamespace}.index`) },
+        { title: 'Releases', href: route('releasemanager.releases.index', releaseRouteParams(type, { status: 'all' })) },
     ];
 
     const handleBulkAction = (action: string, selected: any[], clearSelection: () => void) => {
         if (selected.length === 0) return;
-        router.post(route(`${routeNamespace}.bulk-action`), { action, ids: selected.map((p: any) => p.id), status: currentStatus }, { preserveScroll: true, onSuccess: () => clearSelection() });
+        router.post(route('releasemanager.releases.bulk-action', releaseRouteParams(type)), { action, ids: selected.map((p: any) => p.id), status: currentStatus }, { preserveScroll: true, onSuccess: () => clearSelection() });
     };
 
     const columns: DatagridColumn<any>[] = [
         {
             key: 'version', header: 'Version', sortable: true,
             cell: (item) => (
-                <Link href={route(`${routeNamespace}.edit`, { release: item.id })} className="flex min-w-0 flex-col gap-1 hover:opacity-80">
+                <Link href={route('releasemanager.releases.edit', releaseRouteParams(type, { release: item.id }))} className="flex min-w-0 flex-col gap-1 hover:opacity-80">
                     <span className="font-medium text-foreground">{item.version}</span>
                 </Link>
             ),
@@ -56,13 +55,13 @@ export default function ReleasesIndex({ config, rows, filters, statistics, type 
     const rowActions = (item: any): DatagridAction[] => {
         if (item.is_trashed) {
             return [
-                ...(canRestoreReleases ? [{ label: 'Restore', icon: <RefreshCwIcon />, href: route(`${routeNamespace}.restore`, { release: item.id }), method: 'PATCH' as const, confirm: `Restore "${item.version}"?` }] : []),
-                ...(canDeleteReleases ? [{ label: 'Delete Permanently', icon: <Trash2Icon />, href: route(`${routeNamespace}.force-delete`, { release: item.id }), method: 'DELETE' as const, confirm: `⚠️ Permanently delete "${item.version}"? This cannot be undone!`, variant: 'destructive' as const }] : []),
+                ...(canRestoreReleases ? [{ label: 'Restore', icon: <RefreshCwIcon />, href: route('releasemanager.releases.restore', releaseRouteParams(type, { release: item.id })), method: 'PATCH' as const, confirm: `Restore "${item.version}"?` }] : []),
+                ...(canDeleteReleases ? [{ label: 'Delete Permanently', icon: <Trash2Icon />, href: route('releasemanager.releases.force-delete', releaseRouteParams(type, { release: item.id })), method: 'DELETE' as const, confirm: `⚠️ Permanently delete "${item.version}"? This cannot be undone!`, variant: 'destructive' as const }] : []),
             ];
         }
         return [
-            ...(canEditReleases ? [{ label: 'Edit', href: route(`${routeNamespace}.edit`, { release: item.id }), icon: <PencilIcon /> }] : []),
-            ...(canDeleteReleases ? [{ label: 'Move to Trash', href: route(`${routeNamespace}.destroy`, { release: item.id }), method: 'DELETE' as const, confirm: `Move "${item.version}" to trash?`, icon: <Trash2Icon />, variant: 'destructive' as const }] : []),
+            ...(canEditReleases ? [{ label: 'Edit', href: route('releasemanager.releases.edit', releaseRouteParams(type, { release: item.id })), icon: <PencilIcon /> }] : []),
+            ...(canDeleteReleases ? [{ label: 'Move to Trash', href: route('releasemanager.releases.destroy', releaseRouteParams(type, { release: item.id })), method: 'DELETE' as const, confirm: `Move "${item.version}" to trash?`, icon: <Trash2Icon />, variant: 'destructive' as const }] : []),
         ];
     };
 
@@ -78,10 +77,10 @@ export default function ReleasesIndex({ config, rows, filters, statistics, type 
 
     return (
         <AppLayout breadcrumbs={breadcrumbs} title={type === 'application' ? 'Application Releases' : 'Module Releases'} description="Manage releases and versions"
-            headerActions={canAddReleases ? (<Button asChild><Link href={route(`${routeNamespace}.create`)}><PlusIcon data-icon="inline-start" />Add Release</Link></Button>) : undefined}>
+            headerActions={canAddReleases ? (<Button asChild><Link href={route('releasemanager.releases.create', releaseRouteParams(type))}><PlusIcon data-icon="inline-start" />Add Release</Link></Button>) : undefined}>
             <div className="flex flex-col gap-6">
                 <Datagrid
-                    action={route(`${routeNamespace}.index`)}
+                    action={route('releasemanager.releases.index', releaseRouteParams(type))}
                     rows={rows}
                     columns={columns}
                     filters={gridFilters}

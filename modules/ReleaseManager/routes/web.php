@@ -3,51 +3,48 @@
 use Illuminate\Support\Facades\Route;
 use Modules\ReleaseManager\Http\Controllers\ReleaseController;
 
-Route::middleware(['auth', 'verified'])->group(function (): void {
-    Route::group(['prefix' => config('app.admin_slug').'/releasemanager', 'as' => 'releasemanager.'], function (): void {
-        $registerReleaseRoutes = function (string $prefix, string $name, string $type): void {
-            Route::prefix($prefix)
-                ->name($name.'.')
-                ->middleware(['crud.exceptions'])
-                ->group(function () use ($type): void {
-                    Route::get('/next-version', [ReleaseController::class, 'getNextVersion'])->defaults('type', $type)->name('next-version');
-                    Route::post('/bulk-action', [ReleaseController::class, 'bulkAction'])->defaults('type', $type)->name('bulk-action');
+/** @var string $releaseTypePattern */
+$releaseTypePattern = collect(config('releasemanager.release_types', []))
+    ->pluck('value')
+    ->filter()
+    ->map(fn (mixed $value): string => preg_quote((string) $value, '/'))
+    ->implode('|');
 
-                    Route::get('/create', [ReleaseController::class, 'create'])->defaults('type', $type)->name('create');
-                    Route::post('/', [ReleaseController::class, 'store'])->defaults('type', $type)->name('store');
-                    Route::get('/{release}/edit', [ReleaseController::class, 'edit'])->defaults('type', $type)->whereNumber('release')->name('edit');
-                    Route::put('/{release}', [ReleaseController::class, 'update'])->defaults('type', $type)->whereNumber('release')->name('update');
-                    Route::delete('/{release}', [ReleaseController::class, 'destroy'])->defaults('type', $type)->whereNumber('release')->name('destroy');
+/** @var string $statusPattern */
+$statusPattern = collect(config('releasemanager.status_options', []))
+    ->pluck('value')
+    ->filter()
+    ->map(fn (mixed $value): string => preg_quote((string) $value, '/'))
+    ->prepend('trash')
+    ->prepend('all')
+    ->unique()
+    ->implode('|');
 
-                    Route::patch('/{release}/restore', [ReleaseController::class, 'restore'])->defaults('type', $type)->whereNumber('release')->name('restore');
-                    Route::delete('/{release}/force-delete', [ReleaseController::class, 'forceDelete'])->defaults('type', $type)->whereNumber('release')->name('force-delete');
-                    Route::get('/{release}', [ReleaseController::class, 'show'])->defaults('type', $type)->whereNumber('release')->name('show');
+$releaseTypePattern = $releaseTypePattern !== '' ? '^('.$releaseTypePattern.')$' : '^(application|module)$';
+$statusPattern = $statusPattern !== '' ? '^('.$statusPattern.')$' : '^(all|draft|published|deprecate|trash)$';
 
-                    Route::get('/', [ReleaseController::class, 'index'])->defaults('type', $type)->name('index');
-                });
-        };
-
-        $registerReleaseRoutes('application', 'application', 'application');
-        $registerReleaseRoutes('module', 'module', 'module');
-
-        Route::prefix('releases')->name('releases.')->middleware(['crud.exceptions'])->group(function (): void {
-            Route::get('/', function () {
-                return redirect()->to('/'.trim((string) config('app.admin_slug'), '/').'/releasemanager/application');
-            })->name('index');
-
-            Route::get('/create', function () {
-                return redirect()->to('/'.trim((string) config('app.admin_slug'), '/').'/releasemanager/application/create');
-            })->name('create');
-
+Route::middleware(['auth', 'verified'])->group(function () use ($releaseTypePattern, $statusPattern): void {
+    Route::group(['prefix' => config('app.admin_slug').'/releasemanager', 'as' => 'releasemanager.'], function () use ($releaseTypePattern, $statusPattern): void {
+        Route::group([
+            'prefix' => 'releases/{type}',
+            'as' => 'releases.',
+            'middleware' => ['crud.exceptions'],
+            'where' => ['type' => $releaseTypePattern],
+        ], function () use ($statusPattern): void {
             Route::get('/next-version', [ReleaseController::class, 'getNextVersion'])->name('next-version');
             Route::post('/bulk-action', [ReleaseController::class, 'bulkAction'])->name('bulk-action');
+            Route::get('/create', [ReleaseController::class, 'create'])->name('create');
             Route::post('/', [ReleaseController::class, 'store'])->name('store');
-            Route::get('/{release}', [ReleaseController::class, 'show'])->whereNumber('release')->name('show');
             Route::get('/{release}/edit', [ReleaseController::class, 'edit'])->whereNumber('release')->name('edit');
             Route::put('/{release}', [ReleaseController::class, 'update'])->whereNumber('release')->name('update');
             Route::delete('/{release}', [ReleaseController::class, 'destroy'])->whereNumber('release')->name('destroy');
             Route::patch('/{release}/restore', [ReleaseController::class, 'restore'])->whereNumber('release')->name('restore');
             Route::delete('/{release}/force-delete', [ReleaseController::class, 'forceDelete'])->whereNumber('release')->name('force-delete');
+            Route::get('/{release}', [ReleaseController::class, 'show'])->whereNumber('release')->name('show');
+
+            Route::get('/{status?}', [ReleaseController::class, 'index'])
+                ->where('status', $statusPattern)
+                ->name('index');
         });
     });
 });

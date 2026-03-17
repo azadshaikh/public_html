@@ -13,12 +13,14 @@ use Modules\ReleaseManager\Models\Release;
 
 class ReleaseDefinition extends ScaffoldDefinition
 {
-    public function __construct(
-        private readonly string $type = 'application'
-    ) {
-        $this->routePrefix = 'releasemanager.releases';
-        $this->permissionPrefix = 'releases';
-        $this->statusField = 'status';
+    protected string $routePrefix = 'releasemanager.releases';
+
+    protected string $permissionPrefix = 'releases';
+
+    protected ?string $statusField = 'status';
+
+    public function __construct()
+    {
         $this->perPage = 10;
         $this->defaultSort = 'release_at';
         $this->defaultSortDirection = 'desc';
@@ -32,11 +34,6 @@ class ReleaseDefinition extends ScaffoldDefinition
     public function getRequestClass(): ?string
     {
         return ReleaseRequest::class;
-    }
-
-    public function shouldValidateConventionalRouteNames(): bool
-    {
-        return false;
     }
 
     public function columns(): array

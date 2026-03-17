@@ -39,7 +39,7 @@ class ReleaseService implements ScaffoldServiceInterface
 
     public function getScaffoldDefinition(): ScaffoldDefinition
     {
-        return new ReleaseDefinition($this->resolveReleaseType());
+        return new ReleaseDefinition;
     }
 
     public function getStatistics(): array
@@ -158,8 +158,8 @@ class ReleaseService implements ScaffoldServiceInterface
     }
 
     /**
-     * Releases routes are nested under /{type}/..., so the default Scaffoldable
-     * row action URL builder (route(name, id)) would generate invalid URLs.
+     * Releases require the current type route parameter, so the default
+     * Scaffoldable row action URL builder cannot be used directly.
      *
      * Note: This is a safety-net for cases where the Resource isn't used.
      */
@@ -186,8 +186,10 @@ class ReleaseService implements ScaffoldServiceInterface
 
             try {
                 $suffix = str($actionData['route'])->afterLast('.')->value();
-                $routeName = $type === 'module' ? 'releasemanager.module.'.$suffix : 'releasemanager.application.'.$suffix;
-                $url = route($routeName, ['release' => $item->getKey()]);
+                $url = route('releasemanager.releases.'.$suffix, [
+                    'type' => $type,
+                    'release' => $item->getKey(),
+                ]);
             } catch (Throwable) {
                 continue;
             }
@@ -220,8 +222,8 @@ class ReleaseService implements ScaffoldServiceInterface
     }
 
     /**
-     * Release routes are type-scoped (/{type}/...), so empty-state create URL
-     * must include the required {type} parameter.
+     * Release routes are type-scoped, so the empty-state create URL must
+     * preserve the current type.
      */
     protected function getEmptyStateConfig(): array
     {
@@ -233,7 +235,7 @@ class ReleaseService implements ScaffoldServiceInterface
             'message' => sprintf('There are no %s to display.', $this->getEntityPlural()),
             'action' => [
                 'label' => 'Create '.$this->getEntityName(),
-                'url' => route($type === 'module' ? 'releasemanager.module.create' : 'releasemanager.application.create'),
+                'url' => route('releasemanager.releases.create', ['type' => $type]),
             ],
         ];
     }

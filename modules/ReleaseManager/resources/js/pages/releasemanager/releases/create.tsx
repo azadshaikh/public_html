@@ -1,15 +1,15 @@
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import { ReleaseForm } from '../../../components/release-form';
+import { releaseRouteParams } from '../../../lib/helpers';
 
 export default function ReleaseCreate({ initialValues, versionTypes, statusOptions, type }: any) {
     const title = type === 'application' ? 'Add Application Release' : 'Add Module Release';
-    const routeNamespace = type === 'module' ? 'releasemanager.module' : 'releasemanager.application';
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: route('dashboard') },
-        { title: 'Releases', href: route(`${routeNamespace}.index`) },
-        { title, href: route(`${routeNamespace}.create`) },
+        { title: 'Releases', href: route('releasemanager.releases.index', releaseRouteParams(type, { status: 'all' })) },
+        { title, href: route('releasemanager.releases.create', releaseRouteParams(type)) },
     ];
 
     return (
@@ -19,7 +19,7 @@ export default function ReleaseCreate({ initialValues, versionTypes, statusOptio
                 versionTypes={versionTypes}
                 statusOptions={statusOptions}
                 type={type}
-                submitUrl={route(`${routeNamespace}.store`)}
+                submitUrl={route('releasemanager.releases.store', releaseRouteParams(type))}
                 method="post"
             />
         </AppLayout>

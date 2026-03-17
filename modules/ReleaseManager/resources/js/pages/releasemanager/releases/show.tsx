@@ -6,16 +6,16 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
+import { releaseRouteParams } from '../../../lib/helpers';
 
 export default function ReleaseShow({ release, type, statusOptions }: any) {
     const title = `Release ${release.version}`;
     const displayType = type === 'application' ? 'Application Releases' : 'Module Releases';
-    const routeNamespace = type === 'module' ? 'releasemanager.module' : 'releasemanager.application';
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: route('dashboard') },
-        { title: 'Releases', href: route(`${routeNamespace}.index`) },
-        { title, href: route(`${routeNamespace}.show`, { release: release.id }) },
+        { title: 'Releases', href: route('releasemanager.releases.index', releaseRouteParams(type, { status: 'all' })) },
+        { title, href: route('releasemanager.releases.show', releaseRouteParams(type, { release: release.id })) },
     ];
 
     const currentStatusLabel = statusOptions?.find((o: any) => o.value === release.status)?.label || release.status || 'Draft';
@@ -46,7 +46,7 @@ export default function ReleaseShow({ release, type, statusOptions }: any) {
             description={`${displayType} details`}
             headerActions={
                 <Button asChild>
-                    <Link href={route(`${routeNamespace}.edit`, { release: release.id })}>
+                    <Link href={route('releasemanager.releases.edit', releaseRouteParams(type, { release: release.id }))}>
                         <PencilIcon data-icon="inline-start" />
                         Edit Release
                     </Link>

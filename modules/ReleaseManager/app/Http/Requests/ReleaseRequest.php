@@ -81,7 +81,7 @@ class ReleaseRequest extends ScaffoldRequest
 
     protected function definition(): ScaffoldDefinition
     {
-        return new ReleaseDefinition($this->currentType());
+        return new ReleaseDefinition;
     }
 
     /**
@@ -102,7 +102,7 @@ class ReleaseRequest extends ScaffoldRequest
             $this->merge(['package_identifier' => 'main']);
         }
 
-        // Ensure persisted release_type always matches the route context.
+        // Ensure persisted release_type always matches the current route context.
         if (! $this->filled('release_type')) {
             $this->merge(['release_type' => $type]);
         }
