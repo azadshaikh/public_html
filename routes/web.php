@@ -28,7 +28,6 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\UserController;
 use App\Http\Middleware\EnsureSuperUserAccess;
-use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -514,10 +513,10 @@ Route::prefix($adminPrefix)->group(function (): void {
             // --- Media Management (API routes - used by Media Library V2) ---
             Route::group(['prefix' => 'media', 'as' => 'media.'], function (): void {
                 // Upload and API endpoints
-                Route::post('/upload-media', [MediaController::class, 'uploadMediaFiles'])->withoutMiddleware([ValidateCsrfToken::class])->name('upload-media');
+                Route::post('/upload-media', [MediaController::class, 'uploadMediaFiles'])->name('upload-media');
                 Route::get('/upload-settings', [MediaController::class, 'getUploadSettings'])->name('upload-settings');
                 Route::get('/get-all-media', [MediaController::class, 'getAllMedia'])->name('get-all-media');
-                Route::post('/media-details/update', [MediaController::class, 'updateDetails'])->withoutMiddleware([ValidateCsrfToken::class])->name('detail.update');
+                Route::post('/media-details/update', [MediaController::class, 'updateDetails'])->name('detail.update');
                 Route::delete('/media-details/{media_id}/delete', [MediaController::class, 'deleteMedia'])->name('delete-media');
 
                 // MediaVariationService endpoints

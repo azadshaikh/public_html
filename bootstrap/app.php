@@ -36,7 +36,14 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $adminPrefix = trim((string) env('ADMIN_SLUG', 'admin'), '/');
+        $adminPrefix = $adminPrefix !== '' ? $adminPrefix : 'admin';
+
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
+        $middleware->preventRequestForgery(except: [
+            $adminPrefix.'/media/upload-media',
+            $adminPrefix.'/media/media-details/update',
+        ]);
 
         $middleware->alias([
             'cdnCacheHeaders' => CdnCacheHeadersMiddleware::class,

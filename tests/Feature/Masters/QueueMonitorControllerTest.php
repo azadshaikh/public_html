@@ -13,7 +13,7 @@ use App\Models\Role;
 use App\Models\User;
 use App\Services\WorkerMonitorService;
 use Database\Seeders\RolesAndPermissionsSeeder;
-use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Str;
@@ -33,7 +33,7 @@ class QueueMonitorControllerTest extends TestCase
     {
         parent::setUp();
 
-        $this->withoutMiddleware(ValidateCsrfToken::class);
+        $this->withoutMiddleware(PreventRequestForgery::class);
         $this->seed(RolesAndPermissionsSeeder::class);
 
         $this->superUser = User::factory()->create([
