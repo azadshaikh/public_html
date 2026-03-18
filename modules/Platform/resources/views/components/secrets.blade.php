@@ -127,6 +127,10 @@
 
 <script>
     function secretsManager(type, id) {
+        const csrfToken = '{{ csrf_token() }}';
+        const secretsIndexUrl = `{{ route('platform.secrets.index') }}?secretable_type=${type}&secretable_id=${id}`;
+        const secretResourceUrl = `{{ route('platform.secrets.show', '') }}`;
+
         return {
             secretableType: type,
             secretableId: id,
@@ -148,12 +152,31 @@
             init() {
                 this.loadSecrets();
             },
-            loadSecrets() {
-                fetch(`{{ route('platform.secrets.index') }}?secretable_type=${this.secretableType}&secretable_id=${this.secretableId}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        this.secrets = data.secrets;
-                    });
+            async requestJson(url, options = {}) {
+                const { body, headers = {}, ...requestOptions } = options;
+
+                const response = await fetch(url, {
+                    headers: {
+                        Accept: 'application/json',
+                        ...(body ? { 'Content-Type': 'application/json' } : {}),
+                        ...(csrfToken ? { 'X-CSRF-TOKEN': csrfToken } : {}),
+                        ...headers,
+                    },
+                    ...requestOptions,
+                    ...(body ? { body: JSON.stringify(body) } : {}),
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Failed to process secret request.');
+                }
+
+                return data;
+            },
+            async loadSecrets() {
+                const data = await this.requestJson(secretsIndexUrl);
+                this.secrets = data.secrets;
             },
             openCreateModal() {
                 this.resetForm();
@@ -165,48 +188,36 @@
                 this.modalTitle = 'Edit Secret';
                 this.isModalOpen = true;
             },
-            viewSecret(id) {
-                fetch(`{{ route('platform.secrets.show', '') }}/${id}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        this.viewedSecretValue = data.secret.decrypted_value;
-                        this.viewedSecretUsername = data.secret.username || '';
-                        this.isViewModalOpen = true;
-                    });
+            async viewSecret(id) {
+                const data = await this.requestJson(`${secretResourceUrl}/${id}`);
+                this.viewedSecretValue = data.secret.decrypted_value;
+                this.viewedSecretUsername = data.secret.username || '';
+                this.isViewModalOpen = true;
             },
-            deleteSecret(id) {
+            async deleteSecret(id) {
                 if (!confirm('Are you sure?')) return;
-                fetch(`{{ route('platform.secrets.destroy', '') }}/${id}`, {
+
+                await this.requestJson(`${secretResourceUrl}/${id}`, {
                     method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    }
-                }).then(() => {
-                    this.loadSecrets();
                 });
+
+                await this.loadSecrets();
             },
-            saveSecret() {
+            async saveSecret() {
                 const url = this.form.id
-                    ? `{{ route('platform.secrets.update', '') }}/${this.form.id}`
+                    ? `${secretResourceUrl}/${this.form.id}`
                     : `{{ route('platform.secrets.store') }}`;
 
                 const method = this.form.id ? 'PUT' : 'POST';
 
-                fetch(url, {
-                    method: method,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
-                    body: JSON.stringify(this.form)
-                })
-                .then(response => response.json())
-                .then(data => {
-                    this.isModalOpen = false;
-                    this.loadSecrets();
-                    this.resetForm();
+                await this.requestJson(url, {
+                    method,
+                    body: this.form,
                 });
+
+                this.isModalOpen = false;
+                await this.loadSecrets();
+                this.resetForm();
             },
             closeModal() {
                 this.isModalOpen = false;

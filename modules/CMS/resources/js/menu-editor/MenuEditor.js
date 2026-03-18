@@ -2,11 +2,14 @@
  * Menu Editor - Core Class
  */
 
+/* global bootstrap */
+
+import { jsonRequest } from '../utils/json-request.js';
 import { DragDrop } from './DragDrop.js';
 import { ItemRenderer } from './ItemRenderer.js';
 import { Modals } from './Modals.js';
 import { Toast } from './Toast.js';
-import { escapeHtml, getItemDepth } from './utils.js';
+import { getItemDepth } from './utils.js';
 
 export class MenuEditor {
     constructor(options = {}) {
@@ -1000,30 +1003,10 @@ export class MenuEditor {
     }
 
     async saveToServer(payload) {
-        const csrfToken = document.querySelector(
-            'meta[name="csrf-token"]',
-        )?.content;
-
-        const response = await fetch(this.menuUrl, {
+        return jsonRequest(this.menuUrl, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken,
-                Accept: 'application/json',
-            },
-            body: JSON.stringify(payload),
+            data: payload,
         });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            const error = new Error(data.message || 'Server error');
-            error.status = response.status;
-            error.errors = data.errors;
-            throw error;
-        }
-
-        return data;
     }
 
     reconcileSavedState(newItemIds = {}) {
@@ -1066,7 +1049,7 @@ export class MenuEditor {
             itemEl.dataset.id = newIdAsString;
             itemEl.dataset.parentId =
                 itemEl.dataset.parentId &&
-                idMap.has(parseInt(itemEl.dataset.parentId, 10))
+                    idMap.has(parseInt(itemEl.dataset.parentId, 10))
                     ? String(idMap.get(parseInt(itemEl.dataset.parentId, 10)))
                     : itemEl.dataset.parentId;
 

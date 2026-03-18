@@ -4,13 +4,15 @@
  * Uses native drag & drop, no external dependencies.
  */
 
+/* global bootstrap */
+
+import { jsonRequest } from '../utils/json-request.js';
 import { DragDrop } from './DragDrop.js';
 import { ItemRenderer } from './ItemRenderer.js';
 import { Toast } from './Toast.js';
 import {
     escapeHtml,
     generateWidgetId,
-    getWidgetDisplayName,
     getDefaultSettings,
 } from './utils.js';
 
@@ -661,7 +663,7 @@ export class WidgetEditor {
                     `;
                     break;
 
-                case 'select':
+                case 'select': {
                     let optionsHTML = '';
                     if (fieldConfig.options) {
                         Object.entries(fieldConfig.options).forEach(
@@ -685,8 +687,9 @@ export class WidgetEditor {
                         </div>
                     `;
                     break;
+                }
 
-                case 'checkbox':
+                case 'checkbox': {
                     const checked = value ? 'checked' : '';
                     formHTML += `
                         <div class="mb-3">
@@ -701,6 +704,7 @@ export class WidgetEditor {
                         </div>
                     `;
                     break;
+                }
 
                 case 'url':
                     formHTML += `
@@ -928,29 +932,10 @@ export class WidgetEditor {
     }
 
     async saveToServer(payload) {
-        const csrfToken = document.querySelector(
-            'meta[name="csrf-token"]',
-        )?.content;
-
-        const response = await fetch(this.widgetUrl, {
+        return jsonRequest(this.widgetUrl, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken,
-                Accept: 'application/json',
-            },
-            body: JSON.stringify(payload),
+            data: payload,
         });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            const error = new Error(data.message || 'Server error');
-            error.status = response.status;
-            throw error;
-        }
-
-        return data;
     }
 
     discardChanges() {
