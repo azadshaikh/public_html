@@ -104,20 +104,76 @@ class PostCrudMigrationTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page): Assert => $page
                 ->component('cms/posts/index')
+                ->missing('config.actions')
+                ->missing('empty_state_config')
                 ->has('rows.data', 1)
                 ->where('config.columns.1.key', 'title_with_meta')
                 ->where('config.columns.2.key', 'categories_display')
                 ->where('config.columns.3.key', 'status')
                 ->where('config.columns.4.key', 'display_date')
-                ->where('rows.data.0.title', $post->title)
-                ->where('rows.data.0.author_name', $this->admin->name)
-                ->where('rows.data.0.featured_image_url', get_media_url($featuredImage, 'thumbnail', usePlaceholder: false))
-                ->where('rows.data.0.status', 'published')
-                ->where('rows.data.0.status_label', 'Published')
-                ->where('rows.data.0.categories.0.title', $category->title)
-                ->where('rows.data.0.categories_display', $category->title)
-                ->has('rows.data.0.permalink_url')
+                ->has('rows.data.0', fn (Assert $row): Assert => $row
+                    ->where('title', $post->title)
+                    ->where('author_name', $this->admin->name)
+                    ->where('featured_image_url', get_media_url($featuredImage, 'thumbnail', usePlaceholder: false))
+                    ->where('status', 'published')
+                    ->where('status_label', 'Published')
+                    ->where('categories.0.title', $category->title)
+                    ->has('permalink_url')
+                    ->missing('content')
+                    ->missing('excerpt')
+                    ->missing('slug')
+                    ->missing('title_with_meta')
+                    ->missing('categories_display')
+                    ->missing('published_at')
+                    ->missing('updated_at_formatted')
+                    ->missing('status_class')
+                    ->missing('actions')
+                    ->missing('seo_data')
+                    ->missing('metadata')
+                    ->missing('deleted_at')
+                    ->etc()
+                )
             );
+    }
+
+    public function test_posts_index_payload_budget_stays_within_the_custom_page_contract(): void
+    {
+        $category = $this->createTerm(CmsPostType::CATEGORY, 'Announcements');
+        $post = $this->createPost('Budget Ready Post');
+        $featuredImage = $this->createMediaForPost($post, 'budget-ready.jpg');
+
+        $post->categories()->attach($category->id, ['term_type' => CmsPostType::CATEGORY->value]);
+        $post->forceFill([
+            'feature_image_id' => $featuredImage->id,
+            'status' => 'published',
+            'published_at' => now(),
+        ])->save();
+
+        $response = $this->actingAs($this->admin)
+            ->get(route('cms.posts.index'))
+            ->assertOk();
+
+        $featurePayloadSize = $this->jsonPayloadSize([
+            'config' => $response->inertiaProps('config'),
+            'rows' => $response->inertiaProps('rows'),
+            'filters' => $response->inertiaProps('filters'),
+            'statistics' => $response->inertiaProps('statistics'),
+            'empty_state_config' => $response->inertiaProps('empty_state_config'),
+        ]);
+
+        $firstRowPayloadSize = $this->jsonPayloadSize($response->inertiaProps('rows.data.0'));
+
+        $this->assertLessThan(
+            14000,
+            $featurePayloadSize,
+            sprintf('Expected the CMS posts index feature payload to stay lean; received %d bytes.', $featurePayloadSize),
+        );
+
+        $this->assertLessThan(
+            1500,
+            $firstRowPayloadSize,
+            sprintf('Expected the CMS posts index row payload to stay lean; received %d bytes.', $firstRowPayloadSize),
+        );
     }
 
     public function test_admin_can_access_posts_edit_page_with_initial_values(): void
@@ -323,5 +379,10 @@ class PostCrudMigrationTest extends TestCase
             'created_by' => $this->admin->id,
             'updated_by' => $this->admin->id,
         ]);
+    }
+
+    private function jsonPayloadSize(mixed $value): int
+    {
+        return strlen(json_encode($value, JSON_THROW_ON_ERROR));
     }
 }

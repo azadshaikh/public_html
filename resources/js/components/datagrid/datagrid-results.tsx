@@ -1,4 +1,4 @@
-import { router } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import { ChevronRightIcon } from 'lucide-react';
 import * as React from 'react';
 import type { Key } from 'react';
@@ -32,6 +32,7 @@ import {
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import {
     Empty,
+    EmptyContent,
     EmptyDescription,
     EmptyHeader,
     EmptyMedia,
@@ -252,6 +253,15 @@ export function DatagridResults<T>({
                                     {empty.description}
                                 </EmptyDescription>
                             </EmptyHeader>
+                            {empty.action ? (
+                                <EmptyContent>
+                                    <Button asChild>
+                                        <Link href={empty.action.href}>
+                                            {empty.action.label}
+                                        </Link>
+                                    </Button>
+                                </EmptyContent>
+                            ) : null}
                         </Empty>
                     </div>
                 ) : view?.value === 'cards' && renderCard ? (

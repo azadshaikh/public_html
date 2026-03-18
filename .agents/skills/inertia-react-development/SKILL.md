@@ -65,6 +65,7 @@ Use the project's current v3 rules as the baseline, not older v1/v2-era habits.
 - New v3 features in active use include `useHttp`, optimistic updates, layout props, instant visits, and simplified Vite-based SSR behavior.
 - Features carried forward and still valid include deferred props, polling, prefetching, prop merging, infinite scroll, and flash data.
 - Prefer Inertia's `<Head>` through the shared app wrapper, `Link`, `<Form>`, `useForm`, `useHttp`, and `router` helpers instead of custom page plumbing.
+- Treat shared Inertia props as shell-safe runtime data, not a substitute for page props. Do not assume shared payloads include broad module metadata or a global map of every ability in the app.
 - Use `useHttp` for standalone JSON or external requests that should not trigger navigation; prefer it over raw `fetch()` for app-owned endpoints when Inertia ergonomics are useful.
 - Prefer built-in Inertia Precognition support for forms and `useForm` when real-time Laravel validation is needed.
 - Prefer built-in optimistic updates only for small, reversible UI changes, and return the minimal changed subset for predictable rollback.
@@ -175,6 +176,8 @@ For authenticated application pages in this project, prefer the shared app shell
 - Use `AccountLayout` only inside `AppLayout` for account/settings screens.
 - Keep page body content focused on the feature content itself: filters, alerts, forms, tables, empty states, and detail sections.
 - Use default control sizing for page actions, filter bars, datagrid toolbars, and form controls. Treat `sm`/`xs` variants as explicit density changes that should only be used when the UI truly needs tighter spacing; if that tradeoff is not obvious, confirm it with the user first.
+- When reading `page.props.auth.abilities`, only use keys the current page actually needs and expect the shared payload to be route-scoped rather than exhaustive.
+- For shared module data, only rely on runtime-safe fields such as `name`, `slug`, and `inertiaNamespace` unless the page is a dedicated management/inspection screen with richer props.
 
 Example:
 

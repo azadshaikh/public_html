@@ -89,7 +89,7 @@ class ModuleManager
     }
 
     /**
-     * @return array{items: array<int, array{name: string, slug: string, version: string, description: string, author: ?string, homepage: ?string, icon: ?string, inertiaNamespace: string, url: string, provider: string, providerPath: string, pageRootPath: string, routeFiles: array<string, string>, abilitiesPath: ?string, navigationPath: ?string, databaseSeederClass: string, databaseSeederPath: string}>}
+     * @return array{items: array<int, array{name: string, slug: string, inertiaNamespace: string}>}
      */
     public function sharedData(): array
     {

@@ -73,6 +73,16 @@ export type ScaffoldColumnConfig = {
     [key: string]: unknown;
 };
 
+export type ScaffoldEmptyStateConfig = {
+    icon?: string;
+    title: string;
+    message: string;
+    action?: {
+        label: string;
+        url: string;
+    };
+};
+
 export type ScaffoldSettings = {
     perPage: number;
     defaultSort: string | null;
@@ -88,7 +98,7 @@ export type ScaffoldSettings = {
 export type ScaffoldInertiaConfig = {
     columns: ScaffoldColumnConfig[];
     filters: ScaffoldFilterConfig[];
-    actions: ScaffoldActionConfig[];
+    actions?: ScaffoldActionConfig[];
     statusTabs: ScaffoldStatusTabConfig[];
     form: ScaffoldFormFieldConfig[];
     settings: ScaffoldSettings;
@@ -109,6 +119,7 @@ export type ScaffoldIndexPageProps<T> = {
     rows: PaginatedData<T>;
     filters: ScaffoldFilterState;
     statistics: Record<string, number>;
+    empty_state_config?: ScaffoldEmptyStateConfig | null;
     status?: string;
     error?: string;
 };

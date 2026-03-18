@@ -5,7 +5,11 @@ import type { DatagridColumn } from '@/components/datagrid/datagrid';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
-import { buildScaffoldBulkActions, buildScaffoldDatagridState, mapScaffoldRowActions } from '@/lib/scaffold-datagrid';
+import {
+    buildScaffoldActionHandlers,
+    buildScaffoldDatagridState,
+    buildScaffoldEmptyState,
+} from '@/lib/scaffold-datagrid';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
 import type { PlatformIndexPageProps, TldListItem } from '../../../types/platform';
 
@@ -23,6 +27,7 @@ export default function TldsIndex({
     rows,
     filters,
     statistics,
+    empty_state_config,
 }: PlatformIndexPageProps<TldListItem>) {
     const page = usePage<AuthenticatedSharedData>();
     const canAddTlds = page.props.auth.abilities.addTlds;
@@ -30,6 +35,10 @@ export default function TldsIndex({
     const { currentStatus, gridFilters, perPage, sorting, statusTabs } = buildScaffoldDatagridState(config, filters, statistics, {
         searchPlaceholder: 'Search TLDs...',
         perPageOptions: [15, 25, 50, 100],
+    });
+    const { rowActions, bulkActions } = buildScaffoldActionHandlers(config, {
+        bulkActionUrl: route('platform.tlds.bulk-action'),
+        currentStatus,
     });
 
     const columns: DatagridColumn<TldListItem>[] = [
@@ -119,17 +128,14 @@ export default function TldsIndex({
                 filters={gridFilters}
                 tabs={{ name: 'status', items: statusTabs }}
                 getRowKey={(item) => item.id}
-                rowActions={(item) => mapScaffoldRowActions(item.actions)}
-                bulkActions={buildScaffoldBulkActions(config.actions, {
-                    bulkActionUrl: route('platform.tlds.bulk-action'),
-                    currentStatus,
-                })}
-                empty={{
+                rowActions={rowActions}
+                bulkActions={bulkActions}
+                empty={buildScaffoldEmptyState(empty_state_config, {
                     icon: <Globe2Icon className="size-5" />,
-                    title: 'No TLDs found',
-                    description:
+                    fallbackTitle: 'No TLDs found',
+                    fallbackDescription:
                         'Create TLD records to power domain search, pricing, and affiliate routing.',
-                }}
+                })}
                 sorting={sorting}
                 perPage={perPage}
                 title="Managed TLDs"

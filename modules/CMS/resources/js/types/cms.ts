@@ -129,7 +129,7 @@ export type ScaffoldIndexPageProps<T> = {
     rows: PaginatedData<T>;
     filters: ScaffoldFilters;
     statistics: Record<string, number>;
-    empty_state_config: EmptyStateConfig;
+    empty_state_config?: EmptyStateConfig | null;
     status?: string;
     error?: string;
 };
@@ -141,26 +141,17 @@ export type ScaffoldIndexPageProps<T> = {
 export type PostListItem = {
     id: number;
     title: string;
-    title_with_meta: string;
-    slug: string;
-    excerpt: string | null;
     status: string;
     status_label: string;
-    status_class: string;
     author_name: string;
     featured_image_url: string | null;
     is_featured: boolean;
-    featured_badge: string;
     categories: { id: number; title: string }[];
-    categories_display: string;
     permalink_url: string | null;
-    published_at: string | null;
     published_at_formatted: string | null;
-    updated_at_formatted: string;
     display_date: string;
     edit_url: string;
     is_trashed: boolean;
-    actions: Record<string, unknown>[];
 };
 
 export type PostFormValues = {

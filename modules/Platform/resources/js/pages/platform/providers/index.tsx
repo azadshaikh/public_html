@@ -5,7 +5,11 @@ import type { DatagridColumn } from '@/components/datagrid/datagrid';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
-import { buildScaffoldBulkActions, buildScaffoldDatagridState, mapScaffoldRowActions } from '@/lib/scaffold-datagrid';
+import {
+    buildScaffoldActionHandlers,
+    buildScaffoldDatagridState,
+    buildScaffoldEmptyState,
+} from '@/lib/scaffold-datagrid';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
 import type { PlatformIndexPageProps, ProviderListItem } from '../../../types/platform';
 
@@ -26,6 +30,7 @@ export default function ProvidersIndex({
     rows,
     filters,
     statistics,
+    empty_state_config,
 }: PlatformIndexPageProps<ProviderListItem>) {
     const page = usePage<AuthenticatedSharedData>();
     const canAddProviders = page.props.auth.abilities.addProviders;
@@ -33,6 +38,10 @@ export default function ProvidersIndex({
     const { currentStatus, gridFilters, perPage, sorting, statusTabs } = buildScaffoldDatagridState(config, filters, statistics, {
         searchPlaceholder: 'Search providers...',
         perPageOptions: [15, 25, 50, 100],
+    });
+    const { rowActions, bulkActions } = buildScaffoldActionHandlers(config, {
+        bulkActionUrl: route('platform.providers.bulk-action'),
+        currentStatus,
     });
 
     const columns: DatagridColumn<ProviderListItem>[] = [
@@ -124,17 +133,14 @@ export default function ProvidersIndex({
                 filters={gridFilters}
                 tabs={{ name: 'status', items: statusTabs }}
                 getRowKey={(provider) => provider.id}
-                rowActions={(provider) => mapScaffoldRowActions(provider.actions)}
-                bulkActions={buildScaffoldBulkActions(config.actions, {
-                    bulkActionUrl: route('platform.providers.bulk-action'),
-                    currentStatus,
-                })}
-                empty={{
+                rowActions={rowActions}
+                bulkActions={bulkActions}
+                empty={buildScaffoldEmptyState(empty_state_config, {
                     icon: <ServerCogIcon className="size-5" />,
-                    title: 'No providers found',
-                    description:
+                    fallbackTitle: 'No providers found',
+                    fallbackDescription:
                         'Create provider accounts for DNS, CDN, registrar, or cloud infrastructure integrations.',
-                }}
+                })}
                 sorting={sorting}
                 perPage={perPage}
                 title="Connected providers"

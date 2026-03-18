@@ -44,7 +44,7 @@ interface ScaffoldServiceInterface
     /**
      * Get paginated/filtered data for DataGrid.
      *
-     * @return array{items: array, pagination: array, columns: array, filters: array, actions: array, empty_state_config: array, statistics?: array}
+     * @return array{rows?: array, filters: array, statistics?: array, empty_state_config?: array}
      */
     public function getData(Request $request): array;
 

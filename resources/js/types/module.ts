@@ -1,21 +1,7 @@
 export type InstalledModule = {
     name: string;
     slug: string;
-    version: string;
-    description: string;
-    author: string | null;
-    homepage: string | null;
-    icon: string | null;
     inertiaNamespace: string;
-    url: string;
-    provider: string;
-    providerPath: string;
-    pageRootPath: string;
-    routeFiles: Record<string, string>;
-    abilitiesPath: string | null;
-    navigationPath: string | null;
-    databaseSeederClass: string;
-    databaseSeederPath: string;
 };
 
 export type ManagedModule = {

@@ -70,20 +70,24 @@ final readonly class ModuleManifest
     }
 
     /**
-     * @return array{name: string, slug: string, version: string, description: string, author: ?string, homepage: ?string, icon: ?string, inertiaNamespace: string, url: string, provider: string, providerPath: string, pageRootPath: string, routeFiles: array<string, string>, abilitiesPath: ?string, navigationPath: ?string, databaseSeederClass: string, databaseSeederPath: string}
+     * @return array{name: string, slug: string, inertiaNamespace: string}
      */
-    public function metadata(): array
+    public function runtimeMetadata(): array
     {
         return [
             'name' => $this->name,
             'slug' => $this->slug,
-            'version' => $this->version,
-            'description' => $this->description,
-            'author' => $this->author,
-            'homepage' => $this->homepage,
-            'icon' => $this->icon,
             'inertiaNamespace' => $this->inertiaNamespace(),
-            'url' => $this->url(),
+        ];
+    }
+
+    /**
+     * @return array{name: string, slug: string, version: string, description: string, author: ?string, homepage: ?string, icon: ?string, inertiaNamespace: string, url: string, provider: string, providerPath: string, pageRootPath: string, routeFiles: array<string, string>, abilitiesPath: ?string, navigationPath: ?string, databaseSeederClass: string, databaseSeederPath: string}
+     */
+    public function managementMetadata(): array
+    {
+        return [
+            ...$this->runtimeMetadata(),
             'provider' => $this->provider,
             'providerPath' => $this->providerPath(),
             'pageRootPath' => $this->pageRootPath,
@@ -96,11 +100,11 @@ final readonly class ModuleManifest
     }
 
     /**
-     * @return array{name: string, slug: string, version: string, description: string, author: ?string, homepage: ?string, icon: ?string, inertiaNamespace: string, url: string, provider: string, providerPath: string, pageRootPath: string, routeFiles: array<string, string>, abilitiesPath: ?string, navigationPath: ?string, databaseSeederClass: string, databaseSeederPath: string}
+     * @return array{name: string, slug: string, inertiaNamespace: string}
      */
     public function toSharedArray(): array
     {
-        return $this->metadata();
+        return $this->runtimeMetadata();
     }
 
     /**
@@ -109,7 +113,7 @@ final readonly class ModuleManifest
     public function toManagementArray(): array
     {
         return [
-            ...$this->metadata(),
+            ...$this->managementMetadata(),
         ];
     }
 

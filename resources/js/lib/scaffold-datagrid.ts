@@ -34,6 +34,7 @@ import type {
 } from '@/components/datagrid/datagrid';
 import type {
     ScaffoldActionConfig,
+    ScaffoldEmptyStateConfig,
     ScaffoldFilterConfig,
     ScaffoldFilterState,
     ScaffoldInertiaConfig,
@@ -62,6 +63,21 @@ type BuildBulkActionOptions<T> = {
     getRowId?: (row: T) => string | number;
     iconMap?: IconMap;
     extraPayload?: Record<string, unknown>;
+};
+
+type RowWithScaffoldActions = {
+    id: string | number;
+    actions?:
+    | Record<string, ScaffoldRowActionPayload>
+    | ScaffoldRowActionPayload[];
+};
+
+type BuildActionHandlersOptions<T> = BuildBulkActionOptions<T>;
+
+type BuildEmptyStateOptions = {
+    icon: ReactNode;
+    fallbackTitle?: string;
+    fallbackDescription?: string;
 };
 
 type StatusCondition = [
@@ -295,6 +311,47 @@ export function buildScaffoldBulkActions<T extends { id: string | number }>(
                 );
             },
         }));
+}
+
+export function buildScaffoldActionHandlers<T extends RowWithScaffoldActions>(
+    config: Pick<ScaffoldInertiaConfig, 'actions'>,
+    options: BuildActionHandlersOptions<T>,
+): {
+    rowActions: (row: T) => DatagridAction[];
+    bulkActions: DatagridBulkAction<T>[];
+} {
+    return {
+        rowActions: (row: T): DatagridAction[] => mapScaffoldRowActions(row.actions),
+        bulkActions: buildScaffoldBulkActions(config.actions, options),
+    };
+}
+
+export function buildScaffoldEmptyState(
+    emptyStateConfig: ScaffoldEmptyStateConfig | null | undefined,
+    options: BuildEmptyStateOptions,
+): {
+    icon: ReactNode;
+    title: string;
+    description: string;
+    action?: {
+        label: string;
+        href: string;
+    };
+} {
+    return {
+        icon: options.icon,
+        title: emptyStateConfig?.title ?? options.fallbackTitle ?? 'No results found',
+        description:
+            emptyStateConfig?.message
+            ?? options.fallbackDescription
+            ?? 'There are no results to display.',
+        action: emptyStateConfig?.action
+            ? {
+                label: emptyStateConfig.action.label,
+                href: emptyStateConfig.action.url,
+            }
+            : undefined,
+    };
 }
 
 export function buildScaffoldDatagridState(

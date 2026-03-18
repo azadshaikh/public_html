@@ -62,6 +62,9 @@ This project has domain-specific skills available. You MUST activate the relevan
 - There are no live instances that require backward compatibility. Do not keep compatibility layers, transitional APIs, or temporary shims unless the user explicitly asks for them.
 - Remove dead code, unused branches, stale helpers, obsolete UI, and old integration paths as part of the change whenever they are no longer needed.
 - PostgreSQL is the primary and only database target for application code. Treat PostgreSQL as first-class and do not spend effort preserving behavior for SQLite, MySQL, MariaDB, or SQL Server unless the user explicitly asks for it.
+- Shared Inertia props must stay shell-safe and minimal. Do not add feature-level data, management metadata, or broad permission maps to shared payloads when page props can carry them instead.
+- Shared module payloads are runtime descriptors only. Ordinary shared frontend module data should be limited to `name`, `slug`, and `inertiaNamespace`; keep paths, providers, seeders, route files, and other diagnostics on management or inspection pages only.
+- Treat shared `auth.abilities` as route/page-scoped UI data, not a global dump of every permission in the app. Only ship the abilities the current page family actually consumes.
 
 ## Verification Scripts
 
@@ -86,6 +89,9 @@ This project has domain-specific skills available. You MUST activate the relevan
 - If a scaffold-backed controller overrides `index()`, it must still return `'config' => $this->service()->getScaffoldDefinition()->toInertiaConfig()` or the frontend will lose scaffold column widths, filters, tabs, and action metadata.
 - If a scaffold-backed React index page defines custom `DatagridColumn[]`, pass `scaffoldColumns={config.columns}` to `<Datagrid>` so column widths continue to come from the backend definition instead of drifting into page-local Tailwind width classes.
 - Treat scaffold definition widths as the source of truth for table layout. Do not duplicate width decisions in page-level `headerClassName` / `cellClassName` unless the definition cannot express the requirement.
+- Scaffold index/list rows must use explicit payload contracts. Prefer resource-level allowlists and list-specific serialization hooks over exposing all model attributes by default.
+- Standard scaffold pages should use one backend-driven datagrid contract for actions and empty states. Custom pages may opt out, but when they do, they should also suppress redundant backend action or empty-state payloads.
+- Empty-state create actions must be authorized on the backend before they are sent to the page payload.
 - Use shared scaffold config/types where helpful, but keep straightforward frontend `route('...')` calls explicit and readable when route names are stable.
 - Treat scaffold form metadata as optional. Prefer explicit form props and feature-local field configuration unless the form is intentionally generic or generator-driven.
 

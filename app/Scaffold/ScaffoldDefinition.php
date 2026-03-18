@@ -694,14 +694,14 @@ abstract class ScaffoldDefinition
     // =========================================================================
 
     /**
-    * Export the runtime scaffold configuration as Inertia-consumable props.
+     * Export the runtime scaffold configuration as Inertia-consumable props.
      *
-    * Returns only the data needed by frontend runtime pages.
+     * Returns only the data needed by frontend runtime pages.
      *
      * @return array{
      *     columns: array<int, array<string, mixed>>,
      *     filters: array<int, array<string, mixed>>,
-     *     actions: array<int, array<string, mixed>>,
+     *     actions?: array<int, array<string, mixed>>,
      *     statusTabs: array<int, array<string, mixed>>,
      *     form: array<int, array<string, mixed>>,
      *     settings: array<string, mixed>,
@@ -709,7 +709,7 @@ abstract class ScaffoldDefinition
      */
     public function toInertiaConfig(): array
     {
-        return [
+        $config = [
             'columns' => collect($this->columns())
                 ->filter(fn (Column $col): bool => $col->visible)
                 ->map(fn (Column $col): array => $col->toArray())
@@ -718,12 +718,6 @@ abstract class ScaffoldDefinition
 
             'filters' => collect($this->filters())
                 ->map(fn (Filter $filter): array => $filter->toArray())
-                ->values()
-                ->all(),
-
-            'actions' => collect($this->actions())
-                ->filter(fn (Action $action): bool => $action->authorized())
-                ->map(fn (Action $action): array => $action->toArray())
                 ->values()
                 ->all(),
 
@@ -749,6 +743,26 @@ abstract class ScaffoldDefinition
                 'statusField' => $this->getStatusField(),
             ],
         ];
+
+        if ($this->shouldIncludeActionConfigInInertia()) {
+            $config['actions'] = collect($this->actions())
+                ->filter(fn (Action $action): bool => $action->authorized())
+                ->map(fn (Action $action): array => $action->toArray())
+                ->values()
+                ->all();
+        }
+
+        return $config;
+    }
+
+    public function shouldIncludeActionConfigInInertia(): bool
+    {
+        return true;
+    }
+
+    public function shouldIncludeEmptyStateConfigInInertia(): bool
+    {
+        return true;
     }
 
     /**

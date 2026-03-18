@@ -71,74 +71,9 @@ class HandleInertiaRequests extends Middleware
                         'name' => $request->user()->name,
                         'email' => $request->user()->email,
                         'avatar' => new UserAvatar($request->user()),
-                        'email_verified_at' => $request->user()->email_verified_at,
-                        'created_at' => $request->user()->created_at,
-                        'updated_at' => $request->user()->updated_at,
                     ]
                     : null,
-                'abilities' => fn (): array => $request->user()
-                    ? [
-                        'manageModules' => $hasMasterAccess,
-                        'viewRoles' => $request->user()->can('view_roles'),
-                        'addRoles' => $request->user()->can('add_roles'),
-                        'editRoles' => $request->user()->can('edit_roles'),
-                        'deleteRoles' => $request->user()->can('delete_roles'),
-                        'restoreRoles' => $request->user()->can('restore_roles'),
-                        'viewUsers' => $request->user()->can('view_users'),
-                        'addUsers' => $request->user()->can('add_users'),
-                        'editUsers' => $request->user()->can('edit_users'),
-                        'deleteUsers' => $request->user()->can('delete_users'),
-                        'restoreUsers' => $request->user()->can('restore_users'),
-                        'impersonateUsers' => $request->user()->can('impersonate_users'),
-                        'viewAddresses' => $hasMasterAccess,
-                        'addAddresses' => $hasMasterAccess,
-                        'editAddresses' => $hasMasterAccess,
-                        'deleteAddresses' => $hasMasterAccess,
-                        'restoreAddresses' => $hasMasterAccess,
-                        'viewEmailProviders' => $hasMasterAccess,
-                        'addEmailProviders' => $hasMasterAccess,
-                        'editEmailProviders' => $hasMasterAccess,
-                        'deleteEmailProviders' => $hasMasterAccess,
-                        'restoreEmailProviders' => $hasMasterAccess,
-                        'viewEmailTemplates' => $hasMasterAccess,
-                        'addEmailTemplates' => $hasMasterAccess,
-                        'editEmailTemplates' => $hasMasterAccess,
-                        'deleteEmailTemplates' => $hasMasterAccess,
-                        'restoreEmailTemplates' => $hasMasterAccess,
-                        'viewEmailLogs' => $hasMasterAccess,
-                        ...AbilityAggregator::resolve($request->user()),
-                    ]
-                    : [
-                        'manageModules' => false,
-                        'viewRoles' => false,
-                        'addRoles' => false,
-                        'editRoles' => false,
-                        'deleteRoles' => false,
-                        'restoreRoles' => false,
-                        'viewUsers' => false,
-                        'addUsers' => false,
-                        'editUsers' => false,
-                        'deleteUsers' => false,
-                        'restoreUsers' => false,
-                        'impersonateUsers' => false,
-                        'viewAddresses' => false,
-                        'addAddresses' => false,
-                        'editAddresses' => false,
-                        'deleteAddresses' => false,
-                        'restoreAddresses' => false,
-                        'viewEmailProviders' => false,
-                        'addEmailProviders' => false,
-                        'editEmailProviders' => false,
-                        'deleteEmailProviders' => false,
-                        'restoreEmailProviders' => false,
-                        'viewEmailTemplates' => false,
-                        'addEmailTemplates' => false,
-                        'editEmailTemplates' => false,
-                        'deleteEmailTemplates' => false,
-                        'restoreEmailTemplates' => false,
-                        'viewEmailLogs' => false,
-                        ...AbilityAggregator::resolve(null),
-                    ],
+                'abilities' => fn (): array => $this->resolveSharedAbilities($request, $hasMasterAccess),
                 'impersonation' => fn (): ?array => $this->resolveImpersonation($request),
             ],
             'navigation' => fn (): array => NavigationAggregator::getUnifiedByArea($request->user()),
@@ -184,5 +119,126 @@ class HandleInertiaRequests extends Middleware
             ],
             'stopUrl' => route('app.users.stop-impersonating'),
         ];
+    }
+
+    /**
+     * @return array<string, bool>
+     */
+    private function resolveSharedAbilities(Request $request, bool $hasMasterAccess): array
+    {
+        $user = $request->user();
+        $abilityKeys = $this->sharedAbilityKeysForRequest($request);
+
+        $abilities = [
+            'manageModules' => $hasMasterAccess,
+        ];
+
+        if ($abilityKeys === []) {
+            return $abilities;
+        }
+
+        $coreAbilityKeys = array_values(array_filter($abilityKeys, fn (string $key): bool => $this->isCoreSharedAbility($key)));
+        $moduleAbilityKeys = array_values(array_diff($abilityKeys, $coreAbilityKeys));
+        $moduleAbilities = AbilityAggregator::resolve($user, $moduleAbilityKeys);
+
+        foreach ($coreAbilityKeys as $abilityKey) {
+            $abilities[$abilityKey] = $this->resolveCoreSharedAbility($user, $abilityKey, $hasMasterAccess);
+        }
+
+        foreach ($moduleAbilityKeys as $abilityKey) {
+            $abilities[$abilityKey] = $moduleAbilities[$abilityKey] ?? false;
+        }
+
+        return $abilities;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function sharedAbilityKeysForRequest(Request $request): array
+    {
+        return match (true) {
+            $request->routeIs('app.roles.*') => ['addRoles', 'editRoles', 'deleteRoles', 'restoreRoles'],
+            $request->routeIs('app.users.*') => ['addUsers', 'editUsers', 'deleteUsers', 'restoreUsers'],
+            $request->routeIs('app.masters.addresses.*') => ['addAddresses', 'editAddresses', 'deleteAddresses', 'restoreAddresses'],
+            $request->routeIs('app.masters.email.providers.*') => ['addEmailProviders', 'editEmailProviders', 'deleteEmailProviders', 'restoreEmailProviders'],
+            $request->routeIs('app.masters.email.templates.*') => ['addEmailTemplates', 'editEmailTemplates', 'deleteEmailTemplates', 'restoreEmailTemplates'],
+            $request->routeIs('app.todos.*') => ['addTodos', 'editTodos', 'deleteTodos', 'restoreTodos'],
+            $request->routeIs('platform.secrets.*') => ['addSecrets'],
+            $request->routeIs('platform.servers.*') => ['addServers'],
+            $request->routeIs('platform.agencies.*') => ['addAgencies'],
+            $request->routeIs('platform.websites.*') => ['addWebsites'],
+            $request->routeIs('platform.providers.*') => ['addProviders'],
+            $request->routeIs('platform.tlds.*') => ['addTlds'],
+            $request->routeIs('platform.domains.*') => ['addDomains', 'editDomains'],
+            $request->routeIs('platform.ssl-certificates.*') => ['editDomains'],
+            $request->routeIs('platform.dns.*') => ['addDomainDnsRecords'],
+            $request->routeIs('releasemanager.releases.*') => ['addReleases', 'editReleases', 'deleteReleases', 'restoreReleases'],
+            $request->routeIs('cms.posts.*') => ['addPosts', 'editPosts', 'deletePosts', 'restorePosts'],
+            $request->routeIs('cms.pages.*') => ['addPages', 'editPages', 'deletePages', 'restorePages'],
+            $request->routeIs('cms.categories.*') => ['addCategories', 'editCategories', 'deleteCategories', 'restoreCategories'],
+            $request->routeIs('cms.tags.*') => ['addTags', 'editTags', 'deleteTags', 'restoreTags'],
+            $request->routeIs('cms.form.*') => ['addCmsForms', 'editCmsForms', 'deleteCmsForms', 'restoreCmsForms'],
+            $request->routeIs('cms.designblock.*') => ['addDesignBlocks', 'editDesignBlocks', 'deleteDesignBlocks', 'restoreDesignBlocks'],
+            $request->routeIs('cms.appearance.menus.*') => ['addMenus', 'editMenus', 'deleteMenus', 'restoreMenus'],
+            $request->routeIs('cms.appearance.themes.*') => ['addThemes', 'editThemes', 'deleteThemes'],
+            $request->routeIs('cms.redirections.*') => ['addRedirections', 'editRedirections', 'deleteRedirections', 'restoreRedirections'],
+            $request->routeIs('cms.settings.default-pages*') => ['manageDefaultPages'],
+            $request->routeIs('cms.integrations.*') => ['manageIntegrationsSeoSettings'],
+            default => [],
+        };
+    }
+
+    private function isCoreSharedAbility(string $abilityKey): bool
+    {
+        return in_array($abilityKey, [
+            'addRoles',
+            'editRoles',
+            'deleteRoles',
+            'restoreRoles',
+            'addUsers',
+            'editUsers',
+            'deleteUsers',
+            'restoreUsers',
+            'addAddresses',
+            'editAddresses',
+            'deleteAddresses',
+            'restoreAddresses',
+            'addEmailProviders',
+            'editEmailProviders',
+            'deleteEmailProviders',
+            'restoreEmailProviders',
+            'addEmailTemplates',
+            'editEmailTemplates',
+            'deleteEmailTemplates',
+            'restoreEmailTemplates',
+        ], true);
+    }
+
+    private function resolveCoreSharedAbility(?User $user, string $abilityKey, bool $hasMasterAccess): bool
+    {
+        return match ($abilityKey) {
+            'addRoles' => $user?->can('add_roles') ?? false,
+            'editRoles' => $user?->can('edit_roles') ?? false,
+            'deleteRoles' => $user?->can('delete_roles') ?? false,
+            'restoreRoles' => $user?->can('restore_roles') ?? false,
+            'addUsers' => $user?->can('add_users') ?? false,
+            'editUsers' => $user?->can('edit_users') ?? false,
+            'deleteUsers' => $user?->can('delete_users') ?? false,
+            'restoreUsers' => $user?->can('restore_users') ?? false,
+            'addAddresses',
+            'editAddresses',
+            'deleteAddresses',
+            'restoreAddresses',
+            'addEmailProviders',
+            'editEmailProviders',
+            'deleteEmailProviders',
+            'restoreEmailProviders',
+            'addEmailTemplates',
+            'editEmailTemplates',
+            'deleteEmailTemplates',
+            'restoreEmailTemplates' => $hasMasterAccess,
+            default => false,
+        };
     }
 }

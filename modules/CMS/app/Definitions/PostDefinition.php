@@ -35,6 +35,16 @@ class PostDefinition extends ScaffoldDefinition
         return PostRequest::class;
     }
 
+    public function shouldIncludeActionConfigInInertia(): bool
+    {
+        return false;
+    }
+
+    public function shouldIncludeEmptyStateConfigInInertia(): bool
+    {
+        return false;
+    }
+
     public function columns(): array
     {
         return [

@@ -62,16 +62,55 @@ abstract class ScaffoldResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        return array_merge(
-            $this->getBaseAttributes(),
-            $this->getFormattedDates(),
-            $this->getEnumFields(),      // Auto-detect ALL enum casts
-            $this->getStatusFields(),    // Legacy: status-specific handling
-            $this->getAuditFields(),
-            $this->getSoftDeleteFields(),
-            $this->customFields(),
-            ['actions' => $this->getActions()]
-        );
+        $payload = [
+            ...$this->getBaseAttributes(),
+        ];
+
+        if ($this->includesFormattedDates()) {
+            $payload = [
+                ...$payload,
+                ...$this->getFormattedDates(),
+            ];
+        }
+
+        if ($this->includesEnumFields()) {
+            $payload = [
+                ...$payload,
+                ...$this->getEnumFields(),
+            ];
+        }
+
+        if ($this->includesStatusFields()) {
+            $payload = [
+                ...$payload,
+                ...$this->getStatusFields(),
+            ];
+        }
+
+        if ($this->includesAuditFields()) {
+            $payload = [
+                ...$payload,
+                ...$this->getAuditFields(),
+            ];
+        }
+
+        if ($this->includesSoftDeleteFields()) {
+            $payload = [
+                ...$payload,
+                ...$this->getSoftDeleteFields(),
+            ];
+        }
+
+        $payload = [
+            ...$payload,
+            ...$this->customFields(),
+        ];
+
+        if ($this->includesActions()) {
+            $payload['actions'] = $this->getActions();
+        }
+
+        return $payload;
     }
 
     /**
@@ -112,6 +151,12 @@ abstract class ScaffoldResource extends JsonResource
             $attributes = array_diff_key($attributes, array_flip($hidden));
         }
 
+        $allowedKeys = $this->baseAttributeKeys();
+
+        if (is_array($allowedKeys)) {
+            $attributes = array_intersect_key($attributes, array_flip($allowedKeys));
+        }
+
         return [
             'id' => $this->resource->getKey(),
             ...$attributes,
@@ -127,14 +172,15 @@ abstract class ScaffoldResource extends JsonResource
     protected function getFormattedDates(): array
     {
         $dates = [];
+        $dateKeys = $this->formattedDateKeys();
 
-        if ($this->resource->created_at) {
+        if (in_array('created_at', $dateKeys, true) && $this->resource->created_at) {
             $dates['created_at'] = $this->resource->created_at->toISOString();
             $dates['created_at_formatted'] = $this->formatDateTime($this->resource->created_at, 'datetime');
             $dates['created_at_human'] = $this->resource->created_at->diffForHumans();
         }
 
-        if ($this->resource->updated_at) {
+        if (in_array('updated_at', $dateKeys, true) && $this->resource->updated_at) {
             $dates['updated_at'] = $this->resource->updated_at->toISOString();
             $dates['updated_at_formatted'] = $this->formatDateTime($this->resource->updated_at, 'datetime');
             $dates['updated_at_human'] = $this->resource->updated_at->diffForHumans();
@@ -286,6 +332,10 @@ abstract class ScaffoldResource extends JsonResource
             return ['is_trashed' => false];
         }
 
+        if (! $this->includesDetailedSoftDeleteFields()) {
+            return ['is_trashed' => true];
+        }
+
         return [
             'is_trashed' => true,
             'deleted_at' => $this->resource->deleted_at->toISOString(),
@@ -300,6 +350,60 @@ abstract class ScaffoldResource extends JsonResource
     protected function customFields(): array
     {
         return [];
+    }
+
+    /**
+     * Explicit allowlist for raw model attributes in index/list rows.
+     * Returning null preserves the legacy behavior of exposing all model columns.
+     *
+     * @return array<int, string>|null
+     */
+    protected function baseAttributeKeys(): ?array
+    {
+        return null;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    protected function formattedDateKeys(): array
+    {
+        return ['created_at', 'updated_at'];
+    }
+
+    protected function includesFormattedDates(): bool
+    {
+        return true;
+    }
+
+    protected function includesEnumFields(): bool
+    {
+        return true;
+    }
+
+    protected function includesStatusFields(): bool
+    {
+        return true;
+    }
+
+    protected function includesAuditFields(): bool
+    {
+        return true;
+    }
+
+    protected function includesSoftDeleteFields(): bool
+    {
+        return true;
+    }
+
+    protected function includesDetailedSoftDeleteFields(): bool
+    {
+        return true;
+    }
+
+    protected function includesActions(): bool
+    {
+        return true;
     }
 
     // =========================================================================

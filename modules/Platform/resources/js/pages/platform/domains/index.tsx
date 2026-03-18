@@ -5,7 +5,11 @@ import type { DatagridColumn } from '@/components/datagrid/datagrid';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
-import { buildScaffoldBulkActions, buildScaffoldDatagridState, mapScaffoldRowActions } from '@/lib/scaffold-datagrid';
+import {
+    buildScaffoldActionHandlers,
+    buildScaffoldDatagridState,
+    buildScaffoldEmptyState,
+} from '@/lib/scaffold-datagrid';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
 import type { DomainListItem, PlatformIndexPageProps } from '../../../types/platform';
 
@@ -26,6 +30,7 @@ export default function DomainsIndex({
     rows,
     filters,
     statistics,
+    empty_state_config,
 }: PlatformIndexPageProps<DomainListItem>) {
     const page = usePage<AuthenticatedSharedData>();
     const canAddDomains = page.props.auth.abilities.addDomains;
@@ -33,6 +38,10 @@ export default function DomainsIndex({
     const { currentStatus, gridFilters, perPage, sorting, statusTabs } = buildScaffoldDatagridState(config, filters, statistics, {
         searchPlaceholder: 'Search domains...',
         perPageOptions: [15, 25, 50, 100],
+    });
+    const { rowActions, bulkActions } = buildScaffoldActionHandlers(config, {
+        bulkActionUrl: route('platform.domains.bulk-action'),
+        currentStatus,
     });
 
     const columns: DatagridColumn<DomainListItem>[] = [
@@ -123,17 +132,14 @@ export default function DomainsIndex({
                 filters={gridFilters}
                 tabs={{ name: 'status', items: statusTabs }}
                 getRowKey={(domain) => domain.id}
-                rowActions={(domain) => mapScaffoldRowActions(domain.actions)}
-                bulkActions={buildScaffoldBulkActions(config.actions, {
-                    bulkActionUrl: route('platform.domains.bulk-action'),
-                    currentStatus,
-                })}
-                empty={{
+                rowActions={rowActions}
+                bulkActions={bulkActions}
+                empty={buildScaffoldEmptyState(empty_state_config, {
                     icon: <GlobeIcon className="size-5" />,
-                    title: 'No domains found',
-                    description:
+                    fallbackTitle: 'No domains found',
+                    fallbackDescription:
                         'Add a domain to start tracking registrar details, SSL coverage, and DNS records.',
-                }}
+                })}
                 sorting={sorting}
                 perPage={perPage}
                 title="Registered domains"

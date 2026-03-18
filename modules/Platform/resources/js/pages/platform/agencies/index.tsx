@@ -5,7 +5,11 @@ import type { DatagridColumn } from '@/components/datagrid/datagrid';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
-import { buildScaffoldBulkActions, buildScaffoldDatagridState, mapScaffoldRowActions } from '@/lib/scaffold-datagrid';
+import {
+    buildScaffoldActionHandlers,
+    buildScaffoldDatagridState,
+    buildScaffoldEmptyState,
+} from '@/lib/scaffold-datagrid';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
 import type { AgencyListItem, PlatformIndexPageProps } from '../../../types/platform';
 
@@ -26,6 +30,7 @@ export default function AgenciesIndex({
     rows,
     filters,
     statistics,
+    empty_state_config,
 }: PlatformIndexPageProps<AgencyListItem>) {
     const page = usePage<AuthenticatedSharedData>();
     const canAddAgencies = page.props.auth.abilities.addAgencies;
@@ -33,6 +38,10 @@ export default function AgenciesIndex({
     const { currentStatus, gridFilters, perPage, sorting, statusTabs } = buildScaffoldDatagridState(config, filters, statistics, {
         searchPlaceholder: 'Search agencies...',
         perPageOptions: [15, 25, 50, 100],
+    });
+    const { rowActions, bulkActions } = buildScaffoldActionHandlers(config, {
+        bulkActionUrl: route('platform.agencies.bulk-action'),
+        currentStatus,
     });
 
     const columns: DatagridColumn<AgencyListItem>[] = [
@@ -131,17 +140,14 @@ export default function AgenciesIndex({
                 filters={gridFilters}
                 tabs={{ name: 'status', items: statusTabs }}
                 getRowKey={(agency) => agency.id}
-                rowActions={(agency) => mapScaffoldRowActions(agency.actions)}
-                bulkActions={buildScaffoldBulkActions(config.actions, {
-                    bulkActionUrl: route('platform.agencies.bulk-action'),
-                    currentStatus,
-                })}
-                empty={{
+                rowActions={rowActions}
+                bulkActions={bulkActions}
+                empty={buildScaffoldEmptyState(empty_state_config, {
                     icon: <Building2Icon className="size-5" />,
-                    title: 'No agencies found',
-                    description:
+                    fallbackTitle: 'No agencies found',
+                    fallbackDescription:
                         'Create the first agency to start organizing websites and servers.',
-                }}
+                })}
                 sorting={sorting}
                 perPage={perPage}
                 title="Agency directory"

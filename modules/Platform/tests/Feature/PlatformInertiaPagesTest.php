@@ -21,7 +21,9 @@ use Modules\Platform\Models\Agency;
 use Modules\Platform\Models\Domain;
 use Modules\Platform\Models\DomainDnsRecord;
 use Modules\Platform\Models\Provider;
+use Modules\Platform\Models\Secret;
 use Modules\Platform\Models\Server;
+use Modules\Platform\Models\Tld;
 use Modules\Platform\Models\Website;
 use Modules\Platform\Providers\PlatformServiceProvider;
 use Tests\TestCase;
@@ -46,6 +48,21 @@ class PlatformInertiaPagesTest extends TestCase
             'edit_agencies',
             'delete_agencies',
             'restore_agencies',
+            'view_tlds',
+            'add_tlds',
+            'edit_tlds',
+            'delete_tlds',
+            'restore_tlds',
+            'view_providers',
+            'add_providers',
+            'edit_providers',
+            'delete_providers',
+            'restore_providers',
+            'view_secrets',
+            'add_secrets',
+            'edit_secrets',
+            'delete_secrets',
+            'restore_secrets',
             'view_servers',
             'add_servers',
             'edit_servers',
@@ -91,6 +108,21 @@ class PlatformInertiaPagesTest extends TestCase
             'edit_agencies',
             'delete_agencies',
             'restore_agencies',
+            'view_tlds',
+            'add_tlds',
+            'edit_tlds',
+            'delete_tlds',
+            'restore_tlds',
+            'view_providers',
+            'add_providers',
+            'edit_providers',
+            'delete_providers',
+            'restore_providers',
+            'view_secrets',
+            'add_secrets',
+            'edit_secrets',
+            'delete_secrets',
+            'restore_secrets',
             'view_servers',
             'add_servers',
             'edit_servers',
@@ -196,6 +228,166 @@ class PlatformInertiaPagesTest extends TestCase
                 ->has('initialValues')
                 ->has('typeOptions')
                 ->has('ttlOptions'));
+    }
+
+    public function test_platform_standard_scaffold_index_pages_use_backend_action_and_empty_state_contracts(): void
+    {
+        $agency = $this->createAgency();
+        $serverProvider = $this->createProvider(Provider::TYPE_SERVER, 'Server Provider');
+        $server = $this->createServer($serverProvider, $agency);
+        $dnsProvider = $this->createProvider(Provider::TYPE_DNS, 'DNS Provider');
+        $cdnProvider = $this->createProvider(Provider::TYPE_CDN, 'CDN Provider');
+        $website = $this->createWebsite($agency, $server, $dnsProvider, $cdnProvider);
+        $domain = $this->createDomain($agency);
+        $dnsRecord = $this->createDnsRecord($domain);
+        $tld = $this->createTld();
+
+        Secret::query()->create([
+            'secretable_type' => Agency::class,
+            'secretable_id' => $agency->id,
+            'key' => 'platform_api_key',
+            'username' => 'deploy-user',
+            'type' => 'password',
+            'value' => encrypt('secret-value'),
+            'is_active' => true,
+            'created_by' => $this->admin->id,
+            'updated_by' => $this->admin->id,
+        ]);
+
+        $this->actingAs($this->admin)
+            ->get(route('platform.agencies.index', ['status' => 'all']))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->component('platform/agencies/index')
+                ->has('config.actions', 5)
+                ->where('empty_state_config.title', 'No Agencies Found')
+                ->where('empty_state_config.action.label', 'Create Agency')
+                ->where('empty_state_config.action.url', route('platform.agencies.create'))
+                ->has('rows.data.0.actions', 3));
+
+        $this->actingAs($this->admin)
+            ->get(route('platform.servers.index', ['status' => 'all']))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->component('platform/servers/index')
+                ->has('config.actions', 5)
+                ->where('empty_state_config.title', 'No Servers Found')
+                ->where('empty_state_config.action.label', 'Create Server')
+                ->where('empty_state_config.action.url', route('platform.servers.create'))
+                ->where('rows.data.0.name', $server->name)
+                ->has('rows.data.0.actions', 3));
+
+        $this->assertPlatformStandardIndexContract(
+            route('platform.providers.index', ['status' => 'all']),
+            'platform/providers/index',
+            'rows.data.0.name',
+            $serverProvider->name,
+        );
+
+        $this->assertPlatformStandardIndexContract(
+            route('platform.secrets.index', ['status' => 'all']),
+            'platform/secrets/index',
+            'rows.data.0.key',
+            'platform_api_key',
+        );
+
+        $this->assertPlatformStandardIndexContract(
+            route('platform.websites.index', ['status' => 'all']),
+            'platform/websites/index',
+            'rows.data.0.name',
+            $website->name,
+        );
+
+        $this->assertPlatformStandardIndexContract(
+            route('platform.tlds.index', ['status' => 'all']),
+            'platform/tlds/index',
+            'rows.data.0.tld',
+            $tld->tld,
+        );
+
+        $this->assertPlatformStandardIndexContract(
+            route('platform.domains.index', ['status' => 'all']),
+            'platform/domains/index',
+            'rows.data.0.name',
+            $domain->name,
+        );
+
+        $this->assertPlatformStandardIndexContract(
+            route('platform.dns.index', ['status' => 'all', 'domain_id' => $domain->id]),
+            'platform/dns/index',
+            'rows.data.0.name',
+            $dnsRecord->name,
+        );
+    }
+
+    public function test_platform_standard_scaffold_index_pages_stay_within_the_backend_driven_payload_budget(): void
+    {
+        $agency = $this->createAgency();
+        $serverProvider = $this->createProvider(Provider::TYPE_SERVER, 'Server Provider');
+        $this->createServer($serverProvider, $agency);
+
+        Secret::query()->create([
+            'secretable_type' => Agency::class,
+            'secretable_id' => $agency->id,
+            'key' => 'platform_api_key',
+            'username' => 'deploy-user',
+            'type' => 'password',
+            'value' => encrypt('secret-value'),
+            'is_active' => true,
+            'created_by' => $this->admin->id,
+            'updated_by' => $this->admin->id,
+        ]);
+
+        $agenciesResponse = $this->actingAs($this->admin)
+            ->get(route('platform.agencies.index', ['status' => 'all']))
+            ->assertOk();
+
+        $serversResponse = $this->actingAs($this->admin)
+            ->get(route('platform.servers.index', ['status' => 'all']))
+            ->assertOk();
+
+        $agenciesFeaturePayloadSize = $this->jsonPayloadSize([
+            'config' => $agenciesResponse->inertiaProps('config'),
+            'rows' => $agenciesResponse->inertiaProps('rows'),
+            'filters' => $agenciesResponse->inertiaProps('filters'),
+            'statistics' => $agenciesResponse->inertiaProps('statistics'),
+            'empty_state_config' => $agenciesResponse->inertiaProps('empty_state_config'),
+        ]);
+
+        $serversFeaturePayloadSize = $this->jsonPayloadSize([
+            'config' => $serversResponse->inertiaProps('config'),
+            'rows' => $serversResponse->inertiaProps('rows'),
+            'filters' => $serversResponse->inertiaProps('filters'),
+            'statistics' => $serversResponse->inertiaProps('statistics'),
+            'empty_state_config' => $serversResponse->inertiaProps('empty_state_config'),
+        ]);
+
+        $agencyRowPayloadSize = $this->jsonPayloadSize($agenciesResponse->inertiaProps('rows.data.0'));
+        $serverRowPayloadSize = $this->jsonPayloadSize($serversResponse->inertiaProps('rows.data.0'));
+
+        $this->assertLessThan(
+            18000,
+            $agenciesFeaturePayloadSize,
+            sprintf('Expected the Platform agencies index feature payload to stay within budget; received %d bytes.', $agenciesFeaturePayloadSize),
+        );
+
+        $this->assertLessThan(
+            18000,
+            $serversFeaturePayloadSize,
+            sprintf('Expected the Platform servers index feature payload to stay within budget; received %d bytes.', $serversFeaturePayloadSize),
+        );
+
+        $this->assertLessThan(
+            1800,
+            $agencyRowPayloadSize,
+            sprintf('Expected the Platform agencies index row payload to stay within budget; received %d bytes.', $agencyRowPayloadSize),
+        );
+
+        $this->assertLessThan(
+            2200,
+            $serverRowPayloadSize,
+            sprintf('Expected the Platform servers index row payload to stay within budget; received %d bytes.', $serverRowPayloadSize),
+        );
     }
 
     public function test_platform_edit_and_show_pages_render_with_inertia(): void
@@ -332,6 +524,22 @@ class PlatformInertiaPagesTest extends TestCase
         ]);
     }
 
+    private function createTld(): Tld
+    {
+        return Tld::query()->create([
+            'tld' => '.com',
+            'whois_server' => 'whois.verisign-grs.com',
+            'is_main' => true,
+            'is_suggested' => true,
+            'price' => '12.99',
+            'sale_price' => '9.99',
+            'status' => true,
+            'tld_order' => 1,
+            'created_by' => $this->admin->id,
+            'updated_by' => $this->admin->id,
+        ]);
+    }
+
     private function createServer(Provider $provider, Agency $agency): Server
     {
         $server = Server::query()->create([
@@ -382,5 +590,33 @@ class PlatformInertiaPagesTest extends TestCase
         $website->assignProvider($cdnProvider->id, true);
 
         return $website->fresh();
+    }
+
+    private function assertPlatformStandardIndexContract(
+        string $url,
+        string $component,
+        string $rowField,
+        mixed $expectedValue,
+    ): void {
+        $normalizedRowField = str_replace('rows.data.0.', '', $rowField);
+
+        $this->actingAs($this->admin)
+            ->get($url)
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->component($component)
+                ->has('config.actions')
+                ->has('empty_state_config.title')
+                ->has('empty_state_config.action.label')
+                ->has('empty_state_config.action.url')
+                ->where('rows.data', fn ($rows): bool => collect($rows)->contains(
+                    fn (array $row): bool => data_get($row, $normalizedRowField) === $expectedValue
+                        && filled(data_get($row, 'actions')),
+                )));
+    }
+
+    private function jsonPayloadSize(mixed $value): int
+    {
+        return strlen(json_encode($value, JSON_THROW_ON_ERROR));
     }
 }

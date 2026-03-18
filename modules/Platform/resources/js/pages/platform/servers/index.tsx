@@ -5,7 +5,11 @@ import type { DatagridColumn } from '@/components/datagrid/datagrid';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
-import { buildScaffoldBulkActions, buildScaffoldDatagridState, mapScaffoldRowActions } from '@/lib/scaffold-datagrid';
+import {
+    buildScaffoldActionHandlers,
+    buildScaffoldDatagridState,
+    buildScaffoldEmptyState,
+} from '@/lib/scaffold-datagrid';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
 import type { PlatformIndexPageProps, ServerListItem } from '../../../types/platform';
 
@@ -26,6 +30,7 @@ export default function ServersIndex({
     rows,
     filters,
     statistics,
+    empty_state_config,
 }: PlatformIndexPageProps<ServerListItem>) {
     const page = usePage<AuthenticatedSharedData>();
     const canAddServers = page.props.auth.abilities.addServers;
@@ -33,6 +38,10 @@ export default function ServersIndex({
     const { currentStatus, gridFilters, perPage, sorting, statusTabs } = buildScaffoldDatagridState(config, filters, statistics, {
         searchPlaceholder: 'Search servers...',
         perPageOptions: [15, 25, 50, 100],
+    });
+    const { rowActions, bulkActions } = buildScaffoldActionHandlers(config, {
+        bulkActionUrl: route('platform.servers.bulk-action'),
+        currentStatus,
     });
 
     const columns: DatagridColumn<ServerListItem>[] = [
@@ -126,17 +135,14 @@ export default function ServersIndex({
                 filters={gridFilters}
                 tabs={{ name: 'status', items: statusTabs }}
                 getRowKey={(server) => server.id}
-                rowActions={(server) => mapScaffoldRowActions(server.actions)}
-                bulkActions={buildScaffoldBulkActions(config.actions, {
-                    bulkActionUrl: route('platform.servers.bulk-action'),
-                    currentStatus,
-                })}
-                empty={{
+                rowActions={rowActions}
+                bulkActions={bulkActions}
+                empty={buildScaffoldEmptyState(empty_state_config, {
                     icon: <HardDriveIcon className="size-5" />,
-                    title: 'No servers found',
-                    description:
+                    fallbackTitle: 'No servers found',
+                    fallbackDescription:
                         'Add an existing server or provision a fresh VPS to get started.',
-                }}
+                })}
                 sorting={sorting}
                 perPage={perPage}
                 title="Infrastructure"

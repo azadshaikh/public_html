@@ -29,10 +29,11 @@ class AbilityAggregator
      *
      * @return array<string, bool>
      */
-    public static function resolve(?User $user): array
+    public static function resolve(?User $user, ?array $onlyKeys = null): array
     {
         $moduleManager = resolve(ModuleManager::class);
         $abilities = [];
+        $filterKeys = $onlyKeys !== null ? array_fill_keys($onlyKeys, true) : null;
 
         foreach ($moduleManager->enabled() as $module) {
             $configPath = base_path(sprintf('modules/%s/config/abilities.php', $module->name));
@@ -49,6 +50,10 @@ class AbilityAggregator
                 }
 
                 foreach ($definitions as $key => $value) {
+                    if ($filterKeys !== null && ! array_key_exists($key, $filterKeys)) {
+                        continue;
+                    }
+
                     if (is_bool($value)) {
                         $abilities[$key] = $user ? $value : false;
                     } else {

@@ -5,7 +5,11 @@ import type { DatagridColumn } from '@/components/datagrid/datagrid';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
-import { buildScaffoldBulkActions, buildScaffoldDatagridState, mapScaffoldRowActions } from '@/lib/scaffold-datagrid';
+import {
+    buildScaffoldActionHandlers,
+    buildScaffoldDatagridState,
+    buildScaffoldEmptyState,
+} from '@/lib/scaffold-datagrid';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
 import type { PlatformIndexPageProps, WebsiteListItem } from '../../../types/platform';
 
@@ -26,6 +30,7 @@ export default function WebsitesIndex({
     rows,
     filters,
     statistics,
+    empty_state_config,
 }: PlatformIndexPageProps<WebsiteListItem>) {
     const page = usePage<AuthenticatedSharedData>();
     const canAddWebsites = page.props.auth.abilities.addWebsites;
@@ -33,6 +38,10 @@ export default function WebsitesIndex({
     const { currentStatus, gridFilters, perPage, sorting, statusTabs } = buildScaffoldDatagridState(config, filters, statistics, {
         searchPlaceholder: 'Search websites...',
         perPageOptions: [15, 25, 50, 100],
+    });
+    const { rowActions, bulkActions } = buildScaffoldActionHandlers(config, {
+        bulkActionUrl: route('platform.websites.bulk-action'),
+        currentStatus,
     });
 
     const columns: DatagridColumn<WebsiteListItem>[] = [
@@ -127,17 +136,14 @@ export default function WebsitesIndex({
                 filters={gridFilters}
                 tabs={{ name: 'status', items: statusTabs }}
                 getRowKey={(website) => website.id}
-                rowActions={(website) => mapScaffoldRowActions(website.actions)}
-                bulkActions={buildScaffoldBulkActions(config.actions, {
-                    bulkActionUrl: route('platform.websites.bulk-action'),
-                    currentStatus,
-                })}
-                empty={{
+                rowActions={rowActions}
+                bulkActions={bulkActions}
+                empty={buildScaffoldEmptyState(empty_state_config, {
                     icon: <GlobeIcon className="size-5" />,
-                    title: 'No websites found',
-                    description:
+                    fallbackTitle: 'No websites found',
+                    fallbackDescription:
                         'Create the first website to start automated provisioning and lifecycle tracking.',
-                }}
+                })}
                 sorting={sorting}
                 perPage={perPage}
                 title="Provisioned websites"

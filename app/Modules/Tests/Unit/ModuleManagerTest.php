@@ -32,9 +32,9 @@ class ModuleManagerTest extends TestCase
         $this->assertNotNull($module);
         $this->assertSame('CMS', $module->name);
         $this->assertSame('Modules\\CMS\\', $module->namespace);
-        $this->assertNull($module->author);
-        $this->assertNull($module->homepage);
-        $this->assertNull($module->icon);
+        $this->assertSame('AsteroDigital', $module->author);
+        $this->assertSame('https://asterodigital.com', $module->homepage);
+        $this->assertStringContainsString('<svg', (string) $module->icon);
         $this->assertSame('cms/', $module->inertiaNamespace());
         $this->assertSame('/cms', $module->url());
     }
@@ -53,9 +53,15 @@ class ModuleManagerTest extends TestCase
         $sharedModule = collect($this->app->make(ModuleManager::class)->sharedData()['items'])
             ->firstWhere('slug', 'chatbot');
 
-        $this->assertSame('AsteroDigital', $sharedModule['author']);
-        $this->assertSame('https://asterodigital.com', $sharedModule['homepage']);
-        $this->assertStringContainsString('<svg', (string) $sharedModule['icon']);
+        $this->assertSame('ChatBot', $sharedModule['name']);
+        $this->assertSame('chatbot', $sharedModule['slug']);
+        $this->assertSame('chatbot/', $sharedModule['inertiaNamespace']);
+        $this->assertArrayNotHasKey('author', $sharedModule);
+        $this->assertArrayNotHasKey('homepage', $sharedModule);
+        $this->assertArrayNotHasKey('icon', $sharedModule);
+        $this->assertArrayNotHasKey('version', $sharedModule);
+        $this->assertArrayNotHasKey('description', $sharedModule);
+        $this->assertArrayNotHasKey('url', $sharedModule);
     }
 
     public function test_it_only_enables_modules_listed_in_the_root_manifest(): void

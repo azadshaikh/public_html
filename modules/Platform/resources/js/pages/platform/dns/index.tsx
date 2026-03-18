@@ -5,7 +5,11 @@ import type { DatagridColumn } from '@/components/datagrid/datagrid';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
-import { buildScaffoldBulkActions, buildScaffoldDatagridState, mapScaffoldRowActions } from '@/lib/scaffold-datagrid';
+import {
+    buildScaffoldActionHandlers,
+    buildScaffoldDatagridState,
+    buildScaffoldEmptyState,
+} from '@/lib/scaffold-datagrid';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
 import type { DomainDnsRecordListItem, PlatformIndexPageProps } from '../../../types/platform';
 
@@ -18,7 +22,7 @@ type DnsIndexPageProps = PlatformIndexPageProps<DomainDnsRecordListItem> & {
     domain: DomainContext;
 };
 
-export default function DnsIndex({ config, rows, filters, statistics, domain }: DnsIndexPageProps) {
+export default function DnsIndex({ config, rows, filters, statistics, empty_state_config, domain }: DnsIndexPageProps) {
     const page = usePage<AuthenticatedSharedData>();
     const canAddRecords = page.props.auth.abilities.addDomainDnsRecords;
 
@@ -45,6 +49,10 @@ export default function DnsIndex({ config, rows, filters, statistics, domain }: 
     };
 
     const bulkActionRouteParams = domain ? { domain_id: domain.id } : {};
+    const { rowActions, bulkActions } = buildScaffoldActionHandlers(config, {
+        bulkActionUrl: route('platform.dns.bulk-action', bulkActionRouteParams),
+        currentStatus,
+    });
 
     const columns: DatagridColumn<DomainDnsRecordListItem>[] = [
         {
@@ -107,16 +115,13 @@ export default function DnsIndex({ config, rows, filters, statistics, domain }: 
                 filters={gridFilters}
                 tabs={{ name: 'status', items: statusTabs }}
                 getRowKey={(record) => record.id}
-                rowActions={(record) => mapScaffoldRowActions(record.actions)}
-                bulkActions={buildScaffoldBulkActions(config.actions, {
-                    bulkActionUrl: route('platform.dns.bulk-action', bulkActionRouteParams),
-                    currentStatus,
-                })}
-                empty={{
+                rowActions={rowActions}
+                bulkActions={bulkActions}
+                empty={buildScaffoldEmptyState(empty_state_config, {
                     icon: <GlobeIcon className="size-5" />,
-                    title: 'No DNS records found',
-                    description: 'Create a record to start managing hostnames, routing targets, and TTL policy.',
-                }}
+                    fallbackTitle: 'No DNS records found',
+                    fallbackDescription: 'Create a record to start managing hostnames, routing targets, and TTL policy.',
+                })}
                 sorting={sorting}
                 perPage={perPage}
                 title="DNS records"

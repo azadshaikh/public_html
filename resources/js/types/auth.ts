@@ -6,10 +6,7 @@ export type User = {
     name: string;
     email: string;
     avatar?: string;
-    email_verified_at: string | null;
     two_factor_enabled?: boolean;
-    created_at: string;
-    updated_at: string;
     [key: string]: unknown;
 };
 
@@ -17,35 +14,7 @@ export type Auth = {
     user: User | null;
     abilities: {
         manageModules: boolean;
-        viewRoles: boolean;
-        addRoles: boolean;
-        editRoles: boolean;
-        deleteRoles: boolean;
-        restoreRoles: boolean;
-        viewUsers: boolean;
-        addUsers: boolean;
-        editUsers: boolean;
-        deleteUsers: boolean;
-        restoreUsers: boolean;
-        impersonateUsers: boolean;
-        viewAddresses: boolean;
-        addAddresses: boolean;
-        editAddresses: boolean;
-        deleteAddresses: boolean;
-        restoreAddresses: boolean;
-        viewEmailProviders: boolean;
-        addEmailProviders: boolean;
-        editEmailProviders: boolean;
-        deleteEmailProviders: boolean;
-        restoreEmailProviders: boolean;
-        viewEmailTemplates: boolean;
-        addEmailTemplates: boolean;
-        editEmailTemplates: boolean;
-        deleteEmailTemplates: boolean;
-        restoreEmailTemplates: boolean;
-        viewEmailLogs: boolean;
-        /** Module-provided abilities (resolved dynamically via AbilityAggregator) */
-        [key: string]: boolean;
+        [key: string]: boolean | undefined;
     };
     impersonation: {
         active: true;
@@ -61,9 +30,9 @@ export type Auth = {
 export type FlashMessage =
     | string
     | {
-          title?: string;
-          message?: string;
-      };
+        title?: string;
+        message?: string;
+    };
 
 export type FlashData = {
     success?: FlashMessage;

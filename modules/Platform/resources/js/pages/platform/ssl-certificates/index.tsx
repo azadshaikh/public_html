@@ -5,7 +5,11 @@ import type { DatagridColumn } from '@/components/datagrid/datagrid';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
-import { buildScaffoldDatagridState, mapScaffoldRowActions } from '@/lib/scaffold-datagrid';
+import {
+    buildScaffoldActionHandlers,
+    buildScaffoldDatagridState,
+    buildScaffoldEmptyState,
+} from '@/lib/scaffold-datagrid';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
 import type { PlatformIndexPageProps, SslCertificateListItem } from '../../../types/platform';
 
@@ -26,6 +30,7 @@ export default function SslCertificatesIndex({
     rows,
     filters,
     statistics,
+    empty_state_config,
 }: PlatformIndexPageProps<SslCertificateListItem>) {
     const page = usePage<AuthenticatedSharedData>();
     const canEditDomains = page.props.auth.abilities.editDomains;
@@ -33,6 +38,9 @@ export default function SslCertificatesIndex({
     const { currentStatus, gridFilters, perPage, sorting, statusTabs } = buildScaffoldDatagridState(config, filters, statistics, {
         searchPlaceholder: 'Search certificates...',
         perPageOptions: [15, 25, 50, 100],
+    });
+    const { rowActions, bulkActions } = buildScaffoldActionHandlers(config, {
+        currentStatus,
     });
 
     const columns: DatagridColumn<SslCertificateListItem>[] = [
@@ -133,13 +141,14 @@ export default function SslCertificatesIndex({
                 filters={gridFilters}
                 tabs={{ name: 'status', items: statusTabs }}
                 getRowKey={(certificate) => certificate.id}
-                rowActions={(certificate) => mapScaffoldRowActions(certificate.actions)}
-                empty={{
+                rowActions={rowActions}
+                bulkActions={bulkActions}
+                empty={buildScaffoldEmptyState(empty_state_config, {
                     icon: <ShieldCheckIcon className="size-5" />,
-                    title: 'No certificates found',
-                    description:
+                    fallbackTitle: 'No certificates found',
+                    fallbackDescription:
                         'Certificates attached to domains will appear here with expiry and status details.',
-                }}
+                })}
                 sorting={sorting}
                 perPage={perPage}
                 title="Global certificate inventory"

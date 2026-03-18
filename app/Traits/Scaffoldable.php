@@ -138,8 +138,11 @@ trait Scaffoldable
             'rows' => $rows,
             'filters' => $this->collectRequestFilters($request),
             'statistics' => $includeStats ? $this->getStatistics() : [],
-            'empty_state_config' => $this->getEmptyStateConfig(),
         ];
+
+        if ($this->scaffold()->shouldIncludeEmptyStateConfigInInertia()) {
+            $data['empty_state_config'] = $this->getEmptyStateConfig();
+        }
 
         return $data;
     }
@@ -511,7 +514,7 @@ trait Scaffoldable
         ];
 
         $createRoute = $this->scaffold()->getCreateRoute();
-        if ($createRoute && Route::has($createRoute)) {
+        if ($createRoute && Route::has($createRoute) && $this->canRenderEmptyStateCreateAction()) {
             $config['action'] = [
                 'label' => 'Create '.$this->getEntityName(),
                 'url' => route($createRoute),
@@ -519,6 +522,25 @@ trait Scaffoldable
         }
 
         return $config;
+    }
+
+    protected function canRenderEmptyStateCreateAction(): bool
+    {
+        if (! Auth::check()) {
+            return false;
+        }
+
+        if ($this->scaffold()->requiresSuperUserAccess()) {
+            return true;
+        }
+
+        $permissionPrefix = $this->scaffold()->getPermissionPrefix();
+
+        if ($permissionPrefix === '') {
+            return false;
+        }
+
+        return Auth::user()?->can('add_'.$permissionPrefix) ?? false;
     }
 
     // =========================================================================
@@ -579,10 +601,21 @@ trait Scaffoldable
      */
     protected function applyEagerLoading(Builder $query): void
     {
-        $relationships = $this->getEagerLoadRelationships();
+        $relationships = $this->getListEagerLoadRelationships();
         if (! empty($relationships)) {
             $query->with($relationships);
         }
+    }
+
+    /**
+     * Get relationships to eager load for index/list queries.
+     *
+     * Override this when list pages need a different relationship set than other
+     * resource operations. By default it preserves the legacy hook.
+     */
+    protected function getListEagerLoadRelationships(): array
+    {
+        return $this->getEagerLoadRelationships();
     }
 
     /**

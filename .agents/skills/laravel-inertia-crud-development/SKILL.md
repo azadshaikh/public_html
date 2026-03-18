@@ -153,6 +153,16 @@ If you override a scaffold-backed `index()` action for custom statistics, filter
 
 On the frontend, if the index page supplies custom `DatagridColumn[]`, pass `scaffoldColumns={config.columns}` into `<Datagrid>` so widths and scaffold-only columns stay aligned with the backend definition.
 
+Keep payload ownership explicit:
+
+- shared Inertia props are for shell-safe runtime data only
+- feature-specific filters, rows, stats, abilities, and options belong in page props
+- management and diagnostic metadata should stay off ordinary browser pages
+
+For scaffold list rows, prefer explicit list serialization over permissive model dumps. Do not rely on `ScaffoldResource` exposing every attribute by default for new or updated CRUD work.
+
+When a scaffold index follows the standard backend-driven datagrid path, let the backend own action config and empty-state config. If the page intentionally owns those concerns in React, also opt out of the redundant backend payload.
+
 Keep readable named route calls explicit in feature pages when the route names are stable. Do not replace clear `route('app.resource.action')` calls with config/meta indirection unless the route truly needs to be dynamic.
 
 For uploads:

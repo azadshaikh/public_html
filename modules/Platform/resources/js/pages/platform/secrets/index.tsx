@@ -5,7 +5,11 @@ import type { DatagridColumn } from '@/components/datagrid/datagrid';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
-import { buildScaffoldBulkActions, buildScaffoldDatagridState, mapScaffoldRowActions } from '@/lib/scaffold-datagrid';
+import {
+    buildScaffoldActionHandlers,
+    buildScaffoldDatagridState,
+    buildScaffoldEmptyState,
+} from '@/lib/scaffold-datagrid';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
 import type { PlatformIndexPageProps, SecretListItem } from '../../../types/platform';
 
@@ -26,6 +30,7 @@ export default function SecretsIndex({
     rows,
     filters,
     statistics,
+    empty_state_config,
 }: PlatformIndexPageProps<SecretListItem>) {
     const page = usePage<AuthenticatedSharedData>();
     const canAddSecrets = page.props.auth.abilities.addSecrets;
@@ -33,6 +38,10 @@ export default function SecretsIndex({
     const { currentStatus, gridFilters, perPage, sorting, statusTabs } = buildScaffoldDatagridState(config, filters, statistics, {
         searchPlaceholder: 'Search secrets...',
         perPageOptions: [15, 25, 50, 100],
+    });
+    const { rowActions, bulkActions } = buildScaffoldActionHandlers(config, {
+        bulkActionUrl: route('platform.secrets.bulk-action'),
+        currentStatus,
     });
 
     const columns: DatagridColumn<SecretListItem>[] = [
@@ -120,17 +129,14 @@ export default function SecretsIndex({
                 filters={gridFilters}
                 tabs={{ name: 'status', items: statusTabs }}
                 getRowKey={(secret) => secret.id}
-                rowActions={(secret) => mapScaffoldRowActions(secret.actions)}
-                bulkActions={buildScaffoldBulkActions(config.actions, {
-                    bulkActionUrl: route('platform.secrets.bulk-action'),
-                    currentStatus,
-                })}
-                empty={{
+                rowActions={rowActions}
+                bulkActions={bulkActions}
+                empty={buildScaffoldEmptyState(empty_state_config, {
                     icon: <KeyRoundIcon className="size-5" />,
-                    title: 'No secrets found',
-                    description:
+                    fallbackTitle: 'No secrets found',
+                    fallbackDescription:
                         'Create encrypted secret records for platform credentials, tokens, and certificates.',
-                }}
+                })}
                 sorting={sorting}
                 perPage={perPage}
                 title="Encrypted secret records"

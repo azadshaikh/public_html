@@ -46,8 +46,9 @@ For scaffold index pages, prefer this flow:
 
 1. Treat `ScaffoldDefinition::toInertiaConfig()` as the backend source of truth.
 2. Use `buildScaffoldDatagridState()` to derive filters, tabs, sorting, and per-page state.
-3. Use `mapScaffoldRowActions()` to render row actions from backend action payloads.
-4. Use `buildScaffoldBulkActions()` when scaffold actions should drive the bulk-action toolbar.
+3. Use `buildScaffoldActionHandlers()` to derive row and bulk actions from the backend contract when the page follows the standard scaffold path.
+4. Use `buildScaffoldEmptyState()` when the page consumes backend empty-state config.
+5. Only drop down to `mapScaffoldRowActions()` or `buildScaffoldBulkActions()` directly when the page truly needs a custom split.
 
 Use the shared scaffold helpers for datagrid state, but keep simple page-level navigation routes explicit with readable `route('...')` calls when those routes are fixed.
 
@@ -72,6 +73,10 @@ If a scaffold-backed page uses custom frontend columns instead of directly mappi
 This is what lets the shared datagrid keep backend-defined column widths, including `_bulk_select` and `_actions`, even when the page renders richer cells.
 
 Do not invent parallel helpers like `buildDatagridColumns()` or `buildDatagridActions()` when the shared scaffold adapter already covers the page.
+
+For standard scaffold pages, do not pay for both backend-defined actions/empty states and custom frontend definitions at the same time. If the page intentionally owns row actions, bulk actions, or the empty state in React, also opt out of the redundant backend payload on the definition/resource side.
+
+Backend empty-state actions are authorization-sensitive UI. Treat the backend payload as the source of truth and do not re-add unauthorized create CTAs on the frontend.
 
 ## Required props
 

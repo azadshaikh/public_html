@@ -1,6 +1,7 @@
 import type { PaginatedData } from '@/types';
 import type {
     ScaffoldActionConfig,
+    ScaffoldEmptyStateConfig,
     ScaffoldFilterState,
     ScaffoldInertiaConfig,
     ScaffoldRowActionPayload,
@@ -34,6 +35,7 @@ export type PlatformIndexPageProps<T> = {
     rows: PaginatedData<T>;
     filters: PlatformFilterState;
     statistics: Record<string, number>;
+    empty_state_config?: ScaffoldEmptyStateConfig | null;
 };
 
 export type AgencyListItem = {
@@ -369,49 +371,49 @@ export type DomainDnsRecordItem = {
 };
 
 export type DomainDnsRecordListItem = {
-	id: number;
-	domain_name: string | null;
-	name: string;
-	type_label: string;
-	value: string;
-	ttl: number | null;
-	updated_at: string | null;
-	actions?: Record<string, PlatformActionPayload>;
-	is_trashed?: boolean;
+    id: number;
+    domain_name: string | null;
+    name: string;
+    type_label: string;
+    value: string;
+    ttl: number | null;
+    updated_at: string | null;
+    actions?: Record<string, PlatformActionPayload>;
+    is_trashed?: boolean;
 };
 
 export type DomainDnsRecordFormValues = {
-	domain_id: string;
-	name: string;
-	type: string;
-	value: string;
-	ttl: string;
-	priority: string;
-	weight: string;
-	port: string;
-	disabled: boolean;
-	record_id: string;
-	zone_id: string;
+    domain_id: string;
+    name: string;
+    type: string;
+    value: string;
+    ttl: string;
+    priority: string;
+    weight: string;
+    port: string;
+    disabled: boolean;
+    record_id: string;
+    zone_id: string;
 };
 
 export type DomainDnsRecordShowData = {
-	id: number;
-	domain_id: number;
-	domain_name: string | null;
-	name: string;
-	type: number | null;
-	type_label: string;
-	value: string | null;
-	ttl: number | null;
-	priority: number | null;
-	weight: number | null;
-	port: number | null;
-	disabled: boolean;
-	record_id: string | null;
-	zone_id: string | null;
-	created_at: string | null;
-	updated_at: string | null;
-	deleted_at: string | null;
+    id: number;
+    domain_id: number;
+    domain_name: string | null;
+    name: string;
+    type: number | null;
+    type_label: string;
+    value: string | null;
+    ttl: number | null;
+    priority: number | null;
+    weight: number | null;
+    port: number | null;
+    disabled: boolean;
+    record_id: string | null;
+    zone_id: string | null;
+    created_at: string | null;
+    updated_at: string | null;
+    deleted_at: string | null;
 };
 
 export type DomainSslCertificateItem = {

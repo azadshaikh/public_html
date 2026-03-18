@@ -183,7 +183,7 @@ Every module MUST have a `module.json` at its root. Required fields: `name`, `na
 | `navigation_path` | No | Relative path to module navigation config |
 | `database_seeder` | No | FQCN of the module database seeder |
 
-These optional fields are now first-class runtime metadata. `ModuleManager`, `ModuleManifest`, shared frontend module types, and `module:inspect` all consume them directly.
+Treat these optional fields as management and inspection metadata by default, not ordinary shared frontend runtime data. Shared module payloads for the app shell should stay limited to the runtime-safe descriptor used by Inertia page resolution, while `module:inspect`, module management screens, and other diagnostics can consume the richer manifest metadata.
 
 ## Module Status (`modules.json`)
 
