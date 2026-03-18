@@ -1,4 +1,5 @@
 import type { PaginatedData } from '@/types/pagination';
+import type { ScaffoldInertiaConfig } from '@/types/scaffold';
 import type { BadgeVariant } from '@/types/ui';
 
 export type PermissionOption = {
@@ -49,6 +50,7 @@ export type RoleFilters = {
 };
 
 export type RolesIndexPageProps = {
+    config: ScaffoldInertiaConfig;
     roles: PaginatedData<RoleListItem>;
     statistics: RoleStatistics;
     filters: RoleFilters;

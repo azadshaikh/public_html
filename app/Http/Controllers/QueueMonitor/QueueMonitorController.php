@@ -70,6 +70,7 @@ class QueueMonitorController extends ScaffoldController implements HasMiddleware
             : null;
 
         return Inertia::render($this->inertiaPage().'/index', [
+            'config' => $this->service()->getScaffoldDefinition()->toInertiaConfig(),
             'monitors' => $this->service()->getPaginatedMonitors($request),
             'statistics' => $this->service()->getStatistics(),
             'filters' => [

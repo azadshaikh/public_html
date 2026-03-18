@@ -14,8 +14,8 @@ import type {
 } from '@/components/datagrid/datagrid';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
-import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
 import { buildScaffoldDatagridState } from '@/lib/scaffold-datagrid';
+import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
 import type { FormIndexPageProps, FormListItem } from '../../../types/cms';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -239,6 +239,7 @@ export default function FormsIndex({
                     action={route('cms.form.index')}
                     rows={rows}
                     columns={columns}
+                    scaffoldColumns={config.columns}
                     filters={gridFilters}
                     tabs={{ name: 'status', items: statusTabs }}
                     getRowKey={(form) => form.id}

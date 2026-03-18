@@ -110,6 +110,8 @@ class QueueMonitorControllerTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page): Assert => $page
                 ->component('masters/queue-monitor/index')
+                ->has('config.columns', 10)
+                ->where('config.columns.1.width', 100)
                 ->has('monitors')
                 ->where('monitors.data', function (Collection $rows) use ($failedMonitor, $runningMonitor, $syncMonitor): bool {
                     $ids = $rows->pluck('id');

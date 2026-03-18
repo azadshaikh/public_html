@@ -14,8 +14,8 @@ import type {
 } from '@/components/datagrid/datagrid';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
-import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
 import { buildScaffoldDatagridState } from '@/lib/scaffold-datagrid';
+import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
 import type { DesignBlockIndexPageProps, DesignBlockListItem } from '../../../types/cms';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -53,29 +53,32 @@ export default function DesignBlocksIndex({
 
     const columns: DatagridColumn<DesignBlockListItem>[] = [
         {
-            key: 'preview_image_url',
-            header: 'Preview',
-            headerClassName: 'w-20',
-            cell: (block) => (
-                <img
-                    src={block.preview_image_url}
-                    alt={block.title}
-                    className="h-10 w-16 rounded border object-cover"
-                    loading="lazy"
-                />
-            ),
-        },
-        {
             key: 'title',
             header: 'Design Block',
+            headerClassName: 'w-[42%] min-w-[24rem]',
+            cellClassName: 'w-[42%] min-w-[24rem]',
             sortable: true,
             cell: (block) => (
-                <Link
-                    href={block.edit_url}
-                    className="font-medium text-foreground hover:opacity-80"
-                >
-                    {block.title}
-                </Link>
+                <div className="flex min-w-0 items-center gap-4">
+                    <Link
+                        href={block.edit_url}
+                        className="shrink-0 transition-opacity hover:opacity-80"
+                    >
+                        <img
+                            src={block.preview_image_url}
+                            alt={block.title}
+                            className="h-10 w-16 rounded border object-cover"
+                            loading="lazy"
+                        />
+                    </Link>
+
+                    <Link
+                        href={block.edit_url}
+                        className="min-w-0 font-medium text-foreground hover:opacity-80"
+                    >
+                        <span className="block truncate">{block.title}</span>
+                    </Link>
+                </div>
             ),
         },
         {
@@ -242,6 +245,7 @@ export default function DesignBlocksIndex({
                     action={route('cms.designblock.index')}
                     rows={rows}
                     columns={columns}
+                    scaffoldColumns={config.columns}
                     filters={gridFilters}
                     tabs={{ name: 'status', items: statusTabs }}
                     getRowKey={(block) => block.id}

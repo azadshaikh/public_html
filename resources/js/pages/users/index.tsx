@@ -87,6 +87,7 @@ function mapBackendAction(action: UserRowAction): DatagridAction {
 // =========================================================================
 
 export default function UsersIndex({
+    config,
     users,
     filters,
     statistics,
@@ -431,6 +432,7 @@ export default function UsersIndex({
                     action={route('app.users.index')}
                     rows={users}
                     columns={columns}
+                    scaffoldColumns={config.columns}
                     filters={gridFilters}
                     tabs={{
                         name: 'status',

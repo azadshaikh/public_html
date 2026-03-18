@@ -5,6 +5,7 @@ import type {
     NoteVisibilityOption,
 } from '@/types/notes';
 import type { PaginatedData } from '@/types/pagination';
+import type { ScaffoldInertiaConfig } from '@/types/scaffold';
 
 export type ManagedUserRole = {
     id: number;
@@ -92,6 +93,7 @@ export type RegistrationSettings = {
 };
 
 export type UsersIndexPageProps = {
+    config: ScaffoldInertiaConfig;
     users: PaginatedData<UserListItem>;
     statistics: UserStatistics;
     filters: UserFilters;

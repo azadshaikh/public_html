@@ -1,5 +1,6 @@
 import type { RecentStats } from '@/types/login-attempt';
 import type { PaginatedData } from '@/types/pagination';
+import type { ScaffoldInertiaConfig } from '@/types/scaffold';
 
 export type NotFoundLogListItem = {
     id: number;
@@ -57,6 +58,7 @@ export type NotFoundLogFilters = {
 };
 
 export type NotFoundLogsIndexPageProps = {
+    config: ScaffoldInertiaConfig;
     notFoundLogs: PaginatedData<NotFoundLogListItem>;
     statistics: NotFoundLogStatistics;
     filters: NotFoundLogFilters;

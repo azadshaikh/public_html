@@ -25,6 +25,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function EmailLogsIndex({
+    config,
     emailLogs,
     statistics,
     providerOptions,
@@ -169,6 +170,7 @@ export default function EmailLogsIndex({
                     action={route('app.masters.email.logs.index')}
                     rows={emailLogs}
                     columns={columns}
+                    scaffoldColumns={config.columns}
                     filters={gridFilters}
                     tabs={{ name: 'status', items: statusTabs }}
                     getRowKey={(log) => log.id}

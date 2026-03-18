@@ -103,6 +103,7 @@ export default function DnsIndex({ config, rows, filters, statistics, domain }: 
                 action={route('platform.dns.index', indexRouteParams)}
                 rows={rows}
                 columns={columns}
+                scaffoldColumns={config.columns}
                 filters={gridFilters}
                 tabs={{ name: 'status', items: statusTabs }}
                 getRowKey={(record) => record.id}

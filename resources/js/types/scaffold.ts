@@ -65,6 +65,14 @@ export type ScaffoldRowActionPayload = {
     hidden?: boolean;
 };
 
+export type ScaffoldColumnConfig = {
+    key: string;
+    label: string;
+    width?: string | number;
+    visible?: boolean;
+    [key: string]: unknown;
+};
+
 export type ScaffoldSettings = {
     perPage: number;
     defaultSort: string | null;
@@ -78,7 +86,7 @@ export type ScaffoldSettings = {
 };
 
 export type ScaffoldInertiaConfig = {
-    columns: Record<string, unknown>[];
+    columns: ScaffoldColumnConfig[];
     filters: ScaffoldFilterConfig[];
     actions: ScaffoldActionConfig[];
     statusTabs: ScaffoldStatusTabConfig[];

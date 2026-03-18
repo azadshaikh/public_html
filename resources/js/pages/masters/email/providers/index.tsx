@@ -37,6 +37,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function EmailProvidersIndex({
+    config,
     emailProviders,
     statistics,
     filters,
@@ -320,6 +321,7 @@ export default function EmailProvidersIndex({
                     action={route('app.masters.email.providers.index')}
                     rows={emailProviders}
                     columns={columns}
+                    scaffoldColumns={config.columns}
                     filters={gridFilters}
                     tabs={{ name: 'status', items: statusTabs }}
                     getRowKey={(provider) => provider.id}

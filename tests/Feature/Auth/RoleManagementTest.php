@@ -56,6 +56,8 @@ class RoleManagementTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page): Assert => $page
                 ->component('roles/index')
+                ->has('config.columns', 7)
+                ->where('config.columns.1.width', '250px')
                 ->has('statistics')
                 ->where('filters.sort', 'display_name')
                 ->where('filters.direction', 'asc')

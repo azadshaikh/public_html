@@ -16,8 +16,8 @@ import type {
 } from '@/components/datagrid/datagrid';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
-import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
 import { buildScaffoldDatagridState } from '@/lib/scaffold-datagrid';
+import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
 import type {
     RedirectionIndexPageProps,
     RedirectionListItem,
@@ -287,6 +287,7 @@ export default function RedirectionsIndex({
                     action={route('cms.redirections.index')}
                     rows={rows}
                     columns={columns}
+                    scaffoldColumns={config.columns}
                     filters={gridFilters}
                     tabs={{ name: 'status', items: statusTabs }}
                     getRowKey={(r) => r.id}

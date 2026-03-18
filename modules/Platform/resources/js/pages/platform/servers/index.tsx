@@ -122,6 +122,7 @@ export default function ServersIndex({
                 })}
                 rows={rows}
                 columns={columns}
+                scaffoldColumns={config.columns}
                 filters={gridFilters}
                 tabs={{ name: 'status', items: statusTabs }}
                 getRowKey={(server) => server.id}

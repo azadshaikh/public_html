@@ -1,4 +1,5 @@
 import type { PaginatedData } from '@/types/pagination';
+import type { ScaffoldInertiaConfig } from '@/types/scaffold';
 
 // =========================================================================
 // Media list item (from MediaLibraryResource)
@@ -158,6 +159,7 @@ export type MediaFilterOptions = {
 };
 
 export type MediaIndexPageProps = {
+    config: ScaffoldInertiaConfig;
     media: PaginatedData<MediaListItem>;
     filters: MediaFilters;
     statistics: MediaStatistics;

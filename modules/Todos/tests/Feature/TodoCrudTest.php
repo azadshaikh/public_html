@@ -68,6 +68,8 @@ class TodoCrudTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page): Assert => $page
                 ->component('todos/index')
+                ->has('config.columns', 8)
+                ->where('config.columns.0.width', '40px')
                 ->has('todos')
                 ->has('todos.data')
                 ->has('statistics')

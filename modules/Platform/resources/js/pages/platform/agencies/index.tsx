@@ -127,6 +127,7 @@ export default function AgenciesIndex({
                 })}
                 rows={rows}
                 columns={columns}
+                scaffoldColumns={config.columns}
                 filters={gridFilters}
                 tabs={{ name: 'status', items: statusTabs }}
                 getRowKey={(agency) => agency.id}

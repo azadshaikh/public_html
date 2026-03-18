@@ -93,6 +93,7 @@ function getFileTypeIcon(mimeType: string, className: string) {
 // =========================================================================
 
 export default function MediaIndex({
+    config,
     media,
     filters,
     statistics,
@@ -430,6 +431,7 @@ export default function MediaIndex({
                     action={route('app.media-library.index')}
                     rows={media}
                     columns={columns}
+                    scaffoldColumns={config.columns}
                     filters={gridFilters}
                     tabs={{
                         name: 'status',

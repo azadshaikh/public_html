@@ -129,6 +129,7 @@ export default function SslCertificatesIndex({
                 })}
                 rows={rows}
                 columns={columns}
+                scaffoldColumns={config.columns}
                 filters={gridFilters}
                 tabs={{ name: 'status', items: statusTabs }}
                 getRowKey={(certificate) => certificate.id}

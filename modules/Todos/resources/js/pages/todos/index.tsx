@@ -33,6 +33,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function TodosIndex({
+    config,
     todos,
     filters,
     statistics,
@@ -379,6 +380,7 @@ export default function TodosIndex({
                     action={route('app.todos.index')}
                     rows={todos}
                     columns={columns}
+                    scaffoldColumns={config.columns}
                     filters={gridFilters}
                     tabs={{
                         name: 'status',

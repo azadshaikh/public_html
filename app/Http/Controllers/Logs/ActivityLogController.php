@@ -49,6 +49,7 @@ class ActivityLogController extends ScaffoldController implements HasMiddleware
         $perPage = $this->service()->getScaffoldDefinition()->getPerPage();
 
         return Inertia::render($this->inertiaPage().'/index', [
+            'config' => $this->service()->getScaffoldDefinition()->toInertiaConfig(),
             'logs' => $this->activityLogService->getPaginatedLogs($request),
             'statistics' => $this->activityLogService->getStatistics(),
             'filterOptions' => [

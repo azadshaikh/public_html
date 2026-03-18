@@ -1,4 +1,5 @@
 import type { PaginatedData } from '@/types/pagination';
+import type { ScaffoldInertiaConfig } from '@/types/scaffold';
 
 export type LoginAttemptListItem = {
     id: number;
@@ -51,6 +52,7 @@ export type LoginAttemptFilters = {
 };
 
 export type LoginAttemptsIndexPageProps = {
+    config: ScaffoldInertiaConfig;
     loginAttempts: PaginatedData<LoginAttemptListItem>;
     statistics: LoginAttemptStatistics;
     filters: LoginAttemptFilters;

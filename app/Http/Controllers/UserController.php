@@ -85,6 +85,7 @@ class UserController extends ScaffoldController implements HasMiddleware
         $perPage = $this->service()->getScaffoldDefinition()->getPerPage();
 
         return Inertia::render($this->inertiaPage().'/index', [
+            'config' => $this->userService->getScaffoldDefinition()->toInertiaConfig(),
             'users' => $this->userService->getPaginatedUsers($request),
             'statistics' => $statistics,
             'filters' => [

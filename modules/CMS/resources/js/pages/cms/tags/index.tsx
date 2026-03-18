@@ -30,8 +30,6 @@ function getTagDateLabel(): string {
     return 'Created';
 }
 
-const FEATURED_IMAGE_COLUMN_CLASS = 'w-32 min-w-32';
-
 function TagPreview({ tag }: { tag: TagListItem }) {
     if (tag.featured_image_url) {
         return (
@@ -127,37 +125,32 @@ export default function TagsIndex({
 
     const columns: DatagridColumn<TagListItem>[] = [
         {
-            key: 'featured_image_url',
-            header: '',
-            headerClassName: FEATURED_IMAGE_COLUMN_CLASS,
-            cellClassName: FEATURED_IMAGE_COLUMN_CLASS,
-            cell: (tag) => (
-                <Link
-                    href={tag.edit_url}
-                    className="block shrink-0 transition-opacity hover:opacity-80"
-                >
-                    <TagPreview tag={tag} />
-                </Link>
-            ),
-        },
-        {
             key: 'title',
             header: 'Title',
-            headerClassName: 'w-[400px] min-w-[24rem]',
-            cellClassName: 'w-[400px] min-w-[24rem]',
+            headerClassName: 'w-[42%] min-w-[26rem]',
+            cellClassName: 'w-[42%] min-w-[26rem]',
             sortable: true,
             cell: (tag) => (
-                <div className="min-w-0 space-y-1.5">
-                    <div className="flex items-start gap-2">
-                        <Link
-                            href={tag.edit_url}
-                            className="line-clamp-2 font-semibold break-words text-foreground hover:underline"
-                        >
-                            {tag.title}
-                        </Link>
-                    </div>
+                <div className="flex min-w-0 items-center gap-4">
+                    <Link
+                        href={tag.edit_url}
+                        className="shrink-0 transition-opacity hover:opacity-80"
+                    >
+                        <TagPreview tag={tag} />
+                    </Link>
 
-                    <TagMeta tag={tag} />
+                    <div className="min-w-0 flex-1 space-y-1.5">
+                        <div className="flex items-start gap-2">
+                            <Link
+                                href={tag.edit_url}
+                                className="line-clamp-2 font-semibold break-words text-foreground hover:underline"
+                            >
+                                {tag.title}
+                            </Link>
+                        </div>
+
+                        <TagMeta tag={tag} />
+                    </div>
                 </div>
             ),
         },
@@ -316,6 +309,7 @@ export default function TagsIndex({
                     action={route('cms.tags.index')}
                     rows={rows}
                     columns={columns}
+                    scaffoldColumns={config.columns}
                     filters={gridFilters}
                     tabs={{ name: 'status', items: statusTabs }}
                     getRowKey={(tag) => tag.id}

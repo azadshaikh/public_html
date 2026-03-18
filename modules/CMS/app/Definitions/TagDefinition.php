@@ -36,17 +36,12 @@ class TagDefinition extends ScaffoldDefinition
         return [
             Column::make('_bulk_select')->label('')->checkbox()->width('40px')->excludeFromExport(),
 
-            Column::make('featured_image')
-                ->label('')
-                ->template('tag_featured_image')
-                ->width('128px'),
-
             Column::make('title_with_meta')
                 ->label('Title')
                 ->sortable('title')
                 ->searchable(['title', 'slug'])
                 ->template('tag_title_meta')
-                ->width('400px'),
+                ->width('520px'),
 
             Column::make('posts_count')
                 ->label('Posts')

@@ -46,6 +46,7 @@ class LoginAttemptController extends ScaffoldController implements HasMiddleware
         $perPage = $this->service()->getScaffoldDefinition()->getPerPage();
 
         return Inertia::render($this->inertiaPage().'/index', [
+            'config' => $this->service()->getScaffoldDefinition()->toInertiaConfig(),
             'loginAttempts' => $this->loginAttemptService->getPaginatedAttempts($request),
             'statistics' => $this->loginAttemptService->getStatistics(),
             'filters' => [

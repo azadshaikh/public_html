@@ -53,6 +53,7 @@ class EmailLogController extends ScaffoldController implements HasMiddleware
         $perPage = $this->emailLogService->getScaffoldDefinition()->getPerPage();
 
         return Inertia::render($this->inertiaPage().'/index', [
+            'config' => $this->emailLogService->getScaffoldDefinition()->toInertiaConfig(),
             'emailLogs' => $this->emailLogService->getPaginatedEmailLogs($request),
             'statistics' => $this->emailLogService->getStatistics(),
             'providerOptions' => $this->emailLogService->getProviderOptions(),

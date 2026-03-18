@@ -41,6 +41,7 @@ const STATUS_BADGE_VARIANT: Record<string, BadgeVariant> = {
 };
 
 export default function NotFoundLogsIndex({
+    config,
     notFoundLogs,
     filters,
     statistics,
@@ -345,6 +346,7 @@ export default function NotFoundLogsIndex({
                     action={route('app.logs.not-found-logs.index')}
                     rows={notFoundLogs}
                     columns={columns}
+                    scaffoldColumns={config.columns}
                     filters={gridFilters}
                     tabs={{
                         name: 'status',

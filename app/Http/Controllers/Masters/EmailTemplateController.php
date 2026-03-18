@@ -80,6 +80,7 @@ class EmailTemplateController extends ScaffoldController implements HasMiddlewar
         $perPage = $this->emailTemplateService->getScaffoldDefinition()->getPerPage();
 
         return Inertia::render($this->inertiaPage().'/index', [
+            'config' => $this->emailTemplateService->getScaffoldDefinition()->toInertiaConfig(),
             'emailTemplates' => $this->emailTemplateService->getPaginatedEmailTemplates($request),
             'statistics' => $this->emailTemplateService->getStatistics(),
             'providerOptions' => $this->emailTemplateService->getProviderOptions(),

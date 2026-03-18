@@ -145,6 +145,14 @@ For forms, return:
 
 For scaffold-backed resources, prefer the shared scaffold contract from `ScaffoldDefinition::toInertiaConfig()` instead of manually rebuilding datagrid tabs, filters, sort metadata, and per-page defaults in each controller.
 
+If you override a scaffold-backed `index()` action for custom statistics, filter options, or alternate row payloads, keep the scaffold contract intact by still returning:
+
+```php
+'config' => $this->service()->getScaffoldDefinition()->toInertiaConfig(),
+```
+
+On the frontend, if the index page supplies custom `DatagridColumn[]`, pass `scaffoldColumns={config.columns}` into `<Datagrid>` so widths and scaffold-only columns stay aligned with the backend definition.
+
 Keep readable named route calls explicit in feature pages when the route names are stable. Do not replace clear `route('app.resource.action')` calls with config/meta indirection unless the route truly needs to be dynamic.
 
 For uploads:
@@ -208,6 +216,8 @@ For index pages, prefer:
 - empty state
 
 For scaffold index pages, derive the datagrid state from `resources/js/lib/scaffold-datagrid.ts` so tabs, filters, sorting, bulk actions, and pagination stay aligned with the backend definition.
+
+When the page intentionally uses custom columns or custom cards, keep display logic in the React page but keep layout metadata in the scaffold definition. Width should be owned by `Column::width()` and consumed through `config.columns`, not duplicated by hard-coded page widths.
 
 For common backend datagrid patterns, prefer explicit `Column`, `Filter`, `StatusTab`, and `Action` definitions in the resource so generated and hand-written CRUDs stay easy to read.
 

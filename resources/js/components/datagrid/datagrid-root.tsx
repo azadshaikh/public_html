@@ -14,10 +14,25 @@ import {
 import { CardDescription, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
+function normalizeWidth(width?: string | number): string | undefined {
+    if (typeof width === 'number') {
+        return `${width}px`;
+    }
+
+    if (typeof width !== 'string') {
+        return undefined;
+    }
+
+    const trimmedWidth = width.trim();
+
+    return trimmedWidth === '' ? undefined : trimmedWidth;
+}
+
 export function Datagrid<T>({
     action,
     rows,
     columns,
+    scaffoldColumns,
     filters = [],
     tabs,
     getRowKey,
@@ -148,13 +163,57 @@ export function Datagrid<T>({
     );
     const hasToolbar = Boolean(tabs || hasVisibleFilters || perPage || view);
     const hasSelection = bulkActions.length > 0;
+    const visibleScaffoldColumns = React.useMemo(
+        () =>
+            (scaffoldColumns ?? []).filter(
+                (column) => column.visible !== false,
+            ),
+        [scaffoldColumns],
+    );
+    const contentScaffoldColumns = React.useMemo(
+        () =>
+            visibleScaffoldColumns.filter(
+                (column) =>
+                    column.key !== '_bulk_select' && column.key !== '_actions',
+            ),
+        [visibleScaffoldColumns],
+    );
+    const selectionColumnWidth = React.useMemo(
+        () =>
+            normalizeWidth(
+                visibleScaffoldColumns.find(
+                    (column) => column.key === '_bulk_select',
+                )?.width,
+            ) ?? '3.5rem',
+        [visibleScaffoldColumns],
+    );
+    const actionColumnWidth = React.useMemo(
+        () =>
+            normalizeWidth(
+                visibleScaffoldColumns.find(
+                    (column) => column.key === '_actions',
+                )?.width,
+            ),
+        [visibleScaffoldColumns],
+    );
+    const resolvedBaseColumns = React.useMemo(
+        () =>
+            columns.map((column, index) => ({
+                ...column,
+                width:
+                    column.width
+                    ?? normalizeWidth(contentScaffoldColumns[index]?.width),
+            })),
+        [columns, contentScaffoldColumns],
+    ) as DatagridColumn<T>[];
     const resolvedColumns = React.useMemo(() => {
-        const mappedColumns = [...columns];
+        const mappedColumns = [...resolvedBaseColumns];
 
         if (rowActions) {
             mappedColumns.push({
                 key: '__actions',
                 header: 'Actions',
+                width: actionColumnWidth,
                 headerClassName: 'w-14 text-right',
                 cellClassName: 'w-14 text-right',
                 cell: () => null,
@@ -162,7 +221,7 @@ export function Datagrid<T>({
         }
 
         return mappedColumns;
-    }, [columns, rowActions]) as DatagridColumn<T>[];
+    }, [actionColumnWidth, resolvedBaseColumns, rowActions]) as DatagridColumn<T>[];
 
     const selectableRows = React.useMemo(
         () =>
@@ -432,6 +491,7 @@ export function Datagrid<T>({
                 rows={rows}
                 empty={empty}
                 hasSelection={hasSelection}
+                selectionColumnWidth={selectionColumnWidth}
                 selectedRows={selectedRows}
                 bulkActions={bulkActions}
                 clearSelection={clearSelection}
@@ -448,7 +508,7 @@ export function Datagrid<T>({
                 someSelectableRowsSelected={someSelectableRowsSelected}
                 toggleAllRows={toggleAllRows}
                 resolvedColumns={resolvedColumns}
-                columns={columns}
+                columns={resolvedBaseColumns}
                 sorting={sorting}
                 handleSort={handleSort}
                 perPage={perPage}
