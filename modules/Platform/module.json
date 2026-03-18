@@ -2,7 +2,7 @@
     "name": "Platform",
     "slug": "platform",
     "alias": "platform",
-    "description": "Core platform management module for system configuration, settings, and platform administration",
+    "description": "Core platform management module for system configuration, operations, and platform administration.",
     "namespace": "Modules\\Platform\\",
     "keywords": [
         "platform",
@@ -16,8 +16,10 @@
     "author": "AsteroDigital",
     "homepage": "https://asterodigital.com",
     "category": "Core",
-    "icon": "<i class='ri-settings-3-line'></i>",
+    "icon": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"4\" width=\"18\" height=\"6\" rx=\"2\"></rect><rect x=\"3\" y=\"14\" width=\"8\" height=\"6\" rx=\"2\"></rect><rect x=\"13\" y=\"14\" width=\"8\" height=\"6\" rx=\"2\"></rect><path d=\"M7 10v4\"></path><path d=\"M17 10v4\"></path></svg>",
     "provider": "Modules\\Platform\\Providers\\PlatformServiceProvider",
-    "providers": ["Modules\\Platform\\Providers\\PlatformServiceProvider"],
+    "providers": [
+        "Modules\\Platform\\Providers\\PlatformServiceProvider"
+    ],
     "files": []
 }

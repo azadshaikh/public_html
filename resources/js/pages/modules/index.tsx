@@ -294,7 +294,7 @@ export default function ModulesIndex({
                                     <div className="flex items-center gap-2.5">
                                         <div
                                             className={cn(
-                                                'flex size-7 shrink-0 items-center justify-center rounded-lg border text-muted-foreground',
+                                                'flex size-8 shrink-0 items-center justify-center rounded-xl border text-muted-foreground',
                                                 module.enabled &&
                                                     'bg-secondary text-foreground',
                                                 !module.enabled && 'bg-muted',
@@ -303,10 +303,10 @@ export default function ModulesIndex({
                                             {module.icon ? (
                                                 <NavigationIcon
                                                     svg={module.icon}
-                                                    className="text-current [&_svg]:size-3.5"
+                                                    className="text-current [&_svg]:size-4"
                                                 />
                                             ) : (
-                                                <PackageIcon className="size-3.5" />
+                                                <PackageIcon className="size-4" />
                                             )}
                                         </div>
                                         <div className="min-w-0 flex-1">
