@@ -54,8 +54,13 @@ class MakeModuleScaffoldCommandTest extends TestCase
         $this->assertFileExists($modulePath.'/app/Http/Controllers/TicketController.php');
         $this->assertFileExists($modulePath.'/resources/js/pages/feedback/tickets/index.tsx');
 
+        $manifestContents = File::get($modulePath.'/module.json');
+
         $this->assertStringContainsString('"page_root": "resources/js/pages/feedback"', File::get($modulePath.'/module.json'));
         $this->assertStringContainsString('DatabaseSeeder', File::get($modulePath.'/module.json'));
+        $this->assertStringContainsString('"author": "AsteroDigital"', $manifestContents);
+        $this->assertStringContainsString('"homepage": "https://asterodigital.com"', $manifestContents);
+        $this->assertStringContainsString('"icon": "<svg viewBox=', $manifestContents);
         $this->assertStringContainsString('class FeedbackServiceProvider extends ModuleServiceProvider', File::get($modulePath.'/app/Providers/FeedbackServiceProvider.php'));
         $this->assertStringContainsString('// Register Feedback routes here.', File::get($modulePath.'/routes/web.php'));
         $this->assertStringContainsString('scaffold-generated:tickets:routes:start', File::get($modulePath.'/routes/web.php'));
