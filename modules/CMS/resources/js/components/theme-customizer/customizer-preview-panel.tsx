@@ -1,5 +1,4 @@
 import type { RefObject } from 'react';
-import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import type { DeviceMode } from '../../pages/cms/themes/customizer/types';
 
@@ -25,18 +24,6 @@ export function ThemeCustomizerPreviewPanel({
 
     return (
         <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-[24px] border border-white/70 bg-white/82 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-sm">
-            <div className="flex items-center justify-between gap-3 border-b border-border/60 px-3 py-2.5 sm:px-4">
-                <div className="min-w-0">
-                    <p className="text-sm font-semibold text-foreground">Frontend preview</p>
-                    <p className="hidden text-xs text-muted-foreground sm:block">
-                        Navigate inside the frame to inspect live theme changes before saving.
-                    </p>
-                </div>
-                <Badge variant="outline" className="capitalize">
-                    {deviceMode}
-                </Badge>
-            </div>
-
             <div className="min-h-0 flex-1 overflow-auto p-2 sm:p-3">
                 <div
                     className={cn(
