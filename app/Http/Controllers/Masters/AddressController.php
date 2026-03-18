@@ -55,6 +55,7 @@ class AddressController extends ScaffoldController implements HasMiddleware
         $perPage = $this->addressService->getScaffoldDefinition()->getPerPage();
 
         return Inertia::render($this->inertiaPage().'/index', [
+            'config' => $this->addressService->getScaffoldDefinition()->toInertiaConfig(),
             'addresses' => $this->addressService->getPaginatedAddresses($request),
             'statistics' => $this->addressService->getStatistics(),
             'filters' => [

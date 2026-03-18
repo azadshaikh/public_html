@@ -40,17 +40,12 @@ class DesignBlockDefinition extends ScaffoldDefinition
         return [
             Column::make('_bulk_select')->label('')->checkbox()->width('40px')->excludeFromExport(),
 
-            Column::make('preview_image_url')
-                ->label('Preview')
-                ->image(40)
-                ->width('80px'),
-
             Column::make('title')
                 ->label('Design Block')
                 ->sortable()
                 ->searchable(['title', 'slug', 'excerpt'])
                 ->link('edit_url')
-                ->width('260px'),
+                ->width('340px'),
 
             Column::make('design_type')
                 ->label('Design Type')

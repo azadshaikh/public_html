@@ -1,5 +1,6 @@
 import type { Key, ReactNode } from 'react';
 import type { PaginatedData } from '@/types';
+import type { ScaffoldColumnConfig } from '@/types/scaffold';
 import type { BadgeVariant } from '@/types/ui';
 
 export type DatagridFilterOption = {
@@ -76,14 +77,14 @@ export type DatagridTab = {
     icon?: ReactNode;
     /** Badge variant for the count pill. Supports all Badge variants. */
     countVariant?:
-        | 'default'
-        | 'secondary'
-        | 'success'
-        | 'warning'
-        | 'info'
-        | 'danger'
-        | 'destructive'
-        | 'outline';
+    | 'default'
+    | 'secondary'
+    | 'success'
+    | 'warning'
+    | 'info'
+    | 'danger'
+    | 'destructive'
+    | 'outline';
 };
 
 export type DatagridColumnType =
@@ -98,6 +99,7 @@ export type DatagridColumnType =
 export type DatagridColumn<T> = {
     key: string;
     header: string;
+    width?: string | number;
     headerClassName?: string;
     cellClassName?: string;
     cell?: (row: T) => ReactNode;
@@ -147,6 +149,7 @@ export type DatagridProps<T> = {
     action: string;
     rows: PaginatedData<T>;
     columns: DatagridColumn<T>[];
+    scaffoldColumns?: ScaffoldColumnConfig[];
     filters?: DatagridFilter[];
     tabs?: {
         name: string;

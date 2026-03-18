@@ -49,6 +49,7 @@ const EVENT_BADGE_VARIANT: Record<string, BadgeVariant> = {
 };
 
 export default function ActivityLogsIndex({
+    config,
     logs,
     filters,
     statistics,
@@ -332,6 +333,7 @@ export default function ActivityLogsIndex({
                     action={route('app.logs.activity-logs.index')}
                     rows={logs}
                     columns={columns}
+                    scaffoldColumns={config.columns}
                     filters={gridFilters}
                     tabs={{
                         name: 'status',

@@ -1,4 +1,5 @@
 import type { PaginatedData } from '@/types/pagination';
+import type { ScaffoldInertiaConfig } from '@/types/scaffold';
 
 export type EmailOption = {
     value: string;
@@ -81,6 +82,7 @@ export type EmailProviderEditTarget = {
 };
 
 export type EmailProvidersIndexPageProps = {
+    config: ScaffoldInertiaConfig;
     emailProviders: PaginatedData<EmailProviderListItem>;
     statistics: EmailProviderStatistics;
     filters: EmailProviderFilters;
@@ -173,6 +175,7 @@ export type EmailTemplateEditTarget = {
 };
 
 export type EmailTemplatesIndexPageProps = {
+    config: ScaffoldInertiaConfig;
     emailTemplates: PaginatedData<EmailTemplateListItem>;
     statistics: EmailTemplateStatistics;
     providerOptions: EmailOption[];
@@ -248,6 +251,7 @@ export type EmailLogFilters = {
 };
 
 export type EmailLogsIndexPageProps = {
+    config: ScaffoldInertiaConfig;
     emailLogs: PaginatedData<EmailLogListItem>;
     statistics: EmailLogStatistics;
     providerOptions: EmailOption[];

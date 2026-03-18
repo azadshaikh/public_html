@@ -1,4 +1,5 @@
 import type { PaginatedData } from '@/types/pagination';
+import type { ScaffoldInertiaConfig } from '@/types/scaffold';
 
 // ================================================================
 // Option type
@@ -125,6 +126,7 @@ export type TodoShowDetail = {
 // ================================================================
 
 export type TodoIndexPageProps = {
+    config: ScaffoldInertiaConfig;
     todos: PaginatedData<TodoListItem>;
     statistics: TodoStatistics;
     filters: TodoFilters;

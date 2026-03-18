@@ -115,6 +115,7 @@ export default function TldsIndex({
                 action={route('platform.tlds.index', { status: currentStatus })}
                 rows={rows}
                 columns={columns}
+                scaffoldColumns={config.columns}
                 filters={gridFilters}
                 tabs={{ name: 'status', items: statusTabs }}
                 getRowKey={(item) => item.id}

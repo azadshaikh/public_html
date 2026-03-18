@@ -1,4 +1,5 @@
 import type { PaginatedData } from '@/types/pagination';
+import type { ScaffoldInertiaConfig } from '@/types/scaffold';
 
 export type ActivityLogListItem = {
     id: number;
@@ -60,6 +61,7 @@ export type ActivityLogFilterOptions = {
 };
 
 export type ActivityLogsIndexPageProps = {
+    config: ScaffoldInertiaConfig;
     logs: PaginatedData<ActivityLogListItem>;
     statistics: ActivityLogStatistics;
     filters: ActivityLogFilters;

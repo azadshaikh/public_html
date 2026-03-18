@@ -69,6 +69,8 @@ class EmailManagementPagesTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page): Assert => $page
                 ->component('masters/email/providers/index')
+                ->has('config.columns', 8)
+                ->where('config.columns.1.width', '200px')
                 ->has('emailProviders.data', 1)
                 ->has('statistics')
                 ->has('filters'));
@@ -130,6 +132,8 @@ class EmailManagementPagesTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page): Assert => $page
                 ->component('masters/email/templates/index')
+                ->has('config.columns', 7)
+                ->where('config.columns.1.width', '220px')
                 ->has('emailTemplates.data', 1)
                 ->has('providerOptions', 1)
                 ->has('filters'));
@@ -204,6 +208,8 @@ class EmailManagementPagesTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page): Assert => $page
                 ->component('masters/email/logs/index')
+                ->has('config.columns', 6)
+                ->where('config.columns.1.width', '300px')
                 ->has('emailLogs.data', 1)
                 ->has('providerOptions', 1)
                 ->has('templateOptions', 1)

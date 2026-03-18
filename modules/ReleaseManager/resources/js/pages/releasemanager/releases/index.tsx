@@ -14,8 +14,8 @@ import type {
 } from '@/components/datagrid/datagrid';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
-import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
 import { buildScaffoldDatagridState } from '@/lib/scaffold-datagrid';
+import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
 import { releaseRouteParams } from '../../../lib/helpers';
 
 export default function ReleasesIndex({
@@ -236,6 +236,7 @@ export default function ReleasesIndex({
                     action={route('releasemanager.releases.index', releaseRouteParams(type))}
                     rows={rows}
                     columns={columns}
+                    scaffoldColumns={config.columns}
                     filters={gridFilters}
                     tabs={{ name: 'status', items: statusTabs }}
                     getRowKey={(item) => item.id}

@@ -123,6 +123,7 @@ export default function WebsitesIndex({
                 })}
                 rows={rows}
                 columns={columns}
+                scaffoldColumns={config.columns}
                 filters={gridFilters}
                 tabs={{ name: 'status', items: statusTabs }}
                 getRowKey={(website) => website.id}

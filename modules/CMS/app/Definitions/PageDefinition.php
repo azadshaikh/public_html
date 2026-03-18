@@ -40,17 +40,12 @@ class PageDefinition extends ScaffoldDefinition
         return [
             Column::make('_bulk_select')->label('')->checkbox()->width('40px')->excludeFromExport(),
 
-            Column::make('featured_image')
-                ->label('')
-                ->template('page_featured_image')
-                ->width('128px'),
-
             Column::make('title_with_meta')
                 ->label('Title')
                 ->sortable('title')
                 ->searchable(['title', 'slug', 'excerpt', 'content', 'author.name', 'parent.title'])
                 ->template('page_title_meta')
-                ->width('400px'),
+                ->width('520px'),
 
             Column::make('status')
                 ->label('Status')

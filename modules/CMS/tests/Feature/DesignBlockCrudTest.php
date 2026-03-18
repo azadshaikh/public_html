@@ -83,6 +83,25 @@ class DesignBlockCrudTest extends TestCase
             );
     }
 
+    public function test_admin_can_access_design_blocks_index_with_merged_preview_title_column(): void
+    {
+        $block = $this->createDesignBlock('Index Block');
+
+        $this->actingAs($this->admin)
+            ->get(route('cms.designblock.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->component('cms/design-blocks/index')
+                ->has('rows.data', 1)
+                ->where('config.columns.1.key', 'title')
+                ->where('config.columns.2.key', 'design_type')
+                ->where('config.columns.3.key', 'category_name')
+                ->where('config.columns.4.key', 'status')
+                ->where('config.columns.5.key', 'created_at')
+                ->where('rows.data.0.title', $block->title)
+            );
+    }
+
     public function test_admin_can_access_design_blocks_edit_page_with_initial_values(): void
     {
         $block = $this->createDesignBlock('My Test Block');

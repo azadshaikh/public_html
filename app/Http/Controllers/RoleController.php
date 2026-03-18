@@ -39,6 +39,7 @@ class RoleController extends ScaffoldController implements HasMiddleware
         $perPage = $this->service()->getScaffoldDefinition()->getPerPage();
 
         return Inertia::render($this->inertiaPage().'/index', [
+            'config' => $this->roleService->getScaffoldDefinition()->toInertiaConfig(),
             'roles' => $this->roleService->getPaginatedRoles($request),
             'statistics' => $this->roleService->getStatistics(),
             'filters' => [

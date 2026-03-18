@@ -32,6 +32,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function RolesIndex({
+    config,
     roles,
     filters,
     statistics,
@@ -320,6 +321,7 @@ export default function RolesIndex({
                     action={route('app.roles.index')}
                     rows={roles}
                     columns={columns}
+                    scaffoldColumns={config.columns}
                     filters={gridFilters}
                     tabs={{
                         name: 'status',

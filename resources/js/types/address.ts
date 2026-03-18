@@ -1,4 +1,5 @@
 import type { PaginatedData } from '@/types/pagination';
+import type { ScaffoldInertiaConfig } from '@/types/scaffold';
 
 export type AddressRowAction = {
     url: string;
@@ -117,6 +118,7 @@ export type AddressEditTarget = {
 };
 
 export type AddressIndexPageProps = {
+    config: ScaffoldInertiaConfig;
     addresses: PaginatedData<AddressListItem>;
     statistics: AddressStatistics;
     filters: AddressFilters;

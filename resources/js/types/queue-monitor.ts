@@ -1,4 +1,5 @@
 import type { PaginatedData } from '@/types/pagination';
+import type { ScaffoldInertiaConfig } from '@/types/scaffold';
 
 export type QueueMonitorRowAction = {
     url: string;
@@ -102,6 +103,7 @@ export type QueueMonitorUiConfig = {
 };
 
 export type QueueMonitorIndexPageProps = {
+    config: ScaffoldInertiaConfig;
     monitors: PaginatedData<QueueMonitorListItem>;
     statistics: QueueMonitorStatistics;
     filters: QueueMonitorFilters;

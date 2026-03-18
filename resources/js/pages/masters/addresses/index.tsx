@@ -29,6 +29,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function AddressesIndex({
+    config,
     addresses,
     filters,
     statistics,
@@ -354,6 +355,7 @@ export default function AddressesIndex({
                     action={route('app.masters.addresses.index')}
                     rows={addresses}
                     columns={columns}
+                    scaffoldColumns={config.columns}
                     filters={gridFilters}
                     tabs={{
                         name: 'status',

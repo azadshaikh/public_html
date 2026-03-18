@@ -9,4 +9,12 @@
     <loc><![CDATA[https://two.xip.net.in/sitemaps/pages/sitemap.xml]]></loc>
     <lastmod><![CDATA[2026-03-18T02:26:07.000Z]]></lastmod>
   </sitemap>
+  <sitemap>
+    <loc><![CDATA[https://two.xip.net.in/sitemaps/categories/sitemap.xml]]></loc>
+    <lastmod><![CDATA[2026-03-18T12:31:31.000Z]]></lastmod>
+  </sitemap>
+  <sitemap>
+    <loc><![CDATA[https://two.xip.net.in/sitemaps/tags/sitemap.xml]]></loc>
+    <lastmod><![CDATA[2026-03-18T12:31:31.000Z]]></lastmod>
+  </sitemap>
 </sitemapindex>

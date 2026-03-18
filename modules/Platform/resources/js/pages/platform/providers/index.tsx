@@ -120,6 +120,7 @@ export default function ProvidersIndex({
                 })}
                 rows={rows}
                 columns={columns}
+                scaffoldColumns={config.columns}
                 filters={gridFilters}
                 tabs={{ name: 'status', items: statusTabs }}
                 getRowKey={(provider) => provider.id}

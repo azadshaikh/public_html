@@ -89,10 +89,9 @@ class PageCrudTest extends TestCase
             ->assertInertia(fn (Assert $assert): Assert => $assert
                 ->component('cms/pages/index')
                 ->has('rows.data', 1)
-                ->where('config.columns.1.key', 'featured_image')
-                ->where('config.columns.2.key', 'title_with_meta')
-                ->where('config.columns.3.key', 'status')
-                ->where('config.columns.4.key', 'display_date')
+                ->where('config.columns.1.key', 'title_with_meta')
+                ->where('config.columns.2.key', 'status')
+                ->where('config.columns.3.key', 'display_date')
                 ->where('rows.data.0.title', $page->title)
                 ->where('rows.data.0.slug', $page->slug)
                 ->where('rows.data.0.permalink_url', $page->permalink_url)

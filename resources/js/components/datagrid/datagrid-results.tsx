@@ -48,10 +48,41 @@ import {
 import { cn } from '@/lib/utils';
 import type { BadgeVariant } from '@/types/ui';
 
+function buildColumnWidthStyle(
+    width?: string | number,
+): React.CSSProperties | undefined {
+    if (typeof width === 'number') {
+        const pixelWidth = `${width}px`;
+
+        return {
+            width: pixelWidth,
+            minWidth: pixelWidth,
+            maxWidth: pixelWidth,
+        };
+    }
+
+    if (typeof width !== 'string') {
+        return undefined;
+    }
+
+    const trimmedWidth = width.trim();
+
+    if (trimmedWidth === '') {
+        return undefined;
+    }
+
+    return {
+        width: trimmedWidth,
+        minWidth: trimmedWidth,
+        maxWidth: trimmedWidth,
+    };
+}
+
 type DatagridResultsProps<T> = {
     rows: DatagridProps<T>['rows'];
     empty: DatagridProps<T>['empty'];
     hasSelection: boolean;
+    selectionColumnWidth: string;
     selectedRows: T[];
     bulkActions: DatagridBulkAction<T>[];
     clearSelection: () => void;
@@ -76,12 +107,11 @@ type DatagridResultsProps<T> = {
     resolvedSummary?: string;
 };
 
-const SELECTION_COLUMN_WIDTH = '3.5rem';
-
 export function DatagridResults<T>({
     rows,
     empty,
     hasSelection,
+    selectionColumnWidth,
     selectedRows,
     bulkActions,
     clearSelection,
@@ -108,12 +138,16 @@ export function DatagridResults<T>({
     const [confirmBulkAction, setConfirmBulkAction] =
         React.useState<DatagridBulkAction<T> | null>(null);
     const selectionColumnStyle = React.useMemo(
-        () => ({
-            width: SELECTION_COLUMN_WIDTH,
-            minWidth: SELECTION_COLUMN_WIDTH,
-            maxWidth: SELECTION_COLUMN_WIDTH,
-        }),
-        [],
+        () => buildColumnWidthStyle(selectionColumnWidth),
+        [selectionColumnWidth],
+    );
+    const actionColumnStyle = React.useMemo(
+        () =>
+            buildColumnWidthStyle(
+                resolvedColumns.find((column) => column.key === '__actions')
+                    ?.width,
+            ),
+        [resolvedColumns],
     );
     const perPageItems = React.useMemo(
         () =>
@@ -239,6 +273,12 @@ export function DatagridResults<T>({
                             {hasSelection ? (
                                 <col style={selectionColumnStyle} />
                             ) : null}
+                            {resolvedColumns.map((column) => (
+                                <col
+                                    key={`col-${column.key}`}
+                                    style={buildColumnWidthStyle(column.width)}
+                                />
+                            ))}
                         </colgroup>
                         <TableHeader>
                             <TableRow className="hover:bg-transparent">
@@ -290,6 +330,9 @@ export function DatagridResults<T>({
                                             className={cn(
                                                 'h-11 px-4 pt-1 align-middle text-[0.72rem] font-bold tracking-[0.03em] text-muted-foreground uppercase',
                                                 column.headerClassName,
+                                            )}
+                                            style={buildColumnWidthStyle(
+                                                column.width,
                                             )}
                                         >
                                             {column.sortable ? (
@@ -388,6 +431,9 @@ export function DatagridResults<T>({
                                                     'px-4 py-3 align-middle whitespace-normal',
                                                     column.cellClassName,
                                                 )}
+                                                style={buildColumnWidthStyle(
+                                                    column.width,
+                                                )}
                                             >
                                                 {column.cell
                                                     ? column.cell(row)
@@ -421,7 +467,10 @@ export function DatagridResults<T>({
                                             </TableCell>
                                         ))}
                                         {rowActions ? (
-                                            <TableCell className="px-4 py-3 text-right align-middle">
+                                            <TableCell
+                                                className="px-4 py-3 text-right align-middle"
+                                                style={actionColumnStyle}
+                                            >
                                                 <DatagridActionMenu
                                                     actions={actions ?? []}
                                                 />
@@ -567,16 +616,17 @@ function CardGridView<T>({
                     <Card
                         key={rowKey}
                         className={cn(
-                            'overflow-hidden',
-                            cardGridClassName ? 'gap-0 py-0' : 'gap-3 py-3',
+                            'group relative overflow-hidden border border-border/70 bg-linear-to-br from-background via-background to-muted/20 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md',
+                            'gap-0 py-0',
                             isSelected &&
                                 'border-primary/40 bg-primary/5 ring-2 ring-primary',
                         )}
                     >
+                        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-primary/35 to-transparent" />
                         {renderCardHeader ? (
                             <>
-                                <CardHeader className="border-b pb-3">
-                                    <div className="flex min-w-0 items-center gap-3">
+                                <CardHeader className="relative border-b border-border/60 bg-linear-to-r from-muted/40 via-background to-background px-4 py-4">
+                                    <div className="flex min-w-0 items-start gap-3">
                                         {hasSelection ? (
                                             <Checkbox
                                                 checked={isSelected}
@@ -590,7 +640,7 @@ function CardGridView<T>({
                                                 }
                                             />
                                         ) : null}
-                                        <div className="min-w-0 flex-1">
+                                        <div className="min-w-0 flex-1 pt-0.5">
                                             {renderCardHeader(row)}
                                         </div>
                                     </div>
@@ -602,7 +652,7 @@ function CardGridView<T>({
                                         </CardAction>
                                     ) : null}
                                 </CardHeader>
-                                <CardContent className="flex flex-col gap-3 p-4 pt-0">
+                                <CardContent className="p-4">
                                     {renderCard(row)}
                                 </CardContent>
                             </>
@@ -632,26 +682,31 @@ function CardGridView<T>({
                                 {renderCard(row)}
                             </CardContent>
                         ) : (
-                            <CardContent className="flex flex-col gap-3 p-4">
-                                <div className="flex items-center justify-between gap-3">
-                                    {hasSelection ? (
-                                        <Checkbox
-                                            checked={isSelected}
-                                            disabled={!rowSelectable}
-                                            aria-label="Select row"
-                                            onCheckedChange={(checked) =>
-                                                toggleRowSelection(
-                                                    row,
-                                                    checked === true,
-                                                )
-                                            }
-                                        />
-                                    ) : null}
+                            <CardContent className="p-0">
+                                <div className="flex items-center justify-between gap-3 border-b border-border/60 bg-linear-to-r from-muted/40 via-background to-background px-4 py-3">
+                                    <div className="flex items-center gap-3">
+                                        {hasSelection ? (
+                                            <Checkbox
+                                                checked={isSelected}
+                                                disabled={!rowSelectable}
+                                                aria-label="Select row"
+                                                onCheckedChange={(checked) =>
+                                                    toggleRowSelection(
+                                                        row,
+                                                        checked === true,
+                                                    )
+                                                }
+                                            />
+                                        ) : null}
+                                        <span className="text-[0.68rem] font-semibold tracking-[0.18em] text-muted-foreground uppercase">
+                                            Overview
+                                        </span>
+                                    </div>
                                     {actions.length > 0 ? (
                                         <DatagridActionMenu actions={actions} />
                                     ) : null}
                                 </div>
-                                {renderCard(row)}
+                                <div className="p-4">{renderCard(row)}</div>
                             </CardContent>
                         )}
                     </Card>
@@ -662,8 +717,8 @@ function CardGridView<T>({
             {showNextCard ? (
                 <Card
                     className={cn(
-                        'overflow-hidden',
-                        cardGridClassName ? 'gap-0 py-0' : 'gap-3 py-3',
+                        'overflow-hidden border border-dashed border-border/70 bg-linear-to-br from-background via-background to-muted/20 shadow-sm',
+                        'gap-0 py-0',
                     )}
                 >
                     <CardContent

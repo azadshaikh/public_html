@@ -36,6 +36,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function EmailTemplatesIndex({
+    config,
     emailTemplates,
     statistics,
     providerOptions,
@@ -321,6 +322,7 @@ export default function EmailTemplatesIndex({
                     action={route('app.masters.email.templates.index')}
                     rows={emailTemplates}
                     columns={columns}
+                    scaffoldColumns={config.columns}
                     filters={gridFilters}
                     tabs={{ name: 'status', items: statusTabs }}
                     getRowKey={(template) => template.id}

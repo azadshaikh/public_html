@@ -51,6 +51,26 @@ For scaffold index pages, prefer this flow:
 
 Use the shared scaffold helpers for datagrid state, but keep simple page-level navigation routes explicit with readable `route('...')` calls when those routes are fixed.
 
+If a scaffold-backed controller overrides `index()`, it must still include `config` in the Inertia payload:
+
+```php
+'config' => $this->service()->getScaffoldDefinition()->toInertiaConfig(),
+```
+
+If a scaffold-backed page uses custom frontend columns instead of directly mapping `config.columns`, still pass the scaffold metadata through the shared datagrid:
+
+```tsx
+<Datagrid
+    action={route('app.resource.index')}
+    rows={rows}
+    columns={columns}
+    scaffoldColumns={config.columns}
+    ...
+/>
+```
+
+This is what lets the shared datagrid keep backend-defined column widths, including `_bulk_select` and `_actions`, even when the page renders richer cells.
+
 Do not invent parallel helpers like `buildDatagridColumns()` or `buildDatagridActions()` when the shared scaffold adapter already covers the page.
 
 ## Required props
@@ -64,6 +84,8 @@ Do not invent parallel helpers like `buildDatagridColumns()` or `buildDatagridAc
 | `empty`     | `{ icon, title, description }` | Empty state content                                                                       |
 
 For scaffold-backed pages, most of these props should come from `ScaffoldDefinition::toInertiaConfig()` plus the adapter in `resources/js/lib/scaffold-datagrid.ts`, not duplicated local page logic.
+
+When a page needs richer cards, prefer page-level `renderCardHeader` and `renderCard` for the data-specific content, but let the shared card container in `datagrid-results.tsx` own the default card chrome, selection state, and action placement.
 
 On the backend, keep common status, timestamp, filter, and destructive-action definitions explicit in each scaffold definition unless a resource-specific helper clearly improves readability.
 

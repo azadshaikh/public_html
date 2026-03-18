@@ -71,6 +71,8 @@ class AddressManagementTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page): Assert => $page
                 ->component('masters/addresses/index')
+                ->has('config.columns', 8)
+                ->where('config.columns.1.width', '250px')
                 ->has('addresses.data', 1)
                 ->where('addresses.data.0.full_name', 'Primary Address')
                 ->where('statistics.total', 1)

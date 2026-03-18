@@ -136,6 +136,7 @@ class MediaLibraryController extends Controller implements HasMiddleware
         ])->values()->all();
 
         return Inertia::render('media/index', [
+            'config' => $scaffold->toInertiaConfig(),
             'media' => $items,
             'filters' => [
                 'search' => $request->input('search', ''),

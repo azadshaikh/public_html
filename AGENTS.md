@@ -82,6 +82,9 @@ This project has domain-specific skills available. You MUST activate the relevan
 - Generated scaffolds now carry explicit registration targets and merge markers for routes, navigation, and module abilities. Preserve manual entries outside generated marker blocks and update generated sections through the scaffold workflow rather than ad hoc edits when practical.
 - For legacy non-generated registrations, `scaffold:doctor --strict-legacy-registrations` can be used to audit whether routes and navigation still reference the expected controller, route, permission, and active-pattern hooks.
 - When working on scaffold index pages, prefer the shared adapter flow from `ScaffoldDefinition::toInertiaConfig()` and `resources/js/lib/scaffold-datagrid.ts` instead of rebuilding tabs, filters, sorting, and per-page state by hand.
+- If a scaffold-backed controller overrides `index()`, it must still return `'config' => $this->service()->getScaffoldDefinition()->toInertiaConfig()` or the frontend will lose scaffold column widths, filters, tabs, and action metadata.
+- If a scaffold-backed React index page defines custom `DatagridColumn[]`, pass `scaffoldColumns={config.columns}` to `<Datagrid>` so column widths continue to come from the backend definition instead of drifting into page-local Tailwind width classes.
+- Treat scaffold definition widths as the source of truth for table layout. Do not duplicate width decisions in page-level `headerClassName` / `cellClassName` unless the definition cannot express the requirement.
 - Use shared scaffold config/types where helpful, but keep straightforward frontend `route('...')` calls explicit and readable when route names are stable.
 - Treat scaffold form metadata as optional. Prefer explicit form props and feature-local field configuration unless the form is intentionally generic or generator-driven.
 

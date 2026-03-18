@@ -35,6 +35,7 @@ class TodoController extends ScaffoldController implements HasMiddleware
         $perPage = $this->service()->getScaffoldDefinition()->getPerPage();
 
         return Inertia::render($this->inertiaPage().'/index', [
+            'config' => $this->service()->getScaffoldDefinition()->toInertiaConfig(),
             'todos' => $this->todoService->getPaginatedTodos($request),
             'statistics' => $this->todoService->getStatistics(),
             'filters' => [
@@ -45,6 +46,7 @@ class TodoController extends ScaffoldController implements HasMiddleware
                 'sort' => $request->input('sort', 'created_at'),
                 'direction' => $request->input('direction', 'desc'),
                 'per_page' => (int) $request->input('per_page', $perPage),
+                'view' => $request->input('view', 'table'),
             ],
             'status' => session('status'),
             'error' => session('error'),

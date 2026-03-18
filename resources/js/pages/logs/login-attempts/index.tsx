@@ -41,6 +41,7 @@ const STATUS_BADGE_VARIANT: Record<string, BadgeVariant> = {
 };
 
 export default function LoginAttemptsIndex({
+    config,
     loginAttempts,
     filters,
     statistics,
@@ -345,6 +346,7 @@ export default function LoginAttemptsIndex({
                     action={route('app.logs.login-attempts.index')}
                     rows={loginAttempts}
                     columns={columns}
+                    scaffoldColumns={config.columns}
                     filters={gridFilters}
                     tabs={{
                         name: 'status',

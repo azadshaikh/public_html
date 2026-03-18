@@ -104,6 +104,7 @@ const CHART_PALETTE = [
 ];
 
 export default function QueueMonitorIndex({
+    config,
     monitors,
     statistics,
     filters,
@@ -737,6 +738,7 @@ export default function QueueMonitorIndex({
                     action={route('app.masters.queue-monitor.index')}
                     rows={monitors}
                     columns={columns}
+                    scaffoldColumns={config.columns}
                     filters={gridFilters}
                     tabs={{
                         name: 'status',

@@ -16,8 +16,8 @@ import type {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
-import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
 import { buildScaffoldDatagridState } from '@/lib/scaffold-datagrid';
+import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
 import type { MenuIndexPageProps, MenuListItem } from '../../../types/cms';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -252,6 +252,7 @@ export default function MenusIndex({
                     action={route('cms.appearance.menus.index')}
                     rows={rows}
                     columns={columns}
+                    scaffoldColumns={config.columns}
                     filters={gridFilters}
                     tabs={{ name: 'status', items: statusTabs }}
                     getRowKey={(menu) => menu.id}

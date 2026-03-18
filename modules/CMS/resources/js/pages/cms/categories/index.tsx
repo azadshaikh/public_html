@@ -30,8 +30,6 @@ function getCategoryDateLabel(): string {
     return 'Created';
 }
 
-const FEATURED_IMAGE_COLUMN_CLASS = 'w-32 min-w-32';
-
 function CategoryPreview({ category }: { category: CategoryListItem }) {
     if (category.featured_image_url) {
         return (
@@ -135,37 +133,32 @@ export default function CategoriesIndex({
 
     const columns: DatagridColumn<CategoryListItem>[] = [
         {
-            key: 'featured_image_url',
-            header: '',
-            headerClassName: FEATURED_IMAGE_COLUMN_CLASS,
-            cellClassName: FEATURED_IMAGE_COLUMN_CLASS,
-            cell: (cat) => (
-                <Link
-                    href={cat.edit_url}
-                    className="block shrink-0 transition-opacity hover:opacity-80"
-                >
-                    <CategoryPreview category={cat} />
-                </Link>
-            ),
-        },
-        {
             key: 'title',
             header: 'Title',
-            headerClassName: 'w-[400px] min-w-[24rem]',
-            cellClassName: 'w-[400px] min-w-[24rem]',
+            headerClassName: 'w-[42%] min-w-[26rem]',
+            cellClassName: 'w-[42%] min-w-[26rem]',
             sortable: true,
             cell: (cat) => (
-                <div className="min-w-0 space-y-1.5">
-                    <div className="flex items-start gap-2">
-                        <Link
-                            href={cat.edit_url}
-                            className="line-clamp-2 font-semibold break-words text-foreground hover:underline"
-                        >
-                            {cat.title}
-                        </Link>
-                    </div>
+                <div className="flex min-w-0 items-center gap-4">
+                    <Link
+                        href={cat.edit_url}
+                        className="shrink-0 transition-opacity hover:opacity-80"
+                    >
+                        <CategoryPreview category={cat} />
+                    </Link>
 
-                    <CategoryMeta category={cat} />
+                    <div className="min-w-0 flex-1 space-y-1.5">
+                        <div className="flex items-start gap-2">
+                            <Link
+                                href={cat.edit_url}
+                                className="line-clamp-2 font-semibold break-words text-foreground hover:underline"
+                            >
+                                {cat.title}
+                            </Link>
+                        </div>
+
+                        <CategoryMeta category={cat} />
+                    </div>
                 </div>
             ),
         },
@@ -333,6 +326,7 @@ export default function CategoriesIndex({
                     action={route('cms.categories.index')}
                     rows={rows}
                     columns={columns}
+                    scaffoldColumns={config.columns}
                     filters={gridFilters}
                     tabs={{ name: 'status', items: statusTabs }}
                     getRowKey={(cat) => cat.id}

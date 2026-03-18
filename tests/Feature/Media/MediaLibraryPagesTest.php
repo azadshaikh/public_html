@@ -74,6 +74,8 @@ class MediaLibraryPagesTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page): Assert => $page
                 ->component('media/index')
+                ->has('config.columns', 7)
+                ->where('config.columns.1.width', '80px')
                 ->where('filters.status', 'all')
                 ->where('uploadSettings.upload_route', route('app.media.upload-media'))
                 ->where('uploadSettings.max_files_per_upload', (int) config('media.max_files_per_upload', 10))
