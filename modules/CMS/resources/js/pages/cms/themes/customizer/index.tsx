@@ -555,7 +555,7 @@ export default function ThemeCustomizerIndex({
                         ) : null}
                     </aside>
 
-                    <div className="min-h-0 bg-[radial-gradient(circle_at_top_left,rgba(99,102,241,0.12),transparent_35%),radial-gradient(circle_at_top_right,rgba(236,72,153,0.1),transparent_30%),linear-gradient(180deg,#eef2ff_0%,#f8fafc_52%,#ffffff_100%)] p-3 sm:p-4">
+                    <div className="min-h-0 overflow-hidden bg-[#f3f5f8] p-2 sm:p-3 lg:p-4">
                         <ThemeCustomizerPreviewPanel
                             deviceMode={deviceMode}
                             iframeRef={iframeRef}
