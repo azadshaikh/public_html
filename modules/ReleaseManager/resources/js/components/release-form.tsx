@@ -14,6 +14,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { releaseRouteParams } from '../lib/helpers';
 
 type ReleaseFormData = {
     package_identifier: string;
@@ -45,10 +46,6 @@ export function ReleaseForm({
     submitUrl,
     method,
 }: ReleaseFormProps) {
-    const routeNamespace =
-        type === 'module'
-            ? 'releasemanager.module'
-            : 'releasemanager.application';
     const { data, setData, post, put, processing, errors } =
         useForm<ReleaseFormData>({
             package_identifier: initialValues.package_identifier || '',
@@ -76,10 +73,10 @@ export function ReleaseForm({
             const packageIdentifier =
                 type === 'application' ? 'main' : data.package_identifier;
             const result = await nextVersionRequest.get(
-                route(`${routeNamespace}.next-version`, {
-                    versionType: data.version_type,
+                route('releasemanager.releases.next-version', releaseRouteParams(type, {
+                    version_type: data.version_type,
                     package_identifier: packageIdentifier,
-                }),
+                })),
                 {
                     headers: {
                         Accept: 'application/json',

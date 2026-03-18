@@ -13,10 +13,6 @@ export default function ReleaseCreate({
         type === 'application'
             ? 'Add Application Release'
             : 'Add Module Release';
-    const routeNamespace =
-        type === 'module'
-            ? 'releasemanager.module'
-            : 'releasemanager.application';
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: route('dashboard') },

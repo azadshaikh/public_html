@@ -14,17 +14,13 @@ export default function ReleaseEdit({
     type,
 }: any) {
     const title = `Edit Release ${initialValues.version}`;
-    const routeNamespace =
-        type === 'module'
-            ? 'releasemanager.module'
-            : 'releasemanager.application';
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: route('dashboard') },
-        { title: 'Releases', href: route(`${routeNamespace}.index`) },
+        { title: 'Releases', href: route('releasemanager.releases.index', releaseRouteParams(type, { status: 'all' })) },
         {
             title,
-            href: route(`${routeNamespace}.edit`, { release: release.id }),
+            href: route('releasemanager.releases.edit', releaseRouteParams(type, { release: release.id })),
         },
     ];
 
@@ -36,9 +32,7 @@ export default function ReleaseEdit({
             headerActions={
                 <Button variant="outline" asChild>
                     <Link
-                        href={route(`${routeNamespace}.show`, {
-                            release: release.id,
-                        })}
+                        href={route('releasemanager.releases.show', releaseRouteParams(type, { release: release.id }))}
                     >
                         <EyeIcon data-icon="inline-start" />
                         View Page
@@ -51,9 +45,7 @@ export default function ReleaseEdit({
                 versionTypes={versionTypes}
                 statusOptions={statusOptions}
                 type={type}
-                submitUrl={route(`${routeNamespace}.update`, {
-                    release: release.id,
-                })}
+                submitUrl={route('releasemanager.releases.update', releaseRouteParams(type, { release: release.id }))}
                 method="put"
             />
         </AppLayout>

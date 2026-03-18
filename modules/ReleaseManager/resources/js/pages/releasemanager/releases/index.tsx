@@ -14,8 +14,8 @@ import type {
 } from '@/components/datagrid/datagrid';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
-import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
 import { buildScaffoldDatagridState } from '@/lib/scaffold-datagrid';
+import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
 import { releaseRouteParams } from '../../../lib/helpers';
 
 export default function ReleasesIndex({
@@ -26,10 +26,6 @@ export default function ReleasesIndex({
     type,
 }: any) {
     const page = usePage<AuthenticatedSharedData>();
-    const routeNamespace =
-        type === 'module'
-            ? 'releasemanager.module'
-            : 'releasemanager.application';
     const abilities = page.props.auth.abilities || {};
     // Ensure fallback abilities in case they aren't matching exact strings
     const canAddReleases = abilities.addReleases ?? true;
@@ -51,7 +47,7 @@ export default function ReleasesIndex({
     ) => {
         if (selected.length === 0) return;
         router.post(
-            route(`${routeNamespace}.bulk-action`),
+            route('releasemanager.releases.bulk-action', releaseRouteParams(type)),
             {
                 action,
                 ids: selected.map((p: any) => p.id),
@@ -68,7 +64,7 @@ export default function ReleasesIndex({
             sortable: true,
             cell: (item) => (
                 <Link
-                    href={route(`${routeNamespace}.edit`, { release: item.id })}
+                    href={route('releasemanager.releases.edit', releaseRouteParams(type, { release: item.id }))}
                     className="flex min-w-0 flex-col gap-1 hover:opacity-80"
                 >
                     <span className="font-medium text-foreground">
@@ -111,9 +107,7 @@ export default function ReleasesIndex({
                           {
                               label: 'Restore',
                               icon: <RefreshCwIcon />,
-                              href: route(`${routeNamespace}.restore`, {
-                                  release: item.id,
-                              }),
+                              href: route('releasemanager.releases.restore', releaseRouteParams(type, { release: item.id })),
                               method: 'PATCH' as const,
                               confirm: `Restore "${item.version}"?`,
                           },
@@ -123,10 +117,7 @@ export default function ReleasesIndex({
                     ? [
                           {
                               label: 'Delete Permanently',
-                              icon: <Trash2Icon />,
-                              href: route(`${routeNamespace}.force-delete`, {
-                                  release: item.id,
-                              }),
+                              href: route('releasemanager.releases.force-delete', releaseRouteParams(type, { release: item.id })),
                               method: 'DELETE' as const,
                               confirm: `⚠️ Permanently delete "${item.version}"? This cannot be undone!`,
                               variant: 'destructive' as const,
@@ -135,14 +126,13 @@ export default function ReleasesIndex({
                     : []),
             ];
         }
+
         return [
             ...(canEditReleases
                 ? [
                       {
                           label: 'Edit',
-                          href: route(`${routeNamespace}.edit`, {
-                              release: item.id,
-                          }),
+                          href: route('releasemanager.releases.edit', releaseRouteParams(type, { release: item.id })),
                           icon: <PencilIcon />,
                       },
                   ]
@@ -151,9 +141,7 @@ export default function ReleasesIndex({
                 ? [
                       {
                           label: 'Move to Trash',
-                          href: route(`${routeNamespace}.destroy`, {
-                              release: item.id,
-                          }),
+                          href: route('releasemanager.releases.destroy', releaseRouteParams(type, { release: item.id })),
                           method: 'DELETE' as const,
                           confirm: `Move "${item.version}" to trash?`,
                           icon: <Trash2Icon />,
@@ -223,7 +211,7 @@ export default function ReleasesIndex({
             headerActions={
                 canAddReleases ? (
                     <Button asChild>
-                        <Link href={route(`${routeNamespace}.create`)}>
+                        <Link href={route('releasemanager.releases.create', releaseRouteParams(type))}>
                             <PlusIcon data-icon="inline-start" />
                             Add Release
                         </Link>
@@ -236,6 +224,7 @@ export default function ReleasesIndex({
                     action={route('releasemanager.releases.index', releaseRouteParams(type))}
                     rows={rows}
                     columns={columns}
+                    scaffoldColumns={config.columns}
                     filters={gridFilters}
                     tabs={{ name: 'status', items: statusTabs }}
                     getRowKey={(item) => item.id}

@@ -12,17 +12,13 @@ export default function ReleaseShow({ release, type, statusOptions }: any) {
     const title = `Release ${release.version}`;
     const displayType =
         type === 'application' ? 'Application Releases' : 'Module Releases';
-    const routeNamespace =
-        type === 'module'
-            ? 'releasemanager.module'
-            : 'releasemanager.application';
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: route('dashboard') },
-        { title: 'Releases', href: route(`${routeNamespace}.index`) },
+        { title: 'Releases', href: route('releasemanager.releases.index', releaseRouteParams(type, { status: 'all' })) },
         {
             title,
-            href: route(`${routeNamespace}.show`, { release: release.id }),
+            href: route('releasemanager.releases.show', releaseRouteParams(type, { release: release.id })),
         },
     ];
 
@@ -59,9 +55,7 @@ export default function ReleaseShow({ release, type, statusOptions }: any) {
             headerActions={
                 <Button asChild>
                     <Link
-                        href={route(`${routeNamespace}.edit`, {
-                            release: release.id,
-                        })}
+                        href={route('releasemanager.releases.edit', releaseRouteParams(type, { release: release.id }))}
                     >
                         <PencilIcon data-icon="inline-start" />
                         Edit Release

@@ -26,12 +26,14 @@ class ReleaseCrudMigrationTest extends TestCase
 
         $this->assertIsString($contents);
         $this->assertIsString($indexPage);
-        $this->assertStringContainsString('route(`${routeNamespace}.next-version`', $contents);
+        $this->assertStringContainsString("route('releasemanager.releases.next-version'", $contents);
         $this->assertStringContainsString('type="date"', $contents);
         $this->assertStringContainsString('put(submitUrl);', $contents);
         $this->assertStringNotContainsString("import axios from 'axios';", $contents);
         $this->assertStringNotContainsString('@/components/ui/date-picker', $contents);
         $this->assertStringContainsString("route('releasemanager.releases.index'", $indexPage);
+        $this->assertStringNotContainsString('releasemanager.application', $contents.$indexPage);
+        $this->assertStringNotContainsString('releasemanager.module', $contents.$indexPage);
     }
 
     public function test_release_backend_preserves_type_query_and_release_parameter_names(): void
