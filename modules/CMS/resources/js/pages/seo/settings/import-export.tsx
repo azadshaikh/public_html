@@ -1,3 +1,4 @@
+import { useHttp } from '@inertiajs/react';
 import {
     DownloadIcon,
     FileArchiveIcon,
@@ -39,6 +40,10 @@ export default function SeoImportExportPage({
     seoGroups,
 }: ImportExportPageProps) {
     const [exporting, setExporting] = useState(false);
+    const exportRequest = useHttp<
+        Record<string, never>,
+        { status: string; message: string; jsondata?: string }
+    >({});
     const form = useAppForm<{ import_file: File | null }>({
         defaults: { import_file: null },
         rememberKey: 'seo.settings.import-export',
@@ -55,27 +60,13 @@ export default function SeoImportExportPage({
         setExporting(true);
 
         try {
-            const response = await fetch(route('seo.settings.export'), {
-                method: 'POST',
+            const result = await exportRequest.post(route('seo.settings.export'), {
                 headers: {
-                    'Content-Type': 'application/json',
                     Accept: 'application/json',
-                    'X-CSRF-TOKEN':
-                        document
-                            .querySelector('meta[name="csrf-token"]')
-                            ?.getAttribute('content') ?? '',
                 },
-                body: JSON.stringify({}),
             });
 
-            const result = (await response.json()) as {
-                status: string;
-                message: string;
-                jsondata?: string;
-            };
-
             if (
-                !response.ok ||
                 result.status !== 'success' ||
                 !result.jsondata
             ) {

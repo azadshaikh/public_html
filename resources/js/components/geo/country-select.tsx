@@ -1,3 +1,4 @@
+import { useHttp } from '@inertiajs/react';
 import { useEffect, useMemo, useState } from 'react';
 import {
     Combobox,
@@ -29,6 +30,10 @@ export function CountrySelect({
 }: CountrySelectProps) {
     const [items, setItems] = useState<GeoOption[]>([]);
     const [loading, setLoading] = useState(false);
+    const countriesRequest = useHttp<
+        Record<string, never>,
+        { items?: GeoOption[] }
+    >({});
 
     useEffect(() => {
         if (items.length > 0) {
@@ -37,10 +42,10 @@ export function CountrySelect({
 
         setLoading(true);
 
-        fetch(route('app.ajax.geo.countries'))
-            .then((res) => res.json())
-            .then((data: { items: GeoOption[] }) => {
-                setItems(data.items ?? []);
+        void countriesRequest
+            .get(route('app.ajax.geo.countries'))
+            .then((payload) => {
+                setItems(payload.items ?? []);
             })
             .catch(() => {
                 setItems([]);
@@ -48,6 +53,10 @@ export function CountrySelect({
             .finally(() => {
                 setLoading(false);
             });
+
+        return () => {
+            countriesRequest.cancel();
+        };
         // Only run once on mount
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);

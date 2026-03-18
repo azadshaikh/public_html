@@ -1,4 +1,4 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import {
     ArrowLeftIcon,
     BanIcon,
@@ -124,8 +124,6 @@ export default function LoginAttemptShow({
             title="Login Attempt Details"
             description={`Login attempt for ${loginAttempt.email}`}
         >
-            <Head title={`Login Attempt — ${loginAttempt.email}`} />
-
             <div className="mb-6">
                 <Button variant="ghost" size="sm" asChild>
                     <Link href={route('app.logs.login-attempts.index')}>

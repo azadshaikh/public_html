@@ -1,3 +1,4 @@
+import { useHttp } from '@inertiajs/react';
 import type { FormEvent } from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { showAppToast } from '@/components/forms/form-success-toast';
@@ -14,6 +15,12 @@ import { ThemeCustomizerDialogs } from '../../../../components/theme-customizer/
 import { ThemeCustomizerHeader } from '../../../../components/theme-customizer/customizer-header';
 import { ThemeCustomizerPreviewPanel } from '../../../../components/theme-customizer/customizer-preview-panel';
 import { ThemeCustomizerSidebar } from '../../../../components/theme-customizer/customizer-sidebar';
+import {
+    buildPreviewUrl,
+    decodeCurrentPreviewLocation,
+    normalizeFieldValue,
+    toFormData,
+} from '../../../../components/theme-customizer/customizer-utils';
 import ThemeCustomizerLayout from '../../../../components/theme-customizer/theme-customizer-layout';
 import type {
     CodeEditorState,
@@ -21,12 +28,6 @@ import type {
     ThemeCustomizerPageProps,
     ThemeCustomizerSnapshot,
 } from './types';
-import {
-    buildPreviewUrl,
-    decodeCurrentPreviewLocation,
-    normalizeFieldValue,
-    toFormData,
-} from '../../../../components/theme-customizer/customizer-utils';
 
 export default function ThemeCustomizerIndex({
     activeTheme,
@@ -76,6 +77,28 @@ export default function ThemeCustomizerIndex({
     const iframeRef = useRef<HTMLIFrameElement | null>(null);
     const latestPreviewCssRef = useRef('');
     const initialSerialized = useRef(JSON.stringify(normalizedInitialValues));
+    const saveRequest = useHttp<
+        ThemeCustomizerSnapshot,
+        { success?: boolean; message?: string; error?: string }
+    >(normalizedInitialValues);
+    const resetRequest = useHttp<
+        Record<string, never>,
+        { success?: boolean; message?: string; error?: string }
+    >({});
+    const exportRequest = useHttp<
+        Record<string, never>,
+        {
+            success?: boolean;
+            filename?: string;
+            data?: string;
+            message?: string;
+            error?: string;
+        }
+    >({});
+    const importRequest = useHttp<
+        { settings_file: File | null },
+        { success?: boolean; message?: string; error?: string }
+    >({ settings_file: null });
 
     const pickerAction = useMemo(() => {
         const action = route('cms.appearance.themes.customizer.index');
@@ -105,17 +128,6 @@ export default function ThemeCustomizerIndex({
         () => buildPreviewUrl(iframeBaseUrl, iframeReloadToken),
         [iframeBaseUrl, iframeReloadToken],
     );
-
-    const previewFrameClassName = useMemo(() => {
-        switch (deviceMode) {
-            case 'tablet':
-                return 'w-full max-w-[834px]';
-            case 'mobile':
-                return 'w-full max-w-[430px]';
-            default:
-                return 'w-full';
-        }
-    }, [deviceMode]);
 
     const setFieldValue = useCallback(
         (fieldId: string, value: string | number | boolean) => {
@@ -275,22 +287,18 @@ export default function ThemeCustomizerIndex({
         setIsSaving(true);
 
         try {
-            const response = await fetch(route('cms.appearance.themes.customizer.update'), {
-                method: 'POST',
-                body: toFormData(values),
+            saveRequest.transform(() => ({
+                ...values,
+            }));
+
+            const payload = await saveRequest.post(route('cms.appearance.themes.customizer.update'), {
                 headers: {
                     Accept: 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
                 },
             });
 
-            const payload = (await response.json()) as {
-                success?: boolean;
-                message?: string;
-                error?: string;
-            };
-
-            if (!response.ok || payload.success === false) {
+            if (payload.success === false) {
                 throw new Error(payload.error || payload.message || 'Save failed.');
             }
 
@@ -315,7 +323,7 @@ export default function ThemeCustomizerIndex({
         } finally {
             setIsSaving(false);
         }
-    }, [refreshPreview, values]);
+    }, [refreshPreview, saveRequest, values]);
 
     useEffect(() => {
         const onKeyDown = (event: KeyboardEvent) => {
@@ -334,22 +342,14 @@ export default function ThemeCustomizerIndex({
 
     const handleReset = useCallback(async () => {
         try {
-            const response = await fetch(route('cms.appearance.themes.customizer.reset'), {
-                method: 'POST',
+            const payload = await resetRequest.post(route('cms.appearance.themes.customizer.reset'), {
                 headers: {
                     Accept: 'application/json',
-                    'Content-Type': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
                 },
             });
 
-            const payload = (await response.json()) as {
-                success?: boolean;
-                message?: string;
-                error?: string;
-            };
-
-            if (!response.ok || payload.success === false) {
+            if (payload.success === false) {
                 throw new Error(payload.error || payload.message || 'Reset failed.');
             }
 
@@ -370,26 +370,18 @@ export default function ThemeCustomizerIndex({
                         : 'Unable to reset theme settings.',
             });
         }
-    }, [applySnapshot, defaultValues, refreshPreview]);
+    }, [applySnapshot, defaultValues, refreshPreview, resetRequest]);
 
     const handleExport = useCallback(async () => {
         try {
-            const response = await fetch(route('cms.appearance.themes.customizer.export'), {
+            const payload = await exportRequest.get(route('cms.appearance.themes.customizer.export'), {
                 headers: {
                     Accept: 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
                 },
             });
 
-            const payload = (await response.json()) as {
-                success?: boolean;
-                filename?: string;
-                data?: string;
-                message?: string;
-                error?: string;
-            };
-
-            if (!response.ok || payload.success === false || !payload.filename || payload.data === undefined) {
+            if (payload.success === false || !payload.filename || payload.data === undefined) {
                 throw new Error(payload.error || payload.message || 'Export failed.');
             }
 
@@ -418,7 +410,7 @@ export default function ThemeCustomizerIndex({
                         : 'Unable to export theme settings.',
             });
         }
-    }, []);
+    }, [exportRequest]);
 
     const handleImportSubmit = useCallback(
         async (event: FormEvent<HTMLFormElement>) => {
@@ -459,22 +451,18 @@ export default function ThemeCustomizerIndex({
                     }),
                 ) as ThemeCustomizerSnapshot;
 
-                const response = await fetch(route('cms.appearance.themes.customizer.import'), {
-                    method: 'POST',
-                    body: formData,
+                importRequest.transform(() => ({
+                    settings_file: importFile,
+                }));
+
+                const payload = await importRequest.post(route('cms.appearance.themes.customizer.import'), {
                     headers: {
                         Accept: 'application/json',
                         'X-Requested-With': 'XMLHttpRequest',
                     },
                 });
 
-                const payload = (await response.json()) as {
-                    success?: boolean;
-                    message?: string;
-                    error?: string;
-                };
-
-                if (!response.ok || payload.success === false) {
+                if (payload.success === false) {
                     throw new Error(payload.error || payload.message || 'Import failed.');
                 }
 
@@ -501,7 +489,14 @@ export default function ThemeCustomizerIndex({
                 });
             }
         },
-        [applySnapshot, defaultValues, fieldDefinitions, importFile, refreshPreview],
+        [
+            applySnapshot,
+            defaultValues,
+            fieldDefinitions,
+            importFile,
+            importRequest,
+            refreshPreview,
+        ],
     );
 
     const openCodeEditor = useCallback(

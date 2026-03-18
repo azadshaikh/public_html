@@ -13,9 +13,10 @@ export default function AppHead({
     children,
 }: AppHeadProps) {
     const { appName } = usePage<SharedData>().props;
+    const pageTitle = title ? `${title} | ${appName}` : appName;
 
     return (
-        <Head title={title}>
+        <Head title={pageTitle}>
             <meta
                 head-key="description"
                 name="description"

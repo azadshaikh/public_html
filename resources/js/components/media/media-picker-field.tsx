@@ -1,5 +1,6 @@
 'use client';
 
+import { useHttp } from '@inertiajs/react';
 import { ImageIcon, ImagePlusIcon, Trash2Icon } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -78,6 +79,17 @@ export function MediaPickerField({
     const [fetchedPreview, setFetchedPreview] = useState<string | null>(null);
     const [loadingPreview, setLoadingPreview] = useState(false);
     const lastFetchedValueRef = useRef<number | null>(null);
+    const previewRequest = useHttp<
+        Record<string, never>,
+        {
+            status?: number;
+            data?: {
+                thumbnail_url?: string | null;
+                media_url?: string | null;
+                original_url?: string | null;
+            };
+        }
+    >({});
 
     // Resolve the final preview URL:
     // 1. pickerPreview (just selected from picker) takes priority
@@ -109,15 +121,19 @@ export function MediaPickerField({
         (async () => {
             setLoadingPreview(true);
             try {
-                const res = await fetch(route('app.media.details', value), {
-                    headers: { Accept: 'application/json' },
-                });
-                const json = await res.json();
-                if (!cancelled && json.status === 1 && json.data) {
+                const payload = await previewRequest.get(
+                    route('app.media.details', value),
+                    {
+                        headers: { Accept: 'application/json' },
+                    },
+                );
+
+                if (!cancelled && payload.status === 1 && payload.data) {
                     setFetchedPreview(
-                        json.data.thumbnail_url ||
-                            json.data.media_url ||
-                            json.data.original_url,
+                        payload.data.thumbnail_url ||
+                            payload.data.media_url ||
+                            payload.data.original_url ||
+                            null,
                     );
                 }
             } catch {
@@ -131,8 +147,15 @@ export function MediaPickerField({
 
         return () => {
             cancelled = true;
+            previewRequest.cancel();
         };
-    }, [value, pickerPreview, externalPreviewUrl, fetchedPreview]);
+    }, [
+        externalPreviewUrl,
+        fetchedPreview,
+        pickerPreview,
+        previewRequest,
+        value,
+    ]);
 
     const handleSelect = useCallback(
         (items: MediaPickerItem[]) => {

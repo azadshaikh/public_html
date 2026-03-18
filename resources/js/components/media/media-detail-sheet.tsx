@@ -1,3 +1,4 @@
+import { useHttp } from '@inertiajs/react';
 import {
     AlertCircleIcon,
     CheckCircleIcon,
@@ -49,18 +50,41 @@ export function MediaDetailSheet({
     const [caption, setCaption] = useState('');
     const [description, setDescription] = useState('');
     const [tags, setTags] = useState('');
+    const detailRequest = useHttp<
+        Record<string, never>,
+        { status?: number; data?: MediaDetail }
+    >({});
+    const conversionStatusRequest = useHttp<
+        Record<string, never>,
+        {
+            data?: {
+                conversion_status?: MediaDetail['conversion_status'];
+            };
+        }
+    >({});
+    const saveRequest = useHttp<
+        Record<string, string>,
+        { status?: number }
+    >({
+        media_id: '',
+        media_name: '',
+        media_alt: '',
+        media_caption: '',
+        media_description: '',
+        media_tags: '',
+    });
 
     // ── Fetch details ─────────────────────────────────────────────
 
     const fetchDetails = useCallback(async (id: number) => {
         setLoading(true);
         try {
-            const res = await fetch(route('app.media.details', id), {
+            const payload = await detailRequest.get(route('app.media.details', id), {
                 headers: { Accept: 'application/json' },
             });
-            const json = await res.json();
-            if (json.status === 1 && json.data) {
-                const d = json.data as MediaDetail;
+
+            if (payload.status === 1 && payload.data) {
+                const d = payload.data;
                 setDetail(d);
                 setName(d.name);
                 setAltText(d.alt_text);
@@ -73,7 +97,7 @@ export function MediaDetailSheet({
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [detailRequest]);
 
     useEffect(() => {
         if (open && mediaId) {
@@ -94,14 +118,13 @@ export function MediaDetailSheet({
         setConversionPolling(true);
         const interval = setInterval(async () => {
             try {
-                const res = await fetch(
+                const payload = await conversionStatusRequest.get(
                     route('app.media.conversion-status', detailId),
                     {
                         headers: { Accept: 'application/json' },
                     },
                 );
-                const json = await res.json();
-                const convStatus = json.data?.conversion_status;
+                const convStatus = payload.data?.conversion_status;
                 if (convStatus?.status === 'completed') {
                     setDetail((prev) =>
                         prev
@@ -130,40 +153,38 @@ export function MediaDetailSheet({
             }
         }, 3000);
 
-        return () => clearInterval(interval);
+        return () => {
+            clearInterval(interval);
+            conversionStatusRequest.cancel();
+        };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [detail?.id, detail?.is_processing, open]);
 
     // ── Save metadata ───────────────────────────────────────────
 
     const handleSave = useCallback(async () => {
-        if (!detail) return;
+        if (!detail) {
+            return;
+        }
 
         setSaving(true);
         try {
-            const csrfMeta = document.head.querySelector(
-                'meta[name="csrf-token"]',
-            );
-            const csrfToken = csrfMeta?.getAttribute('content') ?? '';
+            saveRequest.transform(() => ({
+                media_id: String(detail.id),
+                media_name: name,
+                media_alt: altText,
+                media_caption: caption,
+                media_description: description,
+                media_tags: tags,
+            }));
 
-            const formData = new FormData();
-            formData.append('media_id', String(detail.id));
-            formData.append('media_name', name);
-            formData.append('media_alt', altText);
-            formData.append('media_caption', caption);
-            formData.append('media_description', description);
-            formData.append('media_tags', tags);
-
-            const res = await fetch(route('app.media.detail.update'), {
-                method: 'POST',
+            const payload = await saveRequest.post(route('app.media.detail.update'), {
                 headers: {
-                    'X-CSRF-TOKEN': csrfToken,
                     Accept: 'application/json',
                 },
-                body: formData,
             });
-            const json = await res.json();
-            if (json.status) {
+
+            if (payload.status) {
                 onUpdated?.();
             }
         } catch {
@@ -171,7 +192,16 @@ export function MediaDetailSheet({
         } finally {
             setSaving(false);
         }
-    }, [detail, name, altText, caption, description, tags, onUpdated]);
+    }, [
+        altText,
+        caption,
+        description,
+        detail,
+        name,
+        onUpdated,
+        saveRequest,
+        tags,
+    ]);
 
     // ── Copy URL ────────────────────────────────────────────────
 

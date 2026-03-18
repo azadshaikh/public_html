@@ -1,4 +1,4 @@
-import { router } from '@inertiajs/react';
+import { router, useHttp } from '@inertiajs/react';
 import {
     ActivityIcon,
     AlertTriangleIcon,
@@ -122,6 +122,9 @@ export default function QueueMonitorIndex({
     const [selectedException, setSelectedException] = useState<string | null>(
         null,
     );
+    const workerStatsRequest = useHttp<Record<string, never>, QueueWorkerStats>(
+        {},
+    );
 
     useEffect(() => {
         setLiveWorkerStats(workerStats);
@@ -173,7 +176,7 @@ export default function QueueMonitorIndex({
             setWorkersLoading(true);
 
             try {
-                const response = await fetch(
+                const payload = await workerStatsRequest.get(
                     route('app.masters.queue-monitor.workers'),
                     {
                         headers: {
@@ -182,20 +185,23 @@ export default function QueueMonitorIndex({
                         },
                     },
                 );
-
-                if (!response.ok) {
-                    return;
-                }
-
-                const payload = (await response.json()) as QueueWorkerStats;
                 setLiveWorkerStats(payload);
             } finally {
                 setWorkersLoading(false);
             }
         }, ui.workerRefreshInterval * 1000);
 
-        return () => window.clearInterval(intervalId);
-    }, [liveWorkerStats, paused, ui.workerRefreshInterval, workerStats]);
+        return () => {
+            window.clearInterval(intervalId);
+            workerStatsRequest.cancel();
+        };
+    }, [
+        liveWorkerStats,
+        paused,
+        ui.workerRefreshInterval,
+        workerStats,
+        workerStatsRequest,
+    ]);
 
     const gridFilters: DatagridFilter[] = [
         {

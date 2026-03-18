@@ -1,3 +1,4 @@
+import { useHttp } from '@inertiajs/react';
 import { SaveIcon, WifiIcon } from 'lucide-react';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
@@ -81,6 +82,12 @@ export default function Storage({
     settingsNav,
 }: StoragePageProps) {
     const [isTesting, setIsTesting] = useState(false);
+    const testConnectionRequest = useHttp<
+        StorageFormData,
+        { success?: boolean; message?: string }
+    >({
+        ...settings,
+    });
 
     const form = useAppForm<StorageFormData>({
         defaults: {
@@ -126,23 +133,18 @@ export default function Storage({
         setIsTesting(true);
 
         try {
-            const response = await fetch(
+            testConnectionRequest.transform(() => ({
+                ...form.data,
+            }));
+
+            const data = await testConnectionRequest.post(
                 route('app.masters.settings.test-storage-connection'),
                 {
-                    method: 'POST',
                     headers: {
-                        'X-CSRF-TOKEN':
-                            document.querySelector<HTMLMetaElement>(
-                                'meta[name="csrf-token"]',
-                            )?.content ?? '',
                         Accept: 'application/json',
-                        'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify(form.data),
                 },
             );
-
-            const data = await response.json();
 
             showAppToast({
                 variant: data.success ? 'success' : 'error',

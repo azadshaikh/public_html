@@ -1,4 +1,4 @@
-import { useForm } from '@inertiajs/react';
+import { useForm, useHttp } from '@inertiajs/react';
 import { Loader2Icon, SettingsIcon } from 'lucide-react';
 import type { FormEvent } from 'react';
 import { useState } from 'react';
@@ -14,7 +14,6 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { releaseRouteParams } from '../lib/helpers';
 
 type ReleaseFormData = {
     package_identifier: string;
@@ -65,6 +64,10 @@ export function ReleaseForm({
         });
 
     const [isGeneratingVersion, setIsGeneratingVersion] = useState(false);
+    const nextVersionRequest = useHttp<
+        Record<string, never>,
+        { version?: string }
+    >({});
 
     const generateNextVersion = async () => {
         setIsGeneratingVersion(true);
@@ -72,7 +75,7 @@ export function ReleaseForm({
         try {
             const packageIdentifier =
                 type === 'application' ? 'main' : data.package_identifier;
-            const response = await fetch(
+            const result = await nextVersionRequest.get(
                 route(`${routeNamespace}.next-version`, {
                     versionType: data.version_type,
                     package_identifier: packageIdentifier,
@@ -83,14 +86,6 @@ export function ReleaseForm({
                     },
                 },
             );
-
-            if (!response.ok) {
-                throw new Error(
-                    `Unable to generate version (${response.status})`,
-                );
-            }
-
-            const result = await response.json();
 
             if (result?.version) {
                 setData('version', result.version);

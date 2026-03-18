@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react';
+import { Link, useHttp } from '@inertiajs/react';
 import { ArrowLeftIcon, SaveIcon } from 'lucide-react';
 import type { FormEvent } from 'react';
 import { useEffect, useState } from 'react';
@@ -75,6 +75,13 @@ export default function ProviderForm({
     const [vendorOptionsByType, setVendorOptionsByType] = useState<
         Record<string, PlatformOption[]>
     >({});
+    const vendorRequest = useHttp<
+        Record<string, never>,
+        {
+            success?: boolean;
+            vendors?: PlatformOption[];
+        }
+    >({});
 
     const availableVendorOptions = form.data.type
         ? (vendorOptionsByType[form.data.type] ??
@@ -93,19 +100,14 @@ export default function ProviderForm({
 
         const controller = new AbortController();
 
-        fetch(route('platform.providers.api.vendors', { type: selectedType }), {
-            headers: { Accept: 'application/json' },
-            signal: controller.signal,
-        })
-            .then(async (response) => {
-                if (!response.ok) {
-                    throw new Error('Unable to load vendors.');
-                }
-
-                return (await response.json()) as {
-                    success?: boolean;
-                    vendors?: PlatformOption[];
-                };
+        void vendorRequest
+            .get(route('platform.providers.api.vendors', { type: selectedType }), {
+                headers: { Accept: 'application/json' },
+                onCancelToken: (cancelToken) => {
+                    controller.signal.addEventListener('abort', () => {
+                        cancelToken.cancel();
+                    });
+                },
             })
             .then((payload) => {
                 if (!isMounted || !Array.isArray(payload.vendors)) {
@@ -132,8 +134,9 @@ export default function ProviderForm({
         return () => {
             isMounted = false;
             controller.abort();
+            vendorRequest.cancel();
         };
-    }, [form, form.data.type, vendorOptionsByType]);
+    }, [form, form.data.type, vendorOptionsByType, vendorRequest]);
 
     const setCredential = (
         key: keyof ProviderCredentialValues,

@@ -11,13 +11,9 @@ import {
     resolveInertiaPage,
 } from './lib/inertia-page-resolver';
 
-const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 const inertiaDefaults = {
     form: {
         recentlySuccessfulDuration: 5000,
-    },
-    future: {
-        useDataInertiaHeadAttribute: true,
     },
     prefetch: {
         cacheFor: '1m',
@@ -40,7 +36,6 @@ function syncModulePageFilter(sharedProps: Record<string, unknown>): void {
 }
 
 createInertiaApp({
-    title: (title) => (title ? `${title} | ${appName}` : appName),
     resolve: resolveInertiaPage,
     defaults: inertiaDefaults,
     setup({ el, App, props }) {

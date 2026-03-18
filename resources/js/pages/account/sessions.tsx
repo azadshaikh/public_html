@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react';
+import { Link, useHttp } from '@inertiajs/react';
 import {
     ArrowLeftIcon,
     Clock3Icon,
@@ -135,34 +135,6 @@ function showToast(variant: 'success' | 'error' | 'info', message: string) {
     });
 }
 
-function getCsrfToken(): string {
-    return (
-        document.head
-            .querySelector('meta[name="csrf-token"]')
-            ?.getAttribute('content') ?? ''
-    );
-}
-
-async function deleteJson(url: string): Promise<SessionActionResponse> {
-    const response = await fetch(url, {
-        method: 'DELETE',
-        headers: {
-            'X-CSRF-TOKEN': getCsrfToken(),
-            Accept: 'application/json',
-        },
-    });
-
-    const payload = (await response
-        .json()
-        .catch(() => ({}))) as SessionActionResponse;
-
-    if (!response.ok || !payload.success) {
-        throw new Error(payload.message || 'Something went wrong.');
-    }
-
-    return payload;
-}
-
 export default function Sessions({
     sessions: initialSessions,
     sessionManagementSupported,
@@ -171,6 +143,10 @@ export default function Sessions({
     const [revokeSessionId, setRevokeSessionId] = useState<string | null>(null);
     const [showRevokeOthersDialog, setShowRevokeOthersDialog] = useState(false);
     const [pendingAction, setPendingAction] = useState<string | null>(null);
+    const sessionActionRequest = useHttp<
+        Record<string, never>,
+        SessionActionResponse
+    >({});
 
     const currentSession =
         sessions.find((session) => session.is_current) ?? null;
@@ -183,9 +159,16 @@ export default function Sessions({
         setPendingAction(sessionId);
 
         try {
-            const payload = await deleteJson(
+            const payload = await sessionActionRequest.delete(
                 route('app.profile.sessions.delete', { session: sessionId }),
+                {
+                    headers: { Accept: 'application/json' },
+                },
             );
+
+            if (!payload.success) {
+                throw new Error(payload.message || 'Something went wrong.');
+            }
 
             setSessions((currentSessions) =>
                 currentSessions.filter((session) => session.id !== sessionId),
@@ -211,9 +194,16 @@ export default function Sessions({
         setPendingAction('others');
 
         try {
-            const payload = await deleteJson(
+            const payload = await sessionActionRequest.delete(
                 route('app.profile.sessions.delete-others'),
+                {
+                    headers: { Accept: 'application/json' },
+                },
             );
+
+            if (!payload.success) {
+                throw new Error(payload.message || 'Something went wrong.');
+            }
 
             setSessions((currentSessions) =>
                 currentSessions.filter((session) => session.is_current),

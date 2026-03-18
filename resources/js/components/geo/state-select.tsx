@@ -1,3 +1,4 @@
+import { useHttp } from '@inertiajs/react';
 import { useEffect, useMemo, useState } from 'react';
 import {
     Combobox,
@@ -30,33 +31,38 @@ export function StateSelect({
     'aria-invalid': ariaInvalid,
 }: StateSelectProps) {
     const [items, setItems] = useState<GeoOption[]>([]);
-    const [loading, setLoading] = useState(false);
+    const statesRequest = useHttp<Record<string, never>, { items?: GeoOption[] }>(
+        {},
+    );
+    const loading = statesRequest.processing;
 
     useEffect(() => {
         if (!countryCode) {
             return;
         }
 
-        setLoading(true);
-
         const url =
             route('app.ajax.geo.states') +
             `?country_code=${encodeURIComponent(countryCode)}`;
 
-        fetch(url)
-            .then((res) => res.json())
-            .then((data: { items: GeoOption[] }) => {
-                setItems(data.items ?? []);
+        void statesRequest
+            .get(url)
+            .then((payload) => {
+                setItems(payload.items ?? []);
             })
             .catch(() => {
                 setItems([]);
-            })
-            .finally(() => {
-                setLoading(false);
             });
-    }, [countryCode]);
 
-    const availableItems = countryCode ? items : [];
+        return () => {
+            statesRequest.cancel();
+        };
+    }, [countryCode, statesRequest]);
+
+    const availableItems = useMemo(
+        () => (countryCode ? items : []),
+        [countryCode, items],
+    );
 
     const selectedItem = useMemo(
         () =>

@@ -1,4 +1,4 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import {
     AlertTriangleIcon,
     ArrowLeftIcon,
@@ -144,8 +144,6 @@ export default function NotFoundLogShow({
             title="404 Log Details"
             description={`Not-found error for ${notFoundLog.url}`}
         >
-            <Head title={`404 Log — ${notFoundLog.url.substring(0, 50)}`} />
-
             <div className="mb-6">
                 <Button variant="ghost" size="sm" asChild>
                     <Link href={route('app.logs.not-found-logs.index')}>

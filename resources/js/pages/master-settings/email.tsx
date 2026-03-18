@@ -1,3 +1,4 @@
+import { useHttp } from '@inertiajs/react';
 import { SaveIcon, SendIcon } from 'lucide-react';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
@@ -62,6 +63,13 @@ export default function Email({
 }: EmailPageProps) {
     const [testEmail, setTestEmail] = useState('');
     const [isSendingTest, setIsSendingTest] = useState(false);
+    const testEmailRequest = useHttp<
+        EmailFormData & { email: string },
+        { success?: boolean; message?: string }
+    >({
+        email: '',
+        ...settings,
+    });
 
     const form = useAppForm<EmailFormData>({
         defaults: {
@@ -112,26 +120,19 @@ export default function Email({
         setIsSendingTest(true);
 
         try {
-            const response = await fetch(
+            testEmailRequest.transform(() => ({
+                email: testEmail,
+                ...form.data,
+            }));
+
+            const data = await testEmailRequest.post(
                 route('app.masters.settings.send-test-mail'),
                 {
-                    method: 'POST',
                     headers: {
-                        'X-CSRF-TOKEN':
-                            document.querySelector<HTMLMetaElement>(
-                                'meta[name="csrf-token"]',
-                            )?.content ?? '',
                         Accept: 'application/json',
-                        'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({
-                        email: testEmail,
-                        ...form.data,
-                    }),
                 },
             );
-
-            const data = await response.json();
 
             showAppToast({
                 variant: data.success ? 'success' : 'error',

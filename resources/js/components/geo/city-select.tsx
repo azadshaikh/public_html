@@ -1,3 +1,4 @@
+import { useHttp } from '@inertiajs/react';
 import { useEffect, useMemo, useState } from 'react';
 import {
     Combobox,
@@ -33,6 +34,9 @@ export function CitySelect({
 }: CitySelectProps) {
     const [items, setItems] = useState<GeoOption[]>([]);
     const [loadedKey, setLoadedKey] = useState('');
+    const citiesRequest = useHttp<Record<string, never>, { items?: GeoOption[] }>(
+        {},
+    );
     const hasLocationContext = Boolean(stateCode || countryCode);
     const requestKey = useMemo(() => {
         if (!hasLocationContext) {
@@ -61,9 +65,9 @@ export function CitySelect({
 
         const url = `${route('app.ajax.geo.cities')}?${params.toString()}`;
 
-        fetch(url)
-            .then((res) => res.json())
-            .then((data: { items: GeoOption[] }) => {
+        void citiesRequest
+            .get(url)
+            .then((data) => {
                 if (cancelled) {
                     return;
                 }
@@ -82,8 +86,9 @@ export function CitySelect({
 
         return () => {
             cancelled = true;
+            citiesRequest.cancel();
         };
-    }, [countryCode, requestKey, stateCode]);
+    }, [citiesRequest, countryCode, requestKey, stateCode]);
 
     const loading = Boolean(requestKey) && loadedKey !== requestKey;
     const availableItems = useMemo(() => {
