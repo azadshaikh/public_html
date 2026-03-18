@@ -34,6 +34,10 @@ class UserDefinition extends ScaffoldDefinition
      */
     protected ?string $statusField = 'status';
 
+    protected bool $includeActionConfigInInertia = false;
+
+    protected bool $includeEmptyStateConfigInInertia = false;
+
     /**
      * Return the Model class
      */

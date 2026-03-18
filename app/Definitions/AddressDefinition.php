@@ -34,6 +34,12 @@ class AddressDefinition extends ScaffoldDefinition
     // Addresses don't have a status field - they use soft deletes
     protected ?string $statusField = null;
 
+    protected bool $includeActionConfigInInertia = false;
+
+    protected bool $includeEmptyStateConfigInInertia = false;
+
+    protected bool $includeRowActionsInInertiaRows = false;
+
     /**
      * Get the model class for this scaffold
      */

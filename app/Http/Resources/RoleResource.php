@@ -18,6 +18,18 @@ class RoleResource extends ScaffoldResource
         return new RoleDefinition;
     }
 
+    protected function baseAttributeKeys(): ?array
+    {
+        return [
+            'name',
+            'display_name',
+            'permissions_count',
+            'users_count',
+            'status',
+            'created_at',
+        ];
+    }
+
     protected function customFields(): array
     {
         $role = $this->role();

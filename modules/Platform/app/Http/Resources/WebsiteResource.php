@@ -59,6 +59,7 @@ class WebsiteResource extends ScaffoldResource
         return [
             'show_url' => route($this->scaffold()->getRoutePrefix().'.show', $this->id),
 
+            'domain' => $domain !== '' ? $domain : null,
             'domain_url' => $domainUrl,
 
             'astero_version' => $this->astero_version ?? '-',

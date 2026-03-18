@@ -29,6 +29,31 @@ class UserResource extends ScaffoldResource
         return new UserDefinition;
     }
 
+    protected function formattedDateKeys(): array
+    {
+        if (! $this->isIndexPayloadRequest()) {
+            return parent::formattedDateKeys();
+        }
+
+        return ['created_at'];
+    }
+
+    protected function getFormattedDates(): array
+    {
+        if (! $this->isIndexPayloadRequest()) {
+            return parent::getFormattedDates();
+        }
+
+        if (! $this->resource->created_at) {
+            return [];
+        }
+
+        return [
+            'created_at' => $this->resource->created_at->toISOString(),
+            'created_at_human' => $this->resource->created_at->diffForHumans(),
+        ];
+    }
+
     // ================================================================
     // CUSTOM FIELDS FOR DATAGRID
     // ================================================================
@@ -36,7 +61,9 @@ class UserResource extends ScaffoldResource
     protected function customFields(): array
     {
         $user = $this->user();
-        $primaryAddressRelation = $user->primaryAddress()->first();
+        $primaryAddressRelation = $user->relationLoaded('primaryAddress')
+            ? $user->getRelation('primaryAddress')
+            : $user->primaryAddress()->first();
         $primaryAddress = $primaryAddressRelation instanceof Address ? $primaryAddressRelation : null;
         $status = $user->getAttribute('status');
         $statusValue = $status instanceof Status ? $status->value : (string) ($status ?? 'active');
@@ -45,77 +72,56 @@ class UserResource extends ScaffoldResource
         $roles = $user->relationLoaded('roles')
             ? $user->roles->pluck('name')->values()->toArray()
             : $user->roles()->pluck('name')->values()->toArray();
+        $isIndexPayload = $this->isIndexPayloadRequest();
 
         $data = [
-            // URL for row link to show page
             'show_url' => route($this->scaffold()->getRoutePrefix().'.show', $user->getKey()),
-
-            // Basic fields
-            'first_name' => $user->getAttribute('first_name'),
-            'last_name' => $user->getAttribute('last_name'),
-            'full_name' => $user->getAttribute('full_name'),
             'name' => $user->getAttribute('full_name'),
             'email' => $user->getAttribute('email'),
-            'username' => $user->getAttribute('username'),
-            'phone' => $primaryAddress?->getAttribute('phone'),
-
-            // Avatar
-            'avatar' => $user->getAttribute('avatar'),
             'avatar_url' => $user->getAttribute('avatar_image'),
-
-            // Email verification
             'email_verified' => $user->hasVerifiedEmail(),
-            'email_verified_at' => $emailVerifiedAt instanceof CarbonInterface
-                ? $emailVerifiedAt->toISOString()
-                : ($emailVerifiedAt instanceof DateTimeInterface ? $emailVerifiedAt->format(DateTimeInterface::ATOM) : null),
-            'email_verified_at_formatted' => $emailVerifiedAt instanceof CarbonInterface
-                ? $this->formatDateTime($emailVerifiedAt, 'date')
-                : null,
-
-            // Personal info
-            'gender' => $user->getAttribute('gender'),
-            'birth_date' => $user->getBirthDate(),
-            'tagline' => $user->getAttribute('tagline'),
-            'bio' => $user->getAttribute('bio'),
-
-            // Status fields
             'status' => $statusValue,
             'status_label' => $this->getStatusLabel($statusValue),
-
-            // Roles
             'roles' => $roles,
-
-            // Social URLs
-            'website_url' => $user->getWebsiteUrl(),
-            'twitter_url' => $user->getTwitterUrl(),
-            'facebook_url' => $user->getFacebookUrl(),
-            'instagram_url' => $user->getInstagramUrl(),
-            'linkedin_url' => $user->getLinkedinUrl(),
-
-            // Primary address
-            'address1' => $primaryAddress?->getAttribute('address1'),
-            'address2' => $primaryAddress?->getAttribute('address2'),
-            'city' => $primaryAddress?->getAttribute('city'),
-            'state' => $primaryAddress?->getAttribute('state'),
-            'country' => $primaryAddress?->getAttribute('country'),
-            'zip' => $primaryAddress?->getAttribute('zip'),
-
-            // Last access (ISO + formatted + human)
-            'last_access' => $lastAccess instanceof CarbonInterface ? $lastAccess->toISOString() : null,
-            'last_access_formatted' => $lastAccess instanceof CarbonInterface ? $this->formatDateTime($lastAccess, 'datetime') : null,
-            'last_access_human' => $lastAccess instanceof CarbonInterface ? $lastAccess->diffForHumans() : null,
-
-            // Datetime fields (will be formatted below)
-            'created_at' => $user->getAttribute('created_at'),
-            'updated_at' => $user->getAttribute('updated_at'),
         ];
 
-        // Format datetime fields using app settings (timezone + format)
+        if (! $isIndexPayload) {
+            $data = [
+                ...$data,
+                'username' => $user->getAttribute('username'),
+                'phone' => $primaryAddress?->getAttribute('phone'),
+                'email_verified_at' => $emailVerifiedAt instanceof CarbonInterface
+                    ? $emailVerifiedAt->toISOString()
+                    : ($emailVerifiedAt instanceof DateTimeInterface ? $emailVerifiedAt->format(DateTimeInterface::ATOM) : null),
+                'email_verified_at_formatted' => $emailVerifiedAt instanceof CarbonInterface
+                    ? $this->formatDateTime($emailVerifiedAt, 'date')
+                    : null,
+                'gender' => $user->getAttribute('gender'),
+                'birth_date' => $user->getBirthDate(),
+                'tagline' => $user->getAttribute('tagline'),
+                'bio' => $user->getAttribute('bio'),
+                'website_url' => $user->getWebsiteUrl(),
+                'twitter_url' => $user->getTwitterUrl(),
+                'facebook_url' => $user->getFacebookUrl(),
+                'instagram_url' => $user->getInstagramUrl(),
+                'linkedin_url' => $user->getLinkedinUrl(),
+                'address1' => $primaryAddress?->getAttribute('address1'),
+                'address2' => $primaryAddress?->getAttribute('address2'),
+                'city' => $primaryAddress?->getAttribute('city'),
+                'state' => $primaryAddress?->getAttribute('state'),
+                'country' => $primaryAddress?->getAttribute('country'),
+                'zip' => $primaryAddress?->getAttribute('zip'),
+                'last_access' => $lastAccess instanceof CarbonInterface ? $lastAccess->toISOString() : null,
+                'last_access_formatted' => $lastAccess instanceof CarbonInterface ? $this->formatDateTime($lastAccess, 'datetime') : null,
+                'last_access_human' => $lastAccess instanceof CarbonInterface ? $lastAccess->diffForHumans() : null,
+            ];
+        }
+
         return $this->formatDateTimeFields(
             $data,
             dateFields: [],
             timeFields: [],
-            datetimeFields: ['created_at', 'updated_at']
+            datetimeFields: []
         );
     }
 

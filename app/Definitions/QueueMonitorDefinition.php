@@ -37,6 +37,10 @@ class QueueMonitorDefinition extends ScaffoldDefinition
 
     protected string $defaultSortDirection = 'desc';
 
+    protected bool $includeActionConfigInInertia = false;
+
+    protected bool $includeEmptyStateConfigInInertia = false;
+
     public function getModelClass(): string
     {
         return Monitor::class;

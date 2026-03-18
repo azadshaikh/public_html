@@ -32,6 +32,10 @@ class ActivityLogDefinition extends ScaffoldDefinition
      */
     protected ?string $statusField = null;
 
+    protected bool $includeActionConfigInInertia = false;
+
+    protected bool $includeEmptyStateConfigInInertia = false;
+
     protected bool $enableBulkActions = true;
 
     /**

@@ -253,7 +253,6 @@ export type PageListItem = {
     display_date: string;
     edit_url: string;
     is_trashed: boolean;
-    actions: Record<string, unknown>[];
 };
 
 export type PageFormValues = {
@@ -333,7 +332,6 @@ export type CategoryListItem = {
     display_date: string;
     edit_url: string;
     is_trashed: boolean;
-    actions: Record<string, unknown>[];
 };
 
 export type CategoryFormValues = {
@@ -398,7 +396,6 @@ export type TagListItem = {
     display_date: string;
     edit_url: string;
     is_trashed: boolean;
-    actions: Record<string, unknown>[];
 };
 
 export type TagFormValues = {
@@ -465,7 +462,6 @@ export type RedirectionListItem = {
     show_url: string | null;
     created_at: string;
     is_trashed: boolean;
-    actions: Record<string, unknown>[];
 };
 
 export type RedirectionFormValues = {
@@ -539,7 +535,6 @@ export type FormListItem = {
     show_url: string;
     created_at: string;
     is_trashed: boolean;
-    actions: Record<string, unknown>[];
 };
 
 export type FormFormValues = {
@@ -610,7 +605,6 @@ export type DesignBlockListItem = {
     created_at: string;
     edit_url: string;
     is_trashed: boolean;
-    actions: Record<string, unknown>[];
 };
 
 export type DesignBlockFormValues = {
@@ -683,7 +677,6 @@ export type MenuListItem = {
     edit_url: string;
     show_url: string;
     is_trashed: boolean;
-    actions: Record<string, unknown>[];
 };
 
 export type MenuItem = {

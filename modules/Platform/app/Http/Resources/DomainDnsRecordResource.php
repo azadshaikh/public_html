@@ -20,6 +20,7 @@ class DomainDnsRecordResource extends ScaffoldResource
         $typeConfig = config('platform.domain.record_types.'.$this->type, []);
 
         return [
+            'domain_name' => $this->domain?->name,
             'type_label' => $typeConfig['label'] ?? (string) $this->type,
             'created_at' => app_date_time_format($this->created_at, 'date'),
             'updated_at' => app_date_time_format($this->updated_at, 'date'),

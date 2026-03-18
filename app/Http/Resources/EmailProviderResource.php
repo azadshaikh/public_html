@@ -9,13 +9,10 @@ use App\Enums\Status;
 use App\Models\EmailProvider;
 use App\Scaffold\ScaffoldDefinition;
 use App\Scaffold\ScaffoldResource;
-use App\Traits\DateTimeFormattingTrait;
 use RuntimeException;
 
 class EmailProviderResource extends ScaffoldResource
 {
-    use DateTimeFormattingTrait;
-
     // ================================================================
     // REQUIRED METHOD
     // ================================================================
@@ -23,6 +20,45 @@ class EmailProviderResource extends ScaffoldResource
     protected function definition(): ScaffoldDefinition
     {
         return new EmailProviderDefinition;
+    }
+
+    protected function baseAttributeKeys(): ?array
+    {
+        if (! $this->isIndexPayloadRequest()) {
+            return parent::baseAttributeKeys();
+        }
+
+        return [
+            'name',
+            'sender_email',
+            'smtp_host',
+            'status',
+            'order',
+        ];
+    }
+
+    protected function formattedDateKeys(): array
+    {
+        if (! $this->isIndexPayloadRequest()) {
+            return parent::formattedDateKeys();
+        }
+
+        return ['updated_at'];
+    }
+
+    protected function getFormattedDates(): array
+    {
+        if (! $this->isIndexPayloadRequest()) {
+            return parent::getFormattedDates();
+        }
+
+        if (! $this->resource->updated_at) {
+            return [];
+        }
+
+        return [
+            'updated_at' => $this->resource->updated_at->toISOString(),
+        ];
     }
 
     // ================================================================
@@ -34,47 +70,31 @@ class EmailProviderResource extends ScaffoldResource
         $provider = $this->emailProvider();
         $status = $provider->getAttribute('status');
         $statusValue = $status instanceof Status ? $status->value : (string) ($status ?? 'inactive');
+        $isIndexPayload = $this->isIndexPayloadRequest();
 
         $data = [
-            // URL for row link to show page
             'show_url' => route($this->scaffold()->getRoutePrefix().'.show', $provider->getKey()),
-
-            // Basic fields
-            'name' => $provider->getAttribute('name'),
-            'description' => $provider->getAttribute('description'),
             'sender_name' => $provider->getAttribute('sender_name'),
-            'sender_email' => $provider->getAttribute('sender_email'),
-
-            // SMTP configuration
-            'smtp_host' => $provider->getAttribute('smtp_host'),
-            'smtp_user' => $provider->getAttribute('smtp_user'),
-            'smtp_port' => $provider->getAttribute('smtp_port'),
             'smtp_encryption' => $provider->getAttribute('smtp_encryption')
                 ? strtoupper((string) $provider->getAttribute('smtp_encryption'))
                 : 'None',
-
-            // Email settings
-            'reply_to' => $provider->getAttribute('reply_to'),
-            'bcc' => $provider->getAttribute('bcc'),
-            'signature' => $provider->getAttribute('signature'),
-
-            // Status fields (for badge template)
-            'status' => $statusValue,
             'status_label' => $this->getStatusLabel($statusValue),
             'status_class' => $this->getStatusClass($statusValue),
-
-            // Order
-            'order' => $provider->getAttribute('order') ?? 0,
-
-            // Datetime fields
-            'created_at' => $provider->getAttribute('created_at'),
-            'updated_at' => $provider->getAttribute('updated_at'),
         ];
 
-        return $this->formatDateTimeFields(
-            $data,
-            datetimeFields: ['created_at', 'updated_at']
-        );
+        if (! $isIndexPayload) {
+            $data = [
+                ...$data,
+                'description' => $provider->getAttribute('description'),
+                'smtp_user' => $provider->getAttribute('smtp_user'),
+                'smtp_port' => $provider->getAttribute('smtp_port'),
+                'reply_to' => $provider->getAttribute('reply_to'),
+                'bcc' => $provider->getAttribute('bcc'),
+                'signature' => $provider->getAttribute('signature'),
+            ];
+        }
+
+        return $data;
     }
 
     // ================================================================

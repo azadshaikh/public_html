@@ -43,6 +43,8 @@ abstract class ScaffoldResource extends JsonResource
 {
     use DateTimeFormattingTrait;
 
+    protected ?Request $resourceRequest = null;
+
     /**
      * Cached scaffold definition to prevent N+1 calls
      */
@@ -62,55 +64,61 @@ abstract class ScaffoldResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $payload = [
-            ...$this->getBaseAttributes(),
-        ];
+        $this->resourceRequest = $request;
 
-        if ($this->includesFormattedDates()) {
+        try {
+            $payload = [
+                ...$this->getBaseAttributes(),
+            ];
+
+            if ($this->includesFormattedDates()) {
+                $payload = [
+                    ...$payload,
+                    ...$this->getFormattedDates(),
+                ];
+            }
+
+            if ($this->includesEnumFields()) {
+                $payload = [
+                    ...$payload,
+                    ...$this->getEnumFields(),
+                ];
+            }
+
+            if ($this->includesStatusFields()) {
+                $payload = [
+                    ...$payload,
+                    ...$this->getStatusFields(),
+                ];
+            }
+
+            if ($this->includesAuditFields()) {
+                $payload = [
+                    ...$payload,
+                    ...$this->getAuditFields(),
+                ];
+            }
+
+            if ($this->includesSoftDeleteFields()) {
+                $payload = [
+                    ...$payload,
+                    ...$this->getSoftDeleteFields(),
+                ];
+            }
+
             $payload = [
                 ...$payload,
-                ...$this->getFormattedDates(),
+                ...$this->customFields(),
             ];
+
+            if ($this->includesActions()) {
+                $payload['actions'] = $this->getActions();
+            }
+
+            return $payload;
+        } finally {
+            $this->resourceRequest = null;
         }
-
-        if ($this->includesEnumFields()) {
-            $payload = [
-                ...$payload,
-                ...$this->getEnumFields(),
-            ];
-        }
-
-        if ($this->includesStatusFields()) {
-            $payload = [
-                ...$payload,
-                ...$this->getStatusFields(),
-            ];
-        }
-
-        if ($this->includesAuditFields()) {
-            $payload = [
-                ...$payload,
-                ...$this->getAuditFields(),
-            ];
-        }
-
-        if ($this->includesSoftDeleteFields()) {
-            $payload = [
-                ...$payload,
-                ...$this->getSoftDeleteFields(),
-            ];
-        }
-
-        $payload = [
-            ...$payload,
-            ...$this->customFields(),
-        ];
-
-        if ($this->includesActions()) {
-            $payload['actions'] = $this->getActions();
-        }
-
-        return $payload;
     }
 
     /**
@@ -352,15 +360,31 @@ abstract class ScaffoldResource extends JsonResource
         return [];
     }
 
+    protected function isIndexPayloadRequest(): bool
+    {
+        $route = $this->resourceRequest?->route();
+
+        return $route !== null
+            && method_exists($route, 'named')
+            && $route->named($this->scaffold()->getIndexRoute());
+    }
+
     /**
      * Explicit allowlist for raw model attributes in index/list rows.
-     * Returning null preserves the legacy behavior of exposing all model columns.
+     *
+     * By default, derive the allowlist from visible scaffold column keys so list
+     * payloads do not fall back to exposing every model attribute.
      *
      * @return array<int, string>|null
      */
     protected function baseAttributeKeys(): ?array
     {
-        return null;
+        return collect($this->scaffold()->columns())
+            ->pluck('key')
+            ->filter(fn (string $key): bool => $key !== '' && ! str_starts_with($key, '_'))
+            ->unique()
+            ->values()
+            ->all();
     }
 
     /**
@@ -403,7 +427,7 @@ abstract class ScaffoldResource extends JsonResource
 
     protected function includesActions(): bool
     {
-        return true;
+        return $this->scaffold()->shouldIncludeRowActionsInInertiaRows();
     }
 
     // =========================================================================

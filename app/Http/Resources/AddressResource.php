@@ -24,6 +24,20 @@ class AddressResource extends ScaffoldResource
         return new AddressDefinition;
     }
 
+    protected function baseAttributeKeys(): ?array
+    {
+        return [
+            'first_name',
+            'last_name',
+            'type',
+            'address1',
+            'city',
+            'state',
+            'country_code',
+            'created_at',
+        ];
+    }
+
     /**
      * Get custom/computed fields specific to Address model.
      */

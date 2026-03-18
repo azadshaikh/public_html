@@ -25,6 +25,19 @@ class MenuResource extends ScaffoldResource
         return new MenuDefinition;
     }
 
+    protected function baseAttributeKeys(): ?array
+    {
+        return [
+            'name',
+            'description',
+            'location',
+            'items_count',
+            'all_items_count',
+            'is_active',
+            'updated_at',
+        ];
+    }
+
     /**
      * Custom/computed fields for Menu
      */

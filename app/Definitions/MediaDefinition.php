@@ -32,6 +32,12 @@ class MediaDefinition extends ScaffoldDefinition
     // More items per page for gallery view
     protected int $perPage = 24;
 
+    protected bool $includeActionConfigInInertia = false;
+
+    protected bool $includeEmptyStateConfigInInertia = false;
+
+    protected bool $includeRowActionsInInertiaRows = false;
+
     /**
      * Get the model class for this scaffold
      */

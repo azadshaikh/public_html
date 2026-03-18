@@ -109,6 +109,21 @@ abstract class ScaffoldDefinition
     protected bool $enableExport = false;
 
     /**
+     * Whether the page consumes backend bulk-action config in Inertia.
+     */
+    protected bool $includeActionConfigInInertia = true;
+
+    /**
+     * Whether the page consumes backend empty-state config in Inertia.
+     */
+    protected bool $includeEmptyStateConfigInInertia = true;
+
+    /**
+     * Whether index rows should include backend row-action payloads.
+     */
+    protected bool $includeRowActionsInInertiaRows = true;
+
+    /**
      * Define table columns
      *
      * @return array<Column>
@@ -757,12 +772,17 @@ abstract class ScaffoldDefinition
 
     public function shouldIncludeActionConfigInInertia(): bool
     {
-        return true;
+        return $this->includeActionConfigInInertia;
     }
 
     public function shouldIncludeEmptyStateConfigInInertia(): bool
     {
-        return true;
+        return $this->includeEmptyStateConfigInInertia;
+    }
+
+    public function shouldIncludeRowActionsInInertiaRows(): bool
+    {
+        return $this->includeRowActionsInInertiaRows;
     }
 
     /**

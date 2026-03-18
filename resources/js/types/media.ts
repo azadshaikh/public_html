@@ -33,17 +33,6 @@ export type MediaListItem = {
     restore_url: string;
     created_at: string;
     updated_at: string;
-    actions: Record<
-        string,
-        {
-            url: string;
-            label: string;
-            icon: string;
-            class: string;
-            method: string;
-            confirm?: string;
-        }
-    >;
 };
 
 // =========================================================================

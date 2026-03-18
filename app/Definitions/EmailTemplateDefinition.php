@@ -27,6 +27,12 @@ class EmailTemplateDefinition extends ScaffoldDefinition
 
     protected ?string $statusField = 'status';
 
+    protected bool $includeActionConfigInInertia = false;
+
+    protected bool $includeEmptyStateConfigInInertia = false;
+
+    protected bool $includeRowActionsInInertiaRows = false;
+
     public function getModelClass(): string
     {
         return EmailTemplate::class;

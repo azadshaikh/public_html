@@ -34,6 +34,10 @@ class EmailLogDefinition extends ScaffoldDefinition
      */
     protected ?string $statusField = 'status';
 
+    protected bool $includeActionConfigInInertia = false;
+
+    protected bool $includeEmptyStateConfigInInertia = false;
+
     protected bool $enableBulkActions = false;
 
     /**

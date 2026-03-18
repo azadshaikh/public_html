@@ -9,29 +9,29 @@ export type EmailOption = {
 export type EmailProviderListItem = {
     id: number;
     name: string;
-    description: string | null;
     sender_name: string | null;
     sender_email: string | null;
     smtp_host: string | null;
-    smtp_user: string | null;
-    smtp_port: string | null;
     smtp_encryption: string | null;
-    reply_to: string | null;
-    bcc: string | null;
-    signature: string | null;
     status: string;
     status_label: string;
     status_badge: string;
     order: number;
     show_url: string;
     is_trashed: boolean;
-    created_at: string | null;
-    created_at_formatted: string | null;
     updated_at: string | null;
-    updated_at_formatted: string | null;
 };
 
 export type EmailProviderShowItem = EmailProviderListItem & {
+    description: string | null;
+    smtp_user: string | null;
+    smtp_port: string | null;
+    reply_to: string | null;
+    bcc: string | null;
+    signature: string | null;
+    created_at: string | null;
+    created_at_formatted: string | null;
+    updated_at_formatted: string | null;
     smtp_encryption_label: string;
     has_smtp_password: boolean;
     deleted_at: string | null;

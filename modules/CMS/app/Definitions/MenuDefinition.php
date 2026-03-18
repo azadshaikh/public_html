@@ -31,6 +31,12 @@ class MenuDefinition extends ScaffoldDefinition
 
     protected ?string $statusField = null; // Uses is_active boolean, not status column
 
+    protected bool $includeActionConfigInInertia = false;
+
+    protected bool $includeEmptyStateConfigInInertia = false;
+
+    protected bool $includeRowActionsInInertiaRows = false;
+
     public function getModelClass(): string
     {
         return Menu::class;

@@ -34,6 +34,12 @@ class EmailProviderDefinition extends ScaffoldDefinition
      */
     protected ?string $statusField = 'status';
 
+    protected bool $includeActionConfigInInertia = false;
+
+    protected bool $includeEmptyStateConfigInInertia = false;
+
+    protected bool $includeRowActionsInInertiaRows = false;
+
     /**
      * Return the Model class
      */

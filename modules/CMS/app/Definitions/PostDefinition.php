@@ -25,6 +25,12 @@ class PostDefinition extends ScaffoldDefinition
      */
     protected ?string $defaultSort = 'published_at';
 
+    protected bool $includeActionConfigInInertia = false;
+
+    protected bool $includeEmptyStateConfigInInertia = false;
+
+    protected bool $includeRowActionsInInertiaRows = false;
+
     public function getModelClass(): string
     {
         return CmsPost::class;
@@ -33,16 +39,6 @@ class PostDefinition extends ScaffoldDefinition
     public function getRequestClass(): ?string
     {
         return PostRequest::class;
-    }
-
-    public function shouldIncludeActionConfigInInertia(): bool
-    {
-        return false;
-    }
-
-    public function shouldIncludeEmptyStateConfigInInertia(): bool
-    {
-        return false;
     }
 
     public function columns(): array

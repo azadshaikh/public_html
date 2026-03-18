@@ -25,6 +25,12 @@ class PageDefinition extends ScaffoldDefinition
      */
     protected ?string $defaultSort = 'published_at';
 
+    protected bool $includeActionConfigInInertia = false;
+
+    protected bool $includeEmptyStateConfigInInertia = false;
+
+    protected bool $includeRowActionsInInertiaRows = false;
+
     public function getModelClass(): string
     {
         return CmsPost::class;

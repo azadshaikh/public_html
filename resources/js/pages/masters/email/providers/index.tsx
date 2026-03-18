@@ -390,12 +390,6 @@ export default function EmailProvidersIndex({
                                     </div>
                                 </div>
                             </div>
-
-                            {provider.description ? (
-                                <p className="line-clamp-2 text-sm text-muted-foreground">
-                                    {provider.description}
-                                </p>
-                            ) : null}
                         </div>
                     )}
                     empty={{

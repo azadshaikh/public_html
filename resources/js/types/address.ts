@@ -53,7 +53,6 @@ export type AddressListItem = {
     updated_at: string | null;
     updated_at_formatted: string | null;
     deleted_at: string | null;
-    actions: Record<string, AddressRowAction>;
 };
 
 export type AddressShowItem = AddressListItem & {
