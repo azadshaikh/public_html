@@ -1,12 +1,12 @@
 import { Code2Icon, EyeIcon } from 'lucide-react';
 import { useCallback } from 'react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
     Accordion,
     AccordionContent,
     AccordionItem,
     AccordionTrigger,
 } from '@/components/ui/accordion';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {

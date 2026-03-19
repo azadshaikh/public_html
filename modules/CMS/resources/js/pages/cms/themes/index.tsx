@@ -102,9 +102,6 @@ function ThemeScreenshot({ theme }: { theme: ThemeListItem }) {
                     alt={`${theme.name} preview`}
                     className="aspect-video w-full object-cover transition-transform duration-300 hover:scale-105"
                 />
-                <div className="absolute top-3 left-3 flex flex-wrap gap-2">
-                    <ThemeBadges theme={theme} />
-                </div>
             </div>
         );
     }
@@ -112,9 +109,6 @@ function ThemeScreenshot({ theme }: { theme: ThemeListItem }) {
     return (
         <div className="relative flex aspect-video w-full items-center justify-center rounded-t-xl bg-muted">
             <ImageIcon className="size-10 text-muted-foreground/50" />
-            <div className="absolute top-3 left-3 flex flex-wrap gap-2">
-                <ThemeBadges theme={theme} />
-            </div>
         </div>
     );
 }

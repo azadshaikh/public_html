@@ -13,13 +13,14 @@ import {
     Trash2Icon,
     UploadIcon,
 } from 'lucide-react';
-import {
-    EditorContextMenu,
-    type EditorContextMenuEntry,
-} from './editor-context-menu';
 import { cn } from '@/lib/utils';
 import type { ThemeEditorFileNode } from '../../../../types/cms';
 import type { DeleteTarget } from '../../pages/cms/themes/editor/types';
+import {
+    EditorContextMenu
+    
+} from './editor-context-menu';
+import type {EditorContextMenuEntry} from './editor-context-menu';
 
 function TreeItemIcon({
     isDirectory,

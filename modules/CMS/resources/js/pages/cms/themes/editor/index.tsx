@@ -32,10 +32,6 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
-    EditorContextMenu,
-    type EditorContextMenuEntry,
-} from '../../../../components/theme-editor/editor-context-menu';
-import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
@@ -53,6 +49,11 @@ import {
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import type { AuthenticatedSharedData } from '@/types';
+import {
+    EditorContextMenu
+    
+} from '../../../../components/theme-editor/editor-context-menu';
+import type {EditorContextMenuEntry} from '../../../../components/theme-editor/editor-context-menu';
 import {
     CreateDialog,
     DeleteConfirmDialog,
@@ -338,7 +339,7 @@ export default function ThemeEditorIndex({
                     ),
                 });
             }
-            // eslint-disable-next-line react-hooks/exhaustive-deps
+             
         },
         [openTabs, themeDirectory],
     );
@@ -592,7 +593,7 @@ export default function ThemeEditorIndex({
                     ),
                 });
             }
-            // eslint-disable-next-line react-hooks/exhaustive-deps
+             
         },
         [refreshGitStatus, refreshTree],
     );
