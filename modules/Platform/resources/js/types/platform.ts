@@ -65,8 +65,11 @@ export type AgencyFormValues = {
     webhook_url: string;
     phone_code: string;
     phone: string;
+    country: string;
     country_code: string;
+    state: string;
     state_code: string;
+    city_code: string;
     city: string;
     zip: string;
     address1: string;
@@ -82,14 +85,36 @@ export type AgencyShowData = {
     uid: string | null;
     name: string;
     email: string | null;
+    owner_id: number | null;
     type: string | null;
+    type_label: string | null;
     plan: string | null;
+    plan_label: string | null;
+    website_limit: number | null;
+    plan_usage_percent: number | null;
     status: string | null;
+    status_label: string | null;
+    has_secret_key: boolean;
+    is_whitelabel: boolean;
+    is_trashed: boolean;
+    deleted_at: string | null;
     owner_name: string | null;
     owner_email: string | null;
     website_id_prefix: string | null;
     website_id_zero_padding: number | null;
     webhook_url: string | null;
+    statistics: {
+        websites: number;
+        servers: number;
+        dnsProviders: number;
+        cdnProviders: number;
+        providers: number;
+    };
+    agency_website: {
+        id: number;
+        name: string;
+        href: string;
+    } | null;
     branding: {
         name: string | null;
         website: string | null;
@@ -99,7 +124,9 @@ export type AgencyShowData = {
     address: {
         address1: string | null;
         city: string | null;
+        state: string | null;
         state_code: string | null;
+        country: string | null;
         country_code: string | null;
         zip: string | null;
         phone_code: string | null;
@@ -115,6 +142,20 @@ export type AgencyRelationItem = {
     href?: string;
     subtitle?: string | null;
     status?: string | null;
+    status_label?: string | null;
+    is_primary?: boolean;
+};
+
+export type AgencyServerItem = AgencyRelationItem & {
+    type?: string | null;
+    type_label?: string | null;
+};
+
+export type AgencyProviderItem = AgencyRelationItem & {
+    vendor?: string | null;
+    vendor_label?: string | null;
+    type?: string | null;
+    type_label?: string | null;
 };
 
 export type ServerListItem = {

@@ -30,8 +30,11 @@ class AgencyProviderController extends Controller
             $providers[] = [
                 'id' => $provider->id,
                 'name' => $provider->name,
+                'href' => route('platform.providers.show', $provider),
                 'vendor' => $provider->vendor,
                 'vendor_label' => $provider->vendor_label,
+                'type' => $provider->type,
+                'type_label' => $provider->type_label,
                 'status' => $provider->status,
                 'status_label' => $provider->status_label,
                 'is_primary' => (bool) ($provider->pivot->is_primary ?? false),
@@ -63,8 +66,11 @@ class AgencyProviderController extends Controller
             $providers[] = [
                 'id' => $provider->id,
                 'name' => $provider->name,
+                'href' => route('platform.providers.show', $provider),
                 'vendor' => $provider->vendor,
                 'vendor_label' => $provider->vendor_label,
+                'type' => $provider->type,
+                'type_label' => $provider->type_label,
                 'status' => $provider->status,
                 'status_label' => $provider->status_label,
                 'is_primary' => (bool) ($provider->pivot->is_primary ?? false),
@@ -244,11 +250,26 @@ class AgencyProviderController extends Controller
             ->dns()
             ->whereNotIn('id', $attachedIds)
             ->orderBy('name')
-            ->get(['id', 'name', 'vendor']);
+            ->get(['id', 'name', 'vendor', 'type', 'status']);
+
+        $providers = [];
+        foreach ($availableProviders as $provider) {
+            $providers[] = [
+                'id' => $provider->id,
+                'name' => $provider->name,
+                'href' => route('platform.providers.show', $provider),
+                'vendor' => $provider->vendor,
+                'vendor_label' => $provider->vendor_label,
+                'type' => $provider->type,
+                'type_label' => $provider->type_label,
+                'status' => $provider->status,
+                'status_label' => $provider->status_label,
+            ];
+        }
 
         return response()->json([
             'success' => true,
-            'providers' => $availableProviders,
+            'providers' => $providers,
         ]);
     }
 
@@ -266,11 +287,26 @@ class AgencyProviderController extends Controller
             ->cdn()
             ->whereNotIn('id', $attachedIds)
             ->orderBy('name')
-            ->get(['id', 'name', 'vendor']);
+            ->get(['id', 'name', 'vendor', 'type', 'status']);
+
+        $providers = [];
+        foreach ($availableProviders as $provider) {
+            $providers[] = [
+                'id' => $provider->id,
+                'name' => $provider->name,
+                'href' => route('platform.providers.show', $provider),
+                'vendor' => $provider->vendor,
+                'vendor_label' => $provider->vendor_label,
+                'type' => $provider->type,
+                'type_label' => $provider->type_label,
+                'status' => $provider->status,
+                'status_label' => $provider->status_label,
+            ];
+        }
 
         return response()->json([
             'success' => true,
-            'providers' => $availableProviders,
+            'providers' => $providers,
         ]);
     }
 }

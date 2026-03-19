@@ -166,7 +166,7 @@ class HandleInertiaRequests extends Middleware
             $request->routeIs('app.todos.*') => ['addTodos', 'editTodos', 'deleteTodos', 'restoreTodos'],
             $request->routeIs('platform.secrets.*') => ['addSecrets'],
             $request->routeIs('platform.servers.*') => ['addServers'],
-            $request->routeIs('platform.agencies.*') => ['addAgencies'],
+            $request->routeIs('platform.agencies.*') => ['addAgencies', 'editAgencies', 'deleteAgencies', 'restoreAgencies'],
             $request->routeIs('platform.websites.*') => ['addWebsites'],
             $request->routeIs('platform.providers.*') => ['addProviders'],
             $request->routeIs('platform.tlds.*') => ['addTlds'],

@@ -60,6 +60,33 @@ class AgencyCrudPatternConsistencyTest extends TestCase
         $this->assertStringContainsString('->isAgencyWebsite()', $contents);
     }
 
+    public function test_agency_inertia_form_restores_guided_contact_and_platform_defaults_ui(): void
+    {
+        $path = base_path('modules/Platform/resources/js/components/agencies/agency-form.tsx');
+        $contents = file_get_contents($path);
+
+        $this->assertNotFalse($contents, 'Failed to read modules/Platform/resources/js/components/agencies/agency-form.tsx');
+        $this->assertStringContainsString('CountrySelect', $contents);
+        $this->assertStringContainsString('StateSelect', $contents);
+        $this->assertStringContainsString('CitySelect', $contents);
+        $this->assertStringContainsString('Website ID format preview', $contents);
+        $this->assertStringContainsString('Secret key is generated automatically when an agency website is linked or changed.', $contents);
+        $this->assertStringContainsString('Save the agency first to link its SaaS', $contents);
+        $this->assertStringContainsString('platform website and enable the shared', $contents);
+    }
+
+    public function test_agency_controller_initial_values_include_structured_address_fields_for_inertia_form(): void
+    {
+        $path = base_path('modules/Platform/app/Http/Controllers/AgencyController.php');
+        $contents = file_get_contents($path);
+
+        $this->assertNotFalse($contents, 'Failed to read modules/Platform/app/Http/Controllers/AgencyController.php');
+        $this->assertStringContainsString("'country' => (string) (\$primaryAddress?->country ?? '')", $contents);
+        $this->assertStringContainsString("'state' => (string) (\$primaryAddress?->state ?? '')", $contents);
+        $this->assertStringContainsString("'city_code' => (string) (\$primaryAddress?->city_code ?? '')", $contents);
+        $this->assertStringContainsString("'country_codes' => \$country_codes", $contents);
+    }
+
     public function test_agency_server_controller_prevents_setting_primary_server_when_unattached(): void
     {
         $path = base_path('modules/Platform/app/Http/Controllers/AgencyServerController.php');

@@ -16,7 +16,7 @@ class AgencyAttachDnsProvidersRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'provider_ids' => ['required', 'array'],
+            'provider_ids' => ['present', 'array'],
             'provider_ids.*' => [
                 'integer',
                 'distinct',

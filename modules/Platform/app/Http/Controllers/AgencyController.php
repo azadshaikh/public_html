@@ -107,20 +107,54 @@ class AgencyController extends ScaffoldController implements HasMiddleware
         $agency = $model;
         $agency->loadMissing(['owner', 'websites', 'servers', 'agencyWebsite', 'dnsProviders', 'cdnProviders']);
         $primaryAddress = $agency->getAddressByType('work') ?? $agency->getPrimaryAddress();
+        $planConfig = config('astero.agency_plans.'.(string) $agency->plan, []);
+        $statusConfig = config('platform.agency_statuses.'.(string) $agency->status, []);
+        $websiteCount = $agency->websites()->withTrashed()->count();
+        $serverCount = $agency->servers->count();
+        $dnsProvidersCount = $agency->dnsProviders->count();
+        $cdnProvidersCount = $agency->cdnProviders->count();
+        $websiteLimit = isset($planConfig['websites']) ? (int) $planConfig['websites'] : null;
+        $planUsagePercent = $websiteLimit && $websiteLimit > 0
+            ? (int) round(min(100, ($websiteCount / $websiteLimit) * 100))
+            : null;
 
         return [
             'id' => $agency->getKey(),
             'uid' => $agency->uid,
             'name' => $agency->name,
             'email' => $agency->email,
+            'owner_id' => $agency->owner_id,
             'type' => $agency->type,
+            'type_label' => $agency->type ? str((string) $agency->type)->headline()->toString() : null,
             'plan' => $agency->plan,
+            'plan_label' => $planConfig['label'] ?? ($agency->plan ? str((string) $agency->plan)->headline()->toString() : null),
+            'website_limit' => $websiteLimit,
+            'plan_usage_percent' => $planUsagePercent,
             'status' => $agency->status,
-            'owner_name' => $agency->owner?->first_name,
+            'status_label' => $statusConfig['label'] ?? ($agency->status ? str((string) $agency->status)->headline()->toString() : null),
+            'has_secret_key' => ! empty($agency->secret_key),
+            'is_whitelabel' => $agency->isWhitelabel(),
+            'is_trashed' => $agency->trashed(),
+            'deleted_at' => app_date_time_format($agency->deleted_at, 'datetime'),
+            'owner_name' => $agency->owner?->name ?? $agency->owner?->first_name,
             'owner_email' => $agency->owner?->email,
             'website_id_prefix' => $agency->website_id_prefix,
             'website_id_zero_padding' => $agency->website_id_zero_padding,
             'webhook_url' => $agency->webhook_url,
+            'statistics' => [
+                'websites' => $websiteCount,
+                'servers' => $serverCount,
+                'dnsProviders' => $dnsProvidersCount,
+                'cdnProviders' => $cdnProvidersCount,
+                'providers' => $dnsProvidersCount + $cdnProvidersCount,
+            ],
+            'agency_website' => $agency->agencyWebsite
+                ? [
+                    'id' => $agency->agencyWebsite->getKey(),
+                    'name' => (string) $agency->agencyWebsite->name,
+                    'href' => route('platform.websites.show', $agency->agencyWebsite),
+                ]
+                : null,
             'branding' => [
                 'name' => $agency->getMetadata('branding_name'),
                 'website' => $agency->getMetadata('branding_website'),
@@ -130,7 +164,9 @@ class AgencyController extends ScaffoldController implements HasMiddleware
             'address' => [
                 'address1' => $primaryAddress?->address1,
                 'city' => $primaryAddress?->city,
+                'state' => $primaryAddress?->state,
                 'state_code' => $primaryAddress?->state_code,
+                'country' => $primaryAddress?->country,
                 'country_code' => $primaryAddress?->country_code,
                 'zip' => $primaryAddress?->zip,
                 'phone_code' => $primaryAddress?->phone_code,
@@ -167,25 +203,45 @@ class AgencyController extends ScaffoldController implements HasMiddleware
                 'href' => route('platform.websites.show', $website),
                 'subtitle' => $website->domain,
                 'status' => $website->status instanceof BackedEnum ? $website->status->value : (string) $website->status,
+                'status_label' => $website->status instanceof BackedEnum ? $website->status->label() : str((string) $website->status)->headline()->toString(),
+                'is_primary' => (int) $website->getKey() === (int) ($agency->agency_website_id ?? 0),
             ])->values()->all(),
             'servers' => $agency->servers->map(fn ($server): array => [
                 'id' => $server->getKey(),
                 'name' => $server->name,
                 'href' => route('platform.servers.show', $server),
                 'subtitle' => $server->ip,
+                'type' => $server->type,
+                'type_label' => $server->type_label,
                 'status' => $server->status,
+                'status_label' => $server->status_label,
+                'is_primary' => (bool) ($server->pivot?->is_primary ?? false),
             ])->values()->all(),
             'dnsProviders' => $agency->dnsProviders->map(fn ($provider): array => [
                 'id' => $provider->getKey(),
                 'name' => $provider->name,
+                'href' => route('platform.providers.show', $provider),
                 'subtitle' => $provider->vendor,
+                'vendor' => $provider->vendor,
+                'vendor_label' => $provider->vendor_label,
+                'type' => $provider->type,
+                'type_label' => $provider->type_label,
                 'status' => $provider->status,
+                'status_label' => $provider->status_label,
+                'is_primary' => (bool) ($provider->pivot?->is_primary ?? false),
             ])->values()->all(),
             'cdnProviders' => $agency->cdnProviders->map(fn ($provider): array => [
                 'id' => $provider->getKey(),
                 'name' => $provider->name,
+                'href' => route('platform.providers.show', $provider),
                 'subtitle' => $provider->vendor,
+                'vendor' => $provider->vendor,
+                'vendor_label' => $provider->vendor_label,
+                'type' => $provider->type,
+                'type_label' => $provider->type_label,
                 'status' => $provider->status,
+                'status_label' => $provider->status_label,
+                'is_primary' => (bool) ($provider->pivot?->is_primary ?? false),
             ])->values()->all(),
             'activities' => $activities->map(fn ($activity): array => [
                 'id' => $activity->getKey(),
@@ -217,8 +273,11 @@ class AgencyController extends ScaffoldController implements HasMiddleware
             'webhook_url' => (string) ($agency->webhook_url ?? ''),
             'phone_code' => (string) ($primaryAddress?->phone_code ?? ''),
             'phone' => (string) ($primaryAddress?->phone ?? ''),
+            'country' => (string) ($primaryAddress?->country ?? ''),
             'country_code' => (string) ($primaryAddress?->country_code ?? ''),
+            'state' => (string) ($primaryAddress?->state ?? ''),
             'state_code' => (string) ($primaryAddress?->state_code ?? ''),
+            'city_code' => (string) ($primaryAddress?->city_code ?? ''),
             'city' => (string) ($primaryAddress?->city ?? ''),
             'zip' => (string) ($primaryAddress?->zip ?? ''),
             'address1' => (string) ($primaryAddress?->address1 ?? ''),

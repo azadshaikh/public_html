@@ -1,4 +1,3 @@
-import { useHttp } from '@inertiajs/react';
 import { useEffect, useMemo, useState } from 'react';
 import {
     Combobox,
@@ -34,9 +33,6 @@ export function CitySelect({
 }: CitySelectProps) {
     const [items, setItems] = useState<GeoOption[]>([]);
     const [loadedKey, setLoadedKey] = useState('');
-    const citiesRequest = useHttp<Record<string, never>, { items?: GeoOption[] }>(
-        {},
-    );
     const hasLocationContext = Boolean(stateCode || countryCode);
     const requestKey = useMemo(() => {
         if (!hasLocationContext) {
@@ -52,6 +48,7 @@ export function CitySelect({
         }
 
         let cancelled = false;
+        const controller = new AbortController();
 
         const params = new URLSearchParams();
 
@@ -65,9 +62,22 @@ export function CitySelect({
 
         const url = `${route('app.ajax.geo.cities')}?${params.toString()}`;
 
-        void citiesRequest
-            .get(url)
-            .then((data) => {
+        void fetch(url, {
+            headers: {
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            signal: controller.signal,
+        })
+            .then(async (response) => {
+                if (!response.ok) {
+                    throw new Error('Failed to load cities.');
+                }
+
+                const data = (await response.json()) as {
+                    items?: GeoOption[];
+                };
+
                 if (cancelled) {
                     return;
                 }
@@ -76,7 +86,7 @@ export function CitySelect({
                 setLoadedKey(requestKey);
             })
             .catch(() => {
-                if (cancelled) {
+                if (cancelled || controller.signal.aborted) {
                     return;
                 }
 
@@ -86,18 +96,18 @@ export function CitySelect({
 
         return () => {
             cancelled = true;
-            citiesRequest.cancel();
+            controller.abort();
         };
-    }, [citiesRequest, countryCode, requestKey, stateCode]);
+    }, [countryCode, requestKey, stateCode]);
 
     const loading = Boolean(requestKey) && loadedKey !== requestKey;
     const availableItems = useMemo(() => {
-        if (!requestKey || loadedKey !== requestKey) {
+        if (!requestKey || (loading && loadedKey !== requestKey)) {
             return [];
         }
 
         return items;
-    }, [items, loadedKey, requestKey]);
+    }, [items, loadedKey, loading, requestKey]);
 
     const selectedItem = useMemo(
         () =>

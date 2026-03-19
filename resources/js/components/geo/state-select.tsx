@@ -1,4 +1,3 @@
-import { useHttp } from '@inertiajs/react';
 import { useEffect, useMemo, useState } from 'react';
 import {
     Combobox,
@@ -31,37 +30,60 @@ export function StateSelect({
     'aria-invalid': ariaInvalid,
 }: StateSelectProps) {
     const [items, setItems] = useState<GeoOption[]>([]);
-    const statesRequest = useHttp<Record<string, never>, { items?: GeoOption[] }>(
-        {},
-    );
-    const loading = statesRequest.processing;
+    const [loadedCountryCode, setLoadedCountryCode] = useState('');
 
     useEffect(() => {
         if (!countryCode) {
             return;
         }
 
+        let cancelled = false;
+        const controller = new AbortController();
         const url =
             route('app.ajax.geo.states') +
             `?country_code=${encodeURIComponent(countryCode)}`;
 
-        void statesRequest
-            .get(url)
-            .then((payload) => {
+        void fetch(url, {
+            headers: {
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            signal: controller.signal,
+        })
+            .then(async (response) => {
+                if (!response.ok) {
+                    throw new Error('Failed to load states.');
+                }
+
+                const payload = (await response.json()) as {
+                    items?: GeoOption[];
+                };
+
+                if (cancelled) {
+                    return;
+                }
+
                 setItems(payload.items ?? []);
+                setLoadedCountryCode(countryCode);
             })
             .catch(() => {
+                if (cancelled || controller.signal.aborted) {
+                    return;
+                }
+
                 setItems([]);
+                setLoadedCountryCode(countryCode);
             });
 
         return () => {
-            statesRequest.cancel();
+            cancelled = true;
+            controller.abort();
         };
-    }, [countryCode, statesRequest]);
+    }, [countryCode]);
 
     const availableItems = useMemo(
-        () => (countryCode ? items : []),
-        [countryCode, items],
+        () => (countryCode && loadedCountryCode === countryCode ? items : []),
+        [countryCode, items, loadedCountryCode],
     );
 
     const selectedItem = useMemo(
@@ -73,6 +95,7 @@ export function StateSelect({
         [availableItems, value],
     );
 
+    const loading = Boolean(countryCode) && loadedCountryCode !== countryCode;
     const isDisabled = disabled || loading || !countryCode;
 
     return (

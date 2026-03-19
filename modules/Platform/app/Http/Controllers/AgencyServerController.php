@@ -29,6 +29,12 @@ class AgencyServerController extends Controller
             $servers[] = [
                 'id' => $server->id,
                 'name' => $server->name,
+                'href' => route('platform.servers.show', $server),
+                'subtitle' => $server->ip,
+                'type' => $server->type,
+                'type_label' => $server->type_label,
+                'status' => $server->status,
+                'status_label' => $server->status_label,
                 'is_primary' => (bool) ($server->pivot->is_primary ?? false),
                 'can_remove' => true,
             ];
@@ -145,11 +151,25 @@ class AgencyServerController extends Controller
 
         $availableServers = Server::query()->whereNotIn('id', $agency->servers->pluck('id'))
             ->orderBy('name')
-            ->get(['id', 'name']);
+            ->get(['id', 'name', 'ip', 'type', 'status']);
+
+        $servers = [];
+        foreach ($availableServers as $server) {
+            $servers[] = [
+                'id' => $server->id,
+                'name' => $server->name,
+                'href' => route('platform.servers.show', $server),
+                'subtitle' => $server->ip,
+                'type' => $server->type,
+                'type_label' => $server->type_label,
+                'status' => $server->status,
+                'status_label' => $server->status_label,
+            ];
+        }
 
         return response()->json([
             'success' => true,
-            'servers' => $availableServers,
+            'servers' => $servers,
         ]);
     }
 }
