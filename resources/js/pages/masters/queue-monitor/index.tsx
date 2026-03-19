@@ -1334,7 +1334,7 @@ function ExceptionDialog({
                         {exception}
                     </pre>
                 </ScrollArea>
-                <DialogFooter showCloseButton>
+                <DialogFooter showCloseButton className="mx-0 mb-0 rounded-b-xl">
                     <Button
                         type="button"
                         variant="outline"

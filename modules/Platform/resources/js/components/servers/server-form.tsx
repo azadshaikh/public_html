@@ -132,7 +132,8 @@ export default function ServerForm({
         }
 
         form.clearErrors('ssh_private_key', 'ssh_public_key');
-    }, [form, server.has_ssh_private_key, form.data.ssh_private_key]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [server.has_ssh_private_key, form.data.ssh_private_key]);
 
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();

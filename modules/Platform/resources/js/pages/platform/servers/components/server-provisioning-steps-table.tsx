@@ -326,7 +326,7 @@ export function ServerProvisioningStepsTable({
                         <tbody>
                             {currentSteps.map((step) => (
                                 <tr key={step.key} className="border-b last:border-0">
-                                    <td className="w-64 min-w-64 py-3 pr-4 align-top">
+                                    <td className="w-50 min-w-50 py-3 pr-4 align-top">
                                         <p className="font-medium">{step.title}</p>
                                         {step.description ? (
                                             <p className="text-xs text-muted-foreground">{step.description}</p>
@@ -338,7 +338,9 @@ export function ServerProvisioningStepsTable({
                                             {formatStatusLabel(step.status)}
                                         </Badge>
                                     </td>
-                                    <td className="py-3 pr-4 align-top text-muted-foreground">{step.message ?? ''}</td>
+                                    <td className="py-3 pr-4 align-top text-muted-foreground">
+                                        <pre className="w-[600px] max-w-[600px] max-h-[550px] overflow-auto whitespace-pre-wrap break-words text-sm">{step.message ?? ''}</pre>
+                                    </td>
                                     <td className="py-3 align-top text-center">
                                         <Button
                                             variant="ghost"
