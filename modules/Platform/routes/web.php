@@ -73,6 +73,7 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
             Route::post('/{server}/reprovision', [ServerController::class, 'reprovisionServer'])->name('reprovision')->whereNumber('server');
             Route::post('/{server}/stop-provisioning', [ServerController::class, 'stopProvisioning'])->name('stop-provisioning')->whereNumber('server');
             Route::post('/{server}/provisioning/{step}/execute', [ServerController::class, 'executeProvisioningStep'])->name('execute.step')->whereNumber('server');
+            Route::get('/{server}/provisioning-status', [ServerController::class, 'provisioningStatus'])->name('provisioning-status')->whereNumber('server');
 
             // Secrets (on-demand reveal)
             Route::post('/{server}/secrets/{secret}/reveal', [ServerController::class, 'revealSecret'])
@@ -247,6 +248,7 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
             Route::post('/{website}/scale-queue-worker/{count}', [WebsiteController::class, 'scaleQueueWorker'])->name('scale-queue-worker')->whereNumber('website')->whereNumber('count');
             Route::post('/{website}/remove-from-server', [WebsiteController::class, 'removeFromServer'])->name('remove-from-server')->whereNumber('website');
             Route::post('/{website}/reprovision', [WebsiteController::class, 'reprovision'])->name('reprovision')->whereNumber('website');
+            Route::get('/{website}/provisioning-status', [WebsiteController::class, 'provisioningStatus'])->name('provisioning-status')->whereNumber('website');
 
             Route::post('/{website}/{step}/execute', [WebsiteController::class, 'executeStep'])->name('execute.step')->whereNumber('website');
             Route::post('/{website}/{step}/revert', [WebsiteController::class, 'revertStep'])->name('revert.step')->whereNumber('website');

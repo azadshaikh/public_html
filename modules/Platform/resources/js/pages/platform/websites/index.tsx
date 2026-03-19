@@ -13,6 +13,26 @@ import {
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
 import type { PlatformIndexPageProps, WebsiteListItem } from '../../../types/platform';
 
+function websiteStatusVariant(statusLabel: string, isTrashed?: boolean): 'success' | 'warning' | 'danger' | 'secondary' {
+    if (isTrashed) {
+        return 'danger';
+    }
+
+    switch (statusLabel.toLowerCase()) {
+        case 'active':
+            return 'success';
+        case 'suspended':
+            return 'warning';
+        case 'expired':
+        case 'failed':
+        case 'deleted':
+        case 'trash':
+            return 'danger';
+        default:
+            return 'secondary';
+    }
+}
+
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: route('dashboard') },
     {
@@ -46,8 +66,18 @@ export default function WebsitesIndex({
 
     const columns: DatagridColumn<WebsiteListItem>[] = [
         {
+            key: 'uid',
+            header: 'UID',
+            sortable: true,
+            cell: (website) => (
+                <Badge variant="secondary" className="font-mono text-[0.7rem]">
+                    {website.uid ?? '—'}
+                </Badge>
+            ),
+        },
+        {
             key: 'name',
-            header: 'Website',
+            header: 'Name',
             sortable: true,
             cell: (website) => (
                 <div className="flex flex-col gap-1">
@@ -57,10 +87,7 @@ export default function WebsitesIndex({
                     >
                         {website.name}
                     </Link>
-                    <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                        {website.uid ? <span>{website.uid}</span> : null}
-                        <span>{website.domain}</span>
-                    </div>
+                    <span className="text-xs text-muted-foreground">{website.domain}</span>
                 </div>
             ),
         },
@@ -88,20 +115,10 @@ export default function WebsitesIndex({
             sortable: true,
             sortKey: 'status',
             cell: (website) => (
-                <Badge
-                    variant={website.is_trashed ? 'destructive' : 'secondary'}
-                >
+                <Badge variant={websiteStatusVariant(website.status_label, website.is_trashed)}>
                     {website.status_label}
                 </Badge>
             ),
-        },
-        {
-            key: 'dns_mode_label',
-            header: 'DNS',
-        },
-        {
-            key: 'cdn_status_label',
-            header: 'CDN',
         },
         {
             key: 'created_at',
@@ -114,7 +131,7 @@ export default function WebsitesIndex({
         <AppLayout
             breadcrumbs={breadcrumbs}
             title="Websites"
-            description="Track website provisioning, customer context, and server placement."
+            description="Manage your websites and hosting."
             headerActions={
                 canAddWebsites ? (
                     <Button asChild>
@@ -146,8 +163,8 @@ export default function WebsitesIndex({
                 })}
                 sorting={sorting}
                 perPage={perPage}
-                title="Provisioned websites"
-                description="Monitor deployment status, DNS routing, and customer associations for every site."
+                title="Websites"
+                description="Review hosting placement, customer ownership, and lifecycle state across your sites."
             />
         </AppLayout>
     );

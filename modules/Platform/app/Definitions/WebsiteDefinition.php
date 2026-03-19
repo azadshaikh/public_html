@@ -49,12 +49,11 @@ class WebsiteDefinition extends ScaffoldDefinition
                 ->sortable()
                 ->searchable()
                 ->template('platform_website_name')
-                ->width('320px'),
+                ->width('250px'),
 
             Column::make('customer_name')
                 ->label('Customer')
-                ->sortable('customer_ref')
-                ->width('180px'),
+                ->sortable('customer_ref'),
 
             Column::make('agency_name')
                 ->label('Agency')

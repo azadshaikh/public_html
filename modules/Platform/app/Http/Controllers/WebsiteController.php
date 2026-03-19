@@ -5,6 +5,7 @@ namespace Modules\Platform\Http\Controllers;
 use App\Enums\ActivityAction;
 use App\Models\ActivityLog;
 use App\Scaffold\ScaffoldController;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
@@ -12,9 +13,11 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Number;
 use Inertia\Inertia;
 use Inertia\Response;
 use Modules\Platform\Definitions\WebsiteDefinition;
@@ -140,21 +143,20 @@ class WebsiteController extends ScaffoldController implements HasMiddleware
         $websiteStepsData = $website->getProvisioningStepsForView();
         $websiteStepsConfig = config('platform.website.steps');
         $canRevealSecrets = (bool) auth()->user()?->can('edit_websites');
+        $provisioningSteps = collect($websiteStepsConfig)
+            ->map(function ($config, $key) use ($websiteStepsData): array {
+                $stepData = $websiteStepsData->get($key);
 
-        // Check for JSON request (polling)
-        if (request()->wantsJson() || request()->boolean('json')) {
-            // Calculate percentage
-            $totalSteps = count($websiteStepsConfig);
-            $completedSteps = $websiteStepsData->where('status', 'done')->count();
-            $percentage = $totalSteps > 0 ? round($completedSteps / $totalSteps * 100) : 0;
-
-            return response()->json([
-                'status' => 'success',
-                'website_steps_data' => $websiteStepsData,
-                'percentage' => $percentage,
-                'current_status' => $website->status, // To check if we need to reload page
-            ]);
-        }
+                return [
+                    'key' => (string) $key,
+                    'title' => $config['title'] ?? str((string) $key)->headline()->toString(),
+                    'description' => $config['description'] ?? null,
+                    'status' => (string) data_get($stepData, 'status', 'pending'),
+                    'message' => data_get($stepData, 'meta_value', data_get($stepData, 'message')),
+                ];
+            })
+            ->values()
+            ->all();
 
         return Inertia::render($this->inertiaPage().'/show', [
             'website' => $this->transformWebsiteForShow($website),
@@ -163,19 +165,11 @@ class WebsiteController extends ScaffoldController implements HasMiddleware
                     'id' => $secret->getKey(),
                     'key' => (string) $secret->key,
                     'label' => str($secret->key)->replace('_', ' ')->headline()->toString(),
+                    'username' => $secret->username,
                 ])
                 ->values()
                 ->all(),
-            'provisioningSteps' => collect($websiteStepsConfig)
-                ->map(fn ($config, $key): array => [
-                    'key' => (string) $key,
-                    'title' => $config['title'] ?? str((string) $key)->headline()->toString(),
-                    'description' => $config['description'] ?? null,
-                    'status' => $websiteStepsData->get($key)['status'] ?? 'pending',
-                    'message' => $websiteStepsData->get($key)['message'] ?? null,
-                ])
-                ->values()
-                ->all(),
+            'provisioningSteps' => $provisioningSteps,
             'updates' => collect($website->getUpdateHistoryForView())
                 ->map(function ($value, $key): array {
                     if (is_array($value)) {
@@ -199,6 +193,56 @@ class WebsiteController extends ScaffoldController implements HasMiddleware
             'pullzoneId' => $website->pullzone_id,
             'canRevealSecrets' => $canRevealSecrets,
         ]);
+    }
+
+    public function provisioningStatus(int|string $website): JsonResponse
+    {
+        $websiteModel = Website::withTrashed()->findOrFail((int) $website);
+
+        return response()->json($this->buildProvisioningStatusPayload($websiteModel));
+    }
+
+    /**
+     * @return array{
+     *     status: string,
+     *     website_steps_data: Collection,
+     *     provisioning_steps: array<int, array<string, mixed>>,
+     *     percentage: float|int,
+     *     current_status: string|null
+     * }
+     */
+    private function buildProvisioningStatusPayload(Website $website): array
+    {
+        $websiteStepsData = $website->getProvisioningStepsForView();
+        $websiteStepsConfig = config('platform.website.steps');
+        $provisioningSteps = collect($websiteStepsConfig)
+            ->map(function ($config, $key) use ($websiteStepsData): array {
+                $stepData = $websiteStepsData->get($key);
+
+                return [
+                    'key' => (string) $key,
+                    'title' => $config['title'] ?? str((string) $key)->headline()->toString(),
+                    'description' => $config['description'] ?? null,
+                    'status' => (string) data_get($stepData, 'status', 'pending'),
+                    'message' => data_get($stepData, 'meta_value', data_get($stepData, 'message')),
+                ];
+            })
+            ->values()
+            ->all();
+
+        $totalSteps = count($websiteStepsConfig);
+        $completedSteps = $websiteStepsData
+            ->filter(fn ($step): bool => (string) data_get($step, 'status', 'pending') === 'done')
+            ->count();
+        $percentage = $totalSteps > 0 ? round($completedSteps / $totalSteps * 100) : 0;
+
+        return [
+            'status' => 'success',
+            'website_steps_data' => $websiteStepsData,
+            'provisioning_steps' => $provisioningSteps,
+            'percentage' => $percentage,
+            'current_status' => $website->status instanceof WebsiteStatus ? $website->status->value : $website->status,
+        ];
     }
 
     // =============================================================================
@@ -906,9 +950,14 @@ class WebsiteController extends ScaffoldController implements HasMiddleware
 
     private function transformWebsiteForShow(Website $website): array
     {
-        $website->loadMissing(['server', 'agency']);
+        $website->loadMissing(['server', 'agency', 'providers']);
 
         $status = $website->status instanceof WebsiteStatus ? $website->status : WebsiteStatus::tryFrom((string) $website->status);
+        $diskUsageBytes = (int) $website->getMetadata('disk_usage_bytes', 0);
+        $lastSyncedAt = $website->getMetadata('last_synced_at');
+        $queueWorkerRunning = (int) $website->getMetadata('queue_worker_running_count', 0);
+        $queueWorkerTotal = (int) $website->getMetadata('queue_worker_total_count', 0);
+        $customerInfo = $website->customer_info;
 
         return [
             'id' => $website->getKey(),
@@ -921,13 +970,9 @@ class WebsiteController extends ScaffoldController implements HasMiddleware
             'status' => $status?->value ?? (string) $website->status,
             'status_label' => $status?->label() ?? ucfirst((string) $website->status),
             'dns_mode' => $website->dns_mode,
-            'server_name' => $website->server?->name,
-            'agency_name' => $website->agency?->name,
             'astero_version' => $website->astero_version,
             'admin_slug' => $website->admin_slug,
             'media_slug' => $website->media_slug,
-            'queue_worker_status' => $website->getMetadata('queue_worker_status'),
-            'cron_status' => $website->getMetadata('cron_status'),
             'is_www' => (bool) ($website->is_www ?? false),
             'is_agency' => (bool) ($website->is_agency ?? false),
             'skip_cdn' => (bool) ($website->skip_cdn ?? false),
@@ -935,8 +980,33 @@ class WebsiteController extends ScaffoldController implements HasMiddleware
             'skip_ssl_issue' => (bool) ($website->skip_ssl_issue ?? false),
             'skip_email' => (bool) ($website->skip_email ?? false),
             'created_at' => app_date_time_format($website->created_at, 'datetime'),
-            'updated_at' => app_date_time_format($website->updated_at, 'datetime'),
-            'expired_on' => $website->expired_on?->format('Y-m-d'),
+            'updated_at' => $website->updated_at ? $website->updated_at->diffForHumans() : null,
+            'expired_on' => $website->expired_on?->format('M d, Y'),
+            'is_trashed' => ! empty($website->deleted_at),
+            'has_update' => $website->hasUpdateAvailable(),
+            'server_version' => $website->server?->astero_version,
+            'niches' => $website->getNichesLabels(),
+
+            // Infrastructure
+            'server_id' => $website->server_id,
+            'server_name' => $website->server?->name ?? $website->server?->fqdn,
+            'server_ip' => $website->server?->ip,
+            'server_fqdn' => $website->server?->fqdn,
+            'dns_provider_name' => $website->dnsProvider?->name,
+            'cdn_provider_name' => $website->cdnProvider?->name,
+
+            // Ownership
+            'agency_id' => $website->agency_id,
+            'agency_name' => $website->agency?->name,
+            'customer_name' => $customerInfo['name'] ?? $customerInfo['email'] ?? $customerInfo['ref'] ?? null,
+
+            // Runtime
+            'disk_usage' => $diskUsageBytes > 0 ? Number::fileSize($diskUsageBytes, precision: 2) : null,
+            'last_synced_at' => $lastSyncedAt ? Carbon::parse($lastSyncedAt)->diffForHumans() : null,
+            'queue_worker_status' => $website->getMetadata('queue_worker_status'),
+            'queue_worker_running' => $queueWorkerRunning,
+            'queue_worker_total' => $queueWorkerTotal,
+            'cron_status' => $website->getMetadata('cron_status'),
         ];
     }
 

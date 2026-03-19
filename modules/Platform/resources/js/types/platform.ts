@@ -122,11 +122,14 @@ export type ServerListItem = {
     uid: string | null;
     name: string;
     ip: string;
+    type?: string | null;
+    status?: string | null;
     provider_name: string;
     type_label: string;
     status_label: string;
     domain_usage_current: number;
     domain_usage_max: number | null;
+    domain_usage_percent?: number | null;
     created_at: string | null;
     actions?: Record<string, PlatformActionPayload>;
     is_trashed?: boolean;
@@ -141,6 +144,10 @@ export type ServerFormValues = {
     provider_id: string;
     monitor: boolean;
     status: string;
+    location_country_code: string;
+    location_country: string;
+    location_city_code: string;
+    location_city: string;
     port: string;
     access_key_id: string;
     access_key_secret: string;
@@ -150,6 +157,13 @@ export type ServerFormValues = {
     ssh_user: string;
     ssh_public_key: string;
     ssh_private_key: string;
+    server_cpu: string;
+    server_ccore: string;
+    server_ram: string;
+    server_storage: string;
+    server_os: string;
+    astero_version: string;
+    hestia_version: string;
     release_zip_url: string;
     install_port: string;
     install_lang: string;
@@ -189,6 +203,20 @@ export type ServerSecretItem = {
     id: number;
     key: string;
     label: string;
+    username: string | null;
+};
+
+export type ServerAgencyItem = {
+    id: number;
+    name: string;
+    status: string | null;
+    is_primary: boolean;
+};
+
+export type ServerMetadataItem = {
+    key: string;
+    label: string;
+    value: string;
 };
 
 export type ServerShowData = {
@@ -202,17 +230,31 @@ export type ServerShowData = {
     status: string | null;
     status_label: string | null;
     provisioning_status: string | null;
+    provider_id: number | null;
     provider_name: string | null;
+    location_label: string | null;
     port: number | null;
     ssh_port: number | null;
     ssh_user: string | null;
+    access_key_id: string | null;
+    has_access_key_secret: boolean;
+    has_ssh_credentials: boolean;
     current_domains: number;
     max_domains: number | null;
     creation_mode: string;
+    server_ccore: number | null;
+    server_ram: number | null;
+    server_storage: number | null;
+    server_ram_used: number | null;
+    server_storage_used: number | null;
     astero_version: string | null;
     hestia_version: string | null;
     server_os: string | null;
     server_uptime: string | null;
+    last_synced_at: string | null;
+    acme_configured: boolean;
+    acme_email: string | null;
+    is_trashed: boolean;
     created_at: string | null;
     updated_at: string | null;
 };
@@ -222,13 +264,14 @@ export type WebsiteListItem = {
     uid: string | null;
     name: string;
     domain: string;
-    customer_name: string;
+    type: string | null; // Added type
+    status: string | null; // Added status
     agency_name: string;
     server_name: string;
     status_label: string;
     dns_mode_label: string;
     cdn_status_label: string;
-    created_at: string | null;
+    domain_usage_percent?: number | null; // Optional domain usage percent
     domain_url?: string | null;
     actions?: Record<string, PlatformActionPayload>;
     is_trashed?: boolean;
@@ -277,6 +320,7 @@ export type WebsiteSecretItem = {
     id: number;
     key: string;
     label: string;
+    username: string | null;
 };
 
 export type WebsiteShowData = {
@@ -290,13 +334,9 @@ export type WebsiteShowData = {
     status: string | null;
     status_label: string | null;
     dns_mode: string | null;
-    server_name: string | null;
-    agency_name: string | null;
     astero_version: string | null;
     admin_slug: string | null;
     media_slug: string | null;
-    queue_worker_status: string | null;
-    cron_status: string | null;
     is_www: boolean;
     is_agency: boolean;
     skip_cdn: boolean;
@@ -306,6 +346,31 @@ export type WebsiteShowData = {
     created_at: string | null;
     updated_at: string | null;
     expired_on: string | null;
+    is_trashed: boolean;
+    has_update: boolean;
+    server_version: string | null;
+    niches: string[];
+
+    // Infrastructure
+    server_id: number | null;
+    server_name: string | null;
+    server_ip: string | null;
+    server_fqdn: string | null;
+    dns_provider_name: string | null;
+    cdn_provider_name: string | null;
+
+    // Ownership
+    agency_id: number | null;
+    agency_name: string | null;
+    customer_name: string | null;
+
+    // Runtime
+    disk_usage: string | null;
+    last_synced_at: string | null;
+    queue_worker_status: string | null;
+    queue_worker_running: number;
+    queue_worker_total: number;
+    cron_status: string | null;
 };
 
 export type DomainListItem = {

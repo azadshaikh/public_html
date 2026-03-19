@@ -40,14 +40,14 @@ class ServerDefinition extends ScaffoldDefinition
                 ->sortable()
                 ->searchable()
                 ->template('platform_uid')
-                ->width('120px'),
+                ->width('90px'),
 
             Column::make('name')
                 ->label('Server')
                 ->sortable()
                 ->searchable()
                 ->link('show_url')
-                ->width('240px'),
+                ->width('250px'),
 
             Column::make('ip')
                 ->label('IP')
@@ -63,13 +63,13 @@ class ServerDefinition extends ScaffoldDefinition
             Column::make('provider_name')
                 ->label('Provider')
                 ->sortable()
-                ->width('180px'),
+                ->width('150px'),
 
             Column::make('domain_usage')
                 ->label('Domains')
                 ->template('platform_domain_usage')
                 ->sortable('current_domains')
-                ->width('150px'),
+                ->width('120px'),
 
             Column::make('status')
                 ->label('Status')
@@ -80,7 +80,7 @@ class ServerDefinition extends ScaffoldDefinition
             Column::make('created_at')
                 ->label('Created')
                 ->sortable()
-                ->width('120px'),
+                ->width('110px'),
 
             Column::make('_actions')->label('Actions')->template('actions')->excludeFromExport()->width('90px'),
         ];

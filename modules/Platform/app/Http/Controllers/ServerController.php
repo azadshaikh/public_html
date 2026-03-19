@@ -185,41 +185,8 @@ class ServerController extends ScaffoldController implements HasMiddleware
     {
         /** @var Server $server */
         $server = $this->findModel((int) $id);
-        $server->load(['providers']);
-
-        // Get provisioning steps data
-        $provisioningSteps = $this->getProvisioningStepsConfig();
-        $provisioningStepsData = $server->getMetadata('provisioning_steps') ?? [];
-
-        $creationMode = (string) ($server->getMetadata('creation_mode') ?? 'manual');
-        $isProvisionModeServer = $creationMode === 'provision'
-            || in_array((string) $server->provisioning_status, [
-                Server::PROVISIONING_STATUS_PENDING,
-                Server::PROVISIONING_STATUS_PROVISIONING,
-                Server::PROVISIONING_STATUS_FAILED,
-            ], true)
-            || ! empty($provisioningStepsData);
-
-        // Initialize provisioning steps only for provision-mode servers.
-        if ($isProvisionModeServer && empty($provisioningStepsData) && $server->hasSshCredentials()) {
-            $provisioningStepsData = $this->initializeProvisioningSteps($server, $provisioningSteps);
-        }
-
-        // Calculate progress
-        $totalSteps = count($provisioningSteps);
-        $completedSteps = collect($provisioningStepsData)->where('status', 'completed')->count();
-        $skippedSteps = collect($provisioningStepsData)->where('status', 'skipped')->count();
-        $progressPercent = $totalSteps > 0 ? round(($completedSteps + $skippedSteps) / $totalSteps * 100) : 0;
-
-        // Check for JSON request (polling)
-        if (request()->wantsJson() || request()->boolean('json')) {
-            return response()->json([
-                'status' => 'success',
-                'provisioning_status' => $server->provisioning_status,
-                'provisioning_steps' => $provisioningStepsData,
-                'progress_percent' => $progressPercent,
-            ]);
-        }
+        $server->load(['providers', 'agencies']);
+        $provisioningPayload = $this->buildProvisioningStatusPayload($server);
 
         $websiteCounts = Website::query()
             ->where('server_id', $server->id)
@@ -257,6 +224,13 @@ class ServerController extends ScaffoldController implements HasMiddleware
                 'id' => $secret->getKey(),
                 'key' => (string) $secret->key,
                 'label' => str($secret->key)->replace('_', ' ')->headline()->toString(),
+                'username' => $secret->username,
+            ])->values()->all(),
+            'agencies' => $server->agencies->map(fn ($agency): array => [
+                'id' => $agency->getKey(),
+                'name' => (string) $agency->name,
+                'status' => $agency->status,
+                'is_primary' => (bool) ($agency->pivot?->is_primary ?? false),
             ])->values()->all(),
             'websiteCounts' => [
                 'total' => $websiteTotal,
@@ -264,20 +238,19 @@ class ServerController extends ScaffoldController implements HasMiddleware
                 'inactive' => ($websiteCounts['inactive'] ?? 0) + ($websiteCounts['failed'] ?? 0),
                 'provisioning' => $websiteCounts[WebsiteStatus::Provisioning->value] ?? 0,
             ],
-            'provisioningSteps' => collect($provisioningSteps)
-                ->map(fn (array $config, string $key): array => [
-                    'key' => $key,
-                    'title' => $config['title'],
-                    'description' => $config['description'],
-                    'status' => $provisioningStepsData[$key]['status'] ?? 'pending',
-                    'message' => $provisioningStepsData[$key]['message'] ?? null,
-                ])
-                ->values()
-                ->all(),
-            'progressPercent' => $progressPercent,
+            'provisioningSteps' => $provisioningPayload['provisioning_steps'],
+            'metadataItems' => $this->buildServerMetadataItems($server),
             'canRevealSecrets' => $canRevealSecrets,
             'canRevealSshKeyPair' => $canRevealSshKeyPair,
         ]);
+    }
+
+    public function provisioningStatus(int|string $server): JsonResponse
+    {
+        /** @var Server $serverModel */
+        $serverModel = $this->findModel((int) $server);
+
+        return response()->json($this->buildProvisioningStatusPayload($serverModel));
     }
 
     public function websites(Request $request, int|string $id): JsonResponse
@@ -1105,12 +1078,17 @@ class ServerController extends ScaffoldController implements HasMiddleware
     {
         /** @var Server $server */
         $server = $model;
+        $sshKeyService = resolve(SSHKeyService::class);
+        $sshPublicKey = (string) ($server->ssh_public_key ?? '');
 
         return [
             'initialValues' => $this->buildServerInitialValues($server),
             'typeOptions' => $this->serverService->getTypeOptionsForForm(),
             'providerOptions' => $this->serverService->getProviderOptionsForForm(),
             'statusOptions' => $this->serverService->getStatusOptionsForForm(),
+            'sshCommand' => $sshPublicKey !== ''
+                ? $sshKeyService->generateAuthorizedKeysCommand($sshPublicKey, SSHKeyService::DEFAULT_KEY_COMMENT)
+                : null,
         ];
     }
 
@@ -1123,6 +1101,8 @@ class ServerController extends ScaffoldController implements HasMiddleware
             'id' => $server->getKey(),
             'name' => $server->name,
             'provisioning_status' => $server->provisioning_status,
+            'has_ssh_credentials' => $server->hasSshCredentials(),
+            'has_ssh_private_key' => $server->hasSshPrivateKey(),
         ];
     }
 
@@ -1198,6 +1178,7 @@ class ServerController extends ScaffoldController implements HasMiddleware
 
         $installOptions = $server->getMetadata('install_options', []);
         $creationMode = (string) ($server->getMetadata('creation_mode') ?? ($server->exists ? 'manual' : 'provision'));
+        $metadataValue = static fn (string $key): mixed => $server->getMetadata($key);
 
         return [
             'creation_mode' => in_array($creationMode, ['manual', 'provision'], true) ? $creationMode : 'manual',
@@ -1208,6 +1189,10 @@ class ServerController extends ScaffoldController implements HasMiddleware
             'provider_id' => $provider ? (string) $provider->getKey() : '',
             'monitor' => (bool) ($server->monitor ?? false),
             'status' => (string) ($server->status ?? 'active'),
+            'location_country_code' => (string) ($server->location_country_code ?? $metadataValue('location_country_code') ?? ''),
+            'location_country' => (string) ($server->location_country ?? $metadataValue('location_country') ?? ''),
+            'location_city_code' => (string) ($server->location_city_code ?? $metadataValue('location_city_code') ?? ''),
+            'location_city' => (string) ($server->location_city ?? $metadataValue('location_city') ?? ''),
             'port' => $server->port !== null ? (string) $server->port : '8443',
             'access_key_id' => (string) ($server->access_key_id ?? ''),
             'access_key_secret' => '',
@@ -1217,6 +1202,13 @@ class ServerController extends ScaffoldController implements HasMiddleware
             'ssh_user' => (string) ($server->ssh_user ?? 'root'),
             'ssh_public_key' => (string) ($server->ssh_public_key ?? $sshPublicKey ?? ''),
             'ssh_private_key' => (string) ($sshPrivateKey ?? ''),
+            'server_cpu' => (string) ($server->server_cpu ?? $metadataValue('server_cpu') ?? ''),
+            'server_ccore' => (string) ($server->server_ccore ?? $metadataValue('server_ccore') ?? ''),
+            'server_ram' => (string) ($server->server_ram ?? $metadataValue('server_ram') ?? ''),
+            'server_storage' => (string) ($server->server_storage ?? $metadataValue('server_storage') ?? ''),
+            'server_os' => (string) ($server->server_os ?? $metadataValue('server_os') ?? ''),
+            'astero_version' => (string) ($server->astero_version ?? $metadataValue('astero_version') ?? ''),
+            'hestia_version' => (string) ($server->hestia_version ?? $metadataValue('hestia_version') ?? ''),
             'release_zip_url' => (string) ($server->getMetadata('release_zip_url') ?? ''),
             'install_port' => (string) ($installOptions['port'] ?? '8443'),
             'install_lang' => (string) ($installOptions['lang'] ?? 'en'),
@@ -1251,6 +1243,8 @@ class ServerController extends ScaffoldController implements HasMiddleware
             ? ($server->serverProviders->firstWhere('pivot.is_primary', true) ?? $server->serverProviders->first())
             : $server->provider;
 
+        $lastSyncedAt = $server->getMetadata('last_synced_at');
+
         return [
             'id' => $server->getKey(),
             'uid' => $server->uid,
@@ -1262,20 +1256,115 @@ class ServerController extends ScaffoldController implements HasMiddleware
             'status' => $server->status,
             'status_label' => $server->status_label,
             'provisioning_status' => $server->provisioning_status,
+            'provider_id' => $provider?->getKey(),
             'provider_name' => $provider?->name,
+            'location_label' => $server->location_label,
             'port' => $server->port,
             'ssh_port' => $server->ssh_port,
             'ssh_user' => $server->ssh_user,
+            'access_key_id' => $server->access_key_id,
+            'has_access_key_secret' => ! empty($server->access_key_secret),
+            'has_ssh_credentials' => $server->hasSshCredentials(),
             'current_domains' => (int) ($server->current_domains ?? 0),
             'max_domains' => $server->max_domains,
             'creation_mode' => (string) ($server->getMetadata('creation_mode') ?? 'manual'),
+            'server_ccore' => $server->server_ccore,
+            'server_ram' => $server->server_ram,
+            'server_storage' => $server->server_storage,
+            'server_ram_used' => $server->getMetadata('server_ram_used'),
+            'server_storage_used' => $server->getMetadata('server_storage_used'),
             'astero_version' => $server->astero_version,
             'hestia_version' => $server->hestia_version,
             'server_os' => $server->server_os,
             'server_uptime' => $server->server_uptime,
+            'last_synced_at' => $lastSyncedAt ? app_date_time_format($lastSyncedAt, 'datetime') : null,
+            'acme_configured' => (bool) $server->acme_configured,
+            'acme_email' => $server->acme_email,
+            'is_trashed' => method_exists($server, 'trashed') ? (bool) $server->trashed() : false,
             'created_at' => app_date_time_format($server->created_at, 'datetime'),
             'updated_at' => app_date_time_format($server->updated_at, 'datetime'),
         ];
+    }
+
+    /**
+     * @return array{
+     *     status: string,
+     *     current_status: string|null,
+     *     provisioning_steps: array<int, array<string, mixed>>,
+     *     progress_percent: float|int
+     * }
+     */
+    private function buildProvisioningStatusPayload(Server $server): array
+    {
+        $provisioningSteps = $this->getProvisioningStepsConfig();
+        $provisioningStepsData = $server->getMetadata('provisioning_steps') ?? [];
+
+        $creationMode = (string) ($server->getMetadata('creation_mode') ?? 'manual');
+        $isProvisionModeServer = $creationMode === 'provision'
+            || in_array((string) $server->provisioning_status, [
+                Server::PROVISIONING_STATUS_PENDING,
+                Server::PROVISIONING_STATUS_PROVISIONING,
+                Server::PROVISIONING_STATUS_FAILED,
+            ], true)
+            || ! empty($provisioningStepsData);
+
+        if ($isProvisionModeServer && empty($provisioningStepsData) && $server->hasSshCredentials()) {
+            $provisioningStepsData = $this->initializeProvisioningSteps($server, $provisioningSteps);
+        }
+
+        $normalizedSteps = collect($provisioningSteps)
+            ->map(function (array $config, string $key) use ($provisioningStepsData): array {
+                $stepData = $provisioningStepsData[$key] ?? [];
+                $rawStatus = (string) ($stepData['status'] ?? 'pending');
+                $status = match ($rawStatus) {
+                    'completed', 'skipped' => 'done',
+                    'running' => 'provisioning',
+                    default => $rawStatus,
+                };
+                $message = $stepData['message']
+                    ?? data_get($stepData, 'data.message')
+                    ?? data_get($stepData, 'data.error')
+                    ?? data_get($stepData, 'data.output_tail')
+                    ?? data_get($stepData, 'data.log_tail');
+
+                return [
+                    'key' => $key,
+                    'title' => $config['title'],
+                    'description' => $config['description'],
+                    'status' => $status,
+                    'message' => is_string($message) ? $message : null,
+                ];
+            })
+            ->values()
+            ->all();
+
+        $totalSteps = count($provisioningSteps);
+        $completedSteps = collect($normalizedSteps)->where('status', 'done')->count();
+        $progressPercent = $totalSteps > 0 ? round($completedSteps / $totalSteps * 100) : 0;
+
+        return [
+            'status' => 'success',
+            'current_status' => $server->provisioning_status,
+            'provisioning_steps' => $normalizedSteps,
+            'progress_percent' => $progressPercent,
+        ];
+    }
+
+    /**
+     * @return array<int, array{key: string, label: string, value: string}>
+     */
+    private function buildServerMetadataItems(Server $server): array
+    {
+        return collect([
+            ['key' => 'creation_mode', 'label' => 'Creation Mode', 'value' => (string) ($server->getMetadata('creation_mode') ?? 'manual')],
+            ['key' => 'provisioning_status', 'label' => 'Provisioning Status', 'value' => (string) ($server->provisioning_status ?? 'unknown')],
+            ['key' => 'last_synced_at', 'label' => 'Last Synced', 'value' => (string) ($server->getMetadata('last_synced_at') ? app_date_time_format($server->getMetadata('last_synced_at'), 'datetime') : 'Never')],
+            ['key' => 'access_key_id', 'label' => 'Access Key ID', 'value' => (string) ($server->access_key_id ?? '—')],
+            ['key' => 'ssh_user', 'label' => 'SSH User', 'value' => (string) ($server->ssh_user ?? '—')],
+            ['key' => 'ssh_port', 'label' => 'SSH Port', 'value' => (string) ($server->ssh_port ?? '—')],
+            ['key' => 'hestia_port', 'label' => 'Hestia Port', 'value' => (string) ($server->port ?? '—')],
+            ['key' => 'acme_email', 'label' => 'ACME Email', 'value' => (string) ($server->acme_email ?? '—')],
+        ])->values()->all();
     }
 
     /**

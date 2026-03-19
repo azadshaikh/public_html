@@ -1,3 +1,6 @@
+import { Link } from '@inertiajs/react';
+import { ArrowLeftIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import WebsiteForm from '../../../components/websites/website-form';
@@ -38,8 +41,16 @@ export default function WebsitesCreate(props: WebsitesCreatePageProps) {
     return (
         <AppLayout
             breadcrumbs={breadcrumbs}
-            title="Create website"
-            description="Add a provisioned website and assign its infrastructure, agency, and provider routing."
+            title="Add website"
+            description="Set up a new website, assign its infrastructure, and configure provisioning options before launch."
+            headerActions={
+                <Button asChild variant="outline">
+                    <Link href={route('platform.websites.index', { status: 'all' })}>
+                        <ArrowLeftIcon data-icon="inline-start" />
+                        Back
+                    </Link>
+                </Button>
+            }
         >
             <WebsiteForm
                 mode="create"

@@ -7,11 +7,13 @@ import {
     Card,
     CardContent,
     CardDescription,
+    CardFooter,
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
 import {
     Field,
+    FieldContent,
     FieldDescription,
     FieldError,
     FieldGroup,
@@ -51,6 +53,105 @@ type WebsiteFormProps = {
     } | null;
 };
 
+type SelectFieldProps = {
+    label: string;
+    placeholder: string;
+    value: string;
+    options: PlatformOption[];
+    error?: string;
+    invalid: boolean;
+    onChange: (value: string) => void;
+    noneOptionLabel?: string;
+};
+
+const optionFields = [
+    {
+        field: 'is_agency',
+        label: 'Is agency website?',
+        description: "Enable if this is the agency's SaaS platform website.",
+    },
+    {
+        field: 'is_www',
+        label: 'Use WWW?',
+        description: 'Enable to use the www subdomain as primary.',
+    },
+    {
+        field: 'skip_cdn',
+        label: 'Skip CDN setup?',
+        description: 'Enable if CDN has already been configured manually.',
+    },
+    {
+        field: 'skip_dns',
+        label: 'Skip DNS setup?',
+        description: 'Enable if DNS has already been configured manually.',
+    },
+    {
+        field: 'skip_ssl_issue',
+        label: 'Skip ACME SSL issuance?',
+        description:
+            'Enable for local or LAN sites. The platform will reuse an available certificate or generate a self-signed certificate when needed.',
+    },
+    {
+        field: 'skip_email',
+        label: 'Skip email setup?',
+        description: 'Disable mailbox setup during initial provisioning.',
+    },
+] as const;
+
+function SelectField({
+    label,
+    placeholder,
+    value,
+    options,
+    error,
+    invalid,
+    onChange,
+    noneOptionLabel,
+}: SelectFieldProps) {
+    const selectValue = value || (noneOptionLabel ? '__none__' : undefined);
+
+    return (
+        <Field data-invalid={invalid || undefined}>
+            <FieldLabel>{label}</FieldLabel>
+            <Select
+                value={selectValue}
+                onValueChange={(nextValue) =>
+                    onChange(
+                        noneOptionLabel && nextValue === '__none__'
+                            ? ''
+                            : nextValue,
+                    )
+                }
+            >
+                <SelectTrigger
+                    className="w-full"
+                    aria-invalid={invalid || undefined}
+                >
+                    <SelectValue placeholder={placeholder} />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectGroup>
+                        {noneOptionLabel ? (
+                            <SelectItem value="__none__">
+                                {noneOptionLabel}
+                            </SelectItem>
+                        ) : null}
+                        {options.map((option) => (
+                            <SelectItem
+                                key={String(option.value)}
+                                value={String(option.value)}
+                            >
+                                {option.label}
+                            </SelectItem>
+                        ))}
+                    </SelectGroup>
+                </SelectContent>
+            </Select>
+            <FieldError>{error}</FieldError>
+        </Field>
+    );
+}
+
 export default function WebsiteForm({
     mode,
     website,
@@ -78,6 +179,11 @@ export default function WebsiteForm({
             ? route('platform.websites.store')
             : route('platform.websites.update', website!.id);
 
+    const cancelUrl =
+        mode === 'create'
+            ? route('platform.websites.index', { status: 'all' })
+            : route('platform.websites.show', website!.id);
+
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
@@ -93,7 +199,7 @@ export default function WebsiteForm({
 
     return (
         <form
-            className="flex flex-col gap-6"
+            className="mx-auto flex w-full max-w-6xl flex-col gap-6"
             onSubmit={handleSubmit}
             noValidate
         >
@@ -101,7 +207,7 @@ export default function WebsiteForm({
             <FormErrorSummary errors={form.errors} minMessages={2} />
 
             {order ? (
-                <Card>
+                <Card size="sm">
                     <CardHeader>
                         <CardTitle>Order context</CardTitle>
                         <CardDescription>
@@ -112,14 +218,14 @@ export default function WebsiteForm({
                 </Card>
             ) : null}
 
-            <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+            <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
                 <div className="flex flex-col gap-6">
                     <Card>
                         <CardHeader>
-                            <CardTitle>Website profile</CardTitle>
+                            <CardTitle>Website information</CardTitle>
                             <CardDescription>
-                                Define the domain, provisioning target, and
-                                ownership context for the site.
+                                Define the domain, plan, and infrastructure
+                                routing for this website.
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
@@ -136,6 +242,7 @@ export default function WebsiteForm({
                                         <Input
                                             id="name"
                                             value={form.data.name}
+                                            placeholder="My Business Website"
                                             onChange={(event) =>
                                                 form.setField(
                                                     'name',
@@ -148,6 +255,10 @@ export default function WebsiteForm({
                                                 undefined
                                             }
                                         />
+                                        <FieldDescription>
+                                            Internal label used across the
+                                            platform and operations views.
+                                        </FieldDescription>
                                         <FieldError>
                                             {form.error('name')}
                                         </FieldError>
@@ -164,6 +275,7 @@ export default function WebsiteForm({
                                         <Input
                                             id="domain"
                                             value={form.data.domain}
+                                            placeholder="example.com"
                                             onChange={(event) =>
                                                 form.setField(
                                                     'domain',
@@ -175,8 +287,11 @@ export default function WebsiteForm({
                                                 form.invalid('domain') ||
                                                 undefined
                                             }
-                                            placeholder="example.com"
                                         />
+                                        <FieldDescription>
+                                            Primary domain that will be
+                                            provisioned for the site.
+                                        </FieldDescription>
                                         <FieldError>
                                             {form.error('domain')}
                                         </FieldError>
@@ -184,286 +299,92 @@ export default function WebsiteForm({
                                 </div>
 
                                 <div className="grid gap-4 md:grid-cols-2">
-                                    <Field
-                                        data-invalid={
-                                            form.invalid('type') || undefined
+                                    <SelectField
+                                        label="Website type"
+                                        placeholder="Select type"
+                                        value={form.data.type}
+                                        options={typeOptions}
+                                        error={form.error('type')}
+                                        invalid={form.invalid('type')}
+                                        onChange={(value) =>
+                                            form.setField('type', value)
                                         }
-                                    >
-                                        <FieldLabel>Website type</FieldLabel>
-                                        <Select
-                                            value={form.data.type || undefined}
-                                            onValueChange={(value) =>
-                                                form.setField('type', value)
-                                            }
-                                        >
-                                            <SelectTrigger
-                                                className="w-full"
-                                                aria-invalid={
-                                                    form.invalid('type') ||
-                                                    undefined
-                                                }
-                                            >
-                                                <SelectValue placeholder="Select type" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectGroup>
-                                                    {typeOptions.map(
-                                                        (option) => (
-                                                            <SelectItem
-                                                                key={String(
-                                                                    option.value,
-                                                                )}
-                                                                value={String(
-                                                                    option.value,
-                                                                )}
-                                                            >
-                                                                {option.label}
-                                                            </SelectItem>
-                                                        ),
-                                                    )}
-                                                </SelectGroup>
-                                            </SelectContent>
-                                        </Select>
-                                        <FieldError>
-                                            {form.error('type')}
-                                        </FieldError>
-                                    </Field>
+                                    />
 
-                                    <Field
-                                        data-invalid={
-                                            form.invalid('plan') || undefined
+                                    <SelectField
+                                        label="Website plan"
+                                        placeholder="Select plan"
+                                        value={form.data.plan}
+                                        options={planOptions}
+                                        error={form.error('plan')}
+                                        invalid={form.invalid('plan')}
+                                        onChange={(value) =>
+                                            form.setField('plan', value)
                                         }
-                                    >
-                                        <FieldLabel>Plan</FieldLabel>
-                                        <Select
-                                            value={form.data.plan || undefined}
-                                            onValueChange={(value) =>
-                                                form.setField('plan', value)
-                                            }
-                                        >
-                                            <SelectTrigger
-                                                className="w-full"
-                                                aria-invalid={
-                                                    form.invalid('plan') ||
-                                                    undefined
-                                                }
-                                            >
-                                                <SelectValue placeholder="Select plan" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectGroup>
-                                                    {planOptions.map(
-                                                        (option) => (
-                                                            <SelectItem
-                                                                key={String(
-                                                                    option.value,
-                                                                )}
-                                                                value={String(
-                                                                    option.value,
-                                                                )}
-                                                            >
-                                                                {option.label}
-                                                            </SelectItem>
-                                                        ),
-                                                    )}
-                                                </SelectGroup>
-                                            </SelectContent>
-                                        </Select>
-                                        <FieldError>
-                                            {form.error('plan')}
-                                        </FieldError>
-                                    </Field>
+                                    />
                                 </div>
 
                                 <div className="grid gap-4 md:grid-cols-2">
-                                    <Field
-                                        data-invalid={
-                                            form.invalid('server_id') ||
-                                            undefined
+                                    <SelectField
+                                        label="Agency"
+                                        placeholder="Select agency"
+                                        value={form.data.agency_id}
+                                        options={agencyOptions}
+                                        error={form.error('agency_id')}
+                                        invalid={form.invalid('agency_id')}
+                                        onChange={(value) =>
+                                            form.setField('agency_id', value)
                                         }
-                                    >
-                                        <FieldLabel>Server</FieldLabel>
-                                        <Select
-                                            value={
-                                                form.data.server_id || undefined
-                                            }
-                                            onValueChange={(value) =>
-                                                form.setField(
-                                                    'server_id',
-                                                    value,
-                                                )
-                                            }
-                                        >
-                                            <SelectTrigger
-                                                className="w-full"
-                                                aria-invalid={
-                                                    form.invalid('server_id') ||
-                                                    undefined
-                                                }
-                                            >
-                                                <SelectValue placeholder="Select server" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectGroup>
-                                                    {serverOptions.map(
-                                                        (option) => (
-                                                            <SelectItem
-                                                                key={String(
-                                                                    option.value,
-                                                                )}
-                                                                value={String(
-                                                                    option.value,
-                                                                )}
-                                                            >
-                                                                {option.label}
-                                                            </SelectItem>
-                                                        ),
-                                                    )}
-                                                </SelectGroup>
-                                            </SelectContent>
-                                        </Select>
-                                        <FieldError>
-                                            {form.error('server_id')}
-                                        </FieldError>
-                                    </Field>
+                                        noneOptionLabel="-- No agency --"
+                                    />
 
-                                    <Field
-                                        data-invalid={
-                                            form.invalid('agency_id') ||
-                                            undefined
+                                    <SelectField
+                                        label="Server"
+                                        placeholder="Select server"
+                                        value={form.data.server_id}
+                                        options={serverOptions}
+                                        error={form.error('server_id')}
+                                        invalid={form.invalid('server_id')}
+                                        onChange={(value) =>
+                                            form.setField('server_id', value)
                                         }
-                                    >
-                                        <FieldLabel>Agency</FieldLabel>
-                                        <Select
-                                            value={
-                                                form.data.agency_id ||
-                                                '__none__'
-                                            }
-                                            onValueChange={(value) =>
-                                                form.setField(
-                                                    'agency_id',
-                                                    value === '__none__'
-                                                        ? ''
-                                                        : value,
-                                                )
-                                            }
-                                        >
-                                            <SelectTrigger
-                                                className="w-full"
-                                                aria-invalid={
-                                                    form.invalid('agency_id') ||
-                                                    undefined
-                                                }
-                                            >
-                                                <SelectValue placeholder="Select agency" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectGroup>
-                                                    <SelectItem value="__none__">
-                                                        No agency
-                                                    </SelectItem>
-                                                    {agencyOptions.map(
-                                                        (option) => (
-                                                            <SelectItem
-                                                                key={String(
-                                                                    option.value,
-                                                                )}
-                                                                value={String(
-                                                                    option.value,
-                                                                )}
-                                                            >
-                                                                {option.label}
-                                                            </SelectItem>
-                                                        ),
-                                                    )}
-                                                </SelectGroup>
-                                            </SelectContent>
-                                        </Select>
-                                        <FieldError>
-                                            {form.error('agency_id')}
-                                        </FieldError>
-                                    </Field>
+                                    />
                                 </div>
 
                                 <div className="grid gap-4 md:grid-cols-2">
-                                    <Field
-                                        data-invalid={
-                                            form.invalid('status') || undefined
+                                    <SelectField
+                                        label="DNS provider"
+                                        placeholder="Select DNS provider"
+                                        value={form.data.dns_provider_id}
+                                        options={dnsProviderOptions}
+                                        error={form.error('dns_provider_id')}
+                                        invalid={form.invalid(
+                                            'dns_provider_id',
+                                        )}
+                                        onChange={(value) =>
+                                            form.setField(
+                                                'dns_provider_id',
+                                                value,
+                                            )
                                         }
-                                    >
-                                        <FieldLabel>Status</FieldLabel>
-                                        <Select
-                                            value={
-                                                form.data.status || undefined
-                                            }
-                                            onValueChange={(value) =>
-                                                form.setField('status', value)
-                                            }
-                                        >
-                                            <SelectTrigger
-                                                className="w-full"
-                                                aria-invalid={
-                                                    form.invalid('status') ||
-                                                    undefined
-                                                }
-                                            >
-                                                <SelectValue placeholder="Select status" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectGroup>
-                                                    {statusOptions.map(
-                                                        (option) => (
-                                                            <SelectItem
-                                                                key={String(
-                                                                    option.value,
-                                                                )}
-                                                                value={String(
-                                                                    option.value,
-                                                                )}
-                                                            >
-                                                                {option.label}
-                                                            </SelectItem>
-                                                        ),
-                                                    )}
-                                                </SelectGroup>
-                                            </SelectContent>
-                                        </Select>
-                                        <FieldError>
-                                            {form.error('status')}
-                                        </FieldError>
-                                    </Field>
+                                    />
 
-                                    <Field
-                                        data-invalid={
-                                            form.invalid('expired_on') ||
-                                            undefined
+                                    <SelectField
+                                        label="CDN provider"
+                                        placeholder="Select CDN provider"
+                                        value={form.data.cdn_provider_id}
+                                        options={cdnProviderOptions}
+                                        error={form.error('cdn_provider_id')}
+                                        invalid={form.invalid(
+                                            'cdn_provider_id',
+                                        )}
+                                        onChange={(value) =>
+                                            form.setField(
+                                                'cdn_provider_id',
+                                                value,
+                                            )
                                         }
-                                    >
-                                        <FieldLabel htmlFor="expired_on">
-                                            Expiry date
-                                        </FieldLabel>
-                                        <Input
-                                            id="expired_on"
-                                            type="date"
-                                            value={form.data.expired_on}
-                                            onChange={(event) =>
-                                                form.setField(
-                                                    'expired_on',
-                                                    event.target.value,
-                                                )
-                                            }
-                                            onBlur={() =>
-                                                form.touch('expired_on')
-                                            }
-                                            aria-invalid={
-                                                form.invalid('expired_on') ||
-                                                undefined
-                                            }
-                                        />
-                                        <FieldError>
-                                            {form.error('expired_on')}
-                                        </FieldError>
-                                    </Field>
+                                    />
                                 </div>
                             </FieldGroup>
                         </CardContent>
@@ -471,210 +392,14 @@ export default function WebsiteForm({
 
                     <Card>
                         <CardHeader>
-                            <CardTitle>Provider routing</CardTitle>
+                            <CardTitle>Customer &amp; server</CardTitle>
                             <CardDescription>
-                                Pick the upstream DNS and CDN providers used
-                                during provisioning.
+                                Capture the customer contact and the account
+                                identity used during provisioning.
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
                             <FieldGroup>
-                                <div className="grid gap-4 md:grid-cols-2">
-                                    <Field
-                                        data-invalid={
-                                            form.invalid('dns_provider_id') ||
-                                            undefined
-                                        }
-                                    >
-                                        <FieldLabel>DNS provider</FieldLabel>
-                                        <Select
-                                            value={
-                                                form.data.dns_provider_id ||
-                                                undefined
-                                            }
-                                            onValueChange={(value) =>
-                                                form.setField(
-                                                    'dns_provider_id',
-                                                    value,
-                                                )
-                                            }
-                                        >
-                                            <SelectTrigger
-                                                className="w-full"
-                                                aria-invalid={
-                                                    form.invalid(
-                                                        'dns_provider_id',
-                                                    ) || undefined
-                                                }
-                                            >
-                                                <SelectValue placeholder="Select DNS provider" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectGroup>
-                                                    {dnsProviderOptions.map(
-                                                        (option) => (
-                                                            <SelectItem
-                                                                key={String(
-                                                                    option.value,
-                                                                )}
-                                                                value={String(
-                                                                    option.value,
-                                                                )}
-                                                            >
-                                                                {option.label}
-                                                            </SelectItem>
-                                                        ),
-                                                    )}
-                                                </SelectGroup>
-                                            </SelectContent>
-                                        </Select>
-                                        <FieldError>
-                                            {form.error('dns_provider_id')}
-                                        </FieldError>
-                                    </Field>
-
-                                    <Field
-                                        data-invalid={
-                                            form.invalid('cdn_provider_id') ||
-                                            undefined
-                                        }
-                                    >
-                                        <FieldLabel>CDN provider</FieldLabel>
-                                        <Select
-                                            value={
-                                                form.data.cdn_provider_id ||
-                                                undefined
-                                            }
-                                            onValueChange={(value) =>
-                                                form.setField(
-                                                    'cdn_provider_id',
-                                                    value,
-                                                )
-                                            }
-                                        >
-                                            <SelectTrigger
-                                                className="w-full"
-                                                aria-invalid={
-                                                    form.invalid(
-                                                        'cdn_provider_id',
-                                                    ) || undefined
-                                                }
-                                            >
-                                                <SelectValue placeholder="Select CDN provider" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectGroup>
-                                                    {cdnProviderOptions.map(
-                                                        (option) => (
-                                                            <SelectItem
-                                                                key={String(
-                                                                    option.value,
-                                                                )}
-                                                                value={String(
-                                                                    option.value,
-                                                                )}
-                                                            >
-                                                                {option.label}
-                                                            </SelectItem>
-                                                        ),
-                                                    )}
-                                                </SelectGroup>
-                                            </SelectContent>
-                                        </Select>
-                                        <FieldError>
-                                            {form.error('cdn_provider_id')}
-                                        </FieldError>
-                                    </Field>
-                                </div>
-                            </FieldGroup>
-                        </CardContent>
-                    </Card>
-                </div>
-
-                <div className="flex flex-col gap-6">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Provisioning identity</CardTitle>
-                            <CardDescription>
-                                Username and customer context used to create the
-                                provisioned site and any initial account
-                                metadata.
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <FieldGroup>
-                                <Field
-                                    data-invalid={
-                                        form.invalid('website_username') ||
-                                        undefined
-                                    }
-                                >
-                                    <FieldLabel htmlFor="website_username">
-                                        Website username
-                                    </FieldLabel>
-                                    <Input
-                                        id="website_username"
-                                        value={form.data.website_username}
-                                        onChange={(event) =>
-                                            form.setField(
-                                                'website_username',
-                                                event.target.value,
-                                            )
-                                        }
-                                        onBlur={() =>
-                                            form.touch('website_username')
-                                        }
-                                        aria-invalid={
-                                            form.invalid('website_username') ||
-                                            undefined
-                                        }
-                                    />
-                                    <FieldDescription>
-                                        Optional custom username for the
-                                        provisioned Hestia user. Leave blank to
-                                        auto-generate.
-                                    </FieldDescription>
-                                    <FieldError>
-                                        {form.error('website_username')}
-                                    </FieldError>
-                                </Field>
-
-                                <Field
-                                    data-invalid={
-                                        form.invalid('owner_password') ||
-                                        undefined
-                                    }
-                                >
-                                    <FieldLabel htmlFor="owner_password">
-                                        Owner password
-                                    </FieldLabel>
-                                    <Input
-                                        id="owner_password"
-                                        type="password"
-                                        value={form.data.owner_password}
-                                        onChange={(event) =>
-                                            form.setField(
-                                                'owner_password',
-                                                event.target.value,
-                                            )
-                                        }
-                                        onBlur={() =>
-                                            form.touch('owner_password')
-                                        }
-                                        aria-invalid={
-                                            form.invalid('owner_password') ||
-                                            undefined
-                                        }
-                                    />
-                                    <FieldDescription>
-                                        Optional initial password for generated
-                                        website accounts.
-                                    </FieldDescription>
-                                    <FieldError>
-                                        {form.error('owner_password')}
-                                    </FieldError>
-                                </Field>
-
                                 <div className="grid gap-4 md:grid-cols-2">
                                     <Field
                                         data-invalid={
@@ -688,6 +413,7 @@ export default function WebsiteForm({
                                         <Input
                                             id="customer_name"
                                             value={form.data.customer_name}
+                                            placeholder="John Smith"
                                             onChange={(event) =>
                                                 form.setField(
                                                     'customer_name',
@@ -702,6 +428,10 @@ export default function WebsiteForm({
                                                 undefined
                                             }
                                         />
+                                        <FieldDescription>
+                                            Used for the first admin account and
+                                            customer records.
+                                        </FieldDescription>
                                         <FieldError>
                                             {form.error('customer_name')}
                                         </FieldError>
@@ -720,6 +450,7 @@ export default function WebsiteForm({
                                             id="customer_email"
                                             type="email"
                                             value={form.data.customer_email}
+                                            placeholder="customer@example.com"
                                             onChange={(event) =>
                                                 form.setField(
                                                     'customer_email',
@@ -735,74 +466,236 @@ export default function WebsiteForm({
                                                 ) || undefined
                                             }
                                         />
+                                        <FieldDescription>
+                                            Used for the website owner login and
+                                            platform notifications.
+                                        </FieldDescription>
                                         <FieldError>
                                             {form.error('customer_email')}
+                                        </FieldError>
+                                    </Field>
+                                </div>
+
+                                <div className="grid gap-4 md:grid-cols-2">
+                                    <Field
+                                        data-invalid={
+                                            form.invalid('website_username') ||
+                                            undefined
+                                        }
+                                    >
+                                        <FieldLabel htmlFor="website_username">
+                                            Server username
+                                        </FieldLabel>
+                                        <Input
+                                            id="website_username"
+                                            value={form.data.website_username}
+                                            placeholder="Enter server username"
+                                            onChange={(event) =>
+                                                form.setField(
+                                                    'website_username',
+                                                    event.target.value,
+                                                )
+                                            }
+                                            onBlur={() =>
+                                                form.touch('website_username')
+                                            }
+                                            aria-invalid={
+                                                form.invalid('website_username') ||
+                                                undefined
+                                            }
+                                        />
+                                        <FieldDescription>
+                                            Leave blank to let the platform
+                                            generate a username automatically.
+                                        </FieldDescription>
+                                        <FieldError>
+                                            {form.error('website_username')}
+                                        </FieldError>
+                                    </Field>
+
+                                    <Field
+                                        data-invalid={
+                                            form.invalid('owner_password') ||
+                                            undefined
+                                        }
+                                    >
+                                        <FieldLabel htmlFor="owner_password">
+                                            Initial account password
+                                        </FieldLabel>
+                                        <Input
+                                            id="owner_password"
+                                            type="password"
+                                            value={form.data.owner_password}
+                                            onChange={(event) =>
+                                                form.setField(
+                                                    'owner_password',
+                                                    event.target.value,
+                                                )
+                                            }
+                                            onBlur={() =>
+                                                form.touch('owner_password')
+                                            }
+                                            aria-invalid={
+                                                form.invalid('owner_password') ||
+                                                undefined
+                                            }
+                                        />
+                                        <FieldDescription>
+                                            Optional password for the generated
+                                            website owner account.
+                                        </FieldDescription>
+                                        <FieldError>
+                                            {form.error('owner_password')}
                                         </FieldError>
                                     </Field>
                                 </div>
                             </FieldGroup>
                         </CardContent>
                     </Card>
+                </div>
 
+                <div className="flex flex-col gap-6 xl:sticky xl:top-6 xl:self-start">
                     <Card>
                         <CardHeader>
-                            <CardTitle>Flags</CardTitle>
+                            <CardTitle>Options</CardTitle>
                             <CardDescription>
-                                Control how provisioning and integration steps
-                                behave for this website.
+                                Control how provisioning behaves for this
+                                website.
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
                             <FieldGroup>
-                                {(
-                                    [
-                                        ['is_www', 'Use www host'],
-                                        ['is_agency', 'Agency website'],
-                                        ['skip_cdn', 'Skip CDN setup'],
-                                        ['skip_dns', 'Skip DNS setup'],
-                                        ['skip_ssl_issue', 'Skip SSL issuance'],
-                                        ['skip_email', 'Skip email setup'],
-                                    ] as const
-                                ).map(([field, label]) => (
-                                    <Field key={field} orientation="horizontal">
-                                        <FieldLabel htmlFor={field}>
-                                            {label}
-                                        </FieldLabel>
-                                        <Switch
-                                            id={field}
-                                            checked={form.data[field]}
-                                            onCheckedChange={(checked) =>
-                                                form.setField(field, checked)
-                                            }
-                                        />
-                                    </Field>
-                                ))}
+                                {optionFields.map(
+                                    ({ field, label, description }) => (
+                                        <Field
+                                            key={field}
+                                            orientation="horizontal"
+                                            className="items-start justify-between gap-4 rounded-lg border p-3"
+                                        >
+                                            <FieldContent>
+                                                <FieldLabel htmlFor={field}>
+                                                    {label}
+                                                </FieldLabel>
+                                                <FieldDescription>
+                                                    {description}
+                                                </FieldDescription>
+                                            </FieldContent>
+                                            <Switch
+                                                id={field}
+                                                checked={form.data[field]}
+                                                onCheckedChange={(checked) =>
+                                                    form.setField(
+                                                        field,
+                                                        checked,
+                                                    )
+                                                }
+                                            />
+                                        </Field>
+                                    ),
+                                )}
                             </FieldGroup>
                         </CardContent>
                     </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Status</CardTitle>
+                            <CardDescription>
+                                Review lifecycle settings before the website is
+                                created or updated.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <FieldGroup>
+                                <SelectField
+                                    label="Status"
+                                    placeholder="Provisioning"
+                                    value={form.data.status}
+                                    options={statusOptions}
+                                    error={form.error('status')}
+                                    invalid={form.invalid('status')}
+                                    onChange={(value) =>
+                                        form.setField('status', value)
+                                    }
+                                />
+
+                                <Field
+                                    data-invalid={
+                                        form.invalid('expired_on') || undefined
+                                    }
+                                >
+                                    <FieldLabel htmlFor="expired_on">
+                                        Expiry date
+                                    </FieldLabel>
+                                    <Input
+                                        id="expired_on"
+                                        type="date"
+                                        value={form.data.expired_on}
+                                        onChange={(event) =>
+                                            form.setField(
+                                                'expired_on',
+                                                event.target.value,
+                                            )
+                                        }
+                                        onBlur={() => form.touch('expired_on')}
+                                        aria-invalid={
+                                            form.invalid('expired_on') ||
+                                            undefined
+                                        }
+                                    />
+                                    <FieldDescription>
+                                        New websites usually start in
+                                        provisioning until setup completes.
+                                    </FieldDescription>
+                                    <FieldError>
+                                        {form.error('expired_on')}
+                                    </FieldError>
+                                </Field>
+                            </FieldGroup>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>
+                                {mode === 'create'
+                                    ? 'Save website'
+                                    : 'Update website'}
+                            </CardTitle>
+                            <CardDescription>
+                                Review the setup and submit when everything
+                                looks correct.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardFooter className="flex flex-col gap-3">
+                            <Button
+                                type="submit"
+                                disabled={form.processing}
+                                className="w-full"
+                            >
+                                {form.processing ? (
+                                    <Spinner data-icon="inline-start" />
+                                ) : (
+                                    <SaveIcon data-icon="inline-start" />
+                                )}
+                                {mode === 'create'
+                                    ? 'Save website'
+                                    : 'Save changes'}
+                            </Button>
+
+                            <Button
+                                variant="outline"
+                                asChild
+                                className="w-full"
+                            >
+                                <Link href={cancelUrl}>
+                                    <ArrowLeftIcon data-icon="inline-start" />
+                                    Cancel
+                                </Link>
+                            </Button>
+                        </CardFooter>
+                    </Card>
                 </div>
-            </div>
-
-            <div className="flex flex-wrap items-center justify-between gap-3">
-                <Button variant="outline" asChild>
-                    <Link
-                        href={route('platform.websites.index', {
-                            status: 'all',
-                        })}
-                    >
-                        <ArrowLeftIcon data-icon="inline-start" />
-                        Back to websites
-                    </Link>
-                </Button>
-
-                <Button type="submit" disabled={form.processing}>
-                    {form.processing ? (
-                        <Spinner data-icon="inline-start" />
-                    ) : (
-                        <SaveIcon data-icon="inline-start" />
-                    )}
-                    {mode === 'create' ? 'Create website' : 'Save changes'}
-                </Button>
             </div>
         </form>
     );

@@ -213,8 +213,11 @@ class PlatformInertiaPagesTest extends TestCase
                 ->has('initialValues')
                 ->has('serverOptions')
                 ->has('agencyOptions')
+                ->has('statusOptions')
                 ->has('typeOptions')
-                ->has('planOptions'));
+                ->has('planOptions')
+                ->has('dnsProviderOptions')
+                ->has('cdnProviderOptions'));
 
         $domain = $this->createDomain();
 
@@ -395,6 +398,20 @@ class PlatformInertiaPagesTest extends TestCase
         $agency = $this->createAgency();
         $serverProvider = $this->createProvider(Provider::TYPE_SERVER, 'Server Provider');
         $server = $this->createServer($serverProvider, $agency);
+        $server->ssh_public_key = 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAITestEditServerKey astero@test';
+        $server->setMetadata('location_country_code', 'IN');
+        $server->setMetadata('location_country', 'India');
+        $server->setMetadata('location_city_code', 'BOM');
+        $server->setMetadata('location_city', 'Mumbai');
+        $server->setMetadata('server_os', 'Ubuntu 24.04');
+        $server->setMetadata('server_cpu', 'Intel(R) Xeon(R)');
+        $server->setMetadata('server_ccore', '2');
+        $server->setMetadata('server_ram', 3074);
+        $server->setMetadata('server_storage', 89);
+        $server->setMetadata('astero_version', '1.0.46');
+        $server->setMetadata('hestia_version', '1.9.4');
+        $server->save();
+        $server = $server->fresh();
         $dnsProvider = $this->createProvider(Provider::TYPE_DNS, 'DNS Provider');
         $cdnProvider = $this->createProvider(Provider::TYPE_CDN, 'CDN Provider');
         $website = $this->createWebsite($agency, $server, $dnsProvider, $cdnProvider);
@@ -424,7 +441,26 @@ class PlatformInertiaPagesTest extends TestCase
             ->assertInertia(fn (Assert $page): Assert => $page
                 ->component('platform/servers/edit')
                 ->where('server.id', $server->id)
-                ->where('initialValues.name', $server->name));
+                ->where('initialValues.name', $server->name)
+                ->where('initialValues.location_country_code', 'IN')
+                ->where('initialValues.location_city', 'Mumbai')
+                ->where('initialValues.server_os', 'Ubuntu 24.04')
+                ->where('initialValues.astero_version', '1.0.46')
+                ->where('sshCommand', fn ($value): bool => is_string($value) && str_contains($value, 'ssh-ed25519')));
+
+        $server->update([
+            'provisioning_status' => Server::PROVISIONING_STATUS_FAILED,
+            'status' => 'failed',
+            'metadata' => [
+                'creation_mode' => 'provision',
+                'provisioning_steps' => [
+                    'ssh_connection' => [
+                        'status' => 'completed',
+                        'message' => 'SSH connectivity confirmed.',
+                    ],
+                ],
+            ],
+        ]);
 
         $this->actingAs($this->admin)
             ->get(route('platform.servers.show', $server))
@@ -433,7 +469,26 @@ class PlatformInertiaPagesTest extends TestCase
                 ->component('platform/servers/show')
                 ->where('server.id', $server->id)
                 ->has('provisioningSteps')
-                ->has('websiteCounts'));
+                ->where('provisioningSteps.0.key', 'ssh_connection')
+                ->where('provisioningSteps.0.status', 'done')
+                ->where('provisioningSteps.0.message', 'SSH connectivity confirmed.')
+                ->has('websiteCounts')
+                ->has('agencies')
+                ->has('metadataItems')
+                ->where('canRevealSecrets', true)
+                ->where('canRevealSshKeyPair', false));
+
+        $this->actingAs($this->admin)
+            ->get(sprintf('/%s/platform/servers/%d/provisioning-status', config('app.admin_slug'), $server->id))
+            ->assertOk()
+            ->assertJson([
+                'status' => 'success',
+                'current_status' => Server::PROVISIONING_STATUS_FAILED,
+                'progress_percent' => 9,
+            ])
+            ->assertJsonPath('provisioning_steps.0.key', 'ssh_connection')
+            ->assertJsonPath('provisioning_steps.0.status', 'done')
+            ->assertJsonPath('provisioning_steps.0.message', 'SSH connectivity confirmed.');
 
         $this->actingAs($this->admin)
             ->get(route('platform.websites.edit', $website))
@@ -443,6 +498,22 @@ class PlatformInertiaPagesTest extends TestCase
                 ->where('website.id', $website->id)
                 ->where('initialValues.name', $website->name));
 
+        $stepKeys = array_keys(config('platform.website.steps', []));
+        $this->assertNotEmpty($stepKeys);
+        $websiteProgressPercent = (int) round(100 / count($stepKeys));
+
+        $website->update([
+            'metadata' => [
+                'provisioning_steps' => [
+                    $stepKeys[0] => [
+                        'status' => 'done',
+                        'message' => 'Initial provisioning completed.',
+                        'updated_at' => now()->toISOString(),
+                    ],
+                ],
+            ],
+        ]);
+
         $this->actingAs($this->admin)
             ->get(route('platform.websites.show', $website))
             ->assertOk()
@@ -450,7 +521,22 @@ class PlatformInertiaPagesTest extends TestCase
                 ->component('platform/websites/show')
                 ->where('website.id', $website->id)
                 ->has('provisioningSteps')
+                ->where('provisioningSteps.0.key', $stepKeys[0])
+                ->where('provisioningSteps.0.status', 'done')
+                ->where('provisioningSteps.0.message', 'Initial provisioning completed.')
                 ->has('activities'));
+
+        $this->actingAs($this->admin)
+            ->get(route('platform.websites.provisioning-status', ['website' => $website]))
+            ->assertOk()
+            ->assertJson([
+                'status' => 'success',
+                'percentage' => $websiteProgressPercent,
+                'current_status' => $website->status instanceof WebsiteStatus ? $website->status->value : $website->status,
+            ])
+            ->assertJsonPath('provisioning_steps.0.key', $stepKeys[0])
+            ->assertJsonPath('provisioning_steps.0.status', 'done')
+            ->assertJsonPath('provisioning_steps.0.message', 'Initial provisioning completed.');
 
         $this->actingAs($this->admin)
             ->get(route('platform.dns.edit', $dnsRecord))
@@ -469,6 +555,64 @@ class PlatformInertiaPagesTest extends TestCase
                 ->where('domainDnsRecord.id', $dnsRecord->id)
                 ->where('domainDnsRecord.domain_id', $domain->id)
                 ->where('domainDnsRecord.name', $dnsRecord->name));
+    }
+
+    public function test_server_update_persists_restored_edit_fields(): void
+    {
+        $agency = $this->createAgency();
+        $provider = $this->createProvider(Provider::TYPE_SERVER, 'Server Provider');
+        $server = $this->createServer($provider, $agency);
+
+        $payload = [
+            'creation_mode' => 'manual',
+            'name' => 'Edited Server',
+            'ip' => '203.0.113.44',
+            'fqdn' => 'edited.example.com',
+            'type' => 'production',
+            'provider_id' => (string) $provider->id,
+            'monitor' => true,
+            'status' => 'active',
+            'location_country_code' => 'IN',
+            'location_country' => 'India',
+            'location_city_code' => 'BOM',
+            'location_city' => 'Mumbai',
+            'port' => '8443',
+            'access_key_id' => 'updated-key',
+            'access_key_secret' => '',
+            'release_api_key' => 'release-key-123',
+            'max_domains' => '250',
+            'ssh_port' => '22',
+            'ssh_user' => 'root',
+            'ssh_public_key' => 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAITestPersistedKey astero@test',
+            'ssh_private_key' => '',
+            'server_cpu' => 'Intel Xeon',
+            'server_ccore' => '4',
+            'server_ram' => '8192',
+            'server_storage' => '160',
+            'server_os' => 'Ubuntu 24.04',
+            'astero_version' => '1.0.46',
+            'hestia_version' => '1.9.4',
+        ];
+
+        $this->actingAs($this->admin)
+            ->put(route('platform.servers.update', $server), $payload)
+            ->assertRedirect();
+
+        $server = $server->fresh();
+
+        $this->assertSame('Edited Server', $server->name);
+        $this->assertSame('203.0.113.44', $server->ip);
+        $this->assertSame('IN', $server->location_country_code);
+        $this->assertSame('Mumbai', $server->location_city);
+        $this->assertSame('Intel Xeon', $server->server_cpu);
+        $this->assertSame('4', (string) $server->server_ccore);
+        $this->assertSame('8192', (string) $server->server_ram);
+        $this->assertSame('160', (string) $server->server_storage);
+        $this->assertSame('Ubuntu 24.04', $server->server_os);
+        $this->assertSame('1.0.46', $server->astero_version);
+        $this->assertSame('1.9.4', $server->hestia_version);
+        $this->assertSame('release-key-123', $server->release_api_key);
+        $this->assertSame(250, $server->max_domains);
     }
 
     private function createDomain(?Agency $agency = null): Domain

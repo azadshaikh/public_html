@@ -139,7 +139,7 @@ function ConfirmationDialog({
       <AlertDialogContent
         size="comfortable"
         className={cn(
-          "w-[min(calc(100%-2rem),50rem)] !max-w-[40rem] gap-0 overflow-hidden rounded-2xl p-0",
+          "w-[min(calc(100%-2rem),35rem)] !max-w-[40rem] gap-0 overflow-hidden rounded-2xl p-0",
           contentClassName
         )}
       >
