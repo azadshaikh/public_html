@@ -9,6 +9,9 @@ import { cn } from '@/lib/utils';
 import type { ServerProvisioningStep } from '../../../types/platform';
 import { formatStatusLabel, statusBadgeVariant, STEP_STATUS_VARIANT } from './show-shared';
 
+const PROVISIONING_POLL_INTERVAL_MS = 60_000;
+const PROVISIONING_POLL_INTERVAL_LABEL = 'every minute';
+
 type ServerProvisioningStepsTableProps = {
     serverId: number;
     steps: ServerProvisioningStep[];
@@ -143,7 +146,7 @@ export function ServerProvisioningStepsTable({
                     setIsPolling(false);
                 }
             });
-        }, 3000);
+        }, PROVISIONING_POLL_INTERVAL_MS);
 
         return () => {
             active = false;
@@ -227,7 +230,7 @@ export function ServerProvisioningStepsTable({
                             <h3 className="text-sm font-semibold">Provisioning Steps</h3>
                             <p className="text-sm text-muted-foreground">
                                 {isPolling
-                                    ? 'Auto-updating every 3 seconds while provisioning is running.'
+                                    ? `Auto-updating ${PROVISIONING_POLL_INTERVAL_LABEL} while provisioning is running.`
                                     : 'Manual retries and refreshes are available for each step.'}
                             </p>
                         </div>

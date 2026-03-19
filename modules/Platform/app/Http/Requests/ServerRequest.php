@@ -71,8 +71,8 @@ class ServerRequest extends ScaffoldRequest
             $rules['fqdn'] = ['required', 'string', 'max:255']; // FQDN required for provisioning
             $rules['release_zip_url'] = ['nullable', 'url', 'max:2048'];
             $rules['ssh_port'] = ['nullable', 'integer', 'min:1', 'max:65535'];
-            $rules['ssh_public_key'] = ['required', 'string'];
-            $rules['ssh_private_key'] = ['required', 'string'];
+            $rules['ssh_public_key'] = $this->isUpdate() ? ['nullable', 'string'] : ['required', 'string'];
+            $rules['ssh_private_key'] = $this->isUpdate() ? ['nullable', 'string'] : ['required', 'string'];
 
             // HestiaCP install options - all booleans except port/lang/versions
             $rules['install_port'] = ['nullable', 'integer', 'min:1', 'max:65535'];

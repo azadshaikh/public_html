@@ -77,6 +77,9 @@ type WebsitesShowPageProps = {
     canRevealSecrets: boolean;
 };
 
+const PROVISIONING_POLL_INTERVAL_MS = 60_000;
+const PROVISIONING_POLL_INTERVAL_LABEL = 'every minute';
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -1292,7 +1295,7 @@ function ProvisioningStepsTable({
                     setIsPolling(false);
                 }
             });
-        }, 3000);
+        }, PROVISIONING_POLL_INTERVAL_MS);
 
         return () => {
             active = false;
@@ -1383,7 +1386,7 @@ function ProvisioningStepsTable({
                             <h3 className="text-sm font-semibold">Provisioning Steps</h3>
                             <p className="text-sm text-muted-foreground">
                                 {isPolling
-                                    ? 'Auto-updating every 3 seconds while provisioning is running.'
+                                    ? `Auto-updating ${PROVISIONING_POLL_INTERVAL_LABEL} while provisioning is running.`
                                     : 'Step status updates appear here as actions complete.'}
                             </p>
                         </div>

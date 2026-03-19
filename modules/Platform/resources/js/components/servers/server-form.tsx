@@ -95,7 +95,7 @@ export default function ServerForm({
 }: ServerFormProps) {
     const form = useAppForm<ServerFormValues>({
         defaults: initialValues,
-        rememberKey: `platform.servers.edit.${server.id}`,
+        rememberKey: `platform.servers.edit.v2.${server.id}`,
         dirtyGuard: true,
     });
     const [currentSshCommand, setCurrentSshCommand] = useState(sshCommand ?? '');
@@ -125,6 +125,14 @@ export default function ServerForm({
     useEffect(() => {
         setSshConnectionState(INITIAL_SSH_CONNECTION_STATE);
     }, [form.data.ip, form.data.ssh_port, form.data.ssh_user, form.data.ssh_private_key]);
+
+    useEffect(() => {
+        if (!server.has_ssh_private_key || form.data.ssh_private_key.trim() !== '') {
+            return;
+        }
+
+        form.clearErrors('ssh_private_key', 'ssh_public_key');
+    }, [form, server.has_ssh_private_key, form.data.ssh_private_key]);
 
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
