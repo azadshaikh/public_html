@@ -37,7 +37,7 @@ export default function ProvidersIndex({
 
     const { currentStatus, gridFilters, perPage, sorting, statusTabs } = buildScaffoldDatagridState(config, filters, statistics, {
         searchPlaceholder: 'Search providers...',
-        perPageOptions: [15, 25, 50, 100],
+        perPageOptions: [10, 25, 50, 100],
     });
     const { rowActions, bulkActions } = buildScaffoldActionHandlers(config, {
         bulkActionUrl: route('platform.providers.bulk-action'),

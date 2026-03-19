@@ -37,7 +37,7 @@ export default function DomainsIndex({
 
     const { currentStatus, gridFilters, perPage, sorting, statusTabs } = buildScaffoldDatagridState(config, filters, statistics, {
         searchPlaceholder: 'Search domains...',
-        perPageOptions: [15, 25, 50, 100],
+        perPageOptions: [10, 25, 50, 100],
     });
     const { rowActions, bulkActions } = buildScaffoldActionHandlers(config, {
         bulkActionUrl: route('platform.domains.bulk-action'),

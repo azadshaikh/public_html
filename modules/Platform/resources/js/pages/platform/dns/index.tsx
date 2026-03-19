@@ -40,7 +40,7 @@ export default function DnsIndex({ config, rows, filters, statistics, empty_stat
 
     const { currentStatus, gridFilters, perPage, sorting, statusTabs } = buildScaffoldDatagridState(config, filters, statistics, {
         searchPlaceholder: 'Search DNS records...',
-        perPageOptions: [15, 25, 50, 100],
+        perPageOptions: [10, 25, 50, 100],
     });
 
     const indexRouteParams = {
