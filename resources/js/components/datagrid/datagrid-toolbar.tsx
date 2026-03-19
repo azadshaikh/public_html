@@ -3,6 +3,7 @@ import {
     LayoutGridIcon,
     Rows3Icon,
     SearchIcon,
+    XIcon,
 } from 'lucide-react';
 import * as React from 'react';
 import {
@@ -133,7 +134,7 @@ export function DatagridToolbar({
     const activeSheetFilterCount =
         advancedSearchFilters.filter((filter) => filter.value !== '').length +
         selectFilters.filter(
-            (filter) => filter.value !== getFilterDefaultValue(filter),
+            (filter) => filter.value !== getFilterDefaultValue(),
         ).length +
         dateRangeFilters.filter((filter) => filter.value !== '').length +
         booleanFilters.filter((filter) => filter.value !== '').length +
@@ -178,6 +179,45 @@ export function DatagridToolbar({
         setIsFilterSheetOpen(false);
     };
 
+    const handleFilterChange = (name: string, value: string) => {
+        const formElement = document.getElementById(filterFormId) as HTMLFormElement | null;
+        const baseParams: Record<string, string | number | null | undefined> = {
+            ...sharedParams,
+            ...(primarySearchFilter
+                ? { [primarySearchFilter.name]: primarySearchFilter.value }
+                : {}),
+        };
+
+        if (formElement) {
+            const formParams = collectFormParams(formElement);
+
+            Object.assign(baseParams, formParams);
+        }
+
+        if (name.endsWith('_from') || name.endsWith('_to')) {
+            baseParams[name] = value;
+        } else {
+            const isDateRange = dateRangeFilters.some((f) => f.name === name);
+
+            if (isDateRange && value) {
+                const [from = '', to = ''] = value.split(',');
+
+                baseParams[`${name}_from`] = from;
+                baseParams[`${name}_to`] = to;
+            } else if (isDateRange) {
+                baseParams[`${name}_from`] = '';
+                baseParams[`${name}_to`] = '';
+            } else {
+                baseParams[name] = value;
+            }
+        }
+
+        onFilterSubmit({
+            ...baseParams,
+            page: 1,
+        });
+    };
+
     const handleResetFilters = () => {
         onFilterSubmit({
             ...sharedParams,
@@ -190,7 +230,7 @@ export function DatagridToolbar({
             ...Object.fromEntries(
                 selectFilters.map((filter) => [
                     filter.name,
-                    getFilterDefaultValue(filter),
+                    getFilterDefaultValue(),
                 ]),
             ),
             ...Object.fromEntries(
@@ -276,6 +316,21 @@ export function DatagridToolbar({
                                                 filter.value,
                                             ]),
                                         ),
+                                        ...buildDateRangeParams(
+                                            dateRangeFilters,
+                                        ),
+                                        ...Object.fromEntries(
+                                            booleanFilters.map((filter) => [
+                                                filter.name,
+                                                filter.value,
+                                            ]),
+                                        ),
+                                        ...Object.fromEntries(
+                                            numberFilters.map((filter) => [
+                                                filter.name,
+                                                filter.value,
+                                            ]),
+                                        ),
                                     }}
                                 />
 
@@ -311,26 +366,31 @@ export function DatagridToolbar({
                             <Sheet
                                 open={isFilterSheetOpen}
                                 onOpenChange={setIsFilterSheetOpen}
+                                modal={false}
                             >
-                                <SheetTrigger asChild>
-                                    <Button
-                                        type="button"
-                                        variant={submitButtonVariant}
-                                        size={submitButtonSize}
-                                        className="shrink-0"
-                                    >
-                                        <FilterIcon data-icon="inline-start" />
-                                        {submitLabel}
-                                        {activeSheetFilterCount > 0 ? (
-                                            <Badge
-                                                variant="secondary"
-                                                className="rounded-full px-1.5 py-0 text-[0.7rem]"
-                                            >
-                                                {activeSheetFilterCount}
-                                            </Badge>
-                                        ) : null}
-                                    </Button>
-                                </SheetTrigger>
+                                <div className="relative shrink-0">
+                                    <SheetTrigger asChild>
+                                        <Button
+                                            type="button"
+                                            variant={activeSheetFilterCount > 0 ? 'default' : submitButtonVariant}
+                                            size={submitButtonSize}
+                                        >
+                                            <FilterIcon data-icon="inline-start" />
+                                            {activeSheetFilterCount > 0
+                                                ? `Filtered (${activeSheetFilterCount})`
+                                                : submitLabel}
+                                        </Button>
+                                    </SheetTrigger>
+                                    {activeSheetFilterCount > 0 ? (
+                                        <button
+                                            type="button"
+                                            className="absolute -right-2 -top-2 flex size-5 items-center justify-center rounded-full bg-destructive shadow-sm transition-opacity hover:opacity-80"
+                                            onClick={handleResetFilters}
+                                        >
+                                            <XIcon className="size-3 text-white" strokeWidth={3} />
+                                        </button>
+                                    ) : null}
+                                </div>
 
                                 <SheetContent
                                     side="right"
@@ -343,6 +403,15 @@ export function DatagridToolbar({
                                             filters.
                                         </SheetDescription>
                                     </SheetHeader>
+
+                                    <DatagridActiveFilters
+                                        advancedSearchFilters={advancedSearchFilters}
+                                        selectFilters={selectFilters}
+                                        dateRangeFilters={dateRangeFilters}
+                                        booleanFilters={booleanFilters}
+                                        numberFilters={numberFilters}
+                                        onRemove={(name, value) => handleFilterChange(name, value)}
+                                    />
 
                                     <form
                                         id={filterFormId}
@@ -395,6 +464,7 @@ export function DatagridToolbar({
                                                 <DatagridSelectFilterField
                                                     key={filter.name}
                                                     filter={filter}
+                                                    onChange={handleFilterChange}
                                                 />
                                             ))}
 
@@ -402,6 +472,7 @@ export function DatagridToolbar({
                                                 <DatagridDateRangeFilterField
                                                     key={filter.name}
                                                     filter={filter}
+                                                    onChange={handleFilterChange}
                                                 />
                                             ))}
 
@@ -409,6 +480,7 @@ export function DatagridToolbar({
                                                 <DatagridBooleanFilterField
                                                     key={filter.name}
                                                     filter={filter}
+                                                    onChange={handleFilterChange}
                                                 />
                                             ))}
 
@@ -416,6 +488,7 @@ export function DatagridToolbar({
                                                 <DatagridNumberFilterField
                                                     key={filter.name}
                                                     filter={filter}
+                                                    onChange={handleFilterChange}
                                                 />
                                             ))}
                                         </div>
@@ -427,15 +500,14 @@ export function DatagridToolbar({
                                             variant="ghost"
                                             onClick={handleResetFilters}
                                         >
-                                            Reset filters
+                                            Clear All
                                         </Button>
                                         <Button
                                             type="submit"
                                             form={filterFormId}
-                                            variant={submitButtonVariant}
-                                            size={submitButtonSize}
                                         >
-                                            Apply filters
+                                            <FilterIcon data-icon="inline-start" />
+                                            Apply Filters
                                         </Button>
                                     </SheetFooter>
                                 </SheetContent>
@@ -494,6 +566,144 @@ function DatagridHiddenInputs({
     });
 }
 
+function DatagridActiveFilters({
+    advancedSearchFilters,
+    selectFilters,
+    dateRangeFilters,
+    booleanFilters,
+    numberFilters,
+    onRemove,
+}: {
+    advancedSearchFilters: DatagridSearchFilter[];
+    selectFilters: DatagridSelectFilter[];
+    dateRangeFilters: DatagridDateRangeFilter[];
+    booleanFilters: DatagridBooleanFilter[];
+    numberFilters: DatagridNumberFilter[];
+    onRemove: (name: string, value: string) => void;
+}) {
+    const items: { key: string; label: string; onRemove: () => void }[] = [];
+
+    for (const filter of advancedSearchFilters) {
+        if (filter.value !== '') {
+            items.push({
+                key: filter.name,
+                label: `${filter.placeholder}: ${filter.value}`,
+                onRemove: () => onRemove(filter.name, ''),
+            });
+        }
+    }
+
+    for (const filter of selectFilters) {
+        if (filter.value === '' || filter.value === getFilterDefaultValue()) {
+            continue;
+        }
+
+        const filterLabel = filter.label ?? filter.placeholder ?? filter.name;
+        const selectedValues = filter.value.split(',').filter(Boolean);
+        const selectedLabels = selectedValues
+            .map((v) => filter.options.find((o) => o.value === v)?.label ?? v)
+            .join(', ');
+
+        items.push({
+            key: filter.name,
+            label: `${filterLabel}: ${selectedLabels}`,
+            onRemove: () => onRemove(filter.name, ''),
+        });
+    }
+
+    for (const filter of dateRangeFilters) {
+        if (filter.value === '') {
+            continue;
+        }
+
+        const filterLabel = filter.label ?? filter.name;
+        const [from = '', to = ''] = filter.value.split(',');
+
+        items.push({
+            key: filter.name,
+            label: `${filterLabel}: ${from} to ${to}`,
+            onRemove: () => onRemove(filter.name, ''),
+        });
+    }
+
+    for (const filter of booleanFilters) {
+        if (filter.value === '') {
+            continue;
+        }
+
+        const filterLabel = filter.label ?? filter.name;
+        const valueLabel =
+            filter.value === '1'
+                ? (filter.trueLabel ?? 'Yes')
+                : (filter.falseLabel ?? 'No');
+
+        items.push({
+            key: filter.name,
+            label: `${filterLabel}: ${valueLabel}`,
+            onRemove: () => onRemove(filter.name, ''),
+        });
+    }
+
+    for (const filter of numberFilters) {
+        if (filter.value === '') {
+            continue;
+        }
+
+        const filterLabel = filter.label ?? filter.placeholder ?? filter.name;
+
+        items.push({
+            key: filter.name,
+            label: `${filterLabel}: ${filter.value}`,
+            onRemove: () => onRemove(filter.name, ''),
+        });
+    }
+
+    if (items.length === 0) {
+        return null;
+    }
+
+    return (
+        <div className="border-b px-4 py-3">
+            <p className="mb-2 text-xs font-medium text-muted-foreground">
+                Active Filters:
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+                {items.map((item) => (
+                    <Badge
+                        key={item.key}
+                        variant="secondary"
+                        className="gap-1 pr-1"
+                    >
+                        {item.label}
+                        <button
+                            type="button"
+                            className="ml-0.5 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                            onClick={item.onRemove}
+                        >
+                            <XIcon className="size-3" />
+                        </button>
+                    </Badge>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+function buildDateRangeParams(
+    filters: DatagridDateRangeFilter[],
+): Record<string, string> {
+    return Object.fromEntries(
+        filters.flatMap((filter) => {
+            const [from = '', to = ''] = filter.value.split(',');
+
+            return [
+                [`${filter.name}_from`, from],
+                [`${filter.name}_to`, to],
+            ];
+        }),
+    );
+}
+
 function buildSharedParams({
     tabs,
     activeTabValue,
@@ -538,6 +748,6 @@ function buildSharedParams({
     };
 }
 
-function getFilterDefaultValue(filter: DatagridSelectFilter): string {
-    return filter.options[0]?.value ?? '';
+function getFilterDefaultValue(): string {
+    return '';
 }

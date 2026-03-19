@@ -25,7 +25,9 @@ use Illuminate\Support\Facades\DB;
  */
 class ActivityLogService implements ScaffoldServiceInterface
 {
-    use Scaffoldable;
+    use Scaffoldable {
+        getFiltersConfig as protected scaffoldGetFiltersConfig;
+    }
 
     // ================================================================
     // REQUIRED SCAFFOLD METHODS
@@ -50,6 +52,33 @@ class ActivityLogService implements ScaffoldServiceInterface
             ->resolve(request());
 
         return $paginatedArray;
+    }
+
+    protected function getFiltersConfig(): array
+    {
+        $filters = $this->scaffoldGetFiltersConfig();
+
+        foreach ($filters as $index => $filter) {
+            if (($filter['key'] ?? null) === 'event') {
+                $filters[$index]['options'] = $this->normalizeFilterOptionMap(
+                    collect($this->getEventOptions())
+                        ->reject(fn (array $option): bool => ($option['value'] ?? '') === '')
+                        ->values()
+                        ->all()
+                );
+            }
+
+            if (($filter['key'] ?? null) === 'causer_id') {
+                $filters[$index]['options'] = $this->normalizeFilterOptionMap(
+                    collect($this->getUserOptions())
+                        ->reject(fn (array $option): bool => ($option['value'] ?? '') === '')
+                        ->values()
+                        ->all()
+                );
+            }
+        }
+
+        return $filters;
     }
 
     // ================================================================

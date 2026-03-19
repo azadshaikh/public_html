@@ -180,6 +180,8 @@ export function mapScaffoldFilters(
                 type: 'select',
                 name: key,
                 value: normalizeString(activeFilters[key]),
+                label: filter.label,
+                placeholder: filter.placeholder,
                 options: normalizeOptions(filter.options),
                 multiple: Boolean(filter.multiple),
             });
@@ -491,6 +493,13 @@ function normalizeMethod(
 }
 
 function normalizeString(value: unknown): string {
+    if (Array.isArray(value)) {
+        return value
+            .map((entry) => String(entry).trim())
+            .filter((entry) => entry !== '')
+            .join(',');
+    }
+
     if (typeof value === 'string') {
         return value;
     }

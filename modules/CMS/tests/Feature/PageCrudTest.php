@@ -93,9 +93,50 @@ class PageCrudTest extends TestCase
                 ->where('config.columns.2.key', 'status')
                 ->where('config.columns.3.key', 'display_date')
                 ->where('rows.data.0.title', $page->title)
-                ->where('rows.data.0.slug', $page->slug)
                 ->where('rows.data.0.permalink_url', $page->permalink_url)
                 ->where('rows.data.0.featured_image_url', null)
+            );
+    }
+
+    public function test_pages_index_exposes_filter_options_and_round_trips_filter_state(): void
+    {
+        $author = User::factory()->create([
+            'first_name' => 'Page',
+            'last_name' => 'Author',
+            'status' => Status::ACTIVE,
+            'email_verified_at' => now(),
+        ]);
+        $parent = $this->createPage('Parent Filter Page');
+        $matchingPage = $this->createPage('Filtered Page', $parent->id, null, $author);
+        $this->createPage('Non Matching Page');
+        $from = now()->subDay()->toDateString();
+        $to = now()->addDay()->toDateString();
+
+        $matchingPage->forceFill([
+            'status' => 'published',
+            'published_at' => now(),
+        ])->save();
+
+        $this->actingAs($this->admin)
+            ->get(route('cms.pages.index', [
+                'statuses' => ['published'],
+                'author_id' => $author->id,
+                'parent_id' => $parent->id,
+                'published_at_from' => $from,
+                'published_at_to' => $to,
+            ]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $assert): Assert => $assert
+                ->component('cms/pages/index')
+                ->has('rows.data', 1)
+                ->where('rows.data.0.title', $matchingPage->title)
+                ->where('config.filters.0.options.published', 'Published')
+                ->where('config.filters.1.options.'.$author->id, $author->name)
+                ->where('config.filters.2.options.'.$parent->id, $parent->title)
+                ->where('filters.statuses.0', 'published')
+                ->where('filters.author_id', (string) $author->id)
+                ->where('filters.parent_id', (string) $parent->id)
+                ->where('filters.published_at', $from.','.$to)
             );
     }
 
@@ -104,13 +145,19 @@ class PageCrudTest extends TestCase
         $parent = $this->createPage('Parent Page');
         $page = $this->createPage('Child Page', $parent->id);
 
-        $this->actingAs($this->admin)
-            ->get(route('cms.pages.edit', $page))
+        $this->actingAs($this->admin);
+        $page->forceFill(['excerpt' => 'Updated page excerpt'])->save();
+
+        $this->get(route('cms.pages.edit', $page))
             ->assertOk()
             ->assertInertia(fn (Assert $assert): Assert => $assert
                 ->component('cms/pages/edit')
                 ->where('page.id', $page->id)
                 ->where('page.title', $page->title)
+                ->where('page.permalink_url', url($page->permalink_url))
+                ->where('page.revisions_count', 1)
+                ->where('page.revisions.0.changes.0.field', 'Excerpt')
+                ->where('page.revisions.0.changes.0.new_value', 'Updated page excerpt')
                 ->where('initialValues.title', $page->title)
                 ->where('initialValues.slug', $page->slug)
                 ->where('initialValues.status', $page->status)
@@ -238,15 +285,17 @@ class PageCrudTest extends TestCase
         $this->assertSoftDeleted('cms_posts', ['id' => $page->id]);
     }
 
-    private function createPage(string $title, ?int $parentId = null, ?string $slug = null): CmsPost
+    private function createPage(string $title, ?int $parentId = null, ?string $slug = null, ?User $author = null): CmsPost
     {
+        $author ??= $this->admin;
+
         return CmsPost::query()->create([
             'title' => $title,
             'slug' => $slug ?? Str::slug($title).'-'.Str::random(6),
             'type' => CmsPostType::PAGE->value,
             'status' => 'published',
             'visibility' => 'public',
-            'author_id' => $this->admin->id,
+            'author_id' => $author->id,
             'created_by' => $this->admin->id,
             'updated_by' => $this->admin->id,
             'parent_id' => $parentId,

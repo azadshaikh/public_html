@@ -51,12 +51,20 @@ Useful topics:
 
 ## Version Notes
 
-- This project uses Inertia React v3.
+- This project is currently on Inertia React v3 beta packages, not the final stable release. Check the installed package versions before relying on edge APIs.
 - React 19+ is required.
 - Axios is no longer required. Inertia v3 ships with a built-in XHR client and built-in interceptors.
 - `@inertiajs/vite` is the preferred client setup for v3 and can auto-resolve pages and mount the app with a minimal `createInertiaApp()` entrypoint.
 - Inertia v3 can opt into the standards-compliant `data-inertia` head attribute via `defaults.future.useDataInertiaHeadAttribute`.
 - SSR works automatically in Vite development mode with `@inertiajs/vite`; a separate SSR server is not needed during normal dev.
+
+Current project package status:
+
+- `@inertiajs/react`: `3.0.0-beta.3`
+- `@inertiajs/vite`: `3.0.0-beta.1`
+- `inertiajs/inertia-laravel`: `^3.0.0-beta3`
+
+Treat beta-version differences as possible when reading upstream docs.
 
 ### Project Inertia v3 Defaults
 

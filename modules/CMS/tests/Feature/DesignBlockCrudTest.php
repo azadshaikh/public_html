@@ -102,6 +102,52 @@ class DesignBlockCrudTest extends TestCase
             );
     }
 
+    public function test_design_blocks_index_exposes_filter_options_and_round_trips_filter_state(): void
+    {
+        $matchingBlock = $this->createDesignBlock('Filtered Block', overrides: [
+            'status' => 'published',
+            'created_at' => now(),
+            'metadata' => [
+                'design_type' => 'section',
+                'block_type' => 'static',
+                'design_system' => 'bootstrap',
+                'category' => 'hero',
+            ],
+        ]);
+        $this->createDesignBlock('Non Matching Block', overrides: [
+            'metadata' => [
+                'design_type' => 'component',
+                'block_type' => 'static',
+                'design_system' => 'tailwind',
+                'category' => 'content',
+            ],
+        ]);
+        $from = now()->subDay()->toDateString();
+        $to = now()->addDay()->toDateString();
+
+        $this->actingAs($this->admin)
+            ->get(route('cms.designblock.index', [
+                'design_type' => 'section',
+                'category_id' => 'hero',
+                'design_system' => 'bootstrap',
+                'created_at_from' => $from,
+                'created_at_to' => $to,
+            ]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->component('cms/design-blocks/index')
+                ->has('rows.data', 1)
+                ->where('rows.data.0.title', $matchingBlock->title)
+                ->where('config.filters.0.options.section', 'Section')
+                ->where('config.filters.1.options.hero', 'Hero Section')
+                ->where('config.filters.2.options.bootstrap', 'Bootstrap')
+                ->where('filters.design_type', 'section')
+                ->where('filters.category_id', 'hero')
+                ->where('filters.design_system', 'bootstrap')
+                ->where('filters.created_at', $from.','.$to)
+            );
+    }
+
     public function test_admin_can_access_design_blocks_edit_page_with_initial_values(): void
     {
         $block = $this->createDesignBlock('My Test Block');
@@ -216,9 +262,9 @@ class DesignBlockCrudTest extends TestCase
         $this->assertSoftDeleted('cms_posts', ['id' => $block->id]);
     }
 
-    private function createDesignBlock(string $title, ?string $slug = null): DesignBlock
+    private function createDesignBlock(string $title, ?string $slug = null, array $overrides = []): DesignBlock
     {
-        return DesignBlock::unguarded(fn (): DesignBlock => DesignBlock::create([
+        return DesignBlock::unguarded(fn (): DesignBlock => DesignBlock::create(array_merge([
             'title' => $title,
             'slug' => $slug ?? Str::slug($title).'-'.Str::random(6),
             'status' => 'draft',
@@ -231,6 +277,6 @@ class DesignBlockCrudTest extends TestCase
                 'design_system' => 'bootstrap',
                 'category' => 'hero',
             ],
-        ]));
+        ], $overrides)));
     }
 }

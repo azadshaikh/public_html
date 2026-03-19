@@ -75,6 +75,31 @@ class RedirectionCrudTest extends TestCase
             );
     }
 
+    public function test_redirections_index_exposes_filter_options_and_round_trips_filter_state(): void
+    {
+        $matchingRedirection = $this->createRedirection('/legacy-page', '/new-page');
+        $this->createRedirection('/temporary-page', '/external-target', 302, 'external', 'wildcard', 'inactive');
+
+        $this->actingAs($this->admin)
+            ->get(route('cms.redirections.index', [
+                'redirect_type' => '301',
+                'url_type' => 'internal',
+                'match_type' => 'exact',
+            ]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->component('cms/redirections/index')
+                ->has('rows.data', 1)
+                ->where('rows.data.0.source_url', $matchingRedirection->source_url)
+                ->where('config.filters.0.options.301', '301 Moved Permanently')
+                ->where('config.filters.1.options.internal', 'Internal')
+                ->where('config.filters.2.options.exact', 'Exact Match')
+                ->where('filters.redirect_type', '301')
+                ->where('filters.url_type', 'internal')
+                ->where('filters.match_type', 'exact')
+            );
+    }
+
     public function test_admin_can_access_redirections_create_page(): void
     {
         $this->actingAs($this->admin)

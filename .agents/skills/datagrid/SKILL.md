@@ -44,19 +44,32 @@ For scaffold resources, also prefer the shared helpers from `@/lib/scaffold-data
 
 For scaffold index pages, prefer this flow:
 
-1. Treat `ScaffoldDefinition::toInertiaConfig()` as the backend source of truth.
+1. Treat the service runtime config as the backend source of truth. In this codebase, custom scaffold-like controllers should return `service()->getInertiaConfig()`, not raw `ScaffoldDefinition::toInertiaConfig()`, so dynamic filter options stay populated.
 2. Use `buildScaffoldDatagridState()` to derive filters, tabs, sorting, and per-page state.
 3. Use `buildScaffoldActionHandlers()` to derive row and bulk actions from the backend contract when the page follows the standard scaffold path.
 4. Use `buildScaffoldEmptyState()` when the page consumes backend empty-state config.
 5. Only drop down to `mapScaffoldRowActions()` or `buildScaffoldBulkActions()` directly when the page truly needs a custom split.
+
+For filter state, prefer the shared round-trip helpers already in the app:
+
+- Backend: use `collectRequestFilters()` so date-range filters submitted as `key_from` / `key_to` come back to the page as a single `key` value.
+- Frontend: use `mapScaffoldFilters(config.filters, filters, ...)` instead of rebuilding filter arrays by hand when the page is scaffold-backed.
 
 Use the shared scaffold helpers for datagrid state, but keep simple page-level navigation routes explicit with readable `route('...')` calls when those routes are fixed.
 
 If a scaffold-backed controller overrides `index()`, it must still include `config` in the Inertia payload:
 
 ```php
-'config' => $this->service()->getScaffoldDefinition()->toInertiaConfig(),
+'config' => $this->service()->getInertiaConfig(),
 ```
+
+If the overridden controller also sends explicit filter state, prefer:
+
+```php
+'filters' => $this->service()->collectRequestFilters($request),
+```
+
+This keeps date-range filters and any future shared filter serialization rules consistent across pages.
 
 If a scaffold-backed page uses custom frontend columns instead of directly mapping `config.columns`, still pass the scaffold metadata through the shared datagrid:
 
@@ -88,7 +101,7 @@ Backend empty-state actions are authorization-sensitive UI. Treat the backend pa
 | `getRowKey` | `(row: T) => Key`              | Unique key extractor per row                                                              |
 | `empty`     | `{ icon, title, description }` | Empty state content                                                                       |
 
-For scaffold-backed pages, most of these props should come from `ScaffoldDefinition::toInertiaConfig()` plus the adapter in `resources/js/lib/scaffold-datagrid.ts`, not duplicated local page logic.
+For scaffold-backed pages, most of these props should come from `service()->getInertiaConfig()` plus the adapter in `resources/js/lib/scaffold-datagrid.ts`, not duplicated local page logic.
 
 When a page needs richer cards, prefer page-level `renderCardHeader` and `renderCard` for the data-specific content, but let the shared card container in `datagrid-results.tsx` own the default card chrome, selection state, and action placement.
 

@@ -44,6 +44,7 @@ export type LoginAttemptStatistics = {
 
 export type LoginAttemptFilters = {
     search: string;
+    created_at: string;
     status: 'all' | 'success' | 'failed' | 'blocked' | 'trash';
     sort: string;
     direction: 'asc' | 'desc';

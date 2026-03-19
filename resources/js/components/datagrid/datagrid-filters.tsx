@@ -8,12 +8,18 @@ import type {
 } from '@/components/datagrid/types';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
+import {
+    Combobox,
+    ComboboxContent,
+    ComboboxEmpty,
+    ComboboxInput,
+    ComboboxItem,
+    ComboboxList,
+} from '@/components/ui/combobox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-    NativeSelect,
-    NativeSelectOption,
-} from '@/components/ui/native-select';
+import { MultiSelectCombobox } from '@/components/ui/multi-select-combobox';
+import type { MultiSelectComboboxOption } from '@/components/ui/multi-select-combobox';
 import {
     Popover,
     PopoverContent,
@@ -21,10 +27,102 @@ import {
 } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 
+type DatagridComboboxOption = {
+    value: string;
+    label: string;
+};
+
 function formatFilterLabel(name: string): string {
     return name
         .replaceAll('_', ' ')
         .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function parseSelectValues(value: string): string[] {
+    return value
+        .split(',')
+        .map((entry) => entry.trim())
+        .filter((entry) => entry !== '');
+}
+
+function resolveSelectedOption(
+    options: DatagridComboboxOption[],
+    value: string,
+): DatagridComboboxOption | null {
+    return options.find((option) => option.value === value) ?? null;
+}
+
+function DatagridComboboxField({
+    id,
+    name,
+    label,
+    value,
+    options,
+    placeholder,
+    className,
+    onChange,
+}: {
+    id: string;
+    name: string;
+    label: string;
+    value: string;
+    options: DatagridComboboxOption[];
+    placeholder: string;
+    className?: string;
+    onChange?: (value: string) => void;
+}) {
+    const [selectedOption, setSelectedOption] =
+        React.useState<DatagridComboboxOption | null>(() =>
+            resolveSelectedOption(options, value),
+        );
+
+    React.useEffect(() => {
+        setSelectedOption(resolveSelectedOption(options, value));
+    }, [options, value]);
+
+    return (
+        <div className="space-y-2">
+            <Label htmlFor={id}>{label}</Label>
+            <div className={cn('w-full', className)}>
+                <Combobox
+                    items={options}
+                    value={selectedOption}
+                    autoHighlight
+                    itemToStringLabel={(option) => option?.label ?? ''}
+                    itemToStringValue={(option) => option?.value ?? ''}
+                    onValueChange={(option) => {
+                        setSelectedOption(option ?? null);
+                        onChange?.(option?.value ?? '');
+                    }}
+                >
+                    <ComboboxInput
+                        id={id}
+                        placeholder={placeholder}
+                        className="w-full"
+                        showClear={selectedOption !== null}
+                    />
+                    <ComboboxContent>
+                        <ComboboxEmpty>No results found.</ComboboxEmpty>
+                        <ComboboxList>
+                            {(option: DatagridComboboxOption) => (
+                                <ComboboxItem
+                                    key={`${name}-${option.value}`}
+                                    value={option}
+                                >
+                                    {option.label}
+                                </ComboboxItem>
+                            )}
+                        </ComboboxList>
+                    </ComboboxContent>
+                </Combobox>
+            </div>
+            <input
+                type="hidden"
+                name={name}
+                value={selectedOption?.value ?? ''}
+            />
+        </div>
+    );
 }
 
 // =========================================================================
@@ -33,31 +131,67 @@ function formatFilterLabel(name: string): string {
 
 export function DatagridSelectFilterField({
     filter,
+    onChange,
 }: {
     filter: DatagridSelectFilter;
+    onChange?: (name: string, value: string) => void;
 }) {
-    return (
-        <div className="space-y-2">
-            <Label htmlFor={`datagrid-filter-${filter.name}`}>
-                {formatFilterLabel(filter.name)}
-            </Label>
-            <NativeSelect
-                id={`datagrid-filter-${filter.name}`}
-                size="comfortable"
-                name={filter.name}
-                defaultValue={filter.value}
-                className={cn('w-full', filter.className)}
-            >
-                {filter.options.map((option) => (
-                    <NativeSelectOption
-                        key={`${filter.name}-${option.value}`}
-                        value={option.value}
-                    >
-                        {option.label}
-                    </NativeSelectOption>
+    const [selectedValues, setSelectedValues] = React.useState<string[]>(() =>
+        parseSelectValues(filter.value),
+    );
+
+    React.useEffect(() => {
+        setSelectedValues(parseSelectValues(filter.value));
+    }, [filter.value]);
+
+    if (filter.multiple) {
+        const options: MultiSelectComboboxOption<string>[] = filter.options.map(
+            (option) => ({
+                value: option.value,
+                label: option.label,
+            }),
+        );
+
+        return (
+            <div className="space-y-2">
+                <Label htmlFor={`datagrid-filter-${filter.name}`}>
+                    {filter.label ?? formatFilterLabel(filter.name)}
+                </Label>
+                <div className={cn('w-full', filter.className)}>
+                    <MultiSelectCombobox
+                        id={`datagrid-filter-${filter.name}`}
+                        value={selectedValues}
+                        options={options}
+                        onValueChange={(next) => {
+                            setSelectedValues(next);
+                            onChange?.(filter.name, next.join(','));
+                        }}
+                        placeholder={filter.placeholder ?? 'Select options'}
+                    />
+                </div>
+                {selectedValues.map((value) => (
+                    <input
+                        key={`${filter.name}-${value}`}
+                        type="hidden"
+                        name={filter.name}
+                        value={value}
+                    />
                 ))}
-            </NativeSelect>
-        </div>
+            </div>
+        );
+    }
+
+    return (
+        <DatagridComboboxField
+            id={`datagrid-filter-${filter.name}`}
+            name={filter.name}
+            label={filter.label ?? formatFilterLabel(filter.name)}
+            value={filter.value}
+            options={filter.options}
+            placeholder={filter.placeholder ?? 'All'}
+            className={filter.className}
+            onChange={(next) => onChange?.(filter.name, next)}
+        />
     );
 }
 
@@ -92,20 +226,15 @@ function toISODateString(date: Date): string {
 
 export function DatagridDateRangeFilterField({
     filter,
+    onChange,
 }: {
     filter: DatagridDateRangeFilter;
+    onChange?: (name: string, value: string) => void;
 }) {
     const [range, setRange] = React.useState(() =>
         parseDateRangeValue(filter.value),
     );
     const [isOpen, setIsOpen] = React.useState(false);
-
-    const hiddenValue = React.useMemo(() => {
-        if (!range.from) return '';
-        const fromStr = toISODateString(range.from);
-        const toStr = range.to ? toISODateString(range.to) : '';
-        return toStr ? `${fromStr},${toStr}` : fromStr;
-    }, [range]);
 
     const displayText = React.useMemo(() => {
         if (!range.from) return '';
@@ -115,14 +244,36 @@ export function DatagridDateRangeFilterField({
 
     const handleClear = (event: React.MouseEvent) => {
         event.stopPropagation();
+        event.preventDefault();
         setRange({});
+        onChange?.(filter.name, '');
+    };
+
+    const handleOpenChange = (open: boolean) => {
+        setIsOpen(open);
+
+        if (!open && range.from && range.to) {
+            onChange?.(
+                filter.name,
+                `${toISODateString(range.from)},${toISODateString(range.to)}`,
+            );
+        }
     };
 
     return (
         <div className="space-y-2">
             <Label>{filter.label ?? formatFilterLabel(filter.name)}</Label>
-            <input type="hidden" name={filter.name} value={hiddenValue} />
-            <Popover open={isOpen} onOpenChange={setIsOpen}>
+            <input
+                type="hidden"
+                name={`${filter.name}_from`}
+                value={range.from ? toISODateString(range.from) : ''}
+            />
+            <input
+                type="hidden"
+                name={`${filter.name}_to`}
+                value={range.to ? toISODateString(range.to) : ''}
+            />
+            <Popover open={isOpen} onOpenChange={handleOpenChange}>
                 <PopoverTrigger asChild>
                     <Button
                         type="button"
@@ -174,29 +325,28 @@ export function DatagridDateRangeFilterField({
 
 export function DatagridBooleanFilterField({
     filter,
+    onChange,
 }: {
     filter: DatagridBooleanFilter;
+    onChange?: (name: string, value: string) => void;
 }) {
     const trueLabel = filter.trueLabel ?? 'Yes';
     const falseLabel = filter.falseLabel ?? 'No';
 
     return (
-        <div className="space-y-2">
-            <Label htmlFor={`datagrid-filter-${filter.name}`}>
-                {filter.label ?? formatFilterLabel(filter.name)}
-            </Label>
-            <NativeSelect
-                id={`datagrid-filter-${filter.name}`}
-                size="comfortable"
-                name={filter.name}
-                defaultValue={filter.value}
-                className={cn('w-full', filter.className)}
-            >
-                <NativeSelectOption value="">All</NativeSelectOption>
-                <NativeSelectOption value="1">{trueLabel}</NativeSelectOption>
-                <NativeSelectOption value="0">{falseLabel}</NativeSelectOption>
-            </NativeSelect>
-        </div>
+        <DatagridComboboxField
+            id={`datagrid-filter-${filter.name}`}
+            name={filter.name}
+            label={filter.label ?? formatFilterLabel(filter.name)}
+            value={filter.value}
+            options={[
+                { value: '1', label: trueLabel },
+                { value: '0', label: falseLabel },
+            ]}
+            placeholder="All"
+            className={filter.className}
+            onChange={(next) => onChange?.(filter.name, next)}
+        />
     );
 }
 
@@ -206,8 +356,10 @@ export function DatagridBooleanFilterField({
 
 export function DatagridNumberFilterField({
     filter,
+    onChange,
 }: {
     filter: DatagridNumberFilter;
+    onChange?: (name: string, value: string) => void;
 }) {
     return (
         <div className="space-y-2">
@@ -224,6 +376,7 @@ export function DatagridNumberFilterField({
                 step={filter.step}
                 placeholder={filter.placeholder ?? 'Enter a number...'}
                 className={cn('w-full', filter.className)}
+                onChange={(e) => onChange?.(filter.name, e.target.value)}
             />
         </div>
     );

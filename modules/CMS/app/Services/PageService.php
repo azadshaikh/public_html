@@ -27,6 +27,7 @@ use RuntimeException;
 class PageService implements ScaffoldServiceInterface
 {
     use Scaffoldable {
+        getFiltersConfig as protected scaffoldGetFiltersConfig;
         applySorting as protected scaffoldApplySorting;
     }
 
@@ -41,6 +42,27 @@ class PageService implements ScaffoldServiceInterface
             ->map(fn ($status): array => ['value' => $status['value'], 'label' => $status['label']])
             ->values()
             ->all();
+    }
+
+    protected function getFiltersConfig(): array
+    {
+        $filters = $this->scaffoldGetFiltersConfig();
+
+        foreach ($filters as $index => $filter) {
+            if (($filter['key'] ?? null) === 'statuses') {
+                $filters[$index]['options'] = $this->normalizeFilterOptionMap($this->getStatusOptions());
+            }
+
+            if (($filter['key'] ?? null) === 'author_id') {
+                $filters[$index]['options'] = $this->normalizeFilterOptionMap($this->getAuthorOptions());
+            }
+
+            if (($filter['key'] ?? null) === 'parent_id') {
+                $filters[$index]['options'] = $this->normalizeFilterOptionMap($this->getParentPageOptions());
+            }
+        }
+
+        return $filters;
     }
 
     public function getStatistics(): array

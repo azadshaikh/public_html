@@ -69,7 +69,7 @@ abstract class ScaffoldController extends Controller
         $data = $this->scaffoldService()->getData($request);
 
         return Inertia::render($this->inertiaPage().'/index', [
-            'config' => $this->scaffoldDefinition()->toInertiaConfig(),
+            'config' => $this->scaffoldService()->getInertiaConfig(),
             ...$data,
             'status' => session('status'),
             'error' => session('error'),

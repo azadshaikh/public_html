@@ -20,9 +20,9 @@ import type { FormFieldErrors, FormValidationRules } from '@/lib/forms';
 type DirtyGuardOptions =
     | boolean
     | {
-          enabled?: boolean;
-          message?: string;
-      };
+        enabled?: boolean;
+        message?: string;
+    };
 
 type UseAppFormOptions<T extends FormDataType<T>> = {
     defaults: T;
@@ -30,6 +30,7 @@ type UseAppFormOptions<T extends FormDataType<T>> = {
     dontRemember?: Array<AppFormFieldName<T>>;
     dirtyGuard?: DirtyGuardOptions;
     rules?: FormValidationRules<T>;
+    submitShortcut?: boolean;
 };
 
 type AppFormSubmitOptions = UseFormSubmitOptions & {
@@ -60,6 +61,7 @@ export function useAppForm<T extends FormDataType<T>>({
     dontRemember = [],
     dirtyGuard = false,
     rules = {},
+    submitShortcut = true,
 }: UseAppFormOptions<T>) {
     const inertiaForm = useForm<T>(rememberKey, defaults);
     const [clientErrors, setClientErrors] = useState<FormFieldErrors<T>>({});
@@ -84,6 +86,46 @@ export function useAppForm<T extends FormDataType<T>>({
     useEffect(() => {
         defaultsRef.current = defaults;
     }, [defaults]);
+
+    useEffect(() => {
+        if (!submitShortcut) {
+            return;
+        }
+
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (
+                event.defaultPrevented ||
+                event.altKey ||
+                !(event.metaKey || event.ctrlKey) ||
+                event.key.toLowerCase() !== 's' ||
+                isSubmittingRef.current ||
+                inertiaForm.processing
+            ) {
+                return;
+            }
+
+            const forms = Array.from(document.querySelectorAll('form'));
+
+            if (forms.length !== 1) {
+                return;
+            }
+
+            const [singleForm] = forms;
+
+            if (!(singleForm instanceof HTMLFormElement)) {
+                return;
+            }
+
+            event.preventDefault();
+            singleForm.requestSubmit();
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [inertiaForm.processing, submitShortcut]);
 
     const resetValidationState = useCallback(() => {
         setClientErrors({});

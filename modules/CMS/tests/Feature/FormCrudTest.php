@@ -112,6 +112,43 @@ class FormCrudTest extends TestCase
             );
     }
 
+    public function test_forms_index_exposes_filter_options_and_round_trips_filter_state(): void
+    {
+        $matchingForm = $this->createForm([
+            'title' => 'Filtered Form',
+            'slug' => 'filtered-form',
+            'template' => 'contact',
+            'form_type' => 'standard',
+            'is_active' => true,
+        ]);
+        $this->createForm([
+            'title' => 'Non Matching Form',
+            'slug' => 'non-matching-form',
+            'template' => 'feedback',
+            'form_type' => 'popup',
+            'is_active' => false,
+        ]);
+
+        $this->actingAs($this->admin)
+            ->get(route('cms.form.index', [
+                'template' => 'contact',
+                'form_type' => 'standard',
+                'is_active' => '1',
+            ]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->component('cms/forms/index')
+                ->has('rows.data', 1)
+                ->where('rows.data.0.title', $matchingForm->title)
+                ->where('config.filters.0.options.contact', 'Contact Form')
+                ->where('config.filters.1.options.standard', 'Standard Form')
+                ->where('config.filters.2.options.1', 'Yes')
+                ->where('filters.template', 'contact')
+                ->where('filters.form_type', 'standard')
+                ->where('filters.is_active', '1')
+            );
+    }
+
     public function test_form_show_route_redirects_to_edit_page(): void
     {
         $form = $this->createForm();

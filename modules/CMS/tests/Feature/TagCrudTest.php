@@ -96,17 +96,61 @@ class TagCrudTest extends TestCase
             );
     }
 
+    public function test_tags_index_exposes_filter_options_and_round_trips_filter_state(): void
+    {
+        $author = User::factory()->create([
+            'first_name' => 'Tag',
+            'last_name' => 'Author',
+            'status' => Status::ACTIVE,
+            'email_verified_at' => now(),
+        ]);
+        $matchingTag = $this->createTag('Filtered Tag', null, $author);
+        $this->createTag('Non Matching Tag');
+        $from = now()->subDay()->toDateString();
+        $to = now()->addDay()->toDateString();
+
+        $matchingTag->forceFill([
+            'status' => 'published',
+            'created_at' => now(),
+        ])->save();
+
+        $this->actingAs($this->admin)
+            ->get(route('cms.tags.index', [
+                'statuses' => ['published'],
+                'author_id' => $author->id,
+                'created_at_from' => $from,
+                'created_at_to' => $to,
+            ]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->component('cms/tags/index')
+                ->has('rows.data', 1)
+                ->where('rows.data.0.title', $matchingTag->title)
+                ->where('config.filters.0.options.published', 'Published')
+                ->where('config.filters.1.options.'.$author->id, $author->name)
+                ->where('filters.statuses.0', 'published')
+                ->where('filters.author_id', (string) $author->id)
+                ->where('filters.created_at', $from.','.$to)
+            );
+    }
+
     public function test_admin_can_access_tags_edit_page_with_initial_values(): void
     {
         $tag = $this->createTag('Laravel');
 
-        $this->actingAs($this->admin)
-            ->get(route('cms.tags.edit', $tag))
+        $this->actingAs($this->admin);
+        $tag->forceFill(['excerpt' => 'Updated tag excerpt'])->save();
+
+        $this->get(route('cms.tags.edit', $tag))
             ->assertOk()
             ->assertInertia(fn (Assert $page): Assert => $page
                 ->component('cms/tags/edit')
                 ->where('tag.id', $tag->id)
                 ->where('tag.title', $tag->title)
+                ->where('tag.permalink_url', url($tag->permalink_url))
+                ->where('tag.revisions_count', 1)
+                ->where('tag.revisions.0.changes.0.field', 'Excerpt')
+                ->where('tag.revisions.0.changes.0.new_value', 'Updated tag excerpt')
                 ->where('initialValues.title', $tag->title)
                 ->where('initialValues.slug', $tag->slug)
                 ->where('initialValues.status', $tag->status)
@@ -198,15 +242,17 @@ class TagCrudTest extends TestCase
         $this->assertSoftDeleted('cms_posts', ['id' => $tag->id]);
     }
 
-    private function createTag(string $title, ?string $slug = null): CmsPost
+    private function createTag(string $title, ?string $slug = null, ?User $author = null): CmsPost
     {
+        $author ??= $this->admin;
+
         return CmsPost::query()->create([
             'title' => $title,
             'slug' => $slug ?? Str::slug($title).'-'.Str::random(6),
             'type' => CmsPostType::TAG->value,
             'status' => 'published',
             'visibility' => 'public',
-            'author_id' => $this->admin->id,
+            'author_id' => $author->id,
             'created_by' => $this->admin->id,
             'updated_by' => $this->admin->id,
         ]);

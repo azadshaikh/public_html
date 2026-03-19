@@ -19,7 +19,9 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class RedirectionService implements ScaffoldServiceInterface
 {
-    use Scaffoldable;
+    use Scaffoldable {
+        getFiltersConfig as protected scaffoldGetFiltersConfig;
+    }
 
     public function getScaffoldDefinition(): ScaffoldDefinition
     {
@@ -32,6 +34,27 @@ class RedirectionService implements ScaffoldServiceInterface
             ['value' => 'active', 'label' => 'Active'],
             ['value' => 'inactive', 'label' => 'Inactive'],
         ];
+    }
+
+    protected function getFiltersConfig(): array
+    {
+        $filters = $this->scaffoldGetFiltersConfig();
+
+        foreach ($filters as $index => $filter) {
+            if (($filter['key'] ?? null) === 'redirect_type') {
+                $filters[$index]['options'] = $this->normalizeFilterOptionMap($this->getRedirectTypeOptions());
+            }
+
+            if (($filter['key'] ?? null) === 'url_type') {
+                $filters[$index]['options'] = $this->normalizeFilterOptionMap($this->getUrlTypeOptions());
+            }
+
+            if (($filter['key'] ?? null) === 'match_type') {
+                $filters[$index]['options'] = $this->normalizeFilterOptionMap($this->getMatchTypeOptions());
+            }
+        }
+
+        return $filters;
     }
 
     public function getRedirectTypeOptions(): array

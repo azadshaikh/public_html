@@ -20,6 +20,8 @@ export type DatagridSelectFilter = {
     type: 'select';
     name: string;
     value: string;
+    label?: string;
+    placeholder?: string;
     options: DatagridFilterOption[];
     multiple?: boolean;
     className?: string;

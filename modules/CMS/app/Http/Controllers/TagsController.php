@@ -12,12 +12,14 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Modules\CMS\Definitions\TagDefinition;
+use Modules\CMS\Http\Controllers\Concerns\BuildsCmsRevisionPayload;
 use Modules\CMS\Models\CmsPost;
 use Modules\CMS\Services\TagService;
 use RuntimeException;
 
 class TagsController extends ScaffoldController implements HasMiddleware
 {
+    use BuildsCmsRevisionPayload;
     use HasMediaPicker;
 
     public function __construct(private readonly TagService $tagService) {}
@@ -95,6 +97,7 @@ class TagsController extends ScaffoldController implements HasMiddleware
                 : null,
             'updated_at_formatted' => app_date_time_format($model->updated_at, 'datetime'),
             'updated_at_human' => $model->updated_at?->diffForHumans(),
+            ...$this->buildCmsRevisionPayload($model),
         ];
     }
 
@@ -103,6 +106,8 @@ class TagsController extends ScaffoldController implements HasMiddleware
      */
     private function buildInitialValues(CmsPost $model): array
     {
+        $schema = $model->getAttribute('schema');
+
         return [
             'title' => (string) ($model->getAttribute('title') ?? ''),
             'slug' => (string) ($model->getAttribute('slug') ?? ''),
@@ -114,6 +119,13 @@ class TagsController extends ScaffoldController implements HasMiddleware
             'meta_title' => (string) ($model->meta_title ?? ''),
             'meta_description' => (string) ($model->meta_description ?? ''),
             'meta_robots' => (string) ($model->meta_robots ?? ''),
+            'og_title' => (string) ($model->og_title ?? ''),
+            'og_description' => (string) ($model->og_description ?? ''),
+            'og_image' => (string) ($model->og_image ?? ''),
+            'og_url' => (string) ($model->og_url ?? ''),
+            'schema' => is_array($schema)
+                ? json_encode($schema, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
+                : (string) ($schema ?? ''),
         ];
     }
 

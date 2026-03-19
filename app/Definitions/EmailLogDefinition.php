@@ -107,13 +107,13 @@ class EmailLogDefinition extends ScaffoldDefinition
             // Provider filter
             Filter::select('email_provider_id')
                 ->label('Provider')
-                ->options([]) // Will be populated by controller
+                ->options([]) // Will be populated by service
                 ->placeholder('All Providers'),
 
             // Template filter
             Filter::select('email_template_id')
                 ->label('Template')
-                ->options([]) // Will be populated by controller
+                ->options([]) // Will be populated by service
                 ->placeholder('All Templates'),
 
             // Date range filter

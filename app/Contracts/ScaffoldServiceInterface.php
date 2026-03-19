@@ -49,6 +49,13 @@ interface ScaffoldServiceInterface
     public function getData(Request $request): array;
 
     /**
+     * Get the runtime scaffold configuration for Inertia pages.
+     *
+     * @return array<string, mixed>
+     */
+    public function getInertiaConfig(): array;
+
+    /**
      * Create a new model instance.
      */
     public function create(array $data): Model;

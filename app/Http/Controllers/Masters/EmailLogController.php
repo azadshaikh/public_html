@@ -49,26 +49,15 @@ class EmailLogController extends ScaffoldController implements HasMiddleware
     {
         $this->enforcePermission('view');
 
-        $status = $request->input('status') ?? $request->route('status') ?? 'all';
-        $perPage = $this->emailLogService->getScaffoldDefinition()->getPerPage();
+        $filters = $this->emailLogService->collectRequestFilters($request);
 
         return Inertia::render($this->inertiaPage().'/index', [
-            'config' => $this->emailLogService->getScaffoldDefinition()->toInertiaConfig(),
+            'config' => $this->emailLogService->getInertiaConfig(),
             'emailLogs' => $this->emailLogService->getPaginatedEmailLogs($request),
             'statistics' => $this->emailLogService->getStatistics(),
             'providerOptions' => $this->emailLogService->getProviderOptions(),
             'templateOptions' => $this->emailLogService->getTemplateOptions(),
-            'filters' => [
-                'search' => $request->input('search', ''),
-                'email_provider_id' => $request->input('email_provider_id', ''),
-                'email_template_id' => $request->input('email_template_id', ''),
-                'sent_at' => $request->input('sent_at', ''),
-                'status' => $status,
-                'sort' => $request->input('sort', 'sent_at'),
-                'direction' => $request->input('direction', 'desc'),
-                'per_page' => (int) $request->input('per_page', $perPage),
-                'view' => $request->input('view', 'table'),
-            ],
+            'filters' => $filters,
             'status' => session('status'),
             'error' => session('error'),
         ]);

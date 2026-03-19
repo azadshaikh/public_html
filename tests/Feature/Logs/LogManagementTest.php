@@ -77,6 +77,9 @@ class LogManagementTest extends TestCase
             'updated_at' => now(),
         ]);
 
+        $fromDate = now()->subDays(7)->toDateString();
+        $toDate = now()->toDateString();
+
         DB::table('activity_log')->insert([
             'log_name' => 'default',
             'description' => 'Old activity',
@@ -91,13 +94,23 @@ class LogManagementTest extends TestCase
         ]);
 
         $this->actingAs($this->superUser)
-            ->get(route('app.logs.activity-logs.index'))
+            ->get(route('app.logs.activity-logs.index', [
+                'causer_id' => (string) $this->superUser->id,
+                'created_at_from' => $fromDate,
+                'created_at_to' => $toDate,
+            ]))
             ->assertOk()
             ->assertInertia(fn (Assert $page): Assert => $page
                 ->component('logs/activity-logs/index')
                 ->has('logs.data')
                 ->where('statistics.total', 2)
                 ->has('filterOptions.event')
+                ->where('config.filters.0.key', 'event')
+                ->where('config.filters.0.options.update', 'Update')
+                ->where('config.filters.1.key', 'causer_id')
+                ->where('config.filters.1.options.'.$this->superUser->id, fn (string $label): bool => str_contains($label, $this->superUser->email))
+                ->where('filters.causer_id', (string) $this->superUser->id)
+                ->where('filters.created_at', $fromDate.','.$toDate)
             );
 
         $this->actingAs($this->superUser)
@@ -153,14 +166,22 @@ class LogManagementTest extends TestCase
             'created_at' => now()->subDays(45),
         ])->save();
 
+        $fromDate = now()->subDays(7)->toDateString();
+        $toDate = now()->toDateString();
+
         $this->actingAs($this->superUser)
-            ->get(route('app.logs.login-attempts.index'))
+            ->get(route('app.logs.login-attempts.index', [
+                'created_at_from' => $fromDate,
+                'created_at_to' => $toDate,
+            ]))
             ->assertOk()
             ->assertInertia(fn (Assert $page): Assert => $page
                 ->component('logs/login-attempts/index')
                 ->has('loginAttempts.data')
                 ->where('statistics.total', 3)
                 ->where('statistics.blocked', 1)
+                ->where('config.filters.0.key', 'created_at')
+                ->where('filters.created_at', $fromDate.','.$toDate)
             );
 
         $this->actingAs($this->superUser)
@@ -220,13 +241,21 @@ class LogManagementTest extends TestCase
             'created_at' => now()->subDays(40),
         ])->save();
 
+        $fromDate = now()->subDays(7)->toDateString();
+        $toDate = now()->toDateString();
+
         $this->actingAs($this->superUser)
-            ->get(route('app.logs.not-found-logs.index'))
+            ->get(route('app.logs.not-found-logs.index', [
+                'created_at_from' => $fromDate,
+                'created_at_to' => $toDate,
+            ]))
             ->assertOk()
             ->assertInertia(fn (Assert $page): Assert => $page
                 ->component('logs/not-found-logs/index')
                 ->has('notFoundLogs.data')
                 ->where('statistics.total', fn (int $total): bool => $total >= 2)
+                ->where('config.filters.0.key', 'created_at')
+                ->where('filters.created_at', $fromDate.','.$toDate)
             );
 
         $this->actingAs($this->superUser)

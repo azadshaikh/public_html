@@ -143,13 +143,21 @@ For forms, return:
 - current record summary when editing
 - option lists
 
-For scaffold-backed resources, prefer the shared scaffold contract from `ScaffoldDefinition::toInertiaConfig()` instead of manually rebuilding datagrid tabs, filters, sort metadata, and per-page defaults in each controller.
+For scaffold-backed resources, prefer the shared scaffold runtime contract from `service()->getInertiaConfig()` instead of manually rebuilding datagrid tabs, filters, sort metadata, and per-page defaults in each controller.
 
 If you override a scaffold-backed `index()` action for custom statistics, filter options, or alternate row payloads, keep the scaffold contract intact by still returning:
 
 ```php
-'config' => $this->service()->getScaffoldDefinition()->toInertiaConfig(),
+'config' => $this->service()->getInertiaConfig(),
 ```
+
+If the page also needs current filter state, prefer the shared collector instead of manually assembling the filter payload:
+
+```php
+'filters' => $this->service()->collectRequestFilters($request),
+```
+
+This is especially important for date-range filters, which round-trip through `*_from` / `*_to` request params and are normalized back into a single filter value for the frontend.
 
 On the frontend, if the index page supplies custom `DatagridColumn[]`, pass `scaffoldColumns={config.columns}` into `<Datagrid>` so widths and scaffold-only columns stay aligned with the backend definition.
 
@@ -226,6 +234,8 @@ For index pages, prefer:
 - empty state
 
 For scaffold index pages, derive the datagrid state from `resources/js/lib/scaffold-datagrid.ts` so tabs, filters, sorting, bulk actions, and pagination stay aligned with the backend definition.
+
+When the page is scaffold-backed, prefer `mapScaffoldFilters(config.filters, filters, ...)` over hand-built filter arrays so runtime filter definitions, labels, placeholders, multi-select state, and date-range behavior stay consistent with the backend contract.
 
 When the page intentionally uses custom columns or custom cards, keep display logic in the React page but keep layout metadata in the scaffold definition. Width should be owned by `Column::width()` and consumed through `config.columns`, not duplicated by hard-coded page widths.
 

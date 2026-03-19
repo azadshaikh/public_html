@@ -1,25 +1,15 @@
 'use client';
 
-import { Link, router } from '@inertiajs/react';
-import {
-    ExternalLinkIcon,
-    SaveIcon,
-    Settings2Icon,
-    ShieldIcon,
-    Trash2Icon,
-} from 'lucide-react';
+import { router } from '@inertiajs/react';
+import { Settings2Icon, ShieldIcon } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
-import { AsteroNote } from '@/components/asteronote/asteronote';
 import { MonacoEditor } from '@/components/code-editor/monaco-editor';
 import { FormErrorSummary } from '@/components/forms/form-error-summary';
-import { MediaPickerField } from '@/components/media/media-picker-field';
-import { Button } from '@/components/ui/button';
 import {
     Card,
     CardContent,
     CardDescription,
-    CardFooter,
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
@@ -35,14 +25,6 @@ import {
     NativeSelect,
     NativeSelectOption,
 } from '@/components/ui/native-select';
-import {
-    PanelTabs,
-    PanelTabsContent,
-    PanelTabsList,
-    PanelTabsTrigger,
-} from '@/components/ui/panel-tabs';
-import { Spinner } from '@/components/ui/spinner';
-import { Textarea } from '@/components/ui/textarea';
 import { useAppForm } from '@/hooks/use-app-form';
 import { formValidators } from '@/lib/forms';
 import type {
@@ -51,6 +33,17 @@ import type {
     PageEditDetail,
     PageFormValues,
 } from '../../types/cms';
+import { CmsCollapsibleSidebarCard } from '../shared/cms-collapsible-sidebar-card';
+import { CmsContentTabBody } from '../shared/cms-content-tab-body';
+import { CmsDangerZoneCard } from '../shared/cms-danger-zone-card';
+import { CmsFeaturedImageCard } from '../shared/cms-featured-image-card';
+import { RequiredLabel, buildPermalink, slugify } from '../shared/cms-form-utils';
+import { CmsRevisionsSection } from '../shared/cms-revisions-section';
+import { CmsSeoFields } from '../shared/cms-seo-fields';
+import { CmsSlugField } from '../shared/cms-slug-field';
+import { CmsSocialFields } from '../shared/cms-social-fields';
+import { CmsStickyFormFooter } from '../shared/cms-sticky-form-footer';
+import { CmsTabSections } from '../shared/cms-tab-sections';
 
 type PageFormProps = {
     mode: 'create' | 'edit';
@@ -89,48 +82,6 @@ const emptyValues: PageFormValues = {
     og_url: '',
     schema: '',
 };
-
-function slugify(value: string): string {
-    return value
-        .toLowerCase()
-        .trim()
-        .replace(/[^a-z0-9\s-]/g, '')
-        .replace(/\s+/g, '-')
-        .replace(/-+/g, '-')
-        .replace(/^-+/, '')
-        .replace(/-+$/, '');
-}
-
-function buildPermalink(
-    baseUrl: string,
-    preSlug: string,
-    slug: string,
-): string {
-    const base = baseUrl.replace(/\/$/, '');
-    const cleanedSlug = slug.trim() === '' ? 'your-slug-here' : slug.trim();
-
-    if (preSlug === '/' || preSlug.trim() === '') {
-        return `${base}/${cleanedSlug}`;
-    }
-
-    const prefix = preSlug.replace(/^\/+|\/+$/g, '');
-
-    return `${base}/${prefix}/${cleanedSlug}`;
-}
-
-function RequiredLabel({
-    htmlFor,
-    children,
-}: {
-    htmlFor?: string;
-    children: string;
-}) {
-    return (
-        <FieldLabel htmlFor={htmlFor}>
-            {children} <span className="text-destructive">*</span>
-        </FieldLabel>
-    );
-}
 
 export default function PageForm({
     mode,
@@ -181,8 +132,8 @@ export default function PageForm({
     }, [data.slug, data.title, mode, setField, slugTouched]);
 
     const permalinkPreview = useMemo(
-        () => buildPermalink(baseUrl, preSlug, form.data.slug),
-        [baseUrl, form.data.slug, preSlug],
+        () => page?.permalink_url ?? buildPermalink(baseUrl, preSlug, form.data.slug),
+        [baseUrl, form.data.slug, page?.permalink_url, preSlug],
     );
 
     const showPublishAt =
@@ -190,6 +141,11 @@ export default function PageForm({
     const showPasswordFields = form.data.visibility === 'password';
     const showParentPageField = parentPageOptions.length > 1;
     const showTemplateField = templateOptions.length > 1;
+    const hasMoreOptionsErrors = Boolean(
+        form.invalid('slug') ||
+            form.invalid('author_id') ||
+            form.invalid('template'),
+    );
 
     const submitMethod = mode === 'create' ? 'post' : 'put';
     const submitUrl =
@@ -231,7 +187,7 @@ export default function PageForm({
 
     return (
         <form
-            className="flex flex-col gap-6"
+            className="flex flex-col gap-6 pb-20"
             onSubmit={handleSubmit}
             noValidate
         >
@@ -257,358 +213,167 @@ export default function PageForm({
                         <FieldError>{form.error('title')}</FieldError>
                     </Field>
 
-                    <PanelTabs defaultValue="content">
-                        <PanelTabsList>
-                            <PanelTabsTrigger value="content">
-                                Content
-                            </PanelTabsTrigger>
-                            <PanelTabsTrigger value="seo">SEO</PanelTabsTrigger>
-                            <PanelTabsTrigger value="social">
-                                Social
-                            </PanelTabsTrigger>
-                            <PanelTabsTrigger value="schema">
-                                Schema
-                            </PanelTabsTrigger>
-                        </PanelTabsList>
-
-                        <PanelTabsContent
-                            value="content"
-                            className="flex flex-col gap-6"
-                        >
-                                    <Field
-                                        data-invalid={
-                                            form.invalid('content') || undefined
+                    <CmsTabSections
+                        defaultValue="content"
+                        tabs={[
+                            {
+                                value: 'content',
+                                label: 'Content',
+                                contentClassName: 'flex flex-col gap-6',
+                                content: (
+                                    <CmsContentTabBody
+                                        contentValue={form.data.content}
+                                        excerptValue={form.data.excerpt}
+                                        onContentChange={(value) =>
+                                            form.setField('content', value)
                                         }
-                                    >
-                                        <AsteroNote
-                                            id="content"
-                                            value={form.data.content}
-                                            onChange={(value) =>
-                                                form.setField('content', value)
-                                            }
-                                            onBlur={() => form.touch('content')}
-                                            placeholder="Write the full page content"
-                                            invalid={
-                                                form.invalid('content') ||
-                                                undefined
-                                            }
-                                        />
-                                        <FieldError>
-                                            {form.error('content')}
-                                        </FieldError>
-                                    </Field>
-
-                                    <Field
-                                        data-invalid={
-                                            form.invalid('excerpt') || undefined
+                                        onExcerptChange={(value) =>
+                                            form.setField('excerpt', value)
                                         }
-                                    >
-                                        <FieldLabel htmlFor="excerpt">
-                                            Excerpt (optional)
-                                        </FieldLabel>
-                                        <Textarea
-                                            id="excerpt"
-                                            className="bg-background"
-                                            rows={4}
-                                            value={form.data.excerpt}
-                                            onChange={(event) =>
-                                                form.setField(
-                                                    'excerpt',
-                                                    event.target.value,
-                                                )
-                                            }
-                                            onBlur={() => form.touch('excerpt')}
-                                            aria-invalid={
-                                                form.invalid('excerpt') ||
-                                                undefined
-                                            }
-                                            placeholder="Enter a short excerpt"
-                                        />
-                                        <FieldDescription>
-                                            Used in listings, previews, and
-                                            search snippets.
-                                        </FieldDescription>
-                                        <FieldError>
-                                            {form.error('excerpt')}
-                                        </FieldError>
-                                    </Field>
-
-                                    {page ? (
-                                        <div className="text-sm text-muted-foreground">
-                                            Last updated{' '}
-                                            {page.updated_at_human ??
-                                                'recently'}
-                                            {page.updated_at_formatted
-                                                ? ` (${page.updated_at_formatted})`
-                                                : ''}
-                                        </div>
-                                    ) : null}
-                        </PanelTabsContent>
-
-                        <PanelTabsContent
-                            value="seo"
-                            className="flex flex-col gap-6"
-                        >
-                                    <Field
-                                        data-invalid={
-                                            form.invalid('meta_title') ||
-                                            undefined
+                                        onContentBlur={() =>
+                                            form.touch('content')
                                         }
-                                    >
-                                        <FieldLabel htmlFor="meta_title">
-                                            Meta title
-                                        </FieldLabel>
-                                        <Input
-                                            id="meta_title"
-                                            className="bg-background"
-                                            value={form.data.meta_title}
-                                            onChange={(event) =>
-                                                form.setField(
-                                                    'meta_title',
-                                                    event.target.value,
-                                                )
-                                            }
-                                            onBlur={() =>
-                                                form.touch('meta_title')
-                                            }
-                                            aria-invalid={
-                                                form.invalid('meta_title') ||
-                                                undefined
-                                            }
-                                            placeholder="Enter meta title"
-                                        />
-                                        <FieldDescription>
-                                            Recommended length: 50–60
-                                            characters.
-                                        </FieldDescription>
-                                        <FieldError>
-                                            {form.error('meta_title')}
-                                        </FieldError>
-                                    </Field>
-
-                                    <Field
-                                        data-invalid={
-                                            form.invalid('meta_description') ||
-                                            undefined
+                                        onExcerptBlur={() =>
+                                            form.touch('excerpt')
                                         }
-                                    >
-                                        <FieldLabel htmlFor="meta_description">
-                                            Meta description
-                                        </FieldLabel>
-                                        <Textarea
-                                            id="meta_description"
-                                            className="bg-background"
-                                            rows={4}
-                                            value={form.data.meta_description}
-                                            onChange={(event) =>
-                                                form.setField(
-                                                    'meta_description',
-                                                    event.target.value,
-                                                )
-                                            }
-                                            onBlur={() =>
-                                                form.touch('meta_description')
-                                            }
-                                            aria-invalid={
-                                                form.invalid(
-                                                    'meta_description',
-                                                ) || undefined
-                                            }
-                                            placeholder="Enter meta description"
-                                        />
-                                        <FieldError>
-                                            {form.error('meta_description')}
-                                        </FieldError>
-                                    </Field>
-
-                                    <Field
-                                        data-invalid={
-                                            form.invalid('meta_robots') ||
-                                            undefined
+                                        contentInvalid={form.invalid(
+                                            'content',
+                                        )}
+                                        excerptInvalid={form.invalid(
+                                            'excerpt',
+                                        )}
+                                        contentError={form.error('content')}
+                                        excerptError={form.error('excerpt')}
+                                        contentPlaceholder="Write the full page content"
+                                        updatedAtHuman={
+                                            page?.updated_at_human
                                         }
-                                    >
-                                        <FieldLabel htmlFor="meta_robots">
-                                            Meta robots
-                                        </FieldLabel>
-                                        <NativeSelect
-                                            id="meta_robots"
-                                            className="w-full bg-background"
-                                            value={form.data.meta_robots}
-                                            onChange={(event) =>
-                                                form.setField(
-                                                    'meta_robots',
-                                                    event.target.value,
-                                                )
-                                            }
-                                            onBlur={() =>
-                                                form.touch('meta_robots')
-                                            }
-                                            aria-invalid={
-                                                form.invalid('meta_robots') ||
-                                                undefined
-                                            }
-                                        >
-                                            {metaRobotsOptions.map((option) => (
-                                                <NativeSelectOption
-                                                    key={String(option.value)}
-                                                    value={String(option.value)}
-                                                >
-                                                    {option.label}
-                                                </NativeSelectOption>
-                                            ))}
-                                        </NativeSelect>
-                                        <FieldError>
-                                            {form.error('meta_robots')}
-                                        </FieldError>
-                                    </Field>
-                        </PanelTabsContent>
-
-                        <PanelTabsContent
-                            value="social"
-                            className="flex flex-col gap-6"
-                        >
-                                    <Field
-                                        data-invalid={
-                                            form.invalid('og_title') ||
-                                            undefined
+                                        updatedAtFormatted={
+                                            page?.updated_at_formatted
                                         }
-                                    >
-                                        <FieldLabel htmlFor="og_title">
-                                            Open Graph title
-                                        </FieldLabel>
-                                        <Input
-                                            id="og_title"
-                                            className="bg-background"
-                                            value={form.data.og_title}
-                                            onChange={(event) =>
-                                                form.setField(
-                                                    'og_title',
-                                                    event.target.value,
-                                                )
-                                            }
-                                            onBlur={() =>
-                                                form.touch('og_title')
-                                            }
-                                            aria-invalid={
-                                                form.invalid('og_title') ||
-                                                undefined
-                                            }
-                                            placeholder="Enter Open Graph title"
-                                        />
-                                        <FieldError>
-                                            {form.error('og_title')}
-                                        </FieldError>
-                                    </Field>
-
-                                    <Field
-                                        data-invalid={
-                                            form.invalid('og_description') ||
-                                            undefined
+                                    />
+                                ),
+                            },
+                            {
+                                value: 'seo',
+                                label: 'SEO',
+                                contentClassName: 'flex flex-col gap-6',
+                                content: (
+                                    <CmsSeoFields
+                                        metaTitle={form.data.meta_title}
+                                        metaDescription={
+                                            form.data.meta_description
                                         }
-                                    >
-                                        <FieldLabel htmlFor="og_description">
-                                            Open Graph description
-                                        </FieldLabel>
-                                        <Textarea
-                                            id="og_description"
-                                            className="bg-background"
-                                            rows={4}
-                                            value={form.data.og_description}
-                                            onChange={(event) =>
-                                                form.setField(
-                                                    'og_description',
-                                                    event.target.value,
-                                                )
-                                            }
-                                            onBlur={() =>
-                                                form.touch('og_description')
-                                            }
-                                            aria-invalid={
-                                                form.invalid(
-                                                    'og_description',
-                                                ) || undefined
-                                            }
-                                            placeholder="Enter Open Graph description"
-                                        />
-                                        <FieldError>
-                                            {form.error('og_description')}
-                                        </FieldError>
-                                    </Field>
-
-                                    <Field
-                                        data-invalid={
-                                            form.invalid('og_image') ||
-                                            undefined
+                                        metaRobots={form.data.meta_robots}
+                                        metaRobotsOptions={metaRobotsOptions}
+                                        onMetaTitleChange={(value) =>
+                                            form.setField('meta_title', value)
                                         }
-                                    >
-                                        <FieldLabel htmlFor="og_image">
-                                            Open Graph image
-                                        </FieldLabel>
-                                        <Input
-                                            id="og_image"
-                                            className="bg-background"
-                                            type="url"
-                                            value={form.data.og_image}
-                                            onChange={(event) =>
-                                                form.setField(
-                                                    'og_image',
-                                                    event.target.value,
-                                                )
-                                            }
-                                            onBlur={() =>
-                                                form.touch('og_image')
-                                            }
-                                            aria-invalid={
-                                                form.invalid('og_image') ||
-                                                undefined
-                                            }
-                                            placeholder="https://example.com/social-image.jpg"
-                                        />
-                                        <FieldDescription>
-                                            Paste an image URL or choose one
-                                            from the media library.
-                                        </FieldDescription>
-                                        <FieldError>
-                                            {form.error('og_image')}
-                                        </FieldError>
-                                    </Field>
-
-                                    <Field
-                                        data-invalid={
-                                            form.invalid('og_url') || undefined
+                                        onMetaDescriptionChange={(value) =>
+                                            form.setField(
+                                                'meta_description',
+                                                value,
+                                            )
                                         }
-                                    >
-                                        <FieldLabel htmlFor="og_url">
-                                            Open Graph URL
-                                        </FieldLabel>
-                                        <Input
-                                            id="og_url"
-                                            className="bg-background"
-                                            type="url"
-                                            value={form.data.og_url}
-                                            onChange={(event) =>
-                                                form.setField(
-                                                    'og_url',
-                                                    event.target.value,
-                                                )
-                                            }
-                                            onBlur={() => form.touch('og_url')}
-                                            aria-invalid={
-                                                form.invalid('og_url') ||
-                                                undefined
-                                            }
-                                            placeholder="https://example.com/your-page"
-                                        />
-                                        <FieldError>
-                                            {form.error('og_url')}
-                                        </FieldError>
-                                    </Field>
-                        </PanelTabsContent>
-
-                        <PanelTabsContent
-                            value="schema"
-                            className="flex flex-col gap-4"
-                        >
+                                        onMetaRobotsChange={(value) =>
+                                            form.setField('meta_robots', value)
+                                        }
+                                        onMetaTitleBlur={() =>
+                                            form.touch('meta_title')
+                                        }
+                                        onMetaDescriptionBlur={() =>
+                                            form.touch('meta_description')
+                                        }
+                                        onMetaRobotsBlur={() =>
+                                            form.touch('meta_robots')
+                                        }
+                                        metaTitleInvalid={form.invalid(
+                                            'meta_title',
+                                        )}
+                                        metaDescriptionInvalid={form.invalid(
+                                            'meta_description',
+                                        )}
+                                        metaRobotsInvalid={form.invalid(
+                                            'meta_robots',
+                                        )}
+                                        metaTitleError={form.error(
+                                            'meta_title',
+                                        )}
+                                        metaDescriptionError={form.error(
+                                            'meta_description',
+                                        )}
+                                        metaRobotsError={form.error(
+                                            'meta_robots',
+                                        )}
+                                        surfaceClassName="bg-background"
+                                    />
+                                ),
+                            },
+                            {
+                                value: 'social',
+                                label: 'Social',
+                                contentClassName: 'flex flex-col gap-6',
+                                content: (
+                                    <CmsSocialFields
+                                        ogTitle={form.data.og_title}
+                                        ogDescription={
+                                            form.data.og_description
+                                        }
+                                        ogImage={form.data.og_image}
+                                        ogUrl={form.data.og_url}
+                                        onOgTitleChange={(value) =>
+                                            form.setField('og_title', value)
+                                        }
+                                        onOgDescriptionChange={(value) =>
+                                            form.setField(
+                                                'og_description',
+                                                value,
+                                            )
+                                        }
+                                        onOgImageChange={(value) =>
+                                            form.setField('og_image', value)
+                                        }
+                                        onOgUrlChange={(value) =>
+                                            form.setField('og_url', value)
+                                        }
+                                        onOgTitleBlur={() =>
+                                            form.touch('og_title')
+                                        }
+                                        onOgDescriptionBlur={() =>
+                                            form.touch('og_description')
+                                        }
+                                        onOgImageBlur={() =>
+                                            form.touch('og_image')
+                                        }
+                                        onOgUrlBlur={() =>
+                                            form.touch('og_url')
+                                        }
+                                        ogTitleInvalid={form.invalid(
+                                            'og_title',
+                                        )}
+                                        ogDescriptionInvalid={form.invalid(
+                                            'og_description',
+                                        )}
+                                        ogImageInvalid={form.invalid(
+                                            'og_image',
+                                        )}
+                                        ogUrlInvalid={form.invalid('og_url')}
+                                        ogTitleError={form.error('og_title')}
+                                        ogDescriptionError={form.error(
+                                            'og_description',
+                                        )}
+                                        ogImageError={form.error('og_image')}
+                                        ogUrlError={form.error('og_url')}
+                                        surfaceClassName="bg-background"
+                                        ogUrlPlaceholder="https://example.com/your-page"
+                                    />
+                                ),
+                            },
+                            {
+                                value: 'schema',
+                                label: 'Schema',
+                                contentClassName: 'flex flex-col gap-4',
+                                content: (
                                     <Field
                                         data-invalid={
                                             form.invalid('schema') || undefined
@@ -636,49 +401,32 @@ export default function PageForm({
                                             {form.error('schema')}
                                         </FieldError>
                                     </Field>
-                        </PanelTabsContent>
-                    </PanelTabs>
+                                ),
+                            },
+                        ]}
+                    />
                 </div>
 
                 <div className="flex flex-col gap-4">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Featured image</CardTitle>
-                            <CardDescription>
-                                Choose an image or upload a new one.
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="flex flex-col gap-4">
-                            <MediaPickerField
-                                value={form.data.feature_image || null}
-                                previewUrl={page?.featured_image_url}
-                                onChange={(item) => {
-                                    form.setField(
-                                        'feature_image',
-                                        item ? item.id : '',
-                                    );
-                                    form.touch('feature_image');
-                                }}
-                                dialogTitle="Select featured image"
-                                selectLabel="Select featured image"
-                                aria-invalid={
-                                    form.invalid('feature_image') || undefined
-                                }
-                                pickerMedia={pickerMedia}
-                                pickerFilters={pickerFilters}
-                                uploadSettings={uploadSettings}
-                                pickerStatistics={pickerStatistics}
-                                pickerAction={
-                                    mode === 'create'
-                                        ? route('cms.pages.create')
-                                        : route('cms.pages.edit', page!.id)
-                                }
-                            />
-                            <FieldError>
-                                {form.error('feature_image')}
-                            </FieldError>
-                        </CardContent>
-                    </Card>
+                    <CmsFeaturedImageCard
+                        value={form.data.feature_image}
+                        previewUrl={page?.featured_image_url}
+                        onChange={(value) =>
+                            form.setField('feature_image', value)
+                        }
+                        onTouch={() => form.touch('feature_image')}
+                        invalid={form.invalid('feature_image')}
+                        error={form.error('feature_image')}
+                        pickerMedia={pickerMedia}
+                        pickerFilters={pickerFilters}
+                        uploadSettings={uploadSettings}
+                        pickerStatistics={pickerStatistics}
+                        pickerAction={
+                            mode === 'create'
+                                ? route('cms.pages.create')
+                                : route('cms.pages.edit', page!.id)
+                        }
+                    />
 
                     <Card>
                         <CardHeader>
@@ -949,64 +697,25 @@ export default function PageForm({
                         </CardContent>
                     </Card>
 
-                    <Card>
-                        <CardHeader>
-                            <div className="flex items-center gap-2">
-                                <ShieldIcon className="size-4 text-muted-foreground" />
-                                <CardTitle>More options</CardTitle>
-                            </div>
-                            <CardDescription>
-                                Fine-tune permalink, author, and template.
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="flex flex-col gap-6">
-                            <Field
-                                data-invalid={form.invalid('slug') || undefined}
-                            >
-                                <FieldLabel htmlFor="slug">
-                                    Permalink
-                                </FieldLabel>
-                                <div className="flex items-center rounded-lg border bg-muted/20 pl-3">
-                                    <span className="shrink-0 text-sm text-muted-foreground">
-                                        {preSlug}
-                                    </span>
-                                    <Input
-                                        id="slug"
-                                        className="border-0 bg-transparent ring-0 focus-visible:border-0 focus-visible:ring-0"
-                                        value={form.data.slug}
-                                        onChange={(event) => {
-                                            setSlugTouched(true);
-                                            form.setField(
-                                                'slug',
-                                                slugify(event.target.value),
-                                            );
-                                        }}
-                                        onBlur={() => form.touch('slug')}
-                                        aria-invalid={
-                                            form.invalid('slug') || undefined
-                                        }
-                                        placeholder="auto-generated-from-title"
-                                    />
-                                </div>
-                                {page?.permalink_url ? (
-                                    <a
-                                        href={permalinkPreview}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="inline-flex items-center gap-1 text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-                                    >
-                                        <span className="truncate">
-                                            {permalinkPreview}
-                                        </span>
-                                        <ExternalLinkIcon className="size-3.5 shrink-0" />
-                                    </a>
-                                ) : (
-                                    <FieldDescription>
-                                        {permalinkPreview}
-                                    </FieldDescription>
-                                )}
-                                <FieldError>{form.error('slug')}</FieldError>
-                            </Field>
+                    <CmsCollapsibleSidebarCard
+                        title="More options"
+                        description="Fine-tune permalink, author, and template."
+                        icon={ShieldIcon}
+                        hasErrors={hasMoreOptionsErrors}
+                    >
+                            <CmsSlugField
+                                value={form.data.slug}
+                                preSlug={preSlug}
+                                permalinkPreview={permalinkPreview}
+                                hasPermalink={Boolean(page?.permalink_url)}
+                                onChange={(raw) => {
+                                    setSlugTouched(true);
+                                    form.setField('slug', slugify(raw));
+                                }}
+                                onTouch={() => form.touch('slug')}
+                                invalid={form.invalid('slug')}
+                                error={form.error('slug')}
+                            />
 
                             <Field
                                 data-invalid={
@@ -1096,66 +805,31 @@ export default function PageForm({
                                     </FieldError>
                                 </Field>
                             ) : null}
-                        </CardContent>
-                    </Card>
 
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>{submitLabel}</CardTitle>
-                            <CardDescription>
-                                Save this page and return to the editor.
-                            </CardDescription>
-                        </CardHeader>
-                        <CardFooter className="flex-col gap-3">
-                            <Button
-                                type="submit"
-                                className="w-full"
-                                disabled={form.processing}
-                            >
-                                {form.processing ? (
-                                    <Spinner className="size-4" />
-                                ) : (
-                                    <SaveIcon data-icon="inline-start" />
-                                )}
-                                {submitLabel}
-                            </Button>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                className="w-full"
-                                asChild
-                            >
-                                <Link href={route('cms.pages.index')}>
-                                    Back to Pages
-                                </Link>
-                            </Button>
-                        </CardFooter>
-                    </Card>
+                            {page ? (
+                                <CmsRevisionsSection
+                                    revisionsCount={page.revisions_count}
+                                    revisions={page.revisions}
+                                />
+                            ) : null}
+                    </CmsCollapsibleSidebarCard>
 
-                    {mode === 'edit' && page ? (
-                        <Card className="border-destructive/30">
-                            <CardHeader>
-                                <CardTitle>Danger zone</CardTitle>
-                                <CardDescription>
-                                    Move this page to trash. You can restore it
-                                    later from the trash tab.
-                                </CardDescription>
-                            </CardHeader>
-                            <CardFooter>
-                                <Button
-                                    type="button"
-                                    variant="destructive"
-                                    className="w-full"
-                                    onClick={handleDelete}
-                                >
-                                    <Trash2Icon data-icon="inline-start" />
-                                    Move to Trash
-                                </Button>
-                            </CardFooter>
-                        </Card>
-                    ) : null}
+                    <CmsDangerZoneCard
+                        show={mode === 'edit' && Boolean(page)}
+                        description="Move this page to trash. You can restore it later from the trash tab."
+                        onDelete={handleDelete}
+                    />
                 </div>
             </div>
+
+            <CmsStickyFormFooter
+                backHref={route('cms.pages.index')}
+                backLabel="Back to Pages"
+                submitLabel={submitLabel}
+                isCreate={mode === 'create'}
+                isDirty={form.isDirty}
+                isProcessing={form.processing}
+            />
         </form>
     );
 }

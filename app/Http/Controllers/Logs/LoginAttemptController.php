@@ -41,22 +41,13 @@ class LoginAttemptController extends ScaffoldController implements HasMiddleware
     public function index(Request $request): Response|RedirectResponse
     {
         $this->enforcePermission('view');
-
-        $status = $request->input('status') ?? $request->route('status') ?? 'all';
-        $perPage = $this->service()->getScaffoldDefinition()->getPerPage();
+        $filters = $this->loginAttemptService->collectRequestFilters($request);
 
         return Inertia::render($this->inertiaPage().'/index', [
-            'config' => $this->service()->getScaffoldDefinition()->toInertiaConfig(),
+            'config' => $this->service()->getInertiaConfig(),
             'loginAttempts' => $this->loginAttemptService->getPaginatedAttempts($request),
             'statistics' => $this->loginAttemptService->getStatistics(),
-            'filters' => [
-                'search' => $request->input('search', ''),
-                'status' => $status,
-                'sort' => $request->input('sort', 'created_at'),
-                'direction' => $request->input('direction', 'desc'),
-                'per_page' => (int) $request->input('per_page', $perPage),
-                'view' => $request->input('view', 'table'),
-            ],
+            'filters' => $filters,
             'status' => session('status'),
             'error' => session('error'),
         ]);

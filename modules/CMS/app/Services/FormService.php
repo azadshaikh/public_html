@@ -12,7 +12,9 @@ use Modules\CMS\Http\Resources\FormResource;
 
 class FormService implements ScaffoldServiceInterface
 {
-    use Scaffoldable;
+    use Scaffoldable {
+        getFiltersConfig as protected scaffoldGetFiltersConfig;
+    }
 
     public function getScaffoldDefinition(): ScaffoldDefinition
     {
@@ -25,6 +27,30 @@ class FormService implements ScaffoldServiceInterface
             ['value' => 'published', 'label' => 'Published'],
             ['value' => 'draft', 'label' => 'Draft'],
         ];
+    }
+
+    protected function getFiltersConfig(): array
+    {
+        $filters = $this->scaffoldGetFiltersConfig();
+
+        foreach ($filters as $index => $filter) {
+            if (($filter['key'] ?? null) === 'template') {
+                $filters[$index]['options'] = $this->normalizeFilterOptionMap($this->getTemplateOptions());
+            }
+
+            if (($filter['key'] ?? null) === 'form_type') {
+                $filters[$index]['options'] = $this->normalizeFilterOptionMap($this->getFormTypeOptions());
+            }
+
+            if (($filter['key'] ?? null) === 'is_active') {
+                $filters[$index]['options'] = [
+                    '1' => 'Yes',
+                    '0' => 'No',
+                ];
+            }
+        }
+
+        return $filters;
     }
 
     public function getTemplateOptions(): array

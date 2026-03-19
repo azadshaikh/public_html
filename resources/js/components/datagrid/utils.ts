@@ -7,12 +7,23 @@ export function normalizeRowKey(key: Key): string {
 export function collectFormParams(
     form: HTMLFormElement,
 ): Record<string, string> {
-    return Object.fromEntries(
-        Array.from(new FormData(form).entries()).map(([key, value]) => [
-            key,
-            String(value),
-        ]),
-    );
+    const params: Record<string, string> = {};
+
+    for (const [key, value] of new FormData(form).entries()) {
+        const normalizedValue = String(value);
+
+        if (!(key in params)) {
+            params[key] = normalizedValue;
+
+            continue;
+        }
+
+        params[key] = [params[key], normalizedValue]
+            .filter((entry) => entry !== '')
+            .join(',');
+    }
+
+    return params;
 }
 
 export function cleanParams(

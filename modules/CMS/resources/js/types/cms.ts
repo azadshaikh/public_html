@@ -216,6 +216,20 @@ export type PostIndexPageProps = ScaffoldIndexPageProps<PostListItem>;
 
 export type PostCreatePageProps = PostFormOptions;
 
+export type CmsRevisionChange = {
+    field: string;
+    old_value: string | null;
+    new_value: string | null;
+};
+
+export type CmsRevisionSummary = {
+    id: number;
+    created_at_formatted: string | null;
+    created_at_human: string | null;
+    author_name: string | null;
+    changes: CmsRevisionChange[];
+};
+
 export type PostEditDetail = {
     id: number;
     title: string;
@@ -224,6 +238,8 @@ export type PostEditDetail = {
     is_password_protected: boolean;
     updated_at_formatted: string;
     updated_at_human: string | null;
+    revisions_count: number;
+    revisions: CmsRevisionSummary[];
 };
 
 export type PostEditPageProps = PostFormOptions & {
@@ -304,6 +320,8 @@ export type PageEditDetail = {
     is_password_protected: boolean;
     updated_at_formatted: string;
     updated_at_human: string | null;
+    revisions_count: number;
+    revisions: CmsRevisionSummary[];
 };
 
 export type PageEditPageProps = PageFormOptions & {
@@ -346,6 +364,11 @@ export type CategoryFormValues = {
     meta_title: string;
     meta_description: string;
     meta_robots: string;
+    og_title: string;
+    og_description: string;
+    og_image: string;
+    og_url: string;
+    schema: string;
 };
 
 export type CategoryFormOptions = {
@@ -370,6 +393,8 @@ export type CategoryEditDetail = {
     featured_image_url: string | null;
     updated_at_formatted: string;
     updated_at_human: string | null;
+    revisions_count: number;
+    revisions: CmsRevisionSummary[];
 };
 
 export type CategoryEditPageProps = CategoryFormOptions & {
@@ -409,6 +434,11 @@ export type TagFormValues = {
     meta_title: string;
     meta_description: string;
     meta_robots: string;
+    og_title: string;
+    og_description: string;
+    og_image: string;
+    og_url: string;
+    schema: string;
 };
 
 export type TagFormOptions = {
@@ -432,6 +462,8 @@ export type TagEditDetail = {
     featured_image_url: string | null;
     updated_at_formatted: string;
     updated_at_human: string | null;
+    revisions_count: number;
+    revisions: CmsRevisionSummary[];
 };
 
 export type TagEditPageProps = TagFormOptions & {

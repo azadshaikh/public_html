@@ -45,27 +45,17 @@ class ActivityLogController extends ScaffoldController implements HasMiddleware
     {
         $this->enforcePermission('view');
 
-        $status = $request->input('status') ?? $request->route('status') ?? 'all';
-        $perPage = $this->service()->getScaffoldDefinition()->getPerPage();
+        $filters = $this->activityLogService->collectRequestFilters($request);
 
         return Inertia::render($this->inertiaPage().'/index', [
-            'config' => $this->service()->getScaffoldDefinition()->toInertiaConfig(),
+            'config' => $this->service()->getInertiaConfig(),
             'logs' => $this->activityLogService->getPaginatedLogs($request),
             'statistics' => $this->activityLogService->getStatistics(),
             'filterOptions' => [
                 'event' => $this->activityLogService->getEventOptions(),
                 'causer_id' => $this->activityLogService->getUserOptions(),
             ],
-            'filters' => [
-                'search' => $request->input('search', ''),
-                'status' => $status,
-                'event' => $request->input('event', ''),
-                'causer_id' => $request->input('causer_id', ''),
-                'sort' => $request->input('sort', 'created_at'),
-                'direction' => $request->input('direction', 'desc'),
-                'per_page' => (int) $request->input('per_page', $perPage),
-                'view' => $request->input('view', 'table'),
-            ],
+            'filters' => $filters,
             'status' => session('status'),
             'error' => session('error'),
         ]);

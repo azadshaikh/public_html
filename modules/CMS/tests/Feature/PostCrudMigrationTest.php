@@ -89,10 +89,12 @@ class PostCrudMigrationTest extends TestCase
     public function test_admin_can_access_posts_index_page_with_listing_data_for_the_refactored_ui(): void
     {
         $category = $this->createTerm(CmsPostType::CATEGORY, 'Announcements');
+        $tag = $this->createTerm(CmsPostType::TAG, 'Launch');
         $post = $this->createPost('Index Ready Post');
         $featuredImage = $this->createMediaForPost($post, 'index-ready.jpg');
 
         $post->categories()->attach($category->id, ['term_type' => CmsPostType::CATEGORY->value]);
+        $post->tags()->attach($tag->id, ['term_type' => CmsPostType::TAG->value]);
         $post->forceFill([
             'feature_image_id' => $featuredImage->id,
             'status' => 'published',
@@ -111,6 +113,10 @@ class PostCrudMigrationTest extends TestCase
                 ->where('config.columns.2.key', 'categories_display')
                 ->where('config.columns.3.key', 'status')
                 ->where('config.columns.4.key', 'display_date')
+                ->where('config.filters.0.options.published', 'Published')
+                ->where('config.filters.1.options.'.$this->admin->id, $this->admin->name)
+                ->where('config.filters.2.options.'.$category->id, $category->title)
+                ->where('config.filters.3.options.'.$tag->id, $tag->title)
                 ->has('rows.data.0', fn (Assert $row): Assert => $row
                     ->where('title', $post->title)
                     ->where('author_name', $this->admin->name)
@@ -176,6 +182,57 @@ class PostCrudMigrationTest extends TestCase
         );
     }
 
+    public function test_posts_index_applies_relationship_and_date_filters_and_round_trips_filter_state(): void
+    {
+        $author = User::factory()->create([
+            'first_name' => 'Filter',
+            'last_name' => 'Author',
+            'status' => Status::ACTIVE,
+            'email_verified_at' => now(),
+        ]);
+
+        $category = $this->createTerm(CmsPostType::CATEGORY, 'Filtering Category');
+        $tag = $this->createTerm(CmsPostType::TAG, 'Filtering Tag');
+        $matchingPost = $this->createPost('Matching Filtered Post', $author);
+        $nonMatchingPost = $this->createPost('Non Matching Post');
+        $from = now()->subDay()->toDateString();
+        $to = now()->addDay()->toDateString();
+
+        $matchingPost->categories()->attach($category->id, ['term_type' => CmsPostType::CATEGORY->value]);
+        $matchingPost->tags()->attach($tag->id, ['term_type' => CmsPostType::TAG->value]);
+        $matchingPost->forceFill([
+            'category_id' => $category->id,
+            'status' => 'published',
+            'published_at' => now(),
+        ])->save();
+
+        $nonMatchingPost->forceFill([
+            'status' => 'draft',
+            'published_at' => null,
+        ])->save();
+
+        $this->actingAs($this->admin)
+            ->get(route('cms.posts.index', [
+                'author_id' => $author->id,
+                'category_ids' => [$category->id],
+                'tag_ids' => [$tag->id],
+                'statuses' => ['published'],
+                'published_at_from' => $from,
+                'published_at_to' => $to,
+            ]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->component('cms/posts/index')
+                ->has('rows.data', 1)
+                ->where('rows.data.0.title', $matchingPost->title)
+                ->where('filters.author_id', (string) $author->id)
+                ->where('filters.published_at', $from.','.$to)
+                ->where('filters.statuses.0', 'published')
+                ->where('filters.category_ids.0', (string) $category->id)
+                ->where('filters.tag_ids.0', (string) $tag->id)
+            );
+    }
+
     public function test_admin_can_access_posts_edit_page_with_initial_values(): void
     {
         $category = $this->createTerm(CmsPostType::CATEGORY, 'Guides');
@@ -186,13 +243,19 @@ class PostCrudMigrationTest extends TestCase
         $post->tags()->attach($tag->id, ['term_type' => CmsPostType::TAG->value]);
         $post->forceFill(['feature_image_id' => $featuredImage->id])->save();
 
-        $this->actingAs($this->admin)
-            ->get(route('cms.posts.edit', $post))
+        $this->actingAs($this->admin);
+        $post->forceFill(['excerpt' => 'Revised excerpt copy'])->save();
+
+        $this->get(route('cms.posts.edit', $post))
             ->assertOk()
             ->assertInertia(fn (Assert $page): Assert => $page
                 ->component('cms/posts/edit')
                 ->where('post.id', $post->id)
                 ->where('post.title', $post->title)
+                ->where('post.permalink_url', url($post->permalink_url))
+                ->where('post.revisions_count', 2)
+                ->where('post.revisions.0.changes.0.field', 'Excerpt')
+                ->where('post.revisions.0.changes.0.new_value', 'Revised excerpt copy')
                 ->where(
                     'post.featured_image_url',
                     get_media_url($featuredImage, 'thumbnail', usePlaceholder: false),
@@ -339,15 +402,17 @@ class PostCrudMigrationTest extends TestCase
         ]);
     }
 
-    private function createPost(string $title): CmsPost
+    private function createPost(string $title, ?User $author = null): CmsPost
     {
+        $author ??= $this->admin;
+
         return CmsPost::query()->create([
             'title' => $title,
             'slug' => Str::slug($title).'-'.Str::random(6),
             'type' => CmsPostType::POST->value,
             'status' => 'draft',
             'visibility' => 'public',
-            'author_id' => $this->admin->id,
+            'author_id' => $author->id,
             'created_by' => $this->admin->id,
             'updated_by' => $this->admin->id,
             'content' => '<p>Original content</p>',

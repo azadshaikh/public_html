@@ -123,9 +123,20 @@ export function Datagrid<T>({
     const viewParamName = view?.paramName ?? 'view';
     const activeTabValue = tabs?.items.find((item) => item.active)?.value ?? '';
     const currentParams = React.useMemo(() => {
-        const params = Object.fromEntries(
-            filters.map((filter) => [filter.name, filter.value]),
-        ) as Record<string, string>;
+        const params = filters.reduce<Record<string, string>>((carry, filter) => {
+            if (filter.type === 'date_range') {
+                const [from = '', to = ''] = filter.value.split(',');
+
+                carry[`${filter.name}_from`] = from;
+                carry[`${filter.name}_to`] = to;
+
+                return carry;
+            }
+
+            carry[filter.name] = filter.value;
+
+            return carry;
+        }, {});
 
         if (tabs && activeTabValue !== '') {
             params[tabs.name] = activeTabValue;

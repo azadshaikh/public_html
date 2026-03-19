@@ -14,7 +14,9 @@ use Modules\CMS\Http\Resources\DesignBlockResource;
 
 class DesignBlockService implements ScaffoldServiceInterface
 {
-    use Scaffoldable;
+    use Scaffoldable {
+        getFiltersConfig as protected scaffoldGetFiltersConfig;
+    }
 
     public function getScaffoldDefinition(): ScaffoldDefinition
     {
@@ -27,6 +29,27 @@ class DesignBlockService implements ScaffoldServiceInterface
             ['value' => 'draft', 'label' => 'Draft'],
             ['value' => 'published', 'label' => 'Published'],
         ];
+    }
+
+    protected function getFiltersConfig(): array
+    {
+        $filters = $this->scaffoldGetFiltersConfig();
+
+        foreach ($filters as $index => $filter) {
+            if (($filter['key'] ?? null) === 'design_type') {
+                $filters[$index]['options'] = $this->normalizeFilterOptionMap($this->getDesignTypeOptions());
+            }
+
+            if (($filter['key'] ?? null) === 'category_id') {
+                $filters[$index]['options'] = $this->normalizeFilterOptionMap($this->getCategoryOptions());
+            }
+
+            if (($filter['key'] ?? null) === 'design_system') {
+                $filters[$index]['options'] = $this->normalizeFilterOptionMap($this->getDesignSystemOptions());
+            }
+        }
+
+        return $filters;
     }
 
     public function getDesignTypeOptions(): array

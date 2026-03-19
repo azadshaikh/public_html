@@ -1,16 +1,14 @@
 'use client';
 
-import { Link, router } from '@inertiajs/react';
-import { SaveIcon, Settings2Icon, Trash2Icon } from 'lucide-react';
+import { router } from '@inertiajs/react';
+import { Settings2Icon } from 'lucide-react';
 import type { FormEvent } from 'react';
 import { MonacoEditor } from '@/components/code-editor/monaco-editor';
 import { FormErrorSummary } from '@/components/forms/form-error-summary';
-import { Button } from '@/components/ui/button';
 import {
     Card,
     CardContent,
     CardDescription,
-    CardFooter,
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
@@ -25,13 +23,6 @@ import {
     NativeSelect,
     NativeSelectOption,
 } from '@/components/ui/native-select';
-import {
-    PanelTabs,
-    PanelTabsContent,
-    PanelTabsList,
-    PanelTabsTrigger,
-} from '@/components/ui/panel-tabs';
-import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import { useAppForm } from '@/hooks/use-app-form';
 import { formValidators } from '@/lib/forms';
@@ -40,6 +31,9 @@ import type {
     DesignBlockEditDetail,
     DesignBlockFormValues,
 } from '../../types/cms';
+import { CmsDangerZoneCard } from '../shared/cms-danger-zone-card';
+import { CmsStickyFormFooter } from '../shared/cms-sticky-form-footer';
+import { CmsTabSections } from '../shared/cms-tab-sections';
 
 type DesignBlockFormProps = {
     mode: 'create' | 'edit';
@@ -150,7 +144,7 @@ export default function DesignBlockForm({
 
     return (
         <form
-            className="flex flex-col gap-6"
+            className="flex flex-col gap-6 pb-20"
             onSubmit={handleSubmit}
             noValidate
         >
@@ -192,16 +186,13 @@ export default function DesignBlockForm({
                         <FieldError>{form.error('description')}</FieldError>
                     </Field>
 
-                    <PanelTabs defaultValue="html">
-                        <PanelTabsList>
-                            <PanelTabsTrigger value="html">HTML</PanelTabsTrigger>
-                            <PanelTabsTrigger value="css">CSS</PanelTabsTrigger>
-                            <PanelTabsTrigger value="scripts">
-                                Scripts
-                            </PanelTabsTrigger>
-                        </PanelTabsList>
-
-                        <PanelTabsContent value="html">
+                    <CmsTabSections
+                        defaultValue="html"
+                        tabs={[
+                            {
+                                value: 'html',
+                                label: 'HTML',
+                                content: (
                                     <Field
                                         data-invalid={
                                             form.invalid('html') || undefined
@@ -222,9 +213,12 @@ export default function DesignBlockForm({
                                             {form.error('html')}
                                         </FieldError>
                                     </Field>
-                        </PanelTabsContent>
-
-                        <PanelTabsContent value="css">
+                                ),
+                            },
+                            {
+                                value: 'css',
+                                label: 'CSS',
+                                content: (
                                     <Field
                                         data-invalid={
                                             form.invalid('css') || undefined
@@ -248,9 +242,12 @@ export default function DesignBlockForm({
                                             {form.error('css')}
                                         </FieldError>
                                     </Field>
-                        </PanelTabsContent>
-
-                        <PanelTabsContent value="scripts">
+                                ),
+                            },
+                            {
+                                value: 'scripts',
+                                label: 'Scripts',
+                                content: (
                                     <Field
                                         data-invalid={
                                             form.invalid('scripts') || undefined
@@ -264,7 +261,9 @@ export default function DesignBlockForm({
                                             onChange={(value) =>
                                                 form.setField('scripts', value)
                                             }
-                                            onBlur={() => form.touch('scripts')}
+                                            onBlur={() =>
+                                                form.touch('scripts')
+                                            }
                                             placeholder="Enter JavaScript for this block"
                                         />
                                         <FieldDescription>
@@ -275,8 +274,10 @@ export default function DesignBlockForm({
                                             {form.error('scripts')}
                                         </FieldError>
                                     </Field>
-                        </PanelTabsContent>
-                    </PanelTabs>
+                                ),
+                            },
+                        ]}
+                    />
 
                     {designBlock ? (
                         <div className="text-sm text-muted-foreground">
@@ -534,60 +535,22 @@ export default function DesignBlockForm({
                         </CardContent>
                     </Card>
 
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>{submitLabel}</CardTitle>
-                        </CardHeader>
-                        <CardFooter className="flex-col gap-3">
-                            <Button
-                                type="submit"
-                                className="w-full"
-                                disabled={form.processing}
-                            >
-                                {form.processing ? (
-                                    <Spinner className="size-4" />
-                                ) : (
-                                    <SaveIcon data-icon="inline-start" />
-                                )}
-                                {submitLabel}
-                            </Button>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                className="w-full"
-                                asChild
-                            >
-                                <Link href={route('cms.designblock.index')}>
-                                    Back to Design Blocks
-                                </Link>
-                            </Button>
-                        </CardFooter>
-                    </Card>
-
-                    {mode === 'edit' && designBlock ? (
-                        <Card className="border-destructive/30">
-                            <CardHeader>
-                                <CardTitle>Danger zone</CardTitle>
-                                <CardDescription>
-                                    Move this design block to trash. You can
-                                    restore it later.
-                                </CardDescription>
-                            </CardHeader>
-                            <CardFooter>
-                                <Button
-                                    type="button"
-                                    variant="destructive"
-                                    className="w-full"
-                                    onClick={handleDelete}
-                                >
-                                    <Trash2Icon data-icon="inline-start" />
-                                    Move to Trash
-                                </Button>
-                            </CardFooter>
-                        </Card>
-                    ) : null}
+                    <CmsDangerZoneCard
+                        show={mode === 'edit' && Boolean(designBlock)}
+                        description="Move this design block to trash. You can restore it later."
+                        onDelete={handleDelete}
+                    />
                 </div>
             </div>
+
+            <CmsStickyFormFooter
+                backHref={route('cms.designblock.index')}
+                backLabel="Back to Design Blocks"
+                submitLabel={submitLabel}
+                isCreate={mode === 'create'}
+                isDirty={form.isDirty}
+                isProcessing={form.processing}
+            />
         </form>
     );
 }

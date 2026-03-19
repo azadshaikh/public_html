@@ -2,6 +2,7 @@ import { createInertiaApp, router } from '@inertiajs/react';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import '../css/app.css';
+import AppConnectionStatus from '@/components/app-connection-status';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { initializeTheme } from '@/hooks/use-appearance';
@@ -63,6 +64,7 @@ createInertiaApp({
             <StrictMode>
                 <TooltipProvider>
                     <App {...props} />
+                    <AppConnectionStatus />
                     <Toaster
                         position="top-right"
                         closeButton={false}

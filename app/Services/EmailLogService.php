@@ -17,7 +17,9 @@ use Illuminate\Http\Request;
 
 class EmailLogService implements ScaffoldServiceInterface
 {
-    use Scaffoldable;
+    use Scaffoldable {
+        getFiltersConfig as protected scaffoldGetFiltersConfig;
+    }
 
     // ================================================================
     // REQUIRED METHODS
@@ -52,6 +54,23 @@ class EmailLogService implements ScaffoldServiceInterface
             ->resolve(request());
 
         return $paginatedArray;
+    }
+
+    protected function getFiltersConfig(): array
+    {
+        $filters = $this->scaffoldGetFiltersConfig();
+
+        foreach ($filters as $index => $filter) {
+            if (($filter['key'] ?? null) === 'email_provider_id') {
+                $filters[$index]['options'] = $this->normalizeFilterOptionMap($this->getProviderOptions());
+            }
+
+            if (($filter['key'] ?? null) === 'email_template_id') {
+                $filters[$index]['options'] = $this->normalizeFilterOptionMap($this->getTemplateOptions());
+            }
+        }
+
+        return $filters;
     }
 
     // ================================================================

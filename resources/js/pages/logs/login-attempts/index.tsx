@@ -20,6 +20,7 @@ import type {
 import { ResourceFeedbackAlerts } from '@/components/resource/resource-feedback-alerts';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import { mapScaffoldFilters } from '@/lib/scaffold-datagrid';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import type {
@@ -73,15 +74,14 @@ export default function LoginAttemptsIndex({
 
     // ----- Filters -----
 
-    const gridFilters: DatagridFilter[] = [
+    const gridFilters: DatagridFilter[] = mapScaffoldFilters(
+        config.filters,
+        filters,
         {
-            type: 'search',
-            name: 'search',
-            value: filters.search,
-            placeholder: 'Search by email or IP...',
-            className: 'lg:min-w-80',
+            searchPlaceholder: 'Search by email or IP...',
+            searchClassName: 'lg:min-w-80',
         },
-    ];
+    );
 
     // ----- Status tabs -----
 

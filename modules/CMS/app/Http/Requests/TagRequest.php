@@ -28,6 +28,11 @@ class TagRequest extends ScaffoldRequest
             'meta_title' => ['nullable', 'string', 'max:255'],
             'meta_description' => ['nullable', 'string', 'max:500'],
             'meta_robots' => ['nullable', 'string'],
+            'og_title' => ['nullable', 'string', 'max:255'],
+            'og_description' => ['nullable', 'string', 'max:500'],
+            'og_image' => ['nullable', 'string', 'max:500'],
+            'og_url' => ['nullable', 'string', 'max:500'],
+            'schema' => ['nullable', 'string'],
         ];
     }
 

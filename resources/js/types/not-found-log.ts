@@ -50,6 +50,7 @@ export type NotFoundLogStatistics = {
 
 export type NotFoundLogFilters = {
     search: string;
+    created_at: string;
     status: 'all' | 'suspicious' | 'bots' | 'human' | 'trash';
     sort: string;
     direction: 'asc' | 'desc';

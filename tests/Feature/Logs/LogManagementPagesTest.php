@@ -51,31 +51,47 @@ class LogManagementPagesTest extends TestCase
 
     public function test_super_user_can_view_login_attempt_index_with_scaffold_config(): void
     {
+        $fromDate = now()->subDays(2)->toDateString();
+        $toDate = now()->toDateString();
+
         $this->actingAs($this->superUser)
-            ->get(route('app.logs.login-attempts.index'))
+            ->get(route('app.logs.login-attempts.index', [
+                'created_at_from' => $fromDate,
+                'created_at_to' => $toDate,
+            ]))
             ->assertOk()
             ->assertInertia(fn (Assert $page): Assert => $page
                 ->component('logs/login-attempts/index')
                 ->has('config.columns', 9)
                 ->where('config.columns.2.width', '200px')
+                ->where('config.filters.0.key', 'created_at')
                 ->has('loginAttempts.data')
                 ->has('statistics')
                 ->has('filters')
+                ->where('filters.created_at', $fromDate.','.$toDate)
             );
     }
 
     public function test_super_user_can_view_not_found_log_index_with_scaffold_config(): void
     {
+        $fromDate = now()->subDays(2)->toDateString();
+        $toDate = now()->toDateString();
+
         $this->actingAs($this->superUser)
-            ->get(route('app.logs.not-found-logs.index'))
+            ->get(route('app.logs.not-found-logs.index', [
+                'created_at_from' => $fromDate,
+                'created_at_to' => $toDate,
+            ]))
             ->assertOk()
             ->assertInertia(fn (Assert $page): Assert => $page
                 ->component('logs/not-found-logs/index')
                 ->has('config.columns', 9)
                 ->where('config.columns.2.width', '300px')
+                ->where('config.filters.0.key', 'created_at')
                 ->has('notFoundLogs.data')
                 ->has('statistics')
                 ->has('filters')
+                ->where('filters.created_at', $fromDate.','.$toDate)
             );
     }
 }

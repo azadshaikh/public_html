@@ -203,8 +203,16 @@ class EmailManagementPagesTest extends TestCase
             'sent_at' => now(),
         ]);
 
+        $fromDate = now()->subDays(3)->toDateString();
+        $toDate = now()->toDateString();
+
         $this->actingAs($this->superUser)
-            ->get(route('app.masters.email.logs.index'))
+            ->get(route('app.masters.email.logs.index', [
+                'email_provider_id' => (string) $provider->id,
+                'email_template_id' => (string) $template->id,
+                'sent_at_from' => $fromDate,
+                'sent_at_to' => $toDate,
+            ]))
             ->assertOk()
             ->assertInertia(fn (Assert $page): Assert => $page
                 ->component('masters/email/logs/index')
@@ -213,7 +221,14 @@ class EmailManagementPagesTest extends TestCase
                 ->has('emailLogs.data', 1)
                 ->has('providerOptions', 1)
                 ->has('templateOptions', 1)
-                ->has('filters'));
+                ->has('filters')
+                ->where('config.filters.0.key', 'email_provider_id')
+                ->where('config.filters.0.options.'.$provider->id, $provider->name)
+                ->where('config.filters.1.key', 'email_template_id')
+                ->where('config.filters.1.options.'.$template->id, $template->name)
+                ->where('filters.email_provider_id', (string) $provider->id)
+                ->where('filters.email_template_id', (string) $template->id)
+                ->where('filters.sent_at', $fromDate.','.$toDate));
 
         $this->actingAs($this->superUser)
             ->get(route('app.masters.email.logs.show', $log))

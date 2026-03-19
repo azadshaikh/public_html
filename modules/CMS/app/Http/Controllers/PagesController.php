@@ -13,11 +13,13 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Modules\CMS\Definitions\PageDefinition;
+use Modules\CMS\Http\Controllers\Concerns\BuildsCmsRevisionPayload;
 use Modules\CMS\Models\CmsPost;
 use Modules\CMS\Services\PageService;
 
 class PagesController extends ScaffoldController implements HasMiddleware
 {
+    use BuildsCmsRevisionPayload;
     use HasMediaPicker;
 
     public function __construct(private readonly PageService $pageService) {}
@@ -93,6 +95,7 @@ class PagesController extends ScaffoldController implements HasMiddleware
             'is_password_protected' => $model->isPasswordProtected(),
             'updated_at_formatted' => app_date_time_format($model->updated_at, 'datetime'),
             'updated_at_human' => $model->updated_at?->diffForHumans(),
+            ...$this->buildCmsRevisionPayload($model),
         ];
     }
 

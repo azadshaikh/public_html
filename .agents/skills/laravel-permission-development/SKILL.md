@@ -103,17 +103,21 @@ $users = User::withoutPermission('edit articles')->get();
 
 ## Middleware
 
-Register middleware aliases in `bootstrap/app.php`:
+This application uses a custom `permission` middleware alias for super-user-aware permission checks. Do not assume the stock Spatie alias map.
+
+In this project, `bootstrap/app.php` aliases middleware like this:
 
 ```php
 ->withMiddleware(function (Middleware $middleware) {
     $middleware->alias([
+        'permission' => \App\Http\Middleware\SuperUserPermissionMiddleware::class,
         'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
-        'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
         'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
     ]);
 })
 ```
+
+The custom `permission` alias delegates to `$user->can(...)` and preserves the app's super-user bypass behavior. Keep using `permission:ability_name` in controllers and routes; do not replace it with the stock Spatie middleware unless you are intentionally changing authorization behavior across the app.
 
 Use in routes (pipe `|` for OR logic):
 
@@ -156,7 +160,9 @@ Prefer `@can` (permission-based) over `@role` (role-based):
 
 ## Super Admin
 
-Use `Gate::before` in `AppServiceProvider::boot()`:
+This application implements the super-user bypass in `AuthServiceProvider::boot()`, not `AppServiceProvider::boot()`.
+
+Use `Gate::before` in `AuthServiceProvider::boot()`:
 
 ```php
 use Illuminate\Support\Facades\Gate;
@@ -164,12 +170,12 @@ use Illuminate\Support\Facades\Gate;
 public function boot(): void
 {
     Gate::before(function ($user, $ability) {
-        return $user->hasRole('Super Admin') ? true : null;
+        return $user->isSuperUser() ? true : null;
     });
 }
 ```
 
-This makes `$user->can()` and `@can` always return true for Super Admins. Must return `null` (not `false`) to allow normal checks for other users.
+In this codebase, route middleware and `@can` checks both rely on that super-user bypass. Must return `null` (not `false`) to allow normal checks for other users.
 
 ## Policies
 

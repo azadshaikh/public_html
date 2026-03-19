@@ -17,6 +17,12 @@ Activate this skill when:
 - Implementing conversation memory or multi-provider failover
 - Testing AI features with SDK fakes and assertions
 
+## Current Project Status
+
+The `laravel/ai` package is installed and configured in this project, but there are currently no established app-side AI feature implementations under `app/`, `routes/`, `modules/`, or `tests/`.
+
+Use this skill as package guidance for new AI work, not as a source of existing local patterns to copy from.
+
 ## Documentation
 
 Always use `search-docs` before implementing AI SDK features. Never guess at APIs.

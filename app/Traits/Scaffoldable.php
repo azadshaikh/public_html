@@ -148,6 +148,25 @@ trait Scaffoldable
     }
 
     /**
+     * Get scaffold runtime configuration with service-level dynamic options applied.
+     *
+     * @return array<string, mixed>
+     */
+    public function getInertiaConfig(): array
+    {
+        $config = $this->scaffold()->toInertiaConfig();
+
+        $config['columns'] = $this->getColumnsConfig();
+        $config['filters'] = $this->getFiltersConfig();
+
+        if ($this->scaffold()->shouldIncludeActionConfigInInertia()) {
+            $config['actions'] = $this->getActionsConfig();
+        }
+
+        return $config;
+    }
+
+    /**
      * Collect current filter, sort, and pagination values from the request.
      *
      * Builds a typed filters object for the React Datagrid component,
@@ -170,6 +189,17 @@ trait Scaffoldable
         // Collect current values for each defined filter
         foreach ($this->scaffold()->filters() as $filter) {
             if (! array_key_exists($filter->key, $filters)) {
+                if ($filter->type === 'date_range') {
+                    $from = $request->input($filter->key.'_from');
+                    $to = $request->input($filter->key.'_to');
+
+                    $filters[$filter->key] = collect([$from, $to])
+                        ->filter(fn ($value): bool => $value !== null && $value !== '')
+                        ->implode(',');
+
+                    continue;
+                }
+
                 $filters[$filter->key] = $request->input($filter->key, '');
             }
         }
@@ -445,6 +475,28 @@ trait Scaffoldable
         return collect($this->scaffold()->filters())
             ->map(fn ($filter) => $filter->toArray())
             ->toArray();
+    }
+
+    /**
+     * Normalize a list of value/label options into the datagrid filter map format.
+     *
+     * @param  array<int|string, mixed>  $options
+     * @return array<string, string>
+     */
+    protected function normalizeFilterOptionMap(array $options): array
+    {
+        if (! array_is_list($options)) {
+            return collect($options)
+                ->mapWithKeys(fn ($label, $value): array => [(string) $value => (string) $label])
+                ->all();
+        }
+
+        return collect($options)
+            ->filter(fn ($option): bool => is_array($option) && array_key_exists('value', $option))
+            ->mapWithKeys(fn (array $option): array => [
+                (string) $option['value'] => (string) ($option['label'] ?? $option['value']),
+            ])
+            ->all();
     }
 
     /**

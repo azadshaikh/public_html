@@ -18,6 +18,12 @@ Activate this skill when:
 - Working with Stripe Checkout, invoices, or charges
 - Testing billing scenarios with Stripe test cards or tokens
 
+## Current Project Status
+
+This project has `laravel/cashier` installed and includes a custom `Subscription` model extending Cashier's subscription model, but it does not currently expose a clear in-repo billable flow using `Billable`, `newSubscription()`, or other mature subscription-management patterns.
+
+Use this skill as implementation guidance for billing work, but verify the current product/domain model before assuming a standard Cashier setup already exists in the app.
+
 ## Documentation
 
 Use `search-docs` for detailed Cashier patterns and documentation covering subscriptions, webhooks, Stripe Checkout, invoices, payment methods, and testing.

@@ -97,18 +97,66 @@ class CategoryCrudTest extends TestCase
             );
     }
 
+    public function test_categories_index_exposes_filter_options_and_round_trips_filter_state(): void
+    {
+        $author = User::factory()->create([
+            'first_name' => 'Category',
+            'last_name' => 'Author',
+            'status' => Status::ACTIVE,
+            'email_verified_at' => now(),
+        ]);
+        $parent = $this->createCategory('Parent Category');
+        $matchingCategory = $this->createCategory('Filtered Category', $parent->id, null, $author);
+        $this->createCategory('Non Matching Category');
+        $from = now()->subDay()->toDateString();
+        $to = now()->addDay()->toDateString();
+
+        $matchingCategory->forceFill([
+            'status' => 'published',
+            'created_at' => now(),
+        ])->save();
+
+        $this->actingAs($this->admin)
+            ->get(route('cms.categories.index', [
+                'statuses' => ['published'],
+                'parent_id' => $parent->id,
+                'author_id' => $author->id,
+                'created_at_from' => $from,
+                'created_at_to' => $to,
+            ]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->component('cms/categories/index')
+                ->has('rows.data', 1)
+                ->where('rows.data.0.title', $matchingCategory->title)
+                ->where('config.filters.0.options.published', 'Published')
+                ->where('config.filters.1.options.'.$parent->id, $parent->title)
+                ->where('config.filters.2.options.'.$author->id, $author->name)
+                ->where('filters.statuses.0', 'published')
+                ->where('filters.parent_id', (string) $parent->id)
+                ->where('filters.author_id', (string) $author->id)
+                ->where('filters.created_at', $from.','.$to)
+            );
+    }
+
     public function test_admin_can_access_categories_edit_page_with_initial_values(): void
     {
         $parent = $this->createCategory('Parent Category');
         $category = $this->createCategory('Child Category', $parent->id);
 
-        $this->actingAs($this->admin)
-            ->get(route('cms.categories.edit', $category))
+        $this->actingAs($this->admin);
+        $category->forceFill(['excerpt' => 'Updated category excerpt'])->save();
+
+        $this->get(route('cms.categories.edit', $category))
             ->assertOk()
             ->assertInertia(fn (Assert $page): Assert => $page
                 ->component('cms/categories/edit')
                 ->where('category.id', $category->id)
                 ->where('category.title', $category->title)
+                ->where('category.permalink_url', url($category->permalink_url))
+                ->where('category.revisions_count', 1)
+                ->where('category.revisions.0.changes.0.field', 'Excerpt')
+                ->where('category.revisions.0.changes.0.new_value', 'Updated category excerpt')
                 ->where('initialValues.title', $category->title)
                 ->where('initialValues.slug', $category->slug)
                 ->where('initialValues.status', $category->status)
@@ -204,15 +252,17 @@ class CategoryCrudTest extends TestCase
         $this->assertSoftDeleted('cms_posts', ['id' => $category->id]);
     }
 
-    private function createCategory(string $title, ?int $parentId = null, ?string $slug = null): CmsPost
+    private function createCategory(string $title, ?int $parentId = null, ?string $slug = null, ?User $author = null): CmsPost
     {
+        $author ??= $this->admin;
+
         return CmsPost::query()->create([
             'title' => $title,
             'slug' => $slug ?? Str::slug($title).'-'.Str::random(6),
             'type' => CmsPostType::CATEGORY->value,
             'status' => 'published',
             'visibility' => 'public',
-            'author_id' => $this->admin->id,
+            'author_id' => $author->id,
             'created_by' => $this->admin->id,
             'updated_by' => $this->admin->id,
             'parent_id' => $parentId,

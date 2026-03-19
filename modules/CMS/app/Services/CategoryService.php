@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Modules\CMS\Services;
 
 use App\Contracts\ScaffoldServiceInterface;
+use App\Models\User;
 use App\Scaffold\ScaffoldDefinition;
 use App\Traits\Scaffoldable;
 use Illuminate\Database\Eloquent\Builder;
@@ -23,7 +24,9 @@ use RuntimeException;
 
 class CategoryService implements ScaffoldServiceInterface
 {
-    use Scaffoldable;
+    use Scaffoldable {
+        getFiltersConfig as protected scaffoldGetFiltersConfig;
+    }
 
     public function getScaffoldDefinition(): ScaffoldDefinition
     {
@@ -36,6 +39,27 @@ class CategoryService implements ScaffoldServiceInterface
             ['value' => 'published', 'label' => 'Published'],
             ['value' => 'draft', 'label' => 'Draft'],
         ];
+    }
+
+    protected function getFiltersConfig(): array
+    {
+        $filters = $this->scaffoldGetFiltersConfig();
+
+        foreach ($filters as $index => $filter) {
+            if (($filter['key'] ?? null) === 'statuses') {
+                $filters[$index]['options'] = $this->normalizeFilterOptionMap($this->getStatusOptions());
+            }
+
+            if (($filter['key'] ?? null) === 'parent_id') {
+                $filters[$index]['options'] = $this->normalizeFilterOptionMap($this->getParentCategoryOptions());
+            }
+
+            if (($filter['key'] ?? null) === 'author_id') {
+                $filters[$index]['options'] = $this->getAuthorFilterOptions();
+            }
+        }
+
+        return $filters;
     }
 
     public function getStatistics(): array
@@ -91,6 +115,22 @@ class CategoryService implements ScaffoldServiceInterface
 
         return $categories
             ->map(fn (CmsPost $category): array => ['value' => $category->id, 'label' => $category->title])
+            ->all();
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function getAuthorFilterOptions(): array
+    {
+        return User::visibleToCurrentUser()
+            ->where('status', 'active')
+            ->whereDoesntHave('roles', function ($query): void {
+                $query->where('roles.id', User::superUserRoleId());
+            })
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->mapWithKeys(fn (User $user): array => [(string) $user->id => $user->name])
             ->all();
     }
 
