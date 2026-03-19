@@ -8,7 +8,6 @@ import {
     PlusIcon,
     RefreshCwIcon,
     Trash2Icon,
-    UserIcon,
 } from 'lucide-react';
 import { Datagrid } from '@/components/datagrid/datagrid';
 import type {
@@ -142,17 +141,12 @@ export default function PostsIndex({
                             ) : null}
                         </div>
 
-                        <div className="flex flex-wrap items-center gap-1.5 pt-1 text-sm sm:gap-2">
-                            <Badge
-                                variant="secondary"
-                                className="max-w-[150px] bg-muted/50 font-normal hover:bg-muted sm:max-w-[200px]"
-                            >
-                                <UserIcon className="mr-1.5 size-3 shrink-0 text-muted-foreground" />
-                                <span className="truncate">
-                                    {post.author_name}
-                                </span>
-                            </Badge>
-                        </div>
+                        <p className="pt-1 text-xs text-muted-foreground">
+                            <span className="font-medium text-foreground/80">
+                                Author:
+                            </span>{' '}
+                            <span className="truncate">{post.author_name}</span>
+                        </p>
                     </div>
                 </div>
             ),
@@ -402,17 +396,14 @@ export default function PostsIndex({
                                             </Badge>
                                         ) : null}
                                     </div>
-                                    <div className="flex flex-wrap items-center gap-1.5 pt-1 text-sm sm:gap-2">
-                                        <Badge
-                                            variant="secondary"
-                                            className="max-w-[150px] bg-muted/50 font-normal hover:bg-muted sm:max-w-[200px]"
-                                        >
-                                            <UserIcon className="mr-1.5 size-3 shrink-0 text-muted-foreground" />
-                                            <span className="truncate">
-                                                {post.author_name}
-                                            </span>
-                                        </Badge>
-                                    </div>
+                                    <p className="pt-1 text-xs text-muted-foreground">
+                                        <span className="font-medium text-foreground/80">
+                                            Author:
+                                        </span>{' '}
+                                        <span className="truncate">
+                                            {post.author_name}
+                                        </span>
+                                    </p>
                                 </div>
                             </Link>
                             <div className="grid gap-3 sm:grid-cols-3">
