@@ -34,10 +34,24 @@ class SavePageRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'content' => ['required', 'string', 'max:2000000'],
+            'content' => ['present', 'string', 'max:2000000'],
             'css' => ['nullable', 'string', 'max:500000'],
             'js' => ['nullable', 'string', 'max:500000'],
             'format' => ['nullable', 'string', 'in:pagebuilder,html'],
+            'builder_state' => ['nullable', 'array'],
+            'builder_state.css' => ['nullable', 'string', 'max:500000'],
+            'builder_state.js' => ['nullable', 'string', 'max:500000'],
+            'builder_state.items' => ['nullable', 'array'],
+            'builder_state.items.*.uid' => ['required_with:builder_state.items', 'string', 'max:255'],
+            'builder_state.items.*.catalog_id' => ['nullable', 'string', 'max:255'],
+            'builder_state.items.*.type' => ['required_with:builder_state.items', 'string', 'max:255'],
+            'builder_state.items.*.category' => ['required_with:builder_state.items', 'string', 'max:255'],
+            'builder_state.items.*.label' => ['required_with:builder_state.items', 'string', 'max:255'],
+            'builder_state.items.*.html' => ['required_with:builder_state.items', 'string', 'max:2000000'],
+            'builder_state.items.*.css' => ['nullable', 'string', 'max:500000'],
+            'builder_state.items.*.js' => ['nullable', 'string', 'max:500000'],
+            'builder_state.items.*.preview_image_url' => ['nullable', 'string', 'max:2048'],
+            'builder_state.items.*.source' => ['nullable', 'string', 'max:255'],
         ];
     }
 
@@ -60,7 +74,7 @@ class SavePageRequest extends FormRequest
      */
     public function isContentUpdate(): bool
     {
-        return $this->has('content') && $this->filled('content');
+        return $this->exists('content');
     }
 
     /**
@@ -86,5 +100,17 @@ class SavePageRequest extends FormRequest
     public function getJs(): ?string
     {
         return $this->input('js');
+    }
+
+    /**
+     * Get structured builder state for React/Inertia builder round-tripping.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function getBuilderState(): ?array
+    {
+        $builderState = $this->input('builder_state');
+
+        return is_array($builderState) ? $builderState : null;
     }
 }

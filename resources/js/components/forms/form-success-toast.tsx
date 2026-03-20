@@ -4,6 +4,7 @@ import {
     InfoIcon,
     XIcon,
 } from 'lucide-react';
+import { useRef } from 'react';
 import type { ReactNode } from 'react';
 import { toast } from 'sonner';
 
@@ -19,6 +20,8 @@ export type AppToastOptions = {
 
 /** @deprecated Use AppToastOptions instead */
 export type FormSuccessToastOptions = AppToastOptions;
+
+type AppToastId = string | number;
 
 const VARIANT_STYLES: Record<
     AppToastVariant,
@@ -62,28 +65,62 @@ const VARIANT_DEFAULTS: Record<
     },
 };
 
+function dismissAppToast(toastId: AppToastId): void {
+    toast.dismiss(toastId);
+}
+
+function createToastId(): string {
+    if (
+        typeof globalThis.crypto !== 'undefined' &&
+        typeof globalThis.crypto.randomUUID === 'function'
+    ) {
+        return globalThis.crypto.randomUUID();
+    }
+
+    return `toast:${Date.now()}:${Math.random().toString(36).slice(2)}`;
+}
+
 function AppToastContent({
     toastId,
     variant,
     title,
     description,
 }: {
-    toastId: string | number;
+    toastId: AppToastId;
     variant: AppToastVariant;
     title: string;
     description: string;
 }) {
     const styles = VARIANT_STYLES[variant];
+    const dismissedFromPointerRef = useRef(false);
 
     const dismissToast = (
         event:
             | React.PointerEvent<HTMLButtonElement>
             | React.MouseEvent<HTMLButtonElement>,
     ) => {
-        event.preventDefault();
         event.stopPropagation();
 
-        toast.dismiss(toastId);
+        dismissAppToast(toastId);
+    };
+
+    const handlePointerUp = (event: React.PointerEvent<HTMLButtonElement>) => {
+        dismissedFromPointerRef.current = true;
+        dismissToast(event);
+
+        requestAnimationFrame(() => {
+            dismissedFromPointerRef.current = false;
+        });
+    };
+
+    const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+        if (dismissedFromPointerRef.current) {
+            event.stopPropagation();
+
+            return;
+        }
+
+        dismissToast(event);
     };
 
     return (
@@ -108,14 +145,14 @@ function AppToastContent({
             <button
                 type="button"
                 onPointerDown={(event) => {
-                    event.preventDefault();
                     event.stopPropagation();
                 }}
-                onClick={dismissToast}
+                onPointerUp={handlePointerUp}
+                onClick={handleClick}
                 className="pointer-events-auto mt-0.5 inline-flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
                 aria-label="Dismiss notification"
             >
-                <XIcon className="size-4" />
+                <XIcon className="pointer-events-none size-4" />
             </button>
         </div>
     );
@@ -131,9 +168,10 @@ export function showAppToast({
     const defaults = VARIANT_DEFAULTS[variant];
     const toastTitle = title ?? defaults.title;
     const toastDescription = description ?? defaults.description;
+    const toastId = id ?? createToastId();
 
     return toast.custom(
-        (toastId) => (
+        () => (
             <AppToastContent
                 toastId={toastId}
                 variant={variant}
@@ -142,7 +180,7 @@ export function showAppToast({
             />
         ),
         {
-            id,
+            id: toastId,
             duration,
             position: 'top-right',
         },

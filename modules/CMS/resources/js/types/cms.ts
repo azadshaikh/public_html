@@ -328,6 +328,75 @@ export type PageEditPageProps = PageFormOptions & {
     page: PageEditDetail;
 };
 
+export type BuilderLibraryItem = {
+    id: string;
+    type: 'sections' | 'blocks';
+    category: string;
+    category_label: string;
+    name: string;
+    html: string;
+    css: string;
+    js: string;
+    preview_image_url: string | null;
+    source: 'theme' | 'database';
+};
+
+export type BuilderLibraryGroup = {
+    key: string;
+    label: string;
+    items: BuilderLibraryItem[];
+};
+
+export type BuilderCanvasItem = {
+    uid: string;
+    catalog_id: string | null;
+    type: string;
+    category: string;
+    label: string;
+    html: string;
+    css: string;
+    js: string;
+    preview_image_url: string | null;
+    source: 'theme' | 'database' | 'imported-content' | 'custom';
+};
+
+export type BuilderThemeSummary = {
+    name: string;
+    directory: string | null;
+    description?: string | null;
+    version?: string | null;
+    screenshot?: string | null;
+};
+
+export type BuilderState = {
+    source: 'metadata' | 'imported-content' | 'empty';
+    css: string;
+    js: string;
+    items: BuilderCanvasItem[];
+};
+
+export type BuilderEditDetail = {
+    id: number;
+    title: string;
+    permalink_url: string | null;
+    editor_url: string;
+    updated_at_formatted: string | null;
+    updated_at_human: string | null;
+    content: string;
+    css: string;
+    js: string;
+};
+
+export type BuilderEditPageProps = {
+    activeTheme: BuilderThemeSummary | null;
+    page: BuilderEditDetail;
+    palette: {
+        sections: BuilderLibraryGroup[];
+        blocks: BuilderLibraryGroup[];
+    };
+    builderState: BuilderState;
+};
+
 // ================================================================
 // Categories
 // ================================================================
