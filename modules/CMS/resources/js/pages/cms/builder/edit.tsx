@@ -59,6 +59,43 @@ import type {
 // Helpers: Convert legacy builder state items into AST
 // ---------------------------------------------------------------------------
 
+const VOID_ELEMENTS = new Set([
+    'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input',
+    'link', 'meta', 'param', 'source', 'track', 'wbr',
+]);
+
+function formatHtmlForDisplay(html: string): string {
+    const tokens = html.replace(/>\s*</g, '>\n<').split('\n');
+    let indent = 0;
+    const lines: string[] = [];
+
+    for (const token of tokens) {
+        const trimmed = token.trim();
+
+        if (!trimmed) {
+            continue;
+        }
+
+        const isClosing = /^<\//.test(trimmed);
+        const tagMatch = trimmed.match(/^<\/?([a-zA-Z][a-zA-Z0-9-]*)/);
+        const tagName = tagMatch?.[1]?.toLowerCase() ?? '';
+        const isSelfClosing = /\/>$/.test(trimmed) || VOID_ELEMENTS.has(tagName);
+        const isOpening = /^<[a-zA-Z]/.test(trimmed) && !isClosing;
+
+        if (isClosing) {
+            indent = Math.max(0, indent - 1);
+        }
+
+        lines.push('  '.repeat(indent) + trimmed);
+
+        if (isOpening && !isSelfClosing) {
+            indent++;
+        }
+    }
+
+    return lines.join('\n');
+}
+
 function buildInitialAst(items: BuilderCanvasItem[], css: string, js: string) {
     if (items.length === 0) {
         const ast = createEmptyPageAst();
@@ -151,7 +188,6 @@ export default function BuilderEdit({
         palette.sections.length > 0 ? 'sections' : 'blocks',
     );
     const [isSaving, setIsSaving] = useState(false);
-    const [insertAtIndex, setInsertAtIndex] = useState<number | null>(null);
     const [codeDialogNodeId, setCodeDialogNodeId] = useState<string | null>(null);
     const [codeDialogValue, setCodeDialogValue] = useState('');
     const [selectedElementPath, setSelectedElementPath] =
@@ -192,6 +228,9 @@ export default function BuilderEdit({
         canUndo,
         canRedo,
     } = useBuilderStore(initialAst);
+
+    const nodesRef = useRef(nodes);
+    nodesRef.current = nodes;
 
     // Build the preview URL
     const previewUrl = useMemo(() => {
@@ -273,10 +312,8 @@ export default function BuilderEdit({
     // -----------------------------------------------------------------------
 
     const handleAddLibraryItem = useCallback((item: BuilderLibraryItem) => {
-        const idx = insertAtIndex ?? undefined;
-        actions.importHtml(item.html, ROOT_NODE_ID, idx);
-        setInsertAtIndex(null);
-    }, [actions, insertAtIndex]);
+        actions.importHtml(item.html, ROOT_NODE_ID);
+    }, [actions]);
 
     const handleDragStartLibraryItem = useCallback((item: BuilderLibraryItem) => {
         dragDropRef.current?.startPanelDrag(item.html, activeLibrary === 'sections' ? 'section' : 'block', item.name);
@@ -322,18 +359,10 @@ export default function BuilderEdit({
         }
     }, [actions, selectedItemId]);
 
-    const handleInsertAt = useCallback(
-        (_parentId: string, index: number) => {
-            setInsertAtIndex(index);
-            setLeftPanelCollapsed(false);
-        },
-        [],
-    );
-
     const handleViewCode = useCallback(
         (nodeId: string) => {
             const html = renderCleanNodeToHtml(nodes, nodeId);
-            setCodeDialogValue(html);
+            setCodeDialogValue(formatHtmlForDisplay(html));
             setCodeDialogNodeId(nodeId);
         },
         [nodes],
@@ -587,13 +616,14 @@ export default function BuilderEdit({
         // --- Overlay engine ---
         const overlayCb: OverlayCallbacks = {
             onMoveNode: (nodeId, direction) => {
-                const node = getNode(nodes, nodeId);
+                const currentNodes = nodesRef.current;
+                const node = getNode(currentNodes, nodeId);
 
                 if (!node?.parentId) {
                     return;
                 }
 
-                const parent = nodes[node.parentId];
+                const parent = currentNodes[node.parentId];
 
                 if (!parent) {
                     return;
@@ -608,7 +638,6 @@ export default function BuilderEdit({
             },
             onDuplicateNode: (nodeId) => actions.duplicateNode(nodeId),
             onDeleteNode: (nodeId) => actions.deleteNode(nodeId),
-            onInsertAt: handleInsertAt,
             onStartDrag: (nodeId) => {
                 dragDropRef.current?.startCanvasDrag(nodeId);
             },
@@ -662,13 +691,14 @@ export default function BuilderEdit({
             onDelete: (nodeId) => actions.deleteNode(nodeId),
             onEscape: () => actions.setSelected([]),
             onMoveUp: (nodeId) => {
-                const node = getNode(nodes, nodeId);
+                const currentNodes = nodesRef.current;
+                const node = getNode(currentNodes, nodeId);
 
                 if (!node?.parentId) {
                     return;
                 }
 
-                const parent = nodes[node.parentId];
+                const parent = currentNodes[node.parentId];
 
                 if (!parent) {
                     return;
@@ -681,13 +711,14 @@ export default function BuilderEdit({
                 }
             },
             onMoveDown: (nodeId) => {
-                const node = getNode(nodes, nodeId);
+                const currentNodes = nodesRef.current;
+                const node = getNode(currentNodes, nodeId);
 
                 if (!node?.parentId) {
                     return;
                 }
 
-                const parent = nodes[node.parentId];
+                const parent = currentNodes[node.parentId];
 
                 if (!parent) {
                     return;
@@ -845,11 +876,9 @@ export default function BuilderEdit({
                                 <BuilderComponentsPanel
                                     activeLibrary={activeLibrary}
                                     palette={palette}
-                                    insertAtIndex={insertAtIndex}
                                     onActiveLibraryChange={setActiveLibrary}
                                     onAddLibraryItem={handleAddLibraryItem}
                                     onDragStartItem={handleDragStartLibraryItem}
-                                    onCancelInsert={() => setInsertAtIndex(null)}
                                 />
                             ) : null}
                         </aside>
@@ -945,11 +974,9 @@ export default function BuilderEdit({
                             <BuilderComponentsPanel
                                 activeLibrary={activeLibrary}
                                 palette={palette}
-                                insertAtIndex={insertAtIndex}
                                 onActiveLibraryChange={setActiveLibrary}
                                 onAddLibraryItem={handleAddLibraryItem}
                                 onDragStartItem={handleDragStartLibraryItem}
-                                onCancelInsert={() => setInsertAtIndex(null)}
                             />
                         </div>
                     </SheetContent>

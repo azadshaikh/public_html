@@ -12,7 +12,6 @@ import {
     TableIcon,
     TextIcon,
     TypeIcon,
-    XIcon,
 } from 'lucide-react';
 import { useDeferredValue, useMemo, useState } from 'react';
 import {
@@ -29,11 +28,9 @@ import type { BuilderLibraryGroup, BuilderLibraryItem } from '../../types/cms';
 type BuilderComponentsPanelProps = {
     activeLibrary: 'sections' | 'blocks';
     palette: { sections: BuilderLibraryGroup[]; blocks: BuilderLibraryGroup[] };
-    insertAtIndex: number | null;
     onActiveLibraryChange: (value: 'sections' | 'blocks') => void;
     onAddLibraryItem: (item: BuilderLibraryItem) => void;
     onDragStartItem?: (item: BuilderLibraryItem) => void;
-    onCancelInsert?: () => void;
 };
 
 const COMPONENT_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -67,11 +64,9 @@ function getComponentIcon(name: string): React.ComponentType<{ className?: strin
 export function BuilderComponentsPanel({
     activeLibrary,
     palette,
-    insertAtIndex,
     onActiveLibraryChange,
     onAddLibraryItem,
     onDragStartItem,
-    onCancelInsert,
 }: BuilderComponentsPanelProps) {
     const [search, setSearch] = useState('');
     const deferredSearch = useDeferredValue(search);
@@ -105,22 +100,6 @@ export function BuilderComponentsPanel({
 
     return (
         <div className="flex h-full flex-col">
-            {insertAtIndex !== null ? (
-                <div className="flex items-center justify-between border-b border-blue-200 bg-blue-50 px-3 py-2 dark:border-blue-800 dark:bg-blue-950/30">
-                    <span className="text-xs font-medium text-blue-700 dark:text-blue-300">
-                        Insert at position {insertAtIndex + 1}
-                    </span>
-                    {onCancelInsert ? (
-                        <button
-                            type="button"
-                            onClick={onCancelInsert}
-                            className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200"
-                        >
-                            <XIcon className="size-3.5" />
-                        </button>
-                    ) : null}
-                </div>
-            ) : null}
             <div className="flex items-center justify-between border-b border-border/60 px-3 py-2">
                 <Tabs
                     value={activeLibrary}

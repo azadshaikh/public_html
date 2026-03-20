@@ -21,7 +21,6 @@ export type OverlayCallbacks = {
     onMoveNode: (nodeId: AstNodeId, direction: 'up' | 'down') => void;
     onDuplicateNode: (nodeId: AstNodeId) => void;
     onDeleteNode: (nodeId: AstNodeId) => void;
-    onInsertAt: (parentId: AstNodeId, index: number) => void;
     onStartDrag: (nodeId: AstNodeId) => void;
     onSelect?: (nodeId: AstNodeId) => void;
     onViewCode?: (nodeId: AstNodeId) => void;
@@ -47,7 +46,6 @@ export class BuilderOverlay {
     private selectLabel: HTMLDivElement;
     private toolbar: HTMLDivElement;
     private dropLine: HTMLDivElement;
-    private insertButtons: HTMLDivElement[];
     private sectionBoundaries: HTMLDivElement[];
     private iframe: HTMLIFrameElement;
     private callbacks: OverlayCallbacks;
@@ -65,7 +63,6 @@ export class BuilderOverlay {
     ) {
         this.iframe = iframe;
         this.callbacks = callbacks;
-        this.insertButtons = [];
         this.sectionBoundaries = [];
         this.currentState = {
             hoveredId: null,
@@ -233,9 +230,6 @@ export class BuilderOverlay {
             this.dropLine.style.display = 'none';
         }
 
-        // Insert buttons
-        this.updateInsertButtons(iframeDoc, offsetX, offsetY);
-
         // Section boundary lines
         this.updateSectionBoundaries(iframeDoc, offsetX, offsetY);
     }
@@ -321,60 +315,6 @@ export class BuilderOverlay {
                     downBtn.title = isLast ? 'Already last child' : 'Move down';
                 }
             }
-        }
-    }
-
-    private updateInsertButtons(iframeDoc: Document, offsetX: number, offsetY: number): void {
-        const { nodes, rootNodeId, selectedIds } = this.currentState;
-        const root = nodes[rootNodeId];
-
-        if (!root) {
-            return;
-        }
-
-        // Only show insert buttons when something is selected or hovered
-        const shouldShow = selectedIds.length > 0;
-
-        // Remove old buttons
-        for (const btn of this.insertButtons) {
-            btn.remove();
-        }
-
-        this.insertButtons = [];
-
-        if (!shouldShow) {
-            return;
-        }
-
-        // Show insert buttons between top-level children of root
-        const childIds = root.childIds;
-
-        for (let i = 0; i <= childIds.length; i++) {
-            const insertBtn = this.createInsertButton(rootNodeId, i);
-
-            // Position between elements
-            if (i < childIds.length) {
-                const el = getElementByAstId(iframeDoc, childIds[i]);
-
-                if (el) {
-                    const rect = el.getBoundingClientRect();
-                    insertBtn.style.top = `${rect.top + offsetY - 12}px`;
-                    insertBtn.style.left = `${rect.left + offsetX}px`;
-                    insertBtn.style.width = `${rect.width}px`;
-                }
-            } else if (childIds.length > 0) {
-                const lastEl = getElementByAstId(iframeDoc, childIds[childIds.length - 1]);
-
-                if (lastEl) {
-                    const rect = lastEl.getBoundingClientRect();
-                    insertBtn.style.top = `${rect.bottom + offsetY}px`;
-                    insertBtn.style.left = `${rect.left + offsetX}px`;
-                    insertBtn.style.width = `${rect.width}px`;
-                }
-            }
-
-            this.container.appendChild(insertBtn);
-            this.insertButtons.push(insertBtn);
         }
     }
 
@@ -507,52 +447,6 @@ export class BuilderOverlay {
         return toolbar;
     }
 
-    private createInsertButton(parentId: AstNodeId, index: number): HTMLDivElement {
-        const container = document.createElement('div');
-        container.style.cssText = 'position:absolute;display:flex;align-items:center;justify-content:center;height:24px;z-index:1008;pointer-events:auto;opacity:0;transition:opacity 150ms;';
-
-        container.addEventListener('mouseenter', () => {
-            container.style.opacity = '1';
-        });
-        container.addEventListener('mouseleave', () => {
-            container.style.opacity = '0';
-        });
-
-        // Line
-        const line = document.createElement('div');
-        line.style.cssText = 'position:absolute;top:50%;left:18px;right:18px;height:1px;background:rgba(59,130,246,0.4);pointer-events:none;';
-        container.appendChild(line);
-
-        // Button
-        const btn = document.createElement('button');
-        btn.style.cssText = 'position:relative;display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;padding:0;margin:0;border:2px solid rgba(59,130,246,0.6);border-radius:50%;background:#fff;color:rgb(59,130,246);cursor:pointer;font-size:16px;line-height:1;transition:background-color 100ms,border-color 100ms,transform 100ms;';
-        btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M5 12h14"/><path d="M12 5v14"/></svg>';
-        btn.title = 'Add section here';
-
-        btn.addEventListener('mouseenter', () => {
-            btn.style.background = 'rgb(59,130,246)';
-            btn.style.borderColor = 'rgb(59,130,246)';
-            btn.style.color = '#fff';
-            btn.style.transform = 'scale(1.15)';
-        });
-        btn.addEventListener('mouseleave', () => {
-            btn.style.background = '#fff';
-            btn.style.borderColor = 'rgba(59,130,246,0.6)';
-            btn.style.color = 'rgb(59,130,246)';
-            btn.style.transform = 'scale(1)';
-        });
-
-        btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            e.preventDefault();
-            this.callbacks.onInsertAt(parentId, index);
-        });
-
-        container.appendChild(btn);
-
-        return container;
-    }
-
     private updateSectionBoundaries(iframeDoc: Document, offsetX: number, offsetY: number): void {
         const { nodes, rootNodeId } = this.currentState;
         const root = nodes[rootNodeId];
@@ -591,7 +485,7 @@ export class BuilderOverlay {
 
             if (node) {
                 const label = document.createElement('div');
-                label.style.cssText = 'position:absolute;top:0;right:0;background:rgba(148,163,184,0.35);color:rgba(71,85,105,0.8);font-size:9px;font-family:system-ui,-apple-system,sans-serif;font-weight:500;line-height:1;padding:2px 6px;border-radius:0 0 0 4px;white-space:nowrap;pointer-events:auto;cursor:pointer;';
+                label.style.cssText = 'position:absolute;top:0;right:0;background:rgba(148,163,184,0.35);color:rgba(71,85,105,0.8);font-size:10px;font-family:system-ui,-apple-system,sans-serif;font-weight:500;line-height:1;padding:3px 8px;border-radius:0 0 0 4px;white-space:nowrap;pointer-events:auto;cursor:pointer;';
                 label.textContent = node.displayName || node.type;
                 label.addEventListener('click', (e) => {
                     e.stopPropagation();
@@ -626,10 +520,6 @@ export class BuilderOverlay {
         }
 
         this.unbindScrollListeners();
-
-        for (const btn of this.insertButtons) {
-            btn.remove();
-        }
 
         for (const el of this.sectionBoundaries) {
             el.remove();
