@@ -283,9 +283,10 @@ export class BuilderOverlay {
         }
 
         const rect = el.getBoundingClientRect();
+        const toolbarHeight = this.toolbar.offsetHeight || 28;
 
         this.toolbar.style.display = 'flex';
-        this.toolbar.style.top = `${Math.max(0, rect.top + offsetY - 30)}px`;
+        this.toolbar.style.top = `${Math.max(0, rect.top + offsetY - toolbarHeight + 1)}px`;
         this.toolbar.style.left = `${rect.right + offsetX - this.toolbar.offsetWidth}px`;
 
         // Update button states
@@ -333,7 +334,7 @@ export class BuilderOverlay {
     private createLabel(className: string, bg: string): HTMLDivElement {
         const label = document.createElement('div');
         label.className = className;
-        label.style.cssText = `position:absolute;top:-1px;left:8px;transform:translateY(-100%);display:none;background:${bg};color:#fff;font-size:10px;font-family:system-ui,-apple-system,sans-serif;font-weight:600;line-height:1;padding:3px 8px;border-radius:4px 4px 0 0;white-space:nowrap;pointer-events:none;`;
+        label.style.cssText = `position:absolute;top:-1px;left:0;transform:translateY(-100%);display:none;background:${bg};color:#fff;font-size:10px;font-family:system-ui,-apple-system,sans-serif;font-weight:600;line-height:1;padding:3px 8px;border-radius:4px 4px 0 0;white-space:nowrap;pointer-events:none;`;
 
         return label;
     }
@@ -341,7 +342,7 @@ export class BuilderOverlay {
     private createToolbar(): HTMLDivElement {
         const toolbar = document.createElement('div');
         toolbar.className = 'builder-ast-toolbar';
-        toolbar.style.cssText = 'position:absolute;display:none;align-items:center;gap:2px;background:rgba(59,130,246,0.9);padding:2px 4px;border-radius:4px;z-index:1010;font-family:system-ui,-apple-system,sans-serif;pointer-events:auto;';
+        toolbar.style.cssText = 'position:absolute;display:none;align-items:center;gap:2px;background:rgba(59,130,246,0.9);padding:2px 4px;border-radius:4px 4px 0 0;z-index:1010;font-family:system-ui,-apple-system,sans-serif;pointer-events:auto;';
 
         const svgAttrs = 'xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"';
 

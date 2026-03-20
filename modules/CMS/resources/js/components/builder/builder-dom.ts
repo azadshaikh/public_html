@@ -8,13 +8,18 @@ export type BuilderElementStyleValues = {
     color: string;
     fontSize: string;
     fontWeight: string;
+    height: string;
     marginBottom: string;
+    marginLeft: string;
+    marginRight: string;
     marginTop: string;
+    opacity: string;
     paddingBottom: string;
     paddingLeft: string;
     paddingRight: string;
     paddingTop: string;
     textAlign: string;
+    width: string;
 };
 
 export type BuilderEditableElement = {
@@ -77,13 +82,18 @@ const DEFAULT_STYLE_VALUES: BuilderElementStyleValues = {
     color: '',
     fontSize: '',
     fontWeight: '',
+    height: '',
     marginBottom: '',
+    marginLeft: '',
+    marginRight: '',
     marginTop: '',
+    opacity: '',
     paddingBottom: '',
     paddingLeft: '',
     paddingRight: '',
     paddingTop: '',
     textAlign: '',
+    width: '',
 };
 
 function parseHtml(html: string): HTMLDivElement {
@@ -138,13 +148,18 @@ function readStyleValues(element: HTMLElement): BuilderElementStyleValues {
         color: element.style.color,
         fontSize: element.style.fontSize,
         fontWeight: element.style.fontWeight,
+        height: element.style.height,
         marginBottom: element.style.marginBottom,
+        marginLeft: element.style.marginLeft,
+        marginRight: element.style.marginRight,
         marginTop: element.style.marginTop,
+        opacity: element.style.opacity,
         paddingBottom: element.style.paddingBottom,
         paddingLeft: element.style.paddingLeft,
         paddingRight: element.style.paddingRight,
         paddingTop: element.style.paddingTop,
         textAlign: element.style.textAlign,
+        width: element.style.width,
     };
 }
 

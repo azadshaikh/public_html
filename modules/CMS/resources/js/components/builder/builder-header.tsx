@@ -61,7 +61,7 @@ export function BuilderHeader({
     onRedo,
 }: BuilderHeaderProps) {
     return (
-        <header className="flex h-[42px] shrink-0 items-center border-b border-border/70 bg-background/95 px-2 backdrop-blur">
+        <header className="flex h-[42px] shrink-0 items-center border-b border-border/60 bg-background px-2">
             {/* Left section: Back + Panel toggle */}
             <div className="flex items-center gap-1">
                 <Tooltip>

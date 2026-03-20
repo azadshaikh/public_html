@@ -188,7 +188,6 @@ export class IframeInteractionHandler {
 
         if (link) {
             e.preventDefault();
-            e.stopPropagation();
         }
     };
 

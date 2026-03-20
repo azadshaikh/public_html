@@ -15,7 +15,6 @@ import { Button } from '@/components/ui/button';
 import {
     Dialog,
     DialogContent,
-    DialogDescription,
     DialogFooter,
     DialogHeader,
     DialogTitle,
@@ -248,14 +247,16 @@ function buildAstFromPageContent(html: string, css: string, js: string) {
 }
 
 function toEditableElement(node: AstNode): BuilderEditableElement {
+    const tagName = (node.tagName ?? node.type).toLowerCase();
+
     return {
         alt: typeof node.props.alt === 'string' ? node.props.alt : '',
-        canEditText: false,
+        canEditText: typeof node.props.content === 'string' || tagName === 'a' || tagName === 'button',
         className: node.className,
         href: typeof node.props.href === 'string' ? node.props.href : '',
         id: typeof node.props.attr_id === 'string' ? node.props.attr_id : '',
         isImage: node.type === 'image',
-        isLink: node.type === 'link',
+        isLink: node.type === 'link' || tagName === 'a',
         label: node.displayName,
         path: [],
         pathKey: node.id,
@@ -266,15 +267,20 @@ function toEditableElement(node: AstNode): BuilderEditableElement {
             color: node.styles.color ?? '',
             fontSize: node.styles.fontSize ?? '',
             fontWeight: node.styles.fontWeight ?? '',
+            height: node.styles.height ?? '',
             marginBottom: node.styles.marginBottom ?? '',
+            marginLeft: node.styles.marginLeft ?? '',
+            marginRight: node.styles.marginRight ?? '',
             marginTop: node.styles.marginTop ?? '',
+            opacity: node.styles.opacity ?? '',
             paddingBottom: node.styles.paddingBottom ?? '',
             paddingLeft: node.styles.paddingLeft ?? '',
             paddingRight: node.styles.paddingRight ?? '',
             paddingTop: node.styles.paddingTop ?? '',
             textAlign: node.styles.textAlign ?? '',
+            width: node.styles.width ?? '',
         },
-        tagName: (node.tagName ?? node.type).toLowerCase(),
+        tagName,
         textContent: typeof node.props.content === 'string' ? node.props.content : '',
     };
 }
@@ -567,7 +573,7 @@ export default function BuilderEdit({
     }, [actions, codeDialogNodeId, codeDialogValue, nodes]);
 
     const handleUpdateElementField = useCallback(
-        (field: 'id' | 'className', value: string) => {
+        (field: 'id' | 'className' | 'href' | 'textContent', value: string) => {
             if (!selectedItemId) {
                 return;
             }
@@ -575,6 +581,22 @@ export default function BuilderEdit({
             if (field === 'id') {
                 actions.updateNode(selectedItemId, {
                     props: { attr_id: value },
+                });
+
+                return;
+            }
+
+            if (field === 'href') {
+                actions.updateNode(selectedItemId, {
+                    props: { href: value },
+                });
+
+                return;
+            }
+
+            if (field === 'textContent') {
+                actions.updateNode(selectedItemId, {
+                    props: { content: value },
                 });
 
                 return;
@@ -744,7 +766,30 @@ export default function BuilderEdit({
 
     useEffect(() => {
         const onKeyDown = (event: KeyboardEvent) => {
+            const shortcutScope = event.target instanceof Element
+                ? event.target.closest('[data-builder-shortcut-scope]') as HTMLElement | null
+                : null;
             const mod = event.ctrlKey || event.metaKey;
+
+            if (shortcutScope) {
+                if (mod && event.key.toLowerCase() === 's') {
+                    event.preventDefault();
+
+                    if (shortcutScope.dataset.builderShortcutScope === 'element-code') {
+                        handleApplyCode();
+
+                        return;
+                    }
+
+                    if (shortcutScope.dataset.builderShortcutScope === 'footer-code') {
+                        handleApplyFooterEditor();
+
+                        return;
+                    }
+                }
+
+                return;
+            }
 
             if (mod && event.key.toLowerCase() === 's') {
                 event.preventDefault();
@@ -767,7 +812,7 @@ export default function BuilderEdit({
         return () => {
             window.removeEventListener('keydown', onKeyDown);
         };
-    }, [handleSave, actions]);
+    }, [actions, handleApplyCode, handleApplyFooterEditor, handleSave]);
 
     // -----------------------------------------------------------------------
     // Sync AST to iframe
@@ -1179,7 +1224,7 @@ export default function BuilderEdit({
                                                     </Button>
                                                 </div>
                                             </div>
-                                            <div className="min-h-0 flex-1">
+                                            <div className="min-h-0 flex-1" data-builder-shortcut-scope="footer-code">
                                                 <MonacoEditor
                                                     value={footerEditorValue}
                                                     onChange={handleFooterEditorValueChange}
@@ -1247,7 +1292,7 @@ export default function BuilderEdit({
                                                                     </Button>
                                                                 </div>
                                                             </div>
-                                                            <div className="min-h-0 flex-1">
+                                                            <div className="min-h-0 flex-1" data-builder-shortcut-scope="footer-code">
                                                                 <MonacoEditor
                                                                     value={footerEditorValue}
                                                                     onChange={handleFooterEditorValueChange}
@@ -1345,14 +1390,11 @@ export default function BuilderEdit({
 
                 {/* Code editor dialog */}
                 <Dialog open={codeDialogNodeId !== null} onOpenChange={(open) => { if (!open) setCodeDialogNodeId(null); }}>
-                    <DialogContent className="flex h-[calc(100vh-4rem)] max-h-[calc(100vh-4rem)] flex-col sm:w-[min(calc(100vw-4rem),72rem)] sm:max-w-6xl">
-                        <DialogHeader>
+                    <DialogContent className="flex h-[calc(100vh-4rem)] max-h-[calc(100vh-4rem)] flex-col gap-3 p-3 sm:w-[min(calc(100vw-4rem),72rem)] sm:max-w-6xl">
+                        <DialogHeader className="gap-1">
                             <DialogTitle>Edit Element Code</DialogTitle>
-                            <DialogDescription>
-                                View and edit the HTML source of the selected element.
-                            </DialogDescription>
                         </DialogHeader>
-                        <div className="min-h-0 flex-1">
+                        <div className="min-h-0 flex-1" data-builder-shortcut-scope="element-code">
                             <MonacoEditor
                                 value={codeDialogValue}
                                 onChange={setCodeDialogValue}
@@ -1360,7 +1402,7 @@ export default function BuilderEdit({
                                 height="100%"
                             />
                         </div>
-                        <DialogFooter>
+                        <DialogFooter className="-mx-3 -mb-3 gap-2 rounded-b-xl border-t bg-muted/35 px-3 py-2 sm:px-3">
                             <Button variant="outline" onClick={() => setCodeDialogNodeId(null)}>Cancel</Button>
                             <Button onClick={handleApplyCode}>Apply</Button>
                         </DialogFooter>

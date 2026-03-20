@@ -5,27 +5,27 @@ import {
     AlignRightIcon,
     ArrowDownIcon,
     ArrowUpIcon,
-    BoxIcon,
     ChevronDownIcon,
     ChevronRightIcon,
     CopyIcon,
     EyeIcon,
-    LayoutIcon,
     Layers3Icon,
     PaintbrushIcon,
     Trash2Icon,
-    TypeIcon,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
+import {
+    Accordion,
+    AccordionContent,
+    AccordionItem,
+    AccordionTrigger,
+} from '@/components/ui/accordion';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn } from '@/lib/utils';
+import type { BuilderEditableElement, BuilderElementStyleValues } from './builder-dom';
 import type { AstNodeId, AstNodeMap } from './core/ast-types';
-import type {
-    BuilderEditableElement,
-    BuilderElementStyleValues,
-} from './builder-dom';
 
 type BuilderRightSidebarProps = {
     nodes: AstNodeMap;
@@ -33,7 +33,7 @@ type BuilderRightSidebarProps = {
     selectedNodeId: AstNodeId | null;
     selectedElement: BuilderEditableElement | null;
     onUpdateElementField: (
-        field: 'id' | 'className',
+        field: 'id' | 'className' | 'href' | 'textContent',
         value: string,
     ) => void;
     onUpdateElementStyle: (
@@ -46,32 +46,6 @@ type BuilderRightSidebarProps = {
     onDeleteNode: (nodeId: AstNodeId) => void;
 };
 
-type CollapsibleSectionProps = {
-    title: string;
-    icon?: React.ReactNode;
-    children: React.ReactNode;
-    defaultOpen?: boolean;
-};
-
-function CollapsibleSection({ title, icon, children, defaultOpen = false }: CollapsibleSectionProps) {
-    const [open, setOpen] = useState(defaultOpen);
-
-    return (
-        <div className="border-b border-border/50">
-            <button
-                type="button"
-                onClick={() => setOpen((v) => !v)}
-                className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider transition-colors hover:bg-muted/40"
-            >
-                {open ? <ChevronDownIcon className="size-3.5" /> : <ChevronRightIcon className="size-3.5" />}
-                {icon}
-                <span className="flex-1">{title}</span>
-            </button>
-            {open ? <div className="px-3 pb-3">{children}</div> : null}
-        </div>
-    );
-}
-
 type StyleInputRowProps = {
     label: string;
     value: string;
@@ -79,22 +53,110 @@ type StyleInputRowProps = {
     placeholder?: string;
     suffix?: string;
     type?: string;
+    containerClassName?: string;
 };
 
-function StyleInputRow({ label, value, onChange, placeholder, suffix, type = 'text' }: StyleInputRowProps) {
+type InspectorSectionProps = {
+    value: string;
+    title: string;
+    summary?: string;
+    children: ReactNode;
+};
+
+const FONT_WEIGHT_OPTIONS = [
+    { value: '', label: 'Default' },
+    { value: '100', label: 'Thin' },
+    { value: '200', label: 'Extra Light' },
+    { value: '300', label: 'Light' },
+    { value: '400', label: 'Normal' },
+    { value: '500', label: 'Medium' },
+    { value: '600', label: 'Semi Bold' },
+    { value: '700', label: 'Bold' },
+    { value: '800', label: 'Extra Bold' },
+    { value: '900', label: 'Black' },
+];
+
+function formatStyleValue(value: string, fallback = 'Default'): string {
+    const trimmed = value.trim();
+
+    return trimmed === '' ? fallback : trimmed;
+}
+
+function formatDimensionValue(value: string): string {
+    const trimmed = value.trim();
+
+    return trimmed === '' ? 'auto' : trimmed;
+}
+
+function formatLengthValue(value: string, fallback = '0px'): string {
+    const trimmed = value.trim();
+
+    return trimmed === '' ? fallback : trimmed;
+}
+
+function formatAlignmentLabel(value: string): string {
+    switch (value) {
+        case 'center':
+            return 'Center';
+        case 'right':
+            return 'Right';
+        case 'justify':
+            return 'Justify';
+        case 'left':
+            return 'Left';
+        default:
+            return 'Default';
+    }
+}
+
+function formatWeightLabel(value: string): string {
+    return FONT_WEIGHT_OPTIONS.find((option) => option.value === value)?.label ?? 'Default';
+}
+
+function parseLengthValue(value: string): number {
+    const match = value.match(/-?\d+(?:\.\d+)?/);
+
+    return match ? Number.parseFloat(match[0]) : 0;
+}
+
+function parseOpacityValue(value: string): number {
+    const numeric = Number.parseFloat(value);
+
+    if (!Number.isFinite(numeric)) {
+        return 100;
+    }
+
+    return Math.max(0, Math.min(100, Math.round(numeric * 100)));
+}
+
+function formatSpacingSummary(top: string, right: string, bottom: string, left: string): string {
+    return [top, right, bottom, left]
+        .map((value) => formatLengthValue(value))
+        .join(' ');
+}
+
+function StyleInputRow({
+    label,
+    value,
+    onChange,
+    placeholder,
+    suffix,
+    type = 'text',
+    containerClassName,
+}: StyleInputRowProps) {
     return (
-        <div className="flex items-center gap-2">
-            <label className="w-20 shrink-0 text-[11px] text-muted-foreground">{label}</label>
-            <div className="relative flex-1">
+        <div className="flex items-center justify-between gap-3">
+            <label className="text-[12px] font-medium text-foreground/80">{label}</label>
+            <div className={cn('relative w-32 shrink-0', containerClassName)}>
                 <input
                     type={type}
                     value={value}
-                    onChange={(e) => onChange(e.target.value)}
+                    onChange={(event) => onChange(event.target.value)}
                     placeholder={placeholder}
-                    className="h-7 w-full rounded-md border border-border/70 bg-background px-2 text-xs outline-none transition-colors focus:border-primary/50 focus:ring-1 focus:ring-primary/20"
+                    className="h-8 w-full rounded-lg border border-border/70 bg-background px-2.5 text-[12px] outline-none transition-colors focus:border-primary/50 focus:ring-1 focus:ring-primary/15"
                 />
                 {suffix ? (
-                    <span className="pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 text-[10px] text-muted-foreground">
+                    <span className="pointer-events-none absolute top-1/2 right-2.5 -translate-y-1/2 text-[10px] text-muted-foreground">
                         {suffix}
                     </span>
                 ) : null}
@@ -103,32 +165,122 @@ function StyleInputRow({ label, value, onChange, placeholder, suffix, type = 'te
     );
 }
 
-type ColorInputRowProps = {
+function ColorStyleRow({
+    label,
+    value,
+    onChange,
+}: {
     label: string;
     value: string;
     onChange: (value: string) => void;
-};
+}) {
+    const swatchColor = value.trim() === '' ? '#000000' : value;
 
-function ColorInputRow({ label, value, onChange }: ColorInputRowProps) {
     return (
-        <div className="flex items-center gap-2">
-            <label className="w-20 shrink-0 text-[11px] text-muted-foreground">{label}</label>
-            <div className="flex flex-1 items-center gap-1.5">
-                <input
-                    type="color"
-                    value={value || '#000000'}
-                    onChange={(e) => onChange(e.target.value)}
-                    className="size-7 shrink-0 cursor-pointer rounded border border-border/70 bg-background p-0.5"
-                />
+        <div className="rounded-xl bg-muted/45 px-3 py-2.5">
+            <div className="flex items-center gap-3">
+                <span className="min-w-0 flex-1 text-[12px] font-medium text-foreground/80">{label}</span>
+                <label className="relative size-5 shrink-0 overflow-hidden rounded-full border border-border/70 shadow-sm">
+                    <span className="absolute inset-0" style={{ backgroundColor: swatchColor }} />
+                    <input
+                        type="color"
+                        value={swatchColor}
+                        onChange={(event) => onChange(event.target.value)}
+                        className="absolute inset-0 cursor-pointer opacity-0"
+                        aria-label={`${label} color`}
+                    />
+                </label>
                 <input
                     type="text"
                     value={value}
-                    onChange={(e) => onChange(e.target.value)}
-                    placeholder="rgba(0, 0, 0, 0)"
-                    className="h-7 w-full rounded-md border border-border/70 bg-background px-2 text-xs outline-none transition-colors focus:border-primary/50 focus:ring-1 focus:ring-primary/20"
+                    onChange={(event) => onChange(event.target.value)}
+                    placeholder="rgba(0, 0, 0, 1)"
+                    className="h-auto w-36 border-0 bg-transparent p-0 text-right text-[12px] text-muted-foreground outline-none placeholder:text-muted-foreground/60"
                 />
             </div>
         </div>
+    );
+}
+
+function LengthSliderRow({
+    label,
+    value,
+    onChange,
+    min = 0,
+    max = 200,
+}: {
+    label: string;
+    value: string;
+    onChange: (value: string) => void;
+    min?: number;
+    max?: number;
+}) {
+    const numericValue = parseLengthValue(value);
+
+    return (
+        <div className="rounded-xl bg-muted/45 px-3 py-2.5">
+            <div className="flex items-center justify-between gap-3">
+                <span className="text-[12px] font-medium text-foreground/80">{label}</span>
+                <span className="text-[12px] text-muted-foreground">{formatLengthValue(value)}</span>
+            </div>
+            <input
+                type="range"
+                min={min}
+                max={max}
+                step="1"
+                value={numericValue}
+                onChange={(event) => onChange(`${event.target.value}px`)}
+                className="mt-2 h-2 w-full cursor-pointer accent-primary"
+            />
+        </div>
+    );
+}
+
+function OpacitySliderRow({
+    value,
+    onChange,
+}: {
+    value: string;
+    onChange: (value: string) => void;
+}) {
+    const numericValue = parseOpacityValue(value);
+
+    return (
+        <div className="rounded-xl bg-muted/45 px-3 py-2.5">
+            <div className="flex items-center justify-between gap-3">
+                <span className="text-[12px] font-medium text-foreground/80">Opacity</span>
+                <span className="text-[12px] text-muted-foreground">{numericValue}%</span>
+            </div>
+            <input
+                type="range"
+                min="0"
+                max="100"
+                step="1"
+                value={numericValue}
+                onChange={(event) => onChange(`${Number.parseInt(event.target.value, 10) / 100}`)}
+                className="mt-2 h-2 w-full cursor-pointer accent-primary"
+            />
+        </div>
+    );
+}
+
+function InspectorSection({ value, title, summary, children }: InspectorSectionProps) {
+    return (
+        <AccordionItem value={value} className="px-3">
+            <AccordionTrigger className="py-3 text-sm hover:no-underline">
+                <div className="flex min-w-0 flex-1 items-center gap-3 pr-3 text-left">
+                    <span className="text-[13px] font-medium text-foreground">{title}</span>
+                    {summary ? (
+                        <span className="ml-auto truncate text-[12px] text-muted-foreground">
+                            {summary}
+                        </span>
+                    ) : null}
+                </div>
+            </AccordionTrigger>
+            <AccordionContent className="pb-3">
+                <div className="flex flex-col gap-3">{children}</div>
+            </AccordionContent>
+        </AccordionItem>
     );
 }
 
@@ -426,7 +578,7 @@ function StructureActionButton({
     variant = 'default',
     onClick,
 }: {
-    children: React.ReactNode;
+    children: ReactNode;
     title: string;
     disabled?: boolean;
     variant?: 'default' | 'danger';
@@ -459,178 +611,219 @@ function StyleTab({
     onUpdateElementField: BuilderRightSidebarProps['onUpdateElementField'];
     onUpdateElementStyle: BuilderRightSidebarProps['onUpdateElementStyle'];
 }) {
+    const attributeSummary = selectedElement.id.trim() || selectedElement.className.trim() || 'Element metadata';
+    const dimensionsSummary = `${formatDimensionValue(selectedElement.styles.width)} x ${formatDimensionValue(selectedElement.styles.height)}`;
+    const typographySummary = `${formatStyleValue(selectedElement.styles.fontSize, 'Auto')} · ${formatWeightLabel(selectedElement.styles.fontWeight)}`;
+    const colorsSummary = [
+        selectedElement.styles.backgroundColor.trim() !== '' ? 'Background' : null,
+        selectedElement.styles.color.trim() !== '' ? 'Text' : null,
+    ].filter(Boolean).join(' · ') || 'Default';
+    const contentSummary = selectedElement.isLink
+        ? selectedElement.href.trim() || formatStyleValue(selectedElement.textContent, 'Empty label')
+        : selectedElement.tagName === 'button'
+            ? formatStyleValue(selectedElement.textContent, 'Empty label')
+            : '';
+    const marginSummary = formatSpacingSummary(
+        selectedElement.styles.marginTop,
+        selectedElement.styles.marginRight,
+        selectedElement.styles.marginBottom,
+        selectedElement.styles.marginLeft,
+    );
+    const paddingSummary = formatSpacingSummary(
+        selectedElement.styles.paddingTop,
+        selectedElement.styles.paddingRight,
+        selectedElement.styles.paddingBottom,
+        selectedElement.styles.paddingLeft,
+    );
+    const decorationSummary = formatLengthValue(selectedElement.styles.borderRadius);
+    const alignmentSummary = formatAlignmentLabel(selectedElement.styles.textAlign);
+
     return (
         <div className="flex flex-col">
-            <CollapsibleSection title="Attributes" defaultOpen>
-                <div className="flex flex-col gap-2">
+            <Accordion
+                type="multiple"
+                defaultValue={['attributes', 'typography', 'colors']}
+                className="w-full"
+            >
+                <InspectorSection value="attributes" title="Attributes" summary={attributeSummary}>
                     <StyleInputRow
                         label="ID"
                         value={selectedElement.id}
-                        onChange={(v) => onUpdateElementField('id', v)}
+                        onChange={(value) => onUpdateElementField('id', value)}
                         placeholder="element-id"
+                        containerClassName="w-36"
                     />
                     <StyleInputRow
                         label="Classes"
                         value={selectedElement.className}
-                        onChange={(v) => onUpdateElementField('className', v)}
+                        onChange={(value) => onUpdateElementField('className', value)}
                         placeholder="class-name"
+                        containerClassName="w-40"
                     />
-                </div>
-            </CollapsibleSection>
+                </InspectorSection>
 
-            <CollapsibleSection title="Display" icon={<LayoutIcon className="size-3" />} defaultOpen>
-                <div className="flex flex-col gap-2">
-                    <div className="flex items-center gap-2">
-                        <label className="w-20 shrink-0 text-[11px] text-muted-foreground">Opacity</label>
-                        <input
-                            type="range"
-                            min="0"
-                            max="1"
-                            step="0.01"
-                            defaultValue="1"
-                            className="h-1.5 flex-1 cursor-pointer accent-primary"
+                {selectedElement.isLink || selectedElement.tagName === 'button' ? (
+                    <InspectorSection value="content" title="Content" summary={contentSummary}>
+                        <StyleInputRow
+                            label="Label"
+                            value={selectedElement.textContent}
+                            onChange={(value) => onUpdateElementField('textContent', value)}
+                            placeholder="Button label"
+                            containerClassName="w-40"
                         />
-                    </div>
-                </div>
-            </CollapsibleSection>
+                        {selectedElement.isLink ? (
+                            <StyleInputRow
+                                label="URL"
+                                value={selectedElement.href}
+                                onChange={(value) => onUpdateElementField('href', value)}
+                                placeholder="https://example.com"
+                                containerClassName="w-40"
+                            />
+                        ) : null}
+                    </InspectorSection>
+                ) : null}
 
-            <CollapsibleSection title="Typography" icon={<TypeIcon className="size-3" />} defaultOpen>
-                <div className="flex flex-col gap-2">
-                    <div className="flex items-center gap-2">
-                        <label className="w-20 shrink-0 text-[11px] text-muted-foreground">Align</label>
-                        <ToggleGroup
-                            type="single"
-                            size="sm"
-                            value={selectedElement.styles.textAlign || 'left'}
-                            onValueChange={(value) => {
-                                if (value !== '') {
-                                    onUpdateElementStyle('textAlign', value);
-                                }
-                            }}
-                            className="gap-0.5"
-                        >
-                            <ToggleGroupItem value="left" aria-label="Left" className="size-7 p-0">
-                                <AlignLeftIcon className="size-3.5" />
-                            </ToggleGroupItem>
-                            <ToggleGroupItem value="center" aria-label="Center" className="size-7 p-0">
-                                <AlignCenterIcon className="size-3.5" />
-                            </ToggleGroupItem>
-                            <ToggleGroupItem value="right" aria-label="Right" className="size-7 p-0">
-                                <AlignRightIcon className="size-3.5" />
-                            </ToggleGroupItem>
-                            <ToggleGroupItem value="justify" aria-label="Justify" className="size-7 p-0">
-                                <AlignJustifyIcon className="size-3.5" />
-                            </ToggleGroupItem>
-                        </ToggleGroup>
-                    </div>
+                <InspectorSection value="dimensions" title="Dimensions" summary={dimensionsSummary}>
+                    <StyleInputRow
+                        label="Width"
+                        value={selectedElement.styles.width}
+                        onChange={(value) => onUpdateElementStyle('width', value)}
+                        placeholder="100%"
+                    />
+                    <StyleInputRow
+                        label="Height"
+                        value={selectedElement.styles.height}
+                        onChange={(value) => onUpdateElementStyle('height', value)}
+                        placeholder="auto"
+                    />
+                    <OpacitySliderRow
+                        value={selectedElement.styles.opacity}
+                        onChange={(value) => onUpdateElementStyle('opacity', value)}
+                    />
+                </InspectorSection>
+
+                <InspectorSection value="typography" title="Typography" summary={typographySummary}>
                     <StyleInputRow
                         label="Font size"
                         value={selectedElement.styles.fontSize}
-                        onChange={(v) => onUpdateElementStyle('fontSize', v)}
-                        placeholder="16"
-                        suffix="px"
+                        onChange={(value) => onUpdateElementStyle('fontSize', value)}
+                        placeholder="16px"
                     />
-                    <div className="flex items-center gap-2">
-                        <label className="w-20 shrink-0 text-[11px] text-muted-foreground">Weight</label>
+                    <div className="flex items-center justify-between gap-3">
+                        <label className="text-[12px] font-medium text-foreground/80">Weight</label>
                         <select
-                            value={selectedElement.styles.fontWeight || ''}
-                            onChange={(e) => onUpdateElementStyle('fontWeight', e.target.value)}
-                            className="h-7 w-full rounded-md border border-border/70 bg-background px-2 text-xs outline-none transition-colors focus:border-primary/50"
+                            value={selectedElement.styles.fontWeight}
+                            onChange={(event) => onUpdateElementStyle('fontWeight', event.target.value)}
+                            className="h-8 w-36 rounded-lg border border-border/70 bg-background px-2.5 text-[12px] outline-none transition-colors focus:border-primary/50 focus:ring-1 focus:ring-primary/15"
                         >
-                            <option value="">Default</option>
-                            <option value="100">Thin</option>
-                            <option value="200">Extra Light</option>
-                            <option value="300">Light</option>
-                            <option value="400">Normal</option>
-                            <option value="500">Medium</option>
-                            <option value="600">Semi Bold</option>
-                            <option value="700">Bold</option>
-                            <option value="800">Extra Bold</option>
-                            <option value="900">Black</option>
+                            {FONT_WEIGHT_OPTIONS.map((option) => (
+                                <option key={option.label} value={option.value}>
+                                    {option.label}
+                                </option>
+                            ))}
                         </select>
                     </div>
-                    <ColorInputRow
-                        label="Text color"
-                        value={selectedElement.styles.color}
-                        onChange={(v) => onUpdateElementStyle('color', v)}
-                    />
-                </div>
-            </CollapsibleSection>
+                </InspectorSection>
 
-            <CollapsibleSection title="Background" icon={<PaintbrushIcon className="size-3" />}>
-                <div className="flex flex-col gap-2">
-                    <ColorInputRow
-                        label="Color"
+                <InspectorSection value="colors" title="Colors" summary={colorsSummary}>
+                    <ColorStyleRow
+                        label="Background"
                         value={selectedElement.styles.backgroundColor}
-                        onChange={(v) => onUpdateElementStyle('backgroundColor', v)}
+                        onChange={(value) => onUpdateElementStyle('backgroundColor', value)}
                     />
-                </div>
-            </CollapsibleSection>
+                    <ColorStyleRow
+                        label="Text"
+                        value={selectedElement.styles.color}
+                        onChange={(value) => onUpdateElementStyle('color', value)}
+                    />
+                </InspectorSection>
 
-            <CollapsibleSection title="Spacing" icon={<BoxIcon className="size-3" />}>
-                <div className="flex flex-col gap-1.5">
-                    <p className="mb-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Padding</p>
-                    <div className="grid grid-cols-2 gap-1.5">
-                        <StyleInputRow
-                            label="Top"
-                            value={selectedElement.styles.paddingTop}
-                            onChange={(v) => onUpdateElementStyle('paddingTop', v)}
-                            placeholder="0"
-                            suffix="px"
-                        />
-                        <StyleInputRow
-                            label="Right"
-                            value={selectedElement.styles.paddingRight}
-                            onChange={(v) => onUpdateElementStyle('paddingRight', v)}
-                            placeholder="0"
-                            suffix="px"
-                        />
-                        <StyleInputRow
-                            label="Bottom"
-                            value={selectedElement.styles.paddingBottom}
-                            onChange={(v) => onUpdateElementStyle('paddingBottom', v)}
-                            placeholder="0"
-                            suffix="px"
-                        />
-                        <StyleInputRow
-                            label="Left"
-                            value={selectedElement.styles.paddingLeft}
-                            onChange={(v) => onUpdateElementStyle('paddingLeft', v)}
-                            placeholder="0"
-                            suffix="px"
-                        />
-                    </div>
-                    <p className="mt-2 mb-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Margin</p>
-                    <div className="grid grid-cols-2 gap-1.5">
-                        <StyleInputRow
+                <InspectorSection value="margin" title="Margin" summary={marginSummary}>
+                    <div className="grid grid-cols-2 gap-2">
+                        <LengthSliderRow
                             label="Top"
                             value={selectedElement.styles.marginTop}
-                            onChange={(v) => onUpdateElementStyle('marginTop', v)}
-                            placeholder="0"
-                            suffix="px"
+                            onChange={(value) => onUpdateElementStyle('marginTop', value)}
                         />
-                        <StyleInputRow
+                        <LengthSliderRow
+                            label="Right"
+                            value={selectedElement.styles.marginRight}
+                            onChange={(value) => onUpdateElementStyle('marginRight', value)}
+                        />
+                        <LengthSliderRow
                             label="Bottom"
                             value={selectedElement.styles.marginBottom}
-                            onChange={(v) => onUpdateElementStyle('marginBottom', v)}
-                            placeholder="0"
-                            suffix="px"
+                            onChange={(value) => onUpdateElementStyle('marginBottom', value)}
+                        />
+                        <LengthSliderRow
+                            label="Left"
+                            value={selectedElement.styles.marginLeft}
+                            onChange={(value) => onUpdateElementStyle('marginLeft', value)}
                         />
                     </div>
-                </div>
-            </CollapsibleSection>
+                </InspectorSection>
 
-            <CollapsibleSection title="Border">
-                <div className="flex flex-col gap-2">
-                    <StyleInputRow
+                <InspectorSection value="padding" title="Padding" summary={paddingSummary}>
+                    <div className="grid grid-cols-2 gap-2">
+                        <LengthSliderRow
+                            label="Top"
+                            value={selectedElement.styles.paddingTop}
+                            onChange={(value) => onUpdateElementStyle('paddingTop', value)}
+                        />
+                        <LengthSliderRow
+                            label="Right"
+                            value={selectedElement.styles.paddingRight}
+                            onChange={(value) => onUpdateElementStyle('paddingRight', value)}
+                        />
+                        <LengthSliderRow
+                            label="Bottom"
+                            value={selectedElement.styles.paddingBottom}
+                            onChange={(value) => onUpdateElementStyle('paddingBottom', value)}
+                        />
+                        <LengthSliderRow
+                            label="Left"
+                            value={selectedElement.styles.paddingLeft}
+                            onChange={(value) => onUpdateElementStyle('paddingLeft', value)}
+                        />
+                    </div>
+                </InspectorSection>
+
+                <InspectorSection value="decoration" title="Decoration" summary={decorationSummary}>
+                    <LengthSliderRow
                         label="Radius"
                         value={selectedElement.styles.borderRadius}
-                        onChange={(v) => onUpdateElementStyle('borderRadius', v)}
-                        placeholder="0"
-                        suffix="px"
+                        onChange={(value) => onUpdateElementStyle('borderRadius', value)}
+                        max={96}
                     />
-                </div>
-            </CollapsibleSection>
+                </InspectorSection>
+
+                <InspectorSection value="alignment" title="Alignment" summary={alignmentSummary}>
+                    <ToggleGroup
+                        type="single"
+                        size="sm"
+                        value={selectedElement.styles.textAlign || 'left'}
+                        onValueChange={(value) => {
+                            if (value !== '') {
+                                onUpdateElementStyle('textAlign', value);
+                            }
+                        }}
+                        className="grid grid-cols-4 gap-1 rounded-xl bg-muted/45 p-1"
+                    >
+                        <ToggleGroupItem value="left" aria-label="Left" className="size-8 rounded-lg p-0">
+                            <AlignLeftIcon className="size-3.5" />
+                        </ToggleGroupItem>
+                        <ToggleGroupItem value="center" aria-label="Center" className="size-8 rounded-lg p-0">
+                            <AlignCenterIcon className="size-3.5" />
+                        </ToggleGroupItem>
+                        <ToggleGroupItem value="right" aria-label="Right" className="size-8 rounded-lg p-0">
+                            <AlignRightIcon className="size-3.5" />
+                        </ToggleGroupItem>
+                        <ToggleGroupItem value="justify" aria-label="Justify" className="size-8 rounded-lg p-0">
+                            <AlignJustifyIcon className="size-3.5" />
+                        </ToggleGroupItem>
+                    </ToggleGroup>
+                </InspectorSection>
+            </Accordion>
         </div>
     );
 }
