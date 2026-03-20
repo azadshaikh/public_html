@@ -196,6 +196,8 @@ export default function BuilderEdit({
     const overlayContainerRef = useRef<HTMLDivElement | null>(null);
     const [previewLoadedAt, setPreviewLoadedAt] = useState(0);
     const iframeReadyRef = useRef(false);
+    const [addedBadge, setAddedBadge] = useState<string | null>(null);
+    const addedBadgeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // Imperative refs for interaction subsystems
     const overlayRef = useRef<BuilderOverlay | null>(null);
@@ -329,7 +331,13 @@ export default function BuilderEdit({
     const handleAddLibraryItem = useCallback((item: BuilderLibraryItem) => {
         actions.importHtml(item.html, ROOT_NODE_ID);
         pendingScrollRef.current = 'pending';
-        showAppToast({ variant: 'success', title: `${item.name} added`, duration: 2000 });
+
+        if (addedBadgeTimerRef.current) {
+            clearTimeout(addedBadgeTimerRef.current);
+        }
+
+        setAddedBadge(item.name);
+        addedBadgeTimerRef.current = setTimeout(() => setAddedBadge(null), 3000);
     }, [actions]);
 
     const handleDragStartLibraryItem = useCallback((item: BuilderLibraryItem) => {
@@ -904,13 +912,23 @@ export default function BuilderEdit({
                             )}
                         >
                             {!leftPanelCollapsed ? (
-                                <BuilderComponentsPanel
-                                    activeLibrary={activeLibrary}
-                                    palette={palette}
-                                    onActiveLibraryChange={setActiveLibrary}
-                                    onAddLibraryItem={handleAddLibraryItem}
-                                    onDragStartItem={handleDragStartLibraryItem}
-                                />
+                                <div className="relative flex h-full flex-col">
+                                    <BuilderComponentsPanel
+                                        activeLibrary={activeLibrary}
+                                        palette={palette}
+                                        onActiveLibraryChange={setActiveLibrary}
+                                        onAddLibraryItem={handleAddLibraryItem}
+                                        onDragStartItem={handleDragStartLibraryItem}
+                                    />
+                                    {addedBadge ? (
+                                        <div className="absolute inset-x-0 bottom-3 flex justify-center pointer-events-none z-10">
+                                            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-600 px-3 py-1 text-xs font-medium text-white shadow-md animate-in fade-in zoom-in-95 duration-200">
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-3.5"><path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" /></svg>
+                                                {addedBadge} added
+                                            </span>
+                                        </div>
+                                    ) : null}
+                                </div>
                             ) : null}
                         </aside>
 
