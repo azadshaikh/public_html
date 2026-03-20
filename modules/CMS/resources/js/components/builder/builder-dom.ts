@@ -14,6 +14,7 @@ export type BuilderElementStyleValues = {
     borderWidth: string;
     boxShadow: string;
     color: string;
+    display: string;
     fontSize: string;
     fontWeight: string;
     height: string;
@@ -106,6 +107,7 @@ const DEFAULT_STYLE_VALUES: BuilderElementStyleValues = {
     borderWidth: '',
     boxShadow: '',
     color: '',
+    display: '',
     fontSize: '',
     fontWeight: '',
     height: '',
@@ -183,6 +185,7 @@ function readStyleValues(element: HTMLElement): BuilderElementStyleValues {
         borderWidth: element.style.borderWidth,
         boxShadow: element.style.boxShadow,
         color: element.style.color,
+        display: element.style.display,
         fontSize: element.style.fontSize,
         fontWeight: element.style.fontWeight,
         height: element.style.height,

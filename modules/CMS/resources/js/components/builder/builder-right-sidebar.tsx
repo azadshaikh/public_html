@@ -5,15 +5,17 @@ import type { BuilderEditableElement, BuilderElementStyleValues } from './builde
 import { StructureTab } from './builder-right-sidebar-structure-tab';
 import { StyleTab } from './builder-right-sidebar-style-tab';
 import type { AstNodeId, AstNodeMap } from './core/ast-types';
+import type { MediaPickerPageProps } from '../../types/cms';
 
 type BuilderRightSidebarProps = {
     nodes: AstNodeMap;
     rootNodeId: AstNodeId;
     selectedNodeId: AstNodeId | null;
     selectedElement: BuilderEditableElement | null;
+    pickerAction: string;
     onClearSelectedStyles: () => void;
     onUpdateElementField: (
-        field: 'id' | 'className' | 'href' | 'textContent' | 'target' | 'rel' | 'buttonType' | 'disabled',
+        field: 'id' | 'className' | 'href' | 'textContent' | 'target' | 'rel' | 'buttonType' | 'disabled' | 'src' | 'alt',
         value: string,
     ) => void;
     onUpdateElementStyle: (
@@ -30,13 +32,18 @@ type BuilderRightSidebarProps = {
     onMoveNode: (nodeId: AstNodeId, direction: 'up' | 'down') => void;
     onDuplicateNode: (nodeId: AstNodeId) => void;
     onDeleteNode: (nodeId: AstNodeId) => void;
-};
+} & MediaPickerPageProps;
 
 export function BuilderRightSidebar({
     nodes,
     rootNodeId,
     selectedNodeId,
     selectedElement,
+    pickerAction,
+    pickerFilters,
+    pickerMedia,
+    pickerStatistics,
+    uploadSettings,
     onClearSelectedStyles,
     onUpdateElementField,
     onUpdateElementStyle,
@@ -66,6 +73,11 @@ export function BuilderRightSidebar({
                         {selectedElement ? (
                             <StyleTab
                                 selectedElement={selectedElement}
+                                pickerAction={pickerAction}
+                                pickerFilters={pickerFilters}
+                                pickerMedia={pickerMedia}
+                                pickerStatistics={pickerStatistics}
+                                uploadSettings={uploadSettings}
                                 onClearAllStyles={onClearSelectedStyles}
                                 onUpdateElementField={onUpdateElementField}
                                 onUpdateElementStyle={onUpdateElementStyle}

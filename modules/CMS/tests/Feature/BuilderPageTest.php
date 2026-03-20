@@ -82,9 +82,31 @@ class BuilderPageTest extends TestCase
                 ->where('builderState.source', 'imported-content')
                 ->where('builderState.items.0.label', 'Imported page content')
                 ->where('builderState.items.0.html', '<section class="hero"><h1>Imported content</h1></section>')
+                ->where('pickerMedia', null)
+                ->where('pickerFilters', null)
+                ->where('uploadSettings', null)
                 ->has('palette.sections')
                 ->has('palette.sections.0.items')
                 ->where('palette.sections.0.items.0.source', 'theme')
+            );
+    }
+
+    public function test_builder_page_returns_media_picker_props_when_picker_query_is_present(): void
+    {
+        $page = $this->createPage('Image Builder Page');
+
+        $this->actingAs($this->admin)
+            ->get(route('cms.builder.edit', ['page' => $page, 'picker' => 1]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $assert): Assert => $assert
+                ->component('cms/builder/edit')
+                ->where('page.id', $page->id)
+                ->where('pickerFilters.picker', '1')
+                ->where('pickerFilters.status', 'all')
+                ->where('uploadSettings.upload_route', route('app.media.upload-media'))
+                ->where('pickerStatistics.total', 0)
+                ->where('pickerStatistics.trash', 0)
+                ->has('pickerMedia.data', 0)
             );
     }
 

@@ -70,6 +70,10 @@ type BuilderEditLayoutProps = {
     overlayContainerRef: RefObject<HTMLDivElement | null>;
     page: BuilderEditPageProps['page'];
     palette: BuilderEditPageProps['palette'];
+    pickerAction: string;
+    pickerFilters: BuilderEditPageProps['pickerFilters'];
+    pickerMedia: BuilderEditPageProps['pickerMedia'];
+    pickerStatistics: BuilderEditPageProps['pickerStatistics'];
     panelGroupRef: RefObject<GroupImperativeHandle | null>;
     previewDocument: string;
     previewUrl: string | null;
@@ -78,12 +82,13 @@ type BuilderEditLayoutProps = {
     selectedElement: BuilderEditableElement | null;
     selectedItemId: AstNodeId | null;
     setMobileSidebarOpen: (open: boolean) => void;
+    uploadSettings: BuilderEditPageProps['uploadSettings'];
     onClearSelectedStyles: () => void;
     onDeleteNode: (nodeId: AstNodeId) => void;
     onDuplicateNode: (nodeId: AstNodeId) => void;
     onMoveNode: (nodeId: AstNodeId, direction: 'up' | 'down') => void;
     onUpdateElementField: (
-        field: 'id' | 'className' | 'href' | 'textContent' | 'target' | 'rel' | 'buttonType' | 'disabled',
+        field: 'id' | 'className' | 'href' | 'textContent' | 'target' | 'rel' | 'buttonType' | 'disabled' | 'src' | 'alt',
         value: string,
     ) => void;
     onUpdateElementInteractiveStyle: (
@@ -153,6 +158,10 @@ export function BuilderEditLayout({
     overlayContainerRef,
     page,
     palette,
+    pickerAction,
+    pickerFilters,
+    pickerMedia,
+    pickerStatistics,
     panelGroupRef,
     previewDocument,
     previewUrl,
@@ -161,6 +170,7 @@ export function BuilderEditLayout({
     selectedElement,
     selectedItemId,
     setMobileSidebarOpen,
+    uploadSettings,
     viewHref,
 }: BuilderEditLayoutProps) {
     return (
@@ -269,6 +279,11 @@ export function BuilderEditLayout({
                                 rootNodeId={rootNodeId}
                                 selectedNodeId={selectedItemId}
                                 selectedElement={selectedElement}
+                                pickerAction={pickerAction}
+                                pickerFilters={pickerFilters}
+                                pickerMedia={pickerMedia}
+                                pickerStatistics={pickerStatistics}
+                                uploadSettings={uploadSettings}
                                 onClearSelectedStyles={onClearSelectedStyles}
                                 onUpdateElementField={onUpdateElementField}
                                 onUpdateElementStyle={onUpdateElementStyle}

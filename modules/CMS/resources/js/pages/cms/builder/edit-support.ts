@@ -220,6 +220,7 @@ export function toEditableElement(node: AstNode): BuilderEditableElement {
             borderWidth: node.styles.borderWidth ?? '',
             boxShadow: node.styles.boxShadow ?? '',
             color: node.styles.color ?? '',
+            display: node.styles.display ?? '',
             fontSize: node.styles.fontSize ?? '',
             fontWeight: node.styles.fontWeight ?? '',
             height: node.styles.height ?? '',

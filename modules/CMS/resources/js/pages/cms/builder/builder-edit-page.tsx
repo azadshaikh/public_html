@@ -42,9 +42,13 @@ import type {
 
 export default function BuilderEditPage({
     activeTheme,
-    page,
     palette,
     builderState,
+    page,
+    pickerFilters,
+    pickerMedia,
+    pickerStatistics,
+    uploadSettings,
 }: BuilderEditPageProps) {
     const [deviceMode, setDeviceMode] = useState<BuilderDeviceMode>('desktop');
     const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(false);
@@ -319,7 +323,7 @@ export default function BuilderEditPage({
         setCodeDialogNodeId(null);
     }, [actions, codeDialogNodeId, codeDialogValue, nodes]);
 
-    const handleUpdateElementField = useCallback((field: 'id' | 'className' | 'href' | 'textContent' | 'target' | 'rel' | 'buttonType' | 'disabled', value: string) => {
+    const handleUpdateElementField = useCallback((field: 'id' | 'className' | 'href' | 'textContent' | 'target' | 'rel' | 'buttonType' | 'disabled' | 'src' | 'alt', value: string) => {
         if (!selectedItemId) {
             return;
         }
@@ -332,6 +336,18 @@ export default function BuilderEditPage({
 
         if (field === 'href') {
             actions.updateNode(selectedItemId, { props: { href: value } });
+
+            return;
+        }
+
+        if (field === 'src') {
+            actions.updateNode(selectedItemId, { props: { src: value } });
+
+            return;
+        }
+
+        if (field === 'alt') {
+            actions.updateNode(selectedItemId, { props: { alt: value } });
 
             return;
         }
@@ -626,6 +642,10 @@ export default function BuilderEditPage({
             overlayContainerRef={overlayContainerRef}
             page={page}
             palette={palette}
+            pickerAction={route('cms.builder.edit', page.id)}
+            pickerFilters={pickerFilters}
+            pickerMedia={pickerMedia}
+            pickerStatistics={pickerStatistics}
             panelGroupRef={panelGroupRef}
             previewDocument={previewDocument}
             previewUrl={previewUrl}
@@ -634,6 +654,7 @@ export default function BuilderEditPage({
             selectedElement={selectedElement}
             selectedItemId={selectedItemId}
             setMobileSidebarOpen={setMobileSidebarOpen}
+            uploadSettings={uploadSettings}
             viewHref={page.permalink_url}
         />
     );

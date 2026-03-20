@@ -395,7 +395,7 @@ export type BuilderEditPageProps = {
         blocks: BuilderLibraryGroup[];
     };
     builderState: BuilderState;
-};
+} & MediaPickerPageProps;
 
 // ================================================================
 // Categories

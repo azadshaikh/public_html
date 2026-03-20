@@ -3,6 +3,7 @@
 namespace Modules\CMS\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Traits\HasMediaPicker;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -21,6 +22,7 @@ use Modules\CMS\Services\ThemeService;
 class BuilderController extends Controller
 {
     use AuthorizesRequests;
+    use HasMediaPicker;
 
     private const string BUILDER_METADATA_KEY = 'builder_v1';
 
@@ -57,6 +59,7 @@ class BuilderController extends Controller
             ],
             'palette' => $this->buildPalette(),
             'builderState' => $this->resolveBuilderState($page),
+            ...$this->getMediaPickerProps(),
         ]);
     }
 

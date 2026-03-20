@@ -1,11 +1,13 @@
+import { ImagePlusIcon, Trash2Icon } from 'lucide-react';
 import { useState } from 'react';
 import {
     AlignCenterIcon,
-    AlignJustifyIcon,
     AlignLeftIcon,
     AlignRightIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { MediaPickerDialog } from '@/components/media/media-picker-dialog';
+import type { MediaPickerItem } from '@/components/media/media-picker-utils';
 import { Accordion } from '@/components/ui/accordion';
 import type { BuilderEditableElement, BuilderElementStyleValues } from './builder-dom';
 import {
@@ -30,12 +32,14 @@ import {
     StyleSelectRow,
     SummaryText,
 } from './builder-right-sidebar-controls';
+import type { MediaPickerPageProps } from '../../types/cms';
 
 type StyleTabProps = {
     selectedElement: BuilderEditableElement;
+    pickerAction: string;
     onClearAllStyles: () => void;
     onUpdateElementField: (
-        field: 'id' | 'className' | 'href' | 'textContent' | 'target' | 'rel' | 'buttonType' | 'disabled',
+        field: 'id' | 'className' | 'href' | 'textContent' | 'target' | 'rel' | 'buttonType' | 'disabled' | 'src' | 'alt',
         value: string,
     ) => void;
     onUpdateElementStyle: (
@@ -48,10 +52,15 @@ type StyleTabProps = {
         field: keyof BuilderElementStyleValues,
         value: string,
     ) => void;
-};
+} & MediaPickerPageProps;
 
 export function StyleTab({
     selectedElement,
+    pickerAction,
+    pickerFilters,
+    pickerMedia,
+    pickerStatistics,
+    uploadSettings,
     onClearAllStyles,
     onUpdateElementField,
     onUpdateElementStyle,
@@ -59,7 +68,11 @@ export function StyleTab({
     onUpdateElementInteractiveStyle,
 }: StyleTabProps) {
     const [expandedSections, setExpandedSections] = useState<string[]>(['attributes', 'typography', 'colors']);
+    const [imagePickerOpen, setImagePickerOpen] = useState(false);
     const attributeSummary = <SummaryText value={(selectedElement.id ?? '').trim() || (selectedElement.className ?? '').trim() || 'Element metadata'} />;
+    const imageSummary = selectedElement.isImage
+        ? <SummaryText value={(selectedElement.alt ?? '').trim() || (selectedElement.src ?? '').trim() || 'No source'} />
+        : undefined;
     const dimensionsSummary = <SummaryText value={`${formatDimensionValue(selectedElement.styles.width)} x ${formatDimensionValue(selectedElement.styles.height)}`} />;
     const typographySummary = <SummaryText value={formatStyleValue(selectedElement.styles.fontSize, 'Text controls')} />;
     const colorsSummary = (
@@ -137,6 +150,28 @@ export function StyleTab({
 
         onUpdateElementStyles(nextStyles);
     };
+    const imageAlignmentOptions: SegmentedControlOption[] = [
+        {
+            value: '__default__',
+            ariaLabel: 'Default image alignment',
+            label: <span className="text-sm leading-none">×</span>,
+        },
+        {
+            value: 'left',
+            ariaLabel: 'Align image left',
+            label: <AlignLeftIcon className="size-3.5" />,
+        },
+        {
+            value: 'center',
+            ariaLabel: 'Align image center',
+            label: <AlignCenterIcon className="size-3.5" />,
+        },
+        {
+            value: 'right',
+            ariaLabel: 'Align image right',
+            label: <AlignRightIcon className="size-3.5" />,
+        },
+    ];
 
     const alignmentOptions: SegmentedControlOption[] = [
         {
@@ -159,12 +194,12 @@ export function StyleTab({
             ariaLabel: 'Align right',
             label: <AlignRightIcon className="size-3.5" />,
         },
-        {
-            value: 'justify',
-            ariaLabel: 'Justify text',
-            label: <AlignJustifyIcon className="size-3.5" />,
-        },
     ];
+    alignmentOptions.push({
+        value: 'justify',
+        ariaLabel: 'Justify text',
+        label: <span className="text-[11px] font-semibold leading-none">J</span>,
+    });
     const borderStyleOptions = [
         { value: '', label: 'auto' },
         { value: 'solid', label: 'Solid' },
@@ -177,6 +212,79 @@ export function StyleTab({
     const resolvedBorderTopRightRadius = selectedElement.styles.borderTopRightRadius || selectedElement.styles.borderRadius;
     const resolvedBorderBottomRightRadius = selectedElement.styles.borderBottomRightRadius || selectedElement.styles.borderRadius;
     const resolvedBorderBottomLeftRadius = selectedElement.styles.borderBottomLeftRadius || selectedElement.styles.borderRadius;
+    const currentImageAlignment = (() => {
+        if (!selectedElement.isImage || selectedElement.styles.display !== 'block') {
+            return '';
+        }
+
+        if (selectedElement.styles.marginLeft === 'auto' && selectedElement.styles.marginRight === 'auto') {
+            return 'center';
+        }
+
+        if (selectedElement.styles.marginRight === 'auto' && selectedElement.styles.marginLeft !== 'auto') {
+            return 'left';
+        }
+
+        if (selectedElement.styles.marginLeft === 'auto' && selectedElement.styles.marginRight !== 'auto') {
+            return 'right';
+        }
+
+        return '';
+    })();
+    const handleSelectImage = (items: MediaPickerItem[]): void => {
+        const item = items[0];
+
+        if (!item) {
+            return;
+        }
+
+        const nextSource = item.media_url || item.original_url || item.thumbnail_url || '';
+
+        onUpdateElementField('src', nextSource);
+
+        if ((selectedElement.alt ?? '').trim() === '' && item.alt_text.trim() !== '') {
+            onUpdateElementField('alt', item.alt_text);
+        }
+
+        setImagePickerOpen(false);
+    };
+    const handleUpdateImageAlignment = (value: string): void => {
+        if (value === '') {
+            onUpdateElementStyles({
+                display: '',
+                marginLeft: '',
+                marginRight: '',
+            });
+
+            return;
+        }
+
+        if (value === 'left') {
+            onUpdateElementStyles({
+                display: 'block',
+                marginLeft: '0',
+                marginRight: 'auto',
+            });
+
+            return;
+        }
+
+        if (value === 'center') {
+            onUpdateElementStyles({
+                display: 'block',
+                marginLeft: 'auto',
+                marginRight: 'auto',
+            });
+
+            return;
+        }
+
+        onUpdateElementStyles({
+            display: 'block',
+            marginLeft: 'auto',
+            marginRight: '0',
+        });
+    };
 
     return (
         <div className="flex flex-col">
@@ -222,6 +330,97 @@ export function StyleTab({
                         layout="stacked"
                     />
                 </InspectorSection>
+
+                {selectedElement.isImage ? (
+                    <InspectorSection value="image" title="Image" summary={imageSummary}>
+                        <div className="flex flex-col gap-2.5 rounded-lg border border-border/50 bg-muted/20 p-3">
+                            <button
+                                type="button"
+                                onClick={() => setImagePickerOpen(true)}
+                                className="group flex min-h-[152px] w-full items-center justify-center overflow-hidden rounded-xl border border-dashed border-border/70 bg-background transition hover:border-primary/40 hover:bg-muted/40"
+                            >
+                                {selectedElement.src.trim() !== '' ? (
+                                    <img
+                                        src={selectedElement.src}
+                                        alt={selectedElement.alt || 'Selected builder image'}
+                                        className="max-h-[220px] w-full object-contain"
+                                    />
+                                ) : (
+                                    <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                                        <ImagePlusIcon className="size-6 opacity-50" />
+                                        <span className="text-xs font-medium">Choose image</span>
+                                    </div>
+                                )}
+                            </button>
+                            <div className="flex items-center gap-2">
+                                <Button type="button" size="sm" variant="outline" onClick={() => setImagePickerOpen(true)}>
+                                    <ImagePlusIcon data-icon="inline-start" />
+                                    {selectedElement.src.trim() === '' ? 'Choose' : 'Change'}
+                                </Button>
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => onUpdateElementField('src', '')}
+                                    disabled={selectedElement.src.trim() === ''}
+                                >
+                                    <Trash2Icon data-icon="inline-start" />
+                                    Remove
+                                </Button>
+                            </div>
+                        </div>
+                        <StyleInputRow
+                            label="Source"
+                            value={selectedElement.src}
+                            onChange={(value) => onUpdateElementField('src', value)}
+                            placeholder="https://example.com/image.jpg"
+                            layout="stacked"
+                        />
+                        <StyleInputRow
+                            label="Alt text"
+                            value={selectedElement.alt}
+                            onChange={(value) => onUpdateElementField('alt', value)}
+                            placeholder="Describe this image"
+                            layout="stacked"
+                        />
+                        <StyleInputRow
+                            label="Width"
+                            value={selectedElement.styles.width}
+                            onChange={(value) => onUpdateElementStyle('width', value)}
+                            onClear={() => onUpdateElementStyle('width', '')}
+                            placeholder="320px or 100%"
+                            layout="stacked"
+                        />
+                        <StyleInputRow
+                            label="Height"
+                            value={selectedElement.styles.height}
+                            onChange={(value) => onUpdateElementStyle('height', value)}
+                            onClear={() => onUpdateElementStyle('height', '')}
+                            placeholder="auto or 240px"
+                            layout="stacked"
+                        />
+                        <SegmentedControlRow
+                            label="Align"
+                            value={currentImageAlignment}
+                            displayLabel={currentImageAlignment === '' ? 'auto' : currentImageAlignment}
+                            onChange={handleUpdateImageAlignment}
+                            onClear={() => handleUpdateImageAlignment('')}
+                            options={imageAlignmentOptions}
+                        />
+                        <MediaPickerDialog
+                            open={imagePickerOpen}
+                            onOpenChange={setImagePickerOpen}
+                            onSelect={handleSelectImage}
+                            selection="single"
+                            title="Select image"
+                            pickerMedia={pickerMedia}
+                            pickerFilters={pickerFilters}
+                            uploadSettings={uploadSettings}
+                            pickerAction={pickerAction}
+                            pickerStatistics={pickerStatistics}
+                        />
+                    </InspectorSection>
+                ) : null}
 
                 {selectedElement.isLink || selectedElement.isButton ? (
                     <InspectorSection value="content" title="Content" summary={contentSummary}>
