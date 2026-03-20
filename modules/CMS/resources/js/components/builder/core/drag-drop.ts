@@ -39,6 +39,29 @@ const DROP_ZONE_EDGE_RATIO = 0.25; // top/bottom 25% = before/after, middle 50% 
 const INDICATOR_HEIGHT = 3;
 
 // ---------------------------------------------------------------------------
+// Section drag detection
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns true when the source being dragged is a section, whether it is a new
+ * section from the sidebar palette or an existing section node from the canvas.
+ */
+function isSectionDrag(source: DragSource | undefined, nodes: AstNodeMap): boolean {
+    if (!source) {
+        return false;
+    }
+
+    if (source.kind === 'new') {
+        return source.type === 'section';
+    }
+
+    // Existing canvas drag — check whether the node is a top-level section
+    const node = nodes[source.nodeId];
+
+    return !!node && node.type === 'section' && node.parentId === ROOT_NODE_ID;
+}
+
+// ---------------------------------------------------------------------------
 // Drop position calculator
 // ---------------------------------------------------------------------------
 
@@ -59,7 +82,7 @@ export function computeDropPosition(
     const ratio = relativeY / targetRect.height;
 
     // Sections can only be placed before/after (never inside another element)
-    const isDraggingSection = source?.kind === 'new' && source.type === 'section';
+    const isDraggingSection = isSectionDrag(source, nodes);
 
     if (isDraggingSection) {
         return ratio < 0.5 ? 'before' : 'after';
@@ -126,7 +149,18 @@ export function isValidDropTarget(
     nodes: AstNodeMap,
 ): boolean {
     // --- Section-type drags: must resolve to a direct child of ROOT ---
-    if (source.kind === 'new' && source.type === 'section') {
+    if (isSectionDrag(source, nodes)) {
+        // Existing section drag: also guard against self/descendant drops
+        if (source.kind === 'existing') {
+            if (targetNodeId === source.nodeId) {
+                return false;
+            }
+
+            if (isAncestor(nodes, source.nodeId, targetNodeId)) {
+                return false;
+            }
+        }
+
         if (position === 'inside') {
             // Sections are only allowed as direct children of ROOT
             return targetNodeId === ROOT_NODE_ID;
@@ -378,7 +412,7 @@ export class BuilderDragDrop {
         // For section drags over deeply nested elements: redirect to the
         // top-level section ancestor so the indicator shows at the section
         // boundary and the drop resolves to ROOT as parent.
-        const isDraggingSection = this.activeDrag.kind === 'new' && this.activeDrag.type === 'section';
+        const isDraggingSection = isSectionDrag(this.activeDrag, this.nodes);
 
         if (isDraggingSection && !isValid) {
             const topLevel = findTopLevelAncestor(nodeId, this.nodes);
@@ -584,7 +618,7 @@ export class BuilderDragDrop {
         const isValid = isValidDropTarget(this.activeDrag, nodeId, position, this.nodes);
 
         // For section drags: redirect to top-level section ancestor
-        const isDraggingSection = this.activeDrag.kind === 'new' && this.activeDrag.type === 'section';
+        const isDraggingSection = isSectionDrag(this.activeDrag, this.nodes);
 
         if (isDraggingSection && !isValid) {
             const topLevel = findTopLevelAncestor(nodeId, this.nodes);

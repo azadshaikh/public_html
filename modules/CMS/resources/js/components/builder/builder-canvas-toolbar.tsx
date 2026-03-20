@@ -83,14 +83,14 @@ export function BuilderCanvasToolbar({
             {selectedItem ? (
                 <div className="flex shrink-0 items-center gap-0.5 border-l border-border/50 pl-2">
                     <ToolbarButton
-                        title="Move up"
+                        title={selectedIndex <= 0 ? 'Already first child' : 'Move up'}
                         disabled={selectedIndex <= 0}
                         onClick={() => onMoveSelectedItem('up')}
                     >
                         <ArrowUpIcon className="size-3.5" />
                     </ToolbarButton>
                     <ToolbarButton
-                        title="Move down"
+                        title={selectedIndex >= canvasItems.length - 1 ? 'Already last child' : 'Move down'}
                         disabled={selectedIndex >= canvasItems.length - 1}
                         onClick={() => onMoveSelectedItem('down')}
                     >

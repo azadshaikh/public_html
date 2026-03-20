@@ -23,6 +23,8 @@ export type OverlayCallbacks = {
     onDeleteNode: (nodeId: AstNodeId) => void;
     onInsertAt: (parentId: AstNodeId, index: number) => void;
     onStartDrag: (nodeId: AstNodeId) => void;
+    onSelect?: (nodeId: AstNodeId) => void;
+    onViewCode?: (nodeId: AstNodeId) => void;
 };
 
 type OverlayState = {
@@ -304,15 +306,19 @@ export class BuilderOverlay {
                 const idx = parent.childIds.indexOf(nodeId);
                 const upBtn = this.toolbar.querySelector<HTMLButtonElement>('[data-action="moveUp"]');
                 const downBtn = this.toolbar.querySelector<HTMLButtonElement>('[data-action="moveDown"]');
+                const isFirst = idx <= 0;
+                const isLast = idx >= parent.childIds.length - 1;
 
                 if (upBtn) {
-                    upBtn.style.opacity = idx <= 0 ? '0.35' : '1';
-                    upBtn.style.pointerEvents = idx <= 0 ? 'none' : 'auto';
+                    upBtn.style.opacity = isFirst ? '0.35' : '1';
+                    upBtn.style.pointerEvents = isFirst ? 'none' : 'auto';
+                    upBtn.title = isFirst ? 'Already first child' : 'Move up';
                 }
 
                 if (downBtn) {
-                    downBtn.style.opacity = idx >= parent.childIds.length - 1 ? '0.35' : '1';
-                    downBtn.style.pointerEvents = idx >= parent.childIds.length - 1 ? 'none' : 'auto';
+                    downBtn.style.opacity = isLast ? '0.35' : '1';
+                    downBtn.style.pointerEvents = isLast ? 'none' : 'auto';
+                    downBtn.title = isLast ? 'Already last child' : 'Move down';
                 }
             }
         }
@@ -403,6 +409,7 @@ export class BuilderOverlay {
             drag: `<svg ${svgAttrs} style="width:14px;height:14px"><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></svg>`,
             moveUp: `<svg ${svgAttrs} style="width:14px;height:14px"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>`,
             moveDown: `<svg ${svgAttrs} style="width:14px;height:14px"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>`,
+            code: `<svg ${svgAttrs} style="width:14px;height:14px"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>`,
             duplicate: `<svg ${svgAttrs} style="width:14px;height:14px"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>`,
             remove: `<svg ${svgAttrs} style="width:14px;height:14px"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>`,
         };
@@ -420,15 +427,29 @@ export class BuilderOverlay {
             makeBtn('moveUp', 'Move up', icons.moveUp),
             makeBtn('moveDown', 'Move down', icons.moveDown),
             sep,
+            makeBtn('code', 'View code', icons.code),
             makeBtn('duplicate', 'Duplicate', icons.duplicate),
             makeBtn('remove', 'Delete', icons.remove),
         ].join('');
 
-        // Event delegation
+        // Make drag button draggable for HTML5 drag-and-drop
+        const dragBtn = toolbar.querySelector<HTMLButtonElement>('[data-action="drag"]');
+
+        if (dragBtn) {
+            dragBtn.draggable = true;
+            dragBtn.style.cursor = 'grab';
+        }
+
+        // Event delegation — mousedown for button actions (excluding drag)
         toolbar.addEventListener('mousedown', (e) => {
             const target = (e.target as HTMLElement).closest<HTMLButtonElement>('button');
 
             if (!target) {
+                return;
+            }
+
+            // Let the drag button handle its own dragstart event
+            if (target.dataset.action === 'drag') {
                 return;
             }
 
@@ -448,16 +469,39 @@ export class BuilderOverlay {
                 case 'moveDown':
                     this.callbacks.onMoveNode(nodeId, 'down');
                     break;
+                case 'code':
+                    this.callbacks.onViewCode?.(nodeId);
+                    break;
                 case 'duplicate':
                     this.callbacks.onDuplicateNode(nodeId);
                     break;
                 case 'remove':
                     this.callbacks.onDeleteNode(nodeId);
                     break;
-                case 'drag':
-                    this.callbacks.onStartDrag(nodeId);
-                    break;
             }
+        });
+
+        // Drag-start handler for the drag button (HTML5 native drag)
+        toolbar.addEventListener('dragstart', (e) => {
+            const target = (e.target as HTMLElement).closest<HTMLButtonElement>('button[data-action="drag"]');
+
+            if (!target) {
+                return;
+            }
+
+            const nodeId = toolbar.dataset.nodeId;
+
+            if (!nodeId) {
+                return;
+            }
+
+            e.dataTransfer?.setData('text/plain', nodeId);
+
+            if (e.dataTransfer) {
+                e.dataTransfer.effectAllowed = 'move';
+            }
+
+            this.callbacks.onStartDrag(nodeId);
         });
 
         return toolbar;
@@ -547,8 +591,12 @@ export class BuilderOverlay {
 
             if (node) {
                 const label = document.createElement('div');
-                label.style.cssText = 'position:absolute;top:0;right:0;background:rgba(148,163,184,0.35);color:rgba(71,85,105,0.8);font-size:9px;font-family:system-ui,-apple-system,sans-serif;font-weight:500;line-height:1;padding:2px 6px;border-radius:0 0 0 4px;white-space:nowrap;';
+                label.style.cssText = 'position:absolute;top:0;right:0;background:rgba(148,163,184,0.35);color:rgba(71,85,105,0.8);font-size:9px;font-family:system-ui,-apple-system,sans-serif;font-weight:500;line-height:1;padding:2px 6px;border-radius:0 0 0 4px;white-space:nowrap;pointer-events:auto;cursor:pointer;';
                 label.textContent = node.displayName || node.type;
+                label.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.callbacks.onSelect?.(childId);
+                });
                 boundary.appendChild(label);
             }
 

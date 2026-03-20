@@ -1,7 +1,17 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { MonacoEditor } from '@/components/code-editor/monaco-editor';
 import { showAppToast } from '@/components/forms/form-success-toast';
+import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import {
     Sheet,
     SheetContent,
@@ -32,7 +42,7 @@ import {
 } from '../../../components/builder/builder-utils';
 import { ROOT_NODE_ID } from '../../../components/builder/core/ast-types';
 import { parseHtmlToAst, createEmptyPageAst, getNode, serializePageAst } from '../../../components/builder/core/ast-helpers';
-import { renderNodeToHtml, renderPageContent } from '../../../components/builder/core/ast-to-html';
+import { renderCleanNodeToHtml, renderCleanPageContent, renderNodeToHtml, renderPageContent } from '../../../components/builder/core/ast-to-html';
 import { useBuilderStore } from '../../../components/builder/core/use-builder-store';
 import { syncAstToIframe } from '../../../components/builder/core/iframe-sync';
 import { BuilderOverlay, type OverlayCallbacks } from '../../../components/builder/core/overlay-engine';
@@ -142,6 +152,8 @@ export default function BuilderEdit({
     );
     const [isSaving, setIsSaving] = useState(false);
     const [insertAtIndex, setInsertAtIndex] = useState<number | null>(null);
+    const [codeDialogNodeId, setCodeDialogNodeId] = useState<string | null>(null);
+    const [codeDialogValue, setCodeDialogValue] = useState('');
     const [selectedElementPath, setSelectedElementPath] =
         useState<BuilderElementPath>([]);
     const iframeRef = useRef<HTMLIFrameElement | null>(null);
@@ -154,6 +166,7 @@ export default function BuilderEdit({
     const dragDropRef = useRef<BuilderDragDrop | null>(null);
     const interactionRef = useRef<IframeInteractionHandler | null>(null);
     const handleSaveRef = useRef<() => void>(() => {});
+    const handleViewCodeRef = useRef<(nodeId: string) => void>(() => {});
 
     // AST store (replaces canvasItems + selectedItemId)
     const initialAst = useMemo(
@@ -317,6 +330,40 @@ export default function BuilderEdit({
         [],
     );
 
+    const handleViewCode = useCallback(
+        (nodeId: string) => {
+            const html = renderCleanNodeToHtml(nodes, nodeId);
+            setCodeDialogValue(html);
+            setCodeDialogNodeId(nodeId);
+        },
+        [nodes],
+    );
+
+    const handleApplyCode = useCallback(() => {
+        if (!codeDialogNodeId) {
+            return;
+        }
+
+        const node = getNode(nodes, codeDialogNodeId);
+
+        if (!node?.parentId) {
+            return;
+        }
+
+        const parent = nodes[node.parentId];
+
+        if (!parent) {
+            return;
+        }
+
+        const idx = parent.childIds.indexOf(codeDialogNodeId);
+        const parentId = node.parentId;
+
+        actions.deleteNode(codeDialogNodeId);
+        actions.importHtml(codeDialogValue, parentId, idx >= 0 ? idx : undefined);
+        setCodeDialogNodeId(null);
+    }, [actions, codeDialogNodeId, codeDialogValue, nodes]);
+
     const handleUpdateSelectedItemHtml = useCallback(
         (value: string) => {
             if (!selectedItemId) {
@@ -405,7 +452,7 @@ export default function BuilderEdit({
     const handleSave = useCallback(async () => {
         setIsSaving(true);
 
-        const flattenedHtml = renderPageContent(nodes, rootNodeId);
+        const flattenedHtml = renderCleanPageContent(nodes, rootNodeId);
 
         const payload = {
             content: flattenedHtml,
@@ -460,6 +507,7 @@ export default function BuilderEdit({
 
     // Keep handleSaveRef fresh for iframe interaction callbacks
     handleSaveRef.current = () => void handleSave();
+    handleViewCodeRef.current = handleViewCode;
 
     // -----------------------------------------------------------------------
     // Keyboard shortcuts (save, undo, redo)
@@ -564,6 +612,8 @@ export default function BuilderEdit({
             onStartDrag: (nodeId) => {
                 dragDropRef.current?.startCanvasDrag(nodeId);
             },
+            onSelect: (nodeId) => actions.setSelected([nodeId]),
+            onViewCode: (nodeId) => handleViewCodeRef.current(nodeId),
         };
 
         const overlay = new BuilderOverlay(overlayContainer, iframe, overlayCb);
@@ -857,6 +907,30 @@ export default function BuilderEdit({
                         </aside>
                     </div>
                 </div>
+
+                {/* Code editor dialog */}
+                <Dialog open={codeDialogNodeId !== null} onOpenChange={(open) => { if (!open) setCodeDialogNodeId(null); }}>
+                    <DialogContent className="flex h-[calc(100vh-4rem)] max-h-[calc(100vh-4rem)] flex-col sm:w-[min(calc(100vw-4rem),72rem)] sm:max-w-6xl">
+                        <DialogHeader>
+                            <DialogTitle>Edit Element Code</DialogTitle>
+                            <DialogDescription>
+                                View and edit the HTML source of the selected element.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="min-h-0 flex-1">
+                            <MonacoEditor
+                                value={codeDialogValue}
+                                onChange={setCodeDialogValue}
+                                language="html"
+                                height="100%"
+                            />
+                        </div>
+                        <DialogFooter>
+                            <Button variant="outline" onClick={() => setCodeDialogNodeId(null)}>Cancel</Button>
+                            <Button onClick={handleApplyCode}>Apply</Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
 
                 {/* Mobile sidebar sheet */}
                 <Sheet open={mobileSidebarOpen} onOpenChange={setMobileSidebarOpen}>

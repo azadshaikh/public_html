@@ -119,8 +119,16 @@ export function renderNodeToHtml(nodes: AstNodeMap, nodeId: AstNodeId): string {
 }
 
 /**
+ * Render a single AST node without `data-ast-id` attributes.
+ * Used for the code editor dialog where IDs should be stripped.
+ */
+export function renderCleanNodeToHtml(nodes: AstNodeMap, nodeId: AstNodeId): string {
+    return renderNodeToHtml(nodes, nodeId).replace(/ data-ast-id="[^"]*"/g, '');
+}
+
+/**
  * Render the full page content (all children of the root node).
- * Used for saving flattened HTML to the backend.
+ * Keeps `data-ast-id` attributes for iframe two-way binding.
  */
 export function renderPageContent(nodes: AstNodeMap, rootNodeId: AstNodeId): string {
     const root = nodes[rootNodeId];
@@ -131,6 +139,22 @@ export function renderPageContent(nodes: AstNodeMap, rootNodeId: AstNodeId): str
 
     return root.childIds
         .map((childId) => renderNodeToHtml(nodes, childId))
+        .join('\n\n');
+}
+
+/**
+ * Render the full page content with `data-ast-id` stripped.
+ * Used for saving to the backend so IDs don't leak into live pages.
+ */
+export function renderCleanPageContent(nodes: AstNodeMap, rootNodeId: AstNodeId): string {
+    const root = nodes[rootNodeId];
+
+    if (!root) {
+        return '';
+    }
+
+    return root.childIds
+        .map((childId) => renderCleanNodeToHtml(nodes, childId))
         .join('\n\n');
 }
 

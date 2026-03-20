@@ -16,7 +16,7 @@ import {
     TypeIcon,
 } from 'lucide-react';
 import { useState } from 'react';
-import { AceCodeEditor } from '@/components/code-editor/ace-editor';
+import { MonacoEditor } from '@/components/code-editor/monaco-editor';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -544,7 +544,7 @@ function AdvancedTab({
             </CollapsibleSection>
 
             <CollapsibleSection title="Raw HTML" icon={<Code2Icon className="size-3" />}>
-                <AceCodeEditor
+                <MonacoEditor
                     value={selectedItem.html}
                     onChange={onUpdateSelectedItemHtml}
                     language="html"
@@ -571,7 +571,7 @@ function CodeSection({
     return (
         <div className="flex flex-col">
             <CollapsibleSection title="Custom CSS" icon={<Code2Icon className="size-3" />} defaultOpen>
-                <AceCodeEditor
+                <MonacoEditor
                     value={customCss}
                     onChange={onCustomCssChange}
                     language="css"
@@ -581,7 +581,7 @@ function CodeSection({
                 />
             </CollapsibleSection>
             <CollapsibleSection title="Custom JavaScript" icon={<Code2Icon className="size-3" />}>
-                <AceCodeEditor
+                <MonacoEditor
                     value={customJs}
                     onChange={onCustomJsChange}
                     language="javascript"
