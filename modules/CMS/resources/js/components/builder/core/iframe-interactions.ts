@@ -22,6 +22,7 @@ import { getAstIdFromElement } from './iframe-sync';
 export type IframeInteractionCallbacks = {
     onHover: (nodeId: AstNodeId | null) => void;
     onSelect: (nodeId: AstNodeId | null) => void;
+    onRequestTextEdit?: (nodeId: AstNodeId) => void;
     onDelete: (nodeId: AstNodeId) => void;
     onEscape: () => void;
     onMoveUp: (nodeId: AstNodeId) => void;
@@ -29,6 +30,8 @@ export type IframeInteractionCallbacks = {
     onUndo: () => void;
     onRedo: () => void;
     onSave: () => void;
+    canEditText?: (nodeId: AstNodeId) => boolean;
+    isTextEditing?: () => boolean;
 };
 
 // ---------------------------------------------------------------------------
@@ -68,6 +71,9 @@ export class IframeInteractionHandler {
         // Click → select
         iframeDoc.addEventListener('click', this.handleClick, { signal });
 
+        // Double click → text edit
+        iframeDoc.addEventListener('dblclick', this.handleDoubleClick, { signal });
+
         // Keyboard shortcuts
         iframeDoc.addEventListener('keydown', this.handleKeyDown, { signal });
 
@@ -97,6 +103,11 @@ export class IframeInteractionHandler {
 
     private handleMouseMove = (e: MouseEvent): void => {
         const el = e.target as HTMLElement;
+
+        if (this.isEditableTarget(el)) {
+            return;
+        }
+
         const nodeId = getAstIdFromElement(el);
 
         // Don't hover the root node itself
@@ -111,6 +122,11 @@ export class IframeInteractionHandler {
 
     private handleClick = (e: MouseEvent): void => {
         const el = e.target as HTMLElement;
+
+        if (this.isEditableTarget(el)) {
+            return;
+        }
+
         const nodeId = getAstIdFromElement(el);
 
         e.preventDefault();
@@ -122,10 +138,47 @@ export class IframeInteractionHandler {
             return;
         }
 
+        if (
+            nodeId === this.selectedId
+            && this.callbacks.canEditText?.(nodeId)
+            && !this.callbacks.isTextEditing?.()
+        ) {
+            this.callbacks.onRequestTextEdit?.(nodeId);
+
+            return;
+        }
+
         this.callbacks.onSelect(nodeId);
     };
 
+    private handleDoubleClick = (e: MouseEvent): void => {
+        const el = e.target as HTMLElement;
+
+        if (this.isEditableTarget(el)) {
+            return;
+        }
+
+        const nodeId = getAstIdFromElement(el);
+
+        if (!nodeId || nodeId === ROOT_NODE_ID || !this.callbacks.canEditText?.(nodeId)) {
+            return;
+        }
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        this.callbacks.onSelect(nodeId);
+
+        if (!this.callbacks.isTextEditing?.()) {
+            this.callbacks.onRequestTextEdit?.(nodeId);
+        }
+    };
+
     private handleKeyDown = (e: KeyboardEvent): void => {
+        if (this.isEditableTarget(e.target as HTMLElement | null)) {
+            return;
+        }
+
         // Delete / Backspace → delete selected node
         if ((e.key === 'Delete' || e.key === 'Backspace') && this.selectedId) {
             e.preventDefault();
@@ -195,6 +248,14 @@ export class IframeInteractionHandler {
         e.preventDefault();
         e.stopPropagation();
     };
+
+    private isEditableTarget(target: HTMLElement | null): boolean {
+        if (!target) {
+            return false;
+        }
+
+        return Boolean(target.closest('input, textarea, select, [contenteditable="true"], [contenteditable="plaintext-only"]'));
+    }
 
     // ---------------------------------------------------------------------------
     // Cleanup

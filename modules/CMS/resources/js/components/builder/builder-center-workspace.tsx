@@ -6,7 +6,7 @@ import {
     PaintbrushIcon,
     XIcon,
 } from 'lucide-react';
-import type { RefObject } from 'react';
+import type { ReactNode, RefObject } from 'react';
 import { MonacoEditor } from '@/components/code-editor/monaco-editor';
 import { Button } from '@/components/ui/button';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
@@ -22,6 +22,7 @@ type BuilderCenterWorkspaceProps = {
     previewUrl: string | null;
     previewDocument: string;
     pageTitle: string;
+    overlayContent?: ReactNode;
     footerEditorOpen: boolean;
     footerEditorFullscreen: boolean;
     footerEditorTab: FooterEditorTab;
@@ -44,6 +45,7 @@ export function BuilderCenterWorkspace({
     previewUrl,
     previewDocument,
     pageTitle,
+    overlayContent,
     footerEditorOpen,
     footerEditorFullscreen,
     footerEditorTab,
@@ -119,6 +121,7 @@ export function BuilderCenterWorkspace({
                                         previewUrl={previewUrl}
                                         previewDocument={previewDocument}
                                         pageTitle={pageTitle}
+                                        overlayContent={overlayContent}
                                         onPreviewLoad={onPreviewLoad}
                                     />
                                 </ResizablePanel>
@@ -179,6 +182,7 @@ export function BuilderCenterWorkspace({
                                 previewUrl={previewUrl}
                                 previewDocument={previewDocument}
                                 pageTitle={pageTitle}
+                                overlayContent={overlayContent}
                                 onPreviewLoad={onPreviewLoad}
                             />
                         )}
@@ -231,6 +235,7 @@ function PreviewSurface({
     previewUrl,
     previewDocument,
     pageTitle,
+    overlayContent,
     onPreviewLoad,
 }: {
     deviceMode: BuilderDeviceMode;
@@ -239,6 +244,7 @@ function PreviewSurface({
     previewUrl: string | null;
     previewDocument: string;
     pageTitle: string;
+    overlayContent?: ReactNode;
     onPreviewLoad: () => void;
 }) {
     return (
@@ -252,6 +258,9 @@ function PreviewSurface({
                 title={`Builder preview for ${pageTitle}`}
             />
             <div ref={overlayContainerRef} className="pointer-events-none absolute inset-0 z-50" />
+            <div className="pointer-events-none absolute inset-0 z-[60]">
+                {overlayContent}
+            </div>
         </div>
     );
 }

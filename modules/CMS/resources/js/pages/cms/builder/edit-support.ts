@@ -186,6 +186,9 @@ export function toEditableElement(node: AstNode): BuilderEditableElement {
     const tagName = (node.tagName ?? node.type).toLowerCase();
     const hoverStyles = node.props.hoverStyles;
     const focusStyles = node.props.focusStyles;
+    const textContent = typeof node.props.content === 'string'
+        ? node.props.content.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '')
+        : '';
 
     return {
         alt: typeof node.props.alt === 'string' ? node.props.alt : '',
@@ -237,6 +240,6 @@ export function toEditableElement(node: AstNode): BuilderEditableElement {
         } satisfies BuilderElementStyleValues,
         tagName,
         target: typeof node.props.attr_target === 'string' ? node.props.attr_target : '',
-        textContent: typeof node.props.content === 'string' ? node.props.content : '',
+        textContent,
     };
 }
