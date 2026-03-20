@@ -1,9 +1,9 @@
-import { EyeIcon, Layers3Icon, PaintbrushIcon } from 'lucide-react';
+import { EyeIcon, FileTextIcon, Layers3Icon, PaintbrushIcon } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { BuilderEditableElement, BuilderElementStyleValues } from './builder-dom';
 import { StructureTab } from './builder-right-sidebar-structure-tab';
-import { StyleTab } from './builder-right-sidebar-style-tab';
+import { ContentTab, StyleTab } from './builder-right-sidebar-style-tab';
 import type { AstNodeId, AstNodeMap } from './core/ast-types';
 import type { MediaPickerPageProps } from '../../types/cms';
 
@@ -56,8 +56,12 @@ export function BuilderRightSidebar({
 }: BuilderRightSidebarProps) {
     return (
         <div className="flex h-full flex-col">
-            <Tabs defaultValue="style" className="flex min-h-0 flex-1 flex-col">
-                <TabsList className="grid w-full shrink-0 grid-cols-2 rounded-none border-b border-border/60" variant="line">
+            <Tabs defaultValue="content" className="flex min-h-0 flex-1 flex-col">
+                <TabsList className="grid w-full shrink-0 grid-cols-3 rounded-none border-b border-border/60" variant="line">
+                    <TabsTrigger value="content" className="gap-1.5 text-xs">
+                        <FileTextIcon className="size-3.5" />
+                        Content
+                    </TabsTrigger>
                     <TabsTrigger value="style" className="gap-1.5 text-xs">
                         <PaintbrushIcon className="size-3.5" />
                         Style
@@ -69,6 +73,24 @@ export function BuilderRightSidebar({
                 </TabsList>
 
                 <ScrollArea className="min-h-0 flex-1">
+                    <TabsContent value="content" className="mt-0">
+                        {selectedElement ? (
+                            <ContentTab
+                                selectedElement={selectedElement}
+                                pickerAction={pickerAction}
+                                pickerFilters={pickerFilters}
+                                pickerMedia={pickerMedia}
+                                pickerStatistics={pickerStatistics}
+                                uploadSettings={uploadSettings}
+                                onUpdateElementField={onUpdateElementField}
+                                onUpdateElementStyle={onUpdateElementStyle}
+                                onUpdateElementStyles={onUpdateElementStyles}
+                            />
+                        ) : (
+                            <EmptySelectionState />
+                        )}
+                    </TabsContent>
+
                     <TabsContent value="style" className="mt-0">
                         {selectedElement ? (
                             <StyleTab

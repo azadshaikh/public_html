@@ -34,7 +34,7 @@ import {
 } from './builder-right-sidebar-controls';
 import type { MediaPickerPageProps } from '../../types/cms';
 
-type StyleTabProps = {
+type InspectorTabProps = {
     selectedElement: BuilderEditableElement;
     pickerAction: string;
     onClearAllStyles: () => void;
@@ -54,102 +54,30 @@ type StyleTabProps = {
     ) => void;
 } & MediaPickerPageProps;
 
-export function StyleTab({
+type ContentTabProps = Pick<InspectorTabProps,
+    'selectedElement'
+    | 'pickerAction'
+    | 'pickerFilters'
+    | 'pickerMedia'
+    | 'pickerStatistics'
+    | 'uploadSettings'
+    | 'onUpdateElementField'
+    | 'onUpdateElementStyle'
+    | 'onUpdateElementStyles'
+>;
+
+export function ContentTab({
     selectedElement,
     pickerAction,
     pickerFilters,
     pickerMedia,
     pickerStatistics,
     uploadSettings,
-    onClearAllStyles,
     onUpdateElementField,
     onUpdateElementStyle,
     onUpdateElementStyles,
-    onUpdateElementInteractiveStyle,
-}: StyleTabProps) {
-    const [expandedSections, setExpandedSections] = useState<string[]>(['attributes', 'typography', 'colors']);
+}: ContentTabProps) {
     const [imagePickerOpen, setImagePickerOpen] = useState(false);
-    const attributeSummary = <SummaryText value={(selectedElement.id ?? '').trim() || (selectedElement.className ?? '').trim() || 'Element metadata'} />;
-    const imageSummary = selectedElement.isImage
-        ? <SummaryText value={(selectedElement.alt ?? '').trim() || (selectedElement.src ?? '').trim() || 'No source'} />
-        : undefined;
-    const dimensionsSummary = <SummaryText value={`${formatDimensionValue(selectedElement.styles.width)} x ${formatDimensionValue(selectedElement.styles.height)}`} />;
-    const typographySummary = <SummaryText value={formatStyleValue(selectedElement.styles.fontSize, 'Text controls')} />;
-    const colorsSummary = (
-        <ColorSummarySwatches
-            backgroundColor={selectedElement.styles.backgroundColor}
-            textColor={selectedElement.styles.color}
-        />
-    );
-    const contentSummaryValue = selectedElement.isLink
-        ? (selectedElement.href ?? '').trim() || formatStyleValue(selectedElement.textContent, 'Empty label')
-        : selectedElement.isButton
-            ? formatStyleValue(selectedElement.textContent, 'Empty label')
-            : '';
-    const contentSummary = contentSummaryValue === '' ? undefined : <SummaryText value={contentSummaryValue} />;
-    const interactiveSummary = selectedElement.isLink || selectedElement.isButton
-        ? <SummaryText value={selectedElement.isLink ? (selectedElement.target || 'Current tab') : (selectedElement.disabled ? 'Disabled' : (selectedElement.buttonType || 'button'))} />
-        : undefined;
-    const statesSummary = selectedElement.isLink || selectedElement.isButton
-        ? <SummaryText value="Hover + Focus" />
-        : undefined;
-    const marginSummary = <SummaryText value={formatSpacingSummary(
-        selectedElement.styles.marginTop,
-        selectedElement.styles.marginRight,
-        selectedElement.styles.marginBottom,
-        selectedElement.styles.marginLeft,
-    )} />;
-    const paddingSummary = <SummaryText value={formatSpacingSummary(
-        selectedElement.styles.paddingTop,
-        selectedElement.styles.paddingRight,
-        selectedElement.styles.paddingBottom,
-        selectedElement.styles.paddingLeft,
-    )} />;
-    const borderSummary = <SummaryText value={[
-        formatStyleValue(selectedElement.styles.borderStyle, ''),
-        formatLengthValue(selectedElement.styles.borderWidth, ''),
-        formatStyleValue(selectedElement.styles.borderColor, ''),
-    ].filter((value) => value !== '').join(' ') || formatStyleValue(selectedElement.styles.borderRadius, 'auto')} />;
-    const hasCustomStyles = Object.values(selectedElement.styles).some((value) => (value ?? '').trim() !== '')
-        || Object.values(selectedElement.hoverStyles).some((value) => (value ?? '').trim() !== '')
-        || Object.values(selectedElement.focusStyles).some((value) => (value ?? '').trim() !== '');
-    const handleConfirmClearAll = (): void => {
-        if (!hasCustomStyles) {
-            return;
-        }
-
-        if (!window.confirm('Clear all custom styles for the selected element?')) {
-            return;
-        }
-
-        onClearAllStyles();
-    };
-    const handleUpdateBorderCorner = (
-        field: 'borderTopLeftRadius' | 'borderTopRightRadius' | 'borderBottomRightRadius' | 'borderBottomLeftRadius',
-        value: string,
-    ): void => {
-        const sharedRadius = selectedElement.styles.borderRadius ?? '';
-
-        onUpdateElementStyles({
-            borderRadius: '',
-            borderTopLeftRadius: selectedElement.styles.borderTopLeftRadius || sharedRadius,
-            borderTopRightRadius: selectedElement.styles.borderTopRightRadius || sharedRadius,
-            borderBottomRightRadius: selectedElement.styles.borderBottomRightRadius || sharedRadius,
-            borderBottomLeftRadius: selectedElement.styles.borderBottomLeftRadius || sharedRadius,
-            [field]: value,
-        });
-    };
-    const handleUpdateBorderStyles = (styles: Partial<BuilderElementStyleValues>): void => {
-        const nextStyles = { ...styles };
-        const resolvedBorderStyle = styles.borderStyle ?? selectedElement.styles.borderStyle ?? '';
-        const touchesVisibleBorder = [styles.borderWidth, styles.borderColor].some((value) => typeof value === 'string' && value.trim() !== '');
-
-        if (touchesVisibleBorder && (resolvedBorderStyle.trim() === '' || resolvedBorderStyle === 'none')) {
-            nextStyles.borderStyle = 'solid';
-        }
-
-        onUpdateElementStyles(nextStyles);
-    };
     const imageAlignmentOptions: SegmentedControlOption[] = [
         {
             value: '__default__',
@@ -172,46 +100,6 @@ export function StyleTab({
             label: <AlignRightIcon className="size-3.5" />,
         },
     ];
-
-    const alignmentOptions: SegmentedControlOption[] = [
-        {
-            value: '__default__',
-            ariaLabel: 'Default alignment',
-            label: <span className="text-sm leading-none">×</span>,
-        },
-        {
-            value: 'left',
-            ariaLabel: 'Align left',
-            label: <AlignLeftIcon className="size-3.5" />,
-        },
-        {
-            value: 'center',
-            ariaLabel: 'Align center',
-            label: <AlignCenterIcon className="size-3.5" />,
-        },
-        {
-            value: 'right',
-            ariaLabel: 'Align right',
-            label: <AlignRightIcon className="size-3.5" />,
-        },
-    ];
-    alignmentOptions.push({
-        value: 'justify',
-        ariaLabel: 'Justify text',
-        label: <span className="text-[11px] font-semibold leading-none">J</span>,
-    });
-    const borderStyleOptions = [
-        { value: '', label: 'auto' },
-        { value: 'solid', label: 'Solid' },
-        { value: 'dashed', label: 'Dashed' },
-        { value: 'dotted', label: 'Dotted' },
-        { value: 'double', label: 'Double' },
-        { value: 'none', label: 'None' },
-    ];
-    const resolvedBorderTopLeftRadius = selectedElement.styles.borderTopLeftRadius || selectedElement.styles.borderRadius;
-    const resolvedBorderTopRightRadius = selectedElement.styles.borderTopRightRadius || selectedElement.styles.borderRadius;
-    const resolvedBorderBottomRightRadius = selectedElement.styles.borderBottomRightRadius || selectedElement.styles.borderRadius;
-    const resolvedBorderBottomLeftRadius = selectedElement.styles.borderBottomLeftRadius || selectedElement.styles.borderRadius;
     const currentImageAlignment = (() => {
         if (!selectedElement.isImage || selectedElement.styles.display !== 'block') {
             return '';
@@ -287,34 +175,11 @@ export function StyleTab({
     };
 
     return (
-        <div className="flex flex-col">
-            <div className="sticky top-0 z-10 flex items-center justify-end gap-2 border-b border-border/40 bg-background px-3 py-2">
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setExpandedSections([])}
-                    disabled={expandedSections.length === 0}
-                    className="h-7 px-2.5 text-[11px]"
-                >
-                    Collapse all
-                </Button>
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleConfirmClearAll}
-                    disabled={!hasCustomStyles}
-                    className="h-7 px-2.5 text-[11px]"
-                >
-                    Clear all
-                </Button>
-            </div>
-            <Accordion
-                type="multiple"
-                value={expandedSections}
-                onValueChange={setExpandedSections}
-                className="w-full"
+        <div className="flex flex-col gap-4 p-3">
+            <ContentGroup
+                title="Attributes"
+                description="Basic element metadata used for targeting and styling hooks."
             >
-                <InspectorSection value="attributes" title="Attributes" summary={attributeSummary}>
                     <StyleInputRow
                         label="ID"
                         value={selectedElement.id}
@@ -329,10 +194,13 @@ export function StyleTab({
                         placeholder="class-name"
                         layout="stacked"
                     />
-                </InspectorSection>
+            </ContentGroup>
 
-                {selectedElement.isImage ? (
-                    <InspectorSection value="image" title="Image" summary={imageSummary}>
+            {selectedElement.isImage ? (
+                <ContentGroup
+                    title="Image"
+                    description="Source, accessibility, sizing, and alignment for the selected image."
+                >
                         <div className="flex flex-col gap-2.5 rounded-lg border border-border/50 bg-muted/20 p-3">
                             <button
                                 type="button"
@@ -419,11 +287,14 @@ export function StyleTab({
                             pickerAction={pickerAction}
                             pickerStatistics={pickerStatistics}
                         />
-                    </InspectorSection>
-                ) : null}
+                </ContentGroup>
+            ) : null}
 
-                {selectedElement.isLink || selectedElement.isButton ? (
-                    <InspectorSection value="content" title="Content" summary={contentSummary}>
+            {selectedElement.isLink || selectedElement.isButton ? (
+                <ContentGroup
+                    title={selectedElement.isLink ? 'Link Content' : 'Button Content'}
+                    description={selectedElement.isLink ? 'Visible label and destination for this link.' : 'Visible label and submission intent for this button.'}
+                >
                         <StyleInputRow
                             label="Label"
                             value={selectedElement.textContent}
@@ -440,11 +311,14 @@ export function StyleTab({
                                 containerClassName="w-40"
                             />
                         ) : null}
-                    </InspectorSection>
-                ) : null}
+                </ContentGroup>
+            ) : null}
 
-                {selectedElement.isLink || selectedElement.isButton ? (
-                    <InspectorSection value="interactive" title="Interactive" summary={interactiveSummary}>
+            {selectedElement.isLink || selectedElement.isButton ? (
+                <ContentGroup
+                    title="Interaction"
+                    description={selectedElement.isLink ? 'How this link opens and which relationship attributes it uses.' : 'Control the button type and disabled state.'}
+                >
                         {selectedElement.isLink ? (
                             <>
                                 <StyleSelectRow
@@ -488,9 +362,185 @@ export function StyleTab({
                                 />
                             </>
                         ) : null}
-                    </InspectorSection>
-                ) : null}
+                </ContentGroup>
+            ) : null}
+        </div>
+    );
+}
 
+function ContentGroup({
+    title,
+    description,
+    children,
+}: {
+    title: string;
+    description?: string;
+    children: React.ReactNode;
+}) {
+    return (
+        <section className="flex flex-col gap-3 rounded-xl border border-border/50 bg-muted/10 p-3">
+            <div className="flex flex-col gap-1">
+                <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+                {description ? <p className="text-xs leading-5 text-muted-foreground">{description}</p> : null}
+            </div>
+            <div className="flex flex-col gap-3">{children}</div>
+        </section>
+    );
+}
+
+export function StyleTab({
+    selectedElement,
+    onClearAllStyles,
+    onUpdateElementStyle,
+    onUpdateElementStyles,
+    onUpdateElementInteractiveStyle,
+}: InspectorTabProps) {
+    const defaultExpandedSections = [
+        'dimensions',
+        'typography',
+        ...(selectedElement.isLink || selectedElement.isButton ? ['states'] : []),
+        'colors',
+        'margin',
+        'padding',
+        'border',
+    ];
+    const [expandedSections, setExpandedSections] = useState<string[]>(defaultExpandedSections);
+    const dimensionsSummary = <SummaryText value={`${formatDimensionValue(selectedElement.styles.width)} x ${formatDimensionValue(selectedElement.styles.height)}`} />;
+    const typographySummary = <SummaryText value={formatStyleValue(selectedElement.styles.fontSize, 'Text controls')} />;
+    const colorsSummary = (
+        <ColorSummarySwatches
+            backgroundColor={selectedElement.styles.backgroundColor}
+            textColor={selectedElement.styles.color}
+        />
+    );
+    const statesSummary = selectedElement.isLink || selectedElement.isButton
+        ? <SummaryText value="Hover + Focus" />
+        : undefined;
+    const marginSummary = <SummaryText value={formatSpacingSummary(
+        selectedElement.styles.marginTop,
+        selectedElement.styles.marginRight,
+        selectedElement.styles.marginBottom,
+        selectedElement.styles.marginLeft,
+    )} />;
+    const paddingSummary = <SummaryText value={formatSpacingSummary(
+        selectedElement.styles.paddingTop,
+        selectedElement.styles.paddingRight,
+        selectedElement.styles.paddingBottom,
+        selectedElement.styles.paddingLeft,
+    )} />;
+    const borderSummary = <SummaryText value={[
+        formatStyleValue(selectedElement.styles.borderStyle, ''),
+        formatLengthValue(selectedElement.styles.borderWidth, ''),
+        formatStyleValue(selectedElement.styles.borderColor, ''),
+    ].filter((value) => value !== '').join(' ') || formatStyleValue(selectedElement.styles.borderRadius, 'auto')} />;
+    const hasCustomStyles = Object.values(selectedElement.styles).some((value) => (value ?? '').trim() !== '')
+        || Object.values(selectedElement.hoverStyles).some((value) => (value ?? '').trim() !== '')
+        || Object.values(selectedElement.focusStyles).some((value) => (value ?? '').trim() !== '');
+    const handleConfirmClearAll = (): void => {
+        if (!hasCustomStyles) {
+            return;
+        }
+
+        if (!window.confirm('Clear all custom styles for the selected element?')) {
+            return;
+        }
+
+        onClearAllStyles();
+    };
+    const handleUpdateBorderCorner = (
+        field: 'borderTopLeftRadius' | 'borderTopRightRadius' | 'borderBottomRightRadius' | 'borderBottomLeftRadius',
+        value: string,
+    ): void => {
+        const sharedRadius = selectedElement.styles.borderRadius ?? '';
+
+        onUpdateElementStyles({
+            borderRadius: '',
+            borderTopLeftRadius: selectedElement.styles.borderTopLeftRadius || sharedRadius,
+            borderTopRightRadius: selectedElement.styles.borderTopRightRadius || sharedRadius,
+            borderBottomRightRadius: selectedElement.styles.borderBottomRightRadius || sharedRadius,
+            borderBottomLeftRadius: selectedElement.styles.borderBottomLeftRadius || sharedRadius,
+            [field]: value,
+        });
+    };
+    const handleUpdateBorderStyles = (styles: Partial<BuilderElementStyleValues>): void => {
+        const nextStyles = { ...styles };
+        const resolvedBorderStyle = styles.borderStyle ?? selectedElement.styles.borderStyle ?? '';
+        const touchesVisibleBorder = [styles.borderWidth, styles.borderColor].some((value) => typeof value === 'string' && value.trim() !== '');
+
+        if (touchesVisibleBorder && (resolvedBorderStyle.trim() === '' || resolvedBorderStyle === 'none')) {
+            nextStyles.borderStyle = 'solid';
+        }
+
+        onUpdateElementStyles(nextStyles);
+    };
+    const alignmentOptions: SegmentedControlOption[] = [
+        {
+            value: '__default__',
+            ariaLabel: 'Default alignment',
+            label: <span className="text-sm leading-none">×</span>,
+        },
+        {
+            value: 'left',
+            ariaLabel: 'Align left',
+            label: <AlignLeftIcon className="size-3.5" />,
+        },
+        {
+            value: 'center',
+            ariaLabel: 'Align center',
+            label: <AlignCenterIcon className="size-3.5" />,
+        },
+        {
+            value: 'right',
+            ariaLabel: 'Align right',
+            label: <AlignRightIcon className="size-3.5" />,
+        },
+    ];
+    alignmentOptions.push({
+        value: 'justify',
+        ariaLabel: 'Justify text',
+        label: <span className="text-[11px] font-semibold leading-none">J</span>,
+    });
+    const borderStyleOptions = [
+        { value: '', label: 'auto' },
+        { value: 'solid', label: 'Solid' },
+        { value: 'dashed', label: 'Dashed' },
+        { value: 'dotted', label: 'Dotted' },
+        { value: 'double', label: 'Double' },
+        { value: 'none', label: 'None' },
+    ];
+    const resolvedBorderTopLeftRadius = selectedElement.styles.borderTopLeftRadius || selectedElement.styles.borderRadius;
+    const resolvedBorderTopRightRadius = selectedElement.styles.borderTopRightRadius || selectedElement.styles.borderRadius;
+    const resolvedBorderBottomRightRadius = selectedElement.styles.borderBottomRightRadius || selectedElement.styles.borderRadius;
+    const resolvedBorderBottomLeftRadius = selectedElement.styles.borderBottomLeftRadius || selectedElement.styles.borderRadius;
+
+    return (
+        <div className="flex flex-col">
+            <div className="sticky top-0 z-10 flex items-center justify-end gap-2 border-b border-border/40 bg-background px-3 py-2">
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setExpandedSections([])}
+                    disabled={expandedSections.length === 0}
+                    className="h-7 px-2.5 text-[11px]"
+                >
+                    Collapse all
+                </Button>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleConfirmClearAll}
+                    disabled={!hasCustomStyles}
+                    className="h-7 px-2.5 text-[11px]"
+                >
+                    Clear all
+                </Button>
+            </div>
+            <Accordion
+                type="multiple"
+                value={expandedSections}
+                onValueChange={setExpandedSections}
+                className="w-full"
+            >
                 <InspectorSection value="dimensions" title="Dimensions" summary={dimensionsSummary}>
                     <StyleInputRow
                         label="Width"
