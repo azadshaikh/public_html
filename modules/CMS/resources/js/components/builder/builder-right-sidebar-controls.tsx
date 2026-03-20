@@ -152,15 +152,15 @@ export function StyleInputRow({
     return (
         <div
             className={cn(
-                'relative rounded-lg border border-border/50 bg-muted/20 px-3 py-2.5',
+                'relative min-w-0 rounded-lg border border-border/50 bg-muted/20 px-3 py-2.5',
                 isStacked ? 'flex flex-col gap-2' : 'flex items-center justify-between gap-2.5',
             )}
         >
             {onClear && normalizedValue.trim() !== '' ? <ClearValueButton onClick={onClear} label={`Clear ${label}`} /> : null}
-            <label className={cn('text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground', isStacked ? 'pr-6' : 'pr-6')}>
+            <label className={cn('min-w-0 text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground', isStacked ? 'pr-6' : 'max-w-[45%] flex-1 pr-6')}>
                 {label}
             </label>
-            <div className={cn(isStacked ? 'relative w-full pr-4' : 'relative w-32 shrink-0 pr-4', containerClassName)}>
+            <div className={cn(isStacked ? 'relative w-full min-w-0 pr-4' : 'relative min-w-0 max-w-[55%] flex-1 pr-4', containerClassName)}>
                 <input
                     type={type}
                     value={normalizedValue}
@@ -216,13 +216,13 @@ export function StyleSelectRow({
     const normalizedValue = normalizeStyleValue(value);
 
     return (
-        <div className="relative flex items-center justify-between gap-2.5 rounded-lg border border-border/50 bg-muted/20 px-3 py-2.5">
+        <div className="relative flex min-w-0 items-center justify-between gap-2.5 rounded-lg border border-border/50 bg-muted/20 px-3 py-2.5">
             {onClear && normalizedValue.trim() !== '' ? <ClearValueButton onClick={onClear} label={`Clear ${label}`} /> : null}
-            <label className="pr-6 text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">{label}</label>
+            <label className="min-w-0 max-w-[45%] flex-1 pr-6 text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">{label}</label>
             <select
                 value={normalizedValue}
                 onChange={(event) => onChange(event.target.value)}
-                className="h-7 w-32 rounded-md border border-border/60 bg-background px-2.5 pr-7 text-[12px] outline-none transition-colors focus:border-primary/50 focus:ring-1 focus:ring-primary/15"
+                className="h-7 min-w-0 max-w-[55%] flex-1 rounded-md border border-border/60 bg-background px-2.5 pr-7 text-[12px] outline-none transition-colors focus:border-primary/50 focus:ring-1 focus:ring-primary/15"
             >
                 {options.map((option) => (
                     <option key={option.value || 'default'} value={option.value}>

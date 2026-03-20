@@ -185,7 +185,7 @@ export function ContentTab({
                         value={selectedElement.id}
                         onChange={(value) => onUpdateElementField('id', value)}
                         placeholder="element-id"
-                        containerClassName="w-36"
+                        layout="stacked"
                     />
                     <StyleInputRow
                         label="Classes"
@@ -300,7 +300,7 @@ export function ContentTab({
                             value={selectedElement.textContent}
                             onChange={(value) => onUpdateElementField('textContent', value)}
                             placeholder="Button label"
-                            containerClassName="w-40"
+                            layout="stacked"
                         />
                         {selectedElement.isLink ? (
                             <StyleInputRow
@@ -308,7 +308,7 @@ export function ContentTab({
                                 value={selectedElement.href}
                                 onChange={(value) => onUpdateElementField('href', value)}
                                 placeholder="https://example.com"
-                                containerClassName="w-40"
+                                layout="stacked"
                             />
                         ) : null}
                 </ContentGroup>
@@ -338,7 +338,7 @@ export function ContentTab({
                                     value={selectedElement.rel}
                                     onChange={(value) => onUpdateElementField('rel', value)}
                                     placeholder="noopener noreferrer"
-                                    containerClassName="w-40"
+                                    layout="stacked"
                                 />
                             </>
                         ) : null}
