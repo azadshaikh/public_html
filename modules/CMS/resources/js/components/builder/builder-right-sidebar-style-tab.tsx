@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import {
     AlignCenterIcon,
     AlignJustifyIcon,
     AlignLeftIcon,
     AlignRightIcon,
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Accordion } from '@/components/ui/accordion';
 import type { BuilderEditableElement, BuilderElementStyleValues } from './builder-dom';
 import {
@@ -31,6 +33,7 @@ import {
 
 type StyleTabProps = {
     selectedElement: BuilderEditableElement;
+    onClearAllStyles: () => void;
     onUpdateElementField: (
         field: 'id' | 'className' | 'href' | 'textContent' | 'target' | 'rel' | 'buttonType' | 'disabled',
         value: string,
@@ -39,6 +42,7 @@ type StyleTabProps = {
         field: keyof BuilderElementStyleValues,
         value: string,
     ) => void;
+    onUpdateElementStyles: (styles: Partial<BuilderElementStyleValues>) => void;
     onUpdateElementInteractiveStyle: (
         stateKey: 'hoverStyles' | 'focusStyles',
         field: keyof BuilderElementStyleValues,
@@ -48,11 +52,14 @@ type StyleTabProps = {
 
 export function StyleTab({
     selectedElement,
+    onClearAllStyles,
     onUpdateElementField,
     onUpdateElementStyle,
+    onUpdateElementStyles,
     onUpdateElementInteractiveStyle,
 }: StyleTabProps) {
-    const attributeSummary = <SummaryText value={selectedElement.id.trim() || selectedElement.className.trim() || 'Element metadata'} />;
+    const [expandedSections, setExpandedSections] = useState<string[]>(['attributes', 'typography', 'colors']);
+    const attributeSummary = <SummaryText value={(selectedElement.id ?? '').trim() || (selectedElement.className ?? '').trim() || 'Element metadata'} />;
     const dimensionsSummary = <SummaryText value={`${formatDimensionValue(selectedElement.styles.width)} x ${formatDimensionValue(selectedElement.styles.height)}`} />;
     const typographySummary = <SummaryText value={formatStyleValue(selectedElement.styles.fontSize, 'Text controls')} />;
     const colorsSummary = (
@@ -62,7 +69,7 @@ export function StyleTab({
         />
     );
     const contentSummaryValue = selectedElement.isLink
-        ? selectedElement.href.trim() || formatStyleValue(selectedElement.textContent, 'Empty label')
+        ? (selectedElement.href ?? '').trim() || formatStyleValue(selectedElement.textContent, 'Empty label')
         : selectedElement.isButton
             ? formatStyleValue(selectedElement.textContent, 'Empty label')
             : '';
@@ -85,7 +92,51 @@ export function StyleTab({
         selectedElement.styles.paddingBottom,
         selectedElement.styles.paddingLeft,
     )} />;
-    const decorationSummary = <SummaryText value={formatLengthValue(selectedElement.styles.borderRadius)} />;
+    const borderSummary = <SummaryText value={[
+        formatStyleValue(selectedElement.styles.borderStyle, ''),
+        formatLengthValue(selectedElement.styles.borderWidth, ''),
+        formatStyleValue(selectedElement.styles.borderColor, ''),
+    ].filter((value) => value !== '').join(' ') || formatStyleValue(selectedElement.styles.borderRadius, 'auto')} />;
+    const hasCustomStyles = Object.values(selectedElement.styles).some((value) => (value ?? '').trim() !== '')
+        || Object.values(selectedElement.hoverStyles).some((value) => (value ?? '').trim() !== '')
+        || Object.values(selectedElement.focusStyles).some((value) => (value ?? '').trim() !== '');
+    const handleConfirmClearAll = (): void => {
+        if (!hasCustomStyles) {
+            return;
+        }
+
+        if (!window.confirm('Clear all custom styles for the selected element?')) {
+            return;
+        }
+
+        onClearAllStyles();
+    };
+    const handleUpdateBorderCorner = (
+        field: 'borderTopLeftRadius' | 'borderTopRightRadius' | 'borderBottomRightRadius' | 'borderBottomLeftRadius',
+        value: string,
+    ): void => {
+        const sharedRadius = selectedElement.styles.borderRadius ?? '';
+
+        onUpdateElementStyles({
+            borderRadius: '',
+            borderTopLeftRadius: selectedElement.styles.borderTopLeftRadius || sharedRadius,
+            borderTopRightRadius: selectedElement.styles.borderTopRightRadius || sharedRadius,
+            borderBottomRightRadius: selectedElement.styles.borderBottomRightRadius || sharedRadius,
+            borderBottomLeftRadius: selectedElement.styles.borderBottomLeftRadius || sharedRadius,
+            [field]: value,
+        });
+    };
+    const handleUpdateBorderStyles = (styles: Partial<BuilderElementStyleValues>): void => {
+        const nextStyles = { ...styles };
+        const resolvedBorderStyle = styles.borderStyle ?? selectedElement.styles.borderStyle ?? '';
+        const touchesVisibleBorder = [styles.borderWidth, styles.borderColor].some((value) => typeof value === 'string' && value.trim() !== '');
+
+        if (touchesVisibleBorder && (resolvedBorderStyle.trim() === '' || resolvedBorderStyle === 'none')) {
+            nextStyles.borderStyle = 'solid';
+        }
+
+        onUpdateElementStyles(nextStyles);
+    };
 
     const alignmentOptions: SegmentedControlOption[] = [
         {
@@ -114,12 +165,45 @@ export function StyleTab({
             label: <AlignJustifyIcon className="size-3.5" />,
         },
     ];
+    const borderStyleOptions = [
+        { value: '', label: 'auto' },
+        { value: 'solid', label: 'Solid' },
+        { value: 'dashed', label: 'Dashed' },
+        { value: 'dotted', label: 'Dotted' },
+        { value: 'double', label: 'Double' },
+        { value: 'none', label: 'None' },
+    ];
+    const resolvedBorderTopLeftRadius = selectedElement.styles.borderTopLeftRadius || selectedElement.styles.borderRadius;
+    const resolvedBorderTopRightRadius = selectedElement.styles.borderTopRightRadius || selectedElement.styles.borderRadius;
+    const resolvedBorderBottomRightRadius = selectedElement.styles.borderBottomRightRadius || selectedElement.styles.borderRadius;
+    const resolvedBorderBottomLeftRadius = selectedElement.styles.borderBottomLeftRadius || selectedElement.styles.borderRadius;
 
     return (
         <div className="flex flex-col">
+            <div className="sticky top-0 z-10 flex items-center justify-end gap-2 border-b border-border/40 bg-background px-3 py-2">
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setExpandedSections([])}
+                    disabled={expandedSections.length === 0}
+                    className="h-7 px-2.5 text-[11px]"
+                >
+                    Collapse all
+                </Button>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleConfirmClearAll}
+                    disabled={!hasCustomStyles}
+                    className="h-7 px-2.5 text-[11px]"
+                >
+                    Clear all
+                </Button>
+            </div>
             <Accordion
                 type="multiple"
-                defaultValue={['attributes', 'typography', 'colors']}
+                value={expandedSections}
+                onValueChange={setExpandedSections}
                 className="w-full"
             >
                 <InspectorSection value="attributes" title="Attributes" summary={attributeSummary}>
@@ -135,7 +219,7 @@ export function StyleTab({
                         value={selectedElement.className}
                         onChange={(value) => onUpdateElementField('className', value)}
                         placeholder="class-name"
-                        containerClassName="w-40"
+                        layout="stacked"
                     />
                 </InspectorSection>
 
@@ -213,12 +297,14 @@ export function StyleTab({
                         label="Width"
                         value={selectedElement.styles.width}
                         onChange={(value) => onUpdateElementStyle('width', value)}
+                        onClear={() => onUpdateElementStyle('width', '')}
                         placeholder="100%"
                     />
                     <StyleInputRow
                         label="Height"
                         value={selectedElement.styles.height}
                         onChange={(value) => onUpdateElementStyle('height', value)}
+                        onClear={() => onUpdateElementStyle('height', '')}
                         placeholder="auto"
                     />
                     <OpacitySliderRow
@@ -232,37 +318,41 @@ export function StyleTab({
                         label="Font size"
                         value={selectedElement.styles.fontSize}
                         onChange={(value) => onUpdateElementStyle('fontSize', value)}
+                        emptyLabel="auto"
                         min={8}
                         max={120}
-                        displayValue={(value, rawValue) => rawValue.trim() || `${formatSliderNumber(value, 0)}px`}
+                        displayValue={(value) => `${formatSliderNumber(value, 0)}px`}
                         toValue={(value) => `${formatSliderNumber(value, 0)}px`}
                     />
                     <StyleSelectRow
                         label="Weight"
                         value={selectedElement.styles.fontWeight}
                         onChange={(value) => onUpdateElementStyle('fontWeight', value)}
+                        onClear={() => onUpdateElementStyle('fontWeight', '')}
                         options={FONT_WEIGHT_OPTIONS}
                     />
                     <SliderStyleRow
                         label="Line height"
                         value={selectedElement.styles.lineHeight}
                         onChange={(value) => onUpdateElementStyle('lineHeight', value)}
+                        emptyLabel="auto"
                         min={0.8}
                         max={3}
                         step={0.05}
                         parseValue={(value) => parseNumericValue(value, 1.4)}
-                        displayValue={(value, rawValue) => rawValue.trim() || formatSliderNumber(value, 2)}
+                        displayValue={(value) => formatSliderNumber(value, 2)}
                         toValue={(value) => formatSliderNumber(value, 2)}
                     />
                     <SliderStyleRow
                         label="Letter spacing"
                         value={selectedElement.styles.letterSpacing}
                         onChange={(value) => onUpdateElementStyle('letterSpacing', value)}
+                        emptyLabel="auto"
                         min={-2}
                         max={24}
                         step={0.5}
                         parseValue={(value) => parseNumericValue(value, 0)}
-                        displayValue={(value, rawValue) => rawValue.trim() || `${formatSliderNumber(value, 1)}px`}
+                        displayValue={(value) => `${formatSliderNumber(value, 1)}px`}
                         toValue={(value) => `${formatSliderNumber(value, 1)}px`}
                     />
                     <SegmentedControlRow
@@ -270,6 +360,7 @@ export function StyleTab({
                         value={selectedElement.styles.textAlign}
                         displayLabel={formatAlignmentLabel(selectedElement.styles.textAlign)}
                         onChange={(value) => onUpdateElementStyle('textAlign', value)}
+                        onClear={() => onUpdateElementStyle('textAlign', '')}
                         options={alignmentOptions}
                     />
                 </InspectorSection>
@@ -300,6 +391,7 @@ export function StyleTab({
                             label="Focus ring"
                             value={selectedElement.focusStyles.boxShadow ?? ''}
                             onChange={(value) => onUpdateElementInteractiveStyle('focusStyles', 'boxShadow', value)}
+                            onClear={() => onUpdateElementInteractiveStyle('focusStyles', 'boxShadow', '')}
                             placeholder="0 0 0 3px rgba(0,0,0,.15)"
                             containerClassName="w-40"
                         />
@@ -320,7 +412,7 @@ export function StyleTab({
                 </InspectorSection>
 
                 <InspectorSection value="margin" title="Margin" summary={marginSummary}>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 gap-3">
                         <LengthSliderRow label="Top" value={selectedElement.styles.marginTop} onChange={(value) => onUpdateElementStyle('marginTop', value)} />
                         <LengthSliderRow label="Right" value={selectedElement.styles.marginRight} onChange={(value) => onUpdateElementStyle('marginRight', value)} />
                         <LengthSliderRow label="Bottom" value={selectedElement.styles.marginBottom} onChange={(value) => onUpdateElementStyle('marginBottom', value)} />
@@ -329,7 +421,7 @@ export function StyleTab({
                 </InspectorSection>
 
                 <InspectorSection value="padding" title="Padding" summary={paddingSummary}>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 gap-3">
                         <LengthSliderRow label="Top" value={selectedElement.styles.paddingTop} onChange={(value) => onUpdateElementStyle('paddingTop', value)} />
                         <LengthSliderRow label="Right" value={selectedElement.styles.paddingRight} onChange={(value) => onUpdateElementStyle('paddingRight', value)} />
                         <LengthSliderRow label="Bottom" value={selectedElement.styles.paddingBottom} onChange={(value) => onUpdateElementStyle('paddingBottom', value)} />
@@ -337,11 +429,48 @@ export function StyleTab({
                     </div>
                 </InspectorSection>
 
-                <InspectorSection value="decoration" title="Decoration" summary={decorationSummary}>
+                <InspectorSection value="border" title="Border" summary={borderSummary}>
+                    <StyleSelectRow
+                        label="Border Style"
+                        value={selectedElement.styles.borderStyle}
+                        onChange={(value) => handleUpdateBorderStyles({ borderStyle: value })}
+                        onClear={() => onUpdateElementStyle('borderStyle', '')}
+                        options={borderStyleOptions}
+                    />
                     <LengthSliderRow
-                        label="Radius"
-                        value={selectedElement.styles.borderRadius}
-                        onChange={(value) => onUpdateElementStyle('borderRadius', value)}
+                        label="Border Width"
+                        value={selectedElement.styles.borderWidth}
+                        onChange={(value) => handleUpdateBorderStyles({ borderWidth: value })}
+                        min={0}
+                        max={24}
+                    />
+                    <ColorStyleRow
+                        label="Border Color"
+                        value={selectedElement.styles.borderColor}
+                        onChange={(value) => handleUpdateBorderStyles({ borderColor: value })}
+                    />
+                    <LengthSliderRow
+                        label="Top Left Radius"
+                        value={resolvedBorderTopLeftRadius}
+                        onChange={(value) => handleUpdateBorderCorner('borderTopLeftRadius', value)}
+                        max={96}
+                    />
+                    <LengthSliderRow
+                        label="Top Right Radius"
+                        value={resolvedBorderTopRightRadius}
+                        onChange={(value) => handleUpdateBorderCorner('borderTopRightRadius', value)}
+                        max={96}
+                    />
+                    <LengthSliderRow
+                        label="Bottom Right Radius"
+                        value={resolvedBorderBottomRightRadius}
+                        onChange={(value) => handleUpdateBorderCorner('borderBottomRightRadius', value)}
+                        max={96}
+                    />
+                    <LengthSliderRow
+                        label="Bottom Left Radius"
+                        value={resolvedBorderBottomLeftRadius}
+                        onChange={(value) => handleUpdateBorderCorner('borderBottomLeftRadius', value)}
                         max={96}
                     />
                 </InspectorSection>

@@ -11,6 +11,7 @@ type BuilderRightSidebarProps = {
     rootNodeId: AstNodeId;
     selectedNodeId: AstNodeId | null;
     selectedElement: BuilderEditableElement | null;
+    onClearSelectedStyles: () => void;
     onUpdateElementField: (
         field: 'id' | 'className' | 'href' | 'textContent' | 'target' | 'rel' | 'buttonType' | 'disabled',
         value: string,
@@ -19,6 +20,7 @@ type BuilderRightSidebarProps = {
         field: keyof BuilderElementStyleValues,
         value: string,
     ) => void;
+    onUpdateElementStyles: (styles: Partial<BuilderElementStyleValues>) => void;
     onUpdateElementInteractiveStyle: (
         stateKey: 'hoverStyles' | 'focusStyles',
         field: keyof BuilderElementStyleValues,
@@ -35,8 +37,10 @@ export function BuilderRightSidebar({
     rootNodeId,
     selectedNodeId,
     selectedElement,
+    onClearSelectedStyles,
     onUpdateElementField,
     onUpdateElementStyle,
+    onUpdateElementStyles,
     onUpdateElementInteractiveStyle,
     onSelectNode,
     onMoveNode,
@@ -62,8 +66,10 @@ export function BuilderRightSidebar({
                         {selectedElement ? (
                             <StyleTab
                                 selectedElement={selectedElement}
+                                onClearAllStyles={onClearSelectedStyles}
                                 onUpdateElementField={onUpdateElementField}
                                 onUpdateElementStyle={onUpdateElementStyle}
+                                onUpdateElementStyles={onUpdateElementStyles}
                                 onUpdateElementInteractiveStyle={onUpdateElementInteractiveStyle}
                             />
                         ) : (

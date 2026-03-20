@@ -82,6 +82,11 @@ export default function BuilderEdit({
         css: '',
         js: '',
     });
+    const [footerEditorHasManualChanges, setFooterEditorHasManualChanges] = useState<Record<FooterEditorTab, boolean>>({
+        html: false,
+        css: false,
+        js: false,
+    });
     const iframeRef = useRef<HTMLIFrameElement | null>(null);
     const overlayContainerRef = useRef<HTMLDivElement | null>(null);
     const [previewLoadedAt, setPreviewLoadedAt] = useState(0);
@@ -449,11 +454,57 @@ export default function BuilderEdit({
         [actions, selectedItemId],
     );
 
+    const handleUpdateElementStyles = useCallback(
+        (styles: Partial<BuilderElementStyleValues>) => {
+            if (!selectedItemId) {
+                return;
+            }
+
+            actions.updateNode(selectedItemId, {
+                styles,
+            });
+        },
+        [actions, selectedItemId],
+    );
+
+    const handleClearSelectedStyles = useCallback((): void => {
+        if (!selectedItemId || !selectedNode) {
+            return;
+        }
+
+        const nextProps = { ...selectedNode.props };
+
+        delete nextProps.hoverStyles;
+        delete nextProps.focusStyles;
+
+        actions.setAst({
+            ...state.ast,
+            nodes: {
+                ...state.ast.nodes,
+                [selectedItemId]: {
+                    ...selectedNode,
+                    props: nextProps,
+                    styles: {},
+                },
+            },
+        });
+    }, [actions, selectedItemId, selectedNode, state.ast]);
+
     const handleOpenFooterEditor = useCallback((tab: FooterEditorTab): void => {
+        setFooterEditorDrafts((current) => {
+            if (footerEditorHasManualChanges[tab]) {
+                return current;
+            }
+
+            return {
+                ...current,
+                [tab]: footerEditorSources[tab],
+            };
+        });
         setFooterEditorTab(tab);
         setFooterEditorOpen(true);
         setFooterEditorFullscreen(false);
-    }, []);
+    }, [footerEditorHasManualChanges, footerEditorSources]);
 
     const handleCloseFooterEditor = useCallback((): void => {
         setFooterEditorOpen(false);
@@ -469,19 +520,31 @@ export default function BuilderEdit({
             ...current,
             [footerEditorTab]: value,
         }));
-    }, [footerEditorTab]);
+        setFooterEditorHasManualChanges((current) => ({
+            ...current,
+            [footerEditorTab]: value !== footerEditorSources[footerEditorTab],
+        }));
+    }, [footerEditorSources, footerEditorTab]);
 
     const handleApplyFooterEditor = useCallback((): void => {
         const currentDraft = footerEditorDrafts[footerEditorTab];
 
         if (footerEditorTab === 'css') {
             actions.setCss(currentDraft);
+            setFooterEditorHasManualChanges((current) => ({
+                ...current,
+                css: false,
+            }));
 
             return;
         }
 
         if (footerEditorTab === 'js') {
             actions.setJs(currentDraft);
+            setFooterEditorHasManualChanges((current) => ({
+                ...current,
+                js: false,
+            }));
 
             return;
         }
@@ -490,6 +553,10 @@ export default function BuilderEdit({
 
         actions.setAst(nextAst);
         actions.clearSelection();
+        setFooterEditorHasManualChanges((current) => ({
+            ...current,
+            html: false,
+        }));
     }, [actions, footerEditorDrafts, footerEditorTab, state.ast.css, state.ast.js]);
 
     const footerEditorValue = footerEditorDrafts[footerEditorTab];
@@ -518,6 +585,8 @@ export default function BuilderEdit({
 
             for (const tab of ['html', 'css', 'js'] as FooterEditorTab[]) {
                 if (
+                    !footerEditorHasManualChanges[tab]
+                    ||
                     previousSources === null
                     || current[tab] === previousSources[tab]
                     || current[tab] === footerEditorSources[tab]
@@ -530,7 +599,7 @@ export default function BuilderEdit({
         });
 
         previousFooterEditorSourcesRef.current = footerEditorSources;
-    }, [footerEditorSources]);
+    }, [footerEditorHasManualChanges, footerEditorSources]);
 
     const handleSave = useCallback(async () => {
         setIsSaving(true);
@@ -1057,8 +1126,10 @@ export default function BuilderEdit({
                                 rootNodeId={rootNodeId}
                                 selectedNodeId={selectedItemId}
                                 selectedElement={selectedElement}
+                                onClearSelectedStyles={handleClearSelectedStyles}
                                 onUpdateElementField={handleUpdateElementField}
                                 onUpdateElementStyle={handleUpdateElementStyle}
+                                onUpdateElementStyles={handleUpdateElementStyles}
                                 onUpdateElementInteractiveStyle={handleUpdateElementInteractiveStyle}
                                 onSelectNode={handleSelectNode}
                                 onMoveNode={handleMoveNode}

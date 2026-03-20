@@ -380,6 +380,21 @@ export function updateNodeProps(
 /**
  * Update a node's inline styles (shallow merge).
  */
+function mergeNodeStyles(existing: Record<string, string>, patch: Record<string, string>): Record<string, string> {
+    const nextStyles = { ...existing };
+
+    for (const [key, value] of Object.entries(patch)) {
+        if (value.trim() === '') {
+            delete nextStyles[key];
+            continue;
+        }
+
+        nextStyles[key] = value;
+    }
+
+    return nextStyles;
+}
+
 export function updateNodeStyles(
     nodes: AstNodeMap,
     id: AstNodeId,
@@ -393,7 +408,7 @@ export function updateNodeStyles(
 
     return {
         ...nodes,
-        [id]: { ...node, styles: { ...node.styles, ...styles } },
+        [id]: { ...node, styles: mergeNodeStyles(node.styles, styles) },
     };
 }
 
@@ -417,7 +432,7 @@ export function updateNode(
             ...node,
             ...patch,
             props: patch.props ? { ...node.props, ...patch.props } : node.props,
-            styles: patch.styles ? { ...node.styles, ...patch.styles } : node.styles,
+            styles: patch.styles ? mergeNodeStyles(node.styles, patch.styles) : node.styles,
             custom: patch.custom ? { ...node.custom, ...patch.custom } : node.custom,
         },
     };

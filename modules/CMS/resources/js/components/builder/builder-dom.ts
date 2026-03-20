@@ -4,7 +4,14 @@ export type BuilderElementPath = number[];
 
 export type BuilderElementStyleValues = {
     backgroundColor: string;
+    borderBottomLeftRadius: string;
+    borderBottomRightRadius: string;
+    borderColor: string;
     borderRadius: string;
+    borderStyle: string;
+    borderTopLeftRadius: string;
+    borderTopRightRadius: string;
+    borderWidth: string;
     boxShadow: string;
     color: string;
     fontSize: string;
@@ -89,7 +96,14 @@ const EDITABLE_TAGS = new Set([
 
 const DEFAULT_STYLE_VALUES: BuilderElementStyleValues = {
     backgroundColor: '',
+    borderBottomLeftRadius: '',
+    borderBottomRightRadius: '',
+    borderColor: '',
     borderRadius: '',
+    borderStyle: '',
+    borderTopLeftRadius: '',
+    borderTopRightRadius: '',
+    borderWidth: '',
     boxShadow: '',
     color: '',
     fontSize: '',
@@ -159,7 +173,14 @@ function buildElementLabel(element: HTMLElement): string {
 function readStyleValues(element: HTMLElement): BuilderElementStyleValues {
     return {
         backgroundColor: element.style.backgroundColor,
+        borderBottomLeftRadius: element.style.borderBottomLeftRadius,
+        borderBottomRightRadius: element.style.borderBottomRightRadius,
+        borderColor: element.style.borderColor,
         borderRadius: element.style.borderRadius,
+        borderStyle: element.style.borderStyle,
+        borderTopLeftRadius: element.style.borderTopLeftRadius,
+        borderTopRightRadius: element.style.borderTopRightRadius,
+        borderWidth: element.style.borderWidth,
         boxShadow: element.style.boxShadow,
         color: element.style.color,
         fontSize: element.style.fontSize,
