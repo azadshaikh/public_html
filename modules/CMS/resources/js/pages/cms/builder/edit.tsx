@@ -44,7 +44,7 @@ import { ROOT_NODE_ID } from '../../../components/builder/core/ast-types';
 import { parseHtmlToAst, createEmptyPageAst, getNode, serializePageAst } from '../../../components/builder/core/ast-helpers';
 import { renderCleanNodeToHtml, renderCleanPageContent, renderNodeToHtml, renderPageContent } from '../../../components/builder/core/ast-to-html';
 import { useBuilderStore } from '../../../components/builder/core/use-builder-store';
-import { syncAstToIframe } from '../../../components/builder/core/iframe-sync';
+import { getElementByAstId, syncAstToIframe } from '../../../components/builder/core/iframe-sync';
 import { BuilderOverlay, type OverlayCallbacks } from '../../../components/builder/core/overlay-engine';
 import { BuilderDragDrop, type DragDropCallbacks } from '../../../components/builder/core/drag-drop';
 import { IframeInteractionHandler, type IframeInteractionCallbacks } from '../../../components/builder/core/iframe-interactions';
@@ -311,8 +311,25 @@ export default function BuilderEdit({
     // Handlers
     // -----------------------------------------------------------------------
 
+    const pendingScrollRef = useRef<string | null>(null);
+
+    const scrollIframeToNode = useCallback((nodeId: string) => {
+        requestAnimationFrame(() => {
+            const iframeDoc = iframeRef.current?.contentDocument;
+
+            if (!iframeDoc) {
+                return;
+            }
+
+            const el = getElementByAstId(iframeDoc, nodeId);
+            el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+    }, []);
+
     const handleAddLibraryItem = useCallback((item: BuilderLibraryItem) => {
         actions.importHtml(item.html, ROOT_NODE_ID);
+        pendingScrollRef.current = 'pending';
+        showAppToast({ variant: 'success', title: `${item.name} added`, duration: 2000 });
     }, [actions]);
 
     const handleDragStartLibraryItem = useCallback((item: BuilderLibraryItem) => {
@@ -342,9 +359,10 @@ export default function BuilderEdit({
 
             if (newIdx >= 0 && newIdx < parent.childIds.length) {
                 actions.reorderChild(node.parentId, selectedItemId, newIdx);
+                scrollIframeToNode(selectedItemId);
             }
         },
-        [actions, nodes, selectedItemId],
+        [actions, nodes, selectedItemId, scrollIframeToNode],
     );
 
     const handleDuplicateSelectedItem = useCallback(() => {
@@ -596,6 +614,16 @@ export default function BuilderEdit({
         }
     }, [previewLoadedAt, nodes, rootNodeId, state.ast.css, state.ast.js, previewUrl]);
 
+    // Scroll to newly added section after AST sync completes
+    useEffect(() => {
+        if (pendingScrollRef.current !== 'pending' || !selectedItemId) {
+            return;
+        }
+
+        pendingScrollRef.current = null;
+        scrollIframeToNode(selectedItemId);
+    }, [nodes, selectedItemId, scrollIframeToNode]);
+
     // -----------------------------------------------------------------------
     // Overlay, interaction, and drag-drop setup
     // -----------------------------------------------------------------------
@@ -634,6 +662,7 @@ export default function BuilderEdit({
 
                 if (newIdx >= 0 && newIdx < parent.childIds.length) {
                     actions.reorderChild(node.parentId, nodeId, newIdx);
+                    scrollIframeToNode(nodeId);
                 }
             },
             onDuplicateNode: (nodeId) => actions.duplicateNode(nodeId),
@@ -708,6 +737,7 @@ export default function BuilderEdit({
 
                 if (idx > 0) {
                     actions.reorderChild(node.parentId, nodeId, idx - 1);
+                    scrollIframeToNode(nodeId);
                 }
             },
             onMoveDown: (nodeId) => {
@@ -728,6 +758,7 @@ export default function BuilderEdit({
 
                 if (idx < parent.childIds.length - 1) {
                     actions.reorderChild(node.parentId, nodeId, idx + 1);
+                    scrollIframeToNode(nodeId);
                 }
             },
             onUndo: () => actions.undo(),
@@ -904,7 +935,10 @@ export default function BuilderEdit({
                                 canvasItems={canvasItems}
                                 selectedItemId={selectedItemId}
                                 selectedElement={selectedElement}
-                                onSelectItem={(uid) => actions.setSelected([uid])}
+                                onSelectItem={(uid) => {
+                                    actions.setSelected([uid]);
+                                    scrollIframeToNode(uid);
+                                }}
                                 onMoveSelectedItem={handleMoveSelectedItem}
                                 onDuplicateSelectedItem={handleDuplicateSelectedItem}
                                 onRemoveSelectedItem={handleRemoveSelectedItem}
