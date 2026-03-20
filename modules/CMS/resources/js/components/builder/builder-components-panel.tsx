@@ -21,8 +21,8 @@ import {
     AccordionItem,
     AccordionTrigger,
 } from '@/components/ui/accordion';
-import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { SearchInput } from '@/components/ui/search-input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { BuilderLibraryGroup, BuilderLibraryItem } from '../../types/cms';
 
@@ -141,25 +141,11 @@ export function BuilderComponentsPanel({
             </div>
 
             <div className="border-b border-border/60 px-3 py-2">
-                <div className="relative">
-                    <SearchIcon className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                        value={search}
-                        onChange={(event) => setSearch(event.target.value)}
-                        placeholder={`Search ${activeLibrary}...`}
-                        className="h-8 pr-8 pl-8 text-xs"
-                    />
-                    {search !== '' ? (
-                        <button
-                            type="button"
-                            onClick={() => setSearch('')}
-                            className="absolute top-1/2 right-2.5 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
-                            aria-label="Clear search"
-                        >
-                            <XIcon className="size-3.5" />
-                        </button>
-                    ) : null}
-                </div>
+                <SearchInput
+                    value={search}
+                    onChange={setSearch}
+                    placeholder={`Search ${activeLibrary}...`}
+                />
             </div>
 
             <ScrollArea className="min-h-0 flex-1">

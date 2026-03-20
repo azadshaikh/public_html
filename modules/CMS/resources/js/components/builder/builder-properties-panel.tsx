@@ -16,6 +16,7 @@ import {
     TypeIcon,
 } from 'lucide-react';
 import { useState } from 'react';
+import { AceCodeEditor } from '@/components/code-editor/ace-editor';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -543,10 +544,13 @@ function AdvancedTab({
             </CollapsibleSection>
 
             <CollapsibleSection title="Raw HTML" icon={<Code2Icon className="size-3" />}>
-                <Textarea
+                <AceCodeEditor
                     value={selectedItem.html}
-                    onChange={(e) => onUpdateSelectedItemHtml(e.target.value)}
-                    className="min-h-36 resize-y font-mono text-[11px]"
+                    onChange={onUpdateSelectedItemHtml}
+                    language="html"
+                    height={176}
+                    placeholder="<!-- Edit raw HTML for this section -->"
+                    className="mt-1"
                 />
             </CollapsibleSection>
         </div>
@@ -567,19 +571,23 @@ function CodeSection({
     return (
         <div className="flex flex-col">
             <CollapsibleSection title="Custom CSS" icon={<Code2Icon className="size-3" />} defaultOpen>
-                <Textarea
+                <AceCodeEditor
                     value={customCss}
-                    onChange={(e) => onCustomCssChange(e.target.value)}
+                    onChange={onCustomCssChange}
+                    language="css"
+                    height={176}
                     placeholder="/* Add custom CSS styles... */"
-                    className="min-h-28 resize-y font-mono text-[11px]"
+                    className="mt-1"
                 />
             </CollapsibleSection>
             <CollapsibleSection title="Custom JavaScript" icon={<Code2Icon className="size-3" />}>
-                <Textarea
+                <AceCodeEditor
                     value={customJs}
-                    onChange={(e) => onCustomJsChange(e.target.value)}
+                    onChange={onCustomJsChange}
+                    language="javascript"
+                    height={176}
                     placeholder="// Add custom JavaScript..."
-                    className="min-h-28 resize-y font-mono text-[11px]"
+                    className="mt-1"
                 />
             </CollapsibleSection>
         </div>
