@@ -6,7 +6,7 @@
  * Also manages style/script injection and DOM↔AST lookups.
  */
 
-import { renderPageContent } from './ast-to-html';
+import { buildEffectivePageCss, renderPageContent } from './ast-to-html';
 import type { AstNodeId, AstNodeMap } from './ast-types';
 
 // ---------------------------------------------------------------------------
@@ -79,7 +79,7 @@ function syncStyles(
         }
     }
 
-    const allCss = [...nodeCss, customCss].filter(Boolean).join('\n\n');
+    const allCss = [...nodeCss, buildEffectivePageCss(nodes, customCss)].filter(Boolean).join('\n\n');
 
     let styleEl = iframeDoc.getElementById(BUILDER_STYLES_ID) as HTMLStyleElement | null;
 

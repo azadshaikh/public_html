@@ -12,6 +12,11 @@ import {
     type AstNodeMap,
 } from './ast-types';
 
+type InteractiveStateStyleMap = {
+    hover?: Record<string, string>;
+    focus?: Record<string, string>;
+};
+
 // ---------------------------------------------------------------------------
 // Single node → HTML
 // ---------------------------------------------------------------------------
@@ -27,8 +32,92 @@ function escapeHtml(text: string): string {
 function styleObjectToString(styles: Record<string, string>): string {
     return Object.entries(styles)
         .filter(([, v]) => v !== '')
-        .map(([k, v]) => `${kebabCase(k)}: ${v}`)
+        .map(([k, v]) => `${kebabCase(k)}: ${v.includes('!important') ? v : `${v} !important`}`)
         .join('; ');
+}
+
+function isStyleRecord(value: unknown): value is Record<string, string> {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+        return false;
+    }
+
+    return Object.values(value).every((entry) => typeof entry === 'string');
+}
+
+function getInteractiveStateStyles(node: AstNode): InteractiveStateStyleMap {
+    const hover = node.props.hoverStyles;
+    const focus = node.props.focusStyles;
+
+    return {
+        hover: isStyleRecord(hover) ? hover : undefined,
+        focus: isStyleRecord(focus) ? focus : undefined,
+    };
+}
+
+function hasStyleEntries(styles?: Record<string, string>): boolean {
+    return !!styles && Object.values(styles).some((value) => value.trim() !== '');
+}
+
+function sanitizeClassSuffix(value: string): string {
+    return value.toLowerCase().replace(/[^a-z0-9_-]+/g, '-');
+}
+
+export function getNodeInteractiveClassName(node: AstNode): string | null {
+    const interactiveStyles = getInteractiveStateStyles(node);
+
+    if (!hasStyleEntries(interactiveStyles.hover) && !hasStyleEntries(interactiveStyles.focus)) {
+        return null;
+    }
+
+    return `builder-node-${sanitizeClassSuffix(node.id)}`;
+}
+
+function buildClassAttribute(node: AstNode): string {
+    return [node.className, getNodeInteractiveClassName(node)]
+        .filter((value): value is string => typeof value === 'string' && value.trim() !== '')
+        .join(' ')
+        .trim();
+}
+
+function buildInteractiveCssBlock(selector: string, pseudoClass: 'hover' | 'focus', styles: Record<string, string>): string {
+    const styleString = styleObjectToString(styles);
+
+    if (styleString === '') {
+        return '';
+    }
+
+    return `${selector}:${pseudoClass}{${styleString}}`;
+}
+
+export function buildGeneratedPageCss(nodes: AstNodeMap): string {
+    const blocks: string[] = [];
+
+    for (const node of Object.values(nodes)) {
+        const generatedClass = getNodeInteractiveClassName(node);
+
+        if (!generatedClass) {
+            continue;
+        }
+
+        const selector = `.${generatedClass}`;
+        const interactiveStyles = getInteractiveStateStyles(node);
+
+        if (hasStyleEntries(interactiveStyles.hover)) {
+            blocks.push(buildInteractiveCssBlock(selector, 'hover', interactiveStyles.hover!));
+        }
+
+        if (hasStyleEntries(interactiveStyles.focus)) {
+            blocks.push(buildInteractiveCssBlock(selector, 'focus', interactiveStyles.focus!));
+        }
+    }
+
+    return blocks.join('\n');
+}
+
+export function buildEffectivePageCss(nodes: AstNodeMap, customCss: string): string {
+    return [buildGeneratedPageCss(nodes), customCss]
+        .filter((value) => value.trim() !== '')
+        .join('\n\n');
 }
 
 function kebabCase(str: string): string {
@@ -59,8 +148,10 @@ export function renderNodeToHtml(nodes: AstNodeMap, nodeId: AstNodeId): string {
     // Build attributes
     const attrs: string[] = [`data-ast-id="${node.id}"`];
 
-    if (node.className) {
-        attrs.push(`class="${escapeHtml(node.className)}"`);
+    const className = buildClassAttribute(node);
+
+    if (className) {
+        attrs.push(`class="${escapeHtml(className)}"`);
     }
 
     const styleStr = styleObjectToString(node.styles);

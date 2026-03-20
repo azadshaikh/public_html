@@ -1,24 +1,9 @@
 'use client';
 
-import {
-    BracesIcon,
-    CodeXmlIcon,
-    ExpandIcon,
-    Minimize2Icon,
-    PaintbrushIcon,
-    XIcon,
-} from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { MonacoEditor } from '@/components/code-editor/monaco-editor';
+import { BuilderCenterWorkspace } from '../../../components/builder/builder-center-workspace';
+import { BuilderCodeEditorDialog } from '../../../components/builder/builder-code-editor-dialog';
 import { showAppToast } from '@/components/forms/form-success-toast';
-import { Button } from '@/components/ui/button';
-import {
-    Dialog,
-    DialogContent,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
 import {
     Sheet,
     SheetContent,
@@ -30,14 +15,11 @@ import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/componen
 import { type GroupImperativeHandle } from 'react-resizable-panels';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { useDirtyFormGuard } from '@/hooks/use-dirty-form-guard';
-import { cn } from '@/lib/utils';
 import { BuilderLeftSidebar } from '../../../components/builder/builder-left-sidebar';
 import { BuilderHeader } from '../../../components/builder/builder-header';
 import {
-    type BuilderEditableElement,
     type BuilderElementStyleValues,
 } from '../../../components/builder/builder-dom';
-import { BuilderPreviewPanel } from '../../../components/builder/builder-preview-panel';
 import { BuilderRightSidebar } from '../../../components/builder/builder-right-sidebar';
 import {
     buildPreviewDocument,
@@ -45,249 +27,36 @@ import {
     getCsrfToken,
     type BuilderDeviceMode,
 } from '../../../components/builder/builder-utils';
-import { ROOT_NODE_ID, type AstNode } from '../../../components/builder/core/ast-types';
-import { parseHtmlToAst, createEmptyPageAst, getNode, serializePageAst } from '../../../components/builder/core/ast-helpers';
-import { renderCleanNodeToHtml, renderCleanPageContent, renderNodeToHtml } from '../../../components/builder/core/ast-to-html';
+import { ROOT_NODE_ID } from '../../../components/builder/core/ast-types';
+import { getNode, serializePageAst } from '../../../components/builder/core/ast-helpers';
+import { buildEffectivePageCss, renderCleanNodeToHtml, renderCleanPageContent } from '../../../components/builder/core/ast-to-html';
 import { useBuilderStore } from '../../../components/builder/core/use-builder-store';
 import { getElementByAstId, syncAstToIframe } from '../../../components/builder/core/iframe-sync';
 import { BuilderOverlay, type OverlayCallbacks } from '../../../components/builder/core/overlay-engine';
 import { BuilderDragDrop, type DragDropCallbacks } from '../../../components/builder/core/drag-drop';
 import { IframeInteractionHandler, type IframeInteractionCallbacks } from '../../../components/builder/core/iframe-interactions';
 import ThemeCustomizerLayout from '../../../components/theme-customizer/theme-customizer-layout';
+import {
+    astToCanvasItems,
+    buildAstFromPageContent,
+    buildInitialAst,
+    BUILDER_PANEL_LAYOUT_STORAGE_KEY,
+    BUILDER_PANEL_WIDTHS_STORAGE_KEY,
+    clampSidebarPercentage,
+    DEFAULT_LEFT_PANEL_SIZE,
+    DEFAULT_RIGHT_PANEL_SIZE,
+    type BuilderPanelLayout,
+    type FooterEditorDrafts,
+    type FooterEditorTab,
+    formatHtmlForDisplay,
+    isStoredPanelLayout,
+    normalizePanelLayout,
+    toEditableElement,
+} from './edit-support';
 import type {
-    BuilderCanvasItem,
     BuilderEditPageProps,
     BuilderLibraryItem,
 } from '../../../types/cms';
-
-// ---------------------------------------------------------------------------
-// Helpers: Convert legacy builder state items into AST
-// ---------------------------------------------------------------------------
-
-const VOID_ELEMENTS = new Set([
-    'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input',
-    'link', 'meta', 'param', 'source', 'track', 'wbr',
-]);
-
-function formatHtmlForDisplay(html: string): string {
-    const tokens = html.replace(/>\s*</g, '>\n<').split('\n');
-    let indent = 0;
-    const lines: string[] = [];
-
-    for (const token of tokens) {
-        const trimmed = token.trim();
-
-        if (!trimmed) {
-            continue;
-        }
-
-        const isClosing = /^<\//.test(trimmed);
-        const tagMatch = trimmed.match(/^<\/?([a-zA-Z][a-zA-Z0-9-]*)/);
-        const tagName = tagMatch?.[1]?.toLowerCase() ?? '';
-        const isSelfClosing = /\/>$/.test(trimmed) || VOID_ELEMENTS.has(tagName);
-        const isOpening = /^<[a-zA-Z]/.test(trimmed) && !isClosing;
-
-        if (isClosing) {
-            indent = Math.max(0, indent - 1);
-        }
-
-        lines.push('  '.repeat(indent) + trimmed);
-
-        if (isOpening && !isSelfClosing) {
-            indent++;
-        }
-    }
-
-    return lines.join('\n');
-}
-
-function buildInitialAst(items: BuilderCanvasItem[], css: string, js: string) {
-    if (items.length === 0) {
-        const ast = createEmptyPageAst();
-        ast.css = css;
-        ast.js = js;
-
-        return ast;
-    }
-
-    // Create the page root node
-    const ast = createEmptyPageAst();
-    ast.css = css;
-    ast.js = js;
-
-    // Parse each item's HTML as a section subtree and add to the root
-    for (const item of items) {
-        const trimmed = item.html.trim();
-
-        if (!trimmed) {
-            continue;
-        }
-
-        const htmlToUse = /^<section[\s>]/i.test(trimmed) ? trimmed : `<section>${trimmed}</section>`;
-        const parsed = parseHtmlToAst(htmlToUse, 'section', item.label || 'Section', {});
-
-        // Re-parent the parsed root under our page ROOT
-        const parsedRoot = parsed.nodes[parsed.rootId];
-
-        if (parsedRoot) {
-            parsedRoot.parentId = ROOT_NODE_ID;
-            ast.nodes[parsed.rootId] = parsedRoot;
-            ast.nodes[ROOT_NODE_ID].childIds.push(parsed.rootId);
-
-            // Copy all descendants
-            for (const [id, node] of Object.entries(parsed.nodes)) {
-                if (id !== parsed.rootId) {
-                    ast.nodes[id] = node;
-                }
-            }
-        }
-    }
-
-    return ast;
-}
-
-// ---------------------------------------------------------------------------
-// Bridge: Convert AST top-level children to virtual canvas items (for legacy panels)
-// ---------------------------------------------------------------------------
-
-function astToCanvasItems(nodes: Record<string, import('../../../components/builder/core/ast-types').AstNode>, rootNodeId: string): BuilderCanvasItem[] {
-    const root = nodes[rootNodeId];
-
-    if (!root) {
-        return [];
-    }
-
-    return root.childIds.map((childId) => {
-        const node = nodes[childId];
-
-        return {
-            uid: childId,
-            catalog_id: null,
-            type: node?.type ?? 'section',
-            category: 'section',
-            label: node?.displayName ?? 'Section',
-            html: renderNodeToHtml(nodes, childId),
-            css: '',
-            js: '',
-            preview_image_url: null,
-            source: 'database' as const,
-        };
-    });
-}
-
-const BUILDER_PANEL_LAYOUT_STORAGE_KEY = 'cms-builder-panel-layout';
-const BUILDER_PANEL_WIDTHS_STORAGE_KEY = 'cms-builder-panel-widths';
-const DEFAULT_LEFT_PANEL_SIZE = 15;
-const DEFAULT_RIGHT_PANEL_SIZE = 15;
-const MIN_SIDEBAR_PERCENTAGE = 12;
-const MAX_SIDEBAR_PERCENTAGE = 25;
-
-type BuilderPanelLayout = {
-    left: number;
-    center: number;
-    right: number;
-};
-
-type FooterEditorTab = 'html' | 'css' | 'js';
-type FooterEditorDrafts = Record<FooterEditorTab, string>;
-
-function clampSidebarPercentage(value: number): number {
-    return Math.min(MAX_SIDEBAR_PERCENTAGE, Math.max(MIN_SIDEBAR_PERCENTAGE, value));
-}
-
-function normalizePanelLayout(layout?: Partial<BuilderPanelLayout> | null): BuilderPanelLayout {
-    const left = layout?.left === 0 ? 0 : clampSidebarPercentage(layout?.left ?? DEFAULT_LEFT_PANEL_SIZE);
-    const right = layout?.right === 0 ? 0 : clampSidebarPercentage(layout?.right ?? DEFAULT_RIGHT_PANEL_SIZE);
-
-    return {
-        left,
-        center: 100 - left - right,
-        right,
-    };
-}
-
-function isStoredPanelLayout(value: unknown): value is Partial<BuilderPanelLayout> {
-    if (!value || typeof value !== 'object') {
-        return false;
-    }
-
-    const candidate = value as Record<string, unknown>;
-
-    return ['left', 'center', 'right'].some((key) => typeof candidate[key] === 'number');
-}
-
-function buildAstFromPageContent(html: string, css: string, js: string) {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(`<body>${html}</body>`, 'text/html');
-    const ast = createEmptyPageAst();
-
-    ast.css = css;
-    ast.js = js;
-
-    for (const child of Array.from(doc.body.children)) {
-        const parsed = parseHtmlToAst(child.outerHTML, 'section');
-        const parsedRoot = parsed.nodes[parsed.rootId];
-
-        if (!parsedRoot) {
-            continue;
-        }
-
-        parsedRoot.parentId = ROOT_NODE_ID;
-        ast.nodes[parsed.rootId] = parsedRoot;
-        ast.nodes[ROOT_NODE_ID].childIds.push(parsed.rootId);
-
-        for (const [id, node] of Object.entries(parsed.nodes)) {
-            if (id !== parsed.rootId) {
-                ast.nodes[id] = node;
-            }
-        }
-    }
-
-    return ast;
-}
-
-function toEditableElement(node: AstNode): BuilderEditableElement {
-    const tagName = (node.tagName ?? node.type).toLowerCase();
-
-    return {
-        alt: typeof node.props.alt === 'string' ? node.props.alt : '',
-        canEditText: typeof node.props.content === 'string' || tagName === 'a' || tagName === 'button',
-        className: node.className,
-        href: typeof node.props.href === 'string' ? node.props.href : '',
-        id: typeof node.props.attr_id === 'string' ? node.props.attr_id : '',
-        isImage: node.type === 'image',
-        isLink: node.type === 'link' || tagName === 'a',
-        label: node.displayName,
-        path: [],
-        pathKey: node.id,
-        src: typeof node.props.src === 'string' ? node.props.src : '',
-        styles: {
-            backgroundColor: node.styles.backgroundColor ?? '',
-            borderRadius: node.styles.borderRadius ?? '',
-            color: node.styles.color ?? '',
-            fontSize: node.styles.fontSize ?? '',
-            fontWeight: node.styles.fontWeight ?? '',
-            height: node.styles.height ?? '',
-            marginBottom: node.styles.marginBottom ?? '',
-            marginLeft: node.styles.marginLeft ?? '',
-            marginRight: node.styles.marginRight ?? '',
-            marginTop: node.styles.marginTop ?? '',
-            opacity: node.styles.opacity ?? '',
-            paddingBottom: node.styles.paddingBottom ?? '',
-            paddingLeft: node.styles.paddingLeft ?? '',
-            paddingRight: node.styles.paddingRight ?? '',
-            paddingTop: node.styles.paddingTop ?? '',
-            textAlign: node.styles.textAlign ?? '',
-            width: node.styles.width ?? '',
-        },
-        tagName,
-        textContent: typeof node.props.content === 'string' ? node.props.content : '',
-    };
-}
-
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
 
 export default function BuilderEdit({
     activeTheme,
@@ -382,8 +151,8 @@ export default function BuilderEdit({
 
     // Fallback standalone preview document (used when no permalink URL is available)
     const previewDocument = useMemo(
-        () => (previewUrl ? '' : buildPreviewDocument(canvasItems, state.ast.css, state.ast.js)),
-        [canvasItems, state.ast.css, state.ast.js, previewUrl],
+        () => (previewUrl ? '' : buildPreviewDocument(canvasItems, buildEffectivePageCss(nodes, state.ast.css), state.ast.js)),
+        [canvasItems, nodes, state.ast.css, state.ast.js, previewUrl],
     );
     const fullPageHtml = useMemo(
         () => formatHtmlForDisplay(renderCleanPageContent(nodes, rootNodeId)),
@@ -573,7 +342,7 @@ export default function BuilderEdit({
     }, [actions, codeDialogNodeId, codeDialogValue, nodes]);
 
     const handleUpdateElementField = useCallback(
-        (field: 'id' | 'className' | 'href' | 'textContent', value: string) => {
+        (field: 'id' | 'className' | 'href' | 'textContent' | 'target' | 'rel' | 'buttonType' | 'disabled', value: string) => {
             if (!selectedItemId) {
                 return;
             }
@@ -602,11 +371,69 @@ export default function BuilderEdit({
                 return;
             }
 
+            if (field === 'target') {
+                actions.updateNode(selectedItemId, {
+                    props: { attr_target: value },
+                });
+
+                return;
+            }
+
+            if (field === 'rel') {
+                actions.updateNode(selectedItemId, {
+                    props: { attr_rel: value },
+                });
+
+                return;
+            }
+
+            if (field === 'buttonType') {
+                actions.updateNode(selectedItemId, {
+                    props: { attr_type: value },
+                });
+
+                return;
+            }
+
+            if (field === 'disabled') {
+                actions.updateNode(selectedItemId, {
+                    props: { attr_disabled: value === '' ? '' : 'true' },
+                });
+
+                return;
+            }
+
             actions.updateNode(selectedItemId, {
                 className: value,
             });
         },
         [actions, selectedItemId],
+    );
+
+    const handleUpdateElementInteractiveStyle = useCallback(
+        (stateKey: 'hoverStyles' | 'focusStyles', field: keyof BuilderElementStyleValues, value: string) => {
+            if (!selectedItemId || !selectedNode) {
+                return;
+            }
+
+            const existingValue = selectedNode.props[stateKey];
+            const nextStyles = typeof existingValue === 'object' && existingValue !== null
+                ? { ...(existingValue as Record<string, string>) }
+                : {};
+
+            if (value.trim() === '') {
+                delete nextStyles[field];
+            } else {
+                nextStyles[field] = value;
+            }
+
+            actions.updateNode(selectedItemId, {
+                props: {
+                    [stateKey]: nextStyles,
+                },
+            });
+        },
+        [actions, selectedItemId, selectedNode],
     );
 
     const handleUpdateElementStyle = useCallback(
@@ -679,6 +506,11 @@ export default function BuilderEdit({
           ? 'CSS'
           : 'JS';
 
+    const handlePreviewLoad = useCallback((): void => {
+        iframeReadyRef.current = true;
+        setPreviewLoadedAt(Date.now());
+    }, []);
+
     useEffect(() => {
         setFooterEditorDrafts((current) => {
             const previousSources = previousFooterEditorSourcesRef.current;
@@ -704,10 +536,11 @@ export default function BuilderEdit({
         setIsSaving(true);
 
         const flattenedHtml = renderCleanPageContent(nodes, rootNodeId);
+        const effectiveCss = buildEffectivePageCss(nodes, state.ast.css);
 
         const payload = {
             content: flattenedHtml,
-            css: state.ast.css,
+            css: effectiveCss,
             js: state.ast.js,
             format: 'pagebuilder',
             builder_state: {
@@ -1185,180 +1018,27 @@ export default function BuilderEdit({
 
                         {/* Center: Canvas */}
                         <ResizablePanel id="center" defaultSize="70%" minSize="40%">
-                            <div className="flex h-full min-w-0 flex-col">
-                                <div className="flex min-h-0 flex-1 flex-col overflow-hidden border border-border/60 border-b-0 bg-background">
-                                    {footerEditorOpen && footerEditorFullscreen ? (
-                                        <div className="flex min-h-0 flex-1 flex-col">
-                                            <div className="flex items-center justify-between border-b border-border/60 px-2 py-1">
-                                                <div className="flex items-center gap-1">
-                                                    <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Editor</span>
-                                                    <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-foreground/80">
-                                                        {footerEditorTitle}
-                                                    </span>
-                                                </div>
-                                                <div className="flex items-center gap-1">
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        onClick={handleApplyFooterEditor}
-                                                        disabled={!footerEditorIsDirty}
-                                                        className="h-6 px-2.5 text-[11px]"
-                                                    >
-                                                        Apply
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon-sm"
-                                                        onClick={handleToggleFooterEditorFullscreen}
-                                                        aria-label="Exit fullscreen editor"
-                                                    >
-                                                        <Minimize2Icon className="size-3.5" />
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon-sm"
-                                                        onClick={handleCloseFooterEditor}
-                                                        aria-label="Close editor"
-                                                    >
-                                                        <XIcon className="size-3.5" />
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                            <div className="min-h-0 flex-1" data-builder-shortcut-scope="footer-code">
-                                                <MonacoEditor
-                                                    value={footerEditorValue}
-                                                    onChange={handleFooterEditorValueChange}
-                                                    language={footerEditorLanguage}
-                                                    height="100%"
-                                                />
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <>
-                                            {footerEditorOpen ? (
-                                                <ResizablePanelGroup orientation="vertical" className="min-h-0 flex-1">
-                                                    <ResizablePanel defaultSize="58%" minSize="25%">
-                                                        <div className="relative h-full min-h-0 overflow-hidden bg-[#f0f2f5] p-1.5 sm:p-2 lg:bg-transparent lg:p-0">
-                                                            <BuilderPreviewPanel
-                                                                deviceMode={deviceMode}
-                                                                iframeRef={iframeRef}
-                                                                onLoad={() => {
-                                                                    iframeReadyRef.current = true;
-                                                                    setPreviewLoadedAt(Date.now());
-                                                                }}
-                                                                previewUrl={previewUrl}
-                                                                previewHtml={previewDocument || undefined}
-                                                                title={`Builder preview for ${page.title}`}
-                                                            />
-                                                            {/* Overlay container — positioned over the iframe */}
-                                                            <div ref={overlayContainerRef} className="pointer-events-none absolute inset-0 z-50" />
-                                                        </div>
-                                                    </ResizablePanel>
-                                                    <ResizableHandle withHandle />
-                                                    <ResizablePanel defaultSize="42%" minSize="18%">
-                                                        <div className="flex h-full min-h-0 flex-col border-t border-border/60">
-                                                            <div className="flex items-center justify-between border-b border-border/60 px-2 py-1">
-                                                                <div className="flex items-center gap-1">
-                                                                    <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Editor</span>
-                                                                    <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-foreground/80">
-                                                                        {footerEditorTitle}
-                                                                    </span>
-                                                                </div>
-                                                                <div className="flex items-center gap-1">
-                                                                    <Button
-                                                                        variant="outline"
-                                                                        size="sm"
-                                                                        onClick={handleApplyFooterEditor}
-                                                                        disabled={!footerEditorIsDirty}
-                                                                        className="h-6 px-2.5 text-[11px]"
-                                                                    >
-                                                                        Apply
-                                                                    </Button>
-                                                                    <Button
-                                                                        variant="ghost"
-                                                                        size="icon-sm"
-                                                                        onClick={handleToggleFooterEditorFullscreen}
-                                                                        aria-label="Expand editor"
-                                                                    >
-                                                                        <ExpandIcon className="size-3.5" />
-                                                                    </Button>
-                                                                    <Button
-                                                                        variant="ghost"
-                                                                        size="icon-sm"
-                                                                        onClick={handleCloseFooterEditor}
-                                                                        aria-label="Close editor"
-                                                                    >
-                                                                        <XIcon className="size-3.5" />
-                                                                    </Button>
-                                                                </div>
-                                                            </div>
-                                                            <div className="min-h-0 flex-1" data-builder-shortcut-scope="footer-code">
-                                                                <MonacoEditor
-                                                                    value={footerEditorValue}
-                                                                    onChange={handleFooterEditorValueChange}
-                                                                    language={footerEditorLanguage}
-                                                                    height="100%"
-                                                                />
-                                                            </div>
-                                                        </div>
-                                                    </ResizablePanel>
-                                                </ResizablePanelGroup>
-                                            ) : (
-                                                <div className="relative min-h-0 flex-1 overflow-hidden bg-[#f0f2f5] p-1.5 sm:p-2 lg:bg-transparent lg:p-0">
-                                                    <BuilderPreviewPanel
-                                                        deviceMode={deviceMode}
-                                                        iframeRef={iframeRef}
-                                                        onLoad={() => {
-                                                            iframeReadyRef.current = true;
-                                                            setPreviewLoadedAt(Date.now());
-                                                        }}
-                                                        previewUrl={previewUrl}
-                                                        previewHtml={previewDocument || undefined}
-                                                        title={`Builder preview for ${page.title}`}
-                                                    />
-                                                    {/* Overlay container — positioned over the iframe */}
-                                                    <div ref={overlayContainerRef} className="pointer-events-none absolute inset-0 z-50" />
-                                                </div>
-                                            )}
-                                        </>
-                                    )}
-
-                                    <div className="flex items-center justify-between border-t border-border/60 bg-background px-2 py-1">
-                                        <div className="flex items-center gap-1">
-                                            <Button
-                                                variant={footerEditorOpen && footerEditorTab === 'html' ? 'secondary' : 'ghost'}
-                                                size="sm"
-                                                onClick={() => handleOpenFooterEditor('html')}
-                                                className="h-6 gap-1 px-2 text-[11px]"
-                                            >
-                                                <CodeXmlIcon className="size-3" />
-                                                HTML
-                                            </Button>
-                                            <Button
-                                                variant={footerEditorOpen && footerEditorTab === 'css' ? 'secondary' : 'ghost'}
-                                                size="sm"
-                                                onClick={() => handleOpenFooterEditor('css')}
-                                                className="h-6 gap-1 px-2 text-[11px]"
-                                            >
-                                                <PaintbrushIcon className="size-3" />
-                                                CSS
-                                            </Button>
-                                            <Button
-                                                variant={footerEditorOpen && footerEditorTab === 'js' ? 'secondary' : 'ghost'}
-                                                size="sm"
-                                                onClick={() => handleOpenFooterEditor('js')}
-                                                className="h-6 gap-1 px-2 text-[11px]"
-                                            >
-                                                <BracesIcon className="size-3" />
-                                                JS
-                                            </Button>
-                                        </div>
-                                        <span className="text-[10px] text-muted-foreground">
-                                            {footerEditorOpen ? `${footerEditorTitle} editor open` : 'Open code editor'}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
+                            <BuilderCenterWorkspace
+                                deviceMode={deviceMode}
+                                iframeRef={iframeRef}
+                                overlayContainerRef={overlayContainerRef}
+                                previewUrl={previewUrl}
+                                previewDocument={previewDocument}
+                                pageTitle={page.title}
+                                footerEditorOpen={footerEditorOpen}
+                                footerEditorFullscreen={footerEditorFullscreen}
+                                footerEditorTab={footerEditorTab}
+                                footerEditorTitle={footerEditorTitle}
+                                footerEditorLanguage={footerEditorLanguage}
+                                footerEditorValue={footerEditorValue}
+                                footerEditorIsDirty={footerEditorIsDirty}
+                                onPreviewLoad={handlePreviewLoad}
+                                onOpenFooterEditor={handleOpenFooterEditor}
+                                onCloseFooterEditor={handleCloseFooterEditor}
+                                onToggleFooterEditorFullscreen={handleToggleFooterEditorFullscreen}
+                                onFooterEditorValueChange={handleFooterEditorValueChange}
+                                onApplyFooterEditor={handleApplyFooterEditor}
+                            />
                         </ResizablePanel>
 
                         {/* Right panel: Inspector */}
@@ -1379,6 +1059,7 @@ export default function BuilderEdit({
                                 selectedElement={selectedElement}
                                 onUpdateElementField={handleUpdateElementField}
                                 onUpdateElementStyle={handleUpdateElementStyle}
+                                onUpdateElementInteractiveStyle={handleUpdateElementInteractiveStyle}
                                 onSelectNode={handleSelectNode}
                                 onMoveNode={handleMoveNode}
                                 onDuplicateNode={handleDuplicateNode}
@@ -1388,26 +1069,13 @@ export default function BuilderEdit({
                     </ResizablePanelGroup>
                 </div>
 
-                {/* Code editor dialog */}
-                <Dialog open={codeDialogNodeId !== null} onOpenChange={(open) => { if (!open) setCodeDialogNodeId(null); }}>
-                    <DialogContent className="flex h-[calc(100vh-4rem)] max-h-[calc(100vh-4rem)] flex-col gap-3 p-3 sm:w-[min(calc(100vw-4rem),72rem)] sm:max-w-6xl">
-                        <DialogHeader className="gap-1">
-                            <DialogTitle>Edit Element Code</DialogTitle>
-                        </DialogHeader>
-                        <div className="min-h-0 flex-1" data-builder-shortcut-scope="element-code">
-                            <MonacoEditor
-                                value={codeDialogValue}
-                                onChange={setCodeDialogValue}
-                                language="html"
-                                height="100%"
-                            />
-                        </div>
-                        <DialogFooter className="-mx-3 -mb-3 gap-2 rounded-b-xl border-t bg-muted/35 px-3 py-2 sm:px-3">
-                            <Button variant="outline" onClick={() => setCodeDialogNodeId(null)}>Cancel</Button>
-                            <Button onClick={handleApplyCode}>Apply</Button>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
+                <BuilderCodeEditorDialog
+                    open={codeDialogNodeId !== null}
+                    value={codeDialogValue}
+                    onChange={setCodeDialogValue}
+                    onClose={() => setCodeDialogNodeId(null)}
+                    onApply={handleApplyCode}
+                />
 
                 {/* Mobile sidebar sheet */}
                 <Sheet open={mobileSidebarOpen} onOpenChange={setMobileSidebarOpen}>

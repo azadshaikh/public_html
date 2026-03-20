@@ -5,10 +5,13 @@ export type BuilderElementPath = number[];
 export type BuilderElementStyleValues = {
     backgroundColor: string;
     borderRadius: string;
+    boxShadow: string;
     color: string;
     fontSize: string;
     fontWeight: string;
     height: string;
+    letterSpacing: string;
+    lineHeight: string;
     marginBottom: string;
     marginLeft: string;
     marginRight: string;
@@ -19,6 +22,7 @@ export type BuilderElementStyleValues = {
     paddingRight: string;
     paddingTop: string;
     textAlign: string;
+    textDecoration: string;
     width: string;
 };
 
@@ -31,11 +35,18 @@ export type BuilderEditableElement = {
     className: string;
     id: string;
     href: string;
+    target: string;
+    rel: string;
+    buttonType: string;
+    disabled: boolean;
     src: string;
     alt: string;
     styles: BuilderElementStyleValues;
+    hoverStyles: Record<string, string>;
+    focusStyles: Record<string, string>;
     canEditText: boolean;
     isLink: boolean;
+    isButton: boolean;
     isImage: boolean;
 };
 
@@ -79,10 +90,13 @@ const EDITABLE_TAGS = new Set([
 const DEFAULT_STYLE_VALUES: BuilderElementStyleValues = {
     backgroundColor: '',
     borderRadius: '',
+    boxShadow: '',
     color: '',
     fontSize: '',
     fontWeight: '',
     height: '',
+    letterSpacing: '',
+    lineHeight: '',
     marginBottom: '',
     marginLeft: '',
     marginRight: '',
@@ -93,6 +107,7 @@ const DEFAULT_STYLE_VALUES: BuilderElementStyleValues = {
     paddingRight: '',
     paddingTop: '',
     textAlign: '',
+    textDecoration: '',
     width: '',
 };
 
@@ -145,10 +160,13 @@ function readStyleValues(element: HTMLElement): BuilderElementStyleValues {
     return {
         backgroundColor: element.style.backgroundColor,
         borderRadius: element.style.borderRadius,
+        boxShadow: element.style.boxShadow,
         color: element.style.color,
         fontSize: element.style.fontSize,
         fontWeight: element.style.fontWeight,
         height: element.style.height,
+        letterSpacing: element.style.letterSpacing,
+        lineHeight: element.style.lineHeight,
         marginBottom: element.style.marginBottom,
         marginLeft: element.style.marginLeft,
         marginRight: element.style.marginRight,
@@ -159,6 +177,7 @@ function readStyleValues(element: HTMLElement): BuilderElementStyleValues {
         paddingRight: element.style.paddingRight,
         paddingTop: element.style.paddingTop,
         textAlign: element.style.textAlign,
+        textDecoration: element.style.textDecoration,
         width: element.style.width,
     };
 }
@@ -237,20 +256,27 @@ export function collectEditableElements(
 
             results.push({
                 alt: element.getAttribute('alt') ?? '',
+                buttonType: element.getAttribute('type') ?? '',
                 canEditText:
                     hasDirectTextContent(element) ||
                     element.children.length === 0,
                 className: element.getAttribute('class') ?? '',
+                disabled: element.hasAttribute('disabled'),
+                focusStyles: {},
                 href: element.getAttribute('href') ?? '',
+                hoverStyles: {},
                 id: element.id,
+                isButton: element.tagName.toLowerCase() === 'button',
                 isImage: element.tagName.toLowerCase() === 'img',
                 isLink: element.tagName.toLowerCase() === 'a',
                 label: buildElementLabel(element),
                 path,
                 pathKey: toPathKey(path),
+                rel: element.getAttribute('rel') ?? '',
                 src: element.getAttribute('src') ?? '',
                 styles: readStyleValues(element),
                 tagName: element.tagName.toLowerCase(),
+                target: element.getAttribute('target') ?? '',
                 textContent:
                     element.textContent?.replace(/\s+/g, ' ').trim() ?? '',
             });
