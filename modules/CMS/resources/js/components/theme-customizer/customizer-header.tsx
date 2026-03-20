@@ -59,43 +59,32 @@ export function ThemeCustomizerHeader({
 }: ThemeCustomizerHeaderProps) {
     return (
         <header className="border-b border-border/70 bg-white/80 px-3 py-2 backdrop-blur sm:px-4">
-            <div className="flex items-center gap-2.5">
-                <Button variant="outline" size="sm" asChild>
-                    <a href={onBackHref}>
-                        <ArrowLeftIcon data-icon="inline-start" />
-                        Back
-                    </a>
-                </Button>
-
-                <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                        <h1 className="truncate text-sm font-semibold text-foreground sm:text-base">
-                            Theme Customizer
-                        </h1>
-                        <Badge variant="secondary" className="hidden sm:inline-flex">
-                            {activeThemeName}
-                        </Badge>
-                    </div>
-                    <p className="hidden text-xs text-muted-foreground md:block">
-                        Refined controls for theme identity, style, and live preview workflows.
-                    </p>
-                </div>
-
-                <div className="hidden items-center gap-1.5 lg:flex">
-                    <Button
-                        variant="outline"
-                        size="icon-sm"
-                        onClick={onToggleSidebar}
-                        title={sidebarCollapsed ? 'Show settings' : 'Hide settings'}
-                    >
-                        {sidebarCollapsed ? <PanelLeftOpenIcon /> : <PanelLeftCloseIcon />}
+            <div className="relative flex items-center justify-between gap-3">
+                <div className="flex min-w-0 flex-1 items-center gap-2.5">
+                    <Button variant="outline" size="sm" asChild>
+                        <a href={onBackHref}>
+                            <ArrowLeftIcon data-icon="inline-start" />
+                            Back
+                        </a>
                     </Button>
+
+                    <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                            <h1 className="truncate text-sm font-semibold text-foreground sm:text-base">
+                                Theme Customizer
+                            </h1>
+                            <Badge variant="secondary" className="hidden sm:inline-flex">
+                                {activeThemeName}
+                            </Badge>
+                        </div>
+                    </div>
                 </div>
 
-                <div className="hidden items-center gap-2 md:flex">
+                <div className="pointer-events-none absolute left-1/2 hidden -translate-x-1/2 md:flex">
                     <ToggleGroup
                         type="single"
                         size="sm"
+                        className="pointer-events-auto"
                         value={deviceMode}
                         onValueChange={(value) => {
                             if (value) {
@@ -115,7 +104,18 @@ export function ThemeCustomizerHeader({
                     </ToggleGroup>
                 </div>
 
-                <div className="flex items-center gap-1.5">
+                <div className="flex flex-1 items-center justify-end gap-1.5">
+                    <div className="hidden items-center gap-1.5 lg:flex">
+                        <Button
+                            variant="outline"
+                            size="icon-sm"
+                            onClick={onToggleSidebar}
+                            title={sidebarCollapsed ? 'Show settings' : 'Hide settings'}
+                        >
+                            {sidebarCollapsed ? <PanelLeftOpenIcon /> : <PanelLeftCloseIcon />}
+                        </Button>
+                    </div>
+
                     <Button
                         variant="outline"
                         size="icon-sm"

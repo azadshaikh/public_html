@@ -536,7 +536,7 @@ export default function ThemeCustomizerIndex({
                     onSave={() => void handleSave()}
                 />
 
-                <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[minmax(0,var(--customizer-sidebar-width))_minmax(0,1fr)]" style={{ ['--customizer-sidebar-width' as string]: sidebarCollapsed ? '0px' : '360px' }}>
+                <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[minmax(0,var(--customizer-sidebar-width))_minmax(0,1fr)]" style={{ ['--customizer-sidebar-width' as string]: sidebarCollapsed ? '0px' : '320px' }}>
                     <aside className={cn('hidden min-h-0 border-r border-border/70 bg-white/75 backdrop-blur lg:block', sidebarCollapsed && 'overflow-hidden border-r-0')}>
                         {!sidebarCollapsed ? (
                             <ThemeCustomizerSidebar
@@ -555,7 +555,12 @@ export default function ThemeCustomizerIndex({
                         ) : null}
                     </aside>
 
-                    <div className="min-h-0 overflow-hidden bg-[#f3f5f8] p-2 sm:p-3 lg:p-4">
+                    <div
+                        className={cn(
+                            'min-h-0 overflow-hidden bg-[#f3f5f8]',
+                            deviceMode === 'desktop' ? 'p-0' : 'p-2 sm:p-3 lg:p-4',
+                        )}
+                    >
                         <ThemeCustomizerPreviewPanel
                             deviceMode={deviceMode}
                             iframeRef={iframeRef}
@@ -567,12 +572,10 @@ export default function ThemeCustomizerIndex({
             </div>
 
             <Sheet open={mobileSidebarOpen} onOpenChange={setMobileSidebarOpen}>
-                <SheetContent side="left" className="w-[92vw] max-w-[420px] p-0 sm:max-w-[420px]">
+                <SheetContent side="left" className="w-[92vw] max-w-[380px] p-0 sm:max-w-[380px]">
                     <SheetHeader className="border-b border-border/70 pb-4">
                         <SheetTitle>Theme settings</SheetTitle>
-                        <SheetDescription>
-                            Adjust the active theme and watch the preview update in real time.
-                        </SheetDescription>
+                        <SheetDescription>Compact controls for the active theme.</SheetDescription>
                     </SheetHeader>
                     <div className="min-h-0 flex-1">
                         <ThemeCustomizerSidebar

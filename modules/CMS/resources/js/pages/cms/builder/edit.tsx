@@ -1,5 +1,13 @@
 'use client';
 
+import {
+    BracesIcon,
+    CodeXmlIcon,
+    ExpandIcon,
+    Minimize2Icon,
+    PaintbrushIcon,
+    XIcon,
+} from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { MonacoEditor } from '@/components/code-editor/monaco-editor';
 import { showAppToast } from '@/components/forms/form-success-toast';
@@ -19,21 +27,19 @@ import {
     SheetHeader,
     SheetTitle,
 } from '@/components/ui/sheet';
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
+import { type GroupImperativeHandle } from 'react-resizable-panels';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { useDirtyFormGuard } from '@/hooks/use-dirty-form-guard';
 import { cn } from '@/lib/utils';
-import { BuilderCanvasToolbar } from '../../../components/builder/builder-canvas-toolbar';
-import { BuilderComponentsPanel } from '../../../components/builder/builder-components-panel';
+import { BuilderLeftSidebar } from '../../../components/builder/builder-left-sidebar';
 import { BuilderHeader } from '../../../components/builder/builder-header';
 import {
-    collectEditableElements,
-    findEditableElement,
-    updateItemElement,
-    type BuilderElementPath,
+    type BuilderEditableElement,
     type BuilderElementStyleValues,
 } from '../../../components/builder/builder-dom';
 import { BuilderPreviewPanel } from '../../../components/builder/builder-preview-panel';
-import { BuilderPropertiesPanel } from '../../../components/builder/builder-properties-panel';
+import { BuilderRightSidebar } from '../../../components/builder/builder-right-sidebar';
 import {
     buildPreviewDocument,
     extractErrorMessage,
@@ -42,7 +48,7 @@ import {
 } from '../../../components/builder/builder-utils';
 import { ROOT_NODE_ID, type AstNode } from '../../../components/builder/core/ast-types';
 import { parseHtmlToAst, createEmptyPageAst, getNode, serializePageAst } from '../../../components/builder/core/ast-helpers';
-import { renderCleanNodeToHtml, renderCleanPageContent, renderNodeToHtml, renderPageContent } from '../../../components/builder/core/ast-to-html';
+import { renderCleanNodeToHtml, renderCleanPageContent, renderNodeToHtml } from '../../../components/builder/core/ast-to-html';
 import { useBuilderStore } from '../../../components/builder/core/use-builder-store';
 import { getElementByAstId, syncAstToIframe } from '../../../components/builder/core/iframe-sync';
 import { BuilderOverlay, type OverlayCallbacks } from '../../../components/builder/core/overlay-engine';
@@ -170,6 +176,109 @@ function astToCanvasItems(nodes: Record<string, import('../../../components/buil
     });
 }
 
+const BUILDER_PANEL_LAYOUT_STORAGE_KEY = 'cms-builder-panel-layout';
+const BUILDER_PANEL_WIDTHS_STORAGE_KEY = 'cms-builder-panel-widths';
+const DEFAULT_LEFT_PANEL_SIZE = 15;
+const DEFAULT_RIGHT_PANEL_SIZE = 15;
+const MIN_SIDEBAR_PERCENTAGE = 12;
+const MAX_SIDEBAR_PERCENTAGE = 25;
+
+type BuilderPanelLayout = {
+    left: number;
+    center: number;
+    right: number;
+};
+
+type FooterEditorTab = 'html' | 'css' | 'js';
+type FooterEditorDrafts = Record<FooterEditorTab, string>;
+
+function clampSidebarPercentage(value: number): number {
+    return Math.min(MAX_SIDEBAR_PERCENTAGE, Math.max(MIN_SIDEBAR_PERCENTAGE, value));
+}
+
+function normalizePanelLayout(layout?: Partial<BuilderPanelLayout> | null): BuilderPanelLayout {
+    const left = layout?.left === 0 ? 0 : clampSidebarPercentage(layout?.left ?? DEFAULT_LEFT_PANEL_SIZE);
+    const right = layout?.right === 0 ? 0 : clampSidebarPercentage(layout?.right ?? DEFAULT_RIGHT_PANEL_SIZE);
+
+    return {
+        left,
+        center: 100 - left - right,
+        right,
+    };
+}
+
+function isStoredPanelLayout(value: unknown): value is Partial<BuilderPanelLayout> {
+    if (!value || typeof value !== 'object') {
+        return false;
+    }
+
+    const candidate = value as Record<string, unknown>;
+
+    return ['left', 'center', 'right'].some((key) => typeof candidate[key] === 'number');
+}
+
+function buildAstFromPageContent(html: string, css: string, js: string) {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(`<body>${html}</body>`, 'text/html');
+    const ast = createEmptyPageAst();
+
+    ast.css = css;
+    ast.js = js;
+
+    for (const child of Array.from(doc.body.children)) {
+        const parsed = parseHtmlToAst(child.outerHTML, 'section');
+        const parsedRoot = parsed.nodes[parsed.rootId];
+
+        if (!parsedRoot) {
+            continue;
+        }
+
+        parsedRoot.parentId = ROOT_NODE_ID;
+        ast.nodes[parsed.rootId] = parsedRoot;
+        ast.nodes[ROOT_NODE_ID].childIds.push(parsed.rootId);
+
+        for (const [id, node] of Object.entries(parsed.nodes)) {
+            if (id !== parsed.rootId) {
+                ast.nodes[id] = node;
+            }
+        }
+    }
+
+    return ast;
+}
+
+function toEditableElement(node: AstNode): BuilderEditableElement {
+    return {
+        alt: typeof node.props.alt === 'string' ? node.props.alt : '',
+        canEditText: false,
+        className: node.className,
+        href: typeof node.props.href === 'string' ? node.props.href : '',
+        id: typeof node.props.attr_id === 'string' ? node.props.attr_id : '',
+        isImage: node.type === 'image',
+        isLink: node.type === 'link',
+        label: node.displayName,
+        path: [],
+        pathKey: node.id,
+        src: typeof node.props.src === 'string' ? node.props.src : '',
+        styles: {
+            backgroundColor: node.styles.backgroundColor ?? '',
+            borderRadius: node.styles.borderRadius ?? '',
+            color: node.styles.color ?? '',
+            fontSize: node.styles.fontSize ?? '',
+            fontWeight: node.styles.fontWeight ?? '',
+            marginBottom: node.styles.marginBottom ?? '',
+            marginTop: node.styles.marginTop ?? '',
+            paddingBottom: node.styles.paddingBottom ?? '',
+            paddingLeft: node.styles.paddingLeft ?? '',
+            paddingRight: node.styles.paddingRight ?? '',
+            paddingTop: node.styles.paddingTop ?? '',
+            textAlign: node.styles.textAlign ?? '',
+        },
+        tagName: (node.tagName ?? node.type).toLowerCase(),
+        textContent: typeof node.props.content === 'string' ? node.props.content : '',
+    };
+}
+
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
@@ -190,14 +299,25 @@ export default function BuilderEdit({
     const [isSaving, setIsSaving] = useState(false);
     const [codeDialogNodeId, setCodeDialogNodeId] = useState<string | null>(null);
     const [codeDialogValue, setCodeDialogValue] = useState('');
-    const [selectedElementPath, setSelectedElementPath] =
-        useState<BuilderElementPath>([]);
+    const [footerEditorTab, setFooterEditorTab] = useState<FooterEditorTab>('html');
+    const [footerEditorOpen, setFooterEditorOpen] = useState(false);
+    const [footerEditorFullscreen, setFooterEditorFullscreen] = useState(false);
+    const [footerEditorDrafts, setFooterEditorDrafts] = useState<FooterEditorDrafts>({
+        html: '',
+        css: '',
+        js: '',
+    });
     const iframeRef = useRef<HTMLIFrameElement | null>(null);
     const overlayContainerRef = useRef<HTMLDivElement | null>(null);
     const [previewLoadedAt, setPreviewLoadedAt] = useState(0);
     const iframeReadyRef = useRef(false);
     const [addedBadge, setAddedBadge] = useState<string | null>(null);
     const addedBadgeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const panelGroupRef = useRef<GroupImperativeHandle | null>(null);
+    const lastSidebarWidthsRef = useRef({
+        left: DEFAULT_LEFT_PANEL_SIZE,
+        right: DEFAULT_RIGHT_PANEL_SIZE,
+    });
 
     // Imperative refs for interaction subsystems
     const overlayRef = useRef<BuilderOverlay | null>(null);
@@ -250,64 +370,90 @@ export default function BuilderEdit({
 
     const selectedItemId = events.selectedIds[0] ?? null;
 
-    // Resolve the selected node to its top-level section ancestor (direct child of ROOT)
-    // so the properties panel can find a matching canvas item.
-    const resolvedSelectedItemId = useMemo(() => {
-        if (!selectedItemId) {
-            return null;
-        }
-
-        // Walk up the AST tree until we find a node whose parentId is rootNodeId
-        let currentId: string | null = selectedItemId;
-
-        while (currentId) {
-            const node: AstNode | undefined = nodes[currentId];
-
-            if (!node) {
-                return selectedItemId;
-            }
-
-            if (node.parentId === rootNodeId) {
-                return currentId;
-            }
-
-            currentId = node.parentId;
-        }
-
-        return selectedItemId;
-    }, [nodes, selectedItemId, rootNodeId]);
-
-    const selectedItem = useMemo(
-        () => canvasItems.find((item) => item.uid === resolvedSelectedItemId) ?? null,
-        [canvasItems, resolvedSelectedItemId],
-    );
-
-    const editableElements = useMemo(
-        () => (selectedItem ? collectEditableElements(selectedItem.html) : []),
-        [selectedItem],
-    );
-
     const selectedElement = useMemo(() => {
-        if (!selectedItem) {
-            return null;
-        }
-
-        return (
-            findEditableElement(selectedItem.html, selectedElementPath) ??
-            editableElements[0] ??
-            null
-        );
-    }, [editableElements, selectedElementPath, selectedItem]);
+        return selectedNode ? toEditableElement(selectedNode) : null;
+    }, [selectedNode]);
 
     // Fallback standalone preview document (used when no permalink URL is available)
     const previewDocument = useMemo(
         () => (previewUrl ? '' : buildPreviewDocument(canvasItems, state.ast.css, state.ast.js)),
         [canvasItems, state.ast.css, state.ast.js, previewUrl],
     );
+    const fullPageHtml = useMemo(
+        () => formatHtmlForDisplay(renderCleanPageContent(nodes, rootNodeId)),
+        [nodes, rootNodeId],
+    );
+    const footerEditorSources = useMemo<FooterEditorDrafts>(() => ({
+        html: fullPageHtml,
+        css: state.ast.css,
+        js: state.ast.js,
+    }), [fullPageHtml, state.ast.css, state.ast.js]);
+    const previousFooterEditorSourcesRef = useRef<FooterEditorDrafts | null>(null);
 
     const dirtyGuard = useDirtyFormGuard({
         enabled: isDirty,
     });
+
+    const handlePanelLayoutChanged = useCallback((layout: { [panelId: string]: number }): void => {
+        const normalizedLayout = normalizePanelLayout(layout);
+
+        setLeftPanelCollapsed(normalizedLayout.left === 0);
+        setRightPanelCollapsed(normalizedLayout.right === 0);
+
+        if (normalizedLayout.left > 0) {
+            lastSidebarWidthsRef.current.left = normalizedLayout.left;
+        }
+
+        if (normalizedLayout.right > 0) {
+            lastSidebarWidthsRef.current.right = normalizedLayout.right;
+        }
+
+        if (typeof window !== 'undefined') {
+            window.localStorage.setItem(BUILDER_PANEL_LAYOUT_STORAGE_KEY, JSON.stringify(normalizedLayout));
+            window.localStorage.setItem(BUILDER_PANEL_WIDTHS_STORAGE_KEY, JSON.stringify(lastSidebarWidthsRef.current));
+        }
+    }, []);
+
+    const setPanelLayout = useCallback((layout: BuilderPanelLayout): void => {
+        panelGroupRef.current?.setLayout(layout);
+        handlePanelLayoutChanged(layout);
+    }, [handlePanelLayoutChanged]);
+
+    const handleToggleLeftPanel = useCallback((): void => {
+        const currentLayout = normalizePanelLayout(panelGroupRef.current?.getLayout());
+
+        if (currentLayout.left === 0) {
+            setPanelLayout(normalizePanelLayout({
+                left: lastSidebarWidthsRef.current.left,
+                right: currentLayout.right,
+            }));
+
+            return;
+        }
+
+        setPanelLayout(normalizePanelLayout({
+            left: 0,
+            right: currentLayout.right,
+        }));
+    }, [setPanelLayout]);
+
+    const handleToggleRightPanel = useCallback((): void => {
+        const currentLayout = normalizePanelLayout(panelGroupRef.current?.getLayout());
+
+        if (currentLayout.right === 0) {
+            setPanelLayout(normalizePanelLayout({
+                left: currentLayout.left,
+                right: lastSidebarWidthsRef.current.right,
+            }));
+
+            return;
+        }
+
+        setPanelLayout(normalizePanelLayout({
+            left: currentLayout.left,
+            right: 0,
+        }));
+    }, [setPanelLayout]);
 
     // -----------------------------------------------------------------------
     // Handlers
@@ -344,13 +490,13 @@ export default function BuilderEdit({
         dragDropRef.current?.startPanelDrag(item.html, activeLibrary === 'sections' ? 'section' : 'block', item.name);
     }, [activeLibrary]);
 
-    const handleMoveSelectedItem = useCallback(
-        (direction: 'up' | 'down') => {
-            if (!selectedItemId) {
+    const handleMoveNode = useCallback(
+        (nodeId: string, direction: 'up' | 'down') => {
+            if (!nodeId) {
                 return;
             }
 
-            const node = getNode(nodes, selectedItemId);
+            const node = getNode(nodes, nodeId);
 
             if (!node?.parentId) {
                 return;
@@ -362,28 +508,29 @@ export default function BuilderEdit({
                 return;
             }
 
-            const idx = parent.childIds.indexOf(selectedItemId);
+            const idx = parent.childIds.indexOf(nodeId);
             const newIdx = direction === 'up' ? idx - 1 : idx + 1;
 
             if (newIdx >= 0 && newIdx < parent.childIds.length) {
-                actions.reorderChild(node.parentId, selectedItemId, newIdx);
-                scrollIframeToNode(selectedItemId);
+                actions.reorderChild(node.parentId, nodeId, newIdx);
+                scrollIframeToNode(nodeId);
             }
         },
-        [actions, nodes, selectedItemId, scrollIframeToNode],
+        [actions, nodes, scrollIframeToNode],
     );
 
-    const handleDuplicateSelectedItem = useCallback(() => {
-        if (selectedItemId) {
-            actions.duplicateNode(selectedItemId);
-        }
-    }, [actions, selectedItemId]);
+    const handleDuplicateNode = useCallback((nodeId: string) => {
+        actions.duplicateNode(nodeId);
+    }, [actions]);
 
-    const handleRemoveSelectedItem = useCallback(() => {
-        if (selectedItemId) {
-            actions.deleteNode(selectedItemId);
-        }
-    }, [actions, selectedItemId]);
+    const handleRemoveNode = useCallback((nodeId: string) => {
+        actions.deleteNode(nodeId);
+    }, [actions]);
+
+    const handleSelectNode = useCallback((nodeId: string) => {
+        actions.setSelected([nodeId]);
+        scrollIframeToNode(nodeId);
+    }, [actions, scrollIframeToNode]);
 
     const handleViewCode = useCallback(
         (nodeId: string) => {
@@ -419,92 +566,117 @@ export default function BuilderEdit({
         setCodeDialogNodeId(null);
     }, [actions, codeDialogNodeId, codeDialogValue, nodes]);
 
-    const handleUpdateSelectedItemHtml = useCallback(
-        (value: string) => {
+    const handleUpdateElementField = useCallback(
+        (field: 'id' | 'className', value: string) => {
             if (!selectedItemId) {
                 return;
             }
 
-            // Re-parse HTML and update node props from the parsed root
-            const tempAst = parseHtmlToAst(value);
-            const tempRoot = tempAst.nodes[tempAst.rootId];
-
-            if (tempRoot) {
+            if (field === 'id') {
                 actions.updateNode(selectedItemId, {
-                    type: tempRoot.type,
-                    displayName: tempRoot.displayName,
-                    props: tempRoot.props,
-                    styles: tempRoot.styles,
-                    className: tempRoot.className,
-                    tagName: tempRoot.tagName,
+                    props: { attr_id: value },
                 });
+
+                return;
             }
+
+            actions.updateNode(selectedItemId, {
+                className: value,
+            });
         },
         [actions, selectedItemId],
     );
 
-    const handleUpdateElementField = useCallback(
-        (
-            field: 'textContent' | 'href' | 'src' | 'alt' | 'id' | 'className',
-            value: string,
-        ) => {
-            if (!selectedItem) {
-                return;
-            }
-
-            // Use legacy DOM mutation bridge for now
-            const updated = updateItemElement(selectedItem, selectedElementPath, {
-                [field]: value,
-            });
-
-            // Re-parse the updated HTML back into AST
-            if (selectedItemId && updated.html !== selectedItem.html) {
-                const tempAst = parseHtmlToAst(updated.html);
-                const tempRoot = tempAst.nodes[tempAst.rootId];
-
-                if (tempRoot) {
-                    actions.updateNode(selectedItemId, {
-                        type: tempRoot.type,
-                        displayName: tempRoot.displayName,
-                        props: tempRoot.props,
-                        styles: tempRoot.styles,
-                        className: tempRoot.className,
-                        tagName: tempRoot.tagName,
-                    });
-                }
-            }
-        },
-        [actions, selectedElementPath, selectedItem, selectedItemId],
-    );
-
     const handleUpdateElementStyle = useCallback(
         (field: keyof BuilderElementStyleValues, value: string) => {
-            if (!selectedItem) {
+            if (!selectedItemId) {
                 return;
             }
 
-            const updated = updateItemElement(selectedItem, selectedElementPath, {
+            actions.updateNode(selectedItemId, {
                 styles: { [field]: value },
             });
+        },
+        [actions, selectedItemId],
+    );
 
-            if (selectedItemId && updated.html !== selectedItem.html) {
-                const tempAst = parseHtmlToAst(updated.html);
-                const tempRoot = tempAst.nodes[tempAst.rootId];
+    const handleOpenFooterEditor = useCallback((tab: FooterEditorTab): void => {
+        setFooterEditorTab(tab);
+        setFooterEditorOpen(true);
+        setFooterEditorFullscreen(false);
+    }, []);
 
-                if (tempRoot) {
-                    actions.updateNode(selectedItemId, {
-                        type: tempRoot.type,
-                        displayName: tempRoot.displayName,
-                        props: tempRoot.props,
-                        styles: tempRoot.styles,
-                        className: tempRoot.className,
-                        tagName: tempRoot.tagName,
-                    });
+    const handleCloseFooterEditor = useCallback((): void => {
+        setFooterEditorOpen(false);
+        setFooterEditorFullscreen(false);
+    }, []);
+
+    const handleToggleFooterEditorFullscreen = useCallback((): void => {
+        setFooterEditorFullscreen((value) => !value);
+    }, []);
+
+    const handleFooterEditorValueChange = useCallback((value: string): void => {
+        setFooterEditorDrafts((current) => ({
+            ...current,
+            [footerEditorTab]: value,
+        }));
+    }, [footerEditorTab]);
+
+    const handleApplyFooterEditor = useCallback((): void => {
+        const currentDraft = footerEditorDrafts[footerEditorTab];
+
+        if (footerEditorTab === 'css') {
+            actions.setCss(currentDraft);
+
+            return;
+        }
+
+        if (footerEditorTab === 'js') {
+            actions.setJs(currentDraft);
+
+            return;
+        }
+
+        const nextAst = buildAstFromPageContent(currentDraft, state.ast.css, state.ast.js);
+
+        actions.setAst(nextAst);
+        actions.clearSelection();
+    }, [actions, footerEditorDrafts, footerEditorTab, state.ast.css, state.ast.js]);
+
+    const footerEditorValue = footerEditorDrafts[footerEditorTab];
+
+    const footerEditorIsDirty = useMemo(() => {
+        return footerEditorValue !== footerEditorSources[footerEditorTab];
+    }, [footerEditorSources, footerEditorTab, footerEditorValue]);
+
+    const footerEditorLanguage = footerEditorTab === 'html' ? 'html' : footerEditorTab;
+
+    const footerEditorTitle = footerEditorTab === 'html'
+        ? 'HTML'
+        : footerEditorTab === 'css'
+          ? 'CSS'
+          : 'JS';
+
+    useEffect(() => {
+        setFooterEditorDrafts((current) => {
+            const previousSources = previousFooterEditorSourcesRef.current;
+            const next = { ...current };
+
+            for (const tab of ['html', 'css', 'js'] as FooterEditorTab[]) {
+                if (
+                    previousSources === null
+                    || current[tab] === previousSources[tab]
+                    || current[tab] === footerEditorSources[tab]
+                ) {
+                    next[tab] = footerEditorSources[tab];
                 }
             }
-        },
-        [actions, selectedElementPath, selectedItem, selectedItemId],
-    );
+
+            return next;
+        });
+
+        previousFooterEditorSourcesRef.current = footerEditorSources;
+    }, [footerEditorSources]);
 
     const handleSave = useCallback(async () => {
         setIsSaving(true);
@@ -596,16 +768,6 @@ export default function BuilderEdit({
             window.removeEventListener('keydown', onKeyDown);
         };
     }, [handleSave, actions]);
-
-    useEffect(() => {
-        setSelectedElementPath([]);
-    }, [selectedItemId]);
-
-    useEffect(() => {
-        if (selectedElement === null && editableElements[0]) {
-            setSelectedElementPath(editableElements[0].path);
-        }
-    }, [editableElements, selectedElement]);
 
     // -----------------------------------------------------------------------
     // Sync AST to iframe
@@ -874,6 +1036,40 @@ export default function BuilderEdit({
         };
     }, [actions]);
 
+    useEffect(() => {
+        if (typeof window === 'undefined') {
+            return;
+        }
+
+        try {
+            const storedWidths = JSON.parse(window.localStorage.getItem(BUILDER_PANEL_WIDTHS_STORAGE_KEY) ?? 'null');
+
+            if (storedWidths && typeof storedWidths === 'object') {
+                const candidate = storedWidths as Record<string, unknown>;
+
+                if (typeof candidate.left === 'number' && candidate.left > 0) {
+                    lastSidebarWidthsRef.current.left = clampSidebarPercentage(candidate.left);
+                }
+
+                if (typeof candidate.right === 'number' && candidate.right > 0) {
+                    lastSidebarWidthsRef.current.right = clampSidebarPercentage(candidate.right);
+                }
+            }
+
+            const storedLayout = JSON.parse(window.localStorage.getItem(BUILDER_PANEL_LAYOUT_STORAGE_KEY) ?? 'null');
+
+            if (isStoredPanelLayout(storedLayout)) {
+                setPanelLayout(normalizePanelLayout(storedLayout));
+
+                return;
+            }
+        } catch {
+            // Ignore invalid localStorage state and fall back to defaults.
+        }
+
+        setPanelLayout(normalizePanelLayout());
+    }, [setPanelLayout]);
+
     return (
         <ThemeCustomizerLayout
             title={`Builder: ${page.title}`}
@@ -895,8 +1091,8 @@ export default function BuilderEdit({
                         canRedo={canRedo}
                         backHref={page.editor_url}
                         viewHref={page.permalink_url}
-                        onToggleLeftPanel={() => setLeftPanelCollapsed((v) => !v)}
-                        onToggleRightPanel={() => setRightPanelCollapsed((v) => !v)}
+                        onToggleLeftPanel={handleToggleLeftPanel}
+                        onToggleRightPanel={handleToggleRightPanel}
                         onOpenMobileSidebar={() => setMobileSidebarOpen(true)}
                         onDeviceModeChange={setDeviceMode}
                         onSave={() => void handleSave()}
@@ -904,91 +1100,247 @@ export default function BuilderEdit({
                         onRedo={() => actions.redo()}
                     />
 
-                    {/* Three-column layout */}
-                    <div className="flex min-h-0 flex-1">
+                    {/* Three-column layout with resizable panels */}
+                    <ResizablePanelGroup
+                        orientation="horizontal"
+                        className="min-h-0 flex-1"
+                        groupRef={panelGroupRef}
+                        defaultLayout={normalizePanelLayout()}
+                        onLayoutChanged={handlePanelLayoutChanged}
+                    >
                         {/* Left panel: Components */}
-                        <aside
-                            className={cn(
-                                'hidden shrink-0 border-r border-border/60 bg-background transition-[width] duration-200 ease-in-out lg:block',
-                                leftPanelCollapsed ? 'w-0 overflow-hidden border-r-0' : 'w-[260px]',
-                            )}
+                        <ResizablePanel
+                            id="left"
+                            defaultSize="15%"
+                            minSize="240px"
+                            maxSize="25%"
+                            collapsible
+                            collapsedSize={0}
+                            className="hidden bg-background lg:block"
                         >
-                            {!leftPanelCollapsed ? (
-                                <div className="relative flex h-full flex-col">
-                                    <BuilderComponentsPanel
-                                        activeLibrary={activeLibrary}
-                                        palette={palette}
-                                        onActiveLibraryChange={setActiveLibrary}
-                                        onAddLibraryItem={handleAddLibraryItem}
-                                        onDragStartItem={handleDragStartLibraryItem}
-                                    />
-                                    {addedBadge ? (
-                                        <div className="absolute inset-x-0 bottom-3 flex justify-center pointer-events-none z-10">
-                                            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-600 px-3 py-1 text-xs font-medium text-white shadow-md animate-in fade-in zoom-in-95 duration-200">
-                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-3.5"><path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" /></svg>
-                                                {addedBadge} added
-                                            </span>
-                                        </div>
-                                    ) : null}
-                                </div>
-                            ) : null}
-                        </aside>
-
-                        {/* Center: Canvas + Bottom toolbar */}
-                        <div className="flex min-w-0 flex-1 flex-col">
-                            <div className="relative min-h-0 flex-1 overflow-hidden bg-[#f0f2f5] p-1.5 sm:p-2 lg:bg-transparent lg:p-0">
-                                <BuilderPreviewPanel
-                                    deviceMode={deviceMode}
-                                    iframeRef={iframeRef}
-                                    onLoad={() => {
-                                        iframeReadyRef.current = true;
-                                        setPreviewLoadedAt(Date.now());
-                                    }}
-                                    previewUrl={previewUrl}
-                                    previewHtml={previewDocument || undefined}
-                                    title={`Builder preview for ${page.title}`}
+                            <div className="relative flex h-full flex-col">
+                                <BuilderLeftSidebar
+                                    activeLibrary={activeLibrary}
+                                    palette={palette}
+                                    onActiveLibraryChange={setActiveLibrary}
+                                    onAddLibraryItem={handleAddLibraryItem}
+                                    onDragStartItem={handleDragStartLibraryItem}
                                 />
-                                {/* Overlay container — positioned over the iframe */}
-                                <div ref={overlayContainerRef} className="pointer-events-none absolute inset-0 z-50" />
+                                {addedBadge ? (
+                                    <div className="absolute inset-x-0 bottom-3 flex justify-center pointer-events-none z-10">
+                                        <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-600 px-3 py-1 text-xs font-medium text-white shadow-md animate-in fade-in zoom-in-95 duration-200">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-3.5"><path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" /></svg>
+                                            {addedBadge} added
+                                        </span>
+                                    </div>
+                                ) : null}
                             </div>
-                            <BuilderCanvasToolbar
-                                canvasItems={canvasItems}
-                                selectedItemId={selectedItemId}
-                                selectedElement={selectedElement}
-                                onSelectItem={(uid) => {
-                                    actions.setSelected([uid]);
-                                    scrollIframeToNode(uid);
-                                }}
-                                onMoveSelectedItem={handleMoveSelectedItem}
-                                onDuplicateSelectedItem={handleDuplicateSelectedItem}
-                                onRemoveSelectedItem={handleRemoveSelectedItem}
-                            />
-                        </div>
+                        </ResizablePanel>
+                        <ResizableHandle withHandle className="hidden lg:flex" />
 
-                        {/* Right panel: Properties */}
-                        <aside
-                            className={cn(
-                                'hidden shrink-0 border-l border-border/60 bg-background transition-[width] duration-200 ease-in-out lg:block',
-                                rightPanelCollapsed ? 'w-0 overflow-hidden border-l-0' : 'w-[280px]',
-                            )}
+                        {/* Center: Canvas */}
+                        <ResizablePanel id="center" defaultSize="70%" minSize="40%">
+                            <div className="flex h-full min-w-0 flex-col">
+                                <div className="flex min-h-0 flex-1 flex-col overflow-hidden border border-border/60 border-b-0 bg-background">
+                                    {footerEditorOpen && footerEditorFullscreen ? (
+                                        <div className="flex min-h-0 flex-1 flex-col">
+                                            <div className="flex items-center justify-between border-b border-border/60 px-2 py-1">
+                                                <div className="flex items-center gap-1">
+                                                    <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Editor</span>
+                                                    <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-foreground/80">
+                                                        {footerEditorTitle}
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-center gap-1">
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={handleApplyFooterEditor}
+                                                        disabled={!footerEditorIsDirty}
+                                                        className="h-6 px-2.5 text-[11px]"
+                                                    >
+                                                        Apply
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon-sm"
+                                                        onClick={handleToggleFooterEditorFullscreen}
+                                                        aria-label="Exit fullscreen editor"
+                                                    >
+                                                        <Minimize2Icon className="size-3.5" />
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon-sm"
+                                                        onClick={handleCloseFooterEditor}
+                                                        aria-label="Close editor"
+                                                    >
+                                                        <XIcon className="size-3.5" />
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                            <div className="min-h-0 flex-1">
+                                                <MonacoEditor
+                                                    value={footerEditorValue}
+                                                    onChange={handleFooterEditorValueChange}
+                                                    language={footerEditorLanguage}
+                                                    height="100%"
+                                                />
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            {footerEditorOpen ? (
+                                                <ResizablePanelGroup orientation="vertical" className="min-h-0 flex-1">
+                                                    <ResizablePanel defaultSize="58%" minSize="25%">
+                                                        <div className="relative h-full min-h-0 overflow-hidden bg-[#f0f2f5] p-1.5 sm:p-2 lg:bg-transparent lg:p-0">
+                                                            <BuilderPreviewPanel
+                                                                deviceMode={deviceMode}
+                                                                iframeRef={iframeRef}
+                                                                onLoad={() => {
+                                                                    iframeReadyRef.current = true;
+                                                                    setPreviewLoadedAt(Date.now());
+                                                                }}
+                                                                previewUrl={previewUrl}
+                                                                previewHtml={previewDocument || undefined}
+                                                                title={`Builder preview for ${page.title}`}
+                                                            />
+                                                            {/* Overlay container — positioned over the iframe */}
+                                                            <div ref={overlayContainerRef} className="pointer-events-none absolute inset-0 z-50" />
+                                                        </div>
+                                                    </ResizablePanel>
+                                                    <ResizableHandle withHandle />
+                                                    <ResizablePanel defaultSize="42%" minSize="18%">
+                                                        <div className="flex h-full min-h-0 flex-col border-t border-border/60">
+                                                            <div className="flex items-center justify-between border-b border-border/60 px-2 py-1">
+                                                                <div className="flex items-center gap-1">
+                                                                    <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Editor</span>
+                                                                    <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-foreground/80">
+                                                                        {footerEditorTitle}
+                                                                    </span>
+                                                                </div>
+                                                                <div className="flex items-center gap-1">
+                                                                    <Button
+                                                                        variant="outline"
+                                                                        size="sm"
+                                                                        onClick={handleApplyFooterEditor}
+                                                                        disabled={!footerEditorIsDirty}
+                                                                        className="h-6 px-2.5 text-[11px]"
+                                                                    >
+                                                                        Apply
+                                                                    </Button>
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="icon-sm"
+                                                                        onClick={handleToggleFooterEditorFullscreen}
+                                                                        aria-label="Expand editor"
+                                                                    >
+                                                                        <ExpandIcon className="size-3.5" />
+                                                                    </Button>
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="icon-sm"
+                                                                        onClick={handleCloseFooterEditor}
+                                                                        aria-label="Close editor"
+                                                                    >
+                                                                        <XIcon className="size-3.5" />
+                                                                    </Button>
+                                                                </div>
+                                                            </div>
+                                                            <div className="min-h-0 flex-1">
+                                                                <MonacoEditor
+                                                                    value={footerEditorValue}
+                                                                    onChange={handleFooterEditorValueChange}
+                                                                    language={footerEditorLanguage}
+                                                                    height="100%"
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    </ResizablePanel>
+                                                </ResizablePanelGroup>
+                                            ) : (
+                                                <div className="relative min-h-0 flex-1 overflow-hidden bg-[#f0f2f5] p-1.5 sm:p-2 lg:bg-transparent lg:p-0">
+                                                    <BuilderPreviewPanel
+                                                        deviceMode={deviceMode}
+                                                        iframeRef={iframeRef}
+                                                        onLoad={() => {
+                                                            iframeReadyRef.current = true;
+                                                            setPreviewLoadedAt(Date.now());
+                                                        }}
+                                                        previewUrl={previewUrl}
+                                                        previewHtml={previewDocument || undefined}
+                                                        title={`Builder preview for ${page.title}`}
+                                                    />
+                                                    {/* Overlay container — positioned over the iframe */}
+                                                    <div ref={overlayContainerRef} className="pointer-events-none absolute inset-0 z-50" />
+                                                </div>
+                                            )}
+                                        </>
+                                    )}
+
+                                    <div className="flex items-center justify-between border-t border-border/60 bg-background px-2 py-1">
+                                        <div className="flex items-center gap-1">
+                                            <Button
+                                                variant={footerEditorOpen && footerEditorTab === 'html' ? 'secondary' : 'ghost'}
+                                                size="sm"
+                                                onClick={() => handleOpenFooterEditor('html')}
+                                                className="h-6 gap-1 px-2 text-[11px]"
+                                            >
+                                                <CodeXmlIcon className="size-3" />
+                                                HTML
+                                            </Button>
+                                            <Button
+                                                variant={footerEditorOpen && footerEditorTab === 'css' ? 'secondary' : 'ghost'}
+                                                size="sm"
+                                                onClick={() => handleOpenFooterEditor('css')}
+                                                className="h-6 gap-1 px-2 text-[11px]"
+                                            >
+                                                <PaintbrushIcon className="size-3" />
+                                                CSS
+                                            </Button>
+                                            <Button
+                                                variant={footerEditorOpen && footerEditorTab === 'js' ? 'secondary' : 'ghost'}
+                                                size="sm"
+                                                onClick={() => handleOpenFooterEditor('js')}
+                                                className="h-6 gap-1 px-2 text-[11px]"
+                                            >
+                                                <BracesIcon className="size-3" />
+                                                JS
+                                            </Button>
+                                        </div>
+                                        <span className="text-[10px] text-muted-foreground">
+                                            {footerEditorOpen ? `${footerEditorTitle} editor open` : 'Open code editor'}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </ResizablePanel>
+
+                        {/* Right panel: Inspector */}
+                        <ResizableHandle withHandle className="hidden lg:flex" />
+                        <ResizablePanel
+                            id="right"
+                            defaultSize="15%"
+                            minSize="240px"
+                            maxSize="25%"
+                            collapsible
+                            collapsedSize={0}
+                            className="hidden bg-background lg:block"
                         >
-                            {!rightPanelCollapsed ? (
-                                <BuilderPropertiesPanel
-                                    editableElements={editableElements}
-                                    selectedElement={selectedElement}
-                                    selectedItem={selectedItem}
-                                    customCss={state.ast.css}
-                                    customJs={state.ast.js}
-                                    onSelectElement={setSelectedElementPath}
-                                    onUpdateElementField={handleUpdateElementField}
-                                    onUpdateElementStyle={handleUpdateElementStyle}
-                                    onUpdateSelectedItemHtml={handleUpdateSelectedItemHtml}
-                                    onCustomCssChange={(css) => actions.setCss(css)}
-                                    onCustomJsChange={(js) => actions.setJs(js)}
-                                />
-                            ) : null}
-                        </aside>
-                    </div>
+                            <BuilderRightSidebar
+                                nodes={nodes}
+                                rootNodeId={rootNodeId}
+                                selectedNodeId={selectedItemId}
+                                selectedElement={selectedElement}
+                                onUpdateElementField={handleUpdateElementField}
+                                onUpdateElementStyle={handleUpdateElementStyle}
+                                onSelectNode={handleSelectNode}
+                                onMoveNode={handleMoveNode}
+                                onDuplicateNode={handleDuplicateNode}
+                                onDeleteNode={handleRemoveNode}
+                            />
+                        </ResizablePanel>
+                    </ResizablePanelGroup>
                 </div>
 
                 {/* Code editor dialog */}
@@ -1025,7 +1377,7 @@ export default function BuilderEdit({
                             </SheetDescription>
                         </SheetHeader>
                         <div className="min-h-0 flex-1 overflow-hidden">
-                            <BuilderComponentsPanel
+                            <BuilderLeftSidebar
                                 activeLibrary={activeLibrary}
                                 palette={palette}
                                 onActiveLibraryChange={setActiveLibrary}

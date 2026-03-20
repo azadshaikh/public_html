@@ -3,51 +3,47 @@ import {
     AlignJustifyIcon,
     AlignLeftIcon,
     AlignRightIcon,
+    ArrowDownIcon,
+    ArrowUpIcon,
     BoxIcon,
     ChevronDownIcon,
     ChevronRightIcon,
-    Code2Icon,
+    CopyIcon,
     EyeIcon,
-    ImageIcon,
     LayoutIcon,
-    LinkIcon,
+    Layers3Icon,
     PaintbrushIcon,
-    Settings2Icon,
+    Trash2Icon,
     TypeIcon,
 } from 'lucide-react';
-import { useState } from 'react';
-import { MonacoEditor } from '@/components/code-editor/monaco-editor';
-import { Badge } from '@/components/ui/badge';
+import { useEffect, useState } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Textarea } from '@/components/ui/textarea';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn } from '@/lib/utils';
-import type { BuilderCanvasItem } from '../../types/cms';
+import type { AstNodeId, AstNodeMap } from './core/ast-types';
 import type {
     BuilderEditableElement,
-    BuilderElementPath,
     BuilderElementStyleValues,
 } from './builder-dom';
 
-type BuilderPropertiesPanelProps = {
-    editableElements: BuilderEditableElement[];
+type BuilderRightSidebarProps = {
+    nodes: AstNodeMap;
+    rootNodeId: AstNodeId;
+    selectedNodeId: AstNodeId | null;
     selectedElement: BuilderEditableElement | null;
-    selectedItem: BuilderCanvasItem | null;
-    customCss: string;
-    customJs: string;
-    onSelectElement: (path: BuilderElementPath) => void;
     onUpdateElementField: (
-        field: 'textContent' | 'href' | 'src' | 'alt' | 'id' | 'className',
+        field: 'id' | 'className',
         value: string,
     ) => void;
     onUpdateElementStyle: (
         field: keyof BuilderElementStyleValues,
         value: string,
     ) => void;
-    onUpdateSelectedItemHtml: (value: string) => void;
-    onCustomCssChange: (value: string) => void;
-    onCustomJsChange: (value: string) => void;
+    onSelectNode: (nodeId: AstNodeId) => void;
+    onMoveNode: (nodeId: AstNodeId, direction: 'up' | 'down') => void;
+    onDuplicateNode: (nodeId: AstNodeId) => void;
+    onDeleteNode: (nodeId: AstNodeId) => void;
 };
 
 type CollapsibleSectionProps = {
@@ -136,110 +132,54 @@ function ColorInputRow({ label, value, onChange }: ColorInputRowProps) {
     );
 }
 
-export function BuilderPropertiesPanel({
-    editableElements,
+export function BuilderRightSidebar({
+    nodes,
+    rootNodeId,
+    selectedNodeId,
     selectedElement,
-    selectedItem,
-    customCss,
-    customJs,
-    onSelectElement,
     onUpdateElementField,
     onUpdateElementStyle,
-    onUpdateSelectedItemHtml,
-    onCustomCssChange,
-    onCustomJsChange,
-}: BuilderPropertiesPanelProps) {
-    if (!selectedItem || !selectedElement) {
-        return (
-            <div className="flex h-full flex-col">
-                <div className="border-b border-border/60 px-3 py-2">
-                    <div className="flex items-center gap-2">
-                        <Settings2Icon className="size-4 text-muted-foreground" />
-                        <span className="text-sm font-semibold">Properties</span>
-                    </div>
-                </div>
-                <div className="flex flex-1 flex-col items-center justify-center gap-2 px-4 py-12 text-center">
-                    <div className="rounded-full bg-muted/50 p-3">
-                        <EyeIcon className="size-6 text-muted-foreground/50" />
-                    </div>
-                    <p className="text-sm font-medium text-muted-foreground">No element selected</p>
-                    <p className="text-xs text-muted-foreground/70">
-                        Click on an element in the preview to edit its properties.
-                    </p>
-                </div>
-
-                <CodeSection
-                    customCss={customCss}
-                    customJs={customJs}
-                    onCustomCssChange={onCustomCssChange}
-                    onCustomJsChange={onCustomJsChange}
-                />
-            </div>
-        );
-    }
-
+    onSelectNode,
+    onMoveNode,
+    onDuplicateNode,
+    onDeleteNode,
+}: BuilderRightSidebarProps) {
     return (
         <div className="flex h-full flex-col">
-            <div className="border-b border-border/60 px-3 py-2">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <Settings2Icon className="size-4 text-muted-foreground" />
-                        <span className="text-sm font-semibold">Properties</span>
-                    </div>
-                    <Badge variant="outline" className="text-[10px]">
-                        {selectedElement.tagName}
-                    </Badge>
-                </div>
-            </div>
-
-            <Tabs defaultValue="content" className="flex min-h-0 flex-1 flex-col">
-                <TabsList className="grid w-full shrink-0 grid-cols-4 rounded-none border-b border-border/60" variant="line">
-                    <TabsTrigger value="content" className="text-xs">
-                        Content
-                    </TabsTrigger>
-                    <TabsTrigger value="style" className="text-xs">
+            <Tabs defaultValue="style" className="flex min-h-0 flex-1 flex-col">
+                <TabsList className="grid w-full shrink-0 grid-cols-2 rounded-none border-b border-border/60" variant="line">
+                    <TabsTrigger value="style" className="gap-1.5 text-xs">
+                        <PaintbrushIcon className="size-3.5" />
                         Style
                     </TabsTrigger>
-                    <TabsTrigger value="advanced" className="text-xs">
-                        Advanced
-                    </TabsTrigger>
-                    <TabsTrigger value="code" className="text-xs">
-                        Code
+                    <TabsTrigger value="layers" className="gap-1.5 text-xs">
+                        <Layers3Icon className="size-3.5" />
+                        Structure
                     </TabsTrigger>
                 </TabsList>
 
                 <ScrollArea className="min-h-0 flex-1">
-                    <TabsContent value="content" className="mt-0">
-                        <ContentTab
-                            selectedElement={selectedElement}
-                            onUpdateElementField={onUpdateElementField}
-                        />
-                    </TabsContent>
-
                     <TabsContent value="style" className="mt-0">
-                        <StyleTab
-                            selectedElement={selectedElement}
-                            onUpdateElementStyle={onUpdateElementStyle}
-                        />
+                        {selectedElement ? (
+                            <StyleTab
+                                selectedElement={selectedElement}
+                                onUpdateElementField={onUpdateElementField}
+                                onUpdateElementStyle={onUpdateElementStyle}
+                            />
+                        ) : (
+                            <EmptySelectionState />
+                        )}
                     </TabsContent>
 
-                    <TabsContent value="advanced" className="mt-0">
-                        <AdvancedTab
-                            editableElements={editableElements}
-                            selectedElement={selectedElement}
-                            selectedItem={selectedItem}
-                            onSelectElement={onSelectElement}
-                            onUpdateElementField={onUpdateElementField}
-                            onUpdateSelectedItemHtml={onUpdateSelectedItemHtml}
-                        />
-                    </TabsContent>
-
-                    <TabsContent value="code" className="mt-0">
-                        <CodeSection
-                            customCss={customCss}
-                            customJs={customJs}
-                            onCustomCssChange={onCustomCssChange}
-                            onCustomJsChange={onCustomJsChange}
+                    <TabsContent value="layers" className="mt-0">
+                        <StructureTab
+                            nodes={nodes}
+                            rootNodeId={rootNodeId}
+                            selectedNodeId={selectedNodeId}
+                            onSelectNode={onSelectNode}
+                            onMoveNode={onMoveNode}
+                            onDuplicateNode={onDuplicateNode}
+                            onDeleteNode={onDeleteNode}
                         />
                     </TabsContent>
                 </ScrollArea>
@@ -248,78 +188,296 @@ export function BuilderPropertiesPanel({
     );
 }
 
-function ContentTab({
-    selectedElement,
-    onUpdateElementField,
+function EmptySelectionState() {
+    return (
+        <div className="flex flex-col items-center justify-center gap-2 px-4 py-12 text-center">
+            <div className="rounded-full bg-muted/50 p-3">
+                <EyeIcon className="size-6 text-muted-foreground/50" />
+            </div>
+            <p className="text-sm font-medium text-muted-foreground">No element selected</p>
+            <p className="text-xs text-muted-foreground/70">
+                Select an item in the structure or click an element in the preview to inspect and edit it.
+            </p>
+        </div>
+    );
+}
+
+function StructureTab({
+    nodes,
+    rootNodeId,
+    selectedNodeId,
+    onSelectNode,
+    onMoveNode,
+    onDuplicateNode,
+    onDeleteNode,
 }: {
-    selectedElement: BuilderEditableElement;
-    onUpdateElementField: BuilderPropertiesPanelProps['onUpdateElementField'];
+    nodes: AstNodeMap;
+    rootNodeId: AstNodeId;
+    selectedNodeId: AstNodeId | null;
+    onSelectNode: (nodeId: AstNodeId) => void;
+    onMoveNode: (nodeId: AstNodeId, direction: 'up' | 'down') => void;
+    onDuplicateNode: (nodeId: AstNodeId) => void;
+    onDeleteNode: (nodeId: AstNodeId) => void;
 }) {
+    const [collapsedIds, setCollapsedIds] = useState<Record<string, boolean>>({});
+    const root = nodes[rootNodeId];
+
+    useEffect(() => {
+        if (!selectedNodeId) {
+            return;
+        }
+
+        const selectedNode = nodes[selectedNodeId];
+
+        if (!selectedNode) {
+            return;
+        }
+
+        setCollapsedIds((current) => {
+            const next = { ...current };
+            let changed = false;
+            let parentId = selectedNode.parentId;
+
+            while (parentId && parentId !== rootNodeId) {
+                if ((next[parentId] ?? true) !== false) {
+                    next[parentId] = false;
+                    changed = true;
+                }
+
+                parentId = nodes[parentId]?.parentId ?? null;
+            }
+
+            return changed ? next : current;
+        });
+    }, [nodes, rootNodeId, selectedNodeId]);
+
+    if (!root || root.childIds.length === 0) {
+        return (
+            <div className="px-4 py-12 text-center">
+                <Layers3Icon className="mx-auto mb-3 size-6 text-muted-foreground/50" />
+                <p className="text-sm font-medium text-muted-foreground">No structure yet</p>
+                <p className="mt-1 text-xs text-muted-foreground/70">
+                    Add a section from the left sidebar to start building the page structure.
+                </p>
+            </div>
+        );
+    }
+
+    const toggleCollapsed = (nodeId: AstNodeId) => {
+        setCollapsedIds((current) => ({
+            ...current,
+            [nodeId]: !(current[nodeId] ?? true),
+        }));
+    };
+
+    return (
+        <div className="flex flex-col p-1.5">
+            <div className="flex flex-col gap-0.5">
+                {root.childIds.map((childId) => (
+                    <StructureTreeNode
+                        key={childId}
+                        nodeId={childId}
+                        depth={0}
+                        nodes={nodes}
+                        selectedNodeId={selectedNodeId}
+                        collapsedIds={collapsedIds}
+                        onToggleCollapsed={toggleCollapsed}
+                        onSelectNode={onSelectNode}
+                        onMoveNode={onMoveNode}
+                        onDuplicateNode={onDuplicateNode}
+                        onDeleteNode={onDeleteNode}
+                    />
+                ))}
+            </div>
+        </div>
+    );
+}
+
+function StructureTreeNode({
+    nodeId,
+    depth,
+    nodes,
+    selectedNodeId,
+    collapsedIds,
+    onToggleCollapsed,
+    onSelectNode,
+    onMoveNode,
+    onDuplicateNode,
+    onDeleteNode,
+}: {
+    nodeId: AstNodeId;
+    depth: number;
+    nodes: AstNodeMap;
+    selectedNodeId: AstNodeId | null;
+    collapsedIds: Record<string, boolean>;
+    onToggleCollapsed: (nodeId: AstNodeId) => void;
+    onSelectNode: (nodeId: AstNodeId) => void;
+    onMoveNode: (nodeId: AstNodeId, direction: 'up' | 'down') => void;
+    onDuplicateNode: (nodeId: AstNodeId) => void;
+    onDeleteNode: (nodeId: AstNodeId) => void;
+}) {
+    const node = nodes[nodeId];
+
+    if (!node) {
+        return null;
+    }
+
+    const hasChildren = node.childIds.length > 0;
+    const isCollapsed = collapsedIds[nodeId] ?? hasChildren;
+    const isSelected = selectedNodeId === nodeId;
+    const parent = node.parentId ? nodes[node.parentId] : null;
+    const siblingIds = parent?.childIds ?? [];
+    const index = siblingIds.indexOf(nodeId);
+    const canMoveUp = index > 0;
+    const canMoveDown = index >= 0 && index < siblingIds.length - 1;
+    const label = node.displayName || node.type;
+    const isSection = node.type === 'section';
+
     return (
         <div className="flex flex-col">
-            {selectedElement.canEditText ? (
-                <CollapsibleSection title="Text" icon={<TypeIcon className="size-3" />} defaultOpen>
-                    <Textarea
-                        value={selectedElement.textContent}
-                        onChange={(e) => onUpdateElementField('textContent', e.target.value)}
-                        className="min-h-20 resize-y text-xs"
-                        placeholder="Element text content"
-                    />
-                </CollapsibleSection>
-            ) : null}
+            <div
+                className={cn(
+                    'group relative flex items-center gap-0.5 rounded-md px-1 transition-colors',
+                    isSelected
+                        ? 'bg-accent text-accent-foreground'
+                        : 'hover:bg-muted/50',
+                    isSection && depth === 0 && 'border border-border',
+                )}
+                style={{ paddingLeft: depth * 12 }}
+            >
+                <button
+                    type="button"
+                    onClick={() => hasChildren && onToggleCollapsed(nodeId)}
+                    className={cn(
+                        'inline-flex size-6 shrink-0 items-center justify-center rounded text-muted-foreground',
+                        hasChildren ? 'hover:text-foreground' : 'invisible',
+                    )}
+                    aria-label={hasChildren ? (isCollapsed ? 'Expand structure item' : 'Collapse structure item') : 'No child items'}
+                >
+                    {hasChildren ? (
+                        isCollapsed ? <ChevronRightIcon className="size-3.5" /> : <ChevronDownIcon className="size-3.5" />
+                    ) : null}
+                </button>
 
-            {selectedElement.isLink ? (
-                <CollapsibleSection title="Link" icon={<LinkIcon className="size-3" />} defaultOpen>
-                    <div className="flex flex-col gap-2">
-                        <StyleInputRow
-                            label="URL"
-                            value={selectedElement.href}
-                            onChange={(v) => onUpdateElementField('href', v)}
-                            placeholder="https://example.com"
-                        />
-                    </div>
-                </CollapsibleSection>
-            ) : null}
+                <button
+                    type="button"
+                    onClick={() => onSelectNode(nodeId)}
+                    className="min-w-0 flex-1 truncate py-1.5 text-left text-[12px] leading-4"
+                >
+                    <span className={cn(
+                        'text-foreground/85',
+                        isSelected ? 'font-semibold text-foreground' : 'font-medium',
+                    )}>
+                        {label}
+                    </span>
+                </button>
 
-            {selectedElement.isImage ? (
-                <CollapsibleSection title="Image" icon={<ImageIcon className="size-3" />} defaultOpen>
-                    <div className="flex flex-col gap-2">
-                        <StyleInputRow
-                            label="Source"
-                            value={selectedElement.src}
-                            onChange={(v) => onUpdateElementField('src', v)}
-                            placeholder="https://..."
-                        />
-                        <StyleInputRow
-                            label="Alt text"
-                            value={selectedElement.alt}
-                            onChange={(v) => onUpdateElementField('alt', v)}
-                            placeholder="Describe the image"
-                        />
-                    </div>
-                </CollapsibleSection>
-            ) : null}
+                <div className="pointer-events-none flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:pointer-events-auto group-hover:opacity-100">
+                    <StructureActionButton
+                        title={canMoveUp ? 'Move up' : 'Already first sibling'}
+                        disabled={!canMoveUp}
+                        onClick={() => onMoveNode(nodeId, 'up')}
+                    >
+                        <ArrowUpIcon className="size-3.5" />
+                    </StructureActionButton>
+                    <StructureActionButton
+                        title={canMoveDown ? 'Move down' : 'Already last sibling'}
+                        disabled={!canMoveDown}
+                        onClick={() => onMoveNode(nodeId, 'down')}
+                    >
+                        <ArrowDownIcon className="size-3.5" />
+                    </StructureActionButton>
+                    <StructureActionButton title="Duplicate" onClick={() => onDuplicateNode(nodeId)}>
+                        <CopyIcon className="size-3.5" />
+                    </StructureActionButton>
+                    <StructureActionButton title="Delete" variant="danger" onClick={() => onDeleteNode(nodeId)}>
+                        <Trash2Icon className="size-3.5" />
+                    </StructureActionButton>
+                </div>
+            </div>
 
-            {!selectedElement.canEditText && !selectedElement.isLink && !selectedElement.isImage ? (
-                <div className="flex flex-col items-center justify-center gap-2 px-4 py-8 text-center">
-                    <p className="text-xs text-muted-foreground">
-                        No editable content for <code className="rounded bg-muted px-1">{selectedElement.tagName}</code>
-                    </p>
+            {hasChildren && !isCollapsed ? (
+                <div className="flex flex-col">
+                    {node.childIds.map((childId) => (
+                        <StructureTreeNode
+                            key={childId}
+                            nodeId={childId}
+                            depth={depth + 1}
+                            nodes={nodes}
+                            selectedNodeId={selectedNodeId}
+                            collapsedIds={collapsedIds}
+                            onToggleCollapsed={onToggleCollapsed}
+                            onSelectNode={onSelectNode}
+                            onMoveNode={onMoveNode}
+                            onDuplicateNode={onDuplicateNode}
+                            onDeleteNode={onDeleteNode}
+                        />
+                    ))}
                 </div>
             ) : null}
         </div>
     );
 }
 
+function StructureActionButton({
+    children,
+    title,
+    disabled,
+    variant = 'default',
+    onClick,
+}: {
+    children: React.ReactNode;
+    title: string;
+    disabled?: boolean;
+    variant?: 'default' | 'danger';
+    onClick: () => void;
+}) {
+    return (
+        <button
+            type="button"
+            title={title}
+            disabled={disabled}
+            onClick={onClick}
+            className={cn(
+                'inline-flex size-5 items-center justify-center rounded transition disabled:cursor-not-allowed disabled:opacity-30',
+                variant === 'danger'
+                    ? 'text-muted-foreground hover:bg-destructive/10 hover:text-destructive'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+            )}
+        >
+            {children}
+        </button>
+    );
+}
+
 function StyleTab({
     selectedElement,
+    onUpdateElementField,
     onUpdateElementStyle,
 }: {
     selectedElement: BuilderEditableElement;
-    onUpdateElementStyle: BuilderPropertiesPanelProps['onUpdateElementStyle'];
+    onUpdateElementField: BuilderRightSidebarProps['onUpdateElementField'];
+    onUpdateElementStyle: BuilderRightSidebarProps['onUpdateElementStyle'];
 }) {
     return (
         <div className="flex flex-col">
+            <CollapsibleSection title="Attributes" defaultOpen>
+                <div className="flex flex-col gap-2">
+                    <StyleInputRow
+                        label="ID"
+                        value={selectedElement.id}
+                        onChange={(v) => onUpdateElementField('id', v)}
+                        placeholder="element-id"
+                    />
+                    <StyleInputRow
+                        label="Classes"
+                        value={selectedElement.className}
+                        onChange={(v) => onUpdateElementField('className', v)}
+                        placeholder="class-name"
+                    />
+                </div>
+            </CollapsibleSection>
+
             <CollapsibleSection title="Display" icon={<LayoutIcon className="size-3" />} defaultOpen>
                 <div className="flex flex-col gap-2">
                     <div className="flex items-center gap-2">
@@ -477,119 +635,3 @@ function StyleTab({
     );
 }
 
-function AdvancedTab({
-    editableElements,
-    selectedElement,
-    selectedItem,
-    onSelectElement,
-    onUpdateElementField,
-    onUpdateSelectedItemHtml,
-}: {
-    editableElements: BuilderEditableElement[];
-    selectedElement: BuilderEditableElement;
-    selectedItem: BuilderCanvasItem;
-    onSelectElement: BuilderPropertiesPanelProps['onSelectElement'];
-    onUpdateElementField: BuilderPropertiesPanelProps['onUpdateElementField'];
-    onUpdateSelectedItemHtml: BuilderPropertiesPanelProps['onUpdateSelectedItemHtml'];
-}) {
-    return (
-        <div className="flex flex-col">
-            <CollapsibleSection title="Attributes" defaultOpen>
-                <div className="flex flex-col gap-2">
-                    <StyleInputRow
-                        label="ID"
-                        value={selectedElement.id}
-                        onChange={(v) => onUpdateElementField('id', v)}
-                        placeholder="element-id"
-                    />
-                    <StyleInputRow
-                        label="Classes"
-                        value={selectedElement.className}
-                        onChange={(v) => onUpdateElementField('className', v)}
-                        placeholder="class-name"
-                    />
-                </div>
-            </CollapsibleSection>
-
-            <CollapsibleSection title="Elements">
-                <div className="flex max-h-44 flex-col gap-1 overflow-auto">
-                    {editableElements.map((element) => {
-                        const isActive = element.pathKey === selectedElement.pathKey;
-
-                        return (
-                            <button
-                                key={element.pathKey}
-                                type="button"
-                                onClick={() => onSelectElement(element.path)}
-                                className={cn(
-                                    'rounded px-2 py-1.5 text-left text-xs transition',
-                                    isActive
-                                        ? 'bg-primary text-primary-foreground'
-                                        : 'hover:bg-muted/50',
-                                )}
-                            >
-                                <span className="block truncate font-medium">{element.label}</span>
-                                <span
-                                    className={cn(
-                                        'block text-[10px]',
-                                        isActive ? 'text-primary-foreground/70' : 'text-muted-foreground',
-                                    )}
-                                >
-                                    {element.tagName}
-                                </span>
-                            </button>
-                        );
-                    })}
-                </div>
-            </CollapsibleSection>
-
-            <CollapsibleSection title="Raw HTML" icon={<Code2Icon className="size-3" />}>
-                <MonacoEditor
-                    value={selectedItem.html}
-                    onChange={onUpdateSelectedItemHtml}
-                    language="html"
-                    height={176}
-                    placeholder="<!-- Edit raw HTML for this section -->"
-                    className="mt-1"
-                />
-            </CollapsibleSection>
-        </div>
-    );
-}
-
-function CodeSection({
-    customCss,
-    customJs,
-    onCustomCssChange,
-    onCustomJsChange,
-}: {
-    customCss: string;
-    customJs: string;
-    onCustomCssChange: (value: string) => void;
-    onCustomJsChange: (value: string) => void;
-}) {
-    return (
-        <div className="flex flex-col">
-            <CollapsibleSection title="Custom CSS" icon={<Code2Icon className="size-3" />} defaultOpen>
-                <MonacoEditor
-                    value={customCss}
-                    onChange={onCustomCssChange}
-                    language="css"
-                    height={176}
-                    placeholder="/* Add custom CSS styles... */"
-                    className="mt-1"
-                />
-            </CollapsibleSection>
-            <CollapsibleSection title="Custom JavaScript" icon={<Code2Icon className="size-3" />}>
-                <MonacoEditor
-                    value={customJs}
-                    onChange={onCustomJsChange}
-                    language="javascript"
-                    height={176}
-                    placeholder="// Add custom JavaScript..."
-                    className="mt-1"
-                />
-            </CollapsibleSection>
-        </div>
-    );
-}

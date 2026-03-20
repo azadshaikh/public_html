@@ -1,4 +1,4 @@
-import { Code2Icon, EyeIcon } from 'lucide-react';
+import { Code2Icon } from 'lucide-react';
 import { useCallback } from 'react';
 import {
     Accordion,
@@ -6,9 +6,7 @@ import {
     AccordionItem,
     AccordionTrigger,
 } from '@/components/ui/accordion';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import {
     Field,
     FieldDescription,
@@ -136,14 +134,24 @@ export function ThemeCustomizerSidebar({
                     <Field
                         key={fieldId}
                         orientation="horizontal"
-                        className="items-center justify-between rounded-xl border bg-background px-3 py-2.5"
+                        className="items-start justify-between gap-3 rounded-xl border bg-background px-3 py-2.5"
                     >
-                        <div className="flex flex-col gap-0.5">
-                            <FieldLabel htmlFor={fieldId}>{field.label}</FieldLabel>
-                            {description ? <FieldDescription>{description}</FieldDescription> : null}
+                        <div className="min-w-0 flex-1 space-y-1 pr-2">
+                            <FieldLabel
+                                htmlFor={fieldId}
+                                className="w-full min-w-0 whitespace-normal break-words"
+                            >
+                                {field.label}
+                            </FieldLabel>
+                            {description ? (
+                                <FieldDescription className="min-w-0 whitespace-normal break-words text-xs leading-5">
+                                    {description}
+                                </FieldDescription>
+                            ) : null}
                         </div>
                         <Switch
                             id={fieldId}
+                            className="mt-0.5 shrink-0"
                             checked={Boolean(rawValue)}
                             onCheckedChange={(checked) => onFieldChange(fieldId, checked)}
                         />
@@ -230,17 +238,14 @@ export function ThemeCustomizerSidebar({
 
     return (
         <div className="flex h-full flex-col">
-            <div className="border-b border-border/70 px-3 py-3 sm:px-4">
-                <div className="flex items-start justify-between gap-2.5">
-                    <div>
+            <div className="border-b border-border/70 px-3 py-2.5 sm:px-4">
+                <div className="flex items-center justify-between gap-2.5">
+                    <div className="min-w-0">
                         <p className="text-[11px] font-semibold tracking-[0.18em] text-muted-foreground uppercase">
                             Theme Settings
                         </p>
-                        <h2 className="mt-1.5 text-base font-semibold text-foreground">
+                        <p className="mt-1 truncate text-sm font-semibold text-foreground">
                             {activeTheme.name}
-                        </h2>
-                        <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                            Shared site identity controls plus theme-specific presentation settings.
                         </p>
                     </div>
                     {activeTheme.version ? (
@@ -250,36 +255,28 @@ export function ThemeCustomizerSidebar({
             </div>
 
             <ScrollArea className="min-h-0 flex-1">
-                <div className="flex flex-col gap-3 px-3 py-3 sm:px-4">
-                    <Alert className="border-primary/20 bg-primary/5 px-3 py-2 text-primary">
-                        <EyeIcon className="size-4" />
-                        <AlertTitle className="text-sm">Live preview</AlertTitle>
-                        <AlertDescription className="text-xs leading-5">
-                            Changes update the preview pane before you save. Save commits them to theme settings.
-                        </AlertDescription>
-                    </Alert>
-
-                    <Accordion type="multiple" defaultValue={defaultOpenSections} className="gap-2.5">
+                <div className="flex flex-col gap-2.5 px-3 py-3 sm:px-4">
+                    <Accordion type="multiple" defaultValue={defaultOpenSections} className="gap-2">
                         {Object.entries(sections).map(([sectionId, section]) => (
                             <AccordionItem
                                 key={sectionId}
                                 value={sectionId}
-                                className="rounded-xl border bg-background px-3 shadow-xs"
+                                className="rounded-xl border bg-background px-2.5 shadow-xs"
                             >
-                                <AccordionTrigger className="py-3 text-sm hover:no-underline">
+                                <AccordionTrigger className="py-2.5 text-sm hover:no-underline">
                                     <div className="pr-3 text-left">
-                                        <div className="font-semibold text-foreground">
+                                        <div className="leading-none font-semibold text-foreground">
                                             {section.title}
                                         </div>
                                         {section.description || section.helper_text ? (
-                                            <div className="mt-0.5 text-xs font-normal leading-5 text-muted-foreground">
+                                            <div className="mt-1 text-xs font-normal leading-4.5 text-muted-foreground">
                                                 {section.helper_text ?? section.description}
                                             </div>
                                         ) : null}
                                     </div>
                                 </AccordionTrigger>
-                                <AccordionContent className="pb-3">
-                                    <FieldGroup className="gap-4">
+                                <AccordionContent className="pb-2.5">
+                                    <FieldGroup className="gap-3">
                                         {Object.entries(section.settings ?? {}).map(([fieldId, field]) =>
                                             renderField(fieldId, field),
                                         )}

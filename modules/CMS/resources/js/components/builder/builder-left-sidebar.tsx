@@ -25,7 +25,7 @@ import { SearchInput } from '@/components/ui/search-input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { BuilderLibraryGroup, BuilderLibraryItem } from '../../types/cms';
 
-type BuilderComponentsPanelProps = {
+type BuilderLeftSidebarProps = {
     activeLibrary: 'sections' | 'blocks';
     palette: { sections: BuilderLibraryGroup[]; blocks: BuilderLibraryGroup[] };
     onActiveLibraryChange: (value: 'sections' | 'blocks') => void;
@@ -61,13 +61,13 @@ function getComponentIcon(name: string): React.ComponentType<{ className?: strin
     return LayoutTemplateIcon;
 }
 
-export function BuilderComponentsPanel({
+export function BuilderLeftSidebar({
     activeLibrary,
     palette,
     onActiveLibraryChange,
     onAddLibraryItem,
     onDragStartItem,
-}: BuilderComponentsPanelProps) {
+}: BuilderLeftSidebarProps) {
     const [search, setSearch] = useState('');
     const deferredSearch = useDeferredValue(search);
     const groups = palette[activeLibrary] ?? [];

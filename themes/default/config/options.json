@@ -43,5 +43,10 @@
     "feature_3_description": "Built with security and reliability in mind.",
     "newsletter_title": "Newsletter",
     "newsletter_description": "Subscribe to our newsletter for updates.",
-    "footer_about": "We are a modern company focused on delivering exceptional digital experiences through innovative design and development."
+    "footer_about": "We are a modern company focused on delivering exceptional digital experiences through innovative design and development.",
+    "custom_css": null,
+    "custom_js": null,
+    "show_sidebar_on_archive": false,
+    "show_breadcrumb_on_pages": false,
+    "show_social_sharing_on_posts": true
 }
