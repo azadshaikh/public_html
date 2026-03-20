@@ -67,7 +67,7 @@ type Action =
     | { type: 'DELETE_NODE'; nodeId: AstNodeId }
     | { type: 'MOVE_NODE'; nodeId: AstNodeId; newParentId: AstNodeId; index: number }
     | { type: 'DUPLICATE_NODE'; nodeId: AstNodeId }
-    | { type: 'UPDATE_NODE'; nodeId: AstNodeId; patch: Partial<Pick<AstNode, 'displayName' | 'className' | 'tagName' | 'hidden' | 'isCanvas' | 'props' | 'styles' | 'custom'>> }
+    | { type: 'UPDATE_NODE'; nodeId: AstNodeId; patch: Partial<Pick<AstNode, 'type' | 'displayName' | 'className' | 'tagName' | 'hidden' | 'isCanvas' | 'props' | 'styles' | 'custom'>> }
     | { type: 'UPDATE_PROPS'; nodeId: AstNodeId; props: Record<string, unknown> }
     | { type: 'UPDATE_STYLES'; nodeId: AstNodeId; styles: Record<string, string> }
     | { type: 'REORDER_CHILD'; parentId: AstNodeId; childId: AstNodeId; newIndex: number }
@@ -277,7 +277,7 @@ function builderReducer(state: BuilderState, action: Action): BuilderState {
             const { nodes: subtreeNodes, rootId } = parseHtmlToAst(
                 action.html,
                 'section',
-                action.sectionName ?? 'Section',
+                action.sectionName ?? '',
                 action.custom ?? {},
             );
 
@@ -361,7 +361,7 @@ export function useBuilderStore(initialAst?: PageAst) {
             dispatch({ type: 'DUPLICATE_NODE', nodeId });
         },
 
-        updateNode: (nodeId: AstNodeId, patch: Partial<Pick<AstNode, 'displayName' | 'className' | 'tagName' | 'hidden' | 'isCanvas' | 'props' | 'styles' | 'custom'>>) => {
+        updateNode: (nodeId: AstNodeId, patch: Partial<Pick<AstNode, 'type' | 'displayName' | 'className' | 'tagName' | 'hidden' | 'isCanvas' | 'props' | 'styles' | 'custom'>>) => {
             dispatch({ type: 'UPDATE_NODE', nodeId, patch });
         },
 

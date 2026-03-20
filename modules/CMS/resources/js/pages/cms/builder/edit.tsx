@@ -40,7 +40,7 @@ import {
     getCsrfToken,
     type BuilderDeviceMode,
 } from '../../../components/builder/builder-utils';
-import { ROOT_NODE_ID } from '../../../components/builder/core/ast-types';
+import { ROOT_NODE_ID, type AstNode } from '../../../components/builder/core/ast-types';
 import { parseHtmlToAst, createEmptyPageAst, getNode, serializePageAst } from '../../../components/builder/core/ast-helpers';
 import { renderCleanNodeToHtml, renderCleanPageContent, renderNodeToHtml, renderPageContent } from '../../../components/builder/core/ast-to-html';
 import { useBuilderStore } from '../../../components/builder/core/use-builder-store';
@@ -261,7 +261,7 @@ export default function BuilderEdit({
         let currentId: string | null = selectedItemId;
 
         while (currentId) {
-            const node = nodes[currentId];
+            const node: AstNode | undefined = nodes[currentId];
 
             if (!node) {
                 return selectedItemId;
@@ -329,7 +329,7 @@ export default function BuilderEdit({
     }, []);
 
     const handleAddLibraryItem = useCallback((item: BuilderLibraryItem) => {
-        actions.importHtml(item.html, ROOT_NODE_ID);
+        actions.importHtml(item.html, ROOT_NODE_ID, undefined, item.name);
         pendingScrollRef.current = 'pending';
 
         if (addedBadgeTimerRef.current) {
@@ -425,23 +425,19 @@ export default function BuilderEdit({
                 return;
             }
 
-            // Re-parse HTML and replace the node's subtree
-            const tempAst = parseHtmlToAst(value, 'section', 'Section', {});
-            const tempRoot = tempAst.nodes[tempAst.rootNodeId];
+            // Re-parse HTML and update node props from the parsed root
+            const tempAst = parseHtmlToAst(value);
+            const tempRoot = tempAst.nodes[tempAst.rootId];
 
-            if (tempRoot && tempRoot.childIds.length > 0) {
-                // Replace existing node's props with first child of parsed AST
-                const firstChildId = tempRoot.childIds[0];
-                const firstChild = tempAst.nodes[firstChildId];
-
-                if (firstChild) {
-                    actions.updateNode(selectedItemId, {
-                        props: firstChild.props,
-                        styles: firstChild.styles,
-                        className: firstChild.className,
-                        tagName: firstChild.tagName,
-                    });
-                }
+            if (tempRoot) {
+                actions.updateNode(selectedItemId, {
+                    type: tempRoot.type,
+                    displayName: tempRoot.displayName,
+                    props: tempRoot.props,
+                    styles: tempRoot.styles,
+                    className: tempRoot.className,
+                    tagName: tempRoot.tagName,
+                });
             }
         },
         [actions, selectedItemId],
@@ -463,15 +459,18 @@ export default function BuilderEdit({
 
             // Re-parse the updated HTML back into AST
             if (selectedItemId && updated.html !== selectedItem.html) {
-                const tempAst = parseHtmlToAst(updated.html, 'section', 'Section', {});
-                actions.deleteNode(selectedItemId);
-
-                const tempRoot = tempAst.nodes[tempAst.rootNodeId];
+                const tempAst = parseHtmlToAst(updated.html);
+                const tempRoot = tempAst.nodes[tempAst.rootId];
 
                 if (tempRoot) {
-                    for (const childId of tempRoot.childIds) {
-                        actions.addSubtree(tempAst.nodes, childId, ROOT_NODE_ID);
-                    }
+                    actions.updateNode(selectedItemId, {
+                        type: tempRoot.type,
+                        displayName: tempRoot.displayName,
+                        props: tempRoot.props,
+                        styles: tempRoot.styles,
+                        className: tempRoot.className,
+                        tagName: tempRoot.tagName,
+                    });
                 }
             }
         },
@@ -489,15 +488,18 @@ export default function BuilderEdit({
             });
 
             if (selectedItemId && updated.html !== selectedItem.html) {
-                const tempAst = parseHtmlToAst(updated.html, 'section', 'Section', {});
-                actions.deleteNode(selectedItemId);
-
-                const tempRoot = tempAst.nodes[tempAst.rootNodeId];
+                const tempAst = parseHtmlToAst(updated.html);
+                const tempRoot = tempAst.nodes[tempAst.rootId];
 
                 if (tempRoot) {
-                    for (const childId of tempRoot.childIds) {
-                        actions.addSubtree(tempAst.nodes, childId, ROOT_NODE_ID);
-                    }
+                    actions.updateNode(selectedItemId, {
+                        type: tempRoot.type,
+                        displayName: tempRoot.displayName,
+                        props: tempRoot.props,
+                        styles: tempRoot.styles,
+                        className: tempRoot.className,
+                        tagName: tempRoot.tagName,
+                    });
                 }
             }
         },
@@ -934,7 +936,7 @@ export default function BuilderEdit({
 
                         {/* Center: Canvas + Bottom toolbar */}
                         <div className="flex min-w-0 flex-1 flex-col">
-                            <div className="relative min-h-0 flex-1 overflow-hidden bg-[#f0f2f5] p-1.5 sm:p-2 lg:p-3">
+                            <div className="relative min-h-0 flex-1 overflow-hidden bg-[#f0f2f5] p-1.5 sm:p-2 lg:bg-transparent lg:p-0">
                                 <BuilderPreviewPanel
                                     deviceMode={deviceMode}
                                     iframeRef={iframeRef}

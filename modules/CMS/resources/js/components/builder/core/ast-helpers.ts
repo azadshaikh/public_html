@@ -9,6 +9,7 @@
 import {
     AST_VERSION,
     CANVAS_TYPES,
+    DEFAULT_TAG_MAP,
     ROOT_NODE_ID,
     type AstNode,
     type AstNodeId,
@@ -402,7 +403,7 @@ export function updateNodeStyles(
 export function updateNode(
     nodes: AstNodeMap,
     id: AstNodeId,
-    patch: Partial<Pick<AstNode, 'displayName' | 'className' | 'tagName' | 'hidden' | 'isCanvas' | 'props' | 'styles' | 'custom'>>,
+    patch: Partial<Pick<AstNode, 'type' | 'displayName' | 'className' | 'tagName' | 'hidden' | 'isCanvas' | 'props' | 'styles' | 'custom'>>,
 ): AstNodeMap {
     const node = nodes[id];
 
@@ -588,7 +589,7 @@ export function deserializePageAst(data: SerializedPageAst): PageAst {
 export function parseHtmlToAst(
     html: string,
     rootType: AstNodeType = 'section',
-    displayName: string = 'Section',
+    displayName: string = '',
     custom: Record<string, unknown> = {},
 ): { nodes: AstNodeMap; rootId: AstNodeId } {
     const parser = new DOMParser();
@@ -599,7 +600,7 @@ export function parseHtmlToAst(
 
     function processElement(el: Element, parentId: AstNodeId | null, isRoot: boolean): AstNodeId {
         const tag = el.tagName.toLowerCase();
-        const type = isRoot ? rootType : inferNodeType(tag, el);
+        const type = isRoot ? inferNodeType(tag, el) : inferNodeType(tag, el);
         const id = generateNodeId();
 
         const props: Record<string, unknown> = {};
@@ -633,11 +634,11 @@ export function parseHtmlToAst(
         const node = createNode({
             id,
             type,
-            displayName: isRoot ? displayName : `${type}`,
+            displayName: isRoot ? (displayName || buildDisplayName(tag, className)) : buildDisplayName(tag, className),
             props,
             styles,
             className,
-            tagName: isRoot ? null : tag,
+            tagName: tag,
             isCanvas: CANVAS_TYPES.has(type),
             custom: isRoot ? custom : {},
         });
@@ -668,7 +669,7 @@ export function parseHtmlToAst(
                     nodes[textId] = textNode;
 
                     // Insert at the right position
-                    const nextSibling = childNode.nextElementSibling;
+                    const nextSibling = (childNode as ChildNode & { nextElementSibling: Element | null }).nextElementSibling;
 
                     if (nextSibling) {
                         const siblingId = findNodeIdByElement(nodes, id, nextSibling);
@@ -695,10 +696,11 @@ export function parseHtmlToAst(
     if (body.children.length === 1) {
         rootId = processElement(body.children[0], null, true);
     } else if (body.children.length > 1) {
-        // Wrap in a section
+        // Wrap in a container
         const wrapperNode = createNode({
             type: rootType,
-            displayName,
+            displayName: displayName || rootType,
+            tagName: DEFAULT_TAG_MAP[rootType] ?? 'div',
             isCanvas: true,
             custom,
         });
@@ -804,4 +806,19 @@ function findNodeIdByElement(nodes: AstNodeMap, parentId: AstNodeId, el: Element
     }
 
     return '';
+}
+
+/**
+ * Build a human-readable display name from the HTML tag and class list.
+ * e.g. "H2 .display-5", "NAV .navbar", "DIV .container"
+ */
+function buildDisplayName(tag: string, className: string): string {
+    const label = tag.toUpperCase();
+    const firstClass = className.trim().split(/\s+/)[0];
+
+    if (firstClass) {
+        return `${label} .${firstClass}`;
+    }
+
+    return label;
 }
