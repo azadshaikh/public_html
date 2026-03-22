@@ -1,6 +1,6 @@
 import { router } from '@inertiajs/react';
 import { CheckCircleIcon, PlayCircleIcon, RefreshCwIcon } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { showAppToast } from '@/components/forms/form-success-toast';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -9,8 +9,8 @@ import { cn } from '@/lib/utils';
 import type { ServerProvisioningStep } from '../../../types/platform';
 import { formatStatusLabel, statusBadgeVariant, STEP_STATUS_VARIANT } from './show-shared';
 
-const PROVISIONING_POLL_INTERVAL_MS = 60_000;
-const PROVISIONING_POLL_INTERVAL_LABEL = 'every minute';
+const PROVISIONING_POLL_INTERVAL_MS = 10_000;
+const PROVISIONING_POLL_INTERVAL_LABEL = 'every 10 seconds';
 
 type ServerProvisioningStepsTableProps = {
     serverId: number;
@@ -37,6 +37,7 @@ export function ServerProvisioningStepsTable({
     const [pollAttemptCount, setPollAttemptCount] = useState(0);
     const [lastPollError, setLastPollError] = useState<string | null>(null);
     const [lastResponseStatus, setLastResponseStatus] = useState<number | null>(null);
+    const stepsRef = useRef(steps);
     const statusRef = useRef<string | null>(provisioningStatus);
     const completionReloadedRef = useRef(false);
     const shouldShowDebugState = provisioningStatus === 'provisioning'
@@ -56,11 +57,12 @@ export function ServerProvisioningStepsTable({
         setPollAttemptCount(0);
         setLastPollError(null);
         setLastResponseStatus(null);
+        stepsRef.current = steps;
         statusRef.current = provisioningStatus;
         completionReloadedRef.current = false;
     }, [provisioningStatus, steps]);
 
-    const refreshProvisioningState = useCallback(async (): Promise<boolean> => {
+    async function refreshProvisioningState(): Promise<boolean> {
         setPollAttemptCount((count) => count + 1);
 
         const response = await fetch(pollingUrl, {
@@ -81,7 +83,7 @@ export function ServerProvisioningStepsTable({
             current_status?: string | null;
         };
 
-        const nextSteps = Array.isArray(payload.provisioning_steps) ? payload.provisioning_steps : currentSteps;
+        const nextSteps = Array.isArray(payload.provisioning_steps) ? payload.provisioning_steps : stepsRef.current;
         const nextStatus = typeof payload.current_status === 'string' ? payload.current_status : null;
         const total = nextSteps.length;
         const completed = nextSteps.filter((step) => step.status === 'done').length;
@@ -94,6 +96,7 @@ export function ServerProvisioningStepsTable({
         setCurrentStatus(nextStatus);
         setProgressPercent(nextProgress);
         setLastPollError(null);
+        stepsRef.current = nextSteps;
         setLastUpdatedLabel(new Date().toLocaleTimeString([], {
             hour: 'numeric',
             minute: '2-digit',
@@ -119,7 +122,7 @@ export function ServerProvisioningStepsTable({
         }
 
         return false;
-    }, [currentSteps, pollingUrl]);
+    }
 
     useEffect(() => {
         if (!isPolling) {
@@ -127,32 +130,40 @@ export function ServerProvisioningStepsTable({
         }
 
         let active = true;
+        let timeoutId: number | null = null;
 
-        void refreshProvisioningState().catch((error) => {
-            if (active) {
-                const message = error instanceof Error ? error.message : 'Unknown polling error.';
+        const scheduleNextPoll = () => {
+            timeoutId = window.setTimeout(() => {
+                void pollProvisioningState();
+            }, PROVISIONING_POLL_INTERVAL_MS);
+        };
 
-                setLastPollError(message);
-                setIsPolling(false);
-            }
-        });
+        const pollProvisioningState = async () => {
+            try {
+                const shouldContinuePolling = await refreshProvisioningState();
 
-        const intervalId = window.setInterval(() => {
-            void refreshProvisioningState().catch((error) => {
+                if (active && shouldContinuePolling) {
+                    scheduleNextPoll();
+                }
+            } catch (error) {
                 if (active) {
                     const message = error instanceof Error ? error.message : 'Unknown polling error.';
 
                     setLastPollError(message);
                     setIsPolling(false);
                 }
-            });
-        }, PROVISIONING_POLL_INTERVAL_MS);
+            }
+        };
+
+        scheduleNextPoll();
 
         return () => {
             active = false;
-            window.clearInterval(intervalId);
+            if (timeoutId !== null) {
+                window.clearTimeout(timeoutId);
+            }
         };
-    }, [isPolling, refreshProvisioningState]);
+    }, [isPolling]);
 
     async function runStepAction(url: string, actionKey: string, successTitle: string): Promise<void> {
         setActiveActionKey(actionKey);

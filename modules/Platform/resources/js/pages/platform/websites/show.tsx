@@ -77,8 +77,8 @@ type WebsitesShowPageProps = {
     canRevealSecrets: boolean;
 };
 
-const PROVISIONING_POLL_INTERVAL_MS = 60_000;
-const PROVISIONING_POLL_INTERVAL_LABEL = 'every minute';
+const PROVISIONING_POLL_INTERVAL_MS = 10_000;
+const PROVISIONING_POLL_INTERVAL_LABEL = 'every 10 seconds';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -1186,6 +1186,7 @@ function ProvisioningStepsTable({
     const [pollAttemptCount, setPollAttemptCount] = useState(0);
     const [lastPollError, setLastPollError] = useState<string | null>(null);
     const [lastResponseStatus, setLastResponseStatus] = useState<number | null>(null);
+    const stepsRef = useRef(steps);
     const statusRef = useRef<string | null>(websiteStatus);
     const completionReloadedRef = useRef(false);
     const shouldShowDebugState = websiteStatus === 'provisioning'
@@ -1204,6 +1205,7 @@ function ProvisioningStepsTable({
         setPollAttemptCount(0);
         setLastPollError(null);
         setLastResponseStatus(null);
+        stepsRef.current = steps;
         statusRef.current = websiteStatus;
         completionReloadedRef.current = false;
     }, [isProvisioning, steps, websiteStatus]);
@@ -1230,7 +1232,7 @@ function ProvisioningStepsTable({
             current_status?: string | null;
         };
 
-        const nextSteps = Array.isArray(payload.provisioning_steps) ? payload.provisioning_steps : currentSteps;
+        const nextSteps = Array.isArray(payload.provisioning_steps) ? payload.provisioning_steps : stepsRef.current;
         const nextStatus = typeof payload.current_status === 'string' ? payload.current_status : null;
         const total = nextSteps.length;
         const completed = nextSteps.filter((step) => step.status === 'done').length;
@@ -1243,6 +1245,7 @@ function ProvisioningStepsTable({
         setCurrentStatus(nextStatus);
         setProgressPercent(nextProgress);
         setLastPollError(null);
+        stepsRef.current = nextSteps;
         setLastUpdatedLabel(new Date().toLocaleTimeString([], {
             hour: 'numeric',
             minute: '2-digit',
@@ -1276,30 +1279,38 @@ function ProvisioningStepsTable({
         }
 
         let active = true;
+        let timeoutId: number | null = null;
 
-        void refreshProvisioningState().catch((error) => {
-            if (active) {
-                const message = error instanceof Error ? error.message : 'Unknown polling error.';
+        const scheduleNextPoll = () => {
+            timeoutId = window.setTimeout(() => {
+                void pollProvisioningState();
+            }, PROVISIONING_POLL_INTERVAL_MS);
+        };
 
-                setLastPollError(message);
-                setIsPolling(false);
-            }
-        });
+        const pollProvisioningState = async () => {
+            try {
+                const shouldContinuePolling = await refreshProvisioningState();
 
-        const intervalId = window.setInterval(() => {
-            void refreshProvisioningState().catch((error) => {
+                if (active && shouldContinuePolling) {
+                    scheduleNextPoll();
+                }
+            } catch (error) {
                 if (active) {
                     const message = error instanceof Error ? error.message : 'Unknown polling error.';
 
                     setLastPollError(message);
                     setIsPolling(false);
                 }
-            });
-        }, PROVISIONING_POLL_INTERVAL_MS);
+            }
+        };
+
+        scheduleNextPoll();
 
         return () => {
             active = false;
-            window.clearInterval(intervalId);
+            if (timeoutId !== null) {
+                window.clearTimeout(timeoutId);
+            }
         };
     }, [isPolling]);
 
