@@ -13,7 +13,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -27,6 +26,7 @@ use Modules\Platform\Libs\HestiaClient;
 use Modules\Platform\Models\Secret;
 use Modules\Platform\Models\Server;
 use Modules\Platform\Models\Website;
+use Modules\Platform\Services\ServerAcmeSetupService;
 use Modules\Platform\Services\ServerService;
 use Modules\Platform\Services\ServerSSHService;
 use Modules\Platform\Services\SSHKeyService;
@@ -531,28 +531,14 @@ class ServerController extends ScaffoldController implements HasMiddleware
         }
 
         try {
-            $exitCode = Artisan::call('platform:server:setup-acme', [
-                'server_id' => $server->id,
-            ]);
-
-            if ($exitCode === 0) {
-                $message = 'acme.sh setup completed successfully.';
-                $this->logActivity($server, ActivityAction::UPDATE, $message);
-
-                if ($request->expectsJson()) {
-                    return response()->json(['status' => 'success', 'message' => $message]);
-                }
-
-                return back()->with('success', $message);
-            }
-
-            $message = 'acme.sh setup failed. Check server logs for details.';
+            $result = resolve(ServerAcmeSetupService::class)->setup($server);
+            $message = $result['summary'];
 
             if ($request->expectsJson()) {
-                return response()->json(['status' => 'error', 'message' => $message], 500);
+                return response()->json(['status' => 'success', 'message' => $message]);
             }
 
-            return back()->with('error', $message);
+            return back()->with('success', $message);
         } catch (Exception $exception) {
             $message = 'acme.sh setup failed: '.$exception->getMessage();
 
@@ -1142,6 +1128,11 @@ class ServerController extends ScaffoldController implements HasMiddleware
                 'description' => 'Configure HestiaCP, PHP, and Astero directories',
                 'icon' => 'ri-settings-3-line',
             ],
+            'acme_setup' => [
+                'title' => 'ACME Setup',
+                'description' => 'Install acme.sh and wildcard SSL helper scripts',
+                'icon' => 'ri-shield-check-line',
+            ],
             'release_api_key' => [
                 'title' => 'Release API Key',
                 'description' => 'Configure release API key on the target server',
@@ -1166,6 +1157,11 @@ class ServerController extends ScaffoldController implements HasMiddleware
                 'title' => 'Sync Server',
                 'description' => 'Sync server information and stats',
                 'icon' => 'ri-macbook-line',
+            ],
+            'pg_optimize' => [
+                'title' => 'Optimize PostgreSQL',
+                'description' => 'Apply PostgreSQL settings based on server resources',
+                'icon' => 'ri-database-2-line',
             ],
         ];
     }

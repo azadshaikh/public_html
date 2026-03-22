@@ -307,7 +307,7 @@ export function ServerShowOverview({
                                             disabled={processing}
                                             onClick={() => openConfirm(
                                                 'Start Provisioning',
-                                                'Install HestiaCP and Astero scripts on this server? This can take 15-30 minutes.',
+                                                'Install HestiaCP, Astero scripts, and ACME SSL automation on this server? This can take 15-30 minutes.',
                                                 'Start Provisioning',
                                                 () => perform('post', route('platform.servers.provision', server.id)),
                                             )}
@@ -357,7 +357,7 @@ export function ServerShowOverview({
                                             disabled={processing}
                                             onClick={() => openConfirm(
                                                 'Setup ACME (SSL)',
-                                                'Install acme.sh and configure SSL certificate automation on this server?',
+                                                'Run the ACME setup workflow again to install or repair SSL certificate automation on this server?',
                                                 'Setup ACME',
                                                 () => perform('post', route('platform.servers.setup-acme', server.id)),
                                             )}

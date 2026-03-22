@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Sleep;
 use Modules\Platform\Libs\HestiaClient;
 use Modules\Platform\Models\Server;
+use Modules\Platform\Services\ServerAcmeSetupService;
 use Modules\Platform\Services\ServerService;
 use Modules\Platform\Services\ServerSSHService;
 use RecursiveDirectoryIterator;
@@ -33,9 +34,10 @@ use ZipArchive;
  * 2. Install HestiaCP (if not installed)
  * 3. Upload Astero scripts
  * 4. Prepare server for Astero provisioning
- * 5. Create admin access key
- * 6. Verify installation
- * 7. Update server with credentials and mark as ready
+ * 5. Configure ACME SSL automation
+ * 6. Create admin access key
+ * 7. Verify installation
+ * 8. Update server with credentials and mark as ready
  *
  * Progress is tracked in server metadata['provisioning_steps'].
  */
@@ -91,6 +93,7 @@ class ServerProvision implements ShouldQueue
         'server_reboot' => 'Rebooting server',
         'scripts_upload' => 'Uploading Astero scripts',
         'server_setup' => 'Setting up server',
+        'acme_setup' => 'Setting up ACME SSL',
         'release_api_key' => 'Configuring release API key',
         'access_key' => 'Creating access key',
         'verification' => 'Verifying installation',
@@ -109,6 +112,7 @@ class ServerProvision implements ShouldQueue
         'server_reboot',
         'scripts_upload',
         'server_setup',
+        'acme_setup',
         'release_api_key',
         'access_key',
         'verification',
@@ -171,8 +175,11 @@ class ServerProvision implements ShouldQueue
     /**
      * Execute the job.
      */
-    public function handle(ServerSSHService $sshService, ServerService $serverService): void
-    {
+    public function handle(
+        ServerSSHService $sshService,
+        ServerService $serverService,
+        ServerAcmeSetupService $acmeSetupService
+    ): void {
         $this->queueMonitorLabel('Server #'.$this->serverId);
         /** @var Server|null $server */
         $server = Server::query()->find($this->serverId);
@@ -287,7 +294,19 @@ class ServerProvision implements ShouldQueue
                 $this->updateStep($server, 'server_setup', 'completed', $serverSetupResult);
             }
 
-            // Step 7: Configure release API key for secured release sync
+            // Step 7: Install ACME tooling and wildcard SSL helper scripts
+            if (! $this->isStepDone($server, 'acme_setup')) {
+                if ((bool) $server->acme_configured) {
+                    $this->updateStep($server, 'acme_setup', 'skipped', ['reason' => 'Already configured']);
+                } else {
+                    $this->abortIfProvisioningStopRequested($server);
+                    $this->updateStep($server, 'acme_setup', 'running');
+                    $acmeSetupResult = $acmeSetupService->setup($server);
+                    $this->updateStep($server, 'acme_setup', 'completed', $acmeSetupResult);
+                }
+            }
+
+            // Step 8: Configure release API key for secured release sync
             if (! $this->isStepDone($server, 'release_api_key')) {
                 $this->abortIfProvisioningStopRequested($server);
                 $this->updateStep($server, 'release_api_key', 'running');
@@ -295,7 +314,7 @@ class ServerProvision implements ShouldQueue
                 $this->updateStep($server, 'release_api_key', 'completed', $releaseKeyResult);
             }
 
-            // Step 8: Create access key
+            // Step 9: Create access key
             $credentials = null;
             if (! $this->isStepDone($server, 'access_key')) {
                 $this->abortIfProvisioningStopRequested($server);
@@ -310,7 +329,7 @@ class ServerProvision implements ShouldQueue
                 ]);
             }
 
-            // Step 9: Verify installation
+            // Step 10: Verify installation
             if (! $this->isStepDone($server, 'verification')) {
                 $this->abortIfProvisioningStopRequested($server);
                 $this->updateStep($server, 'verification', 'running');
@@ -318,7 +337,7 @@ class ServerProvision implements ShouldQueue
                 $this->updateStep($server, 'verification', 'completed', $verificationResult);
             }
 
-            // Step 10: Update releases
+            // Step 11: Update releases
             if (! $this->isStepDone($server, 'update_releases')) {
                 $this->abortIfProvisioningStopRequested($server);
                 $this->updateStep($server, 'update_releases', 'running');
@@ -326,7 +345,7 @@ class ServerProvision implements ShouldQueue
                 $this->updateStep($server, 'update_releases', 'completed', $updateReleaseResult);
             }
 
-            // Step 11: Sync server info
+            // Step 12: Sync server info
             if (! $this->isStepDone($server, 'server_sync')) {
                 $this->abortIfProvisioningStopRequested($server);
                 $this->updateStep($server, 'server_sync', 'running');
@@ -334,7 +353,7 @@ class ServerProvision implements ShouldQueue
                 $this->updateStep($server, 'server_sync', 'completed', $syncServerResult);
             }
 
-            // Step 12: Optimize PostgreSQL settings
+            // Step 13: Optimize PostgreSQL settings
             if (! $this->isStepDone($server, 'pg_optimize')) {
                 $this->abortIfProvisioningStopRequested($server);
                 $this->updateStep($server, 'pg_optimize', 'running');
