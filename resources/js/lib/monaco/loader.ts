@@ -9,6 +9,8 @@ type MonacoSubscription = {
 export type MonacoEditorModel = {
     getValue: () => string;
     setValue: (value: string) => void;
+    dispose?: () => void;
+    isDisposed?: () => boolean;
 };
 
 export type MonacoEditorConstructionOptions = {

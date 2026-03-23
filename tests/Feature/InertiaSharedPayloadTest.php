@@ -23,6 +23,8 @@ class InertiaSharedPayloadTest extends TestCase
 
     public function test_shared_runtime_payload_omits_internal_module_metadata_and_unused_user_timestamps(): void
     {
+        config()->set('app.inertia_hard_reload_page_limit', 22);
+
         $user = User::factory()->create([
             'first_name' => 'Super',
             'last_name' => 'User',
@@ -67,7 +69,8 @@ class InertiaSharedPayloadTest extends TestCase
                     ->missing('addUsers')
                     ->missing('addPosts')
                     ->etc()
-                ));
+                )
+                ->where('runtime.inertiaHardReloadPageLimit', 22));
     }
 
     public function test_shared_runtime_payload_scopes_abilities_to_the_current_route_family(): void

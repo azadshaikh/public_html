@@ -64,6 +64,9 @@ class HandleInertiaRequests extends Middleware
                 'logo' => (string) config('astero.branding.logo', ''),
                 'icon' => (string) config('astero.branding.icon', ''),
             ],
+            'runtime' => [
+                'inertiaHardReloadPageLimit' => (int) config('app.inertia_hard_reload_page_limit', 15),
+            ],
             'auth' => [
                 'user' => fn (): ?array => $request->user()
                     ? [

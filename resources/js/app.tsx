@@ -11,6 +11,13 @@ import {
     initModulePageFilter,
     resolveInertiaPage,
 } from './lib/inertia-page-resolver';
+import {
+    incrementInertiaNavigationCount,
+    normalizeInertiaNavigationUrl,
+    resetInertiaNavigationCount,
+    shouldForceInertiaHardReload,
+    shouldTrackInertiaNavigation,
+} from './lib/inertia-session-reload';
 
 const inertiaDefaults = {
     form: {
@@ -36,6 +43,18 @@ function syncModulePageFilter(sharedProps: Record<string, unknown>): void {
     );
 }
 
+function resolveInertiaHardReloadPageLimit(
+    sharedProps: Record<string, unknown>,
+): number {
+    const limit = (
+        sharedProps.runtime as
+            | { inertiaHardReloadPageLimit?: number }
+            | undefined
+    )?.inertiaHardReloadPageLimit;
+
+    return typeof limit === 'number' && Number.isFinite(limit) ? limit : 15;
+}
+
 createInertiaApp({
     resolve: resolveInertiaPage,
     defaults: inertiaDefaults,
@@ -49,6 +68,21 @@ createInertiaApp({
         // first Inertia page resolution.
         const sharedProps = props.initialPage.props as Record<string, unknown>;
         syncModulePageFilter(sharedProps);
+        let inertiaHardReloadPageLimit =
+            resolveInertiaHardReloadPageLimit(sharedProps);
+
+        let lastTrackedPageUrl =
+            normalizeInertiaNavigationUrl(props.initialPage.url) ?? '/';
+        let latestStartedVisit: {
+            method?: string;
+            prefetch?: boolean;
+            only?: string[];
+            except?: string[];
+        } | null = null;
+
+        router.on('start', (event) => {
+            latestStartedVisit = event.detail.visit;
+        });
 
         router.on('success', (event) => {
             const nextSharedProps = event.detail?.page?.props as
@@ -57,7 +91,43 @@ createInertiaApp({
 
             if (nextSharedProps) {
                 syncModulePageFilter(nextSharedProps);
+                inertiaHardReloadPageLimit =
+                    resolveInertiaHardReloadPageLimit(nextSharedProps);
             }
+
+            const nextPageUrl = event.detail?.page?.url ?? null;
+
+            if (
+                !shouldTrackInertiaNavigation(
+                    latestStartedVisit,
+                    nextPageUrl,
+                    lastTrackedPageUrl,
+                )
+            ) {
+                latestStartedVisit = null;
+
+                return;
+            }
+
+            lastTrackedPageUrl =
+                normalizeInertiaNavigationUrl(nextPageUrl) ?? lastTrackedPageUrl;
+            latestStartedVisit = null;
+
+            const navigationCount = incrementInertiaNavigationCount(
+                window.sessionStorage,
+            );
+
+            if (
+                !shouldForceInertiaHardReload(
+                    navigationCount,
+                    inertiaHardReloadPageLimit,
+                )
+            ) {
+                return;
+            }
+
+            resetInertiaNavigationCount(window.sessionStorage);
+            window.location.reload();
         });
 
         const app = (

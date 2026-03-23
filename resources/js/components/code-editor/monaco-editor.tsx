@@ -204,11 +204,23 @@ export function MonacoEditor({
         });
 
         return () => {
+            const model = editor.getModel();
+
             changeSubscription.dispose();
             blurSubscription?.dispose();
             window.removeEventListener('keydown', stopEnterPropagation, true);
             window.removeEventListener('keyup', stopEnterPropagation, true);
             editor.dispose();
+
+            if (
+                model &&
+                typeof model.dispose === 'function' &&
+                typeof model.isDisposed === 'function' &&
+                !model.isDisposed()
+            ) {
+                model.dispose();
+            }
+
             editorRef.current = null;
         };
     }, [loaderState, onBlur, onChange]);

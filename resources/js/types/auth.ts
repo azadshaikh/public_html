@@ -50,6 +50,9 @@ export type SharedData = {
         logo: string;
         icon: string;
     };
+    runtime: {
+        inertiaHardReloadPageLimit: number;
+    };
     auth: Auth;
     navigation: NavigationByArea;
     modules: {

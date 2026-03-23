@@ -18,6 +18,10 @@ return [
     'name' => env('APP_NAME', 'Astero'),
 
     'admin_slug' => trim((string) env('ADMIN_SLUG', ''), '/'),
+    'inertia_hard_reload_page_limit' => max(
+        0,
+        (int) env('INERTIA_HARD_RELOAD_PAGE_LIMIT', 15),
+    ),
 
     // HTTP Response Caching - Sets Cache-Control headers for CDN/browser caching
     'cdn_cache_headers' => env('CDN_CACHE_HEADERS', true),
