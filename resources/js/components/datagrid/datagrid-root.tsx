@@ -123,20 +123,23 @@ export function Datagrid<T>({
     const viewParamName = view?.paramName ?? 'view';
     const activeTabValue = tabs?.items.find((item) => item.active)?.value ?? '';
     const currentParams = React.useMemo(() => {
-        const params = filters.reduce<Record<string, string>>((carry, filter) => {
-            if (filter.type === 'date_range') {
-                const [from = '', to = ''] = filter.value.split(',');
+        const params = filters.reduce<Record<string, string>>(
+            (carry, filter) => {
+                if (filter.type === 'date_range') {
+                    const [from = '', to = ''] = filter.value.split(',');
 
-                carry[`${filter.name}_from`] = from;
-                carry[`${filter.name}_to`] = to;
+                    carry[`${filter.name}_from`] = from;
+                    carry[`${filter.name}_to`] = to;
+
+                    return carry;
+                }
+
+                carry[filter.name] = filter.value;
 
                 return carry;
-            }
-
-            carry[filter.name] = filter.value;
-
-            return carry;
-        }, {});
+            },
+            {},
+        );
 
         if (tabs && activeTabValue !== '') {
             params[tabs.name] = activeTabValue;
@@ -212,8 +215,8 @@ export function Datagrid<T>({
             columns.map((column, index) => ({
                 ...column,
                 width:
-                    column.width
-                    ?? normalizeWidth(contentScaffoldColumns[index]?.width),
+                    column.width ??
+                    normalizeWidth(contentScaffoldColumns[index]?.width),
             })),
         [columns, contentScaffoldColumns],
     ) as DatagridColumn<T>[];
@@ -232,7 +235,11 @@ export function Datagrid<T>({
         }
 
         return mappedColumns;
-    }, [actionColumnWidth, resolvedBaseColumns, rowActions]) as DatagridColumn<T>[];
+    }, [
+        actionColumnWidth,
+        resolvedBaseColumns,
+        rowActions,
+    ]) as DatagridColumn<T>[];
 
     const selectableRows = React.useMemo(
         () =>
@@ -398,8 +405,8 @@ export function Datagrid<T>({
         });
     };
 
-    const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const form = event.currentTarget.form;
+    const handleSearchChange = (input: HTMLInputElement) => {
+        const form = input.form;
 
         if (form === null) {
             return;
