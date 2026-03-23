@@ -43,6 +43,11 @@ class ZiggyRouteFilter
             'view_login_attempts',
             'view_not_found_logs',
         ],
+        'seo' => [
+            'manage_seo_settings',
+            'manage_integrations_seo_settings',
+            'manage_cms_seo_settings',
+        ],
     ];
 
     /**

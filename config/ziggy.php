@@ -41,6 +41,7 @@ return [
             'profile.complete',
             'profile.complete.*',
             'logout',
+            'sitemap',
         ],
 
         /*
@@ -103,6 +104,15 @@ return [
         */
         'logs' => [
             'app.logs.*',
+        ],
+
+        /*
+        |----------------------------------------------------------------------
+        | SEO settings — permission-gated CMS SEO pages and actions
+        |----------------------------------------------------------------------
+        */
+        'seo' => [
+            'seo.*',
         ],
 
         /*

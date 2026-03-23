@@ -141,6 +141,19 @@ class RedirectionCrudTest extends TestCase
             );
     }
 
+    public function test_public_request_is_redirected_when_matching_active_redirection(): void
+    {
+        $this->createRedirection(
+            '/go-to-google',
+            'https://www.google.com',
+            301,
+            'external',
+        );
+
+        $this->get('/go-to-google')
+            ->assertRedirect('https://www.google.com');
+    }
+
     public function test_admin_can_access_redirections_import_page(): void
     {
         $this->actingAs($this->admin)

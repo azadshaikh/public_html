@@ -24,6 +24,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Modules\CMS\Http\Middleware\RedirectionMiddleware;
 use Spatie\Permission\Middleware\RoleMiddleware;
 use Spatie\Permission\Middleware\RoleOrPermissionMiddleware;
 use Symfony\Component\HttpFoundation\Response;
@@ -65,6 +66,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             HandleAppearance::class,
             LanguageMiddleware::class,
+            RedirectionMiddleware::class,
             JsonRedirectMiddleware::class,
             EnableDebugbarForSuperUser::class,
             HandleInertiaRequests::class,
