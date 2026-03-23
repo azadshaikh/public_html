@@ -21,6 +21,8 @@ class LogManagementTest extends TestCase
 
     private User $superUser;
 
+    private User $administrator;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -46,6 +48,30 @@ class LogManagementTest extends TestCase
             'delete_not_found_logs',
             'manage_not_found_logs',
         ]);
+
+        $this->administrator = User::factory()->create([
+            'first_name' => 'Log',
+            'last_name' => 'Administrator',
+            'name' => 'Log Administrator',
+            'status' => Status::ACTIVE,
+            'email_verified_at' => now(),
+        ]);
+        $this->administrator->assignRole(Role::findByName('administrator', 'web'));
+    }
+
+    public function test_administrator_can_access_all_log_index_pages(): void
+    {
+        $this->actingAs($this->administrator)
+            ->get(route('app.logs.activity-logs.index'))
+            ->assertOk();
+
+        $this->actingAs($this->administrator)
+            ->get(route('app.logs.login-attempts.index'))
+            ->assertOk();
+
+        $this->actingAs($this->administrator)
+            ->get(route('app.logs.not-found-logs.index'))
+            ->assertOk();
     }
 
     public function test_activity_log_pages_and_actions_work_for_authorized_users(): void

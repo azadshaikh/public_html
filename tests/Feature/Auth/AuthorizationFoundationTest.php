@@ -54,6 +54,15 @@ class AuthorizationFoundationTest extends TestCase
         $this->assertTrue($administrator->hasPermissionTo('edit_roles', 'web'));
         $this->assertTrue($administrator->hasPermissionTo('add_users', 'web'));
         $this->assertTrue($administrator->hasPermissionTo('delete_users', 'web'));
+        $this->assertTrue($administrator->hasPermissionTo('view_activity_logs', 'web'));
+        $this->assertTrue($administrator->hasPermissionTo('delete_activity_logs', 'web'));
+        $this->assertTrue($administrator->hasPermissionTo('manage_activity_logs', 'web'));
+        $this->assertTrue($administrator->hasPermissionTo('view_login_attempts', 'web'));
+        $this->assertTrue($administrator->hasPermissionTo('delete_login_attempts', 'web'));
+        $this->assertTrue($administrator->hasPermissionTo('manage_login_attempts', 'web'));
+        $this->assertTrue($administrator->hasPermissionTo('view_not_found_logs', 'web'));
+        $this->assertTrue($administrator->hasPermissionTo('delete_not_found_logs', 'web'));
+        $this->assertTrue($administrator->hasPermissionTo('manage_not_found_logs', 'web'));
     }
 
     public function test_super_user_role_bypasses_permission_checks(): void

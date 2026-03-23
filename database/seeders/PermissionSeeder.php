@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Models\Permission;
+use App\Models\Role;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -201,6 +203,24 @@ class PermissionSeeder extends Seeder
             );
 
             $this->command->info('Seeded permission: '.$permissionData['name']);
+        }
+
+        $administratorRole = Role::query()
+            ->where('name', 'administrator')
+            ->where('guard_name', 'web')
+            ->first();
+
+        if ($administratorRole instanceof Role) {
+            $applicationPermissionIds = Permission::query()
+                ->where('guard_name', 'web')
+                ->where('module_slug', 'application')
+                ->pluck('id')
+                ->all();
+
+            if ($applicationPermissionIds !== []) {
+                $administratorRole->permissions()->syncWithoutDetaching($applicationPermissionIds);
+                $this->command->info('Assigned application permissions to administrator role.');
+            }
         }
 
         $this->command->info('Permissions seeding completed!');

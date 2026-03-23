@@ -63,7 +63,19 @@ class ZiggyRouteFilterTest extends TestCase
         $this->assertContains('authenticated', $groups);
         $this->assertNotContains('masters', $groups);
         $this->assertNotContains('logs', $groups);
+        $this->assertNotContains('log_viewer', $groups);
         $this->assertNotContains('broadcast', $groups);
+    }
+
+    public function test_user_with_log_permissions_gets_logs_group_only(): void
+    {
+        $user = User::factory()->create(['status' => Status::ACTIVE]);
+        $user->givePermissionTo('view_activity_logs');
+
+        $groups = $this->filter->resolveGroups($user);
+
+        $this->assertContains('logs', $groups);
+        $this->assertNotContains('log_viewer', $groups);
     }
 
     public function test_user_with_view_users_permission_gets_users_group(): void
@@ -96,6 +108,7 @@ class ZiggyRouteFilterTest extends TestCase
         $this->assertNotContains('roles', $groups);
         $this->assertNotContains('masters', $groups);
         $this->assertNotContains('logs', $groups);
+        $this->assertNotContains('log_viewer', $groups);
         $this->assertNotContains('broadcast', $groups);
     }
 
@@ -107,7 +120,8 @@ class ZiggyRouteFilterTest extends TestCase
     {
         $key = $this->filter->cacheKey(null);
 
-        $this->assertSame('ziggy_routes:guest', $key);
+        $this->assertStringStartsWith('ziggy_routes:v', $key);
+        $this->assertStringContainsString(':guest:', $key);
     }
 
     public function test_cache_key_uses_primary_role_id(): void
@@ -118,7 +132,8 @@ class ZiggyRouteFilterTest extends TestCase
 
         $key = $this->filter->cacheKey($user);
 
-        $this->assertSame("ziggy_routes:role:{$role->id}", $key);
+        $this->assertStringStartsWith('ziggy_routes:v', $key);
+        $this->assertStringContainsString(":role:{$role->id}:", $key);
     }
 
     public function test_cache_key_for_user_without_role(): void
@@ -127,7 +142,21 @@ class ZiggyRouteFilterTest extends TestCase
 
         $key = $this->filter->cacheKey($user);
 
-        $this->assertSame('ziggy_routes:role:0', $key);
+        $this->assertStringStartsWith('ziggy_routes:v', $key);
+        $this->assertStringContainsString(':role:0:', $key);
+    }
+
+    public function test_cache_key_changes_when_effective_permissions_change(): void
+    {
+        $user = User::factory()->create(['status' => Status::ACTIVE]);
+
+        $before = $this->filter->cacheKey($user->fresh());
+
+        $user->givePermissionTo('view_activity_logs');
+
+        $after = $this->filter->cacheKey($user->fresh());
+
+        $this->assertNotSame($before, $after);
     }
 
     // =========================================================================
@@ -158,6 +187,7 @@ class ZiggyRouteFilterTest extends TestCase
         $this->assertStringNotContainsString('app.users.index', $output);
         $this->assertStringNotContainsString('app.roles.index', $output);
         $this->assertStringNotContainsString('app.logs.activity-logs.index', $output);
+        $this->assertStringNotContainsString('log-viewer.index', $output);
     }
 
     public function test_render_for_super_user_contains_all_routes(): void
@@ -171,6 +201,7 @@ class ZiggyRouteFilterTest extends TestCase
         $this->assertStringContainsString('app.users.index', $output);
         $this->assertStringContainsString('app.roles.index', $output);
         $this->assertStringContainsString('app.logs.activity-logs.index', $output);
+        $this->assertStringContainsString('log-viewer.index', $output);
         $this->assertStringContainsString('dashboard', $output);
     }
 
@@ -188,10 +219,22 @@ class ZiggyRouteFilterTest extends TestCase
         // Users group should be present (has permission).
         $this->assertStringContainsString('app.users.index', $output);
 
-        // Masters/logs should be absent (super user only).
+        // Masters should be absent (super user only), logs absent without log permissions.
         $this->assertStringNotContainsString('app.masters.settings.index', $output);
         $this->assertStringNotContainsString('app.masters.modules.index', $output);
         $this->assertStringNotContainsString('app.logs.activity-logs.index', $output);
+        $this->assertStringNotContainsString('log-viewer.index', $output);
+    }
+
+    public function test_render_for_user_with_log_permissions_includes_app_logs_but_not_log_viewer(): void
+    {
+        $user = User::factory()->create(['status' => Status::ACTIVE]);
+        $user->givePermissionTo('view_activity_logs');
+
+        $output = $this->filter->render($user);
+
+        $this->assertStringContainsString('app.logs.activity-logs.index', $output);
+        $this->assertStringNotContainsString('log-viewer.index', $output);
     }
 
     // =========================================================================
@@ -238,15 +281,18 @@ class ZiggyRouteFilterTest extends TestCase
         $this->filter->render(null);
 
         // Verify they exist.
-        $this->assertNotNull(Cache::get("ziggy_routes:role:{$role->id}"));
-        $this->assertNotNull(Cache::get('ziggy_routes:guest'));
+        $this->assertNotNull(Cache::get($this->filter->cacheKey($user)));
+        $this->assertNotNull(Cache::get($this->filter->cacheKey(null)));
+
+        $previousUserKey = $this->filter->cacheKey($user);
+        $previousGuestKey = $this->filter->cacheKey(null);
 
         // Clear.
         ZiggyRouteFilter::clearCache();
 
-        // Verify they are gone.
-        $this->assertNull(Cache::get("ziggy_routes:role:{$role->id}"));
-        $this->assertNull(Cache::get('ziggy_routes:guest'));
+        // Verify new cache keys are generated after invalidation.
+        $this->assertNotSame($previousUserKey, $this->filter->cacheKey($user));
+        $this->assertNotSame($previousGuestKey, $this->filter->cacheKey(null));
     }
 
     // =========================================================================
@@ -301,8 +347,9 @@ class ZiggyRouteFilterTest extends TestCase
 
         $this->assertStringContainsString('const Ziggy=', $content);
         $this->assertStringContainsString('dashboard', $content);
-        // Administrator is not a super user, so masters/logs are hidden.
+        // Administrator is not a super user, so masters stay hidden.
         $this->assertStringNotContainsString('app.masters.settings.index', $content);
-        $this->assertStringNotContainsString('app.logs.activity-logs.index', $content);
+        $this->assertStringContainsString('app.logs.activity-logs.index', $content);
+        $this->assertStringNotContainsString('log-viewer.index', $content);
     }
 }
