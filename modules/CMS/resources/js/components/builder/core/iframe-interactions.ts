@@ -43,6 +43,9 @@ export class IframeInteractionHandler {
     private callbacks: IframeInteractionCallbacks;
     private selectedId: AstNodeId | null = null;
     private abortController: AbortController | null = null;
+    private hoverFrameId: number | null = null;
+    private pendingHoveredId: AstNodeId | null = null;
+    private emittedHoveredId: AstNodeId | null = null;
 
     constructor(iframe: HTMLIFrameElement, callbacks: IframeInteractionCallbacks) {
         this.iframe = iframe;
@@ -87,6 +90,8 @@ export class IframeInteractionHandler {
             this.abortController.abort();
             this.abortController = null;
         }
+
+        this.cancelQueuedHover();
     }
 
     // ---------------------------------------------------------------------------
@@ -112,12 +117,12 @@ export class IframeInteractionHandler {
 
         // Don't hover the root node itself
         if (nodeId === ROOT_NODE_ID) {
-            this.callbacks.onHover(null);
+            this.queueHover(null);
 
             return;
         }
 
-        this.callbacks.onHover(nodeId);
+        this.queueHover(nodeId);
     };
 
     private handleClick = (e: MouseEvent): void => {
@@ -255,6 +260,42 @@ export class IframeInteractionHandler {
         }
 
         return Boolean(target.closest('input, textarea, select, [contenteditable="true"], [contenteditable="plaintext-only"]'));
+    }
+
+    private queueHover(nodeId: AstNodeId | null): void {
+        if (this.hoverFrameId !== null && this.pendingHoveredId === nodeId) {
+            return;
+        }
+
+        if (this.hoverFrameId === null && this.emittedHoveredId === nodeId) {
+            return;
+        }
+
+        this.pendingHoveredId = nodeId;
+
+        if (this.hoverFrameId !== null) {
+            return;
+        }
+
+        this.hoverFrameId = window.requestAnimationFrame(() => {
+            this.hoverFrameId = null;
+
+            if (this.pendingHoveredId === this.emittedHoveredId) {
+                return;
+            }
+
+            this.emittedHoveredId = this.pendingHoveredId;
+            this.callbacks.onHover(this.pendingHoveredId);
+        });
+    }
+
+    private cancelQueuedHover(): void {
+        if (this.hoverFrameId !== null) {
+            window.cancelAnimationFrame(this.hoverFrameId);
+            this.hoverFrameId = null;
+        }
+
+        this.pendingHoveredId = this.emittedHoveredId;
     }
 
     // ---------------------------------------------------------------------------

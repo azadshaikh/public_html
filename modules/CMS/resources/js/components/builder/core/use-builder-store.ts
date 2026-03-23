@@ -5,7 +5,7 @@
  * All mutations go through actions → reducer ensures consistency.
  */
 
-import { useMemo, useReducer, useRef } from 'react';
+import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import {
     addNode,
     addSubtree,
@@ -13,7 +13,6 @@ import {
     createNode,
     deleteNode,
     duplicateNode,
-    generateNodeId,
     moveNode,
     parseHtmlToAst,
     reorderChild,
@@ -21,19 +20,17 @@ import {
     updateNode,
     updateNodeProps,
     updateNodeStyles,
-    type CreateNodeOptions,
 } from './ast-helpers';
-import {
-    ROOT_NODE_ID,
-    type AstNode,
-    type AstNodeId,
-    type AstNodeMap,
-    type AstNodeType,
-    type BuilderEvents,
-    type DropIndicator,
-    type PageAst,
-    type SerializedPageAst,
+import type { CreateNodeOptions } from './ast-helpers';
+import type {
+    AstNode,
+    AstNodeId,
+    AstNodeMap,
+    BuilderEvents,
+    DropIndicator,
+    PageAst,
 } from './ast-types';
+import { sameDropIndicator, sameNodeIdList } from './builder-runtime-guards';
 
 // ---------------------------------------------------------------------------
 // State shape
@@ -214,24 +211,40 @@ function builderReducer(state: BuilderState, action: Action): BuilderState {
             };
 
         case 'SET_HOVERED':
+            if (state.events.hoveredId === action.nodeId) {
+                return state;
+            }
+
             return {
                 ...state,
                 events: { ...state.events, hoveredId: action.nodeId },
             };
 
         case 'SET_SELECTED':
+            if (sameNodeIdList(state.events.selectedIds, action.nodeIds)) {
+                return state;
+            }
+
             return {
                 ...state,
                 events: { ...state.events, selectedIds: action.nodeIds },
             };
 
         case 'SET_DRAGGED':
+            if (state.events.draggedId === action.nodeId) {
+                return state;
+            }
+
             return {
                 ...state,
                 events: { ...state.events, draggedId: action.nodeId },
             };
 
         case 'SET_DROP_INDICATOR':
+            if (sameDropIndicator(state.dropIndicator, action.indicator)) {
+                return state;
+            }
+
             return {
                 ...state,
                 dropIndicator: action.indicator,
@@ -315,12 +328,13 @@ export function useBuilderStore(initialAst?: PageAst) {
 
     const [state, dispatch] = useReducer(builderReducer, initialState);
 
-    // Stable initial AST ref for dirty checking
-    const initialAstRef = useRef(JSON.stringify(serializePageAst(state.ast)));
+    const [dirtyBaseline, setDirtyBaseline] = useState(() => JSON.stringify(serializePageAst(initialState.ast)));
 
-    // Ref to current AST so resetDirty can read latest without recreating actions
     const astRef = useRef(state.ast);
-    astRef.current = state.ast;
+
+    useEffect(() => {
+        astRef.current = state.ast;
+    }, [state.ast]);
 
     // Derived state
     const selectedNode = useMemo((): AstNode | null => {
@@ -330,8 +344,8 @@ export function useBuilderStore(initialAst?: PageAst) {
     }, [state.events.selectedIds, state.ast.nodes]);
 
     const isDirty = useMemo(() => {
-        return JSON.stringify(serializePageAst(state.ast)) !== initialAstRef.current;
-    }, [state.ast]);
+        return JSON.stringify(serializePageAst(state.ast)) !== dirtyBaseline;
+    }, [dirtyBaseline, state.ast]);
 
     // ---------------------------------------------------------------------------
     // Actions (stable callbacks — dispatch is stable from useReducer)
@@ -427,10 +441,9 @@ export function useBuilderStore(initialAst?: PageAst) {
         },
 
         resetDirty: () => {
-            initialAstRef.current = JSON.stringify(serializePageAst(astRef.current));
+            setDirtyBaseline(JSON.stringify(serializePageAst(astRef.current)));
         },
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }), []);
+    }), [setDirtyBaseline]);
 
     return {
         state,
