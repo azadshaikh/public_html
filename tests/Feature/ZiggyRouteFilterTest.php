@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Enums\Status;
+use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\ZiggyRouteFilter;
@@ -25,6 +26,18 @@ class ZiggyRouteFilterTest extends TestCase
     {
         parent::setUp();
         $this->seed(RolesAndPermissionsSeeder::class);
+
+        foreach (['manage_seo_settings', 'manage_integrations_seo_settings', 'manage_cms_seo_settings'] as $permission) {
+            Permission::query()->firstOrCreate(
+                ['name' => $permission, 'guard_name' => 'web'],
+                [
+                    'display_name' => ucwords(str_replace('_', ' ', $permission)),
+                    'group' => 'seo',
+                    'module_slug' => 'cms',
+                ],
+            );
+        }
+
         $this->filter = new ZiggyRouteFilter;
 
         // Reset Ziggy statics so each test gets a fresh state.
@@ -76,6 +89,16 @@ class ZiggyRouteFilterTest extends TestCase
 
         $this->assertContains('logs', $groups);
         $this->assertNotContains('log_viewer', $groups);
+    }
+
+    public function test_user_with_seo_permissions_gets_seo_group(): void
+    {
+        $user = User::factory()->create(['status' => Status::ACTIVE]);
+        $user->givePermissionTo('manage_seo_settings');
+
+        $groups = $this->filter->resolveGroups($user);
+
+        $this->assertContains('seo', $groups);
     }
 
     public function test_user_with_view_users_permission_gets_users_group(): void
@@ -180,6 +203,7 @@ class ZiggyRouteFilterTest extends TestCase
 
         // Public routes should be present.
         $this->assertStringContainsString('login', $output);
+        $this->assertStringContainsString('sitemap', $output);
 
         // Admin-only routes should be absent.
         $this->assertStringNotContainsString('app.masters.settings.index', $output);
@@ -235,6 +259,17 @@ class ZiggyRouteFilterTest extends TestCase
 
         $this->assertStringContainsString('app.logs.activity-logs.index', $output);
         $this->assertStringNotContainsString('log-viewer.index', $output);
+    }
+
+    public function test_render_for_user_with_seo_permissions_includes_seo_routes(): void
+    {
+        $user = User::factory()->create(['status' => Status::ACTIVE]);
+        $user->givePermissionTo('manage_cms_seo_settings');
+
+        $output = $this->filter->render($user);
+
+        $this->assertStringContainsString('seo.dashboard', $output);
+        $this->assertStringContainsString('seo.settings.titlesmeta', $output);
     }
 
     // =========================================================================
@@ -339,6 +374,7 @@ class ZiggyRouteFilterTest extends TestCase
         ]);
         // Administrator role grants dashboard access but NOT super user privileges.
         $user->assignRole(Role::findByName('administrator', 'web'));
+        $user->givePermissionTo('manage_cms_seo_settings');
 
         $response = $this->actingAs($user)->get(route('dashboard'));
 
@@ -350,6 +386,7 @@ class ZiggyRouteFilterTest extends TestCase
         // Administrator is not a super user, so masters stay hidden.
         $this->assertStringNotContainsString('app.masters.settings.index', $content);
         $this->assertStringContainsString('app.logs.activity-logs.index', $content);
+        $this->assertStringContainsString('seo.dashboard', $content);
         $this->assertStringNotContainsString('log-viewer.index', $content);
     }
 }
