@@ -91,7 +91,11 @@ function buildAnchorAttributes(
 ): AnchorHTMLAttributes<HTMLAnchorElement> {
     const attributes = Object.fromEntries(
         Object.entries(item.attributes ?? {}).filter(
-            ([, value]) => value !== null,
+            ([key, value]) =>
+                value !== null &&
+                key !== 'as' &&
+                key !== 'data-test' &&
+                key !== 'method',
         ),
     ) as AnchorHTMLAttributes<HTMLAnchorElement>;
 
@@ -118,7 +122,13 @@ const NavigationLink = React.forwardRef<HTMLElement, NavigationLinkProps>(
         }
 
         const { onClick, ...restProps } = props;
+        const inertiaMethod = item.attributes?.method;
+        const inertiaAs = item.attributes?.as;
+        const dataTest = item.attributes?.['data-test'];
+        const hasInertiaBehavior =
+            typeof inertiaMethod === 'string' || typeof inertiaAs === 'string';
         const linkProps = {
+            ...(item.attributes ?? {}),
             ...restProps,
             onClick,
         } as React.ComponentProps<typeof Link>;
@@ -126,7 +136,9 @@ const NavigationLink = React.forwardRef<HTMLElement, NavigationLinkProps>(
         const hasCustomAttributes =
             Object.keys(item.attributes ?? {}).length > 0;
         const shouldUseAnchor =
-            item.hard_reload || item.target || hasCustomAttributes;
+            item.hard_reload ||
+            item.target ||
+            (hasCustomAttributes && !hasInertiaBehavior);
 
         if (shouldUseAnchor) {
             return (
@@ -148,6 +160,17 @@ const NavigationLink = React.forwardRef<HTMLElement, NavigationLinkProps>(
             <Link
                 ref={ref as React.Ref<unknown>}
                 href={item.url}
+                method={
+                    typeof inertiaMethod === 'string'
+                        ? (inertiaMethod as React.ComponentProps<typeof Link>['method'])
+                        : undefined
+                }
+                as={
+                    typeof inertiaAs === 'string'
+                        ? (inertiaAs as React.ComponentProps<typeof Link>['as'])
+                        : undefined
+                }
+                data-test={typeof dataTest === 'string' ? dataTest : undefined}
                 {...linkProps}
             >
                 {children}

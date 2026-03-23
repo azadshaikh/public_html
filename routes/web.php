@@ -265,6 +265,65 @@ Route::prefix($adminPrefix)->group(function (): void {
                 Route::post('/store', [CommentsController::class, 'store'])->name('store');
             });
 
+            // --- Logs: Activity Logs Management ---
+            Route::group(['prefix' => 'logs/activity-logs', 'as' => 'logs.activity-logs.'], function (): void {
+                // Non-parameterized routes first
+                Route::post('bulk-action', [ActivityLogController::class, 'bulkAction'])->name('bulk-action');
+                Route::post('cleanup', [ActivityLogController::class, 'cleanup'])->name('cleanup');
+                Route::post('export', [ActivityLogController::class, 'export'])->name('export');
+                Route::get('statistics', [ActivityLogController::class, 'statistics'])->name('statistics');
+
+                // Parameterized routes
+                Route::get('{activityLog}', [ActivityLogController::class, 'show'])->name('show')->where('activityLog', '[0-9]+');
+                Route::delete('{activityLog}', [ActivityLogController::class, 'destroy'])->name('destroy')->where('activityLog', '[0-9]+');
+                Route::delete('{activityLog}/force-delete', [ActivityLogController::class, 'forceDelete'])->name('force-delete')->where('activityLog', '[0-9]+');
+                Route::patch('{activityLog}/restore', [ActivityLogController::class, 'restore'])->name('restore')->where('activityLog', '[0-9]+');
+
+                // Index with optional status (must be last)
+                Route::get('/{status?}', [ActivityLogController::class, 'index'])
+                    ->name('index')
+                    ->where('status', '^(all|trash)$');
+            });
+
+            // --- Logs: Login Attempts Management ---
+            Route::group(['prefix' => 'logs/login-attempts', 'as' => 'logs.login-attempts.'], function (): void {
+                // Non-parameterized routes first
+                Route::post('bulk-action', [LoginAttemptController::class, 'bulkAction'])->name('bulk-action');
+                Route::post('cleanup', [LoginAttemptController::class, 'cleanup'])->name('cleanup');
+                Route::post('clear-rate-limit', [LoginAttemptController::class, 'clearRateLimit'])->name('clear-rate-limit');
+                Route::get('blocked-ips', [LoginAttemptController::class, 'getBlockedIps'])->name('blocked-ips');
+
+                // Parameterized routes
+                Route::get('{loginAttempt}', [LoginAttemptController::class, 'show'])->name('show')->where('loginAttempt', '[0-9]+');
+                Route::delete('{loginAttempt}', [LoginAttemptController::class, 'destroy'])->name('destroy')->where('loginAttempt', '[0-9]+');
+                Route::delete('{loginAttempt}/force-delete', [LoginAttemptController::class, 'forceDelete'])->name('force-delete')->where('loginAttempt', '[0-9]+');
+                Route::patch('{loginAttempt}/restore', [LoginAttemptController::class, 'restore'])->name('restore')->where('loginAttempt', '[0-9]+');
+
+                // Index with optional status (must be last)
+                Route::get('/{status?}', [LoginAttemptController::class, 'index'])
+                    ->name('index')
+                    ->where('status', '^(all|success|failed|blocked|trash)$');
+            });
+
+            // --- Logs: 404 Logs Management ---
+            Route::group(['prefix' => 'logs/not-found-logs', 'as' => 'logs.not-found-logs.'], function (): void {
+                // Non-parameterized routes first
+                Route::post('bulk-action', [NotFoundLogController::class, 'bulkAction'])->name('bulk-action');
+                Route::post('cleanup', [NotFoundLogController::class, 'cleanup'])->name('cleanup');
+                Route::get('statistics', [NotFoundLogController::class, 'statistics'])->name('statistics');
+
+                // Parameterized routes
+                Route::get('{notFoundLog}', [NotFoundLogController::class, 'show'])->name('show')->where('notFoundLog', '[0-9]+');
+                Route::delete('{notFoundLog}', [NotFoundLogController::class, 'destroy'])->name('destroy')->where('notFoundLog', '[0-9]+');
+                Route::delete('{notFoundLog}/force-delete', [NotFoundLogController::class, 'forceDelete'])->name('force-delete')->where('notFoundLog', '[0-9]+');
+                Route::patch('{notFoundLog}/restore', [NotFoundLogController::class, 'restore'])->name('restore')->where('notFoundLog', '[0-9]+');
+
+                // Index with optional status (must be last)
+                Route::get('/{status?}', [NotFoundLogController::class, 'index'])
+                    ->name('index')
+                    ->where('status', '^(all|suspicious|bots|human|trash)$');
+            });
+
             Route::middleware(EnsureSuperUserAccess::class)->group(function (): void {
                 // --- Masters: Modules Management ---
                 Route::group(['prefix' => 'masters/modules', 'as' => 'masters.modules.'], function (): void {
@@ -287,65 +346,6 @@ Route::prefix($adminPrefix)->group(function (): void {
 
                     // Generic routes LAST (catch-all patterns)
                     Route::get('/{status?}', [AddressController::class, 'index'])->name('index')->where('status', '^(all|trash)$');
-                });
-
-                // --- Logs: Activity Logs Management ---
-                Route::group(['prefix' => 'logs/activity-logs', 'as' => 'logs.activity-logs.'], function (): void {
-                    // Non-parameterized routes first
-                    Route::post('bulk-action', [ActivityLogController::class, 'bulkAction'])->name('bulk-action');
-                    Route::post('cleanup', [ActivityLogController::class, 'cleanup'])->name('cleanup');
-                    Route::post('export', [ActivityLogController::class, 'export'])->name('export');
-                    Route::get('statistics', [ActivityLogController::class, 'statistics'])->name('statistics');
-
-                    // Parameterized routes
-                    Route::get('{activityLog}', [ActivityLogController::class, 'show'])->name('show')->where('activityLog', '[0-9]+');
-                    Route::delete('{activityLog}', [ActivityLogController::class, 'destroy'])->name('destroy')->where('activityLog', '[0-9]+');
-                    Route::delete('{activityLog}/force-delete', [ActivityLogController::class, 'forceDelete'])->name('force-delete')->where('activityLog', '[0-9]+');
-                    Route::patch('{activityLog}/restore', [ActivityLogController::class, 'restore'])->name('restore')->where('activityLog', '[0-9]+');
-
-                    // Index with optional status (must be last)
-                    Route::get('/{status?}', [ActivityLogController::class, 'index'])
-                        ->name('index')
-                        ->where('status', '^(all|trash)$');
-                });
-
-                // --- Logs: Login Attempts Management ---
-                Route::group(['prefix' => 'logs/login-attempts', 'as' => 'logs.login-attempts.'], function (): void {
-                    // Non-parameterized routes first
-                    Route::post('bulk-action', [LoginAttemptController::class, 'bulkAction'])->name('bulk-action');
-                    Route::post('cleanup', [LoginAttemptController::class, 'cleanup'])->name('cleanup');
-                    Route::post('clear-rate-limit', [LoginAttemptController::class, 'clearRateLimit'])->name('clear-rate-limit');
-                    Route::get('blocked-ips', [LoginAttemptController::class, 'getBlockedIps'])->name('blocked-ips');
-
-                    // Parameterized routes
-                    Route::get('{loginAttempt}', [LoginAttemptController::class, 'show'])->name('show')->where('loginAttempt', '[0-9]+');
-                    Route::delete('{loginAttempt}', [LoginAttemptController::class, 'destroy'])->name('destroy')->where('loginAttempt', '[0-9]+');
-                    Route::delete('{loginAttempt}/force-delete', [LoginAttemptController::class, 'forceDelete'])->name('force-delete')->where('loginAttempt', '[0-9]+');
-                    Route::patch('{loginAttempt}/restore', [LoginAttemptController::class, 'restore'])->name('restore')->where('loginAttempt', '[0-9]+');
-
-                    // Index with optional status (must be last)
-                    Route::get('/{status?}', [LoginAttemptController::class, 'index'])
-                        ->name('index')
-                        ->where('status', '^(all|success|failed|blocked|trash)$');
-                });
-
-                // --- Logs: 404 Logs Management ---
-                Route::group(['prefix' => 'logs/not-found-logs', 'as' => 'logs.not-found-logs.'], function (): void {
-                    // Non-parameterized routes first
-                    Route::post('bulk-action', [NotFoundLogController::class, 'bulkAction'])->name('bulk-action');
-                    Route::post('cleanup', [NotFoundLogController::class, 'cleanup'])->name('cleanup');
-                    Route::get('statistics', [NotFoundLogController::class, 'statistics'])->name('statistics');
-
-                    // Parameterized routes
-                    Route::get('{notFoundLog}', [NotFoundLogController::class, 'show'])->name('show')->where('notFoundLog', '[0-9]+');
-                    Route::delete('{notFoundLog}', [NotFoundLogController::class, 'destroy'])->name('destroy')->where('notFoundLog', '[0-9]+');
-                    Route::delete('{notFoundLog}/force-delete', [NotFoundLogController::class, 'forceDelete'])->name('force-delete')->where('notFoundLog', '[0-9]+');
-                    Route::patch('{notFoundLog}/restore', [NotFoundLogController::class, 'restore'])->name('restore')->where('notFoundLog', '[0-9]+');
-
-                    // Index with optional status (must be last)
-                    Route::get('/{status?}', [NotFoundLogController::class, 'index'])
-                        ->name('index')
-                        ->where('status', '^(all|suspicious|bots|human|trash)$');
                 });
 
                 // --- Masters: General Settings ---
