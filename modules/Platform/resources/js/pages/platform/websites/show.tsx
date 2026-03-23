@@ -61,6 +61,7 @@ import type { BreadcrumbItem } from '@/types';
 import { cn } from '@/lib/utils';
 import type {
     PlatformActivity,
+    ProvisioningRunTimestamps,
     WebsiteProvisioningStep,
     WebsiteSecretItem,
     WebsiteShowData,
@@ -70,6 +71,7 @@ import type {
 type WebsitesShowPageProps = {
     website: WebsiteShowData;
     provisioningSteps: WebsiteProvisioningStep[];
+    provisioningRun: ProvisioningRunTimestamps;
     updates: WebsiteUpdateItem[];
     secrets: WebsiteSecretItem[];
     activities: PlatformActivity[];
@@ -207,6 +209,7 @@ function useOperationAction() {
 export default function WebsitesShow({
     website,
     provisioningSteps,
+    provisioningRun,
     updates,
     secrets,
     activities,
@@ -839,6 +842,7 @@ export default function WebsitesShow({
                                 <ProvisioningStepsTable
                                     websiteId={website.id}
                                     steps={provisioningSteps}
+                                    provisioningRun={provisioningRun}
                                     isProvisioning={isProvisioning}
                                     websiteStatus={website.status}
                                 />
@@ -1161,15 +1165,18 @@ function SecretsTable({
 function ProvisioningStepsTable({
     websiteId,
     steps,
+    provisioningRun,
     isProvisioning,
     websiteStatus,
 }: {
     websiteId: number;
     steps: WebsiteProvisioningStep[];
+    provisioningRun: ProvisioningRunTimestamps;
     isProvisioning: boolean;
     websiteStatus: string | null;
 }) {
     const [currentSteps, setCurrentSteps] = useState(steps);
+    const [currentRun, setCurrentRun] = useState(provisioningRun);
     const [currentStatus, setCurrentStatus] = useState<string | null>(websiteStatus);
     const pollingUrl = route('platform.websites.provisioning-status', {
         website: websiteId,
@@ -1199,6 +1206,7 @@ function ProvisioningStepsTable({
         const completed = steps.filter((step) => step.status === 'done').length;
 
         setCurrentSteps(steps);
+        setCurrentRun(provisioningRun);
         setCurrentStatus(websiteStatus);
         setProgressPercent(total > 0 ? Math.round((completed / total) * 100) : 0);
         setIsPolling(isProvisioning);
@@ -1208,7 +1216,7 @@ function ProvisioningStepsTable({
         stepsRef.current = steps;
         statusRef.current = websiteStatus;
         completionReloadedRef.current = false;
-    }, [isProvisioning, steps, websiteStatus]);
+    }, [isProvisioning, provisioningRun, steps, websiteStatus]);
 
     async function refreshProvisioningState(): Promise<boolean> {
         setPollAttemptCount((count) => count + 1);
@@ -1228,11 +1236,13 @@ function ProvisioningStepsTable({
 
         const payload = (await response.json()) as {
             provisioning_steps?: WebsiteProvisioningStep[];
+            provisioning_run?: ProvisioningRunTimestamps;
             percentage?: number;
             current_status?: string | null;
         };
 
         const nextSteps = Array.isArray(payload.provisioning_steps) ? payload.provisioning_steps : stepsRef.current;
+        const nextRun = payload.provisioning_run ?? currentRun;
         const nextStatus = typeof payload.current_status === 'string' ? payload.current_status : null;
         const total = nextSteps.length;
         const completed = nextSteps.filter((step) => step.status === 'done').length;
@@ -1242,6 +1252,7 @@ function ProvisioningStepsTable({
         const previousStatus = statusRef.current;
 
         setCurrentSteps(nextSteps);
+        setCurrentRun(nextRun);
         setCurrentStatus(nextStatus);
         setProgressPercent(nextProgress);
         setLastPollError(null);
@@ -1418,6 +1429,12 @@ function ProvisioningStepsTable({
 
                     <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
                         <div className="flex flex-col gap-2">
+                            {currentRun.started_at || currentRun.completed_at ? (
+                                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                                    {currentRun.started_at ? <span>Started: {currentRun.started_at}</span> : null}
+                                    {currentRun.completed_at ? <span>Completed: {currentRun.completed_at}</span> : null}
+                                </div>
+                            ) : null}
                             <div className="flex items-center justify-between text-xs text-muted-foreground">
                                 <span>{doneSteps} of {totalSteps} completed</span>
                                 <span>{progressPercent}%</span>
@@ -1504,6 +1521,12 @@ function ProvisioningStepsTable({
                                         <p className="font-medium">{step.title}</p>
                                         {step.description ? (
                                             <p className="text-xs text-muted-foreground">{step.description}</p>
+                                        ) : null}
+                                        {step.started_at || step.completed_at ? (
+                                            <div className="mt-1 flex flex-col gap-0.5 text-[11px] text-muted-foreground">
+                                                {step.started_at ? <span>Started: {step.started_at}</span> : null}
+                                                {step.completed_at ? <span>Completed: {step.completed_at}</span> : null}
+                                            </div>
                                         ) : null}
                                     </td>
                                     <td className="py-3 pr-4">

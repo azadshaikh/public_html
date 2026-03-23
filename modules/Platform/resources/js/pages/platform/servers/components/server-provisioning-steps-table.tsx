@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
-import type { ServerProvisioningStep } from '../../../types/platform';
+import type { ProvisioningRunTimestamps, ServerProvisioningStep } from '../../../types/platform';
 import { formatStatusLabel, statusBadgeVariant, STEP_STATUS_VARIANT } from './show-shared';
 
 const PROVISIONING_POLL_INTERVAL_MS = 10_000;
@@ -15,15 +15,18 @@ const PROVISIONING_POLL_INTERVAL_LABEL = 'every 10 seconds';
 type ServerProvisioningStepsTableProps = {
     serverId: number;
     steps: ServerProvisioningStep[];
+    provisioningRun: ProvisioningRunTimestamps;
     provisioningStatus: string | null;
 };
 
 export function ServerProvisioningStepsTable({
     serverId,
     steps,
+    provisioningRun,
     provisioningStatus,
 }: ServerProvisioningStepsTableProps) {
     const [currentSteps, setCurrentSteps] = useState(steps);
+    const [currentRun, setCurrentRun] = useState(provisioningRun);
     const [currentStatus, setCurrentStatus] = useState<string | null>(provisioningStatus);
     const [progressPercent, setProgressPercent] = useState(() => {
         const total = steps.length;
@@ -51,6 +54,7 @@ export function ServerProvisioningStepsTable({
         const completed = steps.filter((step) => step.status === 'done').length;
 
         setCurrentSteps(steps);
+        setCurrentRun(provisioningRun);
         setCurrentStatus(provisioningStatus);
         setProgressPercent(total > 0 ? Math.round((completed / total) * 100) : 0);
         setIsPolling(provisioningStatus === 'provisioning');
@@ -60,7 +64,7 @@ export function ServerProvisioningStepsTable({
         stepsRef.current = steps;
         statusRef.current = provisioningStatus;
         completionReloadedRef.current = false;
-    }, [provisioningStatus, steps]);
+    }, [provisioningRun, provisioningStatus, steps]);
 
     async function refreshProvisioningState(): Promise<boolean> {
         setPollAttemptCount((count) => count + 1);
@@ -79,11 +83,13 @@ export function ServerProvisioningStepsTable({
 
         const payload = (await response.json()) as {
             provisioning_steps?: ServerProvisioningStep[];
+            provisioning_run?: ProvisioningRunTimestamps;
             progress_percent?: number;
             current_status?: string | null;
         };
 
         const nextSteps = Array.isArray(payload.provisioning_steps) ? payload.provisioning_steps : stepsRef.current;
+        const nextRun = payload.provisioning_run ?? currentRun;
         const nextStatus = typeof payload.current_status === 'string' ? payload.current_status : null;
         const total = nextSteps.length;
         const completed = nextSteps.filter((step) => step.status === 'done').length;
@@ -93,6 +99,7 @@ export function ServerProvisioningStepsTable({
         const previousStatus = statusRef.current;
 
         setCurrentSteps(nextSteps);
+        setCurrentRun(nextRun);
         setCurrentStatus(nextStatus);
         setProgressPercent(nextProgress);
         setLastPollError(null);
@@ -266,6 +273,12 @@ export function ServerProvisioningStepsTable({
 
                     <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
                         <div className="flex flex-col gap-2">
+                            {currentRun.started_at || currentRun.completed_at ? (
+                                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                                    {currentRun.started_at ? <span>Started: {currentRun.started_at}</span> : null}
+                                    {currentRun.completed_at ? <span>Completed: {currentRun.completed_at}</span> : null}
+                                </div>
+                            ) : null}
                             <div className="flex items-center justify-between text-xs text-muted-foreground">
                                 <span>{doneSteps} of {totalSteps} completed</span>
                                 <span>{progressPercent}%</span>
@@ -341,6 +354,12 @@ export function ServerProvisioningStepsTable({
                                         <p className="font-medium">{step.title}</p>
                                         {step.description ? (
                                             <p className="text-xs text-muted-foreground">{step.description}</p>
+                                        ) : null}
+                                        {step.started_at || step.completed_at ? (
+                                            <div className="mt-1 flex flex-col gap-0.5 text-[11px] text-muted-foreground">
+                                                {step.started_at ? <span>Started: {step.started_at}</span> : null}
+                                                {step.completed_at ? <span>Completed: {step.completed_at}</span> : null}
+                                            </div>
                                         ) : null}
                                     </td>
                                     <td className="py-3 pr-4 align-top">

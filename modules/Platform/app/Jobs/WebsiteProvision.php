@@ -98,6 +98,8 @@ class WebsiteProvision implements ShouldQueue
         }
 
         try {
+            $website->ensureProvisioningRunStarted();
+
             Log::info('WebsiteProvision job started', [
                 'website_id' => $website->id,
                 'site_id' => $website->site_id,
@@ -164,6 +166,7 @@ class WebsiteProvision implements ShouldQueue
         // Sync website info from server
         $this->syncWebsite($website);
         $this->syncServer($website);
+        $website->markProvisioningRunCompleted();
 
         $this->logActivity($website, ActivityAction::CREATE, $website->site_id.' website provisioned successfully.');
 

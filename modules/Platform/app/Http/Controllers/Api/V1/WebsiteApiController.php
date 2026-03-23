@@ -583,6 +583,8 @@ class WebsiteApiController extends Controller
                 if (isset($step['status']) && $step['status'] === 'failed') {
                     $metadata['provisioning_steps'][$key]['status'] = 'pending';
                     $metadata['provisioning_steps'][$key]['message'] = null;
+                    $metadata['provisioning_steps'][$key]['started_at'] = null;
+                    $metadata['provisioning_steps'][$key]['completed_at'] = null;
                 }
             }
 
@@ -591,6 +593,7 @@ class WebsiteApiController extends Controller
 
         $website->status = WebsiteStatus::Provisioning;
         $website->save();
+        $website->resetProvisioningRun();
 
         dispatch(new WebsiteProvision($website));
 

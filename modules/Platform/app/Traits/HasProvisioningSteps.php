@@ -17,8 +17,8 @@ use RuntimeException;
  *
  * Provisioning steps are stored in metadata['provisioning_steps'] as:
  * [
- *     'create_user' => ['status' => 'done', 'message' => '...', 'updated_at' => '...'],
- *     'create_website' => ['status' => 'pending', 'message' => '...', 'updated_at' => '...'],
+ *     'create_user' => ['status' => 'done', 'message' => '...', 'started_at' => '...', 'completed_at' => '...', 'updated_at' => '...'],
+ *     'create_website' => ['status' => 'pending', 'message' => '...', 'started_at' => null, 'completed_at' => null, 'updated_at' => '...'],
  * ]
  *
  * Update history is stored in metadata['update_history'] as:
@@ -50,6 +50,8 @@ trait HasProvisioningSteps
         return collect($steps)->map(fn (array $step, $key) => (object) [
             'status' => $step['status'] ?? 'pending',
             'meta_value' => $step['message'] ?? '',
+            'started_at' => isset($step['started_at']) ? Date::parse($step['started_at']) : null,
+            'completed_at' => isset($step['completed_at']) ? Date::parse($step['completed_at']) : null,
             'updated_at' => isset($step['updated_at']) ? Date::parse($step['updated_at']) : null,
         ]);
     }
@@ -85,10 +87,30 @@ trait HasProvisioningSteps
             $metadata = $model->metadata ?? [];
             $steps = $metadata['provisioning_steps'] ?? [];
 
+            $existingStep = $steps[$stepKey] ?? [];
+            $timestamp = now()->toISOString();
+            $startedAt = $existingStep['started_at'] ?? null;
+            $completedAt = $existingStep['completed_at'] ?? null;
+
+            if ($status === 'pending') {
+                $startedAt = null;
+                $completedAt = null;
+            } else {
+                $startedAt ??= $timestamp;
+
+                if (in_array($status, ['done', 'failed', 'reverted'], true)) {
+                    $completedAt = $timestamp;
+                } else {
+                    $completedAt = null;
+                }
+            }
+
             $steps[$stepKey] = [
                 'status' => $status,
                 'message' => $message,
-                'updated_at' => now()->toISOString(),
+                'started_at' => $startedAt,
+                'completed_at' => $completedAt,
+                'updated_at' => $timestamp,
             ];
 
             $metadata['provisioning_steps'] = $steps;
@@ -275,6 +297,72 @@ trait HasProvisioningSteps
         });
 
         // Refresh the current instance to reflect the database changes
+        if ($fresh = $this->fresh()) {
+            $this->setRawAttributes($fresh->getAttributes());
+            $this->syncOriginal();
+        }
+    }
+
+    public function ensureProvisioningRunStarted(): void
+    {
+        DB::transaction(function (): void {
+            $model = static::lockForUpdate()->find($this->id);
+
+            if (! $model) {
+                throw new RuntimeException(sprintf('Website %s not found for provisioning run update', $this->id));
+            }
+
+            $metadata = $model->metadata ?? [];
+            $metadata['provisioning_started_at'] ??= now()->toISOString();
+            $metadata['provisioning_completed_at'] = null;
+
+            $model->update(['metadata' => $metadata]);
+        });
+
+        if ($fresh = $this->fresh()) {
+            $this->setRawAttributes($fresh->getAttributes());
+            $this->syncOriginal();
+        }
+    }
+
+    public function resetProvisioningRun(): void
+    {
+        DB::transaction(function (): void {
+            $model = static::lockForUpdate()->find($this->id);
+
+            if (! $model) {
+                throw new RuntimeException(sprintf('Website %s not found for provisioning run reset', $this->id));
+            }
+
+            $metadata = $model->metadata ?? [];
+            $metadata['provisioning_started_at'] = now()->toISOString();
+            $metadata['provisioning_completed_at'] = null;
+
+            $model->update(['metadata' => $metadata]);
+        });
+
+        if ($fresh = $this->fresh()) {
+            $this->setRawAttributes($fresh->getAttributes());
+            $this->syncOriginal();
+        }
+    }
+
+    public function markProvisioningRunCompleted(): void
+    {
+        DB::transaction(function (): void {
+            $model = static::lockForUpdate()->find($this->id);
+
+            if (! $model) {
+                throw new RuntimeException(sprintf('Website %s not found for provisioning completion update', $this->id));
+            }
+
+            $metadata = $model->metadata ?? [];
+            $metadata['provisioning_started_at'] ??= now()->toISOString();
+            $metadata['provisioning_completed_at'] = now()->toISOString();
+
+            $model->update(['metadata' => $metadata]);
+        });
+
         if ($fresh = $this->fresh()) {
             $this->setRawAttributes($fresh->getAttributes());
             $this->syncOriginal();

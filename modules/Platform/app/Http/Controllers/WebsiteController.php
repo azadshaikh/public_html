@@ -6,6 +6,7 @@ use App\Enums\ActivityAction;
 use App\Models\ActivityLog;
 use App\Scaffold\ScaffoldController;
 use Carbon\Carbon;
+use DateTimeInterface;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
@@ -140,23 +141,8 @@ class WebsiteController extends ScaffoldController implements HasMiddleware
             ->limit(50)
             ->get();
 
-        $websiteStepsData = $website->getProvisioningStepsForView();
-        $websiteStepsConfig = config('platform.website.steps');
         $canRevealSecrets = (bool) auth()->user()?->can('edit_websites');
-        $provisioningSteps = collect($websiteStepsConfig)
-            ->map(function ($config, $key) use ($websiteStepsData): array {
-                $stepData = $websiteStepsData->get($key);
-
-                return [
-                    'key' => (string) $key,
-                    'title' => $config['title'] ?? str((string) $key)->headline()->toString(),
-                    'description' => $config['description'] ?? null,
-                    'status' => (string) data_get($stepData, 'status', 'pending'),
-                    'message' => data_get($stepData, 'meta_value', data_get($stepData, 'message')),
-                ];
-            })
-            ->values()
-            ->all();
+        $provisioningPayload = $this->buildProvisioningStatusPayload($website);
 
         return Inertia::render($this->inertiaPage().'/show', [
             'website' => $this->transformWebsiteForShow($website),
@@ -169,7 +155,8 @@ class WebsiteController extends ScaffoldController implements HasMiddleware
                 ])
                 ->values()
                 ->all(),
-            'provisioningSteps' => $provisioningSteps,
+            'provisioningSteps' => $provisioningPayload['provisioning_steps'],
+            'provisioningRun' => $provisioningPayload['provisioning_run'],
             'updates' => collect($website->getUpdateHistoryForView())
                 ->map(function ($value, $key): array {
                     if (is_array($value)) {
@@ -207,6 +194,7 @@ class WebsiteController extends ScaffoldController implements HasMiddleware
      *     status: string,
      *     website_steps_data: Collection,
      *     provisioning_steps: array<int, array<string, mixed>>,
+     *     provisioning_run: array{started_at: string|null, completed_at: string|null},
      *     percentage: float|int,
      *     current_status: string|null
      * }
@@ -225,6 +213,8 @@ class WebsiteController extends ScaffoldController implements HasMiddleware
                     'description' => $config['description'] ?? null,
                     'status' => (string) data_get($stepData, 'status', 'pending'),
                     'message' => data_get($stepData, 'meta_value', data_get($stepData, 'message')),
+                    'started_at' => $this->formatProvisioningTimestamp(data_get($stepData, 'started_at')),
+                    'completed_at' => $this->formatProvisioningTimestamp(data_get($stepData, 'completed_at')),
                 ];
             })
             ->values()
@@ -240,6 +230,10 @@ class WebsiteController extends ScaffoldController implements HasMiddleware
             'status' => 'success',
             'website_steps_data' => $websiteStepsData,
             'provisioning_steps' => $provisioningSteps,
+            'provisioning_run' => [
+                'started_at' => $this->formatProvisioningTimestamp($website->getMetadata('provisioning_started_at')),
+                'completed_at' => $this->formatProvisioningTimestamp($website->getMetadata('provisioning_completed_at')),
+            ],
             'percentage' => $percentage,
             'current_status' => $website->status instanceof WebsiteStatus ? $website->status->value : $website->status,
         ];
@@ -541,6 +535,8 @@ class WebsiteController extends ScaffoldController implements HasMiddleware
                 if (isset($step['status']) && $step['status'] === 'failed') {
                     $metadata['provisioning_steps'][$key]['status'] = 'pending';
                     $metadata['provisioning_steps'][$key]['message'] = null;
+                    $metadata['provisioning_steps'][$key]['started_at'] = null;
+                    $metadata['provisioning_steps'][$key]['completed_at'] = null;
                 }
             }
 
@@ -550,6 +546,7 @@ class WebsiteController extends ScaffoldController implements HasMiddleware
         // Set status back to provisioning
         $website->status = WebsiteStatus::Provisioning;
         $website->save();
+        $website->resetProvisioningRun();
 
         // Dispatch the provisioning job
         dispatch(new WebsiteProvision($website));
@@ -807,6 +804,7 @@ class WebsiteController extends ScaffoldController implements HasMiddleware
         $website->deleted_by = null;
         $website->updated_by = auth()->id();
         $website->save();
+        $website->resetProvisioningRun();
 
         // Dispatch the provision job
         dispatch(new WebsiteProvision($website));
@@ -1008,6 +1006,19 @@ class WebsiteController extends ScaffoldController implements HasMiddleware
             'queue_worker_total' => $queueWorkerTotal,
             'cron_status' => $website->getMetadata('cron_status'),
         ];
+    }
+
+    private function formatProvisioningTimestamp(mixed $value): ?string
+    {
+        if ($value instanceof DateTimeInterface) {
+            return app_date_time_format($value, 'datetime');
+        }
+
+        if (is_string($value) && trim($value) !== '') {
+            return app_date_time_format($value, 'datetime');
+        }
+
+        return null;
     }
 
     /**

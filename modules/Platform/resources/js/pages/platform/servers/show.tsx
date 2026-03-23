@@ -8,6 +8,7 @@ import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import type {
     PlatformActivity,
+    ProvisioningRunTimestamps,
     ServerAgencyItem,
     ServerMetadataItem,
     ServerProvisioningStep,
@@ -21,6 +22,7 @@ import { ServerShowTabs } from './components/server-show-tabs';
 type ServersShowPageProps = {
     server: ServerShowData;
     provisioningSteps: ServerProvisioningStep[];
+    provisioningRun: ProvisioningRunTimestamps;
     websiteCounts: {
         total: number;
         active: number;
@@ -38,6 +40,7 @@ type ServersShowPageProps = {
 export default function ServersShow({
     server,
     provisioningSteps,
+    provisioningRun,
     websiteCounts,
     secrets,
     activities,
@@ -133,6 +136,7 @@ export default function ServersShow({
                     canRevealSecrets={canRevealSecrets}
                     canRevealSshKeyPair={canRevealSshKeyPair}
                     provisioningSteps={provisioningSteps}
+                    provisioningRun={provisioningRun}
                     activities={activities}
                 />
             </div>

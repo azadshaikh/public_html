@@ -5,6 +5,7 @@ namespace Modules\Platform\Http\Controllers;
 use App\Enums\ActivityAction;
 use App\Models\ActivityLog;
 use App\Scaffold\ScaffoldController;
+use DateTimeInterface;
 use Exception;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -165,6 +166,7 @@ class ServerController extends ScaffoldController implements HasMiddleware
                 'provisioning_status' => Server::PROVISIONING_STATUS_PROVISIONING,
                 'status' => 'provisioning',
             ]);
+            $this->markProvisioningRunStarted($server);
             dispatch(new ServerProvision($server));
         }
 
@@ -239,6 +241,7 @@ class ServerController extends ScaffoldController implements HasMiddleware
                 'provisioning' => $websiteCounts[WebsiteStatus::Provisioning->value] ?? 0,
             ],
             'provisioningSteps' => $provisioningPayload['provisioning_steps'],
+            'provisioningRun' => $provisioningPayload['provisioning_run'],
             'metadataItems' => $this->buildServerMetadataItems($server),
             'canRevealSecrets' => $canRevealSecrets,
             'canRevealSshKeyPair' => $canRevealSshKeyPair,
@@ -441,6 +444,7 @@ class ServerController extends ScaffoldController implements HasMiddleware
                 'provisioning_status' => Server::PROVISIONING_STATUS_PROVISIONING,
                 'status' => 'provisioning',
             ]);
+            $this->markProvisioningRunStarted($server);
             dispatch(new ServerProvision($server))->onQueue('default');
 
             $message = 'Server provisioning started. This may take 15-30 minutes.';
@@ -721,6 +725,7 @@ class ServerController extends ScaffoldController implements HasMiddleware
                 'provisioning_status' => Server::PROVISIONING_STATUS_PROVISIONING,
                 'status' => 'provisioning',
             ]);
+            $this->markProvisioningRunStarted($server);
             dispatch(new ServerProvision($server));
 
             return response()->json([
@@ -842,6 +847,8 @@ class ServerController extends ScaffoldController implements HasMiddleware
             if (($stepData['status'] ?? '') === 'failed') {
                 $stepData['status'] = 'pending';
                 $stepData['data'] = null;
+                $stepData['started_at'] = null;
+                $stepData['completed_at'] = null;
             }
         }
 
@@ -853,6 +860,7 @@ class ServerController extends ScaffoldController implements HasMiddleware
             'status' => 'provisioning',
         ]);
         $server->save();
+        $this->markProvisioningRunStarted($server);
 
         // Dispatch provisioning job
         dispatch(new ServerProvision($server));
@@ -904,6 +912,7 @@ class ServerController extends ScaffoldController implements HasMiddleware
         $this->resetProvisioningStopRequest($server);
         $server->setMetadata('provisioning_steps', $steps);
         $server->setMetadata('provisioning_started_at', now()->toISOString());
+        $server->setMetadata('provisioning_completed_at', null);
 
         // Set server to provisioning state
         $server->update([
@@ -1287,6 +1296,7 @@ class ServerController extends ScaffoldController implements HasMiddleware
      *     status: string,
      *     current_status: string|null,
      *     provisioning_steps: array<int, array<string, mixed>>,
+     *     provisioning_run: array{started_at: string|null, completed_at: string|null},
      *     progress_percent: float|int
      * }
      */
@@ -1329,6 +1339,8 @@ class ServerController extends ScaffoldController implements HasMiddleware
                     'description' => $config['description'],
                     'status' => $status,
                     'message' => is_string($message) ? $message : null,
+                    'started_at' => $this->formatProvisioningTimestamp(data_get($stepData, 'started_at')),
+                    'completed_at' => $this->formatProvisioningTimestamp(data_get($stepData, 'completed_at')),
                 ];
             })
             ->values()
@@ -1342,6 +1354,10 @@ class ServerController extends ScaffoldController implements HasMiddleware
             'status' => 'success',
             'current_status' => $server->provisioning_status,
             'provisioning_steps' => $normalizedSteps,
+            'provisioning_run' => [
+                'started_at' => $this->formatProvisioningTimestamp($server->getMetadata('provisioning_started_at')),
+                'completed_at' => $this->formatProvisioningTimestamp($server->getMetadata('provisioning_completed_at')),
+            ],
             'progress_percent' => $progressPercent,
         ];
     }
@@ -1405,6 +1421,13 @@ class ServerController extends ScaffoldController implements HasMiddleware
         $server->save();
     }
 
+    protected function markProvisioningRunStarted(Server $server): void
+    {
+        $server->setMetadata('provisioning_started_at', now()->toISOString());
+        $server->setMetadata('provisioning_completed_at', null);
+        $server->save();
+    }
+
     /**
      * Execute a single provisioning step.
      */
@@ -1435,12 +1458,15 @@ class ServerController extends ScaffoldController implements HasMiddleware
                 // Reset this step to pending and set server to provisioning state
                 $steps[$step]['status'] = 'pending';
                 $steps[$step]['data'] = null;
+                $steps[$step]['started_at'] = null;
+                $steps[$step]['completed_at'] = null;
                 $this->resetProvisioningStopRequest($server);
                 $server->setMetadata('provisioning_steps', $steps);
                 $server->update([
                     'provisioning_status' => Server::PROVISIONING_STATUS_PROVISIONING,
                     'status' => 'provisioning',
                 ]);
+                $this->markProvisioningRunStarted($server);
 
                 // Dispatch job - it will pick up from the first pending step
                 dispatch(new ServerProvision($server));
@@ -1477,6 +1503,19 @@ class ServerController extends ScaffoldController implements HasMiddleware
 
             return ['success' => false, 'message' => $exception->getMessage()];
         }
+    }
+
+    private function formatProvisioningTimestamp(mixed $value): ?string
+    {
+        if ($value instanceof DateTimeInterface) {
+            return app_date_time_format($value, 'datetime');
+        }
+
+        if (is_string($value) && trim($value) !== '') {
+            return app_date_time_format($value, 'datetime');
+        }
+
+        return null;
     }
 
     /**

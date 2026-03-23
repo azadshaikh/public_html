@@ -238,6 +238,13 @@ export type ServerProvisioningStep = {
     description: string;
     status: string;
     message?: string | null;
+    started_at?: string | null;
+    completed_at?: string | null;
+};
+
+export type ProvisioningRunTimestamps = {
+    started_at: string | null;
+    completed_at: string | null;
 };
 
 export type ServerSecretItem = {
@@ -349,6 +356,8 @@ export type WebsiteProvisioningStep = {
     status: string;
     description?: string | null;
     message?: string | null;
+    started_at?: string | null;
+    completed_at?: string | null;
 };
 
 export type WebsiteUpdateItem = {

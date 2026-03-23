@@ -116,6 +116,8 @@ class WebsiteProvisioningService
         $executed_steps = [];
         $failed_steps = [];
 
+        $website->resetProvisioningRun();
+
         foreach ($website_steps as $step_data) {
             if ($this->shouldSkipStep($website, $step_data)) {
                 continue;
@@ -135,6 +137,7 @@ class WebsiteProvisioningService
         }
 
         if ($failed_steps === []) {
+            $website->markProvisioningRunCompleted();
             $this->logActivity($website, ActivityAction::UPDATE, 'Website step executed: All ('.count($executed_steps).' steps completed)');
 
             return [

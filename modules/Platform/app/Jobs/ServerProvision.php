@@ -363,6 +363,7 @@ class ServerProvision implements ShouldQueue
 
             // Update server and mark as ready
             $server->setMetadata('provisioning_control.stop_requested', false);
+            $server->setMetadata('provisioning_completed_at', now()->toISOString());
             $updateData = [
                 'provisioning_status' => Server::PROVISIONING_STATUS_READY,
                 'status' => 'active',

@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import type {
     PlatformActivity,
+    ProvisioningRunTimestamps,
     ServerAgencyItem,
     ServerMetadataItem,
     ServerProvisioningStep,
@@ -28,6 +29,7 @@ type ServerShowTabsProps = {
     canRevealSecrets: boolean;
     canRevealSshKeyPair: boolean;
     provisioningSteps: ServerProvisioningStep[];
+    provisioningRun: ProvisioningRunTimestamps;
     activities: PlatformActivity[];
 };
 
@@ -42,6 +44,7 @@ export function ServerShowTabs({
     canRevealSecrets,
     canRevealSshKeyPair,
     provisioningSteps,
+    provisioningRun,
     activities,
 }: ServerShowTabsProps) {
     return (
@@ -184,6 +187,7 @@ export function ServerShowTabs({
                         <ServerProvisioningStepsTable
                             serverId={server.id}
                             steps={provisioningSteps}
+                            provisioningRun={provisioningRun}
                             provisioningStatus={server.provisioning_status}
                         />
                     </CardContent>

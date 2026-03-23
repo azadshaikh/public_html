@@ -48,5 +48,62 @@
     "custom_js": null,
     "show_sidebar_on_archive": false,
     "show_breadcrumb_on_pages": false,
-    "show_social_sharing_on_posts": true
+    "show_social_sharing_on_posts": true,
+    "widgets_sidebar-main": [
+        {
+            "id": "widget-1774260188918-vcdw4p",
+            "type": "banner",
+            "title": "Banner Widget",
+            "settings": {
+                "title": null,
+                "banner_title": "Your Banner Title",
+                "text": "Banner description text",
+                "button_text": "Learn More",
+                "button_url": "#",
+                "background_color": "#007bff",
+                "text_color": "#ffffff",
+                "button_style": "primary",
+                "banner_size": "medium"
+            },
+            "position": 0
+        },
+        {
+            "id": "widget-1774260191422-q915yr",
+            "type": "popularposts",
+            "title": "Popular Posts",
+            "settings": {
+                "title": "Popular Posts",
+                "icon": "ri-history-line",
+                "posts_limit": 3,
+                "background_style": "secondary"
+            },
+            "position": 1
+        },
+        {
+            "id": "widget-1774260194601-q0ha3t",
+            "type": "newsletter",
+            "title": "Newsletter Signup",
+            "settings": {
+                "title": null,
+                "heading": "Subscribe to Newsletter",
+                "description_text": "Stay updated with our latest news and offers.",
+                "placeholder": "Enter your email address",
+                "button_text": "Subscribe",
+                "form_style": "horizontal"
+            },
+            "position": 2
+        },
+        {
+            "id": "widget-1774260201072-dym90p",
+            "type": "search",
+            "title": "Search",
+            "settings": {
+                "title": "Search",
+                "icon": "ri-search-line",
+                "placeholder_text": "Search",
+                "background_style": "secondary"
+            },
+            "position": 3
+        }
+    ]
 }

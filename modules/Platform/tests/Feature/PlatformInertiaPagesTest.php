@@ -453,14 +453,19 @@ class PlatformInertiaPagesTest extends TestCase
             'status' => 'failed',
             'metadata' => [
                 'creation_mode' => 'provision',
+                'provisioning_started_at' => now()->subMinutes(20)->toISOString(),
+                'provisioning_completed_at' => now()->subMinutes(5)->toISOString(),
                 'provisioning_steps' => [
                     'ssh_connection' => [
                         'status' => 'completed',
                         'message' => 'SSH connectivity confirmed.',
+                        'started_at' => now()->subMinutes(19)->toISOString(),
+                        'completed_at' => now()->subMinutes(18)->toISOString(),
                     ],
                 ],
             ],
         ]);
+        $serverProgressPercent = (int) round(100 / 13);
 
         $this->actingAs($this->admin)
             ->get(route('platform.servers.show', $server))
@@ -472,6 +477,10 @@ class PlatformInertiaPagesTest extends TestCase
                 ->where('provisioningSteps.0.key', 'ssh_connection')
                 ->where('provisioningSteps.0.status', 'done')
                 ->where('provisioningSteps.0.message', 'SSH connectivity confirmed.')
+                ->where('provisioningSteps.0.started_at', app_date_time_format($server->getMetadata('provisioning_steps.ssh_connection.started_at'), 'datetime'))
+                ->where('provisioningSteps.0.completed_at', app_date_time_format($server->getMetadata('provisioning_steps.ssh_connection.completed_at'), 'datetime'))
+                ->where('provisioningRun.started_at', app_date_time_format($server->getMetadata('provisioning_started_at'), 'datetime'))
+                ->where('provisioningRun.completed_at', app_date_time_format($server->getMetadata('provisioning_completed_at'), 'datetime'))
                 ->has('websiteCounts')
                 ->has('agencies')
                 ->has('metadataItems')
@@ -484,11 +493,17 @@ class PlatformInertiaPagesTest extends TestCase
             ->assertJson([
                 'status' => 'success',
                 'current_status' => Server::PROVISIONING_STATUS_FAILED,
-                'progress_percent' => 9,
+                'progress_percent' => $serverProgressPercent,
+                'provisioning_run' => [
+                    'started_at' => app_date_time_format($server->getMetadata('provisioning_started_at'), 'datetime'),
+                    'completed_at' => app_date_time_format($server->getMetadata('provisioning_completed_at'), 'datetime'),
+                ],
             ])
             ->assertJsonPath('provisioning_steps.0.key', 'ssh_connection')
             ->assertJsonPath('provisioning_steps.0.status', 'done')
-            ->assertJsonPath('provisioning_steps.0.message', 'SSH connectivity confirmed.');
+            ->assertJsonPath('provisioning_steps.0.message', 'SSH connectivity confirmed.')
+            ->assertJsonPath('provisioning_steps.0.started_at', app_date_time_format($server->getMetadata('provisioning_steps.ssh_connection.started_at'), 'datetime'))
+            ->assertJsonPath('provisioning_steps.0.completed_at', app_date_time_format($server->getMetadata('provisioning_steps.ssh_connection.completed_at'), 'datetime'));
 
         $this->actingAs($this->admin)
             ->get(route('platform.websites.edit', $website))
@@ -504,10 +519,14 @@ class PlatformInertiaPagesTest extends TestCase
 
         $website->update([
             'metadata' => [
+                'provisioning_started_at' => now()->subMinutes(40)->toISOString(),
+                'provisioning_completed_at' => now()->subMinutes(1)->toISOString(),
                 'provisioning_steps' => [
                     $stepKeys[0] => [
                         'status' => 'done',
                         'message' => 'Initial provisioning completed.',
+                        'started_at' => now()->subMinutes(39)->toISOString(),
+                        'completed_at' => now()->subMinutes(38)->toISOString(),
                         'updated_at' => now()->toISOString(),
                     ],
                 ],
@@ -524,6 +543,10 @@ class PlatformInertiaPagesTest extends TestCase
                 ->where('provisioningSteps.0.key', $stepKeys[0])
                 ->where('provisioningSteps.0.status', 'done')
                 ->where('provisioningSteps.0.message', 'Initial provisioning completed.')
+                ->where('provisioningSteps.0.started_at', app_date_time_format($website->getMetadata('provisioning_steps.'.$stepKeys[0].'.started_at'), 'datetime'))
+                ->where('provisioningSteps.0.completed_at', app_date_time_format($website->getMetadata('provisioning_steps.'.$stepKeys[0].'.completed_at'), 'datetime'))
+                ->where('provisioningRun.started_at', app_date_time_format($website->getMetadata('provisioning_started_at'), 'datetime'))
+                ->where('provisioningRun.completed_at', app_date_time_format($website->getMetadata('provisioning_completed_at'), 'datetime'))
                 ->has('activities'));
 
         $this->actingAs($this->admin)
@@ -532,11 +555,17 @@ class PlatformInertiaPagesTest extends TestCase
             ->assertJson([
                 'status' => 'success',
                 'percentage' => $websiteProgressPercent,
+                'provisioning_run' => [
+                    'started_at' => app_date_time_format($website->getMetadata('provisioning_started_at'), 'datetime'),
+                    'completed_at' => app_date_time_format($website->getMetadata('provisioning_completed_at'), 'datetime'),
+                ],
                 'current_status' => $website->status instanceof WebsiteStatus ? $website->status->value : $website->status,
             ])
             ->assertJsonPath('provisioning_steps.0.key', $stepKeys[0])
             ->assertJsonPath('provisioning_steps.0.status', 'done')
-            ->assertJsonPath('provisioning_steps.0.message', 'Initial provisioning completed.');
+            ->assertJsonPath('provisioning_steps.0.message', 'Initial provisioning completed.')
+            ->assertJsonPath('provisioning_steps.0.started_at', app_date_time_format($website->getMetadata('provisioning_steps.'.$stepKeys[0].'.started_at'), 'datetime'))
+            ->assertJsonPath('provisioning_steps.0.completed_at', app_date_time_format($website->getMetadata('provisioning_steps.'.$stepKeys[0].'.completed_at'), 'datetime'));
 
         $this->actingAs($this->admin)
             ->get(route('platform.dns.edit', $dnsRecord))
