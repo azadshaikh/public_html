@@ -1,0 +1,12 @@
+{
+    "name": "Billing",
+    "slug": "billing",
+    "version": "1.0.0",
+    "description": "Billing module for invoices, payments, credits, refunds, coupons, taxes, and transactions.",
+    "author": "AsteroDigital",
+    "homepage": "https://asterodigital.com",
+    "icon": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect width=\"20\" height=\"14\" x=\"2\" y=\"5\" rx=\"2\"/><line x1=\"2\" x2=\"22\" y1=\"10\" y2=\"10\"/></svg>",
+    "namespace": "Modules\\Billing\\",
+    "provider": "Modules\\Billing\\Providers\\BillingServiceProvider",
+    "database_seeder": "Modules\\Billing\\Database\\Seeders\\DatabaseSeeder"
+}
