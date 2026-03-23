@@ -1,4 +1,3 @@
-```skill
 ---
 name: ziggy-development
 description: "Activates whenever referencing backend routes in frontend components. Use when generating URLs with Ziggy's route() function, working with named Laravel routes in TypeScript, or debugging route resolution."
@@ -221,4 +220,3 @@ Ziggy's `route()` function is globally typed via `resources/js/types/global.d.ts
 - Calling `route('app.masters.settings.index')` for a non-super user — the route won't exist in their Ziggy config. Check `route().has('app.masters.settings.index')` before using it when the route may be filtered out.
 - Forgetting to add new route groups to `config/ziggy.php` when creating new CRUD resources
 - Not calling `ZiggyRouteFilter::clearCache()` after modifying permission assignments or route groups
-```

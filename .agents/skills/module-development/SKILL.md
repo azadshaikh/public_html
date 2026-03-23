@@ -1,4 +1,3 @@
-```skill
 ---
 name: module-development
 description: "Creates and maintains self-contained modules in the internal module system. Use when working in modules/, creating new modules, adding module config files (navigation, abilities), module service providers, module database classes, factories, seeders, or module testing."
@@ -692,4 +691,3 @@ When a module uses Inertia CRUD pages, also verify:
 - **Missing `newFactory()` override on model** — module models cannot rely on Laravel's default factory resolution. Always implement `protected static function newFactory()`.
 - **Creating a module without adding it to `modules.json`** — the module won't be discovered as enabled.
 - **Trying to exclude disabled modules at build time** — all module pages are compiled by Vite regardless of enabled/disabled status (they produce lazy-loaded chunks). Runtime filtering via `initModulePageFilter()` prevents disabled module pages from being registered in the page resolver. Do NOT try to conditionally exclude modules from the Vite build — it would require a rebuild every time a module is toggled.
-```

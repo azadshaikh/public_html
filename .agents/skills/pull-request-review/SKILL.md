@@ -1,4 +1,3 @@
-```skill
 ---
 name: pull-request-review
 description: "Reviews GitHub pull requests from URLs like https://github.com/owner/repo/pull/123. Use when checking a PR before merge, fetching a PR branch locally, comparing it to main, running focused lint/tests, listing findings, and generating a manual review checklist for changed product areas such as theme customizer, datagrids, Ziggy routes, Inertia pages, migrations with data-loss risk, browser-sensitive admin pages, or deployment-risk changes involving queues, cron, config, and caches."
@@ -259,4 +258,3 @@ Use this skill when the user says something like:
 - `check this PR https://github.com/azadshaikh/public_html/pull/4`
 - `review PR 17 before merging`
 - `fetch this PR and tell me what I still need to test manually`
-```
