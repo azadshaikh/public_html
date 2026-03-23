@@ -1,3 +1,5 @@
+import { Link } from '@inertiajs/react';
+import { ArrowLeftIcon, SettingsIcon } from 'lucide-react';
 import type { FormEvent } from 'react';
 import { FormErrorSummary } from '@/components/forms/form-error-summary';
 import { Button } from '@/components/ui/button';
@@ -6,8 +8,8 @@ import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field
 import { Input } from '@/components/ui/input';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { Spinner } from '@/components/ui/spinner';
-import AppLayout from '@/layouts/app-layout';
 import { useAppForm } from '@/hooks/use-app-form';
+import AppLayout from '@/layouts/app-layout';
 import { formValidators } from '@/lib/forms';
 import type { BreadcrumbItem } from '@/types';
 import type { OrderSettingsPageProps, OrderSettingsValues } from '../../../types/orders';
@@ -63,18 +65,33 @@ export default function OrderSettings({ initialValues, digitLengthOptions, forma
     })();
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs} title="Order Settings" description="Configure order numbering">
-            <div className="mx-auto max-w-2xl">
-                <form className="space-y-6" onSubmit={handleSubmit} noValidate>
-                    {form.dirtyGuardDialog}
-                    <FormErrorSummary errors={form.errors} minMessages={2} />
+        <AppLayout
+            breadcrumbs={breadcrumbs}
+            title="Order Settings"
+            description="Configure order numbering"
+            headerActions={
+                <Button variant="outline" asChild>
+                    <Link href={route('app.orders.index')}>
+                        <ArrowLeftIcon data-icon="inline-start" />
+                        Back to Orders
+                    </Link>
+                </Button>
+            }
+        >
+            <form className="flex flex-col gap-6" onSubmit={handleSubmit} noValidate>
+                {form.dirtyGuardDialog}
+                <FormErrorSummary errors={form.errors} minMessages={2} />
 
+                <div className="mx-auto w-full max-w-3xl space-y-6">
                     <Card>
                         <CardHeader>
-                            <CardTitle>Order Numbering</CardTitle>
+                            <CardTitle className="flex items-center gap-2">
+                                <SettingsIcon data-icon="inline-start" />
+                                Order Numbering
+                            </CardTitle>
                         </CardHeader>
-                        <CardContent>
-                            <FieldGroup>
+                        <CardContent className="flex flex-col gap-6">
+                            <FieldGroup className="md:grid-cols-2">
                                 <Field data-invalid={form.invalid('order_prefix') || undefined}>
                                     <FieldLabel htmlFor="order_prefix">
                                         Order Prefix <span className="text-destructive">*</span>
@@ -85,7 +102,7 @@ export default function OrderSettings({ initialValues, digitLengthOptions, forma
                                         onChange={(e) => form.setField('order_prefix', e.target.value)}
                                         onBlur={() => form.touch('order_prefix')}
                                         aria-invalid={form.invalid('order_prefix') || undefined}
-                                        placeholder="e.g. ORD"
+                                        placeholder="e.g. ORD-"
                                     />
                                     <FieldError>{form.error('order_prefix')}</FieldError>
                                 </Field>
@@ -139,12 +156,12 @@ export default function OrderSettings({ initialValues, digitLengthOptions, forma
                                     </NativeSelect>
                                     <FieldError>{form.error('order_format')}</FieldError>
                                 </Field>
-
-                                <div className="rounded-lg border bg-muted/30 p-4">
-                                    <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Preview</span>
-                                    <div className="mt-1 font-mono text-lg font-bold text-foreground">{previewNumber}</div>
-                                </div>
                             </FieldGroup>
+
+                            <div className="rounded-lg border bg-muted/30 p-4 sm:p-5">
+                                <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Preview</span>
+                                <div className="mt-2 font-mono text-lg font-bold text-foreground sm:text-2xl">{previewNumber}</div>
+                            </div>
                         </CardContent>
                     </Card>
 
@@ -152,8 +169,8 @@ export default function OrderSettings({ initialValues, digitLengthOptions, forma
                         {form.processing ? <Spinner className="mr-2" /> : null}
                         Save Order Settings
                     </Button>
-                </form>
-            </div>
+                </div>
+            </form>
         </AppLayout>
     );
 }

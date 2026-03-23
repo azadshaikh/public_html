@@ -52,6 +52,7 @@ export type InvoiceListItem = {
     payment_status: string;
     payment_status_label: string;
     payment_status_badge: string;
+    is_trashed: boolean;
     actions?: { key: string; label: string; url?: string; method?: string; confirm?: string; variant?: string }[];
 };
 
@@ -216,6 +217,7 @@ export type CreditListItem = {
     status_label: string;
     status_badge: string;
     expires_at: string | null;
+    is_trashed: boolean;
     actions?: { key: string; label: string; url?: string; method?: string; confirm?: string; variant?: string }[];
 };
 
@@ -293,6 +295,7 @@ export type RefundListItem = {
     status_badge: string;
     refunded_at: string | null;
     failed_at: string | null;
+    is_trashed: boolean;
     actions?: { key: string; label: string; url?: string; method?: string; confirm?: string; variant?: string }[];
 };
 
@@ -369,6 +372,7 @@ export type TaxListItem = {
     status: string;
     status_label: string;
     status_badge: string;
+    is_trashed: boolean;
     actions?: { key: string; label: string; url?: string; method?: string; confirm?: string; variant?: string }[];
 };
 
@@ -454,6 +458,7 @@ export type CouponListItem = {
     is_active_label: string;
     is_active_badge: string;
     created_at: string | null;
+    is_trashed: boolean;
     actions?: { key: string; label: string; url?: string; method?: string; confirm?: string; variant?: string }[];
 };
 

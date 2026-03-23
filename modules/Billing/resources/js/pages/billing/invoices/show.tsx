@@ -1,5 +1,5 @@
 import { Link, router, usePage } from '@inertiajs/react';
-import { ArrowLeftIcon, PencilIcon, RefreshCwIcon } from 'lucide-react';
+import { ArrowLeftIcon, PencilIcon, RefreshCwIcon, Trash2Icon } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -29,7 +29,7 @@ export default function InvoicesShow({ invoice }: InvoiceShowPageProps) {
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: route('dashboard') },
-        { title: 'Billing' },
+        { title: 'Billing', href: route('app.billing.invoices.index') },
         { title: 'Invoices', href: route('app.billing.invoices.index') },
         { title: invoice.invoice_number, href: route('app.billing.invoices.show', invoice.id) },
     ];
@@ -69,6 +69,12 @@ export default function InvoicesShow({ invoice }: InvoiceShowPageProps) {
                                 <PencilIcon data-icon="inline-start" />
                                 Edit
                             </Link>
+                        </Button>
+                    )}
+                    {!invoice.is_trashed && canDelete && (
+                        <Button variant="destructive" onClick={handleDelete}>
+                            <Trash2Icon data-icon="inline-start" />
+                            Move to Trash
                         </Button>
                     )}
                 </div>

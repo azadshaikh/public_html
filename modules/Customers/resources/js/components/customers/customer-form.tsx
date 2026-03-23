@@ -63,6 +63,7 @@ export default function CustomerForm({
             mode === 'create'
                 ? 'customers.create'
                 : `customers.edit.${customer?.id}`,
+        dontRemember: ['user_password', 'user_password_confirmation'],
         dirtyGuard: { enabled: true },
         rules: {
             email: [formValidators.required('Email')],
@@ -72,6 +73,12 @@ export default function CustomerForm({
     });
 
     const isCompany = form.data.type === 'company';
+    const hasLinkedUser = initialValues.user_id !== '';
+    const selectedUserOption = userOptions.find(
+        (option) => option.value === form.data.user_id,
+    );
+    const showAssociateUser = form.data.user_action === 'associate';
+    const showCreateUser = form.data.user_action === 'create';
     const submitMethod = mode === 'create' ? 'post' : 'put';
     const submitUrl =
         mode === 'create'
@@ -79,6 +86,19 @@ export default function CustomerForm({
             : route('app.customers.update', customer!.id);
     const submitLabel =
         mode === 'create' ? 'Create Customer' : 'Update Customer';
+
+    const handleUserActionChange = (value: string) => {
+        form.setField('user_action', value);
+
+        if (value === 'none' || value === 'create') {
+            form.setField('user_id', '');
+        }
+
+        if (value !== 'create') {
+            form.setField('user_password', '');
+            form.setField('user_password_confirmation', '');
+        }
+    };
 
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -772,6 +792,173 @@ export default function CustomerForm({
                                         ))}
                                     </NativeSelect>
                                 </Field>
+                            </FieldGroup>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>User Account</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <FieldGroup>
+                                <Field
+                                    data-invalid={
+                                        form.invalid('user_action') || undefined
+                                    }
+                                >
+                                    <FieldLabel htmlFor="user_action">
+                                        Account Action
+                                    </FieldLabel>
+                                    <NativeSelect
+                                        id="user_action"
+                                        value={form.data.user_action}
+                                        onChange={(e) =>
+                                            handleUserActionChange(
+                                                e.target.value,
+                                            )
+                                        }
+                                    >
+                                        <NativeSelectOption value="none">
+                                            No linked user account
+                                        </NativeSelectOption>
+                                        {hasLinkedUser && (
+                                            <NativeSelectOption value="keep">
+                                                Keep linked user account
+                                            </NativeSelectOption>
+                                        )}
+                                        <NativeSelectOption value="associate">
+                                            Link an existing user
+                                        </NativeSelectOption>
+                                        <NativeSelectOption value="create">
+                                            Create a new user account
+                                        </NativeSelectOption>
+                                    </NativeSelect>
+                                    <FieldError>
+                                        {form.error('user_action')}
+                                    </FieldError>
+                                </Field>
+
+                                {form.data.user_action === 'keep' &&
+                                    hasLinkedUser && (
+                                        <div className="rounded-lg border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+                                            Linked to{' '}
+                                            <span className="font-medium text-foreground">
+                                                {selectedUserOption?.label ??
+                                                    `User #${form.data.user_id}`}
+                                            </span>
+                                        </div>
+                                    )}
+
+                                {showAssociateUser && (
+                                    <Field
+                                        data-invalid={
+                                            form.invalid('user_id') || undefined
+                                        }
+                                    >
+                                        <FieldLabel htmlFor="user_id">
+                                            Existing User
+                                        </FieldLabel>
+                                        <NativeSelect
+                                            id="user_id"
+                                            value={form.data.user_id}
+                                            onChange={(e) =>
+                                                form.setField(
+                                                    'user_id',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            onBlur={() => form.touch('user_id')}
+                                        >
+                                            <NativeSelectOption value="">
+                                                Select a user...
+                                            </NativeSelectOption>
+                                            {userOptions.map((option) => (
+                                                <NativeSelectOption
+                                                    key={option.value}
+                                                    value={option.value}
+                                                >
+                                                    {option.label}
+                                                </NativeSelectOption>
+                                            ))}
+                                        </NativeSelect>
+                                        <FieldError>
+                                            {form.error('user_id')}
+                                        </FieldError>
+                                    </Field>
+                                )}
+
+                                {showCreateUser && (
+                                    <>
+                                        <Field
+                                            data-invalid={
+                                                form.invalid('user_password') ||
+                                                undefined
+                                            }
+                                        >
+                                            <FieldLabel htmlFor="user_password">
+                                                Password
+                                            </FieldLabel>
+                                            <Input
+                                                id="user_password"
+                                                type="password"
+                                                value={form.data.user_password}
+                                                onChange={(e) =>
+                                                    form.setField(
+                                                        'user_password',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                onBlur={() =>
+                                                    form.touch(
+                                                        'user_password',
+                                                    )
+                                                }
+                                                placeholder="Leave blank to auto-generate"
+                                            />
+                                            <FieldError>
+                                                {form.error('user_password')}
+                                            </FieldError>
+                                        </Field>
+
+                                        <Field
+                                            data-invalid={
+                                                form.invalid(
+                                                    'user_password_confirmation',
+                                                ) || undefined
+                                            }
+                                        >
+                                            <FieldLabel htmlFor="user_password_confirmation">
+                                                Confirm Password
+                                            </FieldLabel>
+                                            <Input
+                                                id="user_password_confirmation"
+                                                type="password"
+                                                value={
+                                                    form.data
+                                                        .user_password_confirmation
+                                                }
+                                                onChange={(e) =>
+                                                    form.setField(
+                                                        'user_password_confirmation',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                onBlur={() =>
+                                                    form.touch(
+                                                        'user_password_confirmation',
+                                                    )
+                                                }
+                                                placeholder="Repeat the password"
+                                            />
+                                            <FieldError>
+                                                {form.error(
+                                                    'user_password_confirmation',
+                                                )}
+                                            </FieldError>
+                                        </Field>
+                                    </>
+                                )}
                             </FieldGroup>
                         </CardContent>
                     </Card>

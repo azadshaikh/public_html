@@ -1,3 +1,5 @@
+import { Link } from '@inertiajs/react';
+import { ArrowLeftIcon, SettingsIcon } from 'lucide-react';
 import type { FormEvent } from 'react';
 import { FormErrorSummary } from '@/components/forms/form-error-summary';
 import { Button } from '@/components/ui/button';
@@ -6,15 +8,15 @@ import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field
 import { Input } from '@/components/ui/input';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { Spinner } from '@/components/ui/spinner';
-import AppLayout from '@/layouts/app-layout';
 import { useAppForm } from '@/hooks/use-app-form';
+import AppLayout from '@/layouts/app-layout';
 import { formValidators } from '@/lib/forms';
 import type { BreadcrumbItem } from '@/types';
 import type { InvoiceSettings, SettingsPageProps, StripeSettings } from '../../../types/billing';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: route('dashboard') },
-    { title: 'Billing' },
+    { title: 'Billing', href: route('app.billing.invoices.index') },
     { title: 'Settings', href: route('app.billing.settings.index') },
 ];
 
@@ -58,10 +60,13 @@ function InvoiceSettingsForm({
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Invoice Numbering</CardTitle>
+                    <CardTitle className="flex items-center gap-2">
+                        <SettingsIcon data-icon="inline-start" />
+                        Invoice Numbering
+                    </CardTitle>
                 </CardHeader>
-                <CardContent>
-                    <FieldGroup>
+                <CardContent className="flex flex-col gap-6">
+                    <FieldGroup className="md:grid-cols-2">
                         <Field data-invalid={form.invalid('invoice_prefix') || undefined}>
                             <FieldLabel htmlFor="invoice_prefix">
                                 Invoice Prefix <span className="text-destructive">*</span>
@@ -126,12 +131,12 @@ function InvoiceSettingsForm({
                             </NativeSelect>
                             <FieldError>{form.error('invoice_format')}</FieldError>
                         </Field>
-
-                        <div className="rounded-lg border bg-muted/30 p-4">
-                            <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Preview</span>
-                            <div className="mt-1 font-mono text-lg font-bold text-foreground">{previewNumber}</div>
-                        </div>
                     </FieldGroup>
+
+                    <div className="rounded-lg border bg-muted/30 p-4 sm:p-5">
+                        <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Preview</span>
+                        <div className="mt-2 font-mono text-lg font-bold text-foreground sm:text-2xl">{previewNumber}</div>
+                    </div>
                 </CardContent>
             </Card>
 
@@ -174,10 +179,13 @@ function StripeSettingsForm({ initialValues }: { initialValues: StripeSettings }
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Stripe Integration</CardTitle>
+                    <CardTitle className="flex items-center gap-2">
+                        <SettingsIcon data-icon="inline-start" />
+                        Stripe Integration
+                    </CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <FieldGroup>
+                    <FieldGroup className="md:grid-cols-2">
                         <Field data-invalid={form.invalid('stripe_key') || undefined}>
                             <FieldLabel htmlFor="stripe_key">
                                 Stripe Publishable Key <span className="text-destructive">*</span>
@@ -247,8 +255,16 @@ export default function BillingSettings({
             breadcrumbs={breadcrumbs}
             title="Billing Settings"
             description="Configure invoice numbering and Stripe integration"
+            headerActions={
+                <Button variant="outline" asChild>
+                    <Link href={route('app.billing.invoices.index')}>
+                        <ArrowLeftIcon data-icon="inline-start" />
+                        Back to Billing
+                    </Link>
+                </Button>
+            }
         >
-            <div className="mx-auto w-full max-w-2xl space-y-10">
+            <div className="mx-auto w-full max-w-3xl space-y-10">
                 <InvoiceSettingsForm
                     initialValues={invoiceSettings}
                     invoiceDigitLengthOptions={invoiceDigitLengthOptions}
