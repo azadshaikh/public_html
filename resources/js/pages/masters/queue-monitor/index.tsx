@@ -65,6 +65,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { usePageVisibility } from '@/hooks/use-page-visibility';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import type {
@@ -123,6 +124,7 @@ export default function QueueMonitorIndex({
     const [selectedException, setSelectedException] = useState<string | null>(
         null,
     );
+    const isPageVisible = usePageVisibility();
     const workerStatsRequest = useHttp<Record<string, never>, QueueWorkerStats>(
         {},
     );
@@ -140,7 +142,7 @@ export default function QueueMonitorIndex({
     }, []);
 
     useEffect(() => {
-        if (!ui.refreshInterval || paused) {
+        if (!ui.refreshInterval || paused || !isPageVisible) {
             return;
         }
 
@@ -162,12 +164,13 @@ export default function QueueMonitorIndex({
         }, ui.refreshInterval * 1000);
 
         return () => window.clearInterval(intervalId);
-    }, [paused, ui.refreshInterval]);
+    }, [isPageVisible, paused, ui.refreshInterval]);
 
     useEffect(() => {
         if (
             !ui.workerRefreshInterval ||
             paused ||
+            !isPageVisible ||
             (workerStats === null && liveWorkerStats === null)
         ) {
             return;
@@ -198,6 +201,7 @@ export default function QueueMonitorIndex({
         };
     }, [
         liveWorkerStats,
+        isPageVisible,
         paused,
         ui.workerRefreshInterval,
         workerStats,

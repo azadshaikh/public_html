@@ -1,10 +1,11 @@
 import { router } from '@inertiajs/react';
 import { CheckCircleIcon, PlayCircleIcon, RotateCcwIcon } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { showAppToast } from '@/components/forms/form-success-toast';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
+import { usePageVisibility } from '@/hooks/use-page-visibility';
 import { cn } from '@/lib/utils';
 import type { WebsiteProvisioningStep } from '../../../types/platform';
 import { statusBadgeVariant, STEP_STATUS_VARIANT } from './show-shared';
@@ -25,6 +26,7 @@ export function WebsiteProvisioningStepsTable({
     isProvisioning,
     websiteStatus,
 }: WebsiteProvisioningStepsTableProps) {
+    const isPageVisible = usePageVisibility();
     const [currentSteps, setCurrentSteps] = useState(steps);
     const [currentStatus, setCurrentStatus] = useState<string | null>(websiteStatus);
     const pollingUrl = route('platform.websites.provisioning-status', {
@@ -66,7 +68,7 @@ export function WebsiteProvisioningStepsTable({
         completionReloadedRef.current = false;
     }, [isProvisioning, steps, websiteStatus]);
 
-    async function refreshProvisioningState(): Promise<boolean> {
+    const refreshProvisioningState = useCallback(async (): Promise<boolean> => {
         setPollAttemptCount((count) => count + 1);
 
         const response = await fetch(pollingUrl, {
@@ -127,10 +129,10 @@ export function WebsiteProvisioningStepsTable({
         }
 
         return false;
-    }
+    }, [pollingUrl]);
 
     useEffect(() => {
-        if (!isPolling) {
+        if (!isPolling || !isPageVisible) {
             return;
         }
 
@@ -168,7 +170,7 @@ export function WebsiteProvisioningStepsTable({
                 window.clearTimeout(timeoutId);
             }
         };
-    }, [isPolling]);
+    }, [isPageVisible, isPolling, refreshProvisioningState]);
 
     async function runStepAction(url: string, actionKey: string, successTitle: string): Promise<void> {
         setActiveActionKey(actionKey);

@@ -46,6 +46,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { getDefaultDatagridCardColumnCount } from '@/lib/datagrid-card-columns';
 import { cn } from '@/lib/utils';
 import type { BadgeVariant } from '@/types/ui';
 
@@ -580,24 +581,66 @@ function CardGridView<T>({
     cardGridClassName,
 }: CardGridViewProps<T>) {
     const gridRef = React.useRef<HTMLDivElement>(null);
-    const [colCount, setColCount] = React.useState(1);
+    const [colCount, setColCount] = React.useState(() =>
+        typeof window === 'undefined'
+            ? 1
+            : getDefaultDatagridCardColumnCount(window.innerWidth),
+    );
 
     React.useEffect(() => {
+        if (!cardGridClassName) {
+            const handleResize = () => {
+                setColCount(
+                    getDefaultDatagridCardColumnCount(window.innerWidth),
+                );
+            };
+
+            handleResize();
+            window.addEventListener('resize', handleResize, { passive: true });
+
+            return () => {
+                window.removeEventListener('resize', handleResize);
+            };
+        }
+
         const el = gridRef.current;
-        if (!el) return;
+
+        if (!el) {
+            return;
+        }
+
+        let frameId: number | null = null;
 
         const detectColumns = () => {
-            const style = getComputedStyle(el);
-            const cols = style.gridTemplateColumns.split(' ').length;
-            setColCount(cols);
+            if (frameId !== null) {
+                return;
+            }
+
+            frameId = window.requestAnimationFrame(() => {
+                frameId = null;
+
+                const style = getComputedStyle(el);
+                const cols = style.gridTemplateColumns.split(' ').length;
+
+                setColCount((currentCount) =>
+                    currentCount === cols ? currentCount : cols,
+                );
+            });
         };
 
         detectColumns();
 
         const observer = new ResizeObserver(detectColumns);
         observer.observe(el);
-        return () => observer.disconnect();
-    }, []);
+
+        return () => {
+            observer.disconnect();
+
+            if (frameId !== null) {
+                window.cancelAnimationFrame(frameId);
+            }
+        };
+    }, [cardGridClassName]);
 
     const itemCount = rows.data.length;
     const hasEmptySlots = itemCount > 0 && itemCount % colCount !== 0;

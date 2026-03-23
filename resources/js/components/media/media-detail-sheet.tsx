@@ -21,6 +21,7 @@ import {
     SheetTitle,
 } from '@/components/ui/sheet';
 import { Textarea } from '@/components/ui/textarea';
+import { usePageVisibility } from '@/hooks/use-page-visibility';
 import type { MediaDetail } from '@/types/media';
 
 type MediaDetailSheetProps = {
@@ -43,6 +44,7 @@ export function MediaDetailSheet({
     const [saving, setSaving] = useState(false);
     const [conversionPolling, setConversionPolling] = useState(false);
     const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
+    const isPageVisible = usePageVisibility();
 
     // Editable fields
     const [name, setName] = useState('');
@@ -112,7 +114,7 @@ export function MediaDetailSheet({
     // ── Poll for conversion status ──────────────────────────────
 
     useEffect(() => {
-        if (!detail || !detail.is_processing || !open) return;
+        if (!detail || !detail.is_processing || !open || !isPageVisible) return;
 
         const detailId = detail.id;
         setConversionPolling(true);
@@ -158,7 +160,7 @@ export function MediaDetailSheet({
             conversionStatusRequest.cancel();
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [detail?.id, detail?.is_processing, open]);
+    }, [detail?.id, detail?.is_processing, isPageVisible, open]);
 
     // ── Save metadata ───────────────────────────────────────────
 

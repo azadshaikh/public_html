@@ -24,6 +24,7 @@ import { MediaDetailSheet } from '@/components/media/media-detail-sheet';
 import { MediaUploadDropzone } from '@/components/media/media-upload-dropzone';
 import { ResourceFeedbackAlerts } from '@/components/resource/resource-feedback-alerts';
 import { Badge } from '@/components/ui/badge';
+import { usePageVisibility } from '@/hooks/use-page-visibility';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import type { MediaIndexPageProps, MediaListItem } from '@/types/media';
@@ -105,6 +106,7 @@ export default function MediaIndex({
 }: MediaIndexPageProps) {
     const [detailMediaId, setDetailMediaId] = useState<number | null>(null);
     const [detailOpen, setDetailOpen] = useState(false);
+    const isPageVisible = usePageVisibility();
 
     const openDetail = useCallback((id: number) => {
         setDetailMediaId(id);
@@ -117,7 +119,7 @@ export default function MediaIndex({
     const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
     useEffect(() => {
-        if (hasProcessing) {
+        if (hasProcessing && isPageVisible) {
             pollingRef.current = setInterval(() => {
                 router.reload({
                     only: ['media', 'statistics'],
@@ -131,7 +133,7 @@ export default function MediaIndex({
                 pollingRef.current = null;
             }
         };
-    }, [hasProcessing]);
+    }, [hasProcessing, isPageVisible]);
 
     // ----- Bulk action helper -----
 
