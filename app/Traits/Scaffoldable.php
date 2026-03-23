@@ -126,9 +126,10 @@ trait Scaffoldable
         $query = $this->buildListQuery($request);
         $paginator = $query->paginate($this->getPerPage($request))->onEachSide(1);
 
-        // Only include statistics on initial load (non-AJAX) or when explicitly requested.
-        // Services can override alwaysIncludeStatistics() to force inclusion on every request.
-        $includeStats = ! $request->ajax() || $request->boolean('include_stats') || $this->alwaysIncludeStatistics();
+        // Include statistics unless explicitly excluded. Inertia v3 sends X-Requested-With
+        // on every navigation, so ajax() is always true — the old check skipped stats on all
+        // Inertia page visits. Services can still override alwaysIncludeStatistics() if needed.
+        $includeStats = ! $request->boolean('exclude_stats');
 
         // Build PaginatedData-compatible payload with transformed items
         $rows = $paginator->toArray();

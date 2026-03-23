@@ -191,6 +191,16 @@ class HandleInertiaRequests extends Middleware
             $request->routeIs('helpdesk.departments.*') => ['addHelpdeskDepartments', 'editHelpdeskDepartments', 'deleteHelpdeskDepartments', 'restoreHelpdeskDepartments'],
             $request->routeIs('helpdesk.tickets.*') => ['addHelpdeskTickets', 'editHelpdeskTickets', 'deleteHelpdeskTickets', 'restoreHelpdeskTickets'],
             $request->routeIs('helpdesk.settings.*') => ['manageHelpdeskSettings'],
+            $request->routeIs('app.customers.contacts.*') => ['addCustomerContacts', 'editCustomerContacts', 'deleteCustomerContacts', 'restoreCustomerContacts'],
+            $request->routeIs('app.customers.*') => ['addCustomers', 'editCustomers', 'deleteCustomers', 'restoreCustomers'],
+            $request->routeIs('app.billing.invoices.*') => ['addInvoices', 'editInvoices', 'deleteInvoices', 'restoreInvoices'],
+            $request->routeIs('app.billing.payments.*') => ['addPayments', 'editPayments', 'deletePayments', 'restorePayments'],
+            $request->routeIs('app.billing.credits.*') => ['addCredits', 'editCredits', 'deleteCredits', 'restoreCredits'],
+            $request->routeIs('app.billing.refunds.*') => ['addRefunds', 'editRefunds', 'deleteRefunds', 'restoreRefunds'],
+            $request->routeIs('app.billing.taxes.*') => ['addTaxes', 'editTaxes', 'deleteTaxes', 'restoreTaxes'],
+            $request->routeIs('app.billing.coupons.*') => ['addCoupons', 'editCoupons', 'deleteCoupons', 'restoreCoupons'],
+            $request->routeIs('app.billing.transactions.*') => ['viewTransactions'],
+            $request->routeIs('app.billing.settings.*') => ['manageBillingSettings'],
             default => [],
         };
     }
