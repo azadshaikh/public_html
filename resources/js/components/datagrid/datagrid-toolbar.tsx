@@ -32,6 +32,7 @@ import {
     InputGroupAddon,
     InputGroupInput,
 } from '@/components/ui/input-group';
+import { SearchInput } from '@/components/ui/search-input';
 import {
     Sheet,
     SheetContent,
@@ -69,7 +70,7 @@ type DatagridToolbarProps = {
     submitButtonSize: NonNullable<DatagridProps<unknown>['submitButtonSize']>;
     searchInputRef: React.RefObject<HTMLInputElement | null>;
     onTabChange: (value: string) => void;
-    onSearchChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+    onSearchChange: (input: HTMLInputElement) => void;
     onFilterSubmit: (
         params: Record<string, string | number | null | undefined>,
     ) => void;
@@ -140,6 +141,14 @@ export function DatagridToolbar({
         booleanFilters.filter((filter) => filter.value !== '').length +
         numberFilters.filter((filter) => filter.value !== '').length;
 
+    const [primarySearchValue, setPrimarySearchValue] = React.useState(
+        primarySearchFilter?.value ?? '',
+    );
+
+    React.useEffect(() => {
+        setPrimarySearchValue(primarySearchFilter?.value ?? '');
+    }, [primarySearchFilter?.name, primarySearchFilter?.value]);
+
     if (!tabs && !hasVisibleFilters) {
         return null;
     }
@@ -166,6 +175,19 @@ export function DatagridToolbar({
         });
     };
 
+    const handlePrimarySearchChange = (value: string) => {
+        setPrimarySearchValue(value);
+
+        const input = searchInputRef.current;
+
+        if (!input) {
+            return;
+        }
+
+        input.value = value;
+        onSearchChange(input);
+    };
+
     const handleFilterSheetSubmit = (
         event: React.FormEvent<HTMLFormElement>,
     ) => {
@@ -180,7 +202,9 @@ export function DatagridToolbar({
     };
 
     const handleFilterChange = (name: string, value: string) => {
-        const formElement = document.getElementById(filterFormId) as HTMLFormElement | null;
+        const formElement = document.getElementById(
+            filterFormId,
+        ) as HTMLFormElement | null;
         const baseParams: Record<string, string | number | null | undefined> = {
             ...sharedParams,
             ...(primarySearchFilter
@@ -335,29 +359,21 @@ export function DatagridToolbar({
                                 />
 
                                 {primarySearchFilter ? (
-                                    <InputGroup
+                                    <SearchInput
                                         key={primarySearchFilter.name}
+                                        ref={searchInputRef}
+                                        name={primarySearchFilter.name}
+                                        value={primarySearchValue}
+                                        onChange={handlePrimarySearchChange}
                                         size="comfortable"
-                                        className={cn(
+                                        placeholder={
+                                            primarySearchFilter.placeholder
+                                        }
+                                        containerClassName={cn(
                                             primarySearchFilter.className,
                                             'w-full min-w-0 md:flex-1 md:basis-0 xl:w-[14.5rem] xl:min-w-[14.5rem] xl:flex-none xl:basis-auto 2xl:w-[15.5rem] 2xl:min-w-[15.5rem]',
                                         )}
-                                    >
-                                        <InputGroupAddon>
-                                            <SearchIcon />
-                                        </InputGroupAddon>
-                                        <InputGroupInput
-                                            ref={searchInputRef}
-                                            name={primarySearchFilter.name}
-                                            defaultValue={
-                                                primarySearchFilter.value
-                                            }
-                                            placeholder={
-                                                primarySearchFilter.placeholder
-                                            }
-                                            onChange={onSearchChange}
-                                        />
-                                    </InputGroup>
+                                    />
                                 ) : null}
                             </form>
                         ) : null}
@@ -372,7 +388,11 @@ export function DatagridToolbar({
                                     <SheetTrigger asChild>
                                         <Button
                                             type="button"
-                                            variant={activeSheetFilterCount > 0 ? 'default' : submitButtonVariant}
+                                            variant={
+                                                activeSheetFilterCount > 0
+                                                    ? 'default'
+                                                    : submitButtonVariant
+                                            }
                                             size={submitButtonSize}
                                         >
                                             <FilterIcon data-icon="inline-start" />
@@ -384,10 +404,13 @@ export function DatagridToolbar({
                                     {activeSheetFilterCount > 0 ? (
                                         <button
                                             type="button"
-                                            className="absolute -right-2 -top-2 flex size-5 items-center justify-center rounded-full bg-destructive shadow-sm transition-opacity hover:opacity-80"
+                                            className="absolute -top-2 -right-2 flex size-5 items-center justify-center rounded-full bg-destructive shadow-sm transition-opacity hover:opacity-80"
                                             onClick={handleResetFilters}
                                         >
-                                            <XIcon className="size-3 text-white" strokeWidth={3} />
+                                            <XIcon
+                                                className="size-3 text-white"
+                                                strokeWidth={3}
+                                            />
                                         </button>
                                     ) : null}
                                 </div>
@@ -405,12 +428,16 @@ export function DatagridToolbar({
                                     </SheetHeader>
 
                                     <DatagridActiveFilters
-                                        advancedSearchFilters={advancedSearchFilters}
+                                        advancedSearchFilters={
+                                            advancedSearchFilters
+                                        }
                                         selectFilters={selectFilters}
                                         dateRangeFilters={dateRangeFilters}
                                         booleanFilters={booleanFilters}
                                         numberFilters={numberFilters}
-                                        onRemove={(name, value) => handleFilterChange(name, value)}
+                                        onRemove={(name, value) =>
+                                            handleFilterChange(name, value)
+                                        }
                                     />
 
                                     <form
@@ -464,7 +491,9 @@ export function DatagridToolbar({
                                                 <DatagridSelectFilterField
                                                     key={filter.name}
                                                     filter={filter}
-                                                    onChange={handleFilterChange}
+                                                    onChange={
+                                                        handleFilterChange
+                                                    }
                                                 />
                                             ))}
 
@@ -472,7 +501,9 @@ export function DatagridToolbar({
                                                 <DatagridDateRangeFilterField
                                                     key={filter.name}
                                                     filter={filter}
-                                                    onChange={handleFilterChange}
+                                                    onChange={
+                                                        handleFilterChange
+                                                    }
                                                 />
                                             ))}
 
@@ -480,7 +511,9 @@ export function DatagridToolbar({
                                                 <DatagridBooleanFilterField
                                                     key={filter.name}
                                                     filter={filter}
-                                                    onChange={handleFilterChange}
+                                                    onChange={
+                                                        handleFilterChange
+                                                    }
                                                 />
                                             ))}
 
@@ -488,7 +521,9 @@ export function DatagridToolbar({
                                                 <DatagridNumberFilterField
                                                     key={filter.name}
                                                     filter={filter}
-                                                    onChange={handleFilterChange}
+                                                    onChange={
+                                                        handleFilterChange
+                                                    }
                                                 />
                                             ))}
                                         </div>
@@ -677,7 +712,7 @@ function DatagridActiveFilters({
                         {item.label}
                         <button
                             type="button"
-                            className="ml-0.5 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                            className="ml-0.5 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none"
                             onClick={item.onRemove}
                         >
                             <XIcon className="size-3" />

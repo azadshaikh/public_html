@@ -134,6 +134,12 @@ class WidgetCrudTest extends TestCase
                 ->has('availableWidgets')
                 ->where('widgetArea.id', 'sidebar-main')
                 ->where('widgetArea.name', 'Main Sidebar')
+                ->where('availableWidgets.text.name', 'Text Widget')
+                ->where(
+                    'availableWidgets.text.description',
+                    'Display custom text content with formatting options',
+                )
+                ->where('availableWidgets.text.category', 'content')
             );
     }
 

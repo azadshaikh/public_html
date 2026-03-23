@@ -14,6 +14,7 @@ type SearchInputProps = Omit<React.ComponentProps<typeof InputGroupInput>, 'valu
     onChange: (value: string) => void;
     onClear?: () => void;
     containerClassName?: string;
+    size?: React.ComponentProps<typeof InputGroup>['size'];
 };
 
 export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
@@ -23,6 +24,7 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
         onClear,
         className,
         containerClassName,
+        size = 'sm',
         onKeyDown,
         placeholder = 'Search...',
         ...props
@@ -33,7 +35,7 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
         }, [onChange, onClear]);
 
         return (
-            <InputGroup size="sm" className={cn('w-full', containerClassName)}>
+            <InputGroup size={size} className={cn('w-full', containerClassName)}>
                 <InputGroupAddon>
                     <SearchIcon />
                 </InputGroupAddon>
@@ -42,7 +44,10 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
                     ref={ref}
                     value={value}
                     placeholder={placeholder}
-                    className={cn('text-xs', className)}
+                    className={cn(
+                        size === 'sm' ? 'text-xs' : 'text-sm',
+                        className,
+                    )}
                     onChange={(event) => onChange(event.target.value)}
                     onKeyDown={(event) => {
                         if (event.key === 'Escape' && value !== '') {
@@ -62,7 +67,7 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
                     <InputGroupAddon align="inline-end">
                         <InputGroupButton
                             aria-label="Clear search"
-                            size="icon-xs"
+                            size={size === 'sm' ? 'icon-xs' : 'icon-sm'}
                             onClick={handleClear}
                         >
                             <XIcon />
