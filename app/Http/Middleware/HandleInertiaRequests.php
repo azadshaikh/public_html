@@ -188,6 +188,9 @@ class HandleInertiaRequests extends Middleware
             $request->routeIs('cms.redirections.*') => ['addRedirections', 'editRedirections', 'deleteRedirections', 'restoreRedirections'],
             $request->routeIs('cms.settings.default-pages*') => ['manageDefaultPages'],
             $request->routeIs('cms.integrations.*') => ['manageIntegrationsSeoSettings'],
+            $request->routeIs('helpdesk.departments.*') => ['addHelpdeskDepartments', 'editHelpdeskDepartments', 'deleteHelpdeskDepartments', 'restoreHelpdeskDepartments'],
+            $request->routeIs('helpdesk.tickets.*') => ['addHelpdeskTickets', 'editHelpdeskTickets', 'deleteHelpdeskTickets', 'restoreHelpdeskTickets'],
+            $request->routeIs('helpdesk.settings.*') => ['manageHelpdeskSettings'],
             default => [],
         };
     }
