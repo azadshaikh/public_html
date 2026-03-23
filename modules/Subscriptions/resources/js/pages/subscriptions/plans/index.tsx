@@ -1,7 +1,7 @@
 import { Link, usePage } from '@inertiajs/react';
 import { PlusIcon, TagIcon } from 'lucide-react';
 import { Datagrid } from '@/components/datagrid/datagrid';
-import type { DatagridAction, DatagridBulkAction, DatagridColumn } from '@/components/datagrid/datagrid';
+import type { DatagridColumn } from '@/components/datagrid/datagrid';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';

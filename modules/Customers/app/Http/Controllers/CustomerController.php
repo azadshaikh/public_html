@@ -94,7 +94,7 @@ class CustomerController extends ScaffoldController implements HasMiddleware
                 'do_not_call' => (bool) ($customer->do_not_call ?? false),
                 'do_not_email' => (bool) ($customer->do_not_email ?? false),
                 'next_action_date' => $customer->next_action_date?->format('Y-m-d') ?? '',
-                'user_action' => 'none',
+                'user_action' => $customer->user_id ? 'keep' : 'none',
                 'user_id' => $customer->user_id ? (string) $customer->user_id : '',
                 'user_password' => '',
                 'user_password_confirmation' => '',

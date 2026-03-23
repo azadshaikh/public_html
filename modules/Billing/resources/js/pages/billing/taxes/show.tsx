@@ -1,12 +1,12 @@
 import { Link, router, usePage } from '@inertiajs/react';
-import { ArrowLeftIcon, PencilIcon, RefreshCwIcon } from 'lucide-react';
+import { ArrowLeftIcon, PencilIcon, RefreshCwIcon, Trash2Icon } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
-import type { TaxShowDetail, TaxShowPageProps } from '../../../types/billing';
+import type { TaxShowPageProps } from '../../../types/billing';
 
 function DetailRow({ label, value }: { label: string; value: ReactNode }) {
     if (value === null || value === undefined || value === '') return null;
@@ -28,7 +28,7 @@ export default function TaxesShow({ tax }: TaxShowPageProps) {
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: route('dashboard') },
-        { title: 'Billing' },
+        { title: 'Billing', href: route('app.billing.taxes.index') },
         { title: 'Taxes', href: route('app.billing.taxes.index') },
         { title: tax.name, href: route('app.billing.taxes.show', tax.id) },
     ];
@@ -71,6 +71,12 @@ export default function TaxesShow({ tax }: TaxShowPageProps) {
                                 <PencilIcon data-icon="inline-start" />
                                 Edit
                             </Link>
+                        </Button>
+                    )}
+                    {!tax.is_trashed && canDelete && (
+                        <Button variant="destructive" onClick={handleDelete}>
+                            <Trash2Icon data-icon="inline-start" />
+                            Move to Trash
                         </Button>
                     )}
                 </div>

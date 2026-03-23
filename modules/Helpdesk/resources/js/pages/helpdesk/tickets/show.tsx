@@ -10,7 +10,6 @@ import {
     RefreshCwIcon,
     SendIcon,
     Trash2Icon,
-    UserIcon,
 } from 'lucide-react';
 import type { FormEvent, ReactNode } from 'react';
 import { useState } from 'react';
@@ -31,8 +30,8 @@ import {
 } from '@/components/ui/native-select';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
-import AppLayout from '@/layouts/app-layout';
 import { useAppForm } from '@/hooks/use-app-form';
+import AppLayout from '@/layouts/app-layout';
 import { formValidators } from '@/lib/forms';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
 import type {

@@ -16,8 +16,8 @@ import {
     NativeSelectOption,
 } from '@/components/ui/native-select';
 import { Spinner } from '@/components/ui/spinner';
-import AppLayout from '@/layouts/app-layout';
 import { useAppForm } from '@/hooks/use-app-form';
+import AppLayout from '@/layouts/app-layout';
 import { formValidators } from '@/lib/forms';
 import type { BreadcrumbItem } from '@/types';
 import type {
@@ -89,16 +89,16 @@ export default function HelpdeskSettings({
                 {form.dirtyGuardDialog}
                 <FormErrorSummary errors={form.errors} minMessages={2} />
 
-                <div className="mx-auto w-full max-w-2xl space-y-6">
+                <div className="mx-auto w-full max-w-3xl space-y-6">
                     <Card>
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
-                                <SettingsIcon className="size-4" />
+                                <SettingsIcon data-icon="inline-start" />
                                 Ticket Numbering
                             </CardTitle>
                         </CardHeader>
-                        <CardContent>
-                            <FieldGroup>
+                        <CardContent className="flex flex-col gap-6">
+                            <FieldGroup className="md:grid-cols-2">
                                 <Field
                                     data-invalid={
                                         form.invalid('ticket_prefix') ||
@@ -221,17 +221,16 @@ export default function HelpdeskSettings({
                                         {form.error('ticket_digit_length')}
                                     </FieldError>
                                 </Field>
-
-                                {/* Live preview */}
-                                <div className="rounded-lg border bg-muted/30 p-4">
-                                    <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                                        Preview
-                                    </span>
-                                    <div className="mt-1 font-mono text-lg font-bold text-foreground">
-                                        {previewNumber}
-                                    </div>
-                                </div>
                             </FieldGroup>
+
+                            <div className="rounded-lg border bg-muted/30 p-4 sm:p-5">
+                                <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                                    Preview
+                                </span>
+                                <div className="mt-2 font-mono text-lg font-bold text-foreground sm:text-2xl">
+                                    {previewNumber}
+                                </div>
+                            </div>
                         </CardContent>
                     </Card>
 

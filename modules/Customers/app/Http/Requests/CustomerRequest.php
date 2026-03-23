@@ -38,7 +38,7 @@ class CustomerRequest extends ScaffoldRequest
 
         return [
             'type' => ['required', 'string', 'in:person,company'],
-            'user_action' => ['nullable', 'string', 'in:none,create,associate'],
+            'user_action' => ['nullable', 'string', 'in:none,keep,create,associate'],
             'user_id' => [
                 Rule::requiredIf($userAction === 'associate'),
                 'nullable',
@@ -135,8 +135,11 @@ class CustomerRequest extends ScaffoldRequest
         }
 
         if (! $this->has('user_action')) {
+            $customer = $this->route('customer');
+            $hasLinkedUser = $customer instanceof Customer && $customer->user_id !== null;
+
             $this->merge([
-                'user_action' => $this->filled('user_id') ? 'associate' : 'none',
+                'user_action' => $this->filled('user_id') ? 'associate' : ($hasLinkedUser ? 'keep' : 'none'),
             ]);
         }
     }
