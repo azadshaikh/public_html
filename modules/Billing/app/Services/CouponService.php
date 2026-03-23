@@ -58,7 +58,7 @@ class CouponService
 
         if ($coupon->min_order_amount !== null && $subtotal < $coupon->min_order_amount) {
             return CouponValidationResult::failure(
-                'This coupon requires a minimum order of '.number_format($coupon->min_order_amount, 2).'.'
+                'This coupon requires a minimum order of '.number_format((float) $coupon->min_order_amount, 2).'.'
             );
         }
 

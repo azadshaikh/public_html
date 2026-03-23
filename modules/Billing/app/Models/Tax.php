@@ -170,10 +170,10 @@ class Tax extends Model
     protected function getFormattedRateAttribute(): string
     {
         if ($this->type === self::TYPE_PERCENTAGE) {
-            return $this->rate.'%';
+            return ((float) $this->rate).'%';
         }
 
-        return number_format($this->rate, 2);
+        return number_format((float) $this->rate, 2);
     }
 
     /**

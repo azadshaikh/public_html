@@ -238,6 +238,6 @@ class Refund extends Model
 
     protected function getFormattedAmountAttribute(): string
     {
-        return number_format($this->amount, 2).' '.$this->currency;
+        return number_format((float) $this->amount, 2).' '.$this->currency;
     }
 }

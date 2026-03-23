@@ -138,14 +138,14 @@ class InvoiceItem extends Model
     {
         $currency = $this->invoice->currency ?? 'USD';
 
-        return number_format($this->unit_price, 2).' '.$currency;
+        return number_format((float) $this->unit_price, 2).' '.$currency;
     }
 
     protected function getFormattedTotalAttribute(): string
     {
         $currency = $this->invoice->currency ?? 'USD';
 
-        return number_format($this->total, 2).' '.$currency;
+        return number_format((float) $this->total, 2).' '.$currency;
     }
 
     protected static function boot(): void

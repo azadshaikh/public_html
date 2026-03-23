@@ -107,11 +107,11 @@ export default function InvoicesShow({ invoice }: InvoiceShowPageProps) {
                             </CardHeader>
                             <CardContent>
                                 <div className="space-y-2 text-sm">
-                                    <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>{invoice.currency} {invoice.subtotal.toFixed(2)}</span></div>
-                                    <div className="flex justify-between"><span className="text-muted-foreground">Tax</span><span>{invoice.currency} {invoice.tax_amount.toFixed(2)}</span></div>
-                                    <div className="flex justify-between"><span className="text-muted-foreground">Discount</span><span>-{invoice.currency} {invoice.discount_amount.toFixed(2)}</span></div>
+                                    <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>{invoice.currency} {Number(invoice.subtotal).toFixed(2)}</span></div>
+                                    <div className="flex justify-between"><span className="text-muted-foreground">Tax</span><span>{invoice.currency} {Number(invoice.tax_amount).toFixed(2)}</span></div>
+                                    <div className="flex justify-between"><span className="text-muted-foreground">Discount</span><span>-{invoice.currency} {Number(invoice.discount_amount).toFixed(2)}</span></div>
                                     <div className="flex justify-between border-t pt-2 font-semibold"><span>Total</span><span>{invoice.formatted_total}</span></div>
-                                    <div className="flex justify-between"><span className="text-muted-foreground">Amount Paid</span><span>{invoice.currency} {invoice.amount_paid.toFixed(2)}</span></div>
+                                    <div className="flex justify-between"><span className="text-muted-foreground">Amount Paid</span><span>{invoice.currency} {Number(invoice.amount_paid).toFixed(2)}</span></div>
                                     <div className="flex justify-between font-medium"><span>Amount Due</span><span>{invoice.formatted_amount_due}</span></div>
                                 </div>
                             </CardContent>

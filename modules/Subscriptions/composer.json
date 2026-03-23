@@ -1,0 +1,28 @@
+{
+    "name": "asterodigital/subscriptions",
+    "description": "",
+    "authors": [
+        {
+            "name": "Astero Digital",
+            "email": "contact@asterodigital.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {}
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\Subscriptions\\": "app/",
+            "Modules\\Subscriptions\\Database\\Factories\\": "database/factories/",
+            "Modules\\Subscriptions\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\Subscriptions\\Tests\\": "tests/"
+        }
+    }
+}
