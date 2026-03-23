@@ -24,7 +24,6 @@ import {
 } from '@/components/ui/native-select';
 import { Spinner } from '@/components/ui/spinner';
 import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
 import { useAppForm } from '@/hooks/use-app-form';
 import AppLayout from '@/layouts/app-layout';
 import { formValidators } from '@/lib/forms';
@@ -187,29 +186,6 @@ export default function MenusCreate({
                             </div>
                         </Field>
 
-                        <Field
-                            data-invalid={
-                                form.invalid('description') || undefined
-                            }
-                        >
-                            <FieldLabel htmlFor="description">
-                                Description
-                            </FieldLabel>
-                            <Textarea
-                                id="description"
-                                placeholder="Optional internal notes about this menu…"
-                                rows={3}
-                                aria-invalid={
-                                    form.invalid('description') || undefined
-                                }
-                                value={form.data.description}
-                                onChange={(e) =>
-                                    form.setField('description', e.target.value)
-                                }
-                                onBlur={() => form.touch('description')}
-                            />
-                            <FieldError>{form.error('description')}</FieldError>
-                        </Field>
                     </CardContent>
 
                     <CardFooter className="flex justify-end gap-3">
