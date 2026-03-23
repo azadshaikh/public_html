@@ -1,0 +1,28 @@
+{
+    "name": "asterodigital/helpdesk",
+    "description": "",
+    "authors": [
+        {
+            "name": "Astero Digital",
+            "email": "contact@asterodigital.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {}
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\Helpdesk\\": "app",
+            "Modules\\Helpdesk\\Database\\Factories\\": "database/factories/",
+            "Modules\\Helpdesk\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\Helpdesk\\Tests\\": "tests/"
+        }
+    }
+}
