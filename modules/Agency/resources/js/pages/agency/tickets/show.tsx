@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import {
     ArrowLeftIcon,
     FileIcon,
@@ -33,7 +33,7 @@ import {
 import { useAppForm } from '@/hooks/use-app-form';
 import { formValidators } from '@/lib/forms';
 import AppLayout from '@/layouts/app-layout';
-import type { BreadcrumbItem } from '@/types';
+import type { BreadcrumbItem, SharedData } from '@/types';
 
 const maxAttachments = 5;
 const maxAttachmentBytes = 5 * 1024 * 1024;
@@ -179,6 +179,9 @@ function formatDateTime(value: string | null): string {
 export default function AgencyTicketShow({
     ticket,
 }: AgencyTicketShowPageProps) {
+    const { auth } = usePage<SharedData>().props;
+    const currentUserName = auth.user?.name?.trim() || 'You';
+
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: route('dashboard') },
         { title: 'Support', href: route('agency.tickets.index') },
@@ -249,8 +252,8 @@ export default function AgencyTicketShow({
     const threadEntries: ThreadEntry[] = [
         {
             key: `ticket-${ticket.id}`,
-            authorName: 'You',
-            badgeLabel: 'Opened',
+            authorName: currentUserName,
+            badgeLabel: 'You',
             badgeVariant: 'success',
             metaLabel: 'Opened this ticket',
             contentHtml: ticket.description_html,
@@ -367,130 +370,107 @@ export default function AgencyTicketShow({
                 </Card>
 
                 {canReply ? (
-                    <Card className="border-border/70 shadow-xs">
-                        <CardHeader>
-                            <CardTitle>Reply to Ticket</CardTitle>
-                            <CardDescription>
-                                Share any new details, screenshots, or logs that will help move this forward.
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <form className="flex flex-col gap-5" onSubmit={handleSubmit} noValidate>
-                                <FormErrorSummary errors={form.errors} minMessages={2} />
+                    <form className="mx-auto flex w-full max-w-3xl flex-col gap-3" onSubmit={handleSubmit} noValidate>
+                        <FormErrorSummary errors={form.errors} minMessages={2} />
 
-                                <FieldGroup>
-                                    <Field data-invalid={form.invalid('message') || undefined}>
-                                        <FieldLabel htmlFor="message">Reply</FieldLabel>
-                                        <div className="overflow-hidden rounded-lg border border-input bg-background">
-                                            <NoteRichTextEditor
-                                                id="message"
-                                                value={form.data.message}
-                                                onChange={(value) => form.setField('message', value)}
-                                                onBlur={() => form.touch('message')}
-                                                invalid={form.invalid('message')}
-                                                placeholder="Type your reply here. Be detailed to help us assist you better."
-                                                className="min-h-[220px]"
-                                            />
-                                        </div>
-                                        <FieldDescription>
-                                            Mention the affected domain, current behavior, expected behavior, and what changed recently.
-                                        </FieldDescription>
-                                        <FieldError>{form.error('message')}</FieldError>
-                                    </Field>
+                        <Field data-invalid={form.invalid('message') || undefined}>
+                            <div className="overflow-hidden rounded-2xl border border-border/70 bg-background shadow-xs">
+                                <NoteRichTextEditor
+                                    id="message"
+                                    value={form.data.message}
+                                    onChange={(value) => form.setField('message', value)}
+                                    onBlur={() => form.touch('message')}
+                                    invalid={form.invalid('message')}
+                                    placeholder="Type your reply here... Be detailed to help us assist you better."
+                                    className="min-h-[160px]"
+                                />
+                            </div>
+                            <FieldError className="mt-2">{form.error('message')}</FieldError>
+                        </Field>
 
-                                    <Field data-invalid={form.invalid('attachments') || undefined}>
-                                        <div className="flex items-center justify-between gap-3">
-                                            <FieldLabel htmlFor="reply_attachments">Attachments</FieldLabel>
-                                            <span className="text-xs text-muted-foreground">
-                                                Up to 5 files, 5 MB each
-                                            </span>
-                                        </div>
+                        <Field data-invalid={form.invalid('attachments') || undefined}>
+                            <label
+                                htmlFor="reply_attachments"
+                                className={`flex min-h-16 cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed px-4 py-3 text-center transition-colors ${
+                                    isDragOver
+                                        ? 'border-foreground/40 bg-muted/70'
+                                        : 'border-border bg-background hover:border-foreground/30 hover:bg-muted/30'
+                                }`}
+                                onDragEnter={() => setIsDragOver(true)}
+                                onDragLeave={() => setIsDragOver(false)}
+                                onDragOver={(event) => event.preventDefault()}
+                                onDrop={handleDrop}
+                            >
+                                <PaperclipIcon className="size-4 text-muted-foreground" />
+                                <p className="text-sm text-muted-foreground">
+                                    Attach files (Drag &amp; drop or <span className="font-medium text-foreground">browse</span>)
+                                </p>
+                            </label>
 
-                                        <label
-                                            htmlFor="reply_attachments"
-                                            className={`flex min-h-24 cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed px-4 py-5 text-center transition-colors ${
-                                                isDragOver
-                                                    ? 'border-foreground/40 bg-muted/70'
-                                                    : 'border-border bg-muted/20 hover:border-foreground/30 hover:bg-muted/50'
-                                            }`}
-                                            onDragEnter={() => setIsDragOver(true)}
-                                            onDragLeave={() => setIsDragOver(false)}
-                                            onDragOver={(event) => event.preventDefault()}
-                                            onDrop={handleDrop}
+                            <input
+                                ref={fileInputRef}
+                                id="reply_attachments"
+                                type="file"
+                                multiple
+                                className="sr-only"
+                                onChange={handleAttachmentSelection}
+                                accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.txt,.zip"
+                            />
+
+                            {form.data.attachments.length > 0 ? (
+                                <div className="mt-2 grid gap-1.5">
+                                    {form.data.attachments.map((file, index) => (
+                                        <div
+                                            key={`${file.name}-${file.lastModified}-${index}`}
+                                            className="flex items-center justify-between gap-3 rounded-xl border border-border/70 bg-muted/20 px-3 py-2"
                                         >
-                                            <PaperclipIcon className="size-4 text-muted-foreground" />
-                                            <p className="text-xs text-muted-foreground sm:text-sm">
-                                                Attach files (Drag &amp; drop or browse)
-                                            </p>
-                                        </label>
-
-                                        <input
-                                            ref={fileInputRef}
-                                            id="reply_attachments"
-                                            type="file"
-                                            multiple
-                                            className="sr-only"
-                                            onChange={handleAttachmentSelection}
-                                            accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.txt,.zip"
-                                        />
-
-                                        {form.data.attachments.length > 0 ? (
-                                            <div className="grid gap-2">
-                                                {form.data.attachments.map((file, index) => (
-                                                    <div
-                                                        key={`${file.name}-${file.lastModified}-${index}`}
-                                                        className="flex items-center justify-between gap-3 rounded-lg border border-border/70 bg-muted/20 px-3 py-2"
-                                                    >
-                                                        <div className="flex min-w-0 items-center gap-3">
-                                                            <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                                                                <FileIcon className="size-4" />
-                                                            </div>
-                                                            <div className="min-w-0">
-                                                                <p className="truncate text-sm font-medium text-foreground">
-                                                                    {file.name}
-                                                                </p>
-                                                                <p className="text-xs text-muted-foreground">
-                                                                    {formatFileSize(file.size)}
-                                                                </p>
-                                                            </div>
-                                                        </div>
-
-                                                        <Button
-                                                            type="button"
-                                                            variant="ghost"
-                                                            size="icon-sm"
-                                                            onClick={() => removeAttachment(index)}
-                                                            aria-label={`Remove ${file.name}`}
-                                                        >
-                                                            <XIcon className="size-4" />
-                                                        </Button>
-                                                    </div>
-                                                ))}
+                                            <div className="flex min-w-0 items-center gap-3">
+                                                <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                                                    <FileIcon className="size-4" />
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <p className="truncate text-sm font-medium text-foreground">
+                                                        {file.name}
+                                                    </p>
+                                                    <p className="text-xs text-muted-foreground">
+                                                        {formatFileSize(file.size)}
+                                                    </p>
+                                                </div>
                                             </div>
-                                        ) : null}
 
-                                        <FieldError>{form.error('attachments')}</FieldError>
-                                    </Field>
-                                </FieldGroup>
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="icon-sm"
+                                                onClick={() => removeAttachment(index)}
+                                                aria-label={`Remove ${file.name}`}
+                                            >
+                                                <XIcon className="size-4" />
+                                            </Button>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : null}
 
-                                <Button
-                                    type="submit"
-                                    size="xl"
-                                    className="w-full rounded-lg bg-foreground text-background hover:bg-foreground/90"
-                                    disabled={form.processing}
-                                >
-                                    {form.processing ? (
-                                        'Sending Reply...'
-                                    ) : (
-                                        <>
-                                            Send Reply
-                                            <SendIcon data-icon="inline-end" />
-                                        </>
-                                    )}
-                                </Button>
-                            </form>
-                        </CardContent>
-                    </Card>
+                            <FieldError className="mt-2">{form.error('attachments')}</FieldError>
+                        </Field>
+
+                        <Button
+                            type="submit"
+                            size="xl"
+                            className="w-full rounded-xl bg-foreground text-background hover:bg-foreground/90"
+                            disabled={form.processing}
+                        >
+                            {form.processing ? (
+                                'Sending Reply...'
+                            ) : (
+                                <>
+                                    Send Reply
+                                    <SendIcon data-icon="inline-end" />
+                                </>
+                            )}
+                        </Button>
+                    </form>
                 ) : (
                     <Card className="border-border/70 shadow-xs">
                         <CardHeader>

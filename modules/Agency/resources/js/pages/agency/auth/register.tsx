@@ -33,15 +33,19 @@ export default function AgencyRegister({
             email: '',
             password: '',
             password_confirmation: '',
+            terms: '1',
         },
         rememberKey: 'agency.auth.register',
-        resetOnSuccess: ['password', 'password_confirmation'],
     });
 
     const submit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
-        form.submit('post', route('agency.get-started.store'));
+        form.submit('post', route('agency.get-started.store'), {
+            onSuccess: () => {
+                form.reset('password', 'password_confirmation');
+            },
+        });
     };
 
     const handleSocialLogin = (provider: 'google' | 'github') => {
@@ -84,6 +88,8 @@ export default function AgencyRegister({
                     noValidate
                     className="space-y-5 inert:pointer-events-none inert:opacity-60"
                 >
+                    <input type="hidden" name="terms" value={form.data.terms} />
+
                     <Field data-invalid={form.invalid('email') || undefined}>
                         <FieldLabel htmlFor="email">Email address</FieldLabel>
                         <Input
