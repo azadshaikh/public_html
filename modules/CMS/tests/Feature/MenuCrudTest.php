@@ -214,10 +214,10 @@ class MenuCrudTest extends TestCase
         $response->assertSessionHasErrors(['name']);
     }
 
-    public function test_admin_cannot_store_menu_with_duplicate_location(): void
+    public function test_admin_can_store_menu_with_duplicate_location_reassigning_old_menu(): void
     {
         // Create a menu that already occupies a location
-        Menu::query()->create([
+        $existingMenu = Menu::query()->create([
             'type' => Menu::TYPE_CONTAINER,
             'name' => 'Existing Menu',
             'slug' => 'existing-menu',
@@ -232,7 +232,20 @@ class MenuCrudTest extends TestCase
                 'is_active' => true,
             ]);
 
-        $response->assertSessionHasErrors(['location']);
+        $response->assertSessionHasNoErrors();
+        $response->assertRedirect();
+
+        // The old menu should have its location cleared
+        $this->assertDatabaseHas('cms_menus', [
+            'id' => $existingMenu->id,
+            'location' => '',
+        ]);
+
+        // The new menu should have the location assigned
+        $this->assertDatabaseHas('cms_menus', [
+            'name' => 'Another Menu',
+            'location' => 'primary',
+        ]);
     }
 
     // =========================================================================

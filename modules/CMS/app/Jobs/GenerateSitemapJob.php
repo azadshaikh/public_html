@@ -43,7 +43,9 @@ class GenerateSitemapJob implements ShouldBeUnique, ShouldQueue
          * The sitemap type to generate ('posts', 'pages', etc.) or 'all'.
          */
         protected string $type = 'all'
-    ) {}
+    ) {
+        $this->afterCommit();
+    }
 
     /**
      * Execute the job.

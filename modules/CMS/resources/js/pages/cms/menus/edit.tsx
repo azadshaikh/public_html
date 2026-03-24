@@ -1,5 +1,3 @@
-'use client';
-
 import { Link, useHttp } from '@inertiajs/react';
 import {
     ArrowDownIcon,
@@ -28,24 +26,28 @@ import {
 } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
+    Empty,
+    EmptyDescription,
+    EmptyHeader,
+    EmptyMedia,
+    EmptyTitle,
+} from '@/components/ui/empty';
 import {
     Field,
     FieldDescription,
-    FieldError,
+    FieldGroup,
     FieldLabel,
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import { Kbd, KbdGroup } from '@/components/ui/kbd';
 import {
     NativeSelect,
     NativeSelectOption,
 } from '@/components/ui/native-select';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { SearchInput } from '@/components/ui/search-input';
 import { Separator } from '@/components/ui/separator';
 import {
     Sheet,
@@ -55,11 +57,12 @@ import {
     SheetHeader,
     SheetTitle,
 } from '@/components/ui/sheet';
-import { Spinner } from '@/components/ui/spinner';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
+import { cn } from '@/lib/utils';
 import type { BreadcrumbItem } from '@/types';
+import { CmsSaveFooter } from '../../../components/shared/cms-save-footer';
 import type { MenuEditPageProps } from '../../types/cms';
 
 // ----------------------------------------------------------------
@@ -108,6 +111,8 @@ type SavePayload = {
 type SaveResponse = {
     success: boolean;
     message: string;
+    details?: string;
+    errors?: Record<string, string[]>;
     newItemIds: Record<string, number>;
 };
 
@@ -357,7 +362,7 @@ type MenuItemRowProps = {
     maxDepth: number;
     isDraggedOver: 'before' | 'after' | null;
     isDragging: boolean;
-    onDragStart: (e: DragEvent<HTMLDivElement>, id: number) => void;
+    onDragStart: (e: DragEvent<HTMLButtonElement>, id: number) => void;
     onDragOver: (e: DragEvent<HTMLDivElement>, id: number) => void;
     onDrop: (e: DragEvent<HTMLDivElement>) => void;
     onDragEnd: () => void;
@@ -422,107 +427,117 @@ function MenuItemRow({
                 />
             )}
             <div
-                draggable
-                onDragStart={(e) => onDragStart(e, item.id)}
+                className={cn(
+                    'group rounded-xl border bg-card p-4 shadow-xs transition-all',
+                    isDragging ? 'scale-[0.99] opacity-45' : 'opacity-100',
+                    isDraggedOver ? 'bg-muted/30' : '',
+                )}
                 onDragOver={(e) => onDragOver(e, item.id)}
                 onDrop={(e) => onDrop(e)}
-                onDragEnd={onDragEnd}
-                className={[
-                    'flex items-center gap-2 rounded-lg border px-2 py-1.5 text-sm transition-colors',
-                    isDragging ? 'opacity-40' : '',
-                    isDraggedOver ? 'bg-muted/50' : 'bg-card hover:bg-muted/30',
-                ]
-                    .filter(Boolean)
-                    .join(' ')}
             >
-                <GripVerticalIcon className="size-4 shrink-0 cursor-grab text-muted-foreground active:cursor-grabbing" />
+                <div className="flex items-start gap-3">
+                    <div className="flex items-center gap-2 self-stretch">
+                        <button
+                            type="button"
+                            draggable
+                            onDragStart={(e) => onDragStart(e, item.id)}
+                            onDragEnd={onDragEnd}
+                            className="mt-0.5 rounded-lg border bg-muted/40 p-2 text-muted-foreground transition hover:bg-accent hover:text-foreground active:cursor-grabbing"
+                            aria-label="Drag to reorder"
+                            title="Drag to reorder"
+                        >
+                            <GripVerticalIcon className="size-4" />
+                        </button>
+                    </div>
 
-                {getTypeIcon(item.type)}
+                    <div
+                        className="min-w-0 flex-1"
+                    >
+                        <div className="flex flex-wrap items-center gap-2">
+                            <p className="truncate text-sm font-medium">
+                                {item.title}
+                            </p>
+                            <Badge variant="outline">
+                                {item.type}
+                            </Badge>
+                            {!item.is_active ? (
+                                <Badge variant="secondary">Inactive</Badge>
+                            ) : null}
+                        </div>
+                        {item.url ? (
+                            <p className="mt-1 truncate text-sm text-muted-foreground">
+                                {item.url}
+                            </p>
+                        ) : null}
+                    </div>
 
-                <span className="min-w-0 flex-1 truncate leading-tight font-medium">
-                    {item.title}
-                </span>
+                    <div className="flex shrink-0 items-center gap-1">
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="sm:hidden"
+                            disabled={!canMoveUp}
+                            onClick={() => onMoveUp(item.id)}
+                            aria-label="Move up"
+                        >
+                            <ArrowUpIcon />
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="sm:hidden"
+                            disabled={!canMoveDown}
+                            onClick={() => onMoveDown(item.id)}
+                            aria-label="Move down"
+                        >
+                            <ArrowDownIcon />
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            disabled={!canOutdent}
+                            onClick={() => onOutdent(item.id)}
+                            aria-label="Outdent"
+                            title="Outdent"
+                        >
+                            <ArrowLeftIcon />
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            disabled={!canIndent}
+                            onClick={() => onIndent(item.id)}
+                            aria-label="Indent"
+                            title="Indent"
+                        >
+                            <ArrowRightIcon />
+                        </Button>
 
-                {item.url && (
-                    <span className="hidden max-w-[160px] truncate text-xs text-muted-foreground lg:block">
-                        {item.url}
-                    </span>
-                )}
-
-                {!item.is_active && (
-                    <Badge
-                        variant="secondary"
-                        className="hidden shrink-0 text-[10px] sm:inline-flex"
-                    >
-                        Inactive
-                    </Badge>
-                )}
-
-                {/* Reorder / structure controls */}
-                <div className="flex shrink-0 items-center gap-0.5">
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon-sm"
-                        disabled={!canMoveUp}
-                        onClick={() => onMoveUp(item.id)}
-                        title="Move up"
-                    >
-                        <ArrowUpIcon className="size-3.5" />
-                    </Button>
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon-sm"
-                        disabled={!canMoveDown}
-                        onClick={() => onMoveDown(item.id)}
-                        title="Move down"
-                    >
-                        <ArrowDownIcon className="size-3.5" />
-                    </Button>
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon-sm"
-                        disabled={!canOutdent}
-                        onClick={() => onOutdent(item.id)}
-                        title="Outdent"
-                    >
-                        <ArrowLeftIcon className="size-3.5" />
-                    </Button>
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon-sm"
-                        disabled={!canIndent}
-                        onClick={() => onIndent(item.id)}
-                        title="Indent"
-                    >
-                        <ArrowRightIcon className="size-3.5" />
-                    </Button>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => onEdit(item)}
+                            aria-label="Edit item"
+                        >
+                            <PencilIcon />
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="text-destructive hover:text-destructive"
+                            onClick={() => onDelete(item.id)}
+                            aria-label="Delete item"
+                        >
+                            <Trash2Icon />
+                        </Button>
+                    </div>
                 </div>
-
-                <Separator orientation="vertical" className="h-5" />
-
-                <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-sm"
-                    onClick={() => onEdit(item)}
-                    title="Edit item"
-                >
-                    <PencilIcon className="size-3.5" />
-                </Button>
-                <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-sm"
-                    className="text-destructive hover:text-destructive"
-                    onClick={() => onDelete(item.id)}
-                    title="Delete item"
-                >
-                    <Trash2Icon className="size-3.5" />
-                </Button>
             </div>
         </div>
     );
@@ -557,6 +572,10 @@ function ItemEditSheet({
 
     if (!draft) return null;
 
+    const isInternalLinkedItem = ['page', 'category', 'tag'].includes(
+        draft.type,
+    );
+
     const set = <K extends keyof DraftMenuItem>(
         key: K,
         value: DraftMenuItem[K],
@@ -575,220 +594,233 @@ function ItemEditSheet({
         <Sheet open={open} onOpenChange={onOpenChange}>
             <SheetContent
                 side="right"
-                className="w-full overflow-y-auto sm:max-w-lg"
+                className="flex w-full flex-col sm:max-w-md"
             >
-                <SheetHeader>
+                <SheetHeader className="px-6 pt-6 pb-4">
                     <SheetTitle>Edit Menu Item</SheetTitle>
                     <SheetDescription>
                         Update the properties of this navigation item.
                     </SheetDescription>
                 </SheetHeader>
 
-                <form
-                    noValidate
-                    onSubmit={handleSave}
-                    className="flex flex-col gap-5 px-4 py-2"
-                >
-                    <Accordion
-                        type="multiple"
-                        defaultValue={['basic', 'appearance', 'behavior']}
-                    >
-                        {/* Basic */}
-                        <AccordionItem value="basic">
-                            <AccordionTrigger>Basic</AccordionTrigger>
-                            <AccordionContent className="flex flex-col gap-4 !pt-2">
-                                <Field>
-                                    <FieldLabel htmlFor="item-title">
-                                        Label{' '}
-                                        <span className="text-destructive">
-                                            *
-                                        </span>
-                                    </FieldLabel>
-                                    <Input
-                                        id="item-title"
-                                        value={draft.title}
-                                        onChange={(e) =>
-                                            set('title', e.target.value)
-                                        }
-                                        placeholder="Navigation label"
-                                    />
-                                </Field>
+                <div className="flex-1 overflow-y-auto px-6 py-5">
+                    <FieldGroup>
+                        <form
+                            noValidate
+                            onSubmit={handleSave}
+                        >
+                            <Accordion
+                                type="multiple"
+                                defaultValue={['basic', 'appearance', 'behavior']}
+                            >
+                                {/* Basic */}
+                                <AccordionItem value="basic">
+                                    <AccordionTrigger>Basic</AccordionTrigger>
+                                    <AccordionContent className="flex flex-col gap-4 !pt-2">
+                                        <Field>
+                                            <FieldLabel htmlFor="item-title">
+                                                Label{' '}
+                                                <span className="text-destructive">
+                                                    *
+                                                </span>
+                                            </FieldLabel>
+                                            <Input
+                                                id="item-title"
+                                                value={draft.title}
+                                                onChange={(e) =>
+                                                    set('title', e.target.value)
+                                                }
+                                                placeholder="Navigation label"
+                                            />
+                                        </Field>
 
-                                <Field>
-                                    <FieldLabel htmlFor="item-url">
-                                        URL
-                                    </FieldLabel>
-                                    <Input
-                                        id="item-url"
-                                        value={draft.url}
-                                        onChange={(e) =>
-                                            set('url', e.target.value)
-                                        }
-                                        placeholder="https://example.com or /path"
-                                    />
-                                </Field>
+                                        <Field>
+                                            <FieldLabel htmlFor="item-url">
+                                                URL
+                                            </FieldLabel>
+                                            <Input
+                                                id="item-url"
+                                                value={draft.url}
+                                                onChange={(e) =>
+                                                    set('url', e.target.value)
+                                                }
+                                                placeholder="https://example.com or /path"
+                                                readOnly={isInternalLinkedItem}
+                                                disabled={isInternalLinkedItem}
+                                            />
+                                            {isInternalLinkedItem ? (
+                                                <FieldDescription>
+                                                    This URL is managed by the
+                                                    linked content and updates
+                                                    automatically when its slug
+                                                    changes.
+                                                </FieldDescription>
+                                            ) : null}
+                                        </Field>
 
-                                <Field>
-                                    <FieldLabel htmlFor="item-type">
-                                        Type
-                                    </FieldLabel>
-                                    <NativeSelect
-                                        id="item-type"
-                                        value={draft.type}
-                                        onChange={(e) =>
-                                            set('type', e.target.value)
-                                        }
-                                    >
-                                        {Object.entries(itemTypes).map(
-                                            ([value, label]) => (
-                                                <NativeSelectOption
-                                                    key={value}
-                                                    value={value}
-                                                >
-                                                    {label}
-                                                </NativeSelectOption>
-                                            ),
-                                        )}
-                                    </NativeSelect>
-                                </Field>
+                                        <Field>
+                                            <FieldLabel htmlFor="item-type">
+                                                Type
+                                            </FieldLabel>
+                                            <NativeSelect
+                                                id="item-type"
+                                                value={draft.type}
+                                                onChange={(e) =>
+                                                    set('type', e.target.value)
+                                                }
+                                            >
+                                                {Object.entries(itemTypes).map(
+                                                    ([value, label]) => (
+                                                        <NativeSelectOption
+                                                            key={value}
+                                                            value={value}
+                                                        >
+                                                            {label}
+                                                        </NativeSelectOption>
+                                                    ),
+                                                )}
+                                            </NativeSelect>
+                                        </Field>
 
-                                <Field orientation="horizontal">
-                                    <Switch
-                                        checked={draft.is_active}
-                                        onCheckedChange={(checked) =>
-                                            set('is_active', checked)
-                                        }
-                                    />
-                                    <div className="flex flex-col gap-1">
-                                        <FieldLabel>Active</FieldLabel>
-                                        <FieldDescription>
-                                            Inactive items are hidden on the
-                                            front end.
-                                        </FieldDescription>
-                                    </div>
-                                </Field>
-                            </AccordionContent>
-                        </AccordionItem>
+                                        <Field orientation="horizontal">
+                                            <Switch
+                                                checked={draft.is_active}
+                                                onCheckedChange={(checked) =>
+                                                    set('is_active', checked)
+                                                }
+                                            />
+                                            <div className="flex flex-col gap-1">
+                                                <FieldLabel>Active</FieldLabel>
+                                                <FieldDescription>
+                                                    Inactive items are hidden on the
+                                                    front end.
+                                                </FieldDescription>
+                                            </div>
+                                        </Field>
+                                    </AccordionContent>
+                                </AccordionItem>
 
-                        {/* Appearance */}
-                        <AccordionItem value="appearance">
-                            <AccordionTrigger>Appearance</AccordionTrigger>
-                            <AccordionContent className="flex flex-col gap-4 !pt-2">
-                                <Field>
-                                    <FieldLabel htmlFor="item-icon">
-                                        Icon Class
-                                    </FieldLabel>
-                                    <Input
-                                        id="item-icon"
-                                        value={draft.icon}
-                                        onChange={(e) =>
-                                            set('icon', e.target.value)
-                                        }
-                                        placeholder="e.g. fa-home or bi-house"
-                                    />
-                                    <FieldDescription>
-                                        CSS class(es) for an icon library.
-                                    </FieldDescription>
-                                </Field>
+                                {/* Appearance */}
+                                <AccordionItem value="appearance">
+                                    <AccordionTrigger>Appearance</AccordionTrigger>
+                                    <AccordionContent className="flex flex-col gap-4 !pt-2">
+                                        <Field>
+                                            <FieldLabel htmlFor="item-icon">
+                                                Icon Class
+                                            </FieldLabel>
+                                            <Input
+                                                id="item-icon"
+                                                value={draft.icon}
+                                                onChange={(e) =>
+                                                    set('icon', e.target.value)
+                                                }
+                                                placeholder="e.g. fa-home or bi-house"
+                                            />
+                                            <FieldDescription>
+                                                CSS class(es) for an icon library.
+                                            </FieldDescription>
+                                        </Field>
 
-                                <Field>
-                                    <FieldLabel htmlFor="item-css">
-                                        CSS Classes
-                                    </FieldLabel>
-                                    <Input
-                                        id="item-css"
-                                        value={draft.css_classes}
-                                        onChange={(e) =>
-                                            set('css_classes', e.target.value)
-                                        }
-                                        placeholder="Extra classes for the link element"
-                                    />
-                                </Field>
-                            </AccordionContent>
-                        </AccordionItem>
+                                        <Field>
+                                            <FieldLabel htmlFor="item-css">
+                                                CSS Classes
+                                            </FieldLabel>
+                                            <Input
+                                                id="item-css"
+                                                value={draft.css_classes}
+                                                onChange={(e) =>
+                                                    set('css_classes', e.target.value)
+                                                }
+                                                placeholder="Extra classes for the link element"
+                                            />
+                                        </Field>
+                                    </AccordionContent>
+                                </AccordionItem>
 
-                        {/* Link Behavior */}
-                        <AccordionItem value="behavior">
-                            <AccordionTrigger>Link Behavior</AccordionTrigger>
-                            <AccordionContent className="flex flex-col gap-4 !pt-2">
-                                <Field>
-                                    <FieldLabel htmlFor="item-target">
-                                        Open In
-                                    </FieldLabel>
-                                    <NativeSelect
-                                        id="item-target"
-                                        value={draft.target}
-                                        onChange={(e) =>
-                                            set('target', e.target.value)
-                                        }
-                                    >
-                                        {Object.entries(itemTargets).map(
-                                            ([value, label]) => (
-                                                <NativeSelectOption
-                                                    key={value}
-                                                    value={value}
-                                                >
-                                                    {label}
-                                                </NativeSelectOption>
-                                            ),
-                                        )}
-                                    </NativeSelect>
-                                </Field>
+                                {/* Link Behavior */}
+                                <AccordionItem value="behavior">
+                                    <AccordionTrigger>Link Behavior</AccordionTrigger>
+                                    <AccordionContent className="flex flex-col gap-4 !pt-2">
+                                        <Field>
+                                            <FieldLabel htmlFor="item-target">
+                                                Open In
+                                            </FieldLabel>
+                                            <NativeSelect
+                                                id="item-target"
+                                                value={draft.target}
+                                                onChange={(e) =>
+                                                    set('target', e.target.value)
+                                                }
+                                            >
+                                                {Object.entries(itemTargets).map(
+                                                    ([value, label]) => (
+                                                        <NativeSelectOption
+                                                            key={value}
+                                                            value={value}
+                                                        >
+                                                            {label}
+                                                        </NativeSelectOption>
+                                                    ),
+                                                )}
+                                            </NativeSelect>
+                                        </Field>
 
-                                <Field>
-                                    <FieldLabel htmlFor="item-link-title">
-                                        Title Attribute
-                                    </FieldLabel>
-                                    <Input
-                                        id="item-link-title"
-                                        value={draft.link_title}
-                                        onChange={(e) =>
-                                            set('link_title', e.target.value)
-                                        }
-                                        placeholder="Tooltip / title="
-                                    />
-                                </Field>
+                                        <Field>
+                                            <FieldLabel htmlFor="item-link-title">
+                                                Title Attribute
+                                            </FieldLabel>
+                                            <Input
+                                                id="item-link-title"
+                                                value={draft.link_title}
+                                                onChange={(e) =>
+                                                    set('link_title', e.target.value)
+                                                }
+                                                placeholder="Tooltip / title="
+                                            />
+                                        </Field>
 
-                                <Field>
-                                    <FieldLabel htmlFor="item-link-rel">
-                                        Rel Attribute
-                                    </FieldLabel>
-                                    <Input
-                                        id="item-link-rel"
-                                        value={draft.link_rel}
-                                        onChange={(e) =>
-                                            set('link_rel', e.target.value)
-                                        }
-                                        placeholder="e.g. noopener nofollow"
-                                    />
-                                </Field>
-                            </AccordionContent>
-                        </AccordionItem>
+                                        <Field>
+                                            <FieldLabel htmlFor="item-link-rel">
+                                                Rel Attribute
+                                            </FieldLabel>
+                                            <Input
+                                                id="item-link-rel"
+                                                value={draft.link_rel}
+                                                onChange={(e) =>
+                                                    set('link_rel', e.target.value)
+                                                }
+                                                placeholder="e.g. noopener nofollow"
+                                            />
+                                        </Field>
+                                    </AccordionContent>
+                                </AccordionItem>
 
-                        {/* Advanced */}
-                        <AccordionItem value="advanced">
-                            <AccordionTrigger>Advanced</AccordionTrigger>
-                            <AccordionContent className="flex flex-col gap-4 !pt-2">
-                                <Field>
-                                    <FieldLabel htmlFor="item-description">
-                                        Description
-                                    </FieldLabel>
-                                    <Textarea
-                                        id="item-description"
-                                        value={draft.description}
-                                        onChange={(e) =>
-                                            set('description', e.target.value)
-                                        }
-                                        rows={3}
-                                        placeholder="Optional description shown in some themes."
-                                    />
-                                </Field>
-                            </AccordionContent>
-                        </AccordionItem>
-                    </Accordion>
-                </form>
+                                {/* Advanced */}
+                                <AccordionItem value="advanced">
+                                    <AccordionTrigger>Advanced</AccordionTrigger>
+                                    <AccordionContent className="flex flex-col gap-4 !pt-2">
+                                        <Field>
+                                            <FieldLabel htmlFor="item-description">
+                                                Description
+                                            </FieldLabel>
+                                            <Textarea
+                                                id="item-description"
+                                                value={draft.description}
+                                                onChange={(e) =>
+                                                    set('description', e.target.value)
+                                                }
+                                                rows={3}
+                                                placeholder="Optional description shown in some themes."
+                                            />
+                                        </Field>
+                                    </AccordionContent>
+                                </AccordionItem>
+                            </Accordion>
+                        </form>
+                    </FieldGroup>
+                </div>
 
-                <SheetFooter>
+                <SheetFooter className="px-6 pt-4 pb-6">
                     <Button
                         type="button"
                         variant="outline"
@@ -805,6 +837,7 @@ function ItemEditSheet({
                             onOpenChange(false);
                         }}
                     >
+                        <SaveIcon data-icon="inline-start" />
                         Apply Changes
                     </Button>
                 </SheetFooter>
@@ -823,8 +856,8 @@ function useLibraryFilter<T extends { title: string }>(items: T[]) {
         () =>
             query.trim()
                 ? items.filter((i) =>
-                      i.title.toLowerCase().includes(query.toLowerCase()),
-                  )
+                    i.title.toLowerCase().includes(query.toLowerCase()),
+                )
                 : items,
         [items, query],
     );
@@ -903,273 +936,292 @@ function ItemLibraryPanel({
         currentItems.filter((i) => i.object_id === objectId && i.type === type)
             .length;
 
+    const totalAvailable = pages.length + categories.length + tags.length;
+
     return (
-        <Card className="flex flex-col">
-            <CardHeader className="pb-3">
-                <CardTitle className="text-base">Add Items</CardTitle>
-                <CardDescription>
-                    Click items below to add them to the menu.
-                </CardDescription>
+        <Card className="sticky top-4 flex max-h-[calc(100vh-7rem)] min-h-0 flex-col overflow-hidden">
+            <CardHeader className="pb-0">
+                <div className="flex items-center gap-2">
+                    <CardTitle className="text-base">Add Items</CardTitle>
+                    <Badge variant="secondary">
+                        {totalAvailable}
+                    </Badge>
+                </div>
             </CardHeader>
-            <CardContent className="flex flex-col gap-0 overflow-y-auto p-0">
-                <Accordion type="multiple" defaultValue={['custom', 'pages']}>
-                    {/* Custom Link */}
-                    <AccordionItem value="custom" className="border-b px-4">
-                        <AccordionTrigger className="text-sm font-medium">
-                            Custom Link
-                        </AccordionTrigger>
-                        <AccordionContent>
-                            <form
-                                noValidate
-                                onSubmit={handleAddCustom}
-                                className="flex flex-col gap-3"
-                            >
-                                <Field>
-                                    <FieldLabel htmlFor="custom-url">
-                                        URL
-                                    </FieldLabel>
-                                    <Input
-                                        id="custom-url"
-                                        value={customUrl}
-                                        onChange={(e) =>
-                                            setCustomUrl(e.target.value)
-                                        }
-                                        placeholder="https:// or /path"
-                                    />
-                                </Field>
-                                <Field>
-                                    <FieldLabel htmlFor="custom-title">
-                                        Link Text{' '}
-                                        <span className="text-destructive">
-                                            *
-                                        </span>
-                                    </FieldLabel>
-                                    <Input
-                                        id="custom-title"
-                                        value={customTitle}
-                                        onChange={(e) =>
-                                            setCustomTitle(e.target.value)
-                                        }
-                                        placeholder="Navigation label"
-                                    />
-                                </Field>
-                                <Button
-                                    type="submit"
-                                    className="w-full"
-                                    disabled={!customTitle.trim()}
+
+            <CardContent className="flex min-h-0 flex-1 flex-col gap-4 p-4 pt-3">
+                <ScrollArea className="min-h-0 flex-1">
+                    <div className="flex flex-col gap-4 pr-1">
+                        <Accordion type="multiple" defaultValue={['custom', 'pages']} className="flex flex-col gap-3">
+                            {/* Custom Link */}
+                            <AccordionItem value="custom" className="overflow-hidden rounded-xl border">
+                                <AccordionTrigger className="px-4 py-3 text-left text-sm font-medium hover:bg-muted/20 hover:no-underline">
+                                    Custom Link
+                                </AccordionTrigger>
+                                <AccordionContent>
+                                    <form
+                                        noValidate
+                                        onSubmit={handleAddCustom}
+                                        className="flex flex-col gap-3 p-4"
+                                    >
+                                        <Field>
+                                            <FieldLabel htmlFor="custom-url">
+                                                URL
+                                            </FieldLabel>
+                                            <Input
+                                                id="custom-url"
+                                                value={customUrl}
+                                                onChange={(e) =>
+                                                    setCustomUrl(e.target.value)
+                                                }
+                                                placeholder="https:// or /path"
+                                            />
+                                        </Field>
+                                        <Field>
+                                            <FieldLabel htmlFor="custom-title">
+                                                Link Text{' '}
+                                                <span className="text-destructive">
+                                                    *
+                                                </span>
+                                            </FieldLabel>
+                                            <Input
+                                                id="custom-title"
+                                                value={customTitle}
+                                                onChange={(e) =>
+                                                    setCustomTitle(e.target.value)
+                                                }
+                                                placeholder="Navigation label"
+                                            />
+                                        </Field>
+                                        <Button
+                                            type="submit"
+                                            className="w-full"
+                                            disabled={!customTitle.trim()}
+                                        >
+                                            <PlusIcon className="size-4" />
+                                            Add to Menu
+                                        </Button>
+                                    </form>
+                                </AccordionContent>
+                            </AccordionItem>
+
+                            {/* Pages */}
+                            {pages.length > 0 && (
+                                <AccordionItem value="pages" className="overflow-hidden rounded-xl border">
+                                    <AccordionTrigger className="px-4 py-3 text-left text-sm font-medium hover:bg-muted/20 hover:no-underline">
+                                        <div className="flex min-w-0 flex-1 items-center gap-3">
+                                            <div className="min-w-0 flex-1"><p>Pages</p></div>
+                                            <Badge variant="outline">{pages.length}</Badge>
+                                        </div>
+                                    </AccordionTrigger>
+                                    <AccordionContent>
+                                        <div className="flex flex-col gap-3 p-4">
+                                            <SearchInput
+                                                value={pagesFilter.query}
+                                                onChange={pagesFilter.setQuery}
+                                                size="comfortable"
+                                                placeholder="Search pages…"
+                                                containerClassName="w-full"
+                                            />
+                                            <div className="flex flex-col gap-2">
+                                                {pagesFilter.filtered.length === 0 ? (
+                                                    <p className="py-4 text-center text-xs text-muted-foreground">
+                                                        No pages found.
+                                                    </p>
+                                                ) : (
+                                                    pagesFilter.filtered.map((page) => {
+                                                        const count = countInMenu(
+                                                            page.id,
+                                                            'page',
+                                                        );
+                                                        return (
+                                                            <button
+                                                                key={page.id}
+                                                                type="button"
+                                                                onClick={() =>
+                                                                    addContentItem(
+                                                                        page,
+                                                                        'page',
+                                                                    )
+                                                                }
+                                                                className="group w-full rounded-xl border bg-background p-4 text-left transition hover:border-primary/40 hover:bg-accent/30"
+                                                            >
+                                                                <div className="flex items-start gap-3">
+                                                                    <div className="flex-1 space-y-1">
+                                                                        <div className="flex items-center gap-2">
+                                                                            <p className="font-medium">{page.title}</p>
+                                                                            {count > 0 ? (
+                                                                                <Badge variant="secondary">Used {count}×</Badge>
+                                                                            ) : null}
+                                                                        </div>
+                                                                        <p className="line-clamp-2 text-sm text-muted-foreground">{page.slug}</p>
+                                                                    </div>
+                                                                    <div className="rounded-lg border bg-muted/40 p-2 text-primary transition group-hover:border-primary/40 group-hover:bg-primary group-hover:text-primary-foreground">
+                                                                        <PlusIcon className="size-4" />
+                                                                    </div>
+                                                                </div>
+                                                            </button>
+                                                        );
+                                                    })
+                                                )}
+                                            </div>
+                                        </div>
+                                    </AccordionContent>
+                                </AccordionItem>
+                            )}
+
+                            {/* Categories */}
+                            {categories.length > 0 && (
+                                <AccordionItem
+                                    value="categories"
+                                    className="overflow-hidden rounded-xl border"
                                 >
-                                    <PlusIcon className="size-4" />
-                                    Add to Menu
-                                </Button>
-                            </form>
-                        </AccordionContent>
-                    </AccordionItem>
-
-                    {/* Pages */}
-                    {pages.length > 0 && (
-                        <AccordionItem value="pages" className="border-b px-4">
-                            <AccordionTrigger className="text-sm font-medium">
-                                Pages
-                            </AccordionTrigger>
-                            <AccordionContent>
-                                <div className="flex flex-col gap-2">
-                                    <div className="relative">
-                                        <SearchIcon className="absolute top-2.5 left-2.5 size-3.5 text-muted-foreground" />
-                                        <Input
-                                            className="h-8 pl-8 text-sm"
-                                            placeholder="Search pages…"
-                                            value={pagesFilter.query}
-                                            onChange={(e) =>
-                                                pagesFilter.setQuery(
-                                                    e.target.value,
-                                                )
-                                            }
-                                        />
-                                    </div>
-                                    <div className="max-h-52 overflow-y-auto">
-                                        {pagesFilter.filtered.length === 0 ? (
-                                            <p className="py-4 text-center text-xs text-muted-foreground">
-                                                No pages found.
-                                            </p>
-                                        ) : (
-                                            pagesFilter.filtered.map((page) => {
-                                                const count = countInMenu(
-                                                    page.id,
-                                                    'page',
-                                                );
-                                                return (
-                                                    <button
-                                                        key={page.id}
-                                                        type="button"
-                                                        onClick={() =>
-                                                            addContentItem(
-                                                                page,
-                                                                'page',
-                                                            )
-                                                        }
-                                                        className="flex w-full items-center gap-2 rounded px-1.5 py-1.5 text-left text-sm hover:bg-muted/60"
-                                                    >
-                                                        <FolderIcon className="size-3.5 shrink-0 text-blue-500" />
-                                                        <span className="min-w-0 flex-1 truncate">
-                                                            {page.title}
-                                                        </span>
-                                                        {count > 0 && (
-                                                            <Badge
-                                                                variant="secondary"
-                                                                className="text-[10px]"
-                                                            >
-                                                                ×{count}
-                                                            </Badge>
-                                                        )}
-                                                    </button>
-                                                );
-                                            })
-                                        )}
-                                    </div>
-                                </div>
-                            </AccordionContent>
-                        </AccordionItem>
-                    )}
-
-                    {/* Categories */}
-                    {categories.length > 0 && (
-                        <AccordionItem
-                            value="categories"
-                            className="border-b px-4"
-                        >
-                            <AccordionTrigger className="text-sm font-medium">
-                                Categories
-                            </AccordionTrigger>
-                            <AccordionContent>
-                                <div className="flex flex-col gap-2">
-                                    <div className="relative">
-                                        <SearchIcon className="absolute top-2.5 left-2.5 size-3.5 text-muted-foreground" />
-                                        <Input
-                                            className="h-8 pl-8 text-sm"
-                                            placeholder="Search categories…"
-                                            value={categoriesFilter.query}
-                                            onChange={(e) =>
-                                                categoriesFilter.setQuery(
-                                                    e.target.value,
-                                                )
-                                            }
-                                        />
-                                    </div>
-                                    <div className="max-h-52 overflow-y-auto">
-                                        {categoriesFilter.filtered.length ===
-                                        0 ? (
-                                            <p className="py-4 text-center text-xs text-muted-foreground">
-                                                No categories found.
-                                            </p>
-                                        ) : (
-                                            categoriesFilter.filtered.map(
-                                                (cat) => {
-                                                    const count = countInMenu(
-                                                        cat.id,
-                                                        'category',
-                                                    );
-                                                    return (
-                                                        <button
-                                                            key={cat.id}
-                                                            type="button"
-                                                            onClick={() =>
-                                                                addContentItem(
-                                                                    cat,
-                                                                    'category',
-                                                                )
-                                                            }
-                                                            className="flex w-full items-center gap-2 rounded px-1.5 py-1.5 text-left text-sm hover:bg-muted/60"
-                                                        >
-                                                            <FolderIcon className="size-3.5 shrink-0 text-amber-500" />
-                                                            <span className="min-w-0 flex-1 truncate">
-                                                                {cat.title}
-                                                            </span>
-                                                            {count > 0 && (
-                                                                <Badge
-                                                                    variant="secondary"
-                                                                    className="text-[10px]"
+                                    <AccordionTrigger className="px-4 py-3 text-left text-sm font-medium hover:bg-muted/20 hover:no-underline">
+                                        <div className="flex min-w-0 flex-1 items-center gap-3">
+                                            <div className="min-w-0 flex-1"><p>Categories</p></div>
+                                            <Badge variant="outline">{categories.length}</Badge>
+                                        </div>
+                                    </AccordionTrigger>
+                                    <AccordionContent>
+                                        <div className="flex flex-col gap-3 p-4">
+                                            <SearchInput
+                                                value={categoriesFilter.query}
+                                                onChange={categoriesFilter.setQuery}
+                                                size="comfortable"
+                                                placeholder="Search categories…"
+                                                containerClassName="w-full"
+                                            />
+                                            <div className="flex flex-col gap-2">
+                                                {categoriesFilter.filtered.length ===
+                                                    0 ? (
+                                                    <p className="py-4 text-center text-xs text-muted-foreground">
+                                                        No categories found.
+                                                    </p>
+                                                ) : (
+                                                    categoriesFilter.filtered.map(
+                                                        (cat) => {
+                                                            const count = countInMenu(
+                                                                cat.id,
+                                                                'category',
+                                                            );
+                                                            return (
+                                                                <button
+                                                                    key={cat.id}
+                                                                    type="button"
+                                                                    onClick={() =>
+                                                                        addContentItem(
+                                                                            cat,
+                                                                            'category',
+                                                                        )
+                                                                    }
+                                                                    className="group w-full rounded-xl border bg-background p-4 text-left transition hover:border-primary/40 hover:bg-accent/30"
                                                                 >
-                                                                    ×{count}
-                                                                </Badge>
-                                                            )}
-                                                        </button>
-                                                    );
-                                                },
-                                            )
-                                        )}
-                                    </div>
-                                </div>
-                            </AccordionContent>
-                        </AccordionItem>
-                    )}
+                                                                    <div className="flex items-start gap-3">
+                                                                        <div className="flex-1 space-y-1">
+                                                                            <div className="flex items-center gap-2">
+                                                                                <p className="font-medium">{cat.title}</p>
+                                                                                {count > 0 ? (
+                                                                                    <Badge variant="secondary">Used {count}×</Badge>
+                                                                                ) : null}
+                                                                            </div>
+                                                                            <p className="line-clamp-2 text-sm text-muted-foreground">{cat.slug}</p>
+                                                                        </div>
+                                                                        <div className="rounded-lg border bg-muted/40 p-2 text-primary transition group-hover:border-primary/40 group-hover:bg-primary group-hover:text-primary-foreground">
+                                                                            <PlusIcon className="size-4" />
+                                                                        </div>
+                                                                    </div>
+                                                                </button>
+                                                            );
+                                                        },
+                                                    )
+                                                )}
+                                            </div>
+                                        </div>
+                                    </AccordionContent>
+                                </AccordionItem>
+                            )}
 
-                    {/* Tags */}
-                    {tags.length > 0 && (
-                        <AccordionItem value="tags" className="px-4">
-                            <AccordionTrigger className="text-sm font-medium">
-                                Tags
-                            </AccordionTrigger>
-                            <AccordionContent>
-                                <div className="flex flex-col gap-2">
-                                    <div className="relative">
-                                        <SearchIcon className="absolute top-2.5 left-2.5 size-3.5 text-muted-foreground" />
-                                        <Input
-                                            className="h-8 pl-8 text-sm"
-                                            placeholder="Search tags…"
-                                            value={tagsFilter.query}
-                                            onChange={(e) =>
-                                                tagsFilter.setQuery(
-                                                    e.target.value,
-                                                )
-                                            }
-                                        />
-                                    </div>
-                                    <div className="max-h-52 overflow-y-auto">
-                                        {tagsFilter.filtered.length === 0 ? (
-                                            <p className="py-4 text-center text-xs text-muted-foreground">
-                                                No tags found.
-                                            </p>
-                                        ) : (
-                                            tagsFilter.filtered.map((tag) => {
-                                                const count = countInMenu(
-                                                    tag.id,
-                                                    'tag',
-                                                );
-                                                return (
-                                                    <button
-                                                        key={tag.id}
-                                                        type="button"
-                                                        onClick={() =>
-                                                            addContentItem(
-                                                                tag,
-                                                                'tag',
-                                                            )
-                                                        }
-                                                        className="flex w-full items-center gap-2 rounded px-1.5 py-1.5 text-left text-sm hover:bg-muted/60"
-                                                    >
-                                                        <TagIcon className="size-3.5 shrink-0 text-green-500" />
-                                                        <span className="min-w-0 flex-1 truncate">
-                                                            {tag.title}
-                                                        </span>
-                                                        {count > 0 && (
-                                                            <Badge
-                                                                variant="secondary"
-                                                                className="text-[10px]"
+                            {/* Tags */}
+                            {tags.length > 0 && (
+                                <AccordionItem value="tags" className="overflow-hidden rounded-xl border">
+                                    <AccordionTrigger className="px-4 py-3 text-left text-sm font-medium hover:bg-muted/20 hover:no-underline">
+                                        <div className="flex min-w-0 flex-1 items-center gap-3">
+                                            <div className="min-w-0 flex-1"><p>Tags</p></div>
+                                            <Badge variant="outline">{tags.length}</Badge>
+                                        </div>
+                                    </AccordionTrigger>
+                                    <AccordionContent>
+                                        <div className="flex flex-col gap-3 p-4">
+                                            <SearchInput
+                                                value={tagsFilter.query}
+                                                onChange={tagsFilter.setQuery}
+                                                size="comfortable"
+                                                placeholder="Search tags…"
+                                                containerClassName="w-full"
+                                            />
+                                            <div className="flex flex-col gap-2">
+                                                {tagsFilter.filtered.length === 0 ? (
+                                                    <p className="py-4 text-center text-xs text-muted-foreground">
+                                                        No tags found.
+                                                    </p>
+                                                ) : (
+                                                    tagsFilter.filtered.map((tag) => {
+                                                        const count = countInMenu(
+                                                            tag.id,
+                                                            'tag',
+                                                        );
+                                                        return (
+                                                            <button
+                                                                key={tag.id}
+                                                                type="button"
+                                                                onClick={() =>
+                                                                    addContentItem(
+                                                                        tag,
+                                                                        'tag',
+                                                                    )
+                                                                }
+                                                                className="group w-full rounded-xl border bg-background p-4 text-left transition hover:border-primary/40 hover:bg-accent/30"
                                                             >
-                                                                ×{count}
-                                                            </Badge>
-                                                        )}
-                                                    </button>
-                                                );
-                                            })
-                                        )}
-                                    </div>
-                                </div>
-                            </AccordionContent>
-                        </AccordionItem>
-                    )}
-                </Accordion>
+                                                                <div className="flex items-start gap-3">
+                                                                    <div className="flex-1 space-y-1">
+                                                                        <div className="flex items-center gap-2">
+                                                                            <p className="font-medium">{tag.title}</p>
+                                                                            {count > 0 ? (
+                                                                                <Badge variant="secondary">Used {count}×</Badge>
+                                                                            ) : null}
+                                                                        </div>
+                                                                        <p className="line-clamp-2 text-sm text-muted-foreground">{tag.slug}</p>
+                                                                    </div>
+                                                                    <div className="rounded-lg border bg-muted/40 p-2 text-primary transition group-hover:border-primary/40 group-hover:bg-primary group-hover:text-primary-foreground">
+                                                                        <PlusIcon className="size-4" />
+                                                                    </div>
+                                                                </div>
+                                                            </button>
+                                                        );
+                                                    })
+                                                )}
+                                            </div>
+                                        </div>
+                                    </AccordionContent>
+                                </AccordionItem>
+                            )}
+                        </Accordion>
+                    </div>
+                </ScrollArea>
             </CardContent>
+
+            <Separator />
+
+            <div className="p-4 text-sm text-muted-foreground">
+                <div className="flex flex-wrap items-center gap-2">
+                    <span>Save anytime with</span>
+                    <KbdGroup>
+                        <Kbd>Ctrl</Kbd>
+                        <span>+</span>
+                        <Kbd>S</Kbd>
+                    </KbdGroup>
+                </div>
+            </div>
         </Card>
     );
 }
@@ -1340,7 +1392,7 @@ export default function MenusEdit({
 
     // ---- DnD handlers ----
     const handleDragStart = useCallback(
-        (e: DragEvent<HTMLDivElement>, id: number) => {
+        (e: DragEvent<HTMLButtonElement>, id: number) => {
             e.dataTransfer.effectAllowed = 'move';
             setDraggedId(id);
         },
@@ -1451,7 +1503,7 @@ export default function MenusEdit({
             );
 
             if (!response.success) {
-                throw new Error(response.message || 'Save failed.');
+                throw new Error(response.details || response.message || 'Save failed.');
             }
 
             // Remap temp IDs to real IDs
@@ -1519,230 +1571,217 @@ export default function MenusEdit({
         return () => window.removeEventListener('keydown', handler);
     }, [handleSave, isDirty, saveRequest.processing]);
 
+    const handleDiscardChanges = useCallback(() => {
+        setItems(menu.all_items.map((i) => ({ ...i })));
+        setDeletedIds([]);
+        setSettings({
+            name: menu.name,
+            location: menu.location ?? '',
+            is_active: menu.is_active,
+            description: menu.description ?? '',
+        });
+        setIsDirty(false);
+        setSheetOpen(false);
+        setEditingItem(null);
+    }, [menu]);
+
+    const isSaving = saveRequest.processing;
+    const showUnsavedChangesStatus = isDirty && !isSaving;
+    const footerStatusText = isSaving
+        ? 'Saving changes...'
+        : showUnsavedChangesStatus
+            ? 'You have unsaved menu changes.'
+            : 'All changes saved.';
+
     return (
         <AppLayout
             breadcrumbs={breadcrumbs}
             title={`Edit Menu: ${menu.name}`}
             description="Build your navigation menu structure by adding and reordering items."
             headerActions={
-                <div className="flex items-center gap-2">
-                    <Button variant="outline" asChild>
-                        <Link href={route('cms.appearance.menus.index')}>
-                            <ArrowLeftIcon data-icon="inline-start" />
-                            Back to Menus
-                        </Link>
-                    </Button>
-                    <Button
-                        onClick={handleSave}
-                        disabled={!isDirty || saveRequest.processing}
-                    >
-                        {saveRequest.processing ? (
-                            <Spinner />
-                        ) : (
-                            <SaveIcon className="size-4" />
-                        )}
-                        Save Menu
-                    </Button>
-                </div>
+                <Button variant="outline" asChild>
+                    <Link href={route('cms.appearance.menus.index')}>
+                        <ArrowLeftIcon data-icon="inline-start" />
+                        Back
+                    </Link>
+                </Button>
             }
         >
-            {/* Settings Card */}
-            <Card className="mb-6">
-                <CardHeader className="pb-4">
-                    <CardTitle className="text-base">Menu Settings</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                        <Field className="lg:col-span-2">
-                            <FieldLabel htmlFor="menu-name">
-                                Name <span className="text-destructive">*</span>
-                            </FieldLabel>
-                            <Input
-                                id="menu-name"
-                                value={settings.name}
-                                onChange={(e) =>
-                                    updateSettings('name', e.target.value)
-                                }
-                                placeholder="Menu name"
-                            />
-                        </Field>
-
-                        <Field>
-                            <FieldLabel htmlFor="menu-location">
-                                Location
-                            </FieldLabel>
-                            <NativeSelect
-                                id="menu-location"
-                                value={settings.location}
-                                onChange={(e) =>
-                                    updateSettings('location', e.target.value)
-                                }
-                            >
-                                <NativeSelectOption value="">
-                                    — None —
-                                </NativeSelectOption>
-                                {locationOptions.map((opt) => (
-                                    <NativeSelectOption
-                                        key={opt.value}
-                                        value={opt.value}
-                                    >
-                                        {opt.label}
-                                    </NativeSelectOption>
-                                ))}
-                            </NativeSelect>
-                        </Field>
-
-                        <Field
-                            orientation="horizontal"
-                            className="items-start pt-6"
-                        >
-                            <Switch
-                                checked={settings.is_active}
-                                onCheckedChange={(checked) =>
-                                    updateSettings('is_active', checked)
-                                }
-                            />
-                            <div className="flex flex-col gap-0.5">
-                                <FieldLabel>Active</FieldLabel>
-                                <FieldDescription>
-                                    Visible on the front end.
-                                </FieldDescription>
-                            </div>
-                        </Field>
-
-                        <Field className="sm:col-span-2 lg:col-span-4">
-                            <FieldLabel htmlFor="menu-description">
-                                Description
-                            </FieldLabel>
-                            <Textarea
-                                id="menu-description"
-                                value={settings.description}
-                                onChange={(e) =>
-                                    updateSettings(
-                                        'description',
-                                        e.target.value,
-                                    )
-                                }
-                                rows={2}
-                                placeholder="Optional notes about this menu…"
-                            />
-                        </Field>
-                    </div>
-                </CardContent>
-            </Card>
-
-            {/* Builder + Library */}
-            <div className="grid gap-6 xl:grid-cols-[1fr_380px]">
-                {/* Left: Menu Structure */}
-                <Card className="flex min-h-[400px] flex-col">
-                    <CardHeader className="pb-3">
-                        <CardTitle className="text-base">
-                            Menu Structure
-                        </CardTitle>
-                        <CardDescription>
-                            Drag items to reorder. Use the arrow buttons to
-                            adjust hierarchy.
-                        </CardDescription>
+            <div className="flex flex-1 flex-col gap-6 pb-20">
+                {/* Settings Card */}
+                <Card>
+                    <CardHeader className="pb-4">
+                        <CardTitle className="text-base">Menu Settings</CardTitle>
                     </CardHeader>
-                    <CardContent className="flex flex-1 flex-col gap-1 p-3">
-                        {renderOrder.length === 0 ? (
-                            <div className="flex flex-1 flex-col items-center justify-center gap-2 rounded-lg border border-dashed py-16 text-center text-muted-foreground">
-                                <LinkIcon className="size-8 opacity-40" />
-                                <p className="text-sm font-medium">
-                                    No items yet
-                                </p>
-                                <p className="text-xs">
-                                    Add items from the panel on the right.
-                                </p>
-                            </div>
-                        ) : (
-                            renderOrder.map(({ item, depth }) => (
-                                <MenuItemRow
-                                    key={item.id}
-                                    renderItem={{ item, depth }}
-                                    allItems={items}
-                                    menuId={menu.id}
-                                    maxDepth={maxDepth}
-                                    isDragging={draggedId === item.id}
-                                    isDraggedOver={
-                                        dropTarget?.id === item.id
-                                            ? dropTarget.position
-                                            : null
+                    <CardContent>
+                        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                            <Field className="lg:col-span-2">
+                                <FieldLabel htmlFor="menu-name">
+                                    Name <span className="text-destructive">*</span>
+                                </FieldLabel>
+                                <Input
+                                    id="menu-name"
+                                    value={settings.name}
+                                    onChange={(e) =>
+                                        updateSettings('name', e.target.value)
                                     }
-                                    onDragStart={handleDragStart}
-                                    onDragOver={handleDragOver}
-                                    onDrop={handleDrop}
-                                    onDragEnd={handleDragEnd}
-                                    onMoveUp={handleMoveUp}
-                                    onMoveDown={handleMoveDown}
-                                    onIndent={handleIndent}
-                                    onOutdent={handleOutdent}
-                                    onEdit={handleEditItem}
-                                    onDelete={deleteItem}
+                                    placeholder="Menu name"
                                 />
-                            ))
-                        )}
+                            </Field>
+
+                            <Field>
+                                <FieldLabel htmlFor="menu-location">
+                                    Location
+                                </FieldLabel>
+                                <NativeSelect
+                                    id="menu-location"
+                                    value={settings.location}
+                                    onChange={(e) =>
+                                        updateSettings('location', e.target.value)
+                                    }
+                                >
+                                    <NativeSelectOption value="">
+                                        — None —
+                                    </NativeSelectOption>
+                                    {locationOptions.map((opt) => (
+                                        <NativeSelectOption
+                                            key={opt.value}
+                                            value={opt.value}
+                                        >
+                                            {opt.label}
+                                        </NativeSelectOption>
+                                    ))}
+                                </NativeSelect>
+                            </Field>
+
+                            <Field
+                                orientation="horizontal"
+                                className="items-start pt-6"
+                            >
+                                <Switch
+                                    checked={settings.is_active}
+                                    onCheckedChange={(checked) =>
+                                        updateSettings('is_active', checked)
+                                    }
+                                />
+                                <div className="flex flex-col gap-0.5">
+                                    <FieldLabel>Active</FieldLabel>
+                                    <FieldDescription>
+                                        Visible on the front end.
+                                    </FieldDescription>
+                                </div>
+                            </Field>
+
+                        </div>
                     </CardContent>
                 </Card>
 
-                {/* Right: Item Library */}
-                <ItemLibraryPanel
-                    menuId={menu.id}
-                    pages={pages}
-                    categories={categories}
-                    tags={tags}
-                    currentItems={items}
-                    onAddItem={addItem}
+                {/* Builder + Library */}
+                <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+                    {/* Left: Menu Structure */}
+                    <Card className="flex min-h-[540px] flex-col">
+                        <CardHeader className="pb-4">
+                            <div className="flex flex-wrap items-center gap-2">
+                                <CardTitle className="text-base">
+                                    Menu Structure
+                                </CardTitle>
+                                <Badge variant="outline">
+                                    {items.length}{' '}
+                                    {items.length === 1 ? 'item' : 'items'}
+                                </Badge>
+                                {isDirty ? (
+                                    <Badge variant="warning">
+                                        Unsaved changes
+                                    </Badge>
+                                ) : null}
+                            </div>
+                            <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                                <span>
+                                    Drag items to reorder. Use the arrow
+                                    buttons to adjust hierarchy.
+                                </span>
+                                <KbdGroup>
+                                    <Kbd>Ctrl</Kbd>
+                                    <span>+</span>
+                                    <Kbd>S</Kbd>
+                                </KbdGroup>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="flex flex-1 flex-col gap-1 p-3">
+                            {renderOrder.length === 0 ? (
+                                <Empty className="flex-1 rounded-2xl border border-dashed bg-muted/10 py-16">
+                                    <EmptyHeader>
+                                        <EmptyMedia variant="icon">
+                                            <LinkIcon />
+                                        </EmptyMedia>
+                                        <EmptyTitle>
+                                            No items in this menu
+                                        </EmptyTitle>
+                                        <EmptyDescription>
+                                            Start with the library on the right
+                                            to add pages, categories, tags, and
+                                            custom links.
+                                        </EmptyDescription>
+                                    </EmptyHeader>
+                                </Empty>
+                            ) : (
+                                renderOrder.map(({ item, depth }) => (
+                                    <MenuItemRow
+                                        key={item.id}
+                                        renderItem={{ item, depth }}
+                                        allItems={items}
+                                        menuId={menu.id}
+                                        maxDepth={maxDepth}
+                                        isDragging={draggedId === item.id}
+                                        isDraggedOver={
+                                            dropTarget?.id === item.id
+                                                ? dropTarget.position
+                                                : null
+                                        }
+                                        onDragStart={handleDragStart}
+                                        onDragOver={handleDragOver}
+                                        onDrop={handleDrop}
+                                        onDragEnd={handleDragEnd}
+                                        onMoveUp={handleMoveUp}
+                                        onMoveDown={handleMoveDown}
+                                        onIndent={handleIndent}
+                                        onOutdent={handleOutdent}
+                                        onEdit={handleEditItem}
+                                        onDelete={deleteItem}
+                                    />
+                                ))
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    {/* Right: Item Library */}
+                    <ItemLibraryPanel
+                        menuId={menu.id}
+                        pages={pages}
+                        categories={categories}
+                        tags={tags}
+                        currentItems={items}
+                        onAddItem={addItem}
+                    />
+                </div>
+
+                <CmsSaveFooter
+                    statusText={footerStatusText}
+                    showStatusIcon={showUnsavedChangesStatus}
+                    isProcessing={isSaving}
+                    secondaryAction={{
+                        label: 'Discard Changes',
+                        onClick: handleDiscardChanges,
+                        disabled: !isDirty || isSaving,
+                    }}
+                    primaryAction={{
+                        label: 'Save Menu',
+                        submit: false,
+                        onClick: handleSave,
+                        disabled: !isDirty || isSaving,
+                    }}
                 />
             </div>
-
-            {/* Floating Save Bar */}
-            {isDirty && (
-                <div className="fixed right-0 bottom-0 left-0 z-40 border-t bg-background/95 px-4 py-3 shadow-lg backdrop-blur supports-backdrop-filter:bg-background/80">
-                    <div className="mx-auto flex max-w-screen-2xl items-center justify-between gap-4">
-                        <p className="text-sm text-muted-foreground">
-                            You have unsaved changes.{' '}
-                            <kbd className="hidden rounded border px-1 text-xs sm:inline">
-                                Ctrl+S
-                            </kbd>
-                        </p>
-                        <div className="flex items-center gap-2">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                    setItems(
-                                        menu.all_items.map((i) => ({ ...i })),
-                                    );
-                                    setDeletedIds([]);
-                                    setSettings({
-                                        name: menu.name,
-                                        location: menu.location ?? '',
-                                        is_active: menu.is_active,
-                                        description: menu.description ?? '',
-                                    });
-                                    setIsDirty(false);
-                                }}
-                                disabled={saveRequest.processing}
-                            >
-                                Discard Changes
-                            </Button>
-                            <Button
-                                size="sm"
-                                onClick={handleSave}
-                                disabled={saveRequest.processing}
-                            >
-                                {saveRequest.processing ? (
-                                    <Spinner />
-                                ) : (
-                                    <SaveIcon className="size-4" />
-                                )}
-                                Save Menu
-                            </Button>
-                        </div>
-                    </div>
-                </div>
-            )}
 
             {/* Item Edit Sheet */}
             <ItemEditSheet

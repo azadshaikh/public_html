@@ -25,6 +25,7 @@ use Modules\CMS\Definitions\MenuDefinition;
 use Modules\CMS\Models\CmsPost;
 use Modules\CMS\Models\Menu;
 use Modules\CMS\Services\MenuService;
+use Modules\CMS\Services\MenuUrlService;
 
 /**
  * MenuController - extends ScaffoldController for CRUD operations
@@ -41,8 +42,10 @@ class MenuController extends ScaffoldController implements HasMiddleware
 
     protected string $activityEntityAttribute = 'name';
 
-    public function __construct(private readonly MenuService $menuService)
-    {
+    public function __construct(
+        private readonly MenuService $menuService,
+        private readonly MenuUrlService $menuUrlService,
+    ) {
         // No parent constructor call - ScaffoldController doesn't have one
     }
 
@@ -328,7 +331,7 @@ class MenuController extends ScaffoldController implements HasMiddleware
         $validator = Validator::make($payload, [
             'settings' => 'required|array',
             'settings.name' => 'required|string|max:255',
-            'settings.location' => 'nullable|string|max:100|unique:cms_menus,location,'.$menu->id,
+            'settings.location' => 'nullable|string|max:100',
             'settings.is_active' => 'required|boolean',
             'settings.description' => 'nullable|string|max:1000',
             'items' => 'required|array',
@@ -341,7 +344,6 @@ class MenuController extends ScaffoldController implements HasMiddleware
             'settings.name.required' => 'Menu name is required.',
             'settings.name.max' => 'Menu name cannot exceed 255 characters.',
             'settings.location.max' => 'Menu location cannot exceed 100 characters.',
-            'settings.location.unique' => 'This location is already assigned to another menu.',
             'settings.is_active.required' => 'Menu status is required.',
             'settings.is_active.boolean' => 'Menu status must be active or inactive.',
             'settings.description.max' => 'Menu description cannot exceed 1000 characters.',
@@ -364,9 +366,18 @@ class MenuController extends ScaffoldController implements HasMiddleware
             DB::beginTransaction();
 
             // 1. Update Menu Container Settings
+            // If this menu is claiming a location, unassign it from any other menu first
+            $newLocation = $this->normalizeLocationValue($data['settings']['location'] ?? null);
+            if (! blank($newLocation)) {
+                Menu::query()->containers()
+                    ->where('location', $newLocation)
+                    ->where('id', '!=', $menu->id)
+                    ->update(['location' => '']);
+            }
+
             $menu->update([
                 'name' => $data['settings']['name'],
-                'location' => $this->normalizeLocationValue($data['settings']['location'] ?? null),
+                'location' => $newLocation,
                 'is_active' => $data['settings']['is_active'],
                 'description' => $data['settings']['description'],
             ]);
@@ -468,6 +479,20 @@ class MenuController extends ScaffoldController implements HasMiddleware
             ], 500);
         }
 
+        // Resolve URLs for any object-linked items (pages, categories, tags) that were created or updated
+        $allSavedRealIds = array_values($newItemIds);
+        if (! empty($data['items']['updated'])) {
+            foreach ($data['items']['updated'] as $itemData) {
+                if (! empty($itemData['object_id']) && ($itemData['id'] ?? 0) > 0) {
+                    $allSavedRealIds[] = $itemData['id'];
+                }
+            }
+        }
+
+        if ($allSavedRealIds !== []) {
+            $this->menuUrlService->updateSpecificMenuItems($allSavedRealIds);
+        }
+
         // Dispatch job to rebuild all caches asynchronously (non-blocking)
         dispatch(new RecacheApplication('Menu update: '.$menu->name));
 
@@ -515,6 +540,15 @@ class MenuController extends ScaffoldController implements HasMiddleware
      */
     protected function handleCreationSideEffects(Model $model): void
     {
+        // If this menu claims a location, unassign it from any other menu that currently holds it
+        $location = $model->getAttribute('location');
+        if (! blank($location)) {
+            Menu::query()->containers()
+                ->where('location', $location)
+                ->where('id', '!=', $model->id)
+                ->update(['location' => '']);
+        }
+
         dispatch(new RecacheApplication('Menu create: '.$model->getAttribute('name')));
     }
 

@@ -4,7 +4,6 @@ namespace Modules\CMS\Services;
 
 use Exception;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Modules\CMS\Models\Menu;
@@ -92,11 +91,6 @@ class MenuUrlService
             }
 
             DB::commit();
-
-            if ($updatedCount > 0) {
-                Artisan::call('optimize:clear');
-                Artisan::call('optimize');
-            }
 
             Log::info('Menu item URLs updated successfully', [
                 'total_items_checked' => $menuItems->count(),
@@ -281,11 +275,6 @@ class MenuUrlService
             $updatedCount += count($bulkUpdates);
         }
 
-        if ($updatedCount > 0) {
-            Artisan::call('optimize:clear');
-            Artisan::call('optimize');
-        }
-
         return $updatedCount;
     }
 
@@ -307,11 +296,6 @@ class MenuUrlService
                 $menuItem->forceDelete();
                 $updatedCount++;
             }
-        }
-
-        if ($updatedCount > 0) {
-            Artisan::call('optimize:clear');
-            Artisan::call('optimize');
         }
 
         return $updatedCount;

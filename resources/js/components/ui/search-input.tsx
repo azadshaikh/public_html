@@ -9,7 +9,7 @@ import {
     InputGroupInput,
 } from '@/components/ui/input-group';
 
-type SearchInputProps = Omit<React.ComponentProps<typeof InputGroupInput>, 'value' | 'onChange'> & {
+type SearchInputProps = Omit<React.ComponentProps<typeof InputGroupInput>, 'value' | 'onChange' | 'size'> & {
     value: string;
     onChange: (value: string) => void;
     onClear?: () => void;

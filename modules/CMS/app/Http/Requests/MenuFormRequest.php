@@ -22,7 +22,6 @@ class MenuFormRequest extends ScaffoldRequest
                 'nullable',
                 'string',
                 'max:100',
-                $this->uniqueRule('location'),
             ],
             'description' => ['nullable', 'string', 'max:500'],
             'is_active' => ['nullable', 'boolean'],
