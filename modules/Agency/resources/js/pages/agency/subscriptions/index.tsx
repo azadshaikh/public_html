@@ -77,31 +77,21 @@ function formatDate(value: string | null): string {
 export default function AgencySubscriptionsIndex({
     subscriptions,
     pagination,
-    statusCounts,
 }: AgencySubscriptionsIndexPageProps) {
     return (
         <AppLayout
             breadcrumbs={breadcrumbs}
             title="Subscription"
             description="Review active subscriptions and upcoming renewals."
+            headerActions={
+                <Button variant="outline" asChild>
+                    <Link href={route('agency.billing.index')}>
+                        Back to Billing
+                    </Link>
+                </Button>
+            }
         >
             <div className="space-y-6">
-                <div className="grid gap-4 md:grid-cols-4">
-                    {[
-                        ['Total', statusCounts.total],
-                        ['Active', statusCounts.active],
-                        ['Trialing', statusCounts.trialing],
-                        ['Canceled', statusCounts.canceled],
-                    ].map(([label, value]) => (
-                        <Card key={label}>
-                            <CardHeader className="pb-2">
-                                <CardDescription>{label}</CardDescription>
-                                <CardTitle className="text-3xl">{value}</CardTitle>
-                            </CardHeader>
-                        </Card>
-                    ))}
-                </div>
-
                 <Card>
                     <CardHeader>
                         <CardTitle>Plans</CardTitle>
@@ -172,9 +162,6 @@ export default function AgencySubscriptionsIndex({
                             <span>
                                 Page {pagination.current_page} of {pagination.last_page}
                             </span>
-                            <Button asChild variant="outline" size="sm">
-                                <Link href={route('agency.billing.index')}>Back to Billing</Link>
-                            </Button>
                         </div>
                     </CardContent>
                 </Card>

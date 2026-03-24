@@ -89,7 +89,6 @@ function statusVariant(status: string): 'success' | 'warning' | 'danger' | 'seco
 export default function AgencyInvoicesIndex({
     invoices,
     pagination,
-    statusCounts,
     balanceDue,
 }: AgencyInvoicesIndexPageProps) {
     return (
@@ -97,24 +96,15 @@ export default function AgencyInvoicesIndex({
             breadcrumbs={breadcrumbs}
             title="Billing History"
             description="Review invoice history and track any unpaid balances."
+            headerActions={
+                <Button variant="outline" asChild>
+                    <Link href={route('agency.billing.index')}>
+                        Back to Billing
+                    </Link>
+                </Button>
+            }
         >
             <div className="space-y-6">
-                <div className="grid gap-4 md:grid-cols-4">
-                    {[
-                        ['Total', statusCounts.total],
-                        ['Paid', statusCounts.paid],
-                        ['Pending', statusCounts.pending],
-                        ['Overdue', statusCounts.overdue],
-                    ].map(([label, value]) => (
-                        <Card key={label}>
-                            <CardHeader className="pb-2">
-                                <CardDescription>{label}</CardDescription>
-                                <CardTitle className="text-3xl">{value}</CardTitle>
-                            </CardHeader>
-                        </Card>
-                    ))}
-                </div>
-
                 <Card>
                     <CardHeader>
                         <CardTitle>Invoices</CardTitle>
@@ -186,9 +176,6 @@ export default function AgencyInvoicesIndex({
                             <span>
                                 Page {pagination.current_page} of {pagination.last_page}
                             </span>
-                            <Button asChild variant="outline" size="sm">
-                                <Link href={route('agency.billing.index')}>Back to Billing</Link>
-                            </Button>
                         </div>
                     </CardContent>
                 </Card>

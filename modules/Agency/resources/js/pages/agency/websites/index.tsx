@@ -1,7 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { ExternalLinkIcon, GlobeIcon, PlusIcon } from 'lucide-react';
 import { Datagrid } from '@/components/datagrid/datagrid';
-import type { DatagridColumn, DatagridFilter } from '@/components/datagrid/datagrid';
+import type { DatagridColumn } from '@/components/datagrid/datagrid';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
@@ -66,7 +66,7 @@ export default function AgencyWebsitesIndex({
     filters,
     canCreateWebsite,
 }: AgencyWebsitesIndexPageProps) {
-    const { perPage, sorting } = buildScaffoldDatagridState(
+    const { gridFilters, perPage, sorting } = buildScaffoldDatagridState(
         config,
         filters,
         statistics,
@@ -75,30 +75,6 @@ export default function AgencyWebsitesIndex({
             perPageOptions: [10, 25, 50],
         },
     );
-
-    const gridFilters: DatagridFilter[] = [
-        {
-            type: 'search',
-            name: 'search',
-            value: filters.search,
-            placeholder: 'Search websites...',
-            className: 'lg:min-w-80',
-        },
-        {
-            type: 'select',
-            name: 'status',
-            value: typeof filters.status === 'string' ? filters.status : 'all',
-            options: [
-                { value: 'all', label: 'All statuses' },
-                { value: 'active', label: 'Active' },
-                { value: 'provisioning', label: 'Provisioning' },
-                { value: 'waiting_for_dns', label: 'Waiting for DNS' },
-                { value: 'failed', label: 'Failed' },
-                { value: 'suspended', label: 'Suspended' },
-                { value: 'trash', label: 'Trashed' },
-            ],
-        },
-    ];
 
     const columns: DatagridColumn<WebsiteRow>[] = [
         {

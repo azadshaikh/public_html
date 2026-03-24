@@ -1,7 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { GlobeIcon } from 'lucide-react';
 import { Datagrid } from '@/components/datagrid/datagrid';
-import type { DatagridColumn, DatagridFilter } from '@/components/datagrid/datagrid';
+import type { DatagridColumn } from '@/components/datagrid/datagrid';
 import { Badge } from '@/components/ui/badge';
 import AppLayout from '@/layouts/app-layout';
 import { buildScaffoldDatagridState } from '@/lib/scaffold-datagrid';
@@ -70,7 +70,7 @@ export default function AgencyDomainsIndex({
     filters,
     statistics,
 }: AgencyDomainsIndexPageProps) {
-    const { perPage, sorting } = buildScaffoldDatagridState(
+    const { gridFilters, perPage, sorting } = buildScaffoldDatagridState(
         config,
         filters,
         statistics,
@@ -79,40 +79,6 @@ export default function AgencyDomainsIndex({
             perPageOptions: [10, 25, 50],
         },
     );
-
-    const gridFilters: DatagridFilter[] = [
-        {
-            type: 'search',
-            name: 'search',
-            value: filters.search,
-            placeholder: 'Search domains...',
-            className: 'lg:min-w-80',
-        },
-        {
-            type: 'select',
-            name: 'dns_mode',
-            value: typeof filters.dns_mode === 'string' ? filters.dns_mode : 'all',
-            options: [
-                { value: 'all', label: 'All DNS modes' },
-                { value: 'managed', label: 'Managed DNS' },
-                { value: 'external', label: 'External DNS' },
-            ],
-        },
-        {
-            type: 'select',
-            name: 'status',
-            value: typeof filters.status === 'string' ? filters.status : 'all',
-            options: [
-                { value: 'all', label: 'All statuses' },
-                { value: 'active', label: 'Active' },
-                { value: 'provisioning', label: 'Provisioning' },
-                { value: 'waiting_for_dns', label: 'Waiting for DNS' },
-                { value: 'failed', label: 'Failed' },
-                { value: 'suspended', label: 'Suspended' },
-                { value: 'expired', label: 'Expired' },
-            ],
-        },
-    ];
 
     const columns: DatagridColumn<DomainRow>[] = [
         {

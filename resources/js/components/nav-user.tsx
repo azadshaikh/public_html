@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import {
     ChevronsUpDownIcon,
     BadgeCheckIcon,
@@ -23,6 +23,7 @@ import {
     useSidebar,
 } from '@/components/ui/sidebar';
 import { useInitials } from '@/hooks/use-initials';
+import type { SharedData } from '@/types';
 
 export function NavUser({
     user,
@@ -33,8 +34,10 @@ export function NavUser({
         avatar?: string | null;
     };
 }) {
+    const { modules } = usePage<SharedData>().props;
     const { isMobile } = useSidebar();
     const getInitials = useInitials();
+    const isBillingEnabled = modules.items.some((moduleItem) => moduleItem.slug === 'billing');
 
     return (
         <SidebarMenu>
@@ -103,14 +106,28 @@ export function NavUser({
                                     Account
                                 </Link>
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
-                                <CreditCardIcon />
-                                Billing
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                                <BellIcon />
-                                Notifications
-                            </DropdownMenuItem>
+                            {isBillingEnabled && route().has('agency.billing.index') ? (
+                                <DropdownMenuItem asChild>
+                                    <Link
+                                        href={route('agency.billing.index')}
+                                        className="w-full cursor-pointer"
+                                    >
+                                        <CreditCardIcon />
+                                        Billing
+                                    </Link>
+                                </DropdownMenuItem>
+                            ) : null}
+                            {route().has('app.notifications.index') ? (
+                                <DropdownMenuItem asChild>
+                                    <Link
+                                        href={route('app.notifications.index')}
+                                        className="w-full cursor-pointer"
+                                    >
+                                        <BellIcon />
+                                        Notifications
+                                    </Link>
+                                </DropdownMenuItem>
+                            ) : null}
                         </DropdownMenuGroup>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem asChild>

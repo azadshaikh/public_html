@@ -1,18 +1,20 @@
-import { useForm } from '@inertiajs/react';
 import type { FormEvent } from 'react';
-import { FormErrorSummary } from '@/components/forms/form-error-summary';
+import { Link } from '@inertiajs/react';
+import { CountrySelect } from '@/components/geo/country-select';
+import { StateSelect } from '@/components/geo/state-select';
 import { Button } from '@/components/ui/button';
 import {
     Card,
     CardContent,
-    CardDescription,
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { useAppForm } from '@/hooks/use-app-form';
 import AppLayout from '@/layouts/app-layout';
+import { formValidators } from '@/lib/forms';
 import type { BreadcrumbItem } from '@/types';
 
 type BillingParty = {
@@ -39,23 +41,42 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Tax Details', href: route('agency.billing.tax-details') },
 ];
 
+const stackedLabelClassName =
+    'text-sm font-semibold tracking-[0.01em] uppercase text-foreground';
+
 export default function AgencyTaxDetails({
     customer,
     billingAddress,
 }: AgencyTaxDetailsPageProps) {
-    const form = useForm({
-        country_code: billingAddress?.country_code ?? '',
-        state: billingAddress?.state ?? '',
-        state_code: billingAddress?.state_code ?? '',
-        city: billingAddress?.city ?? '',
-        vat_id: customer?.tax_id ?? '',
-        company_name: customer?.company_name ?? '',
-        address: billingAddress?.address1 ?? '',
+    const form = useAppForm({
+        defaults: {
+            country_code: billingAddress?.country_code ?? '',
+            state: billingAddress?.state ?? '',
+            state_code: billingAddress?.state_code ?? '',
+            city: billingAddress?.city ?? '',
+            vat_id: customer?.tax_id ?? '',
+            company_name: customer?.company_name ?? '',
+            address: billingAddress?.address1 ?? '',
+        },
+        rememberKey: 'agency.billing.tax-details',
+        dirtyGuard: { enabled: true },
+        rules: {
+            country_code: [formValidators.required('Country')],
+            company_name: [formValidators.required('Company Name')],
+            address: [formValidators.required('Address')],
+        },
     });
 
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        form.post(route('agency.billing.tax-details.update'));
+        form.submit('post', route('agency.billing.tax-details.update'), {
+            preserveScroll: true,
+            setDefaultsOnSuccess: true,
+            successToast: {
+                title: 'Tax details updated',
+                description: 'Your billing tax information has been saved successfully.',
+            },
+        });
     };
 
     return (
@@ -63,145 +84,140 @@ export default function AgencyTaxDetails({
             breadcrumbs={breadcrumbs}
             title="Tax Details"
             description="Update the billing identity and tax information used on your invoices."
+            headerActions={
+                <Button variant="outline" asChild>
+                    <Link href={route('agency.billing.index')}>
+                        Back to Billing
+                    </Link>
+                </Button>
+            }
         >
-            <div className="mx-auto grid w-full max-w-5xl gap-6 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-start">
-                <Card className="w-full border-border/60 shadow-xs">
-                    <CardHeader className="gap-2">
-                        <CardTitle>Billing Identity</CardTitle>
-                        <CardDescription>
-                            Update the tax and billing details that appear on your invoices and receipts.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <form className="space-y-6" onSubmit={handleSubmit}>
-                            <FormErrorSummary errors={form.errors} minMessages={2} />
+            <div className="mx-auto w-full max-w-2xl">
+                <form className="flex flex-col gap-6" onSubmit={handleSubmit} noValidate>
+                    {form.dirtyGuardDialog}
 
+                    <Card className="border-border/60 shadow-xs">
+                        <CardHeader>
+                            <CardTitle>Tax information</CardTitle>
+                        </CardHeader>
+                        <CardContent>
                             <FieldGroup>
-                                <div className="grid gap-4 md:grid-cols-2">
-                                    <Field data-invalid={form.errors.country_code || undefined}>
-                                        <FieldLabel htmlFor="country_code">Country Code</FieldLabel>
-                                        <Input
-                                            id="country_code"
-                                            value={form.data.country_code}
-                                            onChange={(event) =>
-                                                form.setData('country_code', event.target.value)
-                                            }
-                                            placeholder="IN"
-                                            size="xl"
-                                        />
-                                        <FieldError>{form.errors.country_code}</FieldError>
-                                    </Field>
+                                <Field data-invalid={form.invalid('country_code') || undefined}>
+                                    <FieldLabel className="text-base font-medium text-foreground normal-case">
+                                        Country <span className="text-destructive">*</span>
+                                    </FieldLabel>
+                                    <CountrySelect
+                                        value={form.data.country_code}
+                                        onChange={(code) => {
+                                            form.setField('country_code', code);
+                                            form.setField('state_code', '');
+                                            form.setField('state', '');
+                                        }}
+                                        placeholder="-- Select Country --"
+                                        className="h-11"
+                                        aria-invalid={form.invalid('country_code') || undefined}
+                                    />
+                                    <FieldError>{form.error('country_code')}</FieldError>
+                                </Field>
 
-                                    <Field data-invalid={form.errors.state_code || undefined}>
-                                        <FieldLabel htmlFor="state_code">State Code</FieldLabel>
-                                        <Input
-                                            id="state_code"
-                                            value={form.data.state_code}
-                                            onChange={(event) =>
-                                                form.setData('state_code', event.target.value)
-                                            }
-                                            placeholder="KA"
-                                            size="xl"
-                                        />
-                                        <FieldError>{form.errors.state_code}</FieldError>
-                                    </Field>
-                                </div>
+                                <Field data-invalid={form.invalid('state_code') || undefined}>
+                                    <FieldLabel className="text-base font-medium text-foreground normal-case">
+                                        State
+                                    </FieldLabel>
+                                    <StateSelect
+                                        countryCode={form.data.country_code}
+                                        value={form.data.state_code}
+                                        onChange={(code, name) => {
+                                            form.setField('state_code', code);
+                                            form.setField('state', name);
+                                        }}
+                                        placeholder="-- Select State --"
+                                        className="h-11"
+                                        aria-invalid={form.invalid('state_code') || undefined}
+                                    />
+                                    <FieldError>{form.error('state_code')}</FieldError>
+                                </Field>
 
-                                <div className="grid gap-4 md:grid-cols-2">
-                                    <Field data-invalid={form.errors.state || undefined}>
-                                        <FieldLabel htmlFor="state">State</FieldLabel>
-                                        <Input
-                                            id="state"
-                                            value={form.data.state}
-                                            onChange={(event) =>
-                                                form.setData('state', event.target.value)
-                                            }
-                                            placeholder="Karnataka"
-                                            size="xl"
-                                        />
-                                        <FieldError>{form.errors.state}</FieldError>
-                                    </Field>
+                                <Field data-invalid={form.invalid('city') || undefined}>
+                                    <FieldLabel htmlFor="city" className={stackedLabelClassName}>
+                                        City
+                                    </FieldLabel>
+                                    <Input
+                                        id="city"
+                                        value={form.data.city}
+                                        onChange={(event) =>
+                                            form.setField('city', event.target.value)
+                                        }
+                                        onBlur={() => form.touch('city')}
+                                        size="xl"
+                                        aria-invalid={form.invalid('city') || undefined}
+                                    />
+                                    <FieldError>{form.error('city')}</FieldError>
+                                </Field>
 
-                                    <Field data-invalid={form.errors.city || undefined}>
-                                        <FieldLabel htmlFor="city">City</FieldLabel>
-                                        <Input
-                                            id="city"
-                                            value={form.data.city}
-                                            onChange={(event) =>
-                                                form.setData('city', event.target.value)
-                                            }
-                                            placeholder="Bengaluru"
-                                            size="xl"
-                                        />
-                                        <FieldError>{form.errors.city}</FieldError>
-                                    </Field>
-                                </div>
-
-                                <Field data-invalid={form.errors.vat_id || undefined}>
-                                    <FieldLabel htmlFor="vat_id">VAT / GST / Sales Tax ID</FieldLabel>
+                                <Field data-invalid={form.invalid('vat_id') || undefined}>
+                                    <FieldLabel htmlFor="vat_id" className={stackedLabelClassName}>
+                                        VAT / GST / Sales Tax ID
+                                    </FieldLabel>
                                     <Input
                                         id="vat_id"
                                         value={form.data.vat_id}
                                         onChange={(event) =>
-                                            form.setData('vat_id', event.target.value)
+                                            form.setField('vat_id', event.target.value)
                                         }
-                                        placeholder="GB123456789"
+                                        onBlur={() => form.touch('vat_id')}
+                                        placeholder="e.g. GB123456789"
                                         size="xl"
+                                        aria-invalid={form.invalid('vat_id') || undefined}
                                     />
-                                    <FieldError>{form.errors.vat_id}</FieldError>
+                                    <FieldDescription>
+                                        Enter your VAT, GST, CT, or Sales Tax ID if applicable.
+                                    </FieldDescription>
+                                    <FieldError>{form.error('vat_id')}</FieldError>
                                 </Field>
 
-                                <Field data-invalid={form.errors.company_name || undefined}>
-                                    <FieldLabel htmlFor="company_name">Company Name</FieldLabel>
+                                <Field data-invalid={form.invalid('company_name') || undefined}>
+                                    <FieldLabel htmlFor="company_name" className={stackedLabelClassName}>
+                                        Company Name
+                                    </FieldLabel>
                                     <Input
                                         id="company_name"
                                         value={form.data.company_name}
                                         onChange={(event) =>
-                                            form.setData('company_name', event.target.value)
+                                            form.setField('company_name', event.target.value)
                                         }
-                                        placeholder="Astero Digital"
+                                        onBlur={() => form.touch('company_name')}
                                         size="xl"
+                                        aria-invalid={form.invalid('company_name') || undefined}
                                     />
-                                    <FieldError>{form.errors.company_name}</FieldError>
+                                    <FieldError>{form.error('company_name')}</FieldError>
                                 </Field>
 
-                                <Field data-invalid={form.errors.address || undefined}>
-                                    <FieldLabel htmlFor="address">Address</FieldLabel>
+                                <Field data-invalid={form.invalid('address') || undefined}>
+                                    <FieldLabel htmlFor="address" className={stackedLabelClassName}>
+                                        Address
+                                    </FieldLabel>
                                     <Textarea
                                         id="address"
                                         rows={4}
                                         value={form.data.address}
                                         onChange={(event) =>
-                                            form.setData('address', event.target.value)
+                                            form.setField('address', event.target.value)
                                         }
+                                        onBlur={() => form.touch('address')}
                                         className="min-h-28"
+                                        aria-invalid={form.invalid('address') || undefined}
                                     />
-                                    <FieldError>{form.errors.address}</FieldError>
+                                    <FieldError>{form.error('address')}</FieldError>
                                 </Field>
                             </FieldGroup>
+                        </CardContent>
+                    </Card>
 
-                            <div className="flex justify-end">
-                                <Button type="submit" size="xl" disabled={form.processing}>
-                                    Save Tax Details
-                                </Button>
-                            </div>
-                        </form>
-                    </CardContent>
-                </Card>
-
-                <Card size="sm" className="border-border/60 bg-muted/20 shadow-xs">
-                    <CardHeader className="gap-2">
-                        <CardTitle>How It Is Used</CardTitle>
-                        <CardDescription>
-                            These details are used on invoices, receipts, and tax-facing billing records.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-3 text-sm text-muted-foreground">
-                        <p>Leave optional fields empty when they do not apply to your business.</p>
-                        <p>Use standard country and state codes when available for cleaner invoice formatting.</p>
-                        <p>Your tax ID and company name should match the details you use for billing compliance.</p>
-                    </CardContent>
-                </Card>
+                    <Button type="submit" size="xl" className="w-full" disabled={form.processing}>
+                        Save
+                    </Button>
+                </form>
             </div>
         </AppLayout>
     );

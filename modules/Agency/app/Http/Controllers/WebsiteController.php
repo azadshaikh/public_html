@@ -24,6 +24,14 @@ class WebsiteController extends Controller
     public function index(Request $request): Response
     {
         $data = $this->buildDataPayload($request, includeStats: true);
+        $status = (string) $request->input('status', 'all');
+
+        if (! in_array($status, array_merge(['all'], array_map(
+            static fn (WebsiteStatus $websiteStatus): string => $websiteStatus->value,
+            WebsiteStatus::cases()
+        )), true)) {
+            $status = 'all';
+        }
 
         return Inertia::render('agency/websites/index', [
             'config' => $this->getDatagridConfig(),
@@ -31,7 +39,7 @@ class WebsiteController extends Controller
             'statistics' => $data['statistics'] ?? [],
             'filters' => [
                 'search' => trim((string) $request->input('search', '')),
-                'status' => (string) $request->input('status', 'all'),
+                'status' => $status === 'all' ? '' : $status,
                 'sort' => (string) $request->input('sort', 'created_at'),
                 'direction' => strtolower((string) $request->input('direction', 'desc')) === 'asc' ? 'asc' : 'desc',
                 'per_page' => min(max((int) $request->input('per_page', 15), 5), 100),
@@ -252,7 +260,23 @@ class WebsiteController extends Controller
     {
         return [
             'columns' => $this->getColumns(),
-            'filters' => [],
+            'filters' => [
+                [
+                    'key' => 'status',
+                    'type' => 'select',
+                    'label' => 'Status',
+                    'placeholder' => 'All statuses',
+                    'options' => [
+                        ['value' => '', 'label' => 'All statuses'],
+                        ['value' => WebsiteStatus::Active->value, 'label' => WebsiteStatus::Active->label()],
+                        ['value' => WebsiteStatus::Provisioning->value, 'label' => WebsiteStatus::Provisioning->label()],
+                        ['value' => WebsiteStatus::WaitingForDns->value, 'label' => WebsiteStatus::WaitingForDns->label()],
+                        ['value' => WebsiteStatus::Failed->value, 'label' => WebsiteStatus::Failed->label()],
+                        ['value' => WebsiteStatus::Suspended->value, 'label' => WebsiteStatus::Suspended->label()],
+                        ['value' => WebsiteStatus::Trash->value, 'label' => WebsiteStatus::Trash->label()],
+                    ],
+                ],
+            ],
             'actions' => [],
             'statusTabs' => [
                 [

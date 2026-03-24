@@ -1,5 +1,5 @@
-import { Link, router } from '@inertiajs/react';
-import { BadgeCheck, LogOut } from 'lucide-react';
+import { Link, router, usePage } from '@inertiajs/react';
+import { BadgeCheck, Bell, CreditCard, LogOut } from 'lucide-react';
 import {
     DropdownMenuGroup,
     DropdownMenuItem,
@@ -8,14 +8,16 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { UserInfo } from '@/components/user-info';
 import { useMobileNavigation } from '@/hooks/use-mobile-navigation';
-import type { User } from '@/types';
+import type { SharedData, User } from '@/types';
 
 type Props = {
     user: User;
 };
 
 export function UserMenuContent({ user }: Props) {
+    const { modules } = usePage<SharedData>().props;
     const cleanup = useMobileNavigation();
+    const isBillingEnabled = modules.items.some((moduleItem) => moduleItem.slug === 'billing');
 
     const handleLogout = () => {
         cleanup();
@@ -42,6 +44,32 @@ export function UserMenuContent({ user }: Props) {
                         Account
                     </Link>
                 </DropdownMenuItem>
+                {isBillingEnabled && route().has('agency.billing.index') ? (
+                    <DropdownMenuItem asChild>
+                        <Link
+                            className="block w-full cursor-pointer"
+                            href={route('agency.billing.index')}
+                            prefetch
+                            onClick={cleanup}
+                        >
+                            <CreditCard className="mr-2" />
+                            Billing
+                        </Link>
+                    </DropdownMenuItem>
+                ) : null}
+                {route().has('app.notifications.index') ? (
+                    <DropdownMenuItem asChild>
+                        <Link
+                            className="block w-full cursor-pointer"
+                            href={route('app.notifications.index')}
+                            prefetch
+                            onClick={cleanup}
+                        >
+                            <Bell className="mr-2" />
+                            Notifications
+                        </Link>
+                    </DropdownMenuItem>
+                ) : null}
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>

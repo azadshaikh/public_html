@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Modules\Agency\Tests\Feature;
 
 use App\Enums\Status;
-use App\Http\Middleware\HandleInertiaRequests;
 use App\Models\Role;
 use App\Models\User;
 use App\Modules\ModuleManager;
@@ -21,7 +20,7 @@ use Modules\Agency\Providers\AgencyServiceProvider;
 use Tests\Support\InteractsWithModuleManifest;
 use Tests\TestCase;
 
-class AgencyWebsitePagesTest extends TestCase
+class AgencyDomainPagesTest extends TestCase
 {
     use InteractsWithModuleManifest;
     use RefreshDatabase;
@@ -32,7 +31,7 @@ class AgencyWebsitePagesTest extends TestCase
     {
         parent::setUp();
 
-        $this->setUpModuleManifest('agency-website-pages.json', [
+        $this->setUpModuleManifest('agency-domain-pages.json', [
             'Agency' => 'enabled',
         ]);
 
@@ -59,6 +58,7 @@ class AgencyWebsitePagesTest extends TestCase
             'owner_name' => trim($this->user->first_name.' '.$this->user->last_name),
             'is_www' => true,
             'plan' => 'Starter',
+            'metadata' => ['dns_mode' => 'managed'],
         ]);
     }
 
@@ -69,54 +69,31 @@ class AgencyWebsitePagesTest extends TestCase
         parent::tearDown();
     }
 
-    public function test_websites_index_renders_as_an_inertia_page(): void
+    public function test_domains_index_renders_inertia_with_inactive_default_filters(): void
     {
         $this->actingAs($this->user)
-            ->get(route('agency.websites.index'))
+            ->get(route('agency.domains.index'))
             ->assertOk()
             ->assertInertia(fn (Assert $page): Assert => $page
-                ->component('agency/websites/index')
-                ->where('rows.data.0.name', 'Example Site')
-                ->where('config.settings.entityPlural', 'websites')
+                ->component('agency/domains/index')
+                ->where('rows.data.0.domain', 'example.test')
                 ->where('filters.status', '')
-                ->where('config.filters.0.key', 'status')
-                ->where('config.filters.0.options.0.value', ''));
-    }
-
-    public function test_inertia_xhr_request_to_websites_index_does_not_fall_back_to_plain_json(): void
-    {
-        $this->withoutMiddleware([HandleInertiaRequests::class]);
-
-        $this->actingAs($this->user)
-            ->withHeaders([
-                'X-Inertia' => 'true',
-                'X-Requested-With' => 'XMLHttpRequest',
-            ])
-            ->get(route('agency.websites.index'))
-            ->assertOk()
-            ->assertJsonPath('component', 'agency/websites/index')
-            ->assertJsonPath('props.rows.data.0.name', 'Example Site')
-            ->assertJsonMissingPath('status');
-    }
-
-    public function test_explicit_data_endpoint_still_returns_plain_json(): void
-    {
-        $this->actingAs($this->user)
-            ->getJson(route('agency.websites.data'))
-            ->assertOk()
-            ->assertJsonPath('status', 'success')
-            ->assertJsonPath('data.items.0.name', 'Example Site');
+                ->where('filters.dns_mode', '')
+                ->where('config.filters.0.key', 'dns_mode')
+                ->where('config.filters.0.options.0.value', '')
+                ->where('config.filters.1.key', 'status')
+                ->where('config.filters.1.options.0.value', ''));
     }
 
     private function ensureAgencyModuleBooted(): void
     {
         ModuleAutoloader::register(app(ModuleManager::class)->all()->all());
 
-        if (! Route::has('agency.websites.index')) {
+        if (! Route::has('agency.domains.index')) {
             app()->register(AgencyServiceProvider::class);
         }
 
-        if (! Route::has('agency.websites.index')) {
+        if (! Route::has('agency.domains.index')) {
             Route::middleware('web')->group(base_path('modules/Agency/routes/web.php'));
             app('router')->getRoutes()->refreshNameLookups();
             app('router')->getRoutes()->refreshActionLookups();
