@@ -88,6 +88,12 @@ final readonly class ModuleManifest
     {
         return [
             ...$this->runtimeMetadata(),
+            'version' => $this->version,
+            'description' => $this->description,
+            'author' => $this->author,
+            'homepage' => $this->homepage,
+            'icon' => $this->icon,
+            'url' => $this->url(),
             'provider' => $this->provider,
             'providerPath' => $this->providerPath(),
             'pageRootPath' => $this->pageRootPath,

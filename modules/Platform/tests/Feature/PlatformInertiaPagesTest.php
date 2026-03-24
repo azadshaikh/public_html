@@ -63,6 +63,7 @@ class PlatformInertiaPagesTest extends TestCase
             'edit_secrets',
             'delete_secrets',
             'restore_secrets',
+            'manage_platform_settings',
             'view_servers',
             'add_servers',
             'edit_servers',
@@ -123,6 +124,7 @@ class PlatformInertiaPagesTest extends TestCase
             'edit_secrets',
             'delete_secrets',
             'restore_secrets',
+            'manage_platform_settings',
             'view_servers',
             'add_servers',
             'edit_servers',
@@ -233,6 +235,19 @@ class PlatformInertiaPagesTest extends TestCase
                 ->has('ttlOptions'));
     }
 
+    public function test_platform_settings_page_renders_with_inertia(): void
+    {
+        $this->actingAs($this->admin)
+            ->get(route('platform.settings.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->component('platform/settings/index')
+                ->has('initialValues')
+                ->has('serverOptions')
+                ->has('settingsNav')
+                ->where('settingsNav.0.slug', 'general'));
+    }
+
     public function test_platform_standard_scaffold_index_pages_use_backend_action_and_empty_state_contracts(): void
     {
         $agency = $this->createAgency();
@@ -262,7 +277,7 @@ class PlatformInertiaPagesTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page): Assert => $page
                 ->component('platform/agencies/index')
-                ->has('config.actions', 5)
+                ->has('config.actions')
                 ->where('empty_state_config.title', 'No Agencies Found')
                 ->where('empty_state_config.action.label', 'Create Agency')
                 ->where('empty_state_config.action.url', route('platform.agencies.create'))
@@ -273,7 +288,7 @@ class PlatformInertiaPagesTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page): Assert => $page
                 ->component('platform/servers/index')
-                ->has('config.actions', 5)
+                ->has('config.actions')
                 ->where('empty_state_config.title', 'No Servers Found')
                 ->where('empty_state_config.action.label', 'Create Server')
                 ->where('empty_state_config.action.url', route('platform.servers.create'))

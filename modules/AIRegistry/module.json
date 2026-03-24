@@ -1,0 +1,21 @@
+{
+    "name": "AIRegistry",
+    "slug": "airegistry",
+    "description": "Centralized AI provider and model registry with CRUD management and secure API for website instances",
+    "keywords": [
+        "ai",
+        "models",
+        "providers",
+        "registry"
+    ],
+    "priority": 50,
+    "version": "1.0.0",
+    "author": "AsteroDigital",
+    "homepage": "https://asterodigital.com",
+    "category": "AI",
+    "icon": "<i class='ri-robot-line'></i>",
+    "namespace": "Modules\\AIRegistry\\",
+    "provider": "Modules\\AIRegistry\\Providers\\AIRegistryServiceProvider",
+    "page_root": "resources/js/pages/ai-registry",
+    "files": []
+}

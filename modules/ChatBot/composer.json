@@ -1,0 +1,28 @@
+{
+    "name": "asterodigital/chatbot",
+    "description": "AI ChatBot module powered by laravel/ai",
+    "authors": [
+        {
+            "name": "Astero Digital",
+            "email": "contact@asterodigital.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {}
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\ChatBot\\": "app/",
+            "Modules\\ChatBot\\Database\\Factories\\": "database/factories/",
+            "Modules\\ChatBot\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\ChatBot\\Tests\\": "tests/"
+        }
+    }
+}

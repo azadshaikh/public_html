@@ -3,11 +3,11 @@
 namespace App\Modules\Tests\Feature;
 
 use App\Models\Permission;
+use App\Models\Settings;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schema;
-use Modules\ChatBot\Models\PromptTemplate;
 use Modules\CMS\Models\CmsPost;
 use Tests\Support\InteractsWithModuleManifest;
 use Tests\TestCase;
@@ -42,11 +42,13 @@ class ModuleSeederTest extends TestCase
         $this->seed(DatabaseSeeder::class);
 
         $this->assertDatabaseCount('cms_posts', 16);
-        $this->assertDatabaseCount('prompt_templates', 3);
+        $this->assertDatabaseHas('settings', ['key' => 'chatbot_system_prompt']);
+        $this->assertDatabaseHas('settings', ['key' => 'chatbot_tool_list']);
         $this->assertSame(6, Permission::query()->where('module_slug', 'todos')->count());
 
         $this->assertTrue(CmsPost::query()->where('slug', 'home')->where('type', 'page')->exists());
-        $this->assertTrue(PromptTemplate::query()->where('slug', 'support-concierge')->exists());
+        $this->assertTrue(Settings::query()->where('key', 'chatbot_provider')->exists());
+        $this->assertTrue(Settings::query()->where('key', 'chatbot_model')->exists());
         $this->assertTrue(Permission::query()->where('name', 'view_todos')->where('module_slug', 'todos')->exists());
     }
 
@@ -54,7 +56,7 @@ class ModuleSeederTest extends TestCase
     {
         $migrationPaths = [
             'cms_posts' => 'modules/CMS/database/migrations',
-            'prompt_templates' => 'modules/ChatBot/database/migrations',
+            'agent_conversations' => 'modules/ChatBot/database/migrations',
             'todos' => 'modules/Todos/database/migrations',
         ];
 

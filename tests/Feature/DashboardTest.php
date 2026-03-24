@@ -153,7 +153,7 @@ class DashboardTest extends TestCase
                 ->where('navigation.modules.0.label', 'Todos')
                 ->where('navigation.modules.0.items.0.label', 'Tasks')
                 ->where('navigation.modules.0.items.0.url', route('app.todos.index'))
-                ->has('navigation.bottom.0.items', 3)
+                ->has('navigation.bottom.0.items', 4)
                 ->where('navigation.top.0.items.0.label', 'Dashboard'));
     }
 }

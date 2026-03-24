@@ -1,57 +1,39 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Modules\Platform\Http\Controllers;
 
 use App\Enums\ActivityAction;
 use App\Http\Controllers\Controller;
-use App\Models\Group;
 use App\Models\Settings;
 use App\Traits\ActivityTrait;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
+use Modules\Platform\Http\Requests\UpdatePlatformSettingsRequest;
 use Modules\Platform\Models\Server;
 
 class SettingsController extends Controller
 {
     use ActivityTrait;
 
-    private const string MODULE_PATH = 'platform::settings';
-
-    public function settings(): View
+    public function settings(): Response
     {
         abort_unless(Auth::user()->can('manage_platform_settings'), 403);
 
-        $view_data = $this->getViewData('settings');
-
-        return view(self::MODULE_PATH.'.settings', $view_data);
+        return Inertia::render('platform/settings/index', $this->getPageData());
     }
 
-    public function updateSettings(Request $request): RedirectResponse
+    public function updateSettings(UpdatePlatformSettingsRequest $request): RedirectResponse
     {
         abort_unless(Auth::user()->can('manage_platform_settings'), 403);
 
         $section = $request->input('section', 'general');
-
-        $validated = $request->validate([
-            'trail_server_id' => ['required', 'integer'],
-            'default_server_group' => ['required', 'integer'],
-            'default_sub_domain' => ['required', 'string', 'max:255'],
-            'default_domain_ssl_key' => ['required', 'string'],
-            'default_domain_ssl_crt' => ['required', 'string'],
-            'default_ssl_expiry' => ['required', 'date'],
-        ], [
-            'trail_server_id.required' => 'Trial Server is required',
-            'default_server_group.required' => 'Server Group is required',
-            'default_sub_domain.required' => 'Trial Domain is required',
-            'default_domain_ssl_key.required' => 'Domain SSL Key is required',
-            'default_domain_ssl_crt.required' => 'Domain SSL Certificate is required',
-            'default_ssl_expiry.required' => 'Default SSL Expiry is required',
-            'default_ssl_expiry.date' => 'Default SSL Expiry must be a date',
-        ]);
+        $validated = $request->validated();
 
         // Capture previous values for activity log
         $previousValues = [];
@@ -97,26 +79,33 @@ class SettingsController extends Controller
         );
 
         return to_route('platform.settings.index', ['section' => $section])
-            ->with('success', 'Settings updated successfully')
-            ->with('platform_settings_values', $validated);
+            ->with('success', 'Settings updated successfully');
     }
 
-    private function getViewData(string $action): array
+    private function getPageData(): array
     {
         $settingData = Cache::rememberForever('platform_settings', fn () => Settings::query()->where('key', 'like', 'platform_%')
             ->pluck('value', 'key')
             ->toArray());
 
         return [
-            'module_title' => __('platform::platform.settings'),
-            'module_name' => __('platform::platform.settings'),
-            'module_path' => self::MODULE_PATH,
-            'parent_module' => __('platform::platform.platform'),
-            'action' => $action,
-            'page_title' => __('platform::platform.manage_settings'),
-            'servers_options' => Server::getServerOptions(),
-            'server_groups_options' => Group::getGroupOptions('server'),
-            'setting_data' => $settingData,
+            'initialValues' => [
+                'trail_server_id' => isset($settingData['platform_trail_server_id'])
+                    ? (int) $settingData['platform_trail_server_id']
+                    : null,
+                'default_sub_domain' => (string) ($settingData['platform_default_sub_domain'] ?? ''),
+                'default_domain_ssl_key' => (string) ($settingData['platform_default_domain_ssl_key'] ?? ''),
+                'default_domain_ssl_crt' => (string) ($settingData['platform_default_domain_ssl_crt'] ?? ''),
+                'default_ssl_expiry' => (string) ($settingData['platform_default_ssl_expiry'] ?? ''),
+            ],
+            'serverOptions' => Server::getServerOptions(),
+            'settingsNav' => [
+                [
+                    'slug' => 'general',
+                    'label' => __('platform::platform.general_settings'),
+                    'href' => route('platform.settings.index'),
+                ],
+            ],
         ];
     }
 

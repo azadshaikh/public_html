@@ -141,6 +141,7 @@ class PlatformModuleMigrationTest extends TestCase
             'modules/Platform/resources/js/pages/platform/ssl-certificates/edit.tsx',
             'modules/Platform/resources/js/pages/platform/ssl-certificates/show.tsx',
             'modules/Platform/resources/js/pages/platform/ssl-certificates/generate-self-signed.tsx',
+            'modules/Platform/resources/js/pages/platform/settings/index.tsx',
             'modules/Platform/resources/js/pages/platform/tlds/index.tsx',
             'modules/Platform/resources/js/pages/platform/tlds/create.tsx',
             'modules/Platform/resources/js/pages/platform/tlds/edit.tsx',
@@ -154,6 +155,19 @@ class PlatformModuleMigrationTest extends TestCase
         foreach ($paths as $path) {
             $this->assertFileExists(base_path($path));
         }
+    }
+
+    public function test_platform_settings_controller_uses_inertia_and_legacy_settings_blade_views_are_removed(): void
+    {
+        $contents = file_get_contents(base_path('modules/Platform/app/Http/Controllers/SettingsController.php'));
+
+        $this->assertIsString($contents);
+        $this->assertStringContainsString("Inertia::render('platform/settings/index'", $contents);
+        $this->assertStringNotContainsString("view(self::MODULE_PATH.'.settings'", $contents);
+        $this->assertStringNotContainsString('App\\Models\\Group', $contents);
+        $this->assertFileDoesNotExist(base_path('modules/Platform/resources/views/settings/settings.blade.php'));
+        $this->assertFileDoesNotExist(base_path('modules/Platform/resources/views/settings/settings_nav.blade.php'));
+        $this->assertFileDoesNotExist(base_path('modules/Platform/resources/views/settings/partials/general.blade.php'));
     }
 
     public function test_platform_services_use_current_scaffold_datagrid_api(): void

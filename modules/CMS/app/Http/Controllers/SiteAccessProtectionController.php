@@ -1,12 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Modules\CMS\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SiteAccessProtectionRequest;
 use App\Services\SiteAccessProtectionService;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class SiteAccessProtectionController extends Controller
 {
@@ -23,12 +26,13 @@ class SiteAccessProtectionController extends Controller
     /**
      * Show the site access protection form.
      */
-    public function create(): View
+    public function create(): Response
     {
-        /** @var view-string $view */
-        $view = 'cms::site-access-protection.form';
-
-        return view($view, [
+        return Inertia::render('cms/site-access-protection/form', [
+            'message' => setting(
+                'site_access_protection_message',
+                setting('password_protected_message', __('general.site_access_protection_description'))
+            ),
         ]);
     }
 

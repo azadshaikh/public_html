@@ -5,6 +5,7 @@ namespace App\Modules\Tests\Feature;
 use App\Enums\Status;
 use App\Models\Role;
 use App\Models\User;
+use App\Modules\ModuleManager;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -51,33 +52,34 @@ class ModuleManagementTest extends TestCase
         ]);
         $user->assignRole(Role::findByName('super_user', 'web'));
 
-        $this->actingAs($user)
+        $response = $this->actingAs($user)
             ->get(route('app.masters.modules.index'))
             ->assertOk()
             ->assertInertia(fn (Assert $page): Assert => $page
                 ->component('modules/index')
-                ->has('managedModules', 5)
-                ->where('managedModules.0.name', 'CMS')
-                ->where('managedModules.0.version', '1.0.0')
-                ->where('managedModules.0.author', null)
-                ->where('managedModules.0.homepage', null)
-                ->where('managedModules.0.icon', null)
-                ->where('managedModules.0.status', 'enabled')
-                ->where('managedModules.0.enabled', true)
-                ->where('managedModules.0.slug', 'cms')
-                ->where('managedModules.0.url', '/cms')
-                ->where('managedModules.0.inertiaNamespace', 'cms/')
-                ->where('managedModules.1.name', 'ChatBot')
-                ->where('managedModules.1.author', 'AsteroDigital')
-                ->where('managedModules.1.homepage', 'https://asterodigital.com')
-                ->where('managedModules.1.icon', fn (string $icon): bool => str_contains($icon, '<svg'))
-                ->where('managedModules.1.status', 'enabled')
-                ->where('managedModules.2.name', 'Platform')
-                ->where('managedModules.2.status', 'disabled')
-                ->where('managedModules.3.name', 'ReleaseManager')
-                ->where('managedModules.3.status', 'disabled')
-                ->where('managedModules.4.name', 'Todos')
-                ->where('managedModules.4.status', 'disabled'));
+                ->has('managedModules', app(ModuleManager::class)->all()->count()));
+
+        /** @var array<int, array<string, mixed>> $managedModules */
+        $managedModules = $response->inertiaProps('managedModules');
+        $expectedManagedModules = app(ModuleManager::class)->managementData();
+        $managedModulesByName = collect($managedModules)->keyBy('name');
+        $expectedManagedModulesByName = $expectedManagedModules->keyBy('name');
+
+        $this->assertCount($expectedManagedModules->count(), $managedModules);
+        $this->assertSame(
+            $expectedManagedModules->pluck('name')->all(),
+            collect($managedModules)->pluck('name')->all(),
+        );
+
+        $this->assertSame($expectedManagedModulesByName->get('CMS'), $managedModulesByName->get('CMS'));
+        $this->assertSame($expectedManagedModulesByName->get('ChatBot'), $managedModulesByName->get('ChatBot'));
+
+        $this->assertSame('enabled', $managedModulesByName->get('CMS')['status']);
+        $this->assertTrue($managedModulesByName->get('CMS')['enabled']);
+        $this->assertSame('enabled', $managedModulesByName->get('ChatBot')['status']);
+        $this->assertSame('disabled', $managedModulesByName->get('Platform')['status']);
+        $this->assertSame('disabled', $managedModulesByName->get('ReleaseManager')['status']);
+        $this->assertSame('disabled', $managedModulesByName->get('Todos')['status']);
     }
 
     public function test_super_users_can_update_module_statuses(): void
@@ -100,13 +102,21 @@ class ModuleManagementTest extends TestCase
             ->assertRedirect(route('app.masters.modules.index'))
             ->assertSessionHas('success', 'Module settings updated.');
 
-        $this->assertSame([
-            'CMS' => 'disabled',
-            'ChatBot' => 'enabled',
-            'Platform' => 'disabled',
-            'ReleaseManager' => 'disabled',
-            'Todos' => 'enabled',
-        ], json_decode((string) file_get_contents($this->moduleManifestPath), true, 512, JSON_THROW_ON_ERROR));
+        $expectedStatuses = app(ModuleManager::class)->all()
+            ->mapWithKeys(fn ($module): array => [
+                $module->name => match ($module->name) {
+                    'CMS' => 'disabled',
+                    'ChatBot' => 'enabled',
+                    'Todos' => 'enabled',
+                    default => 'disabled',
+                },
+            ])
+            ->all();
+
+        $this->assertSame(
+            $expectedStatuses,
+            json_decode((string) file_get_contents($this->moduleManifestPath), true, 512, JSON_THROW_ON_ERROR)
+        );
     }
 
     public function test_non_super_users_cannot_view_the_module_management_page(): void

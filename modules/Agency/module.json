@@ -1,0 +1,21 @@
+{
+    "name": "Agency",
+    "slug": "agency",
+    "description": "Agency customer portal and onboarding wrapper",
+    "keywords": [
+        "agency",
+        "customer portal",
+        "onboarding",
+        "saas"
+    ],
+    "priority": 0,
+    "version": "1.0.0",
+    "namespace": "Modules\\Agency\\",
+    "provider": "Modules\\Agency\\Providers\\AgencyServiceProvider",
+    "files": [],
+    "dependencies": [
+        "Billing",
+        "Customers",
+        "Helpdesk"
+    ]
+}

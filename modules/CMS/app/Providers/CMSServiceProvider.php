@@ -31,7 +31,6 @@ use Modules\CMS\Services\ThemeValidationService;
 use Modules\CMS\Services\TwigService;
 use Modules\CMS\Transformers\ContentTransformer;
 use Modules\CMS\View\Components\AdminBar;
-use Modules\CMS\View\Components\ContentForm;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 
@@ -85,7 +84,6 @@ class CMSServiceProvider extends ModuleServiceProvider
         }
 
         Blade::componentNamespace('Modules\\CMS\\View\\Components', 'cms');
-        Blade::component('cms.content-form', ContentForm::class);
         Blade::component('cms::admin-bar', AdminBar::class);
 
         $seoViewsPath = $this->modulePath('resources/views/seo');

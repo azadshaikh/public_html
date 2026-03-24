@@ -1,0 +1,28 @@
+{
+    "name": "asterodigital/airegistry",
+    "description": "AI Registry module — centralized AI providers and models registry",
+    "authors": [
+        {
+            "name": "Astero Digital",
+            "email": "contact@asterodigital.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {}
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\AIRegistry\\": "app/",
+            "Modules\\AIRegistry\\Database\\Factories\\": "database/factories/",
+            "Modules\\AIRegistry\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\AIRegistry\\Tests\\": "tests/"
+        }
+    }
+}

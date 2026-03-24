@@ -136,4 +136,23 @@ export const formValidators = {
                 ? undefined
                 : `${label} must be at least ${min} characters.`;
         },
+
+    maxLength:
+        <T extends Record<string, unknown>, K extends FormFieldName<T>>(
+            label: string,
+            max: number,
+        ): FormFieldValidator<T, K> =>
+        (value) => {
+            if (isBlankValue(value)) {
+                return undefined;
+            }
+
+            if (typeof value !== 'string') {
+                return `${label} is invalid.`;
+            }
+
+            return value.trim().length <= max
+                ? undefined
+                : `${label} must be no more than ${max} characters.`;
+        },
 };

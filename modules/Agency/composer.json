@@ -1,0 +1,28 @@
+{
+    "name": "asterodigital/agency",
+    "description": "Agency customer portal and onboarding wrapper",
+    "authors": [
+        {
+            "name": "Astero Digital",
+            "email": "contact@asterodigital.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {}
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\Agency\\": "app/",
+            "Modules\\Agency\\Database\\Factories\\": "database/factories/",
+            "Modules\\Agency\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\Agency\\Tests\\": "tests/"
+        }
+    }
+}

@@ -201,6 +201,9 @@ class HandleInertiaRequests extends Middleware
             $request->routeIs('app.billing.coupons.*') => ['addCoupons', 'editCoupons', 'deleteCoupons', 'restoreCoupons'],
             $request->routeIs('app.billing.transactions.*') => ['viewTransactions'],
             $request->routeIs('app.billing.settings.*') => ['manageBillingSettings'],
+            $request->routeIs('app.chatbot.*') => ['useChatbot', 'manageChatbotSettings'],
+            $request->routeIs('ai-registry.providers.*') => ['viewAiProviders', 'addAiProviders', 'editAiProviders', 'deleteAiProviders', 'restoreAiProviders'],
+            $request->routeIs('ai-registry.models.*') => ['viewAiModels', 'addAiModels', 'editAiModels', 'deleteAiModels', 'restoreAiModels'],
             default => [],
         };
     }

@@ -1,10 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Modules\CMS\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 use Modules\CMS\Http\Requests\PostAccessProtectionRequest;
 use Modules\CMS\Models\CmsPost;
 use Modules\CMS\Services\PostAccessProtectionService;
@@ -24,7 +27,7 @@ class PostAccessProtectionController extends Controller
     /**
      * Show the post access protection form.
      */
-    public function create(CmsPost $post): View|RedirectResponse
+    public function create(CmsPost $post): Response|RedirectResponse
     {
         $canPreview = auth()->check() && auth()->user()->can('preview_unpublished_content');
         abort_if(! $canPreview && ! $post->isPublished(), 404);
@@ -42,11 +45,12 @@ class PostAccessProtectionController extends Controller
         // Store the intended URL if not already stored
         $this->postAccessProtectionService->storeIntendedUrl(url()->previous(), $post->id);
 
-        /** @var view-string $view */
-        $view = 'cms::post-access-protection.form';
-
-        return view($view, [
-            'post' => $post,
+        return Inertia::render('cms/post-access-protection/form', [
+            'post' => [
+                'id' => $post->id,
+                'title' => $post->title,
+                'password_hint' => $post->password_hint,
+            ],
         ]);
     }
 

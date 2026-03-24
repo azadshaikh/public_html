@@ -8,10 +8,14 @@ use App\Enums\Status;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
+use App\Modules\ModuleManager;
+use App\Modules\Support\ModuleAutoloader;
 use App\Services\ZiggyRouteFilter;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Route;
+use Modules\Agency\Providers\AgencyServiceProvider;
 use Tests\TestCase;
 use Tighten\Ziggy\BladeRouteGenerator;
 use Tighten\Ziggy\Ziggy;
@@ -199,10 +203,15 @@ class ZiggyRouteFilterTest extends TestCase
 
     public function test_render_for_guest_only_contains_public_routes(): void
     {
+        $this->ensureAgencyModuleBooted();
+
         $output = $this->filter->render(null);
 
         // Public routes should be present.
         $this->assertStringContainsString('login', $output);
+        $this->assertStringContainsString('agency.sign-in', $output);
+        $this->assertStringContainsString('agency.get-started', $output);
+        $this->assertStringContainsString('agency.get-started.store', $output);
         $this->assertStringContainsString('sitemap', $output);
 
         // Admin-only routes should be absent.
@@ -212,6 +221,21 @@ class ZiggyRouteFilterTest extends TestCase
         $this->assertStringNotContainsString('app.roles.index', $output);
         $this->assertStringNotContainsString('app.logs.activity-logs.index', $output);
         $this->assertStringNotContainsString('log-viewer.index', $output);
+    }
+
+    private function ensureAgencyModuleBooted(): void
+    {
+        ModuleAutoloader::register(app(ModuleManager::class)->all()->all());
+
+        if (! Route::has('agency.sign-in')) {
+            app()->register(AgencyServiceProvider::class);
+        }
+
+        if (! Route::has('agency.sign-in')) {
+            Route::middleware('web')->group(base_path('modules/Agency/routes/web.php'));
+            app('router')->getRoutes()->refreshNameLookups();
+            app('router')->getRoutes()->refreshActionLookups();
+        }
     }
 
     public function test_render_for_super_user_contains_all_routes(): void
