@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Modules\Agency\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -25,26 +26,86 @@ class DomainController extends Controller
     // Index — List all customer domains
     // ─────────────────────────────────────────────────────────
 
-    public function index(): Response
+    public function index(Request $request): Response
     {
         $user = auth()->user();
 
-        $websites = AgencyWebsite::query()
+        $search = trim((string) $request->input('search', ''));
+        $status = (string) $request->input('status', 'all');
+        $dnsMode = (string) $request->input('dns_mode', 'all');
+        $sortBy = (string) $request->input('sort', 'created_at');
+        $sortDir = strtolower((string) $request->input('direction', 'desc')) === 'asc' ? 'asc' : 'desc';
+        $perPage = min(max((int) $request->input('per_page', 15), 5), 100);
+
+        $allowedStatuses = ['all', 'active', 'provisioning', 'waiting_for_dns', 'failed', 'suspended', 'expired'];
+        $allowedDnsModes = ['all', 'managed', 'external'];
+        $sortableColumns = ['domain', 'status', 'created_at'];
+
+        if (! in_array($status, $allowedStatuses, true)) {
+            $status = 'all';
+        }
+
+        if (! in_array($dnsMode, $allowedDnsModes, true)) {
+            $dnsMode = 'all';
+        }
+
+        $query = AgencyWebsite::query()
             ->where('owner_id', $user->id)
             ->whereNull('deleted_at')
-            ->whereRaw("(metadata->>'dns_mode') IN ('managed', 'external')")
-            ->orderByDesc('created_at')
-            ->get();
+            ->whereRaw("(metadata->>'dns_mode') IN ('managed', 'external')");
 
-        return Inertia::render('agency/domains/index', [
-            'websites' => $websites->map(fn (AgencyWebsite $website): array => [
+        if ($search !== '') {
+            $escaped = $this->escapeLikePattern($search);
+            $pattern = sprintf('%%%s%%', $escaped);
+
+            $query->where(function (Builder $builder) use ($pattern): void {
+                $builder->where('domain', 'ilike', $pattern)
+                    ->orWhere('name', 'ilike', $pattern);
+            });
+        }
+
+        if ($status !== 'all') {
+            $query->where('status', $status);
+        }
+
+        if ($dnsMode !== 'all') {
+            $query->whereRaw("metadata->>'dns_mode' = ?", [$dnsMode]);
+        }
+
+        if (in_array($sortBy, $sortableColumns, true)) {
+            $query->orderBy($sortBy, $sortDir);
+        } else {
+            $query->latest();
+        }
+
+        $rows = $query
+            ->paginate($perPage)
+            ->onEachSide(1)
+            ->withQueryString()
+            ->through(fn (AgencyWebsite $website): array => [
                 'id' => $website->id,
                 'name' => $website->name,
                 'domain' => $website->domain,
                 'status' => $website->status->value,
                 'status_label' => $website->status->label(),
                 'dns_mode' => $website->getMetadata('dns_mode', 'subdomain'),
-            ])->values()->all(),
+                'show_url' => route('agency.domains.show', $website->id),
+                'created_at' => $website->created_at?->toIso8601String(),
+            ]);
+
+        return Inertia::render('agency/domains/index', [
+            'config' => $this->getDatagridConfig(),
+            'rows' => $rows,
+            'statistics' => [],
+            'filters' => [
+                'search' => $search,
+                'status' => $status,
+                'dns_mode' => $dnsMode,
+                'sort' => $sortBy,
+                'direction' => $sortDir,
+                'per_page' => $perPage,
+                'view' => (string) $request->input('view', 'cards'),
+            ],
         ]);
     }
 
@@ -290,6 +351,57 @@ class DomainController extends Controller
                 'message' => 'Failed to purge CDN cache: '.$e->getMessage(),
             ], $status ?: 422);
         }
+    }
+
+    private function getDatagridConfig(): array
+    {
+        return [
+            'columns' => [
+                [
+                    'key' => 'domain',
+                    'label' => 'Domain',
+                    'sortable' => true,
+                    'width' => '320px',
+                ],
+                [
+                    'key' => 'dns_mode',
+                    'label' => 'DNS Mode',
+                    'width' => '140px',
+                ],
+                [
+                    'key' => 'status_label',
+                    'label' => 'Status',
+                    'sortable' => true,
+                    'width' => '140px',
+                ],
+                [
+                    'key' => 'created_at',
+                    'label' => 'Created',
+                    'sortable' => true,
+                    'width' => '130px',
+                ],
+            ],
+            'filters' => [],
+            'actions' => [],
+            'statusTabs' => [],
+            'form' => [],
+            'settings' => [
+                'perPage' => 15,
+                'defaultSort' => 'created_at',
+                'defaultDirection' => 'desc',
+                'enableBulkActions' => false,
+                'enableExport' => false,
+                'hasNotes' => false,
+                'entityName' => 'domain',
+                'entityPlural' => 'domains',
+                'statusField' => 'status',
+            ],
+        ];
+    }
+
+    private function escapeLikePattern(string $value): string
+    {
+        return str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $value);
     }
 
     // ─────────────────────────────────────────────────────────

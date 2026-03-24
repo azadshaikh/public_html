@@ -26,6 +26,12 @@ class DashboardController extends Controller
     public function root(): RedirectResponse
     {
         if (Auth::check()) {
+            $user = Auth::user();
+
+            if (module_enabled('agency') && $user?->hasRole('customer') && ! $user->can('view_dashboard')) {
+                return to_route('agency.websites.index');
+            }
+
             return to_route('dashboard');
         }
 

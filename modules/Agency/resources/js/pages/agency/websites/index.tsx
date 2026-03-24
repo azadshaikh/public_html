@@ -1,18 +1,13 @@
 import { Link } from '@inertiajs/react';
-import { GlobeIcon, PlusIcon } from 'lucide-react';
+import { ExternalLinkIcon, GlobeIcon, PlusIcon } from 'lucide-react';
+import { Datagrid } from '@/components/datagrid/datagrid';
+import type { DatagridColumn, DatagridFilter } from '@/components/datagrid/datagrid';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import AppLayout from '@/layouts/app-layout';
+import { buildScaffoldDatagridState } from '@/lib/scaffold-datagrid';
 import type { BreadcrumbItem } from '@/types';
+import type { ScaffoldIndexPageProps } from '@/types/scaffold';
 
 type WebsiteRow = {
     id: number;
@@ -28,20 +23,7 @@ type WebsiteRow = {
     created_at: string | null;
 };
 
-type PaginationData = {
-    current_page: number;
-    last_page: number;
-    total: number;
-};
-
-type AgencyWebsitesIndexPageProps = {
-    websites: WebsiteRow[];
-    pagination: PaginationData;
-    statistics: Record<string, number>;
-    filters: {
-        search: string;
-        status: string;
-    };
+type AgencyWebsitesIndexPageProps = ScaffoldIndexPageProps<WebsiteRow> & {
     canCreateWebsite: boolean;
 };
 
@@ -78,12 +60,114 @@ function statusVariant(status: string): 'success' | 'warning' | 'danger' | 'seco
 }
 
 export default function AgencyWebsitesIndex({
-    websites,
-    pagination,
+    config,
+    rows,
     statistics,
     filters,
     canCreateWebsite,
 }: AgencyWebsitesIndexPageProps) {
+    const { perPage, sorting } = buildScaffoldDatagridState(
+        config,
+        filters,
+        statistics,
+        {
+            searchPlaceholder: 'Search websites...',
+            perPageOptions: [10, 25, 50],
+        },
+    );
+
+    const gridFilters: DatagridFilter[] = [
+        {
+            type: 'search',
+            name: 'search',
+            value: filters.search,
+            placeholder: 'Search websites...',
+            className: 'lg:min-w-80',
+        },
+        {
+            type: 'select',
+            name: 'status',
+            value: typeof filters.status === 'string' ? filters.status : 'all',
+            options: [
+                { value: 'all', label: 'All statuses' },
+                { value: 'active', label: 'Active' },
+                { value: 'provisioning', label: 'Provisioning' },
+                { value: 'waiting_for_dns', label: 'Waiting for DNS' },
+                { value: 'failed', label: 'Failed' },
+                { value: 'suspended', label: 'Suspended' },
+                { value: 'trash', label: 'Trashed' },
+            ],
+        },
+    ];
+
+    const columns: DatagridColumn<WebsiteRow>[] = [
+        {
+            key: 'name',
+            header: 'Website',
+            sortable: true,
+            cardLabel: 'Website',
+            cell: (website) => (
+                <div className="flex min-w-0 flex-col gap-1">
+                    <Link
+                        href={website.manage_url}
+                        className="font-medium text-foreground hover:text-primary"
+                    >
+                        {website.name}
+                    </Link>
+                    <span className="truncate text-xs text-muted-foreground">
+                        {website.domain}
+                    </span>
+                </div>
+            ),
+        },
+        {
+            key: 'plan',
+            header: 'Plan',
+            cardLabel: 'Plan',
+            cell: (website) => website.plan ?? 'N/A',
+        },
+        {
+            key: 'type_label',
+            header: 'Type',
+            cardLabel: 'Type',
+            cell: (website) => <Badge variant="outline">{website.type_label}</Badge>,
+        },
+        {
+            key: 'status_label',
+            header: 'Status',
+            sortable: true,
+            sortKey: 'status',
+            cardLabel: 'Status',
+            cell: (website) => (
+                <Badge variant={statusVariant(website.status)}>
+                    {website.status_label}
+                </Badge>
+            ),
+        },
+        {
+            key: 'created_at',
+            header: 'Created',
+            sortable: true,
+            cardLabel: 'Created',
+            cell: (website) => formatDate(website.created_at),
+        },
+        {
+            key: 'domain_url',
+            header: 'Visit',
+            cell: (website) => (
+                <a
+                    href={website.domain_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+                >
+                    Visit
+                    <ExternalLinkIcon className="size-3.5" />
+                </a>
+            ),
+        },
+    ];
+
     return (
         <AppLayout
             breadcrumbs={breadcrumbs}
@@ -100,125 +184,95 @@ export default function AgencyWebsitesIndex({
                 ) : null
             }
         >
-            <div className="space-y-6">
-                <div className="grid gap-4 md:grid-cols-4">
-                    {[
-                        ['Total', statistics.all ?? pagination.total],
-                        ['Active', statistics.active ?? 0],
-                        ['Provisioning', statistics.provisioning ?? 0],
-                        ['Failed', statistics.failed ?? 0],
-                    ].map(([label, value]) => (
-                        <Card key={label}>
-                            <CardHeader className="pb-2">
-                                <CardDescription>{label}</CardDescription>
-                                <CardTitle className="text-3xl">{value}</CardTitle>
-                            </CardHeader>
-                        </Card>
-                    ))}
-                </div>
-
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Your Websites</CardTitle>
-                        <CardDescription>
-                            Search by website name or domain and jump straight to the manage view.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                        <form
-                            method="get"
-                            action={route('agency.websites.index')}
-                            className="grid gap-3 md:grid-cols-[minmax(0,1fr)_180px_auto]"
-                        >
-                            <Input
-                                name="search"
-                                defaultValue={filters.search}
-                                placeholder="Search websites..."
-                            />
-                            <NativeSelect name="status" defaultValue={filters.status}>
-                                <NativeSelectOption value="all">All statuses</NativeSelectOption>
-                                <NativeSelectOption value="active">Active</NativeSelectOption>
-                                <NativeSelectOption value="provisioning">Provisioning</NativeSelectOption>
-                                <NativeSelectOption value="waiting_for_dns">Waiting for DNS</NativeSelectOption>
-                                <NativeSelectOption value="failed">Failed</NativeSelectOption>
-                            </NativeSelect>
-                            <Button type="submit" variant="outline">
-                                Apply
-                            </Button>
-                        </form>
-
-                        {websites.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-12 text-center">
-                                <GlobeIcon className="mb-3 size-10 text-muted-foreground" />
-                                <p className="font-medium">No websites yet</p>
-                                <p className="text-sm text-muted-foreground">
-                                    Start onboarding to provision your first site.
+            <Datagrid
+                action={route('agency.websites.index')}
+                rows={rows}
+                columns={columns}
+                scaffoldColumns={config.columns}
+                filters={gridFilters}
+                getRowKey={(website) => website.id}
+                sorting={sorting}
+                perPage={perPage}
+                view={{
+                    value: filters.view === 'table' ? 'table' : 'cards',
+                    storageKey: 'agency-websites-datagrid-view',
+                }}
+                renderCardHeader={(website) => (
+                    <div className="flex min-w-0 items-start justify-between gap-3">
+                        <div className="min-w-0 space-y-1">
+                            <Link
+                                href={website.manage_url}
+                                className="block truncate font-semibold text-foreground hover:text-primary"
+                            >
+                                {website.name}
+                            </Link>
+                            <p className="truncate text-sm text-muted-foreground">
+                                {website.domain}
+                            </p>
+                        </div>
+                        <Badge variant={statusVariant(website.status)}>
+                            {website.status_label}
+                        </Badge>
+                    </div>
+                )}
+                renderCard={(website) => (
+                    <div className="flex flex-col gap-4">
+                        <div className="grid gap-3 sm:grid-cols-2">
+                            <div className="space-y-1">
+                                <p className="text-[0.68rem] font-semibold tracking-[0.18em] text-muted-foreground uppercase">
+                                    Plan
+                                </p>
+                                <p className="text-sm font-medium text-foreground">
+                                    {website.plan ?? 'N/A'}
                                 </p>
                             </div>
-                        ) : (
-                            <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
-                                {websites.map((website) => (
-                                    <Card key={website.id} className="h-full">
-                                        <CardHeader>
-                                            <div className="flex items-start justify-between gap-3">
-                                                <div className="space-y-1">
-                                                    <CardTitle className="text-lg">
-                                                        <Link
-                                                            href={website.manage_url}
-                                                            className="hover:text-primary"
-                                                        >
-                                                            {website.name}
-                                                        </Link>
-                                                    </CardTitle>
-                                                    <CardDescription>
-                                                        {website.domain}
-                                                    </CardDescription>
-                                                </div>
-                                                <Badge variant={statusVariant(website.status)}>
-                                                    {website.status_label}
-                                                </Badge>
-                                            </div>
-                                        </CardHeader>
-                                        <CardContent className="space-y-4">
-                                            <div className="grid gap-3 text-sm">
-                                                <div className="flex items-center justify-between">
-                                                    <span className="text-muted-foreground">Plan</span>
-                                                    <span>{website.plan ?? 'N/A'}</span>
-                                                </div>
-                                                <div className="flex items-center justify-between">
-                                                    <span className="text-muted-foreground">Type</span>
-                                                    <span>{website.type_label}</span>
-                                                </div>
-                                                <div className="flex items-center justify-between">
-                                                    <span className="text-muted-foreground">Created</span>
-                                                    <span>{formatDate(website.created_at)}</span>
-                                                </div>
-                                            </div>
-                                            <div className="flex gap-2">
-                                                <Button asChild className="flex-1">
-                                                    <Link href={website.manage_url}>Manage</Link>
-                                                </Button>
-                                                <Button asChild variant="outline" className="flex-1">
-                                                    <a href={website.domain_url} target="_blank" rel="noreferrer">
-                                                        Visit
-                                                    </a>
-                                                </Button>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                ))}
+                            <div className="space-y-1">
+                                <p className="text-[0.68rem] font-semibold tracking-[0.18em] text-muted-foreground uppercase">
+                                    Type
+                                </p>
+                                <div>
+                                    <Badge variant="outline">{website.type_label}</Badge>
+                                </div>
                             </div>
-                        )}
-
-                        <div className="flex items-center justify-between text-sm text-muted-foreground">
-                            <span>
-                                Page {pagination.current_page} of {pagination.last_page}
-                            </span>
-                            <span>{pagination.total} total websites</span>
+                            <div className="space-y-1">
+                                <p className="text-[0.68rem] font-semibold tracking-[0.18em] text-muted-foreground uppercase">
+                                    Created
+                                </p>
+                                <p className="text-sm text-foreground">
+                                    {formatDate(website.created_at)}
+                                </p>
+                            </div>
+                            <div className="space-y-1">
+                                <p className="text-[0.68rem] font-semibold tracking-[0.18em] text-muted-foreground uppercase">
+                                    Open Site
+                                </p>
+                                <a
+                                    href={website.domain_url}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+                                >
+                                    Visit
+                                    <ExternalLinkIcon className="size-3.5" />
+                                </a>
+                            </div>
                         </div>
-                    </CardContent>
-                </Card>
-            </div>
+
+                        <div className="flex items-center justify-end border-t border-border/60 pt-4">
+                            <Button asChild>
+                                <Link href={website.manage_url}>Manage</Link>
+                            </Button>
+                        </div>
+                    </div>
+                )}
+                cardGridClassName="grid-cols-1 xl:grid-cols-2"
+                empty={{
+                    icon: <GlobeIcon className="size-5" />,
+                    title: 'No websites yet',
+                    description:
+                        'Start onboarding to provision your first site and manage it from this list.',
+                }}
+            />
         </AppLayout>
     );
 }

@@ -127,7 +127,6 @@ class RoleSeeder extends Seeder
 
             case 'manager':
                 $this->syncPermissions($roleId, $this->permissionIds([
-                    'view_dashboard',
                     'view_users',
                     'add_users',
                     'edit_users',
@@ -141,7 +140,6 @@ class RoleSeeder extends Seeder
 
             case 'staff':
                 $this->syncPermissions($roleId, $this->permissionIds([
-                    'view_dashboard',
                     'view_todos',
                     'add_todos',
                     'edit_todos',
@@ -152,7 +150,6 @@ class RoleSeeder extends Seeder
 
             case 'customer':
                 $this->syncPermissions($roleId, $this->permissionIds([
-                    'view_dashboard',
                     'view_customers',
                     'add_customers',
                     'edit_customers',
@@ -168,9 +165,7 @@ class RoleSeeder extends Seeder
                 break;
 
             case 'user':
-                $this->syncPermissions($roleId, $this->permissionIds([
-                    'view_dashboard',
-                ]));
+                $this->syncPermissions($roleId, []);
                 $this->command->info('Assigned baseline permissions to user role');
                 break;
 

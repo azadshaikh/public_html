@@ -1,6 +1,7 @@
 import { useForm } from '@inertiajs/react';
+import { GiftIcon, LoaderCircleIcon, LockIcon, TicketIcon } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -10,9 +11,9 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
+import { FieldError } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import AgencyOnboardingLayout from '../../../components/agency-onboarding-layout';
+import AgencyOnboardingMinimalLayout from '../../../components/agency-onboarding-minimal-layout';
 
 type SelectedPlan = {
     id: number;
@@ -39,6 +40,20 @@ type AgencyOnboardingCheckoutPageProps = {
     privacyUrl: string;
 };
 
+type AppliedCoupon = {
+    code: string;
+    discountFormatted: string;
+    newTotalFormatted: string;
+    message: string;
+};
+
+function parseCurrencyAmount(value: string | null | undefined): number {
+    const normalized = (value ?? '').replace(/[^0-9.]/g, '');
+    const amount = Number.parseFloat(normalized);
+
+    return Number.isFinite(amount) ? amount : 0;
+}
+
 export default function AgencyOnboardingCheckout({
     selectedPlan,
     selectedPrice,
@@ -51,8 +66,84 @@ export default function AgencyOnboardingCheckout({
         coupon_code: '',
         agree_terms: false,
     });
+    const [showCouponField, setShowCouponField] = useState(false);
+    const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
+    const [couponMessage, setCouponMessage] = useState<string | null>(null);
+    const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
 
     const isTrial = (selectedPlan?.trial_days ?? 0) > 0;
+    const subtotalAmount = useMemo(() => parseCurrencyAmount(selectedPrice?.formatted_price), [selectedPrice?.formatted_price]);
+    const subtotalFormatted = selectedPrice?.formatted_price ?? '$0.00';
+    const totalDueTodayFormatted = isTrial
+        ? appliedCoupon?.newTotalFormatted ?? '$0.00'
+        : appliedCoupon?.newTotalFormatted ?? subtotalFormatted;
+    const recurringNotice = isTrial
+        ? `${selectedPrice?.formatted_price ?? '$0.00'}/${selectedPrice?.billing_cycle_label ?? 'month'} after ${selectedPlan?.trial_days ?? 0}-day trial`
+        : null;
+
+    const handleValidateCoupon = async () => {
+        const couponCode = form.data.coupon_code.trim();
+
+        if (couponCode === '') {
+            form.setError('coupon_code', 'Enter a coupon code first.');
+
+            return;
+        }
+
+        setIsApplyingCoupon(true);
+        setCouponMessage(null);
+        form.clearErrors('coupon_code');
+
+        try {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
+            const response = await fetch(route('agency.onboarding.validate-coupon'), {
+                method: 'POST',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: JSON.stringify({
+                    coupon_code: couponCode,
+                }),
+            });
+
+            const payload = (await response.json()) as {
+                valid?: boolean;
+                message?: string;
+                discount_formatted?: string;
+                new_total_formatted?: string;
+            };
+
+            if (!response.ok || !payload.valid) {
+                form.setError('coupon_code', payload.message ?? 'Unable to apply coupon.');
+                setAppliedCoupon(null);
+
+                return;
+            }
+
+            setAppliedCoupon({
+                code: couponCode,
+                discountFormatted: payload.discount_formatted ?? '0.00',
+                newTotalFormatted: payload.new_total_formatted ?? '0.00',
+                message: payload.message ?? 'Coupon applied!',
+            });
+            setCouponMessage(payload.message ?? 'Coupon applied!');
+        } catch {
+            form.setError('coupon_code', 'Unable to apply coupon right now.');
+            setAppliedCoupon(null);
+        } finally {
+            setIsApplyingCoupon(false);
+        }
+    };
+
+    const handleRemoveCoupon = () => {
+        setAppliedCoupon(null);
+        setCouponMessage(null);
+        form.setData('coupon_code', '');
+        form.clearErrors('coupon_code');
+    };
 
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -67,190 +158,212 @@ export default function AgencyOnboardingCheckout({
     };
 
     return (
-        <AgencyOnboardingLayout
-            title="Checkout"
-            description="Review your order before provisioning starts."
-            currentStep="checkout"
+        <AgencyOnboardingMinimalLayout
+            title="You're almost there!"
+            description="Review your order and you'll be up and running in no time."
             backHref={route('agency.onboarding.plans')}
+            contentWidthClassName="max-w-2xl"
         >
-            <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
-                <Card className="w-full rounded-[2rem] border-black/6 bg-white/92 shadow-[0_20px_80px_rgba(33,30,22,0.08)] dark:border-white/10 dark:bg-white/5 dark:shadow-none">
-                    <CardHeader className="space-y-3 border-b border-black/6 pb-6 dark:border-white/10">
-                        <Badge variant="info" className="w-fit rounded-full px-3 py-1">
-                            Final Review
-                        </Badge>
-                        <div className="space-y-2">
-                            <CardTitle className="text-2xl tracking-[-0.03em]">
-                                You&apos;re almost there
-                            </CardTitle>
-                            <CardDescription className="text-sm leading-6">
-                                Confirm the selected plan, review the domain, and agree to the
-                                terms before provisioning begins.
-                            </CardDescription>
-                        </div>
-                    </CardHeader>
+            <div className="space-y-6">
+                <form className="space-y-5" noValidate onSubmit={handleSubmit}>
+                    <Card className="w-full rounded-[1.75rem] border-border bg-card py-0 shadow-none">
+                        <CardHeader className="space-y-4 border-b border-border px-4 py-4">
+                            <CardTitle className="text-sm font-semibold">Your Order</CardTitle>
 
-                    <CardContent className="pt-6">
-                        <form className="space-y-6" onSubmit={handleSubmit}>
-                            <FieldGroup>
-                                <Field data-invalid={form.errors.coupon_code || undefined}>
-                                    <FieldLabel htmlFor="coupon_code">Coupon Code</FieldLabel>
+                            <div className="space-y-3 text-sm">
+                                <div className="flex items-start justify-between gap-4">
+                                    <div className="space-y-1">
+                                        <p className="font-semibold text-foreground">
+                                            {selectedPlan?.name ?? 'Selected Plan'}
+                                        </p>
+                                        <p className="text-muted-foreground">
+                                            {selectedPrice?.billing_cycle_label ?? 'Billing cycle'}
+                                        </p>
+                                    </div>
+                                    <p className="font-semibold text-[var(--success-foreground)] dark:text-[var(--success-dark-foreground)]">
+                                        {isTrial ? '$0.00' : subtotalFormatted}
+                                    </p>
+                                </div>
+
+                                {isTrial ? (
+                                    <div className="flex items-center gap-2 text-[13px] font-medium text-[var(--success-foreground)] dark:text-[var(--success-dark-foreground)]">
+                                        <GiftIcon className="size-3.5" />
+                                        <span>{selectedPlan?.trial_days ?? 0}-day free trial</span>
+                                    </div>
+                                ) : null}
+
+                                <div className="flex items-start justify-between gap-4 pt-1">
+                                    <div className="space-y-1">
+                                        <p className="break-all font-semibold text-foreground">
+                                            {websiteDetails.domain ?? 'No domain selected'}
+                                        </p>
+                                        <p className="text-muted-foreground">Domain</p>
+                                    </div>
+                                    <p className="text-[13px] font-medium text-[var(--success-foreground)] dark:text-[var(--success-dark-foreground)]">
+                                        Included
+                                    </p>
+                                </div>
+                            </div>
+                        </CardHeader>
+
+                        <CardContent className="space-y-3 px-4 py-4 text-sm">
+                            <div className="flex items-center justify-between gap-4 border-t border-border pt-3 font-semibold text-foreground">
+                                <span>Total Due Today</span>
+                                <span className="text-xl text-[var(--success-foreground)] dark:text-[var(--success-dark-foreground)]">
+                                    {totalDueTodayFormatted}
+                                </span>
+                            </div>
+
+                            {recurringNotice ? (
+                                <p className="text-right text-[13px] text-muted-foreground">
+                                    {recurringNotice}
+                                </p>
+                            ) : null}
+                        </CardContent>
+                    </Card>
+
+                    <div className="space-y-3">
+                        <button
+                            type="button"
+                            onClick={() => setShowCouponField((current) => !current)}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1 text-xs font-medium text-foreground hover:bg-muted"
+                        >
+                            <TicketIcon className="size-3.5" />
+                            {showCouponField ? 'Hide coupon field' : 'Have a coupon code?'}
+                        </button>
+
+                        {showCouponField ? (
+                            <div className="space-y-3">
+                                <div className="flex gap-2">
                                     <Input
                                         id="coupon_code"
                                         value={form.data.coupon_code}
-                                        onChange={(event) =>
-                                            form.setData('coupon_code', event.target.value)
-                                        }
-                                        placeholder="Optional"
+                                        onChange={(event) => form.setData('coupon_code', event.target.value)}
+                                        placeholder="Enter coupon code"
+                                        className="h-11"
                                     />
-                                    <FieldError>{form.errors.coupon_code}</FieldError>
-                                </Field>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="xl"
+                                        className="min-w-24 rounded-lg"
+                                        disabled={isApplyingCoupon || form.data.coupon_code.trim() === ''}
+                                        onClick={() => {
+                                            void handleValidateCoupon();
+                                        }}
+                                    >
+                                        {isApplyingCoupon ? <LoaderCircleIcon className="size-4 animate-spin" /> : 'Apply'}
+                                    </Button>
+                                </div>
 
-                                <Field data-invalid={form.errors.agree_terms || undefined}>
-                                    <label className="flex items-start gap-4 rounded-[1.5rem] border p-5">
-                                        <Checkbox
-                                            checked={form.data.agree_terms}
-                                            onCheckedChange={(checked) =>
-                                                form.setData('agree_terms', Boolean(checked))
-                                            }
-                                        />
-                                        <span className="text-sm leading-6 text-muted-foreground">
-                                            I agree to the
-                                            {' '}
-                                            <a
-                                                href={termsUrl}
-                                                className="font-medium text-primary"
-                                                target="_blank"
-                                                rel="noreferrer"
+                                <FieldError>{form.errors.coupon_code}</FieldError>
+
+                                {appliedCoupon ? (
+                                    <div className="space-y-2 text-sm">
+                                        <div className="flex items-center justify-between gap-4 text-[var(--success-foreground)] dark:text-[var(--success-dark-foreground)]">
+                                            <div className="flex items-center gap-1.5">
+                                                <GiftIcon className="size-3.5" />
+                                                <span>Discount ({appliedCoupon.code})</span>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={handleRemoveCoupon}
+                                                className="text-xs font-medium text-destructive underline-offset-4 hover:underline"
                                             >
-                                                Terms of Service
-                                            </a>
-                                            {' '}
-                                            and
-                                            {' '}
-                                            <a
-                                                href={privacyUrl}
-                                                className="font-medium text-primary"
-                                                target="_blank"
-                                                rel="noreferrer"
-                                            >
-                                                Privacy Policy
-                                            </a>
-                                            .
-                                        </span>
-                                    </label>
-                                    <FieldError>{form.errors.agree_terms}</FieldError>
-                                </Field>
-                            </FieldGroup>
+                                                Remove
+                                            </button>
+                                        </div>
 
-                            {isTrial ? (
-                                <div className="rounded-[1.5rem] border border-[var(--success-border)] bg-[var(--success-bg)] p-4 text-sm leading-6 text-[var(--success-foreground)] dark:border-[var(--success-dark-border)] dark:bg-[var(--success-dark-bg)] dark:text-[var(--success-dark-foreground)]">
-                                    No credit card is required for this free-trial checkout. We
-                                    will provision the website immediately after you continue.
-                                </div>
-                            ) : stripeConfigured ? (
-                                <div className="rounded-[1.5rem] border border-black/6 bg-background p-4 text-sm leading-6 text-muted-foreground dark:border-white/10">
-                                    Payment is handled securely through Stripe. Card details stay on
-                                    Stripe’s checkout page and never pass through this app.
-                                </div>
-                            ) : (
-                                <div className="rounded-[1.5rem] border border-amber-200 bg-amber-100 p-4 text-sm leading-6 text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/15 dark:text-amber-300">
-                                    Stripe is not configured for paid plans yet. Choose a trial
-                                    plan or contact support before continuing.
-                                </div>
-                            )}
+                                        <div className="flex items-center justify-between gap-4 text-[13px] text-muted-foreground">
+                                            <span>{couponMessage ?? appliedCoupon.message}</span>
+                                            <span>-{appliedCoupon.discountFormatted}</span>
+                                        </div>
 
-                            <div className="flex flex-col gap-3 border-t border-black/6 pt-5 sm:flex-row sm:items-center sm:justify-between dark:border-white/10">
-                                <p className="text-sm leading-6 text-muted-foreground">
-                                    Provisioning starts right after this step, and you can track the
-                                    live status on the next screen.
+                                        <div className="flex items-center justify-between gap-4 border-t border-border pt-2 font-semibold text-foreground">
+                                            <span>New Total</span>
+                                            <span>{appliedCoupon.newTotalFormatted}</span>
+                                        </div>
+                                    </div>
+                                ) : null}
+                            </div>
+                        ) : null}
+                    </div>
+
+                    {isTrial ? (
+                        <div className="rounded-[1.25rem] border border-[var(--success-border)] bg-[var(--success-bg)] px-4 py-3 text-sm leading-7 text-[var(--success-foreground)] dark:border-[var(--success-dark-border)] dark:bg-[var(--success-dark-bg)] dark:text-[var(--success-dark-foreground)]">
+                            <div className="flex items-start gap-2">
+                                <GiftIcon className="mt-1 size-4 shrink-0" />
+                                <p>
+                                    No credit card required. Your {selectedPlan?.trial_days ?? 0}-day free trial starts immediately. When you're ready, payments are handled securely through Stripe — we never store your card details.
                                 </p>
+                            </div>
+                        </div>
+                    ) : stripeConfigured ? (
+                        <div className="rounded-[1.25rem] border border-border bg-muted/30 px-4 py-3 text-sm leading-7 text-muted-foreground">
+                            <div className="flex items-start gap-2">
+                                <LockIcon className="mt-1 size-4 shrink-0 text-foreground" />
+                                <p>
+                                    Payments are handled securely through Stripe. Card details stay on Stripe's checkout page and never pass through this app.
+                                </p>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="rounded-[1.25rem] border border-amber-200 bg-amber-100 px-4 py-3 text-sm leading-7 text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/15 dark:text-amber-300">
+                            Stripe is not configured for paid plans yet. Choose a trial plan or contact support before continuing.
+                        </div>
+                    )}
 
-                                <Button
-                                    type="submit"
-                                    disabled={form.processing || (!isTrial && !stripeConfigured)}
+                    {form.errors.payment ? (
+                        <div className="rounded-[1.25rem] border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+                            {form.errors.payment}
+                        </div>
+                    ) : null}
+
+                    <div className="space-y-2">
+                        <label className="flex items-start gap-3 text-sm text-muted-foreground">
+                            <Checkbox
+                                checked={form.data.agree_terms}
+                                onCheckedChange={(checked) => form.setData('agree_terms', Boolean(checked))}
+                            />
+                            <span>
+                                I agree to the{' '}
+                                <a
+                                    href={termsUrl}
+                                    className="text-foreground underline underline-offset-4"
+                                    target="_blank"
+                                    rel="noreferrer"
                                 >
-                                    {isTrial ? 'Start Free Trial' : 'Continue to Payment'}
-                                </Button>
-                            </div>
-                        </form>
-                    </CardContent>
-                </Card>
+                                    Terms of Service
+                                </a>{' '}
+                                and{' '}
+                                <a
+                                    href={privacyUrl}
+                                    className="text-foreground underline underline-offset-4"
+                                    target="_blank"
+                                    rel="noreferrer"
+                                >
+                                    Privacy Policy
+                                </a>.
+                            </span>
+                        </label>
+                        <FieldError>{form.errors.agree_terms}</FieldError>
+                    </div>
 
-                <div className="space-y-4">
-                    <Card className="rounded-[2rem] border-black/6 bg-white/88 dark:border-white/10 dark:bg-white/5">
-                        <CardHeader className="space-y-2">
-                            <div className="flex items-center justify-between gap-3">
-                                <CardTitle className="text-lg">Order Summary</CardTitle>
-                                {isTrial ? (
-                                    <Badge variant="success">Free Trial</Badge>
-                                ) : (
-                                    <Badge variant="outline">
-                                        {selectedPrice?.billing_cycle_label ?? 'Billing'}
-                                    </Badge>
-                                )}
-                            </div>
-                            <CardDescription>
-                                The domain is included in the selected launch package.
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="rounded-[1.5rem] border p-4">
-                                <p className="text-xs font-semibold tracking-[0.22em] text-muted-foreground uppercase">
-                                    Plan
-                                </p>
-                                <p className="mt-2 text-base font-semibold">
-                                    {selectedPlan?.name ?? 'Selected Plan'}
-                                </p>
-                                <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                                    {selectedPrice?.billing_cycle_label ?? 'Billing cycle'} plan
-                                </p>
-                            </div>
-
-                            <div className="rounded-[1.5rem] border p-4">
-                                <p className="text-xs font-semibold tracking-[0.22em] text-muted-foreground uppercase">
-                                    Domain
-                                </p>
-                                <p className="mt-2 break-all text-base font-semibold">
-                                    {websiteDetails.domain ?? 'No domain selected'}
-                                </p>
-                                <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                                    Website name:
-                                    {' '}
-                                    {websiteDetails.name ?? websiteDetails.domain ?? 'Pending'}
-                                </p>
-                            </div>
-
-                            <div className="rounded-[1.5rem] border border-dashed border-primary/30 bg-primary/5 p-4">
-                                <p className="text-xs font-semibold tracking-[0.22em] text-muted-foreground uppercase">
-                                    Total due today
-                                </p>
-                                <p className="mt-2 text-3xl font-semibold tracking-[-0.03em]">
-                                    {isTrial ? '$0.00' : selectedPrice?.formatted_price ?? '$0.00'}
-                                </p>
-                                <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                                    {isTrial
-                                        ? `${selectedPlan?.trial_days ?? 0}-day free trial before billing starts.`
-                                        : selectedPrice?.billing_cycle_label ?? 'Billed immediately.'}
-                                </p>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card className="rounded-[2rem] border-black/6 bg-white/88 dark:border-white/10 dark:bg-white/5">
-                        <CardHeader className="space-y-2">
-                            <CardTitle className="text-lg">What happens next</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-3 text-sm leading-6 text-muted-foreground">
-                            <p>The platform starts provisioning hosting, DNS, and application setup.</p>
-                            <p>
-                                You will land on a live progress screen where you can track every
-                                provisioning stage.
-                            </p>
-                        </CardContent>
-                    </Card>
-                </div>
+                    <Button
+                        type="submit"
+                        size="xl"
+                        className="w-full rounded-lg bg-[var(--success-foreground)] text-white hover:bg-[color-mix(in_oklab,var(--success-foreground)_90%,black)] dark:bg-[var(--success-dark-foreground)] dark:text-black dark:hover:bg-[color-mix(in_oklab,var(--success-dark-foreground)_88%,white)]"
+                        disabled={form.processing || (!isTrial && !stripeConfigured)}
+                    >
+                        {form.processing ? (
+                            <LoaderCircleIcon className="size-4 animate-spin" />
+                        ) : (
+                            <LockIcon className="size-4" />
+                        )}
+                        {isTrial ? 'Start Free Trial' : 'Continue to Payment'}
+                    </Button>
+                </form>
             </div>
-        </AgencyOnboardingLayout>
+        </AgencyOnboardingMinimalLayout>
     );
 }

@@ -26,12 +26,16 @@ class WebsiteController extends Controller
         $data = $this->buildDataPayload($request, includeStats: true);
 
         return Inertia::render('agency/websites/index', [
-            'websites' => $data['items'],
-            'pagination' => $data['pagination'],
+            'config' => $this->getDatagridConfig(),
+            'rows' => $data['rows'],
             'statistics' => $data['statistics'] ?? [],
             'filters' => [
                 'search' => trim((string) $request->input('search', '')),
                 'status' => (string) $request->input('status', 'all'),
+                'sort' => (string) $request->input('sort', 'created_at'),
+                'direction' => strtolower((string) $request->input('direction', 'desc')) === 'asc' ? 'asc' : 'desc',
+                'per_page' => min(max((int) $request->input('per_page', 15), 5), 100),
+                'view' => (string) $request->input('view', 'cards'),
             ],
             'canCreateWebsite' => Route::has('agency.websites.create'),
         ]);
@@ -140,7 +144,7 @@ class WebsiteController extends Controller
     /**
      * Build the data payload that DataGrid expects.
      *
-     * @return array{items: array, pagination: array, columns?: array, filters?: array, statistics?: array}
+     * @return array{items: array<int, array<string, mixed>>, pagination: array<string, int>, rows: mixed, columns?: array, filters?: array, statistics?: array}
      */
     private function buildDataPayload(Request $request, bool $includeStats = false): array
     {
@@ -176,9 +180,8 @@ class WebsiteController extends Controller
             });
         }
 
-        // Sorting (use sort_column/sort_direction to match DataGrid frontend contract)
-        $sortBy = (string) $request->input('sort_column', 'created_at');
-        $sortDir = strtolower((string) $request->input('sort_direction', 'desc')) === 'asc' ? 'asc' : 'desc';
+        $sortBy = (string) $request->input('sort', 'created_at');
+        $sortDir = strtolower((string) $request->input('direction', 'desc')) === 'asc' ? 'asc' : 'desc';
         $sortableColumns = ['name', 'domain', 'status', 'created_at'];
         if (in_array($sortBy, $sortableColumns, true)) {
             $query->orderBy($sortBy, $sortDir);
@@ -186,46 +189,50 @@ class WebsiteController extends Controller
             $query->latest();
         }
 
-        $paginator = $query->paginate($perPage);
+        $rows = $query
+            ->paginate($perPage)
+            ->onEachSide(1)
+            ->withQueryString()
+            ->through(function (AgencyWebsite $website): array {
+                $isTrashed = $website->trashed();
 
-        $items = collect($paginator->items())->map(function (AgencyWebsite $website): array {
-            $isTrashed = $website->trashed();
+                $manageUrl = match (true) {
+                    $website->status === WebsiteStatus::Provisioning,
+                    $website->status === WebsiteStatus::WaitingForDns,
+                    $website->status === WebsiteStatus::Failed => route('agency.onboarding.provisioning.website', $website->id),
+                    default => route('agency.websites.show', $website->id),
+                };
 
-            // Resolve manage URL
-            $manageUrl = match (true) {
-                $website->status === WebsiteStatus::Provisioning,
-                $website->status === WebsiteStatus::WaitingForDns,
-                $website->status === WebsiteStatus::Failed => route('agency.onboarding.provisioning.website', $website->id),
-                default => route('agency.websites.show', $website->id),
-            };
+                return [
+                    'id' => $website->id,
+                    'name' => $website->name ?? 'Untitled Site',
+                    'domain' => $website->domain,
+                    'domain_url' => $website->domain_url,
+                    'status' => $website->status->value,
+                    'status_label' => $website->status->label(),
+                    'status_badge' => $website->status->badgeClass(),
+                    'plan' => $website->plan,
+                    'type' => $website->type,
+                    'type_label' => $website->type_label,
+                    'is_trashed' => $isTrashed,
+                    'manage_url' => $manageUrl,
+                    'created_at' => $website->created_at?->toIso8601String(),
+                ];
+            });
 
-            return [
-                'id' => $website->id,
-                'name' => $website->name ?? 'Untitled Site',
-                'domain' => $website->domain,
-                'domain_url' => $website->domain_url,
-                'status' => $website->status->value,
-                'status_label' => $website->status->label(),
-                'status_badge' => $website->status->badgeClass(),
-                'plan' => $website->plan,
-                'type' => $website->type,
-                'type_label' => $website->type_label,
-                'is_trashed' => $isTrashed,
-                'manage_url' => $manageUrl,
-                'created_at' => $website->created_at?->toIso8601String(),
-            ];
-        })->all();
+        $items = $rows->items();
 
         $payload = [
             'items' => $items,
             'pagination' => [
-                'total' => $paginator->total(),
-                'per_page' => $paginator->perPage(),
-                'current_page' => $paginator->currentPage(),
-                'last_page' => $paginator->lastPage(),
-                'from' => $paginator->firstItem() ?? 0,
-                'to' => $paginator->lastItem() ?? 0,
+                'total' => $rows->total(),
+                'per_page' => $rows->perPage(),
+                'current_page' => $rows->currentPage(),
+                'last_page' => $rows->lastPage(),
+                'from' => $rows->firstItem() ?? 0,
+                'to' => $rows->lastItem() ?? 0,
             ],
+            'rows' => $rows,
             'columns' => $this->getColumns(),
             'filters' => [],
         ];
@@ -241,11 +248,75 @@ class WebsiteController extends Controller
     // DataGrid configuration
     // ─────────────────────────────────────────────────────────
 
-    private function getDataGridConfig(): array
+    private function getDatagridConfig(): array
     {
         return [
             'columns' => $this->getColumns(),
             'filters' => [],
+            'actions' => [],
+            'statusTabs' => [
+                [
+                    'key' => 'all',
+                    'label' => 'All',
+                    'value' => 'all',
+                    'icon' => 'ri-list-check',
+                    'color' => 'primary',
+                ],
+                [
+                    'key' => WebsiteStatus::Active->value,
+                    'label' => WebsiteStatus::Active->label(),
+                    'value' => WebsiteStatus::Active->value,
+                    'icon' => 'ri-checkbox-circle-line',
+                    'color' => 'success',
+                ],
+                [
+                    'key' => WebsiteStatus::Provisioning->value,
+                    'label' => WebsiteStatus::Provisioning->label(),
+                    'value' => WebsiteStatus::Provisioning->value,
+                    'icon' => 'ri-time-line',
+                    'color' => 'info',
+                ],
+                [
+                    'key' => WebsiteStatus::WaitingForDns->value,
+                    'label' => WebsiteStatus::WaitingForDns->label(),
+                    'value' => WebsiteStatus::WaitingForDns->value,
+                    'icon' => 'ri-hourglass-line',
+                    'color' => 'warning',
+                ],
+                [
+                    'key' => WebsiteStatus::Failed->value,
+                    'label' => WebsiteStatus::Failed->label(),
+                    'value' => WebsiteStatus::Failed->value,
+                    'icon' => 'ri-close-circle-line',
+                    'color' => 'danger',
+                ],
+                [
+                    'key' => WebsiteStatus::Suspended->value,
+                    'label' => WebsiteStatus::Suspended->label(),
+                    'value' => WebsiteStatus::Suspended->value,
+                    'icon' => 'ri-pause-circle-line',
+                    'color' => 'warning',
+                ],
+                [
+                    'key' => WebsiteStatus::Trash->value,
+                    'label' => WebsiteStatus::Trash->label(),
+                    'value' => WebsiteStatus::Trash->value,
+                    'icon' => 'ri-delete-bin-line',
+                    'color' => 'destructive',
+                ],
+            ],
+            'form' => [],
+            'settings' => [
+                'perPage' => 15,
+                'defaultSort' => 'created_at',
+                'defaultDirection' => 'desc',
+                'enableBulkActions' => false,
+                'enableExport' => false,
+                'hasNotes' => false,
+                'entityName' => 'website',
+                'entityPlural' => 'websites',
+                'statusField' => 'status',
+            ],
         ];
     }
 
@@ -259,39 +330,29 @@ class WebsiteController extends Controller
                 'key' => 'name',
                 'label' => 'Website',
                 'sortable' => true,
-                'searchable' => true,
-                'template' => 'agency_website_name',
                 'width' => '320px',
-                'mobilePrimary' => true,
-            ],
-            [
-                'key' => 'status',
-                'label' => 'Status',
-                'sortable' => true,
-                'template' => 'agency_website_status',
-                'width' => '120px',
             ],
             [
                 'key' => 'plan',
                 'label' => 'Plan',
-                'sortable' => false,
-                'template' => 'agency_website_plan',
-                'width' => '150px',
+                'width' => '140px',
+            ],
+            [
+                'key' => 'type_label',
+                'label' => 'Type',
+                'width' => '120px',
+            ],
+            [
+                'key' => 'status_label',
+                'label' => 'Status',
+                'sortable' => true,
+                'width' => '140px',
             ],
             [
                 'key' => 'created_at',
                 'label' => 'Created',
                 'sortable' => true,
-                'template' => 'date',
                 'width' => '130px',
-            ],
-            [
-                'key' => '_actions',
-                'label' => '',
-                'template' => 'agency_website_actions',
-                'type' => 'actions',
-                'width' => '120px',
-                'class' => 'text-end',
             ],
         ];
     }
@@ -313,6 +374,8 @@ class WebsiteController extends Controller
             'total' => array_sum($counts),
             'active' => $counts[WebsiteStatus::Active->value] ?? 0,
             'provisioning' => $counts[WebsiteStatus::Provisioning->value] ?? 0,
+            'waiting_for_dns' => $counts[WebsiteStatus::WaitingForDns->value] ?? 0,
+            'failed' => $counts[WebsiteStatus::Failed->value] ?? 0,
             'suspended' => $counts[WebsiteStatus::Suspended->value] ?? 0,
             'trash' => $counts[WebsiteStatus::Trash->value] ?? 0,
         ];

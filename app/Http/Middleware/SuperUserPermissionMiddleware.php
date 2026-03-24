@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Models\User;
 use Closure;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
@@ -16,7 +17,7 @@ class SuperUserPermissionMiddleware
      *
      * @param  Closure(Request):Response  $next
      */
-    public function handle(Request $request, Closure $next, ...$permissions): Response
+    public function handle(Request $request, Closure $next, ...$permissions): Response|RedirectResponse
     {
         $user = Auth::user();
 
@@ -35,6 +36,13 @@ class SuperUserPermissionMiddleware
                 $hasPermission = true;
                 break;
             }
+        }
+
+        if (! $hasPermission
+            && $permissions === ['view_dashboard']
+            && module_enabled('agency')
+            && $user->hasRole('customer')) {
+            return to_route('agency.websites.index');
         }
 
         abort_unless($hasPermission, 403, 'User does not have the right permissions.');

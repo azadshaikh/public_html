@@ -274,7 +274,12 @@ export function DatagridToolbar({
 
     return (
         <div className="flex flex-col gap-3 lg:gap-4">
-            <div className="flex min-w-0 flex-col gap-3 xl:flex-row xl:items-start xl:gap-4">
+            <div
+                className={cn(
+                    'flex min-w-0 flex-col gap-3 xl:flex-row xl:items-start xl:gap-4',
+                    tabs ? 'xl:justify-between' : 'xl:justify-end',
+                )}
+            >
                 {tabs ? (
                     <Tabs
                         value={activeTabValue}
@@ -312,9 +317,7 @@ export function DatagridToolbar({
                             ))}
                         </TabsList>
                     </Tabs>
-                ) : (
-                    <div />
-                )}
+                ) : null}
 
                 {hasVisibleFilters ? (
                     <div className="flex w-full min-w-0 flex-col gap-3 md:flex-row md:items-center md:justify-end xl:w-auto xl:max-w-[29rem] xl:flex-none">

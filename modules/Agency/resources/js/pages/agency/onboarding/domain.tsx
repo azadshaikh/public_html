@@ -1,19 +1,11 @@
 import { useForm } from '@inertiajs/react';
 import type { FormEvent } from 'react';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
-import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
+import { FieldError } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { cn } from '@/lib/utils';
-import AgencyOnboardingLayout from '../../../components/agency-onboarding-layout';
+import AgencyOnboardingMinimalLayout from '../../../components/agency-onboarding-minimal-layout';
 
 type AgencyOnboardingDomainPageProps = {
     savedDomain: string | null;
@@ -44,254 +36,184 @@ export default function AgencyOnboardingDomain({
         form.post(route('agency.onboarding.domain.store'));
     };
 
-    const selectedDomainPreview =
-        form.data.domain_type === 'subdomain'
-            ? form.data.subdomain !== ''
-                ? `${form.data.subdomain}.${freeSubdomain}`
-                : `your-site-name.${freeSubdomain}`
-            : form.data.custom_domain !== ''
-                ? form.data.custom_domain
-                : 'example.com';
-
     return (
-        <AgencyOnboardingLayout
-            title="Choose Your Domain"
-            description="Pick a free subdomain or connect a domain you already own."
-            currentStep="domain"
+        <AgencyOnboardingMinimalLayout
+            title="What's your website address?"
+            description="Pick a free subdomain to get started, or connect a domain you already own."
             backHref={route('agency.websites.index')}
         >
-            <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_18rem]">
-                <Card className="w-full rounded-[2rem] border-black/6 bg-white/92 shadow-[0_20px_80px_rgba(33,30,22,0.08)] dark:border-white/10 dark:bg-white/5 dark:shadow-none">
-                    <CardHeader className="space-y-3 border-b border-black/6 pb-6 dark:border-white/10">
-                        <Badge variant="info" className="w-fit rounded-full px-3 py-1">
-                            Domain Setup
-                        </Badge>
-                        <div className="space-y-2">
-                            <CardTitle className="text-2xl tracking-[-0.03em]">
-                                Website address
-                            </CardTitle>
-                            <CardDescription className="text-sm leading-6">
-                                Choose how the website should be reached now. You can change the
-                                connected domain later from website settings.
-                            </CardDescription>
-                        </div>
-                    </CardHeader>
-
-                    <CardContent className="pt-6">
-                        <form className="space-y-6" onSubmit={handleSubmit}>
-                            <FieldGroup>
-                                <Field data-invalid={form.errors.domain_type || undefined}>
-                                    <FieldLabel>Domain Type</FieldLabel>
-                                    <RadioGroup
-                                        value={form.data.domain_type}
-                                        onValueChange={(value: 'subdomain' | 'custom') =>
-                                            form.setData('domain_type', value)
-                                        }
-                                        className="gap-4"
+            <form className="space-y-6" onSubmit={handleSubmit}>
+                                <RadioGroup
+                                    value={form.data.domain_type}
+                                    onValueChange={(value: 'subdomain' | 'custom') =>
+                                        form.setData('domain_type', value)
+                                    }
+                                    className="gap-5"
+                                >
+                                    <label
+                                        className={cn(
+                                            'block rounded-[1.6rem] border bg-card p-6 transition-colors',
+                                            form.data.domain_type === 'subdomain'
+                                                ? 'border-foreground shadow-[inset_0_0_0_1px_theme(colors.foreground)]'
+                                                : 'border-border',
+                                        )}
                                     >
-                                        <label
-                                            className={cn(
-                                                'flex items-start gap-4 rounded-[1.5rem] border p-5 transition-colors',
-                                                form.data.domain_type === 'subdomain'
-                                                    ? 'border-primary bg-primary/5'
-                                                    : 'border-border bg-background',
-                                            )}
-                                        >
+                                        <div className="flex items-start gap-4">
                                             <RadioGroupItem value="subdomain" className="mt-1" />
-                                            <div className="space-y-1">
-                                                <div className="flex flex-wrap items-center gap-2">
-                                                    <p className="font-semibold">
+                                            <div className="min-w-0 flex-1 space-y-4">
+                                                <div className="space-y-1.5">
+                                                    <p className="text-xl font-medium tracking-[-0.02em]">
                                                         Use a free subdomain
                                                     </p>
-                                                    <Badge variant="success">
-                                                        Instant launch
-                                                    </Badge>
+                                                    <p className="text-base font-normal text-muted-foreground">
+                                                        Get started instantly with a free
+                                                        {' '}
+                                                        <span className="font-semibold text-foreground">
+                                                            .{freeSubdomain}
+                                                        </span>
+                                                        {' '}
+                                                        subdomain.
+                                                    </p>
                                                 </div>
-                                                <p className="text-sm leading-6 text-muted-foreground">
-                                                    Provision immediately on
-                                                    {' '}
-                                                    <span className="font-medium">
-                                                        .{freeSubdomain}
-                                                    </span>
-                                                    {' '}
-                                                    without touching any DNS settings.
-                                                </p>
-                                            </div>
-                                        </label>
 
-                                        <label
-                                            className={cn(
-                                                'flex items-start gap-4 rounded-[1.5rem] border p-5 transition-colors',
-                                                form.data.domain_type === 'custom'
-                                                    ? 'border-primary bg-primary/5'
-                                                    : 'border-border bg-background',
-                                            )}
-                                        >
-                                            <RadioGroupItem value="custom" className="mt-1" />
-                                            <div className="space-y-1">
-                                                <p className="font-semibold">Use my own domain</p>
-                                                <p className="text-sm leading-6 text-muted-foreground">
-                                                    Connect a domain you already manage and choose whether
-                                                    we handle DNS for you or you keep your current provider.
-                                                </p>
+                                                {form.data.domain_type === 'subdomain' ? (
+                                                    <div className="space-y-2">
+                                                        <div className="flex overflow-hidden rounded-xl border border-input bg-background">
+                                                            <Input
+                                                                id="subdomain"
+                                                                size="xl"
+                                                                className="border-0 shadow-none"
+                                                                value={form.data.subdomain}
+                                                                onChange={(event) =>
+                                                                    form.setData('subdomain', event.target.value)
+                                                                }
+                                                                placeholder="your-site-name"
+                                                            />
+                                                            <div className="flex h-11 shrink-0 items-center border-l border-input bg-muted px-4 text-sm font-normal text-muted-foreground">
+                                                                .{freeSubdomain}
+                                                            </div>
+                                                        </div>
+                                                        <FieldError>{form.errors.subdomain}</FieldError>
+                                                    </div>
+                                                ) : null}
                                             </div>
-                                        </label>
-                                    </RadioGroup>
-                                    <FieldError>{form.errors.domain_type}</FieldError>
-                                </Field>
-
-                                {form.data.domain_type === 'subdomain' ? (
-                                    <Field data-invalid={form.errors.subdomain || undefined}>
-                                        <FieldLabel htmlFor="subdomain">Subdomain</FieldLabel>
-                                        <div className="flex items-center rounded-2xl border bg-background">
-                                            <Input
-                                                id="subdomain"
-                                                className="border-0 shadow-none"
-                                                value={form.data.subdomain}
-                                                onChange={(event) =>
-                                                    form.setData('subdomain', event.target.value)
-                                                }
-                                                placeholder="your-site-name"
-                                            />
-                                            <span className="px-4 text-sm text-muted-foreground">
-                                                .{freeSubdomain}
-                                            </span>
                                         </div>
-                                        <FieldError>{form.errors.subdomain}</FieldError>
-                                    </Field>
-                                ) : (
-                                    <>
-                                        <Field data-invalid={form.errors.custom_domain || undefined}>
-                                            <FieldLabel htmlFor="custom_domain">
-                                                Custom Domain
-                                            </FieldLabel>
-                                            <Input
-                                                id="custom_domain"
-                                                value={form.data.custom_domain}
-                                                onChange={(event) =>
-                                                    form.setData('custom_domain', event.target.value)
-                                                }
-                                                placeholder="example.com"
-                                            />
-                                            <FieldError>{form.errors.custom_domain}</FieldError>
-                                        </Field>
+                                    </label>
 
-                                        <Field data-invalid={form.errors.dns_mode || undefined}>
-                                            <FieldLabel>DNS Handling</FieldLabel>
-                                            <RadioGroup
-                                                value={form.data.dns_mode}
-                                                onValueChange={(value: 'managed' | 'external') =>
-                                                    form.setData('dns_mode', value)
-                                                }
-                                                className="gap-4"
-                                            >
-                                                <label
-                                                    className={cn(
-                                                        'flex items-start gap-4 rounded-[1.5rem] border p-5 transition-colors',
-                                                        form.data.dns_mode === 'managed'
-                                                            ? 'border-primary bg-primary/5'
-                                                            : 'border-border bg-background',
-                                                    )}
-                                                >
-                                                    <RadioGroupItem
-                                                        value="managed"
-                                                        className="mt-1"
-                                                    />
-                                                    <div className="space-y-1">
-                                                        <p className="font-semibold">Managed DNS</p>
-                                                        <p className="text-sm leading-6 text-muted-foreground">
-                                                            Update nameservers once and let the platform
-                                                            manage DNS, SSL, and edge delivery for you.
-                                                        </p>
+                                    <label
+                                        className={cn(
+                                            'block rounded-[1.6rem] border bg-card p-6 transition-colors',
+                                            form.data.domain_type === 'custom'
+                                                ? 'border-foreground shadow-[inset_0_0_0_1px_theme(colors.foreground)]'
+                                                : 'border-border',
+                                        )}
+                                    >
+                                        <div className="flex items-start gap-4">
+                                            <RadioGroupItem value="custom" className="mt-1" />
+                                            <div className="min-w-0 flex-1 space-y-4">
+                                                <div className="space-y-1.5">
+                                                    <p className="text-xl font-medium tracking-[-0.02em]">
+                                                        I already have a domain
+                                                    </p>
+                                                    <p className="text-base font-normal text-muted-foreground">
+                                                        Use a domain you already own and registered elsewhere.
+                                                    </p>
+                                                </div>
+
+                                                {form.data.domain_type === 'custom' ? (
+                                                    <div className="space-y-5">
+                                                        <div className="space-y-2">
+                                                            <Input
+                                                                id="custom_domain"
+                                                                size="xl"
+                                                                value={form.data.custom_domain}
+                                                                onChange={(event) =>
+                                                                    form.setData('custom_domain', event.target.value)
+                                                                }
+                                                                placeholder="example.com"
+                                                            />
+                                                            <p className="text-sm font-normal text-muted-foreground">
+                                                                Enter your domain without http:// or www.
+                                                            </p>
+                                                            <FieldError>{form.errors.custom_domain}</FieldError>
+                                                        </div>
+
+                                                        <div className="space-y-3">
+                                                            <p className="text-base font-medium tracking-[-0.01em]">
+                                                                How should we handle DNS?
+                                                            </p>
+
+                                                            <RadioGroup
+                                                                value={form.data.dns_mode}
+                                                                onValueChange={(value: 'managed' | 'external') =>
+                                                                    form.setData('dns_mode', value)
+                                                                }
+                                                                className="gap-3"
+                                                            >
+                                                                <label
+                                                                    className={cn(
+                                                                        'block rounded-xl border bg-background p-5 transition-colors',
+                                                                        form.data.dns_mode === 'managed'
+                                                                            ? 'border-foreground shadow-[inset_0_0_0_1px_theme(colors.foreground)]'
+                                                                            : 'border-border',
+                                                                    )}
+                                                                >
+                                                                    <div className="flex items-start gap-3">
+                                                                        <RadioGroupItem value="managed" className="mt-1" />
+                                                                        <div className="space-y-1.5">
+                                                                                <p className="text-base font-medium">
+                                                                                We'll manage your DNS
+                                                                            </p>
+                                                                                <p className="text-sm font-normal text-muted-foreground">
+                                                                                Update your nameservers to ours. We handle DNS, SSL, and CDN automatically.
+                                                                            </p>
+                                                                        </div>
+                                                                    </div>
+                                                                </label>
+
+                                                                <label
+                                                                    className={cn(
+                                                                        'block rounded-xl border bg-background p-5 transition-colors',
+                                                                        form.data.dns_mode === 'external'
+                                                                            ? 'border-foreground shadow-[inset_0_0_0_1px_theme(colors.foreground)]'
+                                                                            : 'border-border',
+                                                                    )}
+                                                                >
+                                                                    <div className="flex items-start gap-3">
+                                                                        <RadioGroupItem value="external" className="mt-1" />
+                                                                        <div className="space-y-1.5">
+                                                                                <p className="text-base font-medium">
+                                                                                I'll manage DNS myself
+                                                                            </p>
+                                                                                <p className="text-sm font-normal text-muted-foreground">
+                                                                                Keep your current DNS provider. We'll give you records to add.
+                                                                            </p>
+                                                                        </div>
+                                                                    </div>
+                                                                </label>
+                                                            </RadioGroup>
+
+                                                            <FieldError>{form.errors.dns_mode}</FieldError>
+                                                        </div>
                                                     </div>
-                                                </label>
+                                                ) : null}
+                                            </div>
+                                        </div>
+                                    </label>
+                                </RadioGroup>
 
-                                                <label
-                                                    className={cn(
-                                                        'flex items-start gap-4 rounded-[1.5rem] border p-5 transition-colors',
-                                                        form.data.dns_mode === 'external'
-                                                            ? 'border-primary bg-primary/5'
-                                                            : 'border-border bg-background',
-                                                    )}
-                                                >
-                                                    <RadioGroupItem
-                                                        value="external"
-                                                        className="mt-1"
-                                                    />
-                                                    <div className="space-y-1">
-                                                        <p className="font-semibold">External DNS</p>
-                                                        <p className="text-sm leading-6 text-muted-foreground">
-                                                            Keep Cloudflare, GoDaddy, or another provider
-                                                            and add the required records manually later.
-                                                        </p>
-                                                    </div>
-                                                </label>
-                                            </RadioGroup>
-                                            <FieldError>{form.errors.dns_mode}</FieldError>
-                                        </Field>
-                                    </>
-                                )}
-                            </FieldGroup>
+                                <FieldError>{form.errors.domain_type}</FieldError>
 
-                            <div className="flex flex-col gap-3 border-t border-black/6 pt-5 sm:flex-row sm:items-center sm:justify-between dark:border-white/10">
-                                <p className="text-sm leading-6 text-muted-foreground">
-                                    You can revisit this choice later if the client’s domain plan
-                                    changes.
-                                </p>
+                                <div className="space-y-4 pt-2">
+                                    <Button type="submit" className="h-12 w-full text-base font-medium" disabled={form.processing}>
+                                        Continue
+                                    </Button>
 
-                                <Button type="submit" disabled={form.processing}>
-                                    Continue to Plans
-                                </Button>
-                            </div>
-                        </form>
-                    </CardContent>
-                </Card>
-
-                <div className="space-y-4">
-                    <Card className="rounded-[2rem] border-black/6 bg-white/88 dark:border-white/10 dark:bg-white/5">
-                        <CardHeader className="space-y-2">
-                            <CardTitle className="text-lg">Preview</CardTitle>
-                            <CardDescription>
-                                This is the address the new website will start with.
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="rounded-[1.5rem] border border-dashed border-primary/30 bg-primary/5 p-4">
-                                <p className="text-xs font-semibold tracking-[0.22em] text-muted-foreground uppercase">
-                                    Website URL
-                                </p>
-                                <p className="mt-2 break-all text-base font-semibold">
-                                    {selectedDomainPreview}
-                                </p>
-                            </div>
-
-                            <div className="space-y-3 text-sm leading-6 text-muted-foreground">
-                                <p>
-                                    Free subdomains are best when you want the fastest possible
-                                    launch.
-                                </p>
-                                <p>
-                                    Custom domains are best when the client already has an
-                                    established brand domain.
-                                </p>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card className="rounded-[2rem] border-black/6 bg-white/88 dark:border-white/10 dark:bg-white/5">
-                        <CardHeader className="space-y-2">
-                            <CardTitle className="text-lg">Included either way</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-3 text-sm leading-6 text-muted-foreground">
-                            <p>Provisioning, SSL, and launch progress are handled inside the flow.</p>
-                            <p>
-                                You do not need to decide hosting details here. That comes from the
-                                plan and platform setup automatically.
-                            </p>
-                        </CardContent>
-                    </Card>
-                </div>
-            </div>
-        </AgencyOnboardingLayout>
+                                    <p className="text-center text-sm text-muted-foreground">
+                                        You can change your domain later from settings.
+                                    </p>
+                                </div>
+            </form>
+        </AgencyOnboardingMinimalLayout>
     );
 }

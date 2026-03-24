@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Modules\Agency\Http\Controllers;
 
+use App\Models\Note;
 use App\Scaffold\ScaffoldController;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
@@ -221,7 +222,7 @@ class TicketController extends ScaffoldController
             'id' => $ticket->id,
             'subject' => $ticket->subject,
             'status' => $ticket->status,
-            'description_html' => clean((string) $ticket->description),
+            'description_html' => $this->sanitizeTicketHtml((string) $ticket->description),
             'created_at' => $ticket->created_at?->toIso8601String(),
             'updated_at' => $ticket->updated_at?->toIso8601String(),
             'attachments' => $this->serializeAttachments($ticket->attachments),
@@ -231,13 +232,28 @@ class TicketController extends ScaffoldController
                     'id' => $reply->id,
                     'author_name' => $reply->replyBy->name ?? 'User',
                     'is_staff' => $reply->reply_by !== auth()->id(),
-                    'content_html' => clean((string) $reply->content),
+                    'content_html' => $this->sanitizeTicketHtml((string) $reply->content),
                     'created_at' => $reply->created_at?->toIso8601String(),
                     'attachments' => $this->serializeAttachments($reply->attachments),
                 ])
                 ->values()
                 ->all(),
         ];
+    }
+
+    private function sanitizeTicketHtml(string $content): string
+    {
+        $sanitized = Note::sanitizeContent($content);
+
+        if ($sanitized === '') {
+            return '<p></p>';
+        }
+
+        if (! preg_match('/<[^>]+>/', $sanitized)) {
+            return nl2br(e($sanitized));
+        }
+
+        return $sanitized;
     }
 
     private function serializeAttachments(mixed $attachments): array

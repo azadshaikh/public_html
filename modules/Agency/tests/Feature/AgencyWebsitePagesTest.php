@@ -76,7 +76,8 @@ class AgencyWebsitePagesTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page): Assert => $page
                 ->component('agency/websites/index')
-                ->where('websites.0.name', 'Example Site')
+                ->where('rows.data.0.name', 'Example Site')
+                ->where('config.settings.entityPlural', 'websites')
                 ->where('filters.status', 'all'));
     }
 
@@ -92,7 +93,7 @@ class AgencyWebsitePagesTest extends TestCase
             ->get(route('agency.websites.index'))
             ->assertOk()
             ->assertJsonPath('component', 'agency/websites/index')
-            ->assertJsonPath('props.websites.0.name', 'Example Site')
+            ->assertJsonPath('props.rows.data.0.name', 'Example Site')
             ->assertJsonMissingPath('status');
     }
 

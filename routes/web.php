@@ -78,7 +78,9 @@ Route::prefix($adminPrefix)->group(function (): void {
     // --- Protected Admin Routes (Authentication Required) ---
     Route::middleware(['auth', 'user.status', 'verified', 'profile.completed'])->group(function (): void {
         // Dashboard
-        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+        Route::get('/dashboard', [DashboardController::class, 'index'])
+            ->middleware('permission:view_dashboard')
+            ->name('dashboard');
 
         Route::group(['as' => 'app.'], function (): void {
             // --- Ajax Routes ---

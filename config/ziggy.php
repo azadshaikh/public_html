@@ -66,6 +66,11 @@ return [
             'app.ajax.*',
             'cms.*',
             'cache.clear',
+            'agency.onboarding.*',
+            'agency.websites.*',
+            'agency.domains.*',
+            'agency.billing.*',
+            'agency.tickets.*',
         ],
 
         /*
