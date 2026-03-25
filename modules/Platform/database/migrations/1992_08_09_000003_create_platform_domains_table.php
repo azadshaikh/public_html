@@ -21,12 +21,17 @@ return new class extends Migration
             $table->string('type')->nullable();
 
             // Ownership
-            $table->foreignId('customer_id')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('agency_id')->nullable()->constrained('platform_agencies')->nullOnDelete();
 
             // DNS configuration
             $table->string('dns_provider', 255)->nullable()->comment('Cloudflare, Bunny, etc.');
             $table->string('dns_zone_id', 255)->nullable();
+            $table->string('dns_mode', 30)->nullable();
+            $table->string('dns_status', 30)->default('pending');
+            $table->timestamp('dns_verified_at')->nullable();
+            $table->string('ssl_status', 30)->default('pending');
+            $table->boolean('ssl_auto_renew')->default(true);
+            $table->unsignedBigInteger('acme_server_id')->nullable()->comment('FK added in platform_servers migration');
             $table->string('name_server_1', 255)->nullable();
             $table->string('name_server_2', 255)->nullable();
             $table->string('name_server_3', 255)->nullable();
@@ -54,8 +59,10 @@ return new class extends Migration
             // Indexes
             $table->index('name');
             $table->index('tld_id');
-            $table->index('customer_id');
             $table->index('agency_id');
+            $table->index('dns_mode');
+            $table->index('dns_status');
+            $table->index('ssl_status');
             $table->index('status');
             $table->index('expiry_date');
 

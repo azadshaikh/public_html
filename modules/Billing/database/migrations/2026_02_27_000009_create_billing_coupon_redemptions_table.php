@@ -27,6 +27,7 @@ return new class extends Migration
 
             // Indexes
             $table->index(['coupon_id', 'customer_id']);
+            $table->unique(['coupon_id', 'order_id'], 'billing_coupon_redemptions_coupon_order_unique');
         });
     }
 

@@ -47,6 +47,8 @@ return new class extends Migration
             $table->string('provisioning_status', 30)->default('pending')->comment('pending|provisioning|ready|failed');
             $table->string('scripts_version', 50)->nullable()->comment('Deployed Astero scripts version');
             $table->timestamp('scripts_updated_at')->nullable()->comment('When scripts were last updated');
+            $table->boolean('acme_configured')->default(false);
+            $table->string('acme_email')->nullable();
             $table->json('metadata')->nullable()->comment('Server specs: cpu, ram, storage, os, versions');
 
             // Audit fields
@@ -72,6 +74,11 @@ return new class extends Migration
             $table->foreign('updated_by')->references('id')->on('users')->onDelete('set null');
             $table->foreign('deleted_by')->references('id')->on('users')->onDelete('set null');
         });
+
+        // Deferred FK: platform_domains.acme_server_id → platform_servers (domains created before servers)
+        Schema::table('platform_domains', function (Blueprint $table): void {
+            $table->foreign('acme_server_id')->references('id')->on('platform_servers')->onDelete('set null');
+        });
     }
 
     /**
@@ -79,6 +86,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::table('platform_domains', function (Blueprint $table): void {
+            $table->dropForeign(['acme_server_id']);
+        });
+
         Schema::dropIfExists('platform_servers');
     }
 };

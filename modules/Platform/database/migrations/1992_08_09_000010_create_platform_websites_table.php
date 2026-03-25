@@ -26,6 +26,7 @@ return new class extends Migration
             // Domain configuration
             $table->foreignId('domain_id')->nullable()->constrained('platform_domains')->nullOnDelete();
             $table->string('domain')->nullable();
+            $table->string('dns_mode', 30)->nullable();
             $table->foreignId('ssl_secret_id')->nullable()->constrained('platform_secrets')->nullOnDelete();
 
             // Infrastructure
@@ -100,6 +101,7 @@ return new class extends Migration
             // Indexes
             $table->index('uid');
             $table->index('domain');
+            $table->index('dns_mode');
             $table->index('status');
             $table->index('type');
             $table->index('plan_tier');

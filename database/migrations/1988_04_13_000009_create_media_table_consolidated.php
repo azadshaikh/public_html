@@ -49,7 +49,7 @@ return new class extends Migration
             $table->enum('status', ['inactive', 'active', 'trash'])->default('active');
 
             // Audit fields
-            $table->unsignedBigInteger('created_by')->nullable()->default(1);
+            $table->unsignedBigInteger('created_by')->nullable()->default(null);
             $table->unsignedBigInteger('updated_by')->nullable();
             $table->unsignedBigInteger('deleted_by')->nullable();
 
