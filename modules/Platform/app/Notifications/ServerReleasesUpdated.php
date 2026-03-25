@@ -2,9 +2,7 @@
 
 namespace Modules\Platform\Notifications;
 
-use Illuminate\Notifications\Notification;
-
-class ServerReleasesUpdated extends Notification
+class ServerReleasesUpdated extends PlatformNotification
 {
     /**
      * @var string
@@ -46,19 +44,16 @@ class ServerReleasesUpdated extends Notification
 
         $text = 'Server releases updated | <strong>'.$server->name.'</strong>'.$versionSuffix.$warningSuffix;
 
-        $url_backend = route('platform.servers.show', $server->id);
+        $urlBackend = route('platform.servers.show', $server->id);
 
-        return [
-            'title' => 'Server Releases Updated!',
-            'module' => 'Platform',
-            'type' => 'update',
-            'category' => 'server',
-            'priority' => 'medium',
-            'icon' => 'ri-download-cloud-line',
-            'text' => $text,
-            'url_backend' => $url_backend,
-            'url_frontend' => '',
-        ];
+        return $this->payload('Server Releases Updated!', $text, 'update', 'server', 'medium', 'ri-download-cloud-line', $urlBackend, null, 'View server')
+            ->extra([
+                'server_id' => $server->id,
+                'server_name' => $server->name,
+                'release_version' => $this->releaseVersion,
+                'sync_warning' => $this->syncWarning,
+            ])
+            ->toArray();
     }
 
     /**
@@ -66,6 +61,6 @@ class ServerReleasesUpdated extends Notification
      */
     public function toArray($notifiable): array
     {
-        return [];
+        return $this->toDatabase($notifiable);
     }
 }

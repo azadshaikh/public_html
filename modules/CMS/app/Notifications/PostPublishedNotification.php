@@ -6,8 +6,7 @@ namespace Modules\CMS\Notifications;
 
 use App\Enums\NotificationCategory;
 use App\Enums\NotificationPriority;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
+use App\Notifications\Support\NotificationPayload;
 use Illuminate\Notifications\Notification;
 use Modules\CMS\Models\CmsPost;
 
@@ -16,10 +15,8 @@ use Modules\CMS\Models\CmsPost;
  *
  * Notification sent to admins when a blog post is published.
  */
-class PostPublishedNotification extends Notification implements ShouldQueue
+class PostPublishedNotification extends Notification
 {
-    use Queueable;
-
     /**
      * Create a new notification instance.
      */
@@ -53,20 +50,35 @@ class PostPublishedNotification extends Notification implements ShouldQueue
             ? sprintf('The scheduled blog post "%s" has been automatically published.', $this->post->title)
             : sprintf('A new blog post "%s" has been published by %s.', $this->post->title, $this->post->createdBy?->name);
 
-        return [
-            'title' => $title,
-            'text' => $text,
-            'icon' => 'ri-article-line',
-            'url' => route('cms.posts.edit', $this->post->id),
-            'url_backend' => route('cms.posts.edit', $this->post->id),
-            'category' => NotificationCategory::Cms->value,
-            'priority' => NotificationPriority::Medium->value,
-            'module' => 'CMS',
-            'type' => 'post_published',
-            'post_id' => $this->post->id,
-            'post_title' => $this->post->title,
-            'was_scheduled' => $this->wasScheduled,
-        ];
+        $publicUrl = $this->publicPostUrl();
+
+        $payload = NotificationPayload::make($title, $text)
+            ->icon('ri-article-line')
+            ->category(NotificationCategory::Cms)
+            ->priority(NotificationPriority::Medium)
+            ->module('CMS')
+            ->type('post_published');
+
+        if ($publicUrl !== null) {
+            $payload = $payload
+                ->frontendLink($publicUrl, 'Read post')
+                ->extra([
+                    'url' => $publicUrl,
+                    'public_url' => $publicUrl,
+                ]);
+        }
+
+        if ($this->canEditPosts($notifiable)) {
+            $payload = $payload->backendLink(route('cms.posts.edit', $this->post->id), 'Edit post');
+        }
+
+        return $payload
+            ->extra([
+                'post_id' => $this->post->id,
+                'post_title' => $this->post->title,
+                'was_scheduled' => $this->wasScheduled,
+            ])
+            ->toArray();
     }
 
     /**
@@ -77,5 +89,31 @@ class PostPublishedNotification extends Notification implements ShouldQueue
     public function toArray(object $notifiable): array
     {
         return $this->toDatabase($notifiable);
+    }
+
+    private function publicPostUrl(): ?string
+    {
+        $permalink = trim((string) $this->post->permalink_url);
+
+        if ($permalink === '' || $permalink === '#') {
+            $fallbackSlug = trim((string) $this->post->slug);
+
+            if ($fallbackSlug === '') {
+                return null;
+            }
+
+            return url('/'.$fallbackSlug);
+        }
+
+        return url($permalink);
+    }
+
+    private function canEditPosts(object $notifiable): bool
+    {
+        if (! method_exists($notifiable, 'can')) {
+            return false;
+        }
+
+        return (bool) $notifiable->can('edit_posts');
     }
 }

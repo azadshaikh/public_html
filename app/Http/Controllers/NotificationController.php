@@ -69,7 +69,7 @@ class NotificationController extends Controller implements HasMiddleware
             'categoryOptions' => $this->notificationService->getCategoryOptions(),
             'priorityOptions' => $this->notificationService->getPriorityOptions(),
             'statusOptions' => $this->notificationService->getStatusOptions(),
-            'status' => session('status'),
+            'status' => session('status') ?? session('success'),
             'error' => session('error'),
         ]);
     }
@@ -106,7 +106,7 @@ class NotificationController extends Controller implements HasMiddleware
      */
     public function dropdown(Request $request): JsonResponse
     {
-        $notifications = $this->notificationService->getUnreadForDropdown($request->user());
+        $notifications = $this->notificationService->getRecentForDropdown($request->user());
         $count = $this->notificationService->getUnreadCount($request->user());
 
         return response()->json([
@@ -118,30 +118,23 @@ class NotificationController extends Controller implements HasMiddleware
     /**
      * Show a single notification.
      */
-    public function show(Request $request, Notification $notification): JsonResponse|RedirectResponse|View
+    public function show(Request $request, Notification $notification): JsonResponse|Response
     {
         // Ensure user owns this notification
         abort_unless($notification->belongsToUser($request->user()->id), 403, 'Unauthorized');
 
         // Mark as read when viewed
         $this->notificationService->markAsRead($notification);
+        $notification->refresh();
 
         if ($request->wantsJson()) {
             return response()->json([
-                'notification' => $notification->toDropdownArray(),
+                'notification' => $notification->toDetailArray(),
             ]);
         }
 
-        // Redirect to URL if exists and is not the notifications index
-        $notificationUrl = $notification->url;
-        $notificationsIndexUrl = route('app.notifications.index');
-
-        if ($notificationUrl && ! str_starts_with($notificationUrl, $notificationsIndexUrl)) {
-            return redirect($notificationUrl);
-        }
-
-        return view('app.notifications.show', [
-            'notification' => $notification,
+        return Inertia::render('notifications/show', [
+            'notification' => $notification->toDetailArray(),
         ]);
     }
 
@@ -152,7 +145,7 @@ class NotificationController extends Controller implements HasMiddleware
     {
         // Ensure user owns this notification
         if (! $notification->belongsToUser($request->user()->id)) {
-            if ($request->wantsJson()) {
+            if ($this->shouldReturnJson($request)) {
                 return response()->json(['error' => 'Unauthorized'], 403);
             }
 
@@ -161,7 +154,7 @@ class NotificationController extends Controller implements HasMiddleware
 
         $this->notificationService->markAsRead($notification);
 
-        if ($request->wantsJson()) {
+        if ($this->shouldReturnJson($request)) {
             return response()->json([
                 'status' => 1,
                 'type' => 'toast',
@@ -170,7 +163,7 @@ class NotificationController extends Controller implements HasMiddleware
         }
 
         return back()
-            ->with('success', __('notifications.notification_marked_read'));
+            ->with('status', __('notifications.notification_marked_read'));
     }
 
     /**
@@ -180,7 +173,7 @@ class NotificationController extends Controller implements HasMiddleware
     {
         // Ensure user owns this notification
         if (! $notification->belongsToUser($request->user()->id)) {
-            if ($request->wantsJson()) {
+            if ($this->shouldReturnJson($request)) {
                 return response()->json(['error' => 'Unauthorized'], 403);
             }
 
@@ -189,7 +182,7 @@ class NotificationController extends Controller implements HasMiddleware
 
         $this->notificationService->markAsUnread($notification);
 
-        if ($request->wantsJson()) {
+        if ($this->shouldReturnJson($request)) {
             return response()->json([
                 'status' => 1,
                 'type' => 'toast',
@@ -198,13 +191,13 @@ class NotificationController extends Controller implements HasMiddleware
         }
 
         return back()
-            ->with('success', __('notifications.notification_marked_unread'));
+            ->with('status', __('notifications.notification_marked_unread'));
     }
 
     /**
      * Mark multiple notifications as read.
      */
-    public function markMultipleAsRead(Request $request): JsonResponse
+    public function markMultipleAsRead(Request $request): JsonResponse|RedirectResponse
     {
         $request->validate([
             'ids' => ['required', 'array'],
@@ -215,6 +208,10 @@ class NotificationController extends Controller implements HasMiddleware
             $request->user(),
             $request->input('ids')
         );
+
+        if (! $this->shouldReturnJson($request)) {
+            return back()->with('status', $count.' notification(s) marked as read.');
+        }
 
         return response()->json([
             'status' => 1,
@@ -231,7 +228,7 @@ class NotificationController extends Controller implements HasMiddleware
     {
         $count = $this->notificationService->markAllAsRead($request->user());
 
-        if ($request->wantsJson()) {
+        if ($this->shouldReturnJson($request)) {
             return response()->json([
                 'status' => 1,
                 'type' => 'toast',
@@ -241,7 +238,7 @@ class NotificationController extends Controller implements HasMiddleware
         }
 
         return back()
-            ->with('success', __('notifications.all_notifications_marked_read'));
+            ->with('status', __('notifications.all_notifications_marked_read'));
     }
 
     /**
@@ -251,7 +248,7 @@ class NotificationController extends Controller implements HasMiddleware
     {
         // Ensure user owns this notification
         if (! $notification->belongsToUser($request->user()->id)) {
-            if ($request->wantsJson()) {
+            if ($this->shouldReturnJson($request)) {
                 return response()->json(['error' => 'Unauthorized'], 403);
             }
 
@@ -260,7 +257,7 @@ class NotificationController extends Controller implements HasMiddleware
 
         $this->notificationService->delete($notification);
 
-        if ($request->wantsJson()) {
+        if ($this->shouldReturnJson($request)) {
             return response()->json([
                 'status' => 1,
                 'type' => 'toast',
@@ -269,13 +266,13 @@ class NotificationController extends Controller implements HasMiddleware
         }
 
         return to_route('app.notifications.index')
-            ->with('success', __('notifications.notification_deleted'));
+            ->with('status', __('notifications.notification_deleted'));
     }
 
     /**
      * Delete multiple notifications.
      */
-    public function deleteMultiple(Request $request): JsonResponse
+    public function deleteMultiple(Request $request): JsonResponse|RedirectResponse
     {
         $request->validate([
             'ids' => ['required', 'array'],
@@ -286,6 +283,10 @@ class NotificationController extends Controller implements HasMiddleware
             $request->user(),
             $request->input('ids')
         );
+
+        if (! $this->shouldReturnJson($request)) {
+            return back()->with('status', $count.' notification(s) deleted.');
+        }
 
         return response()->json([
             'status' => 1,
@@ -302,7 +303,7 @@ class NotificationController extends Controller implements HasMiddleware
     {
         $count = $this->notificationService->deleteAllRead($request->user());
 
-        if ($request->wantsJson()) {
+        if ($this->shouldReturnJson($request)) {
             return response()->json([
                 'status' => 1,
                 'type' => 'toast',
@@ -312,7 +313,7 @@ class NotificationController extends Controller implements HasMiddleware
         }
 
         return back()
-            ->with('success', __('notifications.read_notifications_deleted'));
+            ->with('status', __('notifications.read_notifications_deleted'));
     }
 
     /**
@@ -412,6 +413,16 @@ class NotificationController extends Controller implements HasMiddleware
         ]);
 
         return to_route('app.notifications.preferences')
-            ->with('success', __('notifications.preferences_updated'));
+            ->with('status', __('notifications.preferences_updated'));
+    }
+
+    private function shouldReturnJson(Request $request): bool
+    {
+        return ! $this->isInertiaRequest($request) && $request->expectsJson();
+    }
+
+    private function isInertiaRequest(Request $request): bool
+    {
+        return $request->header('X-Inertia') === 'true';
     }
 }

@@ -2,9 +2,7 @@
 
 namespace Modules\Platform\Notifications;
 
-use Illuminate\Notifications\Notification;
-
-class WebsiteCreated extends Notification
+class WebsiteCreated extends PlatformNotification
 {
     /**
      * Create a new notification instance.
@@ -30,20 +28,15 @@ class WebsiteCreated extends Notification
 
         $text = 'New Website Setup completed | <strong>'.$websiteobj->domain.'</strong>';
 
-        $url_backend = route('platform.websites.show', $websiteobj->id);
-        $url_frontend = 'https://'.$websiteobj->domain;
+        $urlBackend = route('platform.websites.show', $websiteobj->id);
+        $urlFrontend = 'https://'.$websiteobj->domain;
 
-        return [
-            'title' => 'New Website Setup done!',
-            'module' => 'Platform',
-            'type' => 'created',
-            'category' => 'website',
-            'priority' => 'medium',
-            'icon' => 'ri-earth-line',
-            'text' => $text,
-            'url_backend' => $url_backend,
-            'url_frontend' => $url_frontend,
-        ];
+        return $this->payload('New Website Setup done!', $text, 'created', 'website', 'medium', 'ri-earth-line', $urlBackend, $urlFrontend, 'View website in app', 'Visit website')
+            ->extra([
+                'website_id' => $websiteobj->id,
+                'domain' => $websiteobj->domain,
+            ])
+            ->toArray();
     }
 
     /**
@@ -51,6 +44,6 @@ class WebsiteCreated extends Notification
      */
     public function toArray($notifiable): array
     {
-        return [];
+        return $this->toDatabase($notifiable);
     }
 }

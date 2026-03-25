@@ -6,6 +6,7 @@ namespace App\Notifications;
 
 use App\Enums\NotificationCategory;
 use App\Enums\NotificationPriority;
+use App\Notifications\Support\NotificationPayload;
 use App\Traits\IsMonitored;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -47,17 +48,18 @@ class BroadcastNotification extends Notification implements ShouldQueue
      */
     public function toDatabase(object $notifiable): array
     {
-        return [
-            'title' => $this->data['title'] ?? 'Announcement',
-            'text' => $this->data['text'] ?? $this->data['message'] ?? '',
-            'icon' => $this->data['icon'] ?? 'ri-broadcast-line',
-            'url' => $this->data['url'] ?? $this->data['url_backend'] ?? null,
-            'url_backend' => $this->data['url_backend'] ?? $this->data['url'] ?? null,
-            'category' => NotificationCategory::Broadcast->value,
-            'priority' => $this->data['priority'] ?? NotificationPriority::Medium->value,
-            'module' => 'System',
-            'type' => 'broadcast',
-        ];
+        return NotificationPayload::make(
+            (string) ($this->data['title'] ?? 'Announcement'),
+            (string) ($this->data['text'] ?? $this->data['message'] ?? ''),
+        )
+            ->icon((string) ($this->data['icon'] ?? 'ri-broadcast-line'))
+            ->category(NotificationCategory::Broadcast)
+            ->priority((string) ($this->data['priority'] ?? NotificationPriority::Medium->value))
+            ->module('System')
+            ->type('broadcast')
+            ->backendLink((string) ($this->data['url_backend'] ?? $this->data['url'] ?? ''), 'Open announcement')
+            ->links(is_array($this->data['links'] ?? null) ? $this->data['links'] : [])
+            ->toArray();
     }
 
     /**

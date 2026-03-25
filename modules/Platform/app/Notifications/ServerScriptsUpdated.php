@@ -2,9 +2,7 @@
 
 namespace Modules\Platform\Notifications;
 
-use Illuminate\Notifications\Notification;
-
-class ServerScriptsUpdated extends Notification
+class ServerScriptsUpdated extends PlatformNotification
 {
     /**
      * @var int
@@ -44,19 +42,16 @@ class ServerScriptsUpdated extends Notification
 
         $text = 'Server scripts updated | <strong>'.$server->name.'</strong> ('.$this->uploadedCount.' files)';
 
-        $url_backend = route('platform.servers.show', $server->id);
+        $urlBackend = route('platform.servers.show', $server->id);
 
-        return [
-            'title' => 'Server Scripts Updated!',
-            'module' => 'Platform',
-            'type' => 'update',
-            'category' => 'server',
-            'priority' => 'medium',
-            'icon' => 'ri-tools-line',
-            'text' => $text,
-            'url_backend' => $url_backend,
-            'url_frontend' => '',
-        ];
+        return $this->payload('Server Scripts Updated!', $text, 'update', 'server', 'medium', 'ri-tools-line', $urlBackend, null, 'View server')
+            ->extra([
+                'server_id' => $server->id,
+                'server_name' => $server->name,
+                'uploaded_count' => $this->uploadedCount,
+                'failed_count' => $this->failedCount,
+            ])
+            ->toArray();
     }
 
     /**
@@ -64,6 +59,6 @@ class ServerScriptsUpdated extends Notification
      */
     public function toArray($notifiable): array
     {
-        return [];
+        return $this->toDatabase($notifiable);
     }
 }

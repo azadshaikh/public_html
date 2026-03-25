@@ -38,6 +38,7 @@ use Modules\CMS\Services\ContentSanitizer;
  * @property-read string $message
  * @property-read string $icon
  * @property-read string|null $url
+ * @property-read array<int, array{label: string, href: string, external: bool}> $content_links
  * @property-read string $category_label
  * @property-read string $category_color
  * @property-read string $category_badge
@@ -90,6 +91,7 @@ class Notification extends Model
         'sanitized_message',
         'icon',
         'url',
+        'content_links',
         'category_label',
         'category_color',
         'category_badge',
@@ -155,22 +157,52 @@ class Notification extends Model
      */
     public function toDropdownArray(): array
     {
-        $priorityValue = $this->data['priority'] ?? $this->priority->value;
-        $priorityEnum = NotificationPriority::tryFrom((string) $priorityValue) ?? NotificationPriority::Medium;
-
         return [
             'id' => $this->id,
-            'title' => $this->title_text,
-            'message' => $this->sanitized_message,
+            'title_text' => $this->title_text,
+            'sanitized_message' => $this->sanitized_message,
             'icon' => $this->icon,
-            'url' => $this->url,
-            'category' => $this->category_label,
+            'category_label' => $this->category_label,
             'category_color' => $this->category_color,
-            'priority' => $priorityEnum->label(),
-            'priority_value' => $priorityEnum->value,
+            'priority' => $this->priority->value,
+            'priority_label' => $this->priority_label,
             'time_ago' => $this->getTimeAgo(),
             'is_read' => $this->is_read,
             'created_at' => $this->created_at->toISOString(),
+            'content_links' => $this->content_links,
+        ];
+    }
+
+    /**
+     * Convert to array for the notification detail view.
+     */
+    public function toDetailArray(): array
+    {
+        return [
+            'id' => $this->id,
+            'type' => $this->type,
+            'category' => $this->category->value,
+            'priority' => $this->priority->value,
+            'title' => $this->title,
+            'data' => $this->data,
+            'read_at' => $this->read_at?->toISOString(),
+            'created_at' => $this->created_at->toISOString(),
+            'updated_at' => $this->updated_at->toISOString(),
+            'is_read' => $this->is_read,
+            'title_text' => $this->title_text,
+            'message' => $this->message,
+            'sanitized_message' => $this->sanitized_message,
+            'icon' => $this->icon,
+            'url' => $this->url,
+            'url_backend' => $this->url_backend,
+            'url_frontend' => $this->url_frontend,
+            'content_links' => $this->content_links,
+            'category_label' => $this->category_label,
+            'category_color' => $this->category_color,
+            'category_badge' => $this->category_badge,
+            'priority_label' => $this->priority_label,
+            'priority_badge' => $this->priority_badge,
+            'time_ago' => $this->getTimeAgo(),
         ];
     }
 
@@ -401,6 +433,67 @@ class Notification extends Model
     }
 
     /**
+     * Get safe content links for rendering inside the notification body.
+     *
+     * @return array<int, array{label: string, href: string, external: bool}>
+     */
+    protected function getContentLinksAttribute(): array
+    {
+        $links = [];
+        $seen = [];
+
+        $rawLinks = $this->data['links'] ?? [];
+
+        if (is_array($rawLinks)) {
+            foreach ($rawLinks as $index => $rawLink) {
+                if (! is_array($rawLink)) {
+                    continue;
+                }
+
+                $href = $this->sanitizeUrl((string) ($rawLink['href'] ?? $rawLink['url'] ?? ''));
+
+                if ($href === null || isset($seen[$href])) {
+                    continue;
+                }
+
+                $label = $this->normalizeLinkLabel(
+                    $rawLink['label'] ?? null,
+                    'Open link '.((int) $index + 1)
+                );
+
+                $links[] = [
+                    'label' => $label,
+                    'href' => $href,
+                    'external' => $this->isExternalUrl($href),
+                ];
+
+                $seen[$href] = true;
+            }
+        }
+
+        foreach ([
+            ['href' => $this->url_backend, 'label' => 'Open related item'],
+            ['href' => $this->url_frontend, 'label' => 'Open external page'],
+        ] as $fallbackLink) {
+            $href = $fallbackLink['href'];
+
+            if ($href === null || isset($seen[$href])) {
+                continue;
+            }
+
+            $links[] = [
+                'label' => $fallbackLink['label'],
+                'href' => $href,
+                'external' => $this->isExternalUrl($href),
+            ];
+
+            $seen[$href] = true;
+        }
+
+        return $links;
+    }
+
+    /**
      * Get the category label.
      */
     protected function getCategoryLabelAttribute(): string
@@ -456,5 +549,21 @@ class Notification extends Model
         }
 
         return $url;
+    }
+
+    private function normalizeLinkLabel(mixed $label, string $fallback): string
+    {
+        $normalized = trim((string) $label);
+
+        if ($normalized === '') {
+            return $fallback;
+        }
+
+        return $normalized;
+    }
+
+    private function isExternalUrl(string $url): bool
+    {
+        return preg_match('/^https?:\/\//i', $url) === 1;
     }
 }

@@ -2,9 +2,7 @@
 
 namespace Modules\Platform\Notifications;
 
-use Illuminate\Notifications\Notification;
-
-class WebsiteDeletionFailed extends Notification
+class WebsiteDeletionFailed extends PlatformNotification
 {
     /**
      * Create a new notification instance.
@@ -31,20 +29,14 @@ class WebsiteDeletionFailed extends Notification
             $text .= ' | Error: '.$this->error_message;
         }
 
-        $url_backend = route('platform.websites.index', 'all');
-        $url_frontend = '';
+        $urlBackend = route('platform.websites.index', 'all');
 
-        return [
-            'title' => 'Website Deletion Failed!',
-            'module' => 'Platform',
-            'type' => 'deletion_failed',
-            'category' => 'website',
-            'priority' => 'high',
-            'icon' => 'ri-error-warning-line',
-            'text' => $text,
-            'url_backend' => $url_backend,
-            'url_frontend' => $url_frontend,
-        ];
+        return $this->payload('Website Deletion Failed!', $text, 'deletion_failed', 'website', 'high', 'ri-error-warning-line', $urlBackend, null, 'View websites')
+            ->extra([
+                'domain' => $this->domain,
+                'error_message' => $this->error_message,
+            ])
+            ->toArray();
     }
 
     /**
@@ -52,6 +44,6 @@ class WebsiteDeletionFailed extends Notification
      */
     public function toArray($notifiable): array
     {
-        return [];
+        return $this->toDatabase($notifiable);
     }
 }

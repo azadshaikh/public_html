@@ -2,9 +2,7 @@
 
 namespace Modules\Platform\Notifications;
 
-use Illuminate\Notifications\Notification;
-
-class WebsiteUpdateFailed extends Notification
+class WebsiteUpdateFailed extends PlatformNotification
 {
     /**
      * Create a new notification instance.
@@ -30,20 +28,15 @@ class WebsiteUpdateFailed extends Notification
 
         $text = 'Website updation failed | <strong>'.$websiteobj->domain.'</strong>';
 
-        $url_backend = route('platform.websites.show', $websiteobj->id);
-        $url_frontend = 'https://'.$websiteobj->domain;
+        $urlBackend = route('platform.websites.show', $websiteobj->id);
+        $urlFrontend = 'https://'.$websiteobj->domain;
 
-        return [
-            'title' => 'Website Update Failed!',
-            'module' => 'Platform',
-            'type' => 'update_failed',
-            'category' => 'website',
-            'priority' => 'high',
-            'icon' => 'ri-error-warning-line',
-            'text' => $text,
-            'url_backend' => $url_backend,
-            'url_frontend' => $url_frontend,
-        ];
+        return $this->payload('Website Update Failed!', $text, 'update_failed', 'website', 'high', 'ri-error-warning-line', $urlBackend, $urlFrontend, 'View website in app', 'Visit website')
+            ->extra([
+                'website_id' => $websiteobj->id,
+                'domain' => $websiteobj->domain,
+            ])
+            ->toArray();
     }
 
     /**
@@ -51,6 +44,6 @@ class WebsiteUpdateFailed extends Notification
      */
     public function toArray($notifiable): array
     {
-        return [];
+        return $this->toDatabase($notifiable);
     }
 }

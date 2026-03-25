@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Notifications;
 
+use App\Notifications\Support\NotificationPayload;
 use Illuminate\Notifications\Notification;
 
 class QueueFailureAlert extends Notification
@@ -32,16 +33,22 @@ class QueueFailureAlert extends Notification
             'queue' => $this->queue,
         ]);
 
-        return [
-            'title' => 'Queue Failures: '.$this->queue,
-            'module' => 'QueueMonitor',
-            'type' => 'queue_failure_alert',
-            'category' => 'system',
-            'priority' => 'high',
-            'icon' => 'ri-error-warning-line',
-            'text' => sprintf('<strong>%d</strong> job(s) failed in the <strong>%s</strong> queue within the last %d minutes.', $this->failureCount, $this->queue, $this->windowMinutes),
-            'url_backend' => $url,
-        ];
+        return NotificationPayload::make(
+            'Queue Failures: '.$this->queue,
+            sprintf(
+                '<strong>%d</strong> job(s) failed in the <strong>%s</strong> queue within the last %d minutes.',
+                $this->failureCount,
+                $this->queue,
+                $this->windowMinutes,
+            ),
+        )
+            ->module('QueueMonitor')
+            ->type('queue_failure_alert')
+            ->category('system')
+            ->priority('high')
+            ->icon('ri-error-warning-line')
+            ->backendLink($url, 'Open queue monitor')
+            ->toArray();
     }
 
     /**
@@ -49,6 +56,6 @@ class QueueFailureAlert extends Notification
      */
     public function toArray(mixed $notifiable): array
     {
-        return [];
+        return $this->toDatabase($notifiable);
     }
 }

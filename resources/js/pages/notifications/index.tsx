@@ -10,7 +10,7 @@ import {
     Settings2Icon,
     Trash2Icon,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Datagrid } from '@/components/datagrid/datagrid';
 import type {
     DatagridAction,
@@ -23,6 +23,7 @@ import { ResourceFeedbackAlerts } from '@/components/resource/resource-feedback-
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
+import { usePageVisibility } from '@/hooks/use-page-visibility';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import type { BreadcrumbItem } from '@/types';
@@ -31,6 +32,8 @@ import type {
     NotificationsIndexPageProps,
 } from '@/types/notification';
 import type { BadgeVariant } from '@/types/ui';
+
+const INBOX_POLL_INTERVAL_MS = 30_000;
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: route('dashboard') },
@@ -53,6 +56,13 @@ const CATEGORY_VARIANT: Record<string, BadgeVariant> = {
 
 type NotificationsActionDialog = 'mark-all-read' | 'delete-read' | null;
 
+function notificationPreview(notification: NotificationListItem): string {
+    return notification.sanitized_message
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
 function formatNotificationDate(value: string): string {
     return new Date(value).toLocaleDateString(undefined, {
         month: 'short',
@@ -71,6 +81,42 @@ export default function NotificationsIndex({
     status,
     error,
 }: NotificationsIndexPageProps) {
+    const isPageVisible = usePageVisibility();
+    const [dialog, setDialog] = useState<NotificationsActionDialog>(null);
+
+    useEffect(() => {
+        if (!isPageVisible) {
+            return;
+        }
+
+        let active = true;
+        let timeoutId: number | null = null;
+
+        const scheduleNextPoll = () => {
+            timeoutId = window.setTimeout(() => {
+                router.reload({
+                    only: ['notifications', 'stats'],
+                    preserveState: true,
+                    preserveScroll: true,
+                });
+
+                if (active) {
+                    scheduleNextPoll();
+                }
+            }, INBOX_POLL_INTERVAL_MS);
+        };
+
+        scheduleNextPoll();
+
+        return () => {
+            active = false;
+
+            if (timeoutId !== null) {
+                window.clearTimeout(timeoutId);
+            }
+        };
+    }, [isPageVisible]);
+
     const handleMarkMultipleAsRead = (
         selectedItems: NotificationListItem[],
         clearSelection: () => void,
@@ -84,6 +130,7 @@ export default function NotificationsIndex({
             { ids: selectedItems.map((item) => item.id) },
             {
                 preserveScroll: true,
+                preserveState: true,
                 onSuccess: () => clearSelection(),
             },
         );
@@ -102,6 +149,7 @@ export default function NotificationsIndex({
             { ids: selectedItems.map((item) => item.id) },
             {
                 preserveScroll: true,
+                preserveState: true,
                 onSuccess: () => clearSelection(),
             },
         );
@@ -184,7 +232,10 @@ export default function NotificationsIndex({
             header: 'Notification',
             sortable: false,
             cell: (notification) => (
-                <div className="flex min-w-0 flex-col gap-0.5">
+                <Link
+                    href={route('app.notifications.show', notification.id)}
+                    className="flex min-w-0 w-full flex-col gap-0.5 text-left"
+                >
                     <span
                         className={cn(
                             'text-sm',
@@ -197,10 +248,10 @@ export default function NotificationsIndex({
                     </span>
                     {notification.sanitized_message ? (
                         <span className="line-clamp-1 text-xs text-muted-foreground">
-                            {notification.sanitized_message}
+                            {notificationPreview(notification)}
                         </span>
                     ) : null}
-                </div>
+                </Link>
             ),
         },
         {
@@ -238,13 +289,11 @@ export default function NotificationsIndex({
     ): DatagridAction[] => {
         const actions: DatagridAction[] = [];
 
-        if (notification.url) {
-            actions.push({
-                label: 'Open',
-                href: route('app.notifications.show', notification.id),
-                icon: <MailOpenIcon />,
-            });
-        }
+        actions.push({
+            label: 'Open full page',
+            icon: <MailOpenIcon />,
+            href: route('app.notifications.show', notification.id),
+        });
 
         if (notification.is_read) {
             actions.push({
@@ -254,7 +303,10 @@ export default function NotificationsIndex({
                     router.post(
                         route('app.notifications.mark-unread', notification.id),
                         {},
-                        { preserveScroll: true },
+                        {
+                            preserveScroll: true,
+                            preserveState: true,
+                        },
                     );
                 },
             });
@@ -266,7 +318,10 @@ export default function NotificationsIndex({
                     router.post(
                         route('app.notifications.mark-read', notification.id),
                         {},
-                        { preserveScroll: true },
+                        {
+                            preserveScroll: true,
+                            preserveState: true,
+                        },
                     );
                 },
             });
@@ -301,8 +356,6 @@ export default function NotificationsIndex({
             onSelect: (rows, clear) => handleDeleteMultiple(rows, clear),
         },
     ];
-
-    const [dialog, setDialog] = useState<NotificationsActionDialog>(null);
 
     return (
         <AppLayout
@@ -371,7 +424,7 @@ export default function NotificationsIndex({
                             'Try a different search or filter, or come back later when new activity arrives.',
                     }}
                     title="Inbox"
-                    description="Search, filter, and act on notifications without leaving the page."
+                    description="Search, filter, and open notifications from one clean list."
                     summary={`${stats.total.toLocaleString()} total notifications · ${stats.unread.toLocaleString()} unread`}
                     renderCardHeader={(notification) => (
                         <div className="flex items-center justify-between gap-3">
@@ -401,8 +454,11 @@ export default function NotificationsIndex({
                         </div>
                     )}
                     renderCard={(notification) => (
-                        <div className="flex flex-col gap-3">
-                            <div className="space-y-1">
+                        <Link
+                            href={route('app.notifications.show', notification.id)}
+                            className="flex w-full flex-col gap-3 text-left"
+                        >
+                            <div className="flex flex-col gap-1">
                                 <span
                                     className={cn(
                                         'text-sm',
@@ -415,16 +471,14 @@ export default function NotificationsIndex({
                                 </span>
                                 {notification.sanitized_message ? (
                                     <p className="line-clamp-3 text-xs leading-5 text-muted-foreground">
-                                        {notification.sanitized_message}
+                                        {notificationPreview(notification)}
                                     </p>
                                 ) : null}
                             </div>
                             <div className="text-xs text-muted-foreground">
-                                {formatNotificationDate(
-                                    notification.created_at,
-                                )}
+                                {formatNotificationDate(notification.created_at)}
                             </div>
-                        </div>
+                        </Link>
                     )}
                     cardGridClassName="grid-cols-1"
                 />
@@ -466,6 +520,7 @@ export default function NotificationsIndex({
                             route('app.notifications.delete-all-read'),
                             {
                                 preserveScroll: true,
+                                preserveState: true,
                             },
                         );
                     }
@@ -476,6 +531,7 @@ export default function NotificationsIndex({
                             {},
                             {
                                 preserveScroll: true,
+                                preserveState: true,
                             },
                         );
                     }

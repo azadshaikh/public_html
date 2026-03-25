@@ -2,9 +2,7 @@
 
 namespace Modules\Platform\Notifications;
 
-use Illuminate\Notifications\Notification;
-
-class WebsiteUpdated extends Notification
+class WebsiteUpdated extends PlatformNotification
 {
     /**
      * Create a new notification instance.
@@ -30,20 +28,15 @@ class WebsiteUpdated extends Notification
 
         $text = 'Website updation completed | <strong>'.$websiteobj->domain.'</strong>';
 
-        $url_backend = route('platform.websites.show', $websiteobj->id);
-        $url_frontend = 'https://'.$websiteobj->domain;
+        $urlBackend = route('platform.websites.show', $websiteobj->id);
+        $urlFrontend = 'https://'.$websiteobj->domain;
 
-        return [
-            'title' => 'Website Update done!',
-            'module' => 'Platform',
-            'type' => 'updated',
-            'category' => 'website',
-            'priority' => 'low',
-            'icon' => 'ri-loop-right-line',
-            'text' => $text,
-            'url_backend' => $url_backend,
-            'url_frontend' => $url_frontend,
-        ];
+        return $this->payload('Website Update done!', $text, 'updated', 'website', 'low', 'ri-loop-right-line', $urlBackend, $urlFrontend, 'View website in app', 'Visit website')
+            ->extra([
+                'website_id' => $websiteobj->id,
+                'domain' => $websiteobj->domain,
+            ])
+            ->toArray();
     }
 
     /**
@@ -51,6 +44,6 @@ class WebsiteUpdated extends Notification
      */
     public function toArray($notifiable): array
     {
-        return [];
+        return $this->toDatabase($notifiable);
     }
 }

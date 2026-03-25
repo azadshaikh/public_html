@@ -2,14 +2,14 @@
 
 namespace Modules\CMS\Console;
 
+use App\Enums\Status;
 use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
+use Modules\CMS\Jobs\SendPostPublishedNotificationsJob;
 use Modules\CMS\Models\CmsPost;
-use Modules\CMS\Notifications\PostPublishedNotification;
 
 class PublishScheduledPostsCommand extends Command
 {
@@ -94,7 +94,7 @@ class PublishScheduledPostsCommand extends Command
         // Send notifications for published blog posts
         $publishedPosts = $scheduledItems->where('type', 'post');
         if ($publishedPosts->isNotEmpty()) {
-            $this->notifyAdminsOfScheduledPosts($publishedPosts);
+            $this->notifyUsersOfScheduledPosts($publishedPosts);
         }
 
         $this->info(sprintf('✓ Successfully published %d item(s).', $updatedCount));
@@ -103,32 +103,24 @@ class PublishScheduledPostsCommand extends Command
     }
 
     /**
-     * Notify admins about scheduled posts that were just published.
+     * Notify users about scheduled posts that were just published.
      *
      * @param  Collection<int, CmsPost>  $posts
      */
-    protected function notifyAdminsOfScheduledPosts(Collection $posts): void
+    protected function notifyUsersOfScheduledPosts(Collection $posts): void
     {
-        // Get all super users and administrators
-        $admins = User::query()->whereHas('roles', function ($query): void {
-            $query->whereIn('name', ['super_user', 'administrator']);
-        })
-            ->where('notifications_enabled', true)
-            ->get();
+        $activeUserCount = User::query()
+            ->where('status', Status::ACTIVE)
+            ->count();
 
-        if ($admins->isEmpty()) {
+        if ($activeUserCount === 0) {
             return;
         }
 
         foreach ($posts as $post) {
-            // Exclude the post author from notifications
-            $recipients = $admins->where('id', '!=', $post->created_by);
-
-            if ($recipients->isNotEmpty()) {
-                Notification::send($recipients, new PostPublishedNotification($post, wasScheduled: true));
-            }
+            SendPostPublishedNotificationsJob::dispatch($post->id, true);
         }
 
-        $this->info(sprintf('  → Sent notifications to %s admin(s) for %d post(s).', $admins->count(), $posts->count()));
+        $this->info(sprintf('  → Queued notifications for %s active user(s) across %d post(s).', $activeUserCount, $posts->count()));
     }
 }

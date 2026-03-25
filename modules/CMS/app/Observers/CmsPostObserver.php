@@ -2,11 +2,11 @@
 
 namespace Modules\CMS\Observers;
 
+use App\Enums\Status;
 use App\Models\User;
 use App\Support\CacheInvalidation;
-use Illuminate\Support\Facades\Notification;
+use Modules\CMS\Jobs\SendPostPublishedNotificationsJob;
 use Modules\CMS\Models\CmsPost;
-use Modules\CMS\Notifications\PostPublishedNotification;
 use Modules\CMS\Services\MenuUrlService;
 
 class CmsPostObserver
@@ -23,6 +23,10 @@ class CmsPostObserver
     public function created(CmsPost $cmspost): void
     {
         $this->invalidateFrontendCaches($cmspost);
+
+        if ($cmspost->type === 'post' && $cmspost->status === 'published') {
+            $this->notifyUsersOfPublishedPost($cmspost, wasScheduled: false);
+        }
     }
 
     /**
@@ -39,7 +43,7 @@ class CmsPostObserver
             $newStatus = $cmspost->status;
 
             if ($newStatus === 'published' && $oldStatus !== 'published') {
-                $this->notifyAdminsOfPublishedPost($cmspost, wasScheduled: false);
+                $this->notifyUsersOfPublishedPost($cmspost, wasScheduled: false);
             }
         }
 
@@ -110,22 +114,14 @@ class CmsPostObserver
     }
 
     /**
-     * Notify admins and super users when a post is published.
+     * Notify users when a post is published.
      */
-    public function notifyAdminsOfPublishedPost(CmsPost $post, bool $wasScheduled = false): void
+    public function notifyUsersOfPublishedPost(CmsPost $post, bool $wasScheduled = false): void
     {
-        // Get all super users and administrators
-        $admins = User::query()->whereHas('roles', function ($query): void {
-            $query->whereIn('name', ['super_user', 'administrator']);
-        })
-            ->where('notifications_enabled', true)
-            ->where('id', '!=', $post->created_by) // Don't notify the author
-            ->get();
-
-        if ($admins->isEmpty()) {
+        if (! User::query()->where('status', Status::ACTIVE)->exists()) {
             return;
         }
 
-        Notification::send($admins, new PostPublishedNotification($post, $wasScheduled));
+        SendPostPublishedNotificationsJob::dispatch($post->id, $wasScheduled);
     }
 }

@@ -1,6 +1,6 @@
 import { usePage } from '@inertiajs/react';
-import { BellIcon } from 'lucide-react';
 import { AppThemeToggle } from '@/components/app-theme-toggle';
+import { NotificationPopover } from '@/components/notifications/notification-popover';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,7 +14,7 @@ import { useInitials } from '@/hooks/use-initials';
 import type { AuthenticatedSharedData } from '@/types';
 
 export function AppTopbar() {
-    const { auth } = usePage<AuthenticatedSharedData>().props;
+    const { auth, notifications } = usePage<AuthenticatedSharedData>().props;
     const getInitials = useInitials();
 
     return (
@@ -25,15 +25,9 @@ export function AppTopbar() {
                 </div>
 
                 <div className="flex items-center gap-1 sm:gap-2">
-                    <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        className="relative rounded-full border border-border/80 bg-card shadow-sm hover:bg-muted"
-                        aria-label="Notifications"
-                    >
-                        <BellIcon />
-                        <span className="absolute top-2 right-2 size-2 rounded-full bg-foreground" />
-                    </Button>
+                    <NotificationPopover
+                        initialUnreadCount={notifications.unreadCount}
+                    />
 
                     <AppThemeToggle />
 

@@ -2,9 +2,7 @@
 
 namespace Modules\Platform\Notifications;
 
-use Illuminate\Notifications\Notification;
-
-class WebsiteUnexpired extends Notification
+class WebsiteUnexpired extends PlatformNotification
 {
     /**
      * Create a new notification instance.
@@ -30,20 +28,15 @@ class WebsiteUnexpired extends Notification
 
         $text = 'Website unexpired | <strong>'.$websiteobj->domain.'</strong>';
 
-        $url_backend = route('platform.websites.show', $websiteobj->id);
-        $url_frontend = 'https://'.$websiteobj->domain;
+        $urlBackend = route('platform.websites.show', $websiteobj->id);
+        $urlFrontend = 'https://'.$websiteobj->domain;
 
-        return [
-            'title' => 'Website Unexpired!',
-            'module' => 'Platform',
-            'type' => 'unexpired',
-            'category' => 'website',
-            'priority' => 'medium',
-            'icon' => 'ri-history-line',
-            'text' => $text,
-            'url_backend' => $url_backend,
-            'url_frontend' => $url_frontend,
-        ];
+        return $this->payload('Website Unexpired!', $text, 'unexpired', 'website', 'medium', 'ri-history-line', $urlBackend, $urlFrontend, 'View website in app', 'Visit website')
+            ->extra([
+                'website_id' => $websiteobj->id,
+                'domain' => $websiteobj->domain,
+            ])
+            ->toArray();
     }
 
     /**
@@ -51,6 +44,6 @@ class WebsiteUnexpired extends Notification
      */
     public function toArray($notifiable): array
     {
-        return [];
+        return $this->toDatabase($notifiable);
     }
 }

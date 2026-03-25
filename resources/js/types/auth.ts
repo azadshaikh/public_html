@@ -58,6 +58,9 @@ export type SharedData = {
     modules: {
         items: InstalledModule[];
     };
+    notifications: {
+        unreadCount: number;
+    };
     sidebarOpen: boolean;
     flash: FlashData;
 };

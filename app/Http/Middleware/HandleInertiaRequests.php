@@ -7,6 +7,7 @@ use App\Helpers\NavigationAggregator;
 use App\Inertia\Properties\UserAvatar;
 use App\Models\User;
 use App\Modules\ModuleManager;
+use App\Services\NotificationService;
 use App\Support\Auth\SuperUserAccess;
 use Composer\InstalledVersions;
 use Illuminate\Http\Request;
@@ -81,6 +82,11 @@ class HandleInertiaRequests extends Middleware
             ],
             'navigation' => fn (): array => NavigationAggregator::getUnifiedByArea($request->user()),
             'modules' => $modules,
+            'notifications' => fn (): array => [
+                'unreadCount' => $request->user()
+                    ? app(NotificationService::class)->getUnreadCount($request->user())
+                    : 0,
+            ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'flash' => fn (): array => array_filter([
                 'success' => $request->session()->get('success'),

@@ -21,7 +21,33 @@ export type NotificationListItem = {
     category_badge: string;
     priority_label: string;
     priority_badge: string;
+    time_ago?: string;
+    url_backend?: string | null;
+    url_frontend?: string | null;
+    content_links: NotificationContentLink[];
 };
+
+export type NotificationContentLink = {
+    label: string;
+    href: string;
+    external: boolean;
+};
+
+export type NotificationDropdownItem = Pick<
+    NotificationListItem,
+    | 'id'
+    | 'title_text'
+    | 'sanitized_message'
+    | 'icon'
+    | 'category_label'
+    | 'category_color'
+    | 'priority'
+    | 'priority_label'
+    | 'time_ago'
+    | 'is_read'
+    | 'created_at'
+    | 'content_links'
+>;
 
 export type NotificationStats = {
     total: number;
@@ -68,4 +94,8 @@ export type NotificationsPreferencesPageProps = {
     preferences: NotificationPreferenceValues;
     categoryPreferences: NotificationPreferenceOption[];
     priorityPreferences: NotificationPreferenceOption[];
+};
+
+export type NotificationShowPageProps = {
+    notification: NotificationListItem;
 };
