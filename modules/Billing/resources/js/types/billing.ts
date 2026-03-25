@@ -386,7 +386,7 @@ export type TaxFormValues = {
     postal_code: string;
     description: string;
     is_compound: boolean;
-    priority: number;
+    priority: string | number;
     is_active: boolean;
     effective_from: string;
     effective_to: string;
@@ -472,7 +472,7 @@ export type CouponFormValues = {
     discount_duration: string;
     duration_in_months: string | number;
     max_uses: string | number;
-    max_uses_per_customer: number;
+    max_uses_per_customer: string | number;
     min_order_amount: string | number;
     applicable_plan_ids: number[];
     expires_at: string;

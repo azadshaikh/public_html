@@ -14,7 +14,7 @@ class OpenStorageResolver
      */
     public static function resolve(Request $request): bool
     {
-        return (bool) env('DEBUGBAR_OPEN_STORAGE', false)
+        return (bool) config('debugbar.storage_open', false)
             && (bool) config('debugbar.enabled')
             && (bool) config('app.debug')
             && SuperUserAccess::allowsRequest($request);

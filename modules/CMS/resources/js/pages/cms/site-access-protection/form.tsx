@@ -25,7 +25,7 @@ export default function SiteAccessProtectionForm({
         event.preventDefault();
 
         form.submit('post', route('site.access.protection.verify'), {
-            resetOnSuccess: ['password'],
+            setDefaultsOnSuccess: true,
         });
     };
 

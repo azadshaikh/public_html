@@ -63,7 +63,7 @@ import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import type { BreadcrumbItem } from '@/types';
 import { CmsSaveFooter } from '../../../components/shared/cms-save-footer';
-import type { MenuEditPageProps } from '../../types/cms';
+import type { MenuEditPageProps } from '../../../types/cms';
 
 // ----------------------------------------------------------------
 // Types

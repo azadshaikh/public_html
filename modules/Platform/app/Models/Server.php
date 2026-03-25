@@ -15,11 +15,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
 use Modules\Platform\Models\Presenters\ServerPresenter;
 use Modules\Platform\Models\QueryBuilders\ServerQueryBuilder;
 use Modules\Platform\Traits\HasSecrets;
 use Modules\Platform\Traits\Providerable;
+use Throwable;
 
 /**
  * @property int $id
@@ -316,10 +318,18 @@ class Server extends Model
 
     public static function getServerOptions(): array
     {
-        return static::query()
-            ->select('id as value', DB::raw(static::getServerLabelSelectRaw().' as label'))
-            ->get()
-            ->toArray();
+        try {
+            return static::query()
+                ->select('id as value', DB::raw(static::getServerLabelSelectRaw().' as label'))
+                ->get()
+                ->toArray();
+        } catch (Throwable $throwable) {
+            if (App::runningInConsole()) {
+                return [];
+            }
+
+            throw $throwable;
+        }
     }
 
     public static function getServerLabelSelectRaw(?string $driver = null): string

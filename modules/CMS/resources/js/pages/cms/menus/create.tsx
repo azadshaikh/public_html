@@ -28,7 +28,7 @@ import { useAppForm } from '@/hooks/use-app-form';
 import AppLayout from '@/layouts/app-layout';
 import { formValidators } from '@/lib/forms';
 import type { BreadcrumbItem } from '@/types';
-import type { MenuCreatePageProps } from '../../types/cms';
+import type { MenuCreatePageProps } from '../../../types/cms';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: route('dashboard') },

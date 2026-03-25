@@ -19,7 +19,7 @@ class PlanDefinition extends ScaffoldDefinition
 
     protected string $routePrefix = 'subscriptions.plans';
 
-    protected string $permissionPrefix = 'subscriptions.plans';
+    protected string $permissionPrefix = 'plans';
 
     /**
      * Status field is null because is_active is a boolean handled in PlanResource.

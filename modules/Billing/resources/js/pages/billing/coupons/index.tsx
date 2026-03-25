@@ -22,7 +22,7 @@ export default function CouponsIndex({ config, rows, filters, statistics }: Coup
     const canDelete = page.props.auth.abilities.deleteCoupons;
     const canRestore = page.props.auth.abilities.restoreCoupons;
 
-    const { currentStatus, gridFilters, perPage, sorting, statusTabs } = buildScaffoldDatagridState(config, filters, statistics, {
+    const { currentStatus, gridFilters, perPage, sorting, statusTabs } = buildScaffoldDatagridState(config, filters, statistics ?? {}, {
         searchPlaceholder: 'Search coupons...',
     });
 

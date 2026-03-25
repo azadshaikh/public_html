@@ -8,10 +8,12 @@ use App\Scaffold\Column;
 use App\Scaffold\Filter;
 use App\Scaffold\ScaffoldDefinition;
 use App\Scaffold\StatusTab;
+use Illuminate\Support\Facades\App;
 use Modules\Platform\Http\Requests\DomainRequest;
 use Modules\Platform\Models\Agency;
 use Modules\Platform\Models\Domain;
 use Modules\Platform\Models\Provider;
+use Throwable;
 
 class DomainDefinition extends ScaffoldDefinition
 {
@@ -82,11 +84,28 @@ class DomainDefinition extends ScaffoldDefinition
 
     public function filters(): array
     {
+        $agencyOptions = [];
+        $registrarOptions = [];
+
+        try {
+            $agencyOptions = Agency::query()->orderBy('name')->pluck('name', 'id')->toArray();
+            $registrarOptions = Provider::query()
+                ->ofType(Provider::TYPE_DOMAIN_REGISTRAR)
+                ->active()
+                ->orderBy('name')
+                ->pluck('name', 'id')
+                ->toArray();
+        } catch (Throwable $throwable) {
+            if (! App::runningInConsole()) {
+                throw $throwable;
+            }
+        }
+
         return [
             Filter::select('agency_id')
                 ->label('Agency')
                 ->placeholder('All Agencies')
-                ->options(Agency::query()->orderBy('name')->pluck('name', 'id')->toArray()),
+                ->options($agencyOptions),
             Filter::select('type')
                 ->label('Type')
                 ->placeholder('All Types')
@@ -100,12 +119,7 @@ class DomainDefinition extends ScaffoldDefinition
             Filter::select('registrar_id')
                 ->label('Registrar')
                 ->placeholder('All Registrars')
-                ->options(Provider::query()
-                    ->ofType(Provider::TYPE_DOMAIN_REGISTRAR)
-                    ->active()
-                    ->orderBy('name')
-                    ->pluck('name', 'id')
-                    ->toArray()),
+                ->options($registrarOptions),
             Filter::dateRange('registered_date')->label('Registered Date'),
             Filter::dateRange('expiry_date')->label('Expiry Date'),
         ];

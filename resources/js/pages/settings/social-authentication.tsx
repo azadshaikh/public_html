@@ -63,6 +63,7 @@ export default function SocialAuthentication({
             github_client_id: settings.github_client_id,
             github_client_secret: settings.github_client_secret,
         },
+        dontRemember: ['google_client_secret', 'github_client_secret'],
         rememberKey: 'settings.social-authentication',
         dirtyGuard: { enabled: true },
     });

@@ -6,6 +6,7 @@ import { FormErrorSummary } from '@/components/forms/form-error-summary';
 import { showAppToast } from '@/components/forms/form-success-toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
     Field,
     FieldDescription,
@@ -48,6 +49,11 @@ type StoragePageProps = {
         endpoint: string;
         use_path_style_endpoint: boolean;
     };
+    secretState: {
+        hasFtpPassword: boolean;
+        hasAccessKey: boolean;
+        hasSecretKey: boolean;
+    };
     options: {
         storageDrivers: SelectOption[];
     };
@@ -62,6 +68,7 @@ type StorageFormData = {
     ftp_host: string;
     ftp_username: string;
     ftp_password: string;
+    clear_ftp_password: boolean;
     ftp_root: string;
     ftp_port: string;
     ftp_passive: boolean;
@@ -69,7 +76,9 @@ type StorageFormData = {
     ftp_ssl: boolean;
     ftp_ssl_mode: string;
     access_key: string;
+    clear_access_key: boolean;
     secret_key: string;
+    clear_secret_key: boolean;
     bucket: string;
     region: string;
     endpoint: string;
@@ -78,6 +87,7 @@ type StorageFormData = {
 
 export default function Storage({
     settings,
+    secretState,
     options,
     settingsNav,
 }: StoragePageProps) {
@@ -86,6 +96,9 @@ export default function Storage({
         StorageFormData,
         { success?: boolean; message?: string }
     >({
+        clear_ftp_password: false,
+        clear_access_key: false,
+        clear_secret_key: false,
         ...settings,
     });
 
@@ -98,6 +111,7 @@ export default function Storage({
             ftp_host: settings.ftp_host,
             ftp_username: settings.ftp_username,
             ftp_password: settings.ftp_password,
+            clear_ftp_password: false,
             ftp_root: settings.ftp_root,
             ftp_port: settings.ftp_port,
             ftp_passive: settings.ftp_passive,
@@ -105,12 +119,15 @@ export default function Storage({
             ftp_ssl: settings.ftp_ssl,
             ftp_ssl_mode: settings.ftp_ssl_mode,
             access_key: settings.access_key,
+            clear_access_key: false,
             secret_key: settings.secret_key,
+            clear_secret_key: false,
             bucket: settings.bucket,
             region: settings.region,
             endpoint: settings.endpoint,
             use_path_style_endpoint: settings.use_path_style_endpoint,
         },
+        dontRemember: ['ftp_password', 'access_key', 'secret_key'],
         rememberKey: 'master-settings.storage',
         dirtyGuard: { enabled: true },
     });
@@ -463,12 +480,21 @@ export default function Storage({
                                                 id="ftp_password"
                                                 type="password"
                                                 value={form.data.ftp_password}
-                                                onChange={(e) =>
+                                                onChange={(e) => {
                                                     form.setField(
                                                         'ftp_password',
                                                         e.target.value,
-                                                    )
-                                                }
+                                                    );
+
+                                                    if (
+                                                        e.target.value !== ''
+                                                    ) {
+                                                        form.setField(
+                                                            'clear_ftp_password',
+                                                            false,
+                                                        );
+                                                    }
+                                                }}
                                                 onBlur={() =>
                                                     form.touch('ftp_password')
                                                 }
@@ -480,6 +506,38 @@ export default function Storage({
                                                 placeholder="Enter FTP password"
                                                 size="comfortable"
                                             />
+                                            {secretState.hasFtpPassword ? (
+                                                <div className="mt-3 flex items-start gap-3 rounded-lg border border-dashed border-border px-3 py-3">
+                                                    <Checkbox
+                                                        id="clear_ftp_password"
+                                                        checked={
+                                                            form.data
+                                                                .clear_ftp_password
+                                                        }
+                                                        onCheckedChange={(
+                                                            checked,
+                                                        ) =>
+                                                            form.setField(
+                                                                'clear_ftp_password',
+                                                                checked === true,
+                                                            )
+                                                        }
+                                                    />
+                                                    <div className="space-y-1">
+                                                        <FieldLabel htmlFor="clear_ftp_password">
+                                                            Clear saved FTP
+                                                            password on save
+                                                        </FieldLabel>
+                                                        <FieldDescription>
+                                                            Leave the password
+                                                            field blank to keep
+                                                            the current value,
+                                                            or check this to
+                                                            remove it.
+                                                        </FieldDescription>
+                                                    </div>
+                                                </div>
+                                            ) : null}
                                             <FieldError>
                                                 {form.error('ftp_password')}
                                             </FieldError>
@@ -659,12 +717,21 @@ export default function Storage({
                                             <Input
                                                 id="access_key"
                                                 value={form.data.access_key}
-                                                onChange={(e) =>
+                                                onChange={(e) => {
                                                     form.setField(
                                                         'access_key',
                                                         e.target.value,
-                                                    )
-                                                }
+                                                    );
+
+                                                    if (
+                                                        e.target.value !== ''
+                                                    ) {
+                                                        form.setField(
+                                                            'clear_access_key',
+                                                            false,
+                                                        );
+                                                    }
+                                                }}
                                                 onBlur={() =>
                                                     form.touch('access_key')
                                                 }
@@ -676,6 +743,37 @@ export default function Storage({
                                                 placeholder="Enter AWS access key"
                                                 size="comfortable"
                                             />
+                                            {secretState.hasAccessKey ? (
+                                                <div className="mt-3 flex items-start gap-3 rounded-lg border border-dashed border-border px-3 py-3">
+                                                    <Checkbox
+                                                        id="clear_access_key"
+                                                        checked={
+                                                            form.data
+                                                                .clear_access_key
+                                                        }
+                                                        onCheckedChange={(
+                                                            checked,
+                                                        ) =>
+                                                            form.setField(
+                                                                'clear_access_key',
+                                                                checked === true,
+                                                            )
+                                                        }
+                                                    />
+                                                    <div className="space-y-1">
+                                                        <FieldLabel htmlFor="clear_access_key">
+                                                            Clear saved access key
+                                                            on save
+                                                        </FieldLabel>
+                                                        <FieldDescription>
+                                                            Leave the field blank
+                                                            to keep the current
+                                                            value, or check this
+                                                            to remove it.
+                                                        </FieldDescription>
+                                                    </div>
+                                                </div>
+                                            ) : null}
                                             <FieldError>
                                                 {form.error('access_key')}
                                             </FieldError>
@@ -694,12 +792,21 @@ export default function Storage({
                                                 id="secret_key"
                                                 type="password"
                                                 value={form.data.secret_key}
-                                                onChange={(e) =>
+                                                onChange={(e) => {
                                                     form.setField(
                                                         'secret_key',
                                                         e.target.value,
-                                                    )
-                                                }
+                                                    );
+
+                                                    if (
+                                                        e.target.value !== ''
+                                                    ) {
+                                                        form.setField(
+                                                            'clear_secret_key',
+                                                            false,
+                                                        );
+                                                    }
+                                                }}
                                                 onBlur={() =>
                                                     form.touch('secret_key')
                                                 }
@@ -711,6 +818,37 @@ export default function Storage({
                                                 placeholder="Enter AWS secret key"
                                                 size="comfortable"
                                             />
+                                            {secretState.hasSecretKey ? (
+                                                <div className="mt-3 flex items-start gap-3 rounded-lg border border-dashed border-border px-3 py-3">
+                                                    <Checkbox
+                                                        id="clear_secret_key"
+                                                        checked={
+                                                            form.data
+                                                                .clear_secret_key
+                                                        }
+                                                        onCheckedChange={(
+                                                            checked,
+                                                        ) =>
+                                                            form.setField(
+                                                                'clear_secret_key',
+                                                                checked === true,
+                                                            )
+                                                        }
+                                                    />
+                                                    <div className="space-y-1">
+                                                        <FieldLabel htmlFor="clear_secret_key">
+                                                            Clear saved secret key
+                                                            on save
+                                                        </FieldLabel>
+                                                        <FieldDescription>
+                                                            Leave the field blank
+                                                            to keep the current
+                                                            value, or check this
+                                                            to remove it.
+                                                        </FieldDescription>
+                                                    </div>
+                                                </div>
+                                            ) : null}
                                             <FieldError>
                                                 {form.error('secret_key')}
                                             </FieldError>

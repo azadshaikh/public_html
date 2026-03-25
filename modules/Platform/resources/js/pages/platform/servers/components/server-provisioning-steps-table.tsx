@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { usePageVisibility } from '@/hooks/use-page-visibility';
 import { cn } from '@/lib/utils';
-import type { ProvisioningRunTimestamps, ServerProvisioningStep } from '../../../types/platform';
+import type { ProvisioningRunTimestamps, ServerProvisioningStep } from '../../../../types/platform';
 import { formatStatusLabel, statusBadgeVariant, STEP_STATUS_VARIANT } from './show-shared';
 
 const PROVISIONING_POLL_INTERVAL_MS = 10_000;

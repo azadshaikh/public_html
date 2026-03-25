@@ -25,7 +25,7 @@ import type {
     AgencyProviderItem,
     AgencyServerItem,
     AgencyShowData,
-} from '../../../types/platform';
+} from '../../../../types/platform';
 import type { ConfirmState } from './show-shared';
 import {
     HealthChip,

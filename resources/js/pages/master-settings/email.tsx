@@ -6,6 +6,7 @@ import { FormErrorSummary } from '@/components/forms/form-error-summary';
 import { showAppToast } from '@/components/forms/form-success-toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
     Field,
     FieldDescription,
@@ -38,6 +39,9 @@ type EmailPageProps = {
         email_from_address: string;
         email_from_name: string;
     };
+    secretState: {
+        hasEmailPassword: boolean;
+    };
     options: {
         emailDrivers: SelectOption[];
         securityTypes: SelectOption[];
@@ -51,6 +55,7 @@ type EmailFormData = {
     email_port: string;
     email_username: string;
     email_password: string;
+    clear_email_password: boolean;
     email_encryption: string;
     email_from_address: string;
     email_from_name: string;
@@ -58,6 +63,7 @@ type EmailFormData = {
 
 export default function Email({
     settings,
+    secretState,
     options,
     settingsNav,
 }: EmailPageProps) {
@@ -68,6 +74,7 @@ export default function Email({
         { success?: boolean; message?: string }
     >({
         email: '',
+        clear_email_password: false,
         ...settings,
     });
 
@@ -78,10 +85,12 @@ export default function Email({
             email_port: settings.email_port,
             email_username: settings.email_username,
             email_password: settings.email_password,
+            clear_email_password: false,
             email_encryption: settings.email_encryption,
             email_from_address: settings.email_from_address,
             email_from_name: settings.email_from_name,
         },
+        dontRemember: ['email_password'],
         rememberKey: 'master-settings.email',
         dirtyGuard: { enabled: true },
         rules: {
@@ -350,12 +359,22 @@ export default function Email({
                                                     value={
                                                         form.data.email_password
                                                     }
-                                                    onChange={(e) =>
+                                                    onChange={(e) => {
                                                         form.setField(
                                                             'email_password',
                                                             e.target.value,
-                                                        )
-                                                    }
+                                                        );
+
+                                                        if (
+                                                            e.target.value !==
+                                                            ''
+                                                        ) {
+                                                            form.setField(
+                                                                'clear_email_password',
+                                                                false,
+                                                            );
+                                                        }
+                                                    }}
                                                     onBlur={() =>
                                                         form.touch(
                                                             'email_password',
@@ -369,6 +388,39 @@ export default function Email({
                                                     placeholder="Enter SMTP password"
                                                     size="comfortable"
                                                 />
+                                                {secretState.hasEmailPassword ? (
+                                                    <div className="mt-3 flex items-start gap-3 rounded-lg border border-dashed border-border px-3 py-3">
+                                                        <Checkbox
+                                                            id="clear_email_password"
+                                                            checked={
+                                                                form.data
+                                                                    .clear_email_password
+                                                            }
+                                                            onCheckedChange={(
+                                                                checked,
+                                                            ) =>
+                                                                form.setField(
+                                                                    'clear_email_password',
+                                                                    checked ===
+                                                                        true,
+                                                                )
+                                                            }
+                                                        />
+                                                        <div className="space-y-1">
+                                                            <FieldLabel htmlFor="clear_email_password">
+                                                                Clear saved SMTP
+                                                                password on save
+                                                            </FieldLabel>
+                                                            <FieldDescription>
+                                                                Leave the password
+                                                                field blank to keep
+                                                                the current value,
+                                                                or check this to
+                                                                remove it.
+                                                            </FieldDescription>
+                                                        </div>
+                                                    </div>
+                                                ) : null}
                                                 <FieldError>
                                                     {form.error(
                                                         'email_password',

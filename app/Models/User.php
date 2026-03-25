@@ -21,6 +21,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -273,12 +274,20 @@ class User extends Authenticatable implements HasMedia, MustVerifyEmailContract
      */
     public static function getAddedByOptions(): array
     {
-        return self::query()->visibleToCurrentUser()
-            ->active()
-            ->select('id', 'first_name')
-            ->orderBy('first_name')
-            ->pluck('first_name', 'id')
-            ->toArray();
+        try {
+            return self::query()->visibleToCurrentUser()
+                ->active()
+                ->select('id', 'first_name')
+                ->orderBy('first_name')
+                ->pluck('first_name', 'id')
+                ->toArray();
+        } catch (Throwable $throwable) {
+            if (App::runningInConsole()) {
+                return [];
+            }
+
+            throw $throwable;
+        }
     }
 
     /**
@@ -287,16 +296,24 @@ class User extends Authenticatable implements HasMedia, MustVerifyEmailContract
      */
     public static function getActiveUsersForSelect(): array
     {
-        return self::query()->visibleToCurrentUser()
-            ->where('status', 'active')
-            ->get()
-            ->map(fn ($user): array => [
-                'value' => (string) $user->id,
-                'label' => $user->name,
-            ])
-            ->sortBy('label')
-            ->values()
-            ->toArray();
+        try {
+            return self::query()->visibleToCurrentUser()
+                ->where('status', 'active')
+                ->get()
+                ->map(fn ($user): array => [
+                    'value' => (string) $user->id,
+                    'label' => $user->name,
+                ])
+                ->sortBy('label')
+                ->values()
+                ->toArray();
+        } catch (Throwable $throwable) {
+            if (App::runningInConsole()) {
+                return [];
+            }
+
+            throw $throwable;
+        }
     }
 
     /**

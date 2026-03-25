@@ -429,7 +429,7 @@ export class BuilderDragDrop {
                         position: topPos,
                         rect: computeDropIndicatorRect(topPos, topRect),
                         isValid: !!topResolved && topResolved.parentId === ROOT_NODE_ID,
-                        parentId: topResolved?.parentId ?? null,
+                        parentId: topResolved?.parentId ?? ROOT_NODE_ID,
                         index: topResolved?.index ?? 0,
                     };
                     this.callbacks.onDragMove(topIndicator);
@@ -446,7 +446,7 @@ export class BuilderDragDrop {
             position,
             rect: computeDropIndicatorRect(position, targetRect),
             isValid: isValid && resolved !== null,
-            parentId: resolved?.parentId ?? null,
+            parentId: resolved?.parentId ?? ROOT_NODE_ID,
             index: resolved?.index ?? 0,
         };
 
@@ -635,7 +635,7 @@ export class BuilderDragDrop {
                         position: topPos,
                         rect: computeDropIndicatorRect(topPos, topRect),
                         isValid: !!topResolved && topResolved.parentId === ROOT_NODE_ID,
-                        parentId: topResolved?.parentId ?? null,
+                        parentId: topResolved?.parentId ?? ROOT_NODE_ID,
                         index: topResolved?.index ?? 0,
                     };
                     this.callbacks.onDragMove(topIndicator);
@@ -652,7 +652,7 @@ export class BuilderDragDrop {
             position,
             rect: computeDropIndicatorRect(position, targetRect),
             isValid: isValid && resolved !== null,
-            parentId: resolved?.parentId ?? null,
+            parentId: resolved?.parentId ?? ROOT_NODE_ID,
             index: resolved?.index ?? 0,
         };
 

@@ -22,7 +22,7 @@ export default function PaymentsIndex({ config, rows, filters, statistics }: Pay
     const canDelete = page.props.auth.abilities.deletePayments;
     const canRestore = page.props.auth.abilities.restorePayments;
 
-    const { currentStatus, gridFilters, perPage, sorting, statusTabs } = buildScaffoldDatagridState(config, filters, statistics, {
+    const { currentStatus, gridFilters, perPage, sorting, statusTabs } = buildScaffoldDatagridState(config, filters, statistics ?? {}, {
         searchPlaceholder: 'Search payments...',
     });
 

@@ -1,4 +1,3 @@
-import type { UseHttpForm } from '@inertiajs/react';
 import {
     AlertCircleIcon,
     HistoryIcon,
@@ -46,6 +45,18 @@ import type {
     NewEntityMode,
     UploadPayload,
 } from '../../pages/cms/themes/editor/types';
+
+type UploadRequest = {
+    data: UploadPayload;
+    progress: {
+        percentage?: number;
+    } | null;
+    processing: boolean;
+    setData: <K extends keyof UploadPayload>(
+        field: K,
+        value: UploadPayload[K],
+    ) => void;
+};
 
 type CreateDialogProps = {
     open: boolean;
@@ -192,7 +203,7 @@ type UploadDialogProps = {
     onOpenChange: (open: boolean) => void;
     targetPath: string;
     onTargetPathChange: (path: string) => void;
-    uploadRequest: UseHttpForm<UploadPayload, GenericResponse>;
+    uploadRequest: UploadRequest;
     onSubmit: () => void;
     canEdit: boolean;
 };

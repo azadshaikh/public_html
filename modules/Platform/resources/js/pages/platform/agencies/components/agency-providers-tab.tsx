@@ -19,7 +19,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import type { AgencyProviderItem, AgencyShowData } from '../../../types/platform';
+import type { AgencyProviderItem, AgencyShowData } from '../../../../types/platform';
 import {
     AssociationManagementDialog,
     mergeManagementOptions,

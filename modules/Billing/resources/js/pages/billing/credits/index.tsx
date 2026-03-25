@@ -22,7 +22,7 @@ export default function CreditsIndex({ config, rows, filters, statistics }: Cred
     const canDelete = page.props.auth.abilities.deleteCredits;
     const canRestore = page.props.auth.abilities.restoreCredits;
 
-    const { currentStatus, gridFilters, perPage, sorting, statusTabs } = buildScaffoldDatagridState(config, filters, statistics, {
+    const { currentStatus, gridFilters, perPage, sorting, statusTabs } = buildScaffoldDatagridState(config, filters, statistics ?? {}, {
         searchPlaceholder: 'Search credits...',
     });
 

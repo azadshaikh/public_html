@@ -22,7 +22,7 @@ export default function TaxesIndex({ config, rows, filters, statistics }: TaxInd
     const canDelete = page.props.auth.abilities.deleteTaxes;
     const canRestore = page.props.auth.abilities.restoreTaxes;
 
-    const { currentStatus, gridFilters, perPage, sorting, statusTabs } = buildScaffoldDatagridState(config, filters, statistics, {
+    const { currentStatus, gridFilters, perPage, sorting, statusTabs } = buildScaffoldDatagridState(config, filters, statistics ?? {}, {
         searchPlaceholder: 'Search taxes...',
     });
 

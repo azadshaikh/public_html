@@ -96,8 +96,6 @@ export default function NotificationsIndex({
             timeoutId = window.setTimeout(() => {
                 router.reload({
                     only: ['notifications', 'stats'],
-                    preserveState: true,
-                    preserveScroll: true,
                 });
 
                 if (active) {

@@ -12,7 +12,7 @@ import type {
     ServerProvisioningStep,
     ServerSecretItem,
     ServerShowData,
-} from '../../../types/platform';
+} from '../../../../types/platform';
 import { InfoRow } from './show-shared';
 import { ServerProvisioningStepsTable } from './server-provisioning-steps-table';
 import { ServerSecretsPanel } from './server-secrets-panel';

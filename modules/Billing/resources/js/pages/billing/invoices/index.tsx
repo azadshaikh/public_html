@@ -22,7 +22,7 @@ export default function InvoicesIndex({ config, rows, filters, statistics }: Inv
     const canDelete = page.props.auth.abilities.deleteInvoices;
     const canRestore = page.props.auth.abilities.restoreInvoices;
 
-    const { currentStatus, gridFilters, perPage, sorting, statusTabs } = buildScaffoldDatagridState(config, filters, statistics, {
+    const { currentStatus, gridFilters, perPage, sorting, statusTabs } = buildScaffoldDatagridState(config, filters, statistics ?? {}, {
         searchPlaceholder: 'Search invoices...',
     });
 

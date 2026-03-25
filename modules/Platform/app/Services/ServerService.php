@@ -9,6 +9,7 @@ use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
 use Modules\Platform\Definitions\ServerDefinition;
 use Modules\Platform\Http\Resources\ServerResource;
@@ -316,25 +317,41 @@ class ServerService implements ScaffoldServiceInterface
 
     public function getProviderOptions(): array
     {
-        return Provider::ofType('server')
-            ->active()
-            ->orderBy('name')
-            ->get()
-            ->mapWithKeys(fn ($item): array => [$item->id => $item->name])
-            ->toArray();
+        try {
+            return Provider::ofType('server')
+                ->active()
+                ->orderBy('name')
+                ->get()
+                ->mapWithKeys(fn ($item): array => [$item->id => $item->name])
+                ->toArray();
+        } catch (Throwable $throwable) {
+            if (App::runningInConsole()) {
+                return [];
+            }
+
+            throw $throwable;
+        }
     }
 
     public function getProviderOptionsForForm(): array
     {
-        return Provider::ofType('server')
-            ->active()
-            ->orderBy('name')
-            ->get()
-            ->map(fn ($item): array => [
-                'value' => $item->id,
-                'label' => $item->name,
-            ])
-            ->toArray();
+        try {
+            return Provider::ofType('server')
+                ->active()
+                ->orderBy('name')
+                ->get()
+                ->map(fn ($item): array => [
+                    'value' => $item->id,
+                    'label' => $item->name,
+                ])
+                ->toArray();
+        } catch (Throwable $throwable) {
+            if (App::runningInConsole()) {
+                return [];
+            }
+
+            throw $throwable;
+        }
     }
 
     /**

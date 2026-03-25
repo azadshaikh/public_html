@@ -34,7 +34,7 @@ export default function PostAccessProtectionForm({
         event.preventDefault();
 
         form.submit('post', route('post.access.protection.verify', post.id), {
-            resetOnSuccess: ['password'],
+            setDefaultsOnSuccess: true,
         });
     };
 

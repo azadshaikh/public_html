@@ -375,10 +375,12 @@ class UserController extends ScaffoldController implements HasMiddleware
 
             return $this->impersonationRedirect(route('dashboard'));
         } catch (Exception $exception) {
+            report($exception);
+
             return to_route('app.users.index')
                 ->with('error', [
                     'title' => 'Impersonation Failed',
-                    'message' => 'Error impersonating user: '.$exception->getMessage(),
+                    'message' => 'Unable to start impersonation right now.',
                 ]);
         }
     }
@@ -441,10 +443,12 @@ class UserController extends ScaffoldController implements HasMiddleware
 
             return $this->impersonationRedirect(route('dashboard'));
         } catch (Exception $exception) {
+            report($exception);
+
             return to_route('dashboard')
                 ->with('error', [
                     'title' => 'Stop Impersonation Failed',
-                    'message' => 'Error stopping impersonation: '.$exception->getMessage(),
+                    'message' => 'Unable to stop impersonation right now.',
                 ]);
         }
     }
@@ -525,7 +529,9 @@ class UserController extends ScaffoldController implements HasMiddleware
 
             return back()->with('status', sprintf('%s users %s successfully.', $successCount, $actionDescription));
         } catch (Exception $exception) {
-            return back()->with('error', 'Bulk action failed: '.$exception->getMessage());
+            report($exception);
+
+            return back()->with('error', 'Bulk action failed.');
         }
     }
 

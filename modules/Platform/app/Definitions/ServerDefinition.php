@@ -8,9 +8,11 @@ use App\Scaffold\Column;
 use App\Scaffold\Filter;
 use App\Scaffold\ScaffoldDefinition;
 use App\Scaffold\StatusTab;
+use Illuminate\Support\Facades\App;
 use Modules\Platform\Http\Requests\ServerRequest;
 use Modules\Platform\Models\Provider;
 use Modules\Platform\Models\Server;
+use Throwable;
 
 class ServerDefinition extends ScaffoldDefinition
 {
@@ -88,6 +90,21 @@ class ServerDefinition extends ScaffoldDefinition
 
     public function filters(): array
     {
+        $providerOptions = [];
+
+        try {
+            $providerOptions = Provider::query()
+                ->ofType(Provider::TYPE_SERVER)
+                ->active()
+                ->orderBy('name')
+                ->pluck('name', 'id')
+                ->toArray();
+        } catch (Throwable $throwable) {
+            if (! App::runningInConsole()) {
+                throw $throwable;
+            }
+        }
+
         return [
             Filter::select('type')
                 ->label('Type')
@@ -102,12 +119,7 @@ class ServerDefinition extends ScaffoldDefinition
             Filter::select('provider_id')
                 ->label('Provider')
                 ->placeholder('All Providers')
-                ->options(Provider::query()
-                    ->ofType(Provider::TYPE_SERVER)
-                    ->active()
-                    ->orderBy('name')
-                    ->pluck('name', 'id')
-                    ->toArray()),
+                ->options($providerOptions),
         ];
     }
 

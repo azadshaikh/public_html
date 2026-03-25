@@ -36,7 +36,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $adminPrefix = trim((string) env('ADMIN_SLUG', 'admin'), '/');
+        $appConfig = require __DIR__.'/../config/app.php';
+        $adminPrefix = trim((string) ($appConfig['admin_slug'] ?? 'admin'), '/');
         $adminPrefix = $adminPrefix !== '' ? $adminPrefix : 'admin';
 
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);

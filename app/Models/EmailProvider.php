@@ -10,6 +10,8 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\App;
+use Throwable;
 
 /**
  * EmailProvider - SMTP email provider configuration
@@ -111,16 +113,24 @@ class EmailProvider extends Model
      */
     public static function getActiveProvidersForSelect(): array
     {
-        return self::query()
-            ->select('id', 'name')
-            ->active()
-            ->orderBy('name')
-            ->get()
-            ->map(fn ($provider): array => [
-                'value' => (string) $provider->id,
-                'label' => $provider->name,
-            ])
-            ->toArray();
+        try {
+            return self::query()
+                ->select('id', 'name')
+                ->active()
+                ->orderBy('name')
+                ->get()
+                ->map(fn ($provider): array => [
+                    'value' => (string) $provider->id,
+                    'label' => $provider->name,
+                ])
+                ->toArray();
+        } catch (Throwable $throwable) {
+            if (App::runningInConsole()) {
+                return [];
+            }
+
+            throw $throwable;
+        }
     }
 
     /**

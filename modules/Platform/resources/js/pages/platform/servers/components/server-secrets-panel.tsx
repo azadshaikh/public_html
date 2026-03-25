@@ -15,7 +15,7 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import type { ServerSecretItem } from '../../../types/platform';
+import type { ServerSecretItem } from '../../../../types/platform';
 
 type SpecialReveal = 'access-key' | 'ssh-key-pair';
 
@@ -60,7 +60,7 @@ export function ServerSecretsPanel({
     function requestRevealSecret(secretId: number) {
         if (revealedValues[secretId] !== undefined) {
             setRevealedValues((previous) => {
-                const next = { ...previous };
+                const next = { ...previous } as Record<number, string>;
 
                 delete next[secretId];
 
@@ -127,7 +127,14 @@ export function ServerSecretsPanel({
                     );
 
                     if (typeof payload.value === 'string') {
-                        setRevealedValues((previous) => ({ ...previous, [secretId]: payload.value }));
+                        setRevealedValues((previous) => {
+                            const next = {
+                                ...previous,
+                                [secretId]: payload.value,
+                            } as Record<number, string>;
+
+                            return next;
+                        });
                     }
 
                     setPasswordModalOpen(false);
@@ -219,6 +226,7 @@ export function ServerSecretsPanel({
 
     const hasAccessKeyCredentials = accessKeyId !== null || hasAccessKeySecret;
     const hasAnySecrets = secrets.length > 0 || hasAccessKeyCredentials || hasSshCredentials;
+    const revealedPrivateKey = revealedSshKeyPair?.privateKey ?? '';
 
     if (!hasAnySecrets) {
         return <p className="text-sm text-muted-foreground">No stored secrets available for this server.</p>;
@@ -246,7 +254,7 @@ export function ServerSecretsPanel({
                                                 {accessKeyId ?? '—'}
                                             </code>
                                             {accessKeyId ? (
-                                                <Button variant="ghost" size="icon" className="size-7" onClick={() => copyToClipboard(accessKeyId)}>
+                                                <Button variant="ghost" size="icon" className="size-7" onClick={() => void copyToClipboard(accessKeyId ?? '')}>
                                                     <ClipboardCopyIcon className="size-3.5" />
                                                 </Button>
                                             ) : null}
@@ -265,7 +273,7 @@ export function ServerSecretsPanel({
                                             {revealedAccessKey ? 'Hide' : 'Reveal'}
                                         </Button>
                                         {revealedAccessKey ? (
-                                            <Button variant="outline" onClick={() => copyToClipboard(revealedAccessKey)}>
+                                            <Button variant="outline" onClick={() => void copyToClipboard(revealedAccessKey ?? '')}>
                                                 <ClipboardCopyIcon data-icon="inline-start" />
                                                 Copy
                                             </Button>
@@ -300,8 +308,8 @@ export function ServerSecretsPanel({
                                             {revealedSshKeyPair ? <EyeOffIcon data-icon="inline-start" /> : <EyeIcon data-icon="inline-start" />}
                                             {revealedSshKeyPair ? 'Hide' : 'Reveal'}
                                         </Button>
-                                        {revealedSshKeyPair?.privateKey ? (
-                                            <Button variant="outline" onClick={() => copyToClipboard(revealedSshKeyPair.privateKey)}>
+                                        {revealedPrivateKey ? (
+                                            <Button variant="outline" onClick={() => void copyToClipboard(revealedPrivateKey)}>
                                                 <ClipboardCopyIcon data-icon="inline-start" />
                                                 Copy
                                             </Button>
@@ -339,7 +347,7 @@ export function ServerSecretsPanel({
                                             {secret.username ? (
                                                 <div className="flex items-center gap-2">
                                                     <code className="rounded border bg-muted px-2 py-1 text-xs">{secret.username}</code>
-                                                    <Button variant="ghost" size="icon" className="size-7" onClick={() => copyToClipboard(secret.username)}>
+                                                    <Button variant="ghost" size="icon" className="size-7" onClick={() => void copyToClipboard(secret.username ?? '')}>
                                                         <ClipboardCopyIcon className="size-3.5" />
                                                     </Button>
                                                 </div>
@@ -368,7 +376,7 @@ export function ServerSecretsPanel({
                                                     </Button>
                                                 ) : null}
                                                 {revealedValues[secret.id] !== undefined ? (
-                                                    <Button variant="ghost" size="icon" className="size-7" onClick={() => copyToClipboard(revealedValues[secret.id])}>
+                                                    <Button variant="ghost" size="icon" className="size-7" onClick={() => void copyToClipboard(revealedValues[secret.id] ?? '')}>
                                                         <ClipboardCopyIcon className="size-3.5" />
                                                     </Button>
                                                 ) : null}

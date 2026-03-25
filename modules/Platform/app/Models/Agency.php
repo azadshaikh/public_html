@@ -16,12 +16,14 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Modules\Platform\Models\Presenters\AgencyPresenter;
 use Modules\Platform\Models\QueryBuilders\AgencyQueryBuilder;
 use Modules\Platform\Traits\Providerable;
 use RuntimeException;
+use Throwable;
 
 /**
  * @property int $id
@@ -290,10 +292,18 @@ class Agency extends Model
 
     public static function getAgencyOptions()
     {
-        return static::query()
-            ->select('id as value', 'name as label')
-            ->get()
-            ->toArray();
+        try {
+            return static::query()
+                ->select('id as value', 'name as label')
+                ->get()
+                ->toArray();
+        } catch (Throwable $throwable) {
+            if (App::runningInConsole()) {
+                return [];
+            }
+
+            throw $throwable;
+        }
     }
 
     protected function casts(): array

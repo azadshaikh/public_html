@@ -8,9 +8,11 @@ use App\Scaffold\Column;
 use App\Scaffold\Filter;
 use App\Scaffold\ScaffoldDefinition;
 use App\Scaffold\StatusTab;
+use Illuminate\Support\Facades\App;
 use Modules\Subscriptions\Http\Requests\SubscriptionRequest;
 use Modules\Subscriptions\Models\Plan;
 use Modules\Subscriptions\Models\Subscription;
+use Throwable;
 
 class SubscriptionDefinition extends ScaffoldDefinition
 {
@@ -20,7 +22,7 @@ class SubscriptionDefinition extends ScaffoldDefinition
 
     protected string $routePrefix = 'subscriptions.subscriptions';
 
-    protected string $permissionPrefix = 'subscriptions.subscriptions';
+    protected string $permissionPrefix = 'subscriptions';
 
     protected ?string $statusField = 'status';
 
@@ -169,11 +171,19 @@ class SubscriptionDefinition extends ScaffoldDefinition
      */
     protected function getPlanOptions(): array
     {
-        return Plan::query()
-            ->select('id', 'name')
-            ->orderBy('sort_order')
-            ->get()
-            ->map(fn ($plan): array => ['value' => (string) $plan->id, 'label' => $plan->name])
-            ->all();
+        try {
+            return Plan::query()
+                ->select('id', 'name')
+                ->orderBy('sort_order')
+                ->get()
+                ->map(fn ($plan): array => ['value' => (string) $plan->id, 'label' => $plan->name])
+                ->all();
+        } catch (Throwable $throwable) {
+            if (App::runningInConsole()) {
+                return [];
+            }
+
+            throw $throwable;
+        }
     }
 }

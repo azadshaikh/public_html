@@ -27,6 +27,10 @@ type TaxFormProps = {
     typeOptions: BillingOption[];
 };
 
+function numericInputValue(value: string): string | number {
+    return value === '' ? '' : Number(value);
+}
+
 export default function TaxForm({
     mode,
     tax,
@@ -120,14 +124,21 @@ export default function TaxForm({
                                 </Field>
                                 <Field>
                                     <FieldLabel>Rate *</FieldLabel>
-                                    <Input
-                                        type="number"
-                                        min="0"
-                                        step="0.01"
-                                        value={form.data.rate}
-                                        onChange={(e) => form.setData('rate', e.target.value)}
-                                        placeholder={form.data.type === 'percentage' ? 'e.g. 18.00' : 'e.g. 5.00'}
-                                    />
+                                        <Input
+                                            type="number"
+                                            min="0"
+                                            step="0.01"
+                                            value={form.data.rate}
+                                            onChange={(e) =>
+                                                form.setData(
+                                                    'rate',
+                                                    numericInputValue(
+                                                        e.target.value,
+                                                    ),
+                                                )
+                                            }
+                                            placeholder={form.data.type === 'percentage' ? 'e.g. 18.00' : 'e.g. 5.00'}
+                                        />
                                     <FieldError>{form.errors.rate}</FieldError>
                                 </Field>
                             </FieldGroup>
@@ -205,7 +216,14 @@ export default function TaxForm({
                                     type="number"
                                     min="0"
                                     value={form.data.priority}
-                                    onChange={(e) => form.setData('priority', e.target.value)}
+                                    onChange={(e) =>
+                                        form.setData(
+                                            'priority',
+                                            numericInputValue(
+                                                e.target.value,
+                                            ),
+                                        )
+                                    }
                                 />
                             </Field>
                             <Field className="flex items-center justify-between">

@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Date;
 use Modules\Subscriptions\Definitions\SubscriptionDefinition;
 use Modules\Subscriptions\Models\Subscription;
@@ -27,7 +28,12 @@ class SubscriptionController extends ScaffoldController implements HasMiddleware
 
     public static function middleware(): array
     {
-        return (new SubscriptionDefinition)->getMiddleware();
+        return [
+            ...(new SubscriptionDefinition)->getMiddleware(),
+            new Middleware('permission:cancel_subscriptions', only: ['cancel']),
+            new Middleware('permission:resume_subscriptions', only: ['resume']),
+            new Middleware('permission:pause_subscriptions', only: ['pause']),
+        ];
     }
 
     // ================================================================

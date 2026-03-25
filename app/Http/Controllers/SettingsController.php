@@ -124,10 +124,10 @@ class SettingsController extends Controller
                 'enable_social_authentication' => $this->toBool(get_env_value('SOCIAL_AUTH_ENABLED', 'false')),
                 'enable_google_authentication' => $this->toBool(get_env_value('GOOGLE_AUTH_ENABLED', 'false')),
                 'google_client_id' => get_env_value('GOOGLE_CLIENT_ID', ''),
-                'google_client_secret' => get_env_value('GOOGLE_CLIENT_SECRET', ''),
+                'google_client_secret' => '',
                 'enable_github_authentication' => $this->toBool(get_env_value('GITHUB_AUTH_ENABLED', 'false')),
                 'github_client_id' => get_env_value('GITHUB_CLIENT_ID', ''),
-                'github_client_secret' => get_env_value('GITHUB_CLIENT_SECRET', ''),
+                'github_client_secret' => '',
             ],
             'settingsNav' => $this->getSettingsNav(),
         ]);
@@ -247,7 +247,7 @@ class SettingsController extends Controller
                     title: 'Settings Update Failed',
                     message: 'Unable to update settings. Please try again.',
                     redirectTo: $redirectUrl
-                )->withInput($request->all());
+                )->withInput($this->safeOldInput($request));
             }
 
             $this->applyPostUpdateEffects($metaGroup, $payload);
@@ -292,9 +292,9 @@ class SettingsController extends Controller
 
             return $this->redirectWithError(
                 title: 'Error Updating Settings',
-                message: 'An unexpected error occurred: '.$throwable->getMessage(),
+                message: 'An unexpected error occurred while updating settings. Please try again.',
                 redirectTo: $redirectUrl
-            )->withInput($request->all());
+            )->withInput($this->safeOldInput($request));
         }
     }
 
@@ -1233,5 +1233,18 @@ class SettingsController extends Controller
     private function getValidationFieldLabels(): array
     {
         return $this->getFieldLabelsForMetaGroup();
+    }
+
+    private function safeOldInput(Request $request): array
+    {
+        return $request->except([
+            'password',
+            'smtp_password',
+            'secret_key',
+            'api_key',
+            'client_secret',
+            'google_client_secret',
+            'github_client_secret',
+        ]);
     }
 }

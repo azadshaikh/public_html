@@ -22,7 +22,7 @@ export default function RefundsIndex({ config, rows, filters, statistics }: Refu
     const canDelete = page.props.auth.abilities.deleteRefunds;
     const canRestore = page.props.auth.abilities.restoreRefunds;
 
-    const { currentStatus, gridFilters, perPage, sorting, statusTabs } = buildScaffoldDatagridState(config, filters, statistics, {
+    const { currentStatus, gridFilters, perPage, sorting, statusTabs } = buildScaffoldDatagridState(config, filters, statistics ?? {}, {
         searchPlaceholder: 'Search refunds...',
     });
 

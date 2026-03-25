@@ -72,11 +72,12 @@ Route::prefix($adminPrefix)->group(function (): void {
     // Redirect root admin URL to either login or dashboard.
     Route::get('/', [DashboardController::class, 'root']);
 
-    // Cache clear route.
-    Route::get('/cache-clear', [DashboardController::class, 'cacheClear'])->name('cache.clear');
-
     // --- Protected Admin Routes (Authentication Required) ---
     Route::middleware(['auth', 'user.status', 'verified', 'profile.completed'])->group(function (): void {
+        Route::post('/cache-clear', [DashboardController::class, 'cacheClear'])
+            ->middleware('permission:manage_system_settings')
+            ->name('cache.clear');
+
         // Dashboard
         Route::get('/dashboard', [DashboardController::class, 'index'])
             ->middleware('permission:view_dashboard')

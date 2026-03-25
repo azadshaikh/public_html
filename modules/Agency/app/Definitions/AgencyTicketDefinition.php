@@ -24,6 +24,11 @@ class AgencyTicketDefinition extends ScaffoldDefinition
         return '';
     }
 
+    public function expectedAbilityMap(): array
+    {
+        return [];
+    }
+
     public function getModelClass(): string
     {
         return Ticket::class;

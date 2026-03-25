@@ -22,7 +22,8 @@ export default function ResetPassword({ token, email }: Props) {
             password: '',
             password_confirmation: '',
         },
-        resetOnSuccess: ['password', 'password_confirmation'],
+        dontRemember: ['password', 'password_confirmation'],
+        rememberKey: 'auth.reset-password',
     });
 
     const submit = (e: FormEvent<HTMLFormElement>) => {

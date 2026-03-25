@@ -18,7 +18,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import type { ServerShowData } from '../../../types/platform';
+import type { ServerShowData } from '../../../../types/platform';
 import type { ConfirmState } from './show-shared';
 import { formatStatusLabel, HealthChip, InfoRow, statusBadgeVariant } from './show-shared';
 

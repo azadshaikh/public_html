@@ -78,11 +78,19 @@ type AgencyTicketShowPageProps = {
     ticket: TicketData;
 };
 
+function createThreadEntry(
+    entry: Omit<ThreadEntry, 'badgeVariant'> & {
+        badgeVariant: ThreadEntry['badgeVariant'];
+    },
+): ThreadEntry {
+    return entry;
+}
+
 type ThreadEntry = {
     key: string;
     authorName: string;
     badgeLabel: string;
-    badgeVariant: 'success' | 'secondary';
+    badgeVariant: 'success' | 'secondary' | 'warning' | 'danger';
     metaLabel: string;
     contentHtml: string;
     attachments: TicketAttachment[];
@@ -249,29 +257,38 @@ export default function AgencyTicketShow({
 
     const closedStatuses = ['closed', 'cancelled'];
     const canReply = !closedStatuses.includes(ticket.status);
+    const ticketBadgeVariant: ThreadEntry['badgeVariant'] = 'success';
     const threadEntries: ThreadEntry[] = [
-        {
+        createThreadEntry({
             key: `ticket-${ticket.id}`,
             authorName: currentUserName,
             badgeLabel: 'You',
-            badgeVariant: 'success',
+            badgeVariant: ticketBadgeVariant,
             metaLabel: 'Opened this ticket',
             contentHtml: ticket.description_html,
             attachments: ticket.attachments,
             createdAt: ticket.created_at,
             sortPriority: 0,
-        },
-        ...ticket.replies.map((reply) => ({
-            key: `reply-${reply.id}`,
-            authorName: reply.author_name,
-            badgeLabel: reply.is_staff ? 'System' : 'You',
-            badgeVariant: reply.is_staff ? 'secondary' : 'success',
-            metaLabel: reply.is_staff ? 'Support response' : 'Reply from your side',
-            contentHtml: reply.content_html,
-            attachments: reply.attachments,
-            createdAt: reply.created_at,
-            sortPriority: 1,
-        })),
+        }),
+        ...ticket.replies.map((reply) =>
+            {
+                const badgeVariant: ThreadEntry['badgeVariant'] = reply.is_staff
+                    ? 'secondary'
+                    : 'success';
+
+                return createThreadEntry({
+                    key: `reply-${reply.id}`,
+                    authorName: reply.author_name,
+                    badgeLabel: reply.is_staff ? 'System' : 'You',
+                    badgeVariant,
+                    metaLabel: reply.is_staff ? 'Support response' : 'Reply from your side',
+                    contentHtml: reply.content_html,
+                    attachments: reply.attachments,
+                    createdAt: reply.created_at,
+                    sortPriority: 1,
+                });
+            },
+        ),
     ].sort((left, right) => {
         const rightTimestamp = right.createdAt ? Date.parse(right.createdAt) : 0;
         const leftTimestamp = left.createdAt ? Date.parse(left.createdAt) : 0;

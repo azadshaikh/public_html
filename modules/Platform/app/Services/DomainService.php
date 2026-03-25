@@ -9,12 +9,14 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
 use Modules\Platform\Definitions\DomainDefinition;
 use Modules\Platform\Http\Resources\DomainResource;
 use Modules\Platform\Models\Agency;
 use Modules\Platform\Models\Domain;
 use Modules\Platform\Models\Provider;
 use Modules\Platform\Models\Secret;
+use Throwable;
 
 class DomainService implements ScaffoldServiceInterface
 {
@@ -66,19 +68,27 @@ class DomainService implements ScaffoldServiceInterface
 
     public function getAgencyOptions(): array
     {
-        /** @var Collection<int, Agency> $agencies */
-        $agencies = Agency::query()
-            ->select('id', 'name')
-            ->where('status', 'active')
-            ->orderBy('name')
-            ->get();
+        try {
+            /** @var Collection<int, Agency> $agencies */
+            $agencies = Agency::query()
+                ->select('id', 'name')
+                ->where('status', 'active')
+                ->orderBy('name')
+                ->get();
 
-        return $agencies
-            ->map(fn (Agency $agency): array => [
-                'value' => $agency->id,
-                'label' => $agency->name,
-            ])
-            ->all();
+            return $agencies
+                ->map(fn (Agency $agency): array => [
+                    'value' => $agency->id,
+                    'label' => $agency->name,
+                ])
+                ->all();
+        } catch (Throwable $throwable) {
+            if (App::runningInConsole()) {
+                return [];
+            }
+
+            throw $throwable;
+        }
     }
 
     public function getTypeOptionsForForm(): array
@@ -94,12 +104,20 @@ class DomainService implements ScaffoldServiceInterface
 
     public function getRegistrarOptionsForSelect(): array
     {
-        return Provider::query()->ofType(Provider::TYPE_DOMAIN_REGISTRAR)
-            ->active()
-            ->orderBy('name')
-            ->get()
-            ->map(fn (Provider $p): array => ['value' => $p->id, 'label' => $p->name])
-            ->toArray();
+        try {
+            return Provider::query()->ofType(Provider::TYPE_DOMAIN_REGISTRAR)
+                ->active()
+                ->orderBy('name')
+                ->get()
+                ->map(fn (Provider $p): array => ['value' => $p->id, 'label' => $p->name])
+                ->toArray();
+        } catch (Throwable $throwable) {
+            if (App::runningInConsole()) {
+                return [];
+            }
+
+            throw $throwable;
+        }
     }
 
     public function getStatusOptions(): array

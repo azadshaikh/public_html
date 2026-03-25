@@ -14,7 +14,7 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import type { WebsiteSecretItem } from '../../../types/platform';
+import type { WebsiteSecretItem } from '../../../../types/platform';
 
 type WebsiteSecretsTableProps = {
     websiteId: number;
@@ -37,7 +37,7 @@ export function WebsiteSecretsTable({ websiteId, secrets, canReveal }: WebsiteSe
     function requestReveal(secretId: number) {
         if (revealedValues[secretId] !== undefined) {
             setRevealedValues((previous) => {
-                const next = { ...previous };
+                const next = { ...previous } as Record<number, string>;
 
                 delete next[secretId];
 
@@ -82,7 +82,14 @@ export function WebsiteSecretsTable({ websiteId, secrets, canReveal }: WebsiteSe
                 );
 
                 if (typeof payload.value === 'string') {
-                    setRevealedValues((previous) => ({ ...previous, [secretId]: payload.value }));
+                    setRevealedValues((previous) => {
+                        const next = {
+                            ...previous,
+                            [secretId]: payload.value,
+                        } as Record<number, string>;
+
+                        return next;
+                    });
                 }
 
                 setPasswordModalOpen(false);
@@ -122,12 +129,12 @@ export function WebsiteSecretsTable({ websiteId, secrets, canReveal }: WebsiteSe
                                     {secret.username ? (
                                         <div className="flex items-center gap-2">
                                             <code className="rounded border bg-muted px-2 py-1 text-xs">{secret.username}</code>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="size-7"
-                                                onClick={() => copyToClipboard(secret.username!)}
-                                            >
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="size-7"
+                                                    onClick={() => void copyToClipboard(secret.username ?? '')}
+                                                >
                                                 <ClipboardCopyIcon className="size-3.5" />
                                             </Button>
                                         </div>
@@ -155,13 +162,13 @@ export function WebsiteSecretsTable({ websiteId, secrets, canReveal }: WebsiteSe
                                                 )}
                                             </Button>
                                         ) : null}
-                                        {revealedValues[secret.id] !== undefined ? (
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="size-7"
-                                                onClick={() => copyToClipboard(revealedValues[secret.id])}
-                                            >
+                                                {revealedValues[secret.id] !== undefined ? (
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="size-7"
+                                                        onClick={() => void copyToClipboard(revealedValues[secret.id] ?? '')}
+                                                    >
                                                 <ClipboardCopyIcon className="size-3.5" />
                                             </Button>
                                         ) : null}

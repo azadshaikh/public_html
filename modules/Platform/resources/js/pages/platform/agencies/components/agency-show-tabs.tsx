@@ -1,4 +1,4 @@
-import { useHttp } from '@inertiajs/react';
+import { Link, useHttp } from '@inertiajs/react';
 import {
     ActivityIcon,
     Building2Icon,
@@ -39,7 +39,7 @@ import type {
     AgencyServerItem,
     AgencyShowData,
     PlatformActivity,
-} from '../../../types/platform';
+} from '../../../../types/platform';
 import { AgencyProvidersTab } from './agency-providers-tab';
 import { AgencyServersTab } from './agency-servers-tab';
 import type { ConfirmState } from './show-shared';

@@ -107,8 +107,8 @@ export default function ThemeEditorIndex({
     parentTheme,
 }: ThemeEditorPageProps) {
     const page = usePage<AuthenticatedSharedData>();
-    const canEditThemes = page.props.auth.abilities.editThemes;
-    const canDeleteThemes = page.props.auth.abilities.deleteThemes;
+    const canEditThemes = Boolean(page.props.auth.abilities.editThemes);
+    const canDeleteThemes = Boolean(page.props.auth.abilities.deleteThemes);
 
     const [tree, setTree] = useState<ThemeEditorFileNode[]>(files);
     const [expandedPaths, setExpandedPaths] = useState<Set<string>>(new Set());

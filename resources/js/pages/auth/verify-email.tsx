@@ -13,6 +13,7 @@ export default function VerifyEmail({ status }: { status?: string }) {
 
     const logoutForm = useAppForm({
         defaults: {},
+        rememberKey: 'auth.verify-email.logout',
     });
 
     const handleResend = (e: FormEvent) => {

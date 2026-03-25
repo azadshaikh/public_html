@@ -148,7 +148,11 @@ class SocialLoginController extends Controller
                 $socialProviderUserId
             );
 
-            return redirect('/')->with('error', $e->getMessage());
+            report($e);
+
+            return redirect('/')->with('error', $e instanceof AccountBannedException
+                ? __('auth.account_banned')
+                : __('auth.account_suspended'));
         } catch (Exception $e) {
             // Log the exception or handle it as needed
             report($e);

@@ -13,14 +13,12 @@ export default function ConfirmPassword() {
             password: '',
         },
         dontRemember: ['password'],
+        rememberKey: 'auth.confirm-password',
     });
 
     const submit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-
-        form.submit('post', route('password.confirm.store'), {
-            resetOnSuccess: ['password'],
-        });
+        form.submit('post', route('password.confirm.store'));
     };
 
     return (

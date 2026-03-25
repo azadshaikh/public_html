@@ -55,6 +55,23 @@ function omitField<T extends Record<string, unknown>>(
     return nextErrors;
 }
 
+function omitRememberedFields<T extends FormDataType<T>>(
+    data: T,
+    fields: Array<AppFormFieldName<T>>,
+): T {
+    if (fields.length === 0) {
+        return data;
+    }
+
+    const nextData = { ...data } as Record<string, unknown>;
+
+    for (const field of fields) {
+        delete nextData[field];
+    }
+
+    return nextData as T;
+}
+
 export function useAppForm<T extends FormDataType<T>>({
     defaults,
     rememberKey,
@@ -135,10 +152,13 @@ export function useAppForm<T extends FormDataType<T>>({
 
     const clearRememberedState = useCallback(
         (nextDefaults: T) => {
-            router.remember(nextDefaults, `${rememberKey}:data`);
+            router.remember(
+                omitRememberedFields(nextDefaults, dontRemember),
+                `${rememberKey}:data`,
+            );
             router.remember({}, `${rememberKey}:errors`);
         },
-        [rememberKey],
+        [dontRemember, rememberKey],
     );
 
     const setDefaults: typeof inertiaForm.setDefaults = useCallback(

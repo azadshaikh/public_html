@@ -1,20 +1,20 @@
 import type { FormDataType } from '@inertiajs/core';
 
-export type FormFieldName<T extends Record<string, unknown>> = Extract<
+export type FormFieldName<T extends object> = Extract<
     keyof T,
     string
 >;
 
-export type FormFieldErrors<T extends Record<string, unknown>> = Partial<
+export type FormFieldErrors<T extends object> = Partial<
     Record<FormFieldName<T>, string>
 >;
 
 export type FormFieldValidator<
-    T extends Record<string, unknown>,
+    T extends object,
     K extends FormFieldName<T>,
 > = (value: T[K], data: T) => string | undefined;
 
-export type FormValidationRules<T extends Record<string, unknown>> = Partial<{
+export type FormValidationRules<T extends object> = Partial<{
     [K in FormFieldName<T>]:
         | FormFieldValidator<T, K>
         | Array<FormFieldValidator<T, K>>;
@@ -25,7 +25,7 @@ const knownServerErrorMessages: Record<string, string> = {
 };
 
 function toValidatorArray<
-    T extends Record<string, unknown>,
+    T extends object,
     K extends FormFieldName<T>,
 >(
     validator:
@@ -94,14 +94,14 @@ export function normalizeFormErrorMessage(
 
 export const formValidators = {
     required:
-        <T extends Record<string, unknown>, K extends FormFieldName<T>>(
+        <T extends object, K extends FormFieldName<T>>(
             label: string,
         ): FormFieldValidator<T, K> =>
         (value) =>
             isBlankValue(value) ? `${label} is required.` : undefined,
 
     email:
-        <T extends Record<string, unknown>, K extends FormFieldName<T>>(
+        <T extends object, K extends FormFieldName<T>>(
             label = 'Email address',
         ): FormFieldValidator<T, K> =>
         (value) => {
@@ -119,7 +119,7 @@ export const formValidators = {
         },
 
     minLength:
-        <T extends Record<string, unknown>, K extends FormFieldName<T>>(
+        <T extends object, K extends FormFieldName<T>>(
             label: string,
             min: number,
         ): FormFieldValidator<T, K> =>
@@ -138,7 +138,7 @@ export const formValidators = {
         },
 
     maxLength:
-        <T extends Record<string, unknown>, K extends FormFieldName<T>>(
+        <T extends object, K extends FormFieldName<T>>(
             label: string,
             max: number,
         ): FormFieldValidator<T, K> =>

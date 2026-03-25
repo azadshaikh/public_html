@@ -92,7 +92,7 @@ class WebsiteController extends ScaffoldController implements HasMiddleware
 
     public function createFromOrder($order_id): Response
     {
-        $ordersModelClass = 'Modules\\SaaS\\Models\\Orders';
+        $ordersModelClass = 'Modules\\Orders\\Models\\Order';
         abort_unless(class_exists($ordersModelClass), 404, 'Order module is not available on this deployment.');
 
         $order = $ordersModelClass::findOrFail($order_id);

@@ -30,7 +30,7 @@ export default function Register({ status, canLogin, socialProviders }: Props) {
             password: '',
             password_confirmation: '',
         },
-        resetOnSuccess: ['password', 'password_confirmation'],
+        dontRemember: ['password', 'password_confirmation'],
         rememberKey: 'auth.register',
     });
 

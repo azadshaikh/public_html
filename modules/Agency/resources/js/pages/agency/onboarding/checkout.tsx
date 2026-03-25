@@ -70,6 +70,8 @@ export default function AgencyOnboardingCheckout({
     const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
     const [couponMessage, setCouponMessage] = useState<string | null>(null);
     const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
+    const paymentError = (form.errors as Record<string, string | undefined>)
+        .payment;
 
     const isTrial = (selectedPlan?.trial_days ?? 0) > 0;
     const subtotalAmount = useMemo(() => parseCurrencyAmount(selectedPrice?.formatted_price), [selectedPrice?.formatted_price]);
@@ -313,9 +315,9 @@ export default function AgencyOnboardingCheckout({
                         </div>
                     )}
 
-                    {form.errors.payment ? (
+                    {paymentError ? (
                         <div className="rounded-[1.25rem] border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
-                            {form.errors.payment}
+                            {paymentError}
                         </div>
                     ) : null}
 

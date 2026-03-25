@@ -20,7 +20,7 @@ import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
 import type {
     CustomerIndexPageProps,
     CustomerListItem,
-} from '../../../types/customers';
+} from '../../types/customers';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: route('dashboard') },

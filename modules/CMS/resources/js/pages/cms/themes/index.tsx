@@ -355,7 +355,7 @@ function ThemeCard({
 
             <CardFooter className="flex items-center gap-2 p-2 pt-2">
                 {theme.is_active ? (
-                    <Button asChild variant="success" className="flex-1">
+                    <Button asChild variant="default" className="flex-1">
                         <a
                             href={route(
                                 'cms.appearance.themes.customizer.index',
@@ -473,9 +473,9 @@ export default function ThemesIndex({
     availableSupports,
 }: ThemeIndexPageProps) {
     const page = usePage<AuthenticatedSharedData>();
-    const canAddThemes = page.props.auth.abilities.addThemes;
-    const canEditThemes = page.props.auth.abilities.editThemes;
-    const canDeleteThemes = page.props.auth.abilities.deleteThemes;
+    const canAddThemes = Boolean(page.props.auth.abilities.addThemes);
+    const canEditThemes = Boolean(page.props.auth.abilities.editThemes);
+    const canDeleteThemes = Boolean(page.props.auth.abilities.deleteThemes);
     const [searchValue, setSearchValue] = useState(filters.search);
     const [importOpen, setImportOpen] = useState(false);
     const [pendingAction, setPendingAction] = useState<PendingAction | null>(

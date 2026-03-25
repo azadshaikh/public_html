@@ -8,7 +8,7 @@ import {
     SearchCheckIcon,
     ServerIcon,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactElement } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AgencyOnboardingMinimalLayout from '../../../components/agency-onboarding-minimal-layout';
@@ -93,7 +93,7 @@ const loadingMessages = [
     'Almost there',
 ];
 
-function ProgressRail(): JSX.Element {
+function ProgressRail(): ReactElement {
     return (
         <div className="mt-7 h-[3px] w-52 overflow-hidden rounded-full bg-border/80">
             <div className="h-full w-1/2 animate-[provisioning-slide_1.4s_ease-in-out_infinite] rounded-full bg-primary" />
@@ -105,7 +105,7 @@ function StatusIcon({
     variant,
 }: {
     variant: 'loading' | 'success' | 'danger' | 'warning';
-}): JSX.Element {
+}): ReactElement {
     const icon =
         variant === 'success' ? (
             <CheckCircle2Icon className="size-8 text-[var(--success-foreground)] dark:text-[var(--success-dark-foreground)]" />

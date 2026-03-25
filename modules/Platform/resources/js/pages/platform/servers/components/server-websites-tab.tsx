@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
-import type { WebsiteListItem } from '../../../types/platform';
+import type { WebsiteListItem } from '../../../../types/platform';
 import { statusBadgeVariant } from './show-shared';
 
 type WebsiteApiItem = {

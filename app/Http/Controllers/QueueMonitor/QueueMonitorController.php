@@ -137,7 +137,9 @@ class QueueMonitorController extends ScaffoldController implements HasMiddleware
         try {
             $result = $this->service()->handleBulkAction($request);
         } catch (RuntimeException $runtimeException) {
-            return back()->with('error', $runtimeException->getMessage());
+            report($runtimeException);
+
+            return back()->with('error', 'Queue monitor bulk action failed.');
         }
 
         $this->handleBulkActionSideEffects(
@@ -178,7 +180,9 @@ class QueueMonitorController extends ScaffoldController implements HasMiddleware
 
             return back()->with('status', 'Job queued for retry.');
         } catch (Exception $exception) {
-            return back()->with('error', $exception->getMessage());
+            report($exception);
+
+            return back()->with('error', 'Unable to retry the job right now.');
         }
     }
 

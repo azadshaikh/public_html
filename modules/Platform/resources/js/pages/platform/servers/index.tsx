@@ -13,7 +13,7 @@ import {
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
 import type { PlatformIndexPageProps, ServerListItem } from '../../../types/platform';
 
-function serverStatusVariant(status: string | null, isTrashed?: boolean): 'success' | 'warning' | 'danger' | 'secondary' {
+function serverStatusVariant(status: string | null | undefined, isTrashed?: boolean): 'success' | 'warning' | 'danger' | 'secondary' {
     if (isTrashed) {
         return 'danger';
     }
@@ -34,7 +34,7 @@ function serverStatusVariant(status: string | null, isTrashed?: boolean): 'succe
     }
 }
 
-function serverTypeVariant(type: string | null): 'warning' | 'secondary' {
+function serverTypeVariant(type: string | null | undefined): 'warning' | 'secondary' {
     return (type ?? '').toLowerCase() === 'localhost' ? 'warning' : 'secondary';
 }
 
@@ -58,7 +58,7 @@ export default function ServersIndex({
     empty_state_config,
 }: PlatformIndexPageProps<ServerListItem>) {
     const page = usePage<AuthenticatedSharedData>();
-    const canAddServers = page.props.auth.abilities.addServers;
+    const canAddServers = Boolean(page.props.auth.abilities.addServers);
 
     const { currentStatus, gridFilters, perPage, sorting, statusTabs } = buildScaffoldDatagridState(config, filters, statistics, {
         searchPlaceholder: 'Search servers...',

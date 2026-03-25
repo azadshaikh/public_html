@@ -258,6 +258,8 @@ return [
         'provider' => env('DEBUGBAR_STORAGE_PROVIDER', ''), // Instance of StorageInterface for custom driver
     ],
 
+    'storage_open' => env('DEBUGBAR_OPEN_STORAGE', false),
+
     /*
      |--------------------------------------------------------------------------
      | Assets

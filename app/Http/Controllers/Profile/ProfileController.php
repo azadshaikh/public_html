@@ -393,16 +393,18 @@ class ProfileController extends Controller
             return to_route('app.profile')
                 ->with('success', $message);
         } catch (Exception $exception) {
+            report($exception);
+
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Unable to update profile: '.$exception->getMessage(),
+                    'message' => 'Unable to update profile right now.',
                 ], 500);
             }
 
             return back()
                 ->withInput()
-                ->with('error', 'Unable to update profile: '.$exception->getMessage());
+                ->with('error', 'Unable to update profile right now.');
         }
     }
 
@@ -451,16 +453,18 @@ class ProfileController extends Controller
             return to_route('app.profile.security.password')
                 ->with('success', $message);
         } catch (Exception $exception) {
+            report($exception);
+
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Unable to update password: '.$exception->getMessage(),
+                    'message' => 'Unable to update password right now.',
                 ], 500);
             }
 
             return back()
                 ->withInput()
-                ->with('error', 'Unable to update password: '.$exception->getMessage());
+                ->with('error', 'Unable to update password right now.');
         }
     }
 

@@ -9,9 +9,11 @@ use App\Scaffold\Column;
 use App\Scaffold\Filter;
 use App\Scaffold\ScaffoldDefinition;
 use App\Scaffold\StatusTab;
+use Illuminate\Support\Facades\App;
 use Modules\Platform\Http\Requests\DomainDnsRecordRequest;
 use Modules\Platform\Models\Domain;
 use Modules\Platform\Models\DomainDnsRecord;
+use Throwable;
 
 class DomainDnsRecordDefinition extends ScaffoldDefinition
 {
@@ -78,11 +80,21 @@ class DomainDnsRecordDefinition extends ScaffoldDefinition
 
     public function filters(): array
     {
+        $domainOptions = [];
+
+        try {
+            $domainOptions = Domain::query()->orderBy('name')->pluck('name', 'id')->toArray();
+        } catch (Throwable $throwable) {
+            if (! App::runningInConsole()) {
+                throw $throwable;
+            }
+        }
+
         return [
             Filter::select('domain_id')
                 ->label('Domain')
                 ->placeholder('All Domains')
-                ->options(Domain::query()->orderBy('name')->pluck('name', 'id')->toArray()),
+                ->options($domainOptions),
             Filter::select('type')
                 ->label('Type')
                 ->placeholder('All Types')
@@ -172,5 +184,4 @@ class DomainDnsRecordDefinition extends ScaffoldDefinition
             StatusTab::make('trash')->label('Trash')->icon('ri-delete-bin-line')->color('danger'),
         ];
     }
-
 }

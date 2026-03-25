@@ -10,7 +10,7 @@ import type {
     WebsiteSecretItem,
     WebsiteShowData,
     WebsiteUpdateItem,
-} from '../../../types/platform';
+} from '../../../../types/platform';
 import { InfoRow } from './show-shared';
 import { WebsiteProvisioningStepsTable } from './website-provisioning-steps-table';
 import { WebsiteSecretsTable } from './website-secrets-table';

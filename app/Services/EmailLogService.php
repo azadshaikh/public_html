@@ -14,6 +14,8 @@ use App\Scaffold\ScaffoldDefinition;
 use App\Traits\Scaffoldable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
+use Throwable;
 
 class EmailLogService implements ScaffoldServiceInterface
 {
@@ -79,32 +81,48 @@ class EmailLogService implements ScaffoldServiceInterface
 
     public function getProviderOptions(): array
     {
-        return EmailProvider::query()
-            ->select('id', 'name')
-            ->where('status', 'active')
-            ->whereNull('deleted_at')
-            ->orderBy('name')
-            ->get()
-            ->map(fn ($item): array => [
-                'value' => (string) $item->id,
-                'label' => $item->name,
-            ])
-            ->all();
+        try {
+            return EmailProvider::query()
+                ->select('id', 'name')
+                ->where('status', 'active')
+                ->whereNull('deleted_at')
+                ->orderBy('name')
+                ->get()
+                ->map(fn ($item): array => [
+                    'value' => (string) $item->id,
+                    'label' => $item->name,
+                ])
+                ->all();
+        } catch (Throwable $throwable) {
+            if (App::runningInConsole()) {
+                return [];
+            }
+
+            throw $throwable;
+        }
     }
 
     public function getTemplateOptions(): array
     {
-        return EmailTemplate::query()
-            ->select('id', 'name')
-            ->where('status', 'active')
-            ->whereNull('deleted_at')
-            ->orderBy('name')
-            ->get()
-            ->map(fn ($item): array => [
-                'value' => (string) $item->id,
-                'label' => $item->name,
-            ])
-            ->all();
+        try {
+            return EmailTemplate::query()
+                ->select('id', 'name')
+                ->where('status', 'active')
+                ->whereNull('deleted_at')
+                ->orderBy('name')
+                ->get()
+                ->map(fn ($item): array => [
+                    'value' => (string) $item->id,
+                    'label' => $item->name,
+                ])
+                ->all();
+        } catch (Throwable $throwable) {
+            if (App::runningInConsole()) {
+                return [];
+            }
+
+            throw $throwable;
+        }
     }
 
     protected function getResourceClass(): ?string

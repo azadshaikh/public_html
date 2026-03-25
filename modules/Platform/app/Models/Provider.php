@@ -15,6 +15,8 @@ use Illuminate\Database\Eloquent\Relations\MorphPivot;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\App;
+use Throwable;
 
 /**
  * @property int $id
@@ -147,13 +149,21 @@ class Provider extends Model
             $query->ofType($type);
         }
 
-        return $query->get()
-            ->map(fn ($provider): array => [
-                'value' => $provider->id,
-                'label' => $provider->name.' ('.$provider->vendor_label.')',
-            ])
-            ->values()
-            ->toArray();
+        try {
+            return $query->get()
+                ->map(fn ($provider): array => [
+                    'value' => $provider->id,
+                    'label' => $provider->name.' ('.$provider->vendor_label.')',
+                ])
+                ->values()
+                ->toArray();
+        } catch (Throwable $throwable) {
+            if (App::runningInConsole()) {
+                return [];
+            }
+
+            throw $throwable;
+        }
     }
 
     /**

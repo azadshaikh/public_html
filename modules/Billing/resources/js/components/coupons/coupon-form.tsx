@@ -29,6 +29,10 @@ type CouponFormProps = {
     planOptions: BillingOption[];
 };
 
+function numericInputValue(value: string): string | number {
+    return value === '' ? '' : Number(value);
+}
+
 export default function CouponForm({
     mode,
     coupon,
@@ -141,7 +145,14 @@ export default function CouponForm({
                                         min="0"
                                         step="0.01"
                                         value={form.data.value}
-                                        onChange={(e) => form.setData('value', e.target.value)}
+                                        onChange={(e) =>
+                                            form.setData(
+                                                'value',
+                                                numericInputValue(
+                                                    e.target.value,
+                                                ),
+                                            )
+                                        }
                                         placeholder={form.data.type === 'percent' ? 'e.g. 20' : 'e.g. 10.00'}
                                     />
                                     <FieldError>{form.errors.value}</FieldError>
@@ -182,7 +193,14 @@ export default function CouponForm({
                                             type="number"
                                             min="1"
                                             value={form.data.duration_in_months}
-                                            onChange={(e) => form.setData('duration_in_months', e.target.value)}
+                                            onChange={(e) =>
+                                                form.setData(
+                                                    'duration_in_months',
+                                                    numericInputValue(
+                                                        e.target.value,
+                                                    ),
+                                                )
+                                            }
                                         />
                                     </Field>
                                 )}
@@ -198,35 +216,56 @@ export default function CouponForm({
                             <FieldGroup cols={3}>
                                 <Field>
                                     <FieldLabel>Max Uses</FieldLabel>
-                                    <Input
-                                        type="number"
-                                        min="0"
-                                        value={form.data.max_uses}
-                                        onChange={(e) => form.setData('max_uses', e.target.value)}
-                                        placeholder="Unlimited"
-                                    />
-                                </Field>
+                                        <Input
+                                            type="number"
+                                            min="0"
+                                            value={form.data.max_uses}
+                                            onChange={(e) =>
+                                                form.setData(
+                                                    'max_uses',
+                                                    numericInputValue(
+                                                        e.target.value,
+                                                    ),
+                                                )
+                                            }
+                                            placeholder="Unlimited"
+                                        />
+                                    </Field>
                                 <Field>
                                     <FieldLabel>Max Per Customer</FieldLabel>
-                                    <Input
-                                        type="number"
-                                        min="0"
-                                        value={form.data.max_uses_per_customer}
-                                        onChange={(e) => form.setData('max_uses_per_customer', e.target.value)}
-                                        placeholder="Unlimited"
-                                    />
-                                </Field>
+                                        <Input
+                                            type="number"
+                                            min="0"
+                                            value={form.data.max_uses_per_customer}
+                                            onChange={(e) =>
+                                                form.setData(
+                                                    'max_uses_per_customer',
+                                                    numericInputValue(
+                                                        e.target.value,
+                                                    ),
+                                                )
+                                            }
+                                            placeholder="Unlimited"
+                                        />
+                                    </Field>
                                 <Field>
                                     <FieldLabel>Min Order Amount</FieldLabel>
-                                    <Input
-                                        type="number"
-                                        min="0"
-                                        step="0.01"
-                                        value={form.data.min_order_amount}
-                                        onChange={(e) => form.setData('min_order_amount', e.target.value)}
-                                        placeholder="No minimum"
-                                    />
-                                </Field>
+                                        <Input
+                                            type="number"
+                                            min="0"
+                                            step="0.01"
+                                            value={form.data.min_order_amount}
+                                            onChange={(e) =>
+                                                form.setData(
+                                                    'min_order_amount',
+                                                    numericInputValue(
+                                                        e.target.value,
+                                                    ),
+                                                )
+                                            }
+                                            placeholder="No minimum"
+                                        />
+                                    </Field>
                             </FieldGroup>
                         </CardContent>
                     </Card>
@@ -243,10 +282,10 @@ export default function CouponForm({
                                             <input
                                                 type="checkbox"
                                                 className="rounded border-gray-300"
-                                                checked={(form.data.applicable_plan_ids ?? []).includes(String(plan.value))}
+                                                checked={(form.data.applicable_plan_ids ?? []).includes(Number(plan.value))}
                                                 onChange={(e) => {
                                                     const current = form.data.applicable_plan_ids ?? [];
-                                                    const planId = String(plan.value);
+                                                    const planId = Number(plan.value);
                                                     form.setData(
                                                         'applicable_plan_ids',
                                                         e.target.checked

@@ -138,6 +138,13 @@ class DomainDnsController extends ScaffoldController implements HasMiddleware
     private function resolveDomainForForm(): Domain
     {
         $domainId = request()->integer('domain_id');
+        if (! $domainId && app()->runningInConsole()) {
+            return new Domain([
+                'id' => 0,
+                'name' => '',
+            ]);
+        }
+
         abort_unless((bool) $domainId, 404, 'domain_id is required');
 
         /** @var Domain $domain */

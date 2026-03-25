@@ -49,6 +49,9 @@ class SettingsRequest extends FormRequest
                     'max_storage_size' => ['required', 'integer', 'min:1'],
                     'storage_cdn_url' => ['nullable', 'string', 'max:255'],
                     'use_path_style_endpoint' => ['nullable', 'boolean'],
+                    'clear_ftp_password' => ['nullable', 'boolean'],
+                    'clear_access_key' => ['nullable', 'boolean'],
+                    'clear_secret_key' => ['nullable', 'boolean'],
                     'ftp_root' => ['nullable', 'string', 'max:255'],
                     'ftp_passive' => ['nullable', 'boolean'],
                     'ftp_ssl' => ['nullable', 'boolean'],
@@ -57,8 +60,24 @@ class SettingsRequest extends FormRequest
                 // Add S3 validation rules only if S3 is selected
                 if ($storageDriver === 's3') {
                     $rules = array_merge($rules, [
-                        'access_key' => ['required', 'string', 'max:255'],
-                        'secret_key' => ['required', 'string', 'max:255'],
+                        'access_key' => [
+                            'nullable',
+                            'string',
+                            'max:255',
+                            Rule::requiredIf(
+                                fn (): bool => ! $this->boolean('clear_access_key')
+                                    && ! $this->hasConfiguredEnvValue('AWS_ACCESS_KEY_ID')
+                            ),
+                        ],
+                        'secret_key' => [
+                            'nullable',
+                            'string',
+                            'max:255',
+                            Rule::requiredIf(
+                                fn (): bool => ! $this->boolean('clear_secret_key')
+                                    && ! $this->hasConfiguredEnvValue('AWS_SECRET_ACCESS_KEY')
+                            ),
+                        ],
                         'bucket' => ['required', 'string', 'max:255'],
                         'region' => ['required', 'string', 'max:255'],
                         'endpoint' => ['required', 'string', 'max:255'],
@@ -70,7 +89,15 @@ class SettingsRequest extends FormRequest
                     $rules = array_merge($rules, [
                         'ftp_host' => ['required', 'string', 'max:255'],
                         'ftp_username' => ['required', 'string', 'max:255'],
-                        'ftp_password' => ['required', 'string', 'max:255'],
+                        'ftp_password' => [
+                            'nullable',
+                            'string',
+                            'max:255',
+                            Rule::requiredIf(
+                                fn (): bool => ! $this->boolean('clear_ftp_password')
+                                    && ! $this->hasConfiguredEnvValue('FTP_PASSWORD')
+                            ),
+                        ],
                         'ftp_port' => ['required', 'integer', 'min:1', 'max:65535'],
                         'ftp_timeout' => ['required', 'integer', 'min:1'],
                         'ftp_ssl_mode' => ['required', 'string'],
@@ -105,21 +132,41 @@ class SettingsRequest extends FormRequest
                 $rules = [
                     'enable_social_authentication' => ['nullable'],
                     'google_client_id' => ['required_if:enable_google_authentication,1'],
-                    'google_client_secret' => ['required_if:enable_google_authentication,1'],
+                    'google_client_secret' => [
+                        'nullable',
+                        Rule::requiredIf(
+                            fn (): bool => $this->boolean('enable_google_authentication')
+                                && ! $this->hasConfiguredEnvValue('GOOGLE_CLIENT_SECRET')
+                        ),
+                    ],
                     'github_client_id' => ['required_if:enable_github_authentication,1'],
-                    'github_client_secret' => ['required_if:enable_github_authentication,1'],
+                    'github_client_secret' => [
+                        'nullable',
+                        Rule::requiredIf(
+                            fn (): bool => $this->boolean('enable_github_authentication')
+                                && ! $this->hasConfiguredEnvValue('GITHUB_CLIENT_SECRET')
+                        ),
+                    ],
                 ];
                 break;
             case 'email':
                 $rules = [
-                    'driver' => ['required'],
-                    'sent_from_name' => ['required', 'string', 'max:255'],
-                    'sent_from_address' => ['required', 'email', 'max:255'],
-                    'smtp_host' => ['required_if:driver,smtp'],
-                    'smtp_port' => ['required_if:driver,smtp'],
-                    'smtp_security_type' => ['required_if:driver,smtp'],
-                    'smtp_username' => ['required_if:driver,smtp'],
-                    'smtp_password' => ['required_if:driver,smtp'],
+                    'email_driver' => ['required'],
+                    'email_from_name' => ['required', 'string', 'max:255'],
+                    'email_from_address' => ['required', 'email', 'max:255'],
+                    'clear_email_password' => ['nullable', 'boolean'],
+                    'email_host' => ['required_if:email_driver,smtp'],
+                    'email_port' => ['required_if:email_driver,smtp'],
+                    'email_encryption' => ['required_if:email_driver,smtp'],
+                    'email_username' => ['required_if:email_driver,smtp'],
+                    'email_password' => [
+                        'nullable',
+                        Rule::requiredIf(
+                            fn (): bool => $this->input('email_driver') === 'smtp'
+                                && ! $this->boolean('clear_email_password')
+                                && ! $this->hasConfiguredEnvValue('MAIL_PASSWORD')
+                        ),
+                    ],
                 ];
                 break;
             case 'localization':
@@ -355,13 +402,13 @@ class SettingsRequest extends FormRequest
             case 'email':
                 $messages = [
                     'email_driver.required' => 'Mail Sending Method is required',
-                    'email_sent_from_name.required' => 'Sender Name is required',
-                    'email_sent_from_address.required' => 'Sender Email Address is required',
-                    'smtp_host.required_if' => 'SMTP Server Host is required',
-                    'smtp_port.required_if' => 'SMTP Port Number is required',
-                    'smtp_security_type.required_if' => 'Encryption Protocol is required',
-                    'smtp_username.required_if' => 'SMTP Username is required',
-                    'smtp_password.required_if' => 'SMTP Password is required',
+                    'email_from_name.required' => 'Sender Name is required',
+                    'email_from_address.required' => 'Sender Email Address is required',
+                    'email_host.required_if' => 'SMTP Server Host is required',
+                    'email_port.required_if' => 'SMTP Port Number is required',
+                    'email_encryption.required_if' => 'Encryption Protocol is required',
+                    'email_username.required_if' => 'SMTP Username is required',
+                    'email_password.required_if' => 'SMTP Password is required',
                 ];
                 break;
             case 'localization':
@@ -454,5 +501,10 @@ class SettingsRequest extends FormRequest
         }
 
         return $messages;
+    }
+
+    private function hasConfiguredEnvValue(string $key): bool
+    {
+        return filled((string) get_env_value($key, ''));
     }
 }

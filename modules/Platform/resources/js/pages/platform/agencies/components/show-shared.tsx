@@ -202,7 +202,6 @@ export function useAgencyRelationAction() {
                     'cdnProviders',
                     'activities',
                 ],
-                preserveScroll: true,
             });
         } catch (error) {
             showAppToast({

@@ -213,7 +213,9 @@ class Notification extends Model
      */
     public function getTableColumns(): array
     {
-        return DB::select('SHOW COLUMNS FROM '.$this->getTable());
+        return DB::connection()
+            ->getSchemaBuilder()
+            ->getColumnListing($this->getTable());
     }
 
     /**

@@ -51,10 +51,7 @@ export default function Login({
 
     const submit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-
-        form.submit('post', route('login.store'), {
-            resetOnSuccess: ['password'],
-        });
+        form.submit('post', route('login.store'));
     };
 
     return (

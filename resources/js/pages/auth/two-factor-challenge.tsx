@@ -103,7 +103,7 @@ export default function TwoFactorChallenge({ email }: Props) {
                             <InputOTP
                                 id="code"
                                 name="code"
-                                size="xl"
+                                size="comfortable"
                                 value={form.data.code}
                                 onChange={(value) =>
                                     form.setData(

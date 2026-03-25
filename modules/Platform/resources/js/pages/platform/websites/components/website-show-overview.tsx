@@ -24,7 +24,7 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import type { WebsiteShowData } from '../../../types/platform';
+import type { WebsiteShowData } from '../../../../types/platform';
 import type { ConfirmState } from './show-shared';
 import { HealthChip, InfoRow, statusBadgeVariant } from './show-shared';
 

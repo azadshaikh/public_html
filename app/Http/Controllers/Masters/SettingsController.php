@@ -22,6 +22,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 use RuntimeException;
@@ -136,10 +137,13 @@ class SettingsController extends Controller
                 'email_host' => get_env_value('MAIL_HOST', ''),
                 'email_port' => get_env_value('MAIL_PORT', '587'),
                 'email_username' => get_env_value('MAIL_USERNAME', ''),
-                'email_password' => get_env_value('MAIL_PASSWORD', ''),
+                'email_password' => '',
                 'email_encryption' => get_env_value('MAIL_ENCRYPTION', 'tls'),
                 'email_from_address' => get_env_value('MAIL_FROM_ADDRESS', ''),
                 'email_from_name' => get_env_value('MAIL_FROM_NAME', config('app.name')),
+            ],
+            'secretState' => [
+                'hasEmailPassword' => filled(get_env_value('MAIL_PASSWORD', '')),
             ],
             'options' => [
                 'emailDrivers' => $this->formatConfigOptions(config('constants.email_drivers')),
@@ -168,7 +172,7 @@ class SettingsController extends Controller
                 // FTP
                 'ftp_host' => get_env_value('FTP_HOST', ''),
                 'ftp_username' => get_env_value('FTP_USERNAME', ''),
-                'ftp_password' => get_env_value('FTP_PASSWORD', ''),
+                'ftp_password' => '',
                 'ftp_root' => get_env_value('FTP_ROOT', ''),
                 'ftp_port' => get_env_value('FTP_PORT', '21'),
                 'ftp_passive' => $this->toBool(get_env_value('FTP_PASSIVE', 'false')),
@@ -176,12 +180,17 @@ class SettingsController extends Controller
                 'ftp_ssl' => $this->toBool(get_env_value('FTP_SSL', 'false')),
                 'ftp_ssl_mode' => get_env_value('FTP_SSL_MODE', 'explicit'),
                 // S3
-                'access_key' => get_env_value('AWS_ACCESS_KEY_ID', ''),
-                'secret_key' => get_env_value('AWS_SECRET_ACCESS_KEY', ''),
+                'access_key' => '',
+                'secret_key' => '',
                 'bucket' => get_env_value('AWS_BUCKET', ''),
                 'region' => get_env_value('AWS_DEFAULT_REGION', ''),
                 'endpoint' => get_env_value('AWS_ENDPOINT', ''),
                 'use_path_style_endpoint' => $this->toBool(get_env_value('AWS_USE_PATH_STYLE_ENDPOINT', 'FALSE')),
+            ],
+            'secretState' => [
+                'hasFtpPassword' => filled(get_env_value('FTP_PASSWORD', '')),
+                'hasAccessKey' => filled(get_env_value('AWS_ACCESS_KEY_ID', '')),
+                'hasSecretKey' => filled(get_env_value('AWS_SECRET_ACCESS_KEY', '')),
             ],
             'options' => [
                 'storageDrivers' => $this->formatConfigOptions(config('constants.storage_drivers')),
@@ -304,9 +313,11 @@ class SettingsController extends Controller
                 redirectTo: $redirectUrl
             );
         } catch (Exception $exception) {
+            report($exception);
+
             return $this->redirectWithError(
                 title: 'Error Updating Settings',
-                message: 'An unexpected error occurred: '.$exception->getMessage(),
+                message: 'An unexpected error occurred while updating settings. Please try again.',
                 redirectTo: $redirectUrl
             );
         }
@@ -327,7 +338,14 @@ class SettingsController extends Controller
             'email_host' => ['required_if:email_driver,smtp'],
             'email_port' => ['required_if:email_driver,smtp'],
             'email_username' => ['required_if:email_driver,smtp'],
-            'email_password' => ['required_if:email_driver,smtp'],
+            'email_password' => [
+                'nullable',
+                Rule::requiredIf(
+                    fn (): bool => $request->input('email_driver') === 'smtp'
+                        && ! $request->boolean('clear_email_password')
+                        && blank(get_env_value('MAIL_PASSWORD', ''))
+                ),
+            ],
             'email_encryption' => ['required_if:email_driver,smtp'],
         ]);
 
@@ -339,7 +357,12 @@ class SettingsController extends Controller
                     'mail.mailers.smtp.host' => $request->input('email_host'),
                     'mail.mailers.smtp.port' => $request->input('email_port'),
                     'mail.mailers.smtp.username' => $request->input('email_username'),
-                    'mail.mailers.smtp.password' => $request->input('email_password'),
+                    'mail.mailers.smtp.password' => $this->resolvedSecretInput(
+                        request: $request,
+                        field: 'email_password',
+                        clearFlag: 'clear_email_password',
+                        envKey: 'MAIL_PASSWORD',
+                    ),
                     'mail.mailers.smtp.encryption' => $request->input('email_encryption'),
                     'mail.mailers.smtp.streams.ssl.allow_self_signed' => true,
                 ]);
@@ -362,9 +385,11 @@ class SettingsController extends Controller
                 'message' => 'Test email sent successfully.',
             ]);
         } catch (Exception $exception) {
+            report($exception);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to send test email: '.$exception->getMessage(),
+                'message' => 'Failed to send test email. Please verify the configuration and try again.',
             ], 500);
         }
     }
@@ -393,7 +418,12 @@ class SettingsController extends Controller
                         'driver' => 'ftp',
                         'host' => $request->input('ftp_host', ''),
                         'username' => $request->input('ftp_username', ''),
-                        'password' => $request->input('ftp_password', ''),
+                        'password' => $this->resolvedSecretInput(
+                            request: $request,
+                            field: 'ftp_password',
+                            clearFlag: 'clear_ftp_password',
+                            envKey: 'FTP_PASSWORD',
+                        ),
                         'root' => $request->input('ftp_root', ''),
                         'port' => (int) $request->input('ftp_port', 21),
                         'passive' => filter_var($request->input('ftp_passive', true), FILTER_VALIDATE_BOOLEAN),
@@ -407,8 +437,18 @@ class SettingsController extends Controller
                 config([
                     'filesystems.disks.s3_test' => [
                         'driver' => 's3',
-                        'key' => $request->input('access_key', ''),
-                        'secret' => $request->input('secret_key', ''),
+                        'key' => $this->resolvedSecretInput(
+                            request: $request,
+                            field: 'access_key',
+                            clearFlag: 'clear_access_key',
+                            envKey: 'AWS_ACCESS_KEY_ID',
+                        ),
+                        'secret' => $this->resolvedSecretInput(
+                            request: $request,
+                            field: 'secret_key',
+                            clearFlag: 'clear_secret_key',
+                            envKey: 'AWS_SECRET_ACCESS_KEY',
+                        ),
                         'region' => $request->input('region', ''),
                         'bucket' => $request->input('bucket', ''),
                         'endpoint' => $request->input('endpoint', ''),
@@ -709,6 +749,15 @@ class SettingsController extends Controller
             }
         }
 
+        if (in_array($metaGroup, ['email', 'storage'], true)) {
+            unset(
+                $data['clear_email_password'],
+                $data['clear_ftp_password'],
+                $data['clear_access_key'],
+                $data['clear_secret_key'],
+            );
+        }
+
         // Exclude only system fields
         $systemFields = ['_token', '_method', 'meta_group', 'section'];
         $imageIdFields = ['logo_id', 'icon_id'];
@@ -771,8 +820,20 @@ class SettingsController extends Controller
         $envValues = [];
         foreach ($mapping as $field => $envKey) {
             if (array_key_exists($field, $data)) {
+                if (
+                    $field === 'email_password'
+                    && blank($data[$field] ?? null)
+                    && ! ($data['clear_email_password'] ?? false)
+                ) {
+                    continue;
+                }
+
                 $envValues[$envKey] = $data[$field] ?? '';
             }
+        }
+
+        if ($data['clear_email_password'] ?? false) {
+            $envValues['MAIL_PASSWORD'] = '';
         }
 
         if ($envValues !== []) {
@@ -966,27 +1027,61 @@ class SettingsController extends Controller
         if (array_key_exists('storage_driver', $data) && $data['storage_driver'] === 'ftp') {
             $envValues['FTP_HOST'] = $data['ftp_host'] ?? '';
             $envValues['FTP_USERNAME'] = $data['ftp_username'] ?? '';
-            $envValues['FTP_PASSWORD'] = $data['ftp_password'] ?? '';
             $envValues['FTP_ROOT'] = $data['ftp_root'] ?? '';
             $envValues['FTP_PORT'] = $data['ftp_port'] ?? '21';
             $envValues['FTP_PASSIVE'] = $this->toBooleanString($data['ftp_passive'] ?? false);
             $envValues['FTP_TIMEOUT'] = $data['ftp_timeout'] ?? '30';
             $envValues['FTP_SSL'] = $this->toBooleanString($data['ftp_ssl'] ?? false);
             $envValues['FTP_SSL_MODE'] = $data['ftp_ssl_mode'] ?? 'explicit';
+
+            if ($data['clear_ftp_password'] ?? false) {
+                $envValues['FTP_PASSWORD'] = '';
+            } elseif (filled($data['ftp_password'] ?? null)) {
+                $envValues['FTP_PASSWORD'] = $data['ftp_password'];
+            }
         }
 
         // Handle S3 settings - allow clearing all S3 fields
         if (array_key_exists('storage_driver', $data) && $data['storage_driver'] === 's3') {
-            $envValues['AWS_ACCESS_KEY_ID'] = $data['access_key'] ?? '';
-            $envValues['AWS_SECRET_ACCESS_KEY'] = $data['secret_key'] ?? '';
             $envValues['AWS_BUCKET'] = $data['bucket'] ?? '';
             $envValues['AWS_DEFAULT_REGION'] = $data['region'] ?? '';
             $envValues['AWS_ENDPOINT'] = $data['endpoint'] ?? '';
             $envValues['AWS_USE_PATH_STYLE_ENDPOINT'] = $this->toBooleanString($data['use_path_style_endpoint'] ?? false, true);
+
+            if ($data['clear_access_key'] ?? false) {
+                $envValues['AWS_ACCESS_KEY_ID'] = '';
+            } elseif (filled($data['access_key'] ?? null)) {
+                $envValues['AWS_ACCESS_KEY_ID'] = $data['access_key'];
+            }
+
+            if ($data['clear_secret_key'] ?? false) {
+                $envValues['AWS_SECRET_ACCESS_KEY'] = '';
+            } elseif (filled($data['secret_key'] ?? null)) {
+                $envValues['AWS_SECRET_ACCESS_KEY'] = $data['secret_key'];
+            }
         }
 
         // Bulk update all env values at once
         set_env_values_bulk($envValues, false);
+    }
+
+    private function resolvedSecretInput(
+        Request $request,
+        string $field,
+        string $clearFlag,
+        string $envKey,
+    ): string {
+        $value = (string) $request->input($field, '');
+
+        if ($value !== '') {
+            return $value;
+        }
+
+        if ($request->boolean($clearFlag)) {
+            return '';
+        }
+
+        return (string) get_env_value($envKey, '');
     }
 
     /**

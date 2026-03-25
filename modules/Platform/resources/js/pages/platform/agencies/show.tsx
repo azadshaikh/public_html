@@ -36,9 +36,9 @@ export default function AgenciesShow({
     activities,
 }: AgenciesShowPageProps) {
     const page = usePage<AuthenticatedSharedData>();
-    const canEdit = page.props.auth.abilities.editAgencies;
-    const canDelete = page.props.auth.abilities.deleteAgencies;
-    const canRestore = page.props.auth.abilities.restoreAgencies;
+    const canEdit = Boolean(page.props.auth.abilities.editAgencies);
+    const canDelete = Boolean(page.props.auth.abilities.deleteAgencies);
+    const canRestore = Boolean(page.props.auth.abilities.restoreAgencies);
     const isMobile = useIsMobile();
     const [processing, setProcessing] = useState(false);
     const [confirm, setConfirm] = useState<ConfirmState>(INITIAL_CONFIRM);

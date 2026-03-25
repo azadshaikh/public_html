@@ -10,6 +10,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use Inertia\Inertia;
 use Inertia\Response;
 use Modules\Agency\Definitions\WebsiteManageDefinition;
@@ -33,7 +34,13 @@ class WebsiteManageController extends ScaffoldController implements HasMiddlewar
 
     public static function middleware(): array
     {
-        return (new WebsiteManageDefinition)->getMiddleware();
+        return [
+            ...(new WebsiteManageDefinition)->getMiddleware(),
+            new Middleware('permission:view_agency_websites', only: ['data', 'showWebsite']),
+            new Middleware('permission:edit_agency_websites', only: ['suspend', 'unsuspend', 'sync', 'retryProvision']),
+            new Middleware('permission:delete_agency_websites', only: ['destroyWebsite', 'forceDeleteWebsite']),
+            new Middleware('permission:restore_agency_websites', only: ['restoreWebsite']),
+        ];
     }
 
     // ──────────────────────────────────────────────────────────

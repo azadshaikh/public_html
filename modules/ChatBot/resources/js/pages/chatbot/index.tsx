@@ -404,7 +404,8 @@ export default function ChatIndex({
 
                                 setLocalActive(newConv);
                                 setLocalConversations((prev) => [newConv, ...prev]);
-                                router.replace(route('app.chatbot.show', newConvId), {
+                                router.visit(route('app.chatbot.show', newConvId), {
+                                    replace: true,
                                     preserveScroll: true,
                                     preserveState: true,
                                 });
@@ -494,7 +495,6 @@ export default function ChatIndex({
                 // Stream complete — reload page props to get canonical server state.
                 router.reload({
                     only: ['messages', 'conversations', 'activeConversation'],
-                    preserveScroll: true,
                     onSuccess: () => {
                         setStreamState(null);
                     },
@@ -577,7 +577,6 @@ export default function ChatIndex({
         setStreamState(null);
         router.reload({
             only: ['messages', 'conversations', 'activeConversation'],
-            preserveScroll: true,
         });
     };
 
@@ -637,7 +636,6 @@ export default function ChatIndex({
             setPendingApproval(null);
             router.reload({
                 only: ['messages', 'conversations', 'activeConversation'],
-                preserveScroll: true,
             });
         });
     };
