@@ -203,6 +203,7 @@ export function NotificationPopover({
 
             <PopoverContent
                 align="end"
+                collisionPadding={8}
                 className="w-[min(24rem,calc(100vw-1rem))] gap-0 p-0"
             >
                 <div className="flex items-center justify-between gap-3 border-b px-4 py-3">
