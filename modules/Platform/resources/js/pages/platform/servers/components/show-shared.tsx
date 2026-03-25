@@ -1,3 +1,4 @@
+import { HttpResponseError } from '@inertiajs/core';
 import { router, useHttp } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import { showAppToast } from '@/components/forms/form-success-toast';
@@ -71,6 +72,46 @@ export const INITIAL_CONFIRM: ConfirmState = {
     action: () => {},
 };
 
+function extractOperationMessage(
+    payload: unknown,
+    fallback: string,
+): string {
+    if (payload && typeof payload === 'object') {
+        const data = payload as { message?: unknown; error?: unknown };
+
+        if (typeof data.message === 'string' && data.message !== '') {
+            return data.message;
+        }
+
+        if (typeof data.error === 'string' && data.error !== '') {
+            return data.error;
+        }
+    }
+
+    return fallback;
+}
+
+function extractOperationErrorMessage(
+    error: unknown,
+    fallback: string,
+): string {
+    if (error instanceof HttpResponseError) {
+        try {
+            const payload = JSON.parse(error.response.data) as unknown;
+
+            return extractOperationMessage(payload, fallback);
+        } catch {
+            return error.message || fallback;
+        }
+    }
+
+    if (error instanceof Error && error.message !== '') {
+        return error.message;
+    }
+
+    return fallback;
+}
+
 export function useOperationAction() {
     const request = useHttp<Record<string, never>, { status?: string; message?: string }>({});
 
@@ -88,8 +129,11 @@ export function useOperationAction() {
         const options = {
             headers: { Accept: 'application/json' } as Record<string, string>,
             preserveScroll: true,
-            onSuccess: () => {
-                const message = 'Operation completed successfully.';
+            onSuccess: (response: { message?: string; error?: string }) => {
+                const message = extractOperationMessage(
+                    response,
+                    'Operation completed successfully.',
+                );
 
                 if (onSuccess) {
                     onSuccess(message);
@@ -100,8 +144,8 @@ export function useOperationAction() {
                 showAppToast({ variant: 'success', title: message });
                 router.reload();
             },
-            onError: () => {
-                const message = 'Operation failed. Please try again.';
+            onError: (errors: Record<string, string>) => {
+                const message = Object.values(errors)[0] ?? 'Operation failed. Please try again.';
 
                 if (onError) {
                     onError(message);
@@ -114,18 +158,57 @@ export function useOperationAction() {
         };
 
         if (method === 'post') {
-            void request.post(url, options);
+            void request.post(url, options).catch((error: unknown) => {
+                const message = extractOperationErrorMessage(
+                    error,
+                    'Operation failed. Please try again.',
+                );
+
+                if (onError) {
+                    onError(message);
+
+                    return;
+                }
+
+                showAppToast({ variant: 'error', title: message });
+            });
 
             return;
         }
 
         if (method === 'delete') {
-            void request.delete(url, options);
+            void request.delete(url, options).catch((error: unknown) => {
+                const message = extractOperationErrorMessage(
+                    error,
+                    'Operation failed. Please try again.',
+                );
+
+                if (onError) {
+                    onError(message);
+
+                    return;
+                }
+
+                showAppToast({ variant: 'error', title: message });
+            });
 
             return;
         }
 
-        void request.patch(url, options);
+        void request.patch(url, options).catch((error: unknown) => {
+            const message = extractOperationErrorMessage(
+                error,
+                'Operation failed. Please try again.',
+            );
+
+            if (onError) {
+                onError(message);
+
+                return;
+            }
+
+            showAppToast({ variant: 'error', title: message });
+        });
     }
 
     return { processing: request.processing, perform };
