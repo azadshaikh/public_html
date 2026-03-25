@@ -12,6 +12,7 @@ import {
     normalizeRowKey,
 } from '@/components/datagrid/utils';
 import { CardDescription, CardTitle } from '@/components/ui/card';
+import { shouldRenderDatagridHeading } from '@/lib/datagrid-heading.js';
 import { cn } from '@/lib/utils';
 
 function normalizeWidth(width?: string | number): string | undefined {
@@ -47,6 +48,7 @@ export function Datagrid<T>({
     renderCard,
     cardGridClassName,
     summary,
+    showHeading = false,
     submitLabel = 'Apply',
     submitButtonVariant = 'outline',
     submitButtonSize = 'comfortable',
@@ -464,10 +466,15 @@ export function Datagrid<T>({
     const clearSelection = () => {
         setSelectedItemsMap({});
     };
+    const shouldShowHeading = shouldRenderDatagridHeading(
+        showHeading,
+        title,
+        description,
+    );
 
     return (
         <div className={cn('flex flex-col gap-4', className)}>
-            {title || description ? (
+            {shouldShowHeading ? (
                 <div className="flex flex-col gap-1">
                     {title ? <CardTitle>{title}</CardTitle> : null}
                     {description ? (

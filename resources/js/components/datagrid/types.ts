@@ -79,14 +79,14 @@ export type DatagridTab = {
     icon?: ReactNode;
     /** Badge variant for the count pill. Supports all Badge variants. */
     countVariant?:
-    | 'default'
-    | 'secondary'
-    | 'success'
-    | 'warning'
-    | 'info'
-    | 'danger'
-    | 'destructive'
-    | 'outline';
+        | 'default'
+        | 'secondary'
+        | 'success'
+        | 'warning'
+        | 'info'
+        | 'danger'
+        | 'destructive'
+        | 'outline';
 };
 
 export type DatagridColumnType =
@@ -190,6 +190,7 @@ export type DatagridProps<T> = {
     renderCard?: (row: T) => ReactNode;
     cardGridClassName?: string;
     summary?: string;
+    showHeading?: boolean;
     submitLabel?: string;
     submitButtonVariant?: 'default' | 'outline' | 'secondary' | 'ghost';
     submitButtonSize?: 'comfortable' | 'default' | 'sm' | 'xs';
