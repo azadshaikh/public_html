@@ -9,6 +9,7 @@ use App\Services\GlobalWarningService;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Blade;
+use Modules\CMS\Http\Middleware\RedirectionMiddleware;
 use Modules\CMS\Http\Middleware\ThemeMiddleware;
 use Modules\CMS\Models\CmsPost;
 use Modules\CMS\Models\Menu;
@@ -62,6 +63,7 @@ class CMSServiceProvider extends ModuleServiceProvider
         $this->registerCommands();
         $this->registerCommandSchedules();
         $this->registerGlobalWarnings();
+        $this->registerWebMiddleware();
     }
 
     protected function bootTranslations(): void
@@ -99,6 +101,13 @@ class CMSServiceProvider extends ModuleServiceProvider
         /** @var Router $router */
         $router = $this->app->make(Router::class);
         $router->aliasMiddleware('theme', ThemeMiddleware::class);
+    }
+
+    protected function registerWebMiddleware(): void
+    {
+        /** @var Router $router */
+        $router = $this->app->make(Router::class);
+        $router->pushMiddlewareToGroup('web', RedirectionMiddleware::class);
     }
 
     protected function registerObservers(): void

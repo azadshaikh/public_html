@@ -11,6 +11,8 @@ export default defineConfig(({ mode }) => {
     const useReactCompiler =
         env.VITE_REACT_COMPILER === undefined ||
         env.VITE_REACT_COMPILER === 'true';
+    const useCmsOnlyReleaseResolver =
+        env.VITE_RELEASE_ENABLED_MODULES === 'CMS';
     const appUrl = new URL(env.APP_URL || 'http://localhost');
     const devServerHost = env.VITE_DEV_SERVER_HOST || appUrl.hostname;
     const devServerPort = Number(env.VITE_DEV_SERVER_PORT || 5173);
@@ -35,9 +37,20 @@ export default defineConfig(({ mode }) => {
 
     return {
         resolve: {
-            alias: {
-                '@': path.resolve('resources/js'),
-            },
+            alias: [
+                {
+                    find: '@/lib/inertia-page-resolver',
+                    replacement: useCmsOnlyReleaseResolver
+                        ? path.resolve(
+                            'resources/js/lib/inertia-page-resolver.cms-release.tsx',
+                        )
+                        : path.resolve('resources/js/lib/inertia-page-resolver.tsx'),
+                },
+                {
+                    find: '@',
+                    replacement: path.resolve('resources/js'),
+                },
+            ],
         },
         plugins: [
             laravel({

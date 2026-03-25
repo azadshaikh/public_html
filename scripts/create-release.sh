@@ -16,18 +16,12 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 COMPOSER_FILE="$PROJECT_ROOT/composer.json"
 ENV_FILE="$PROJECT_ROOT/.env"
 LOCAL_RELEASE_DIR="$PROJECT_ROOT/storage/app/releases"
+MODULES_DIR="$PROJECT_ROOT/modules"
+MODULES_MANIFEST_FILE="$PROJECT_ROOT/modules.json"
+VITE_MANIFEST_FILE="$PROJECT_ROOT/public/build/manifest.json"
 
-# CMS-only module configuration
-CMS_ONLY_MODULES='{
-    "CMS": true,
-    "Todos": false,
-    "Domain": false,
-    "Helpdesk": false,
-    "ReleaseManager": false,
-    "Platform": false,
-    "SaaS": false,
-    "Demo": false
-}'
+# Enabled modules for release builds
+RELEASE_ENABLED_MODULES=(CMS)
 
 # Required tools
 REQUIRED_TOOLS=(pnpm composer zip rsync jq sha256sum curl)
@@ -173,6 +167,8 @@ META_BASENAME="${RELEASE_NAME}.zip.meta.json"
 RELEASE_FILE=""
 META_FILE=""
 TEMP_DIR=""
+declare -a DISCOVERED_MODULES=()
+declare -a DISABLED_RELEASE_MODULES=()
 
 # Store results for final display
 FINAL_CDN_URL=""
@@ -259,6 +255,84 @@ prepare_temp_dir() {
     log "Created temp directory: $TEMP_DIR"
 }
 
+discover_modules() {
+    if [[ ! -d "$MODULES_DIR" ]]; then
+        log_error "Modules directory not found: $MODULES_DIR"
+        exit 1
+    fi
+
+    mapfile -t DISCOVERED_MODULES < <(
+        find "$MODULES_DIR" -mindepth 2 -maxdepth 2 -name module.json -print \
+            | sort \
+            | while read -r manifest_path; do
+                jq -r '.name // empty' "$manifest_path"
+            done
+    )
+
+    if [[ ${#DISCOVERED_MODULES[@]} -eq 0 ]]; then
+        log_error "No modules were discovered from $MODULES_DIR"
+        exit 1
+    fi
+}
+
+module_is_enabled_for_release() {
+    local candidate="$1"
+
+    for enabled_module in "${RELEASE_ENABLED_MODULES[@]}"; do
+        if [[ "$enabled_module" == "$candidate" ]]; then
+            return 0
+        fi
+    done
+
+    return 1
+}
+
+validate_release_modules() {
+    local missing=()
+
+    for enabled_module in "${RELEASE_ENABLED_MODULES[@]}"; do
+        local found=false
+
+        for discovered_module in "${DISCOVERED_MODULES[@]}"; do
+            if [[ "$discovered_module" == "$enabled_module" ]]; then
+                found=true
+                break
+            fi
+        done
+
+        if [[ "$found" == false ]]; then
+            missing+=("$enabled_module")
+        fi
+    done
+
+    if [[ ${#missing[@]} -gt 0 ]]; then
+        log_error "Release-enabled modules not found: ${missing[*]}"
+        exit 1
+    fi
+}
+
+build_release_module_manifest() {
+    local manifest_json='{}'
+    DISABLED_RELEASE_MODULES=()
+
+    for discovered_module in "${DISCOVERED_MODULES[@]}"; do
+        local status="disabled"
+
+        if module_is_enabled_for_release "$discovered_module"; then
+            status="enabled"
+        else
+            DISABLED_RELEASE_MODULES+=("$discovered_module")
+        fi
+
+        manifest_json=$(jq \
+            --arg module "$discovered_module" \
+            --arg status "$status" \
+            '. + {($module): $status}' <<< "$manifest_json")
+    done
+
+    printf '%s\n' "$manifest_json"
+}
+
 # Run a command quietly, only showing output on failure
 run_quiet() {
     local label="$1"
@@ -288,37 +362,74 @@ build_assets() {
     (cd "$PROJECT_ROOT" && run_quiet "pnpm install --frozen-lockfile" pnpm install --frozen-lockfile)
     log_success "Node dependencies installed"
 
-    log "Running pnpm build:prod..."
-    (cd "$PROJECT_ROOT" && run_quiet "pnpm build:prod" pnpm run build:prod)
+    log "Running pnpm build:prod with CMS-only module pages..."
+    (
+        cd "$PROJECT_ROOT" && run_quiet \
+            "pnpm build:prod" \
+            env VITE_RELEASE_ENABLED_MODULES=CMS pnpm run build:prod
+    )
+
+    if [[ ! -f "$VITE_MANIFEST_FILE" ]]; then
+        log_error "Vite build manifest not found after build: $VITE_MANIFEST_FILE"
+        exit 1
+    fi
+
+    for discovered_module in "${DISCOVERED_MODULES[@]}"; do
+        if module_is_enabled_for_release "$discovered_module"; then
+            continue
+        fi
+
+        if grep -q "modules/${discovered_module}/resources/js/pages/" "$VITE_MANIFEST_FILE"; then
+            log_error "Vite manifest still contains pages for excluded module: ${discovered_module}"
+            exit 1
+        fi
+    done
+
     log_success "Assets built"
 }
 
 copy_project() {
     log "Copying project files..."
-    rsync -a \
-        --exclude ".git" \
-        --exclude "node_modules" \
-        --exclude "public/release" \
-        --exclude "public/favicon.ico" \
-        --exclude "public/favicon.svg" \
-        --exclude "public/favicon-*.png" \
-        --exclude "public/apple-touch-icon.png" \
-        --exclude "public/web-app-manifest-*.png" \
-        --exclude "public/site.webmanifest" \
-        --exclude "release_build_*" \
+
+    local rsync_args=(
+        -a
+        --exclude ".git"
+        --exclude "node_modules"
+        --exclude "public/release"
+        --exclude "public/favicon.ico"
+        --exclude "public/favicon.svg"
+        --exclude "public/favicon-*.png"
+        --exclude "public/apple-touch-icon.png"
+        --exclude "public/web-app-manifest-*.png"
+        --exclude "public/site.webmanifest"
+        --exclude "release_build_*"
+    )
+
+    for discovered_module in "${DISCOVERED_MODULES[@]}"; do
+        if ! module_is_enabled_for_release "$discovered_module"; then
+            rsync_args+=(--exclude "modules/${discovered_module}")
+        fi
+    done
+
+    rsync \
+        "${rsync_args[@]}" \
         "$PROJECT_ROOT"/ "$TEMP_DIR"/
     log_success "Project copied"
 }
 
 configure_modules() {
-    log "Setting modules_statuses to CMS-only..."
-    echo "$CMS_ONLY_MODULES" > "$TEMP_DIR/modules_statuses.json"
+    log "Writing release modules.json manifest..."
+    build_release_module_manifest > "$TEMP_DIR/modules.json"
     log_success "Module configuration updated"
 }
 
 install_dependencies() {
     log "Installing composer dependencies (no-dev)..."
     (cd "$TEMP_DIR" && run_quiet "composer install" composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist)
+
+    log "Clearing cached Laravel bootstrap artifacts in release copy..."
+    (cd "$TEMP_DIR" && run_quiet "php artisan optimize:clear" php artisan optimize:clear --ansi)
+
     log_success "Dependencies installed"
 }
 
@@ -376,27 +487,27 @@ prettier.config.mjs
 phpstan.neon
 commitlint.config.js
 package-lock.json
+pnpm-lock.yaml
 package.json
 phpunit.xml
 postcss.config.js
 vite-module-loader.js
 vite.config.js
+vite.config.ts
+tsconfig.json
+eslint.config.js
+skills-lock.json
 *.md
-modules/Agency/*
-modules/Billing/*
-modules/Customers/*
-modules/Demo/*
-modules/Helpdesk/*
-modules/Orders/*
-modules/Platform/*
-modules/ReleaseManager/*
-modules/Subscriptions/*
 tools/*
 hestia/*
 .gemini/*
 .kiro/*
 .zip-excludes
 EOF
+
+    for disabled_module in "${DISABLED_RELEASE_MODULES[@]}"; do
+        printf 'modules/%s/*\n' "$disabled_module" >> "$TEMP_DIR/.zip-excludes"
+    done
 }
 
 create_release_zip() {
@@ -540,6 +651,9 @@ main() {
     fi
     echo ""
 
+    discover_modules
+    validate_release_modules
+
     if [[ "$DRY_RUN" == true ]]; then
         log_warn "DRY RUN MODE - No changes will be made"
         echo ""
@@ -548,6 +662,20 @@ main() {
             echo "Would save local copy to: $LOCAL_RELEASE_DIR/$RELEASE_BASENAME"
         fi
         echo "Would update composer.json version: $CURRENT_VERSION → $NEW_VERSION"
+        echo "Would include modules: ${RELEASE_ENABLED_MODULES[*]}"
+        echo "Would build frontend pages only for modules: ${RELEASE_ENABLED_MODULES[*]}"
+
+        local excluded_modules=()
+        for discovered_module in "${DISCOVERED_MODULES[@]}"; do
+            if ! module_is_enabled_for_release "$discovered_module"; then
+                excluded_modules+=("$discovered_module")
+            fi
+        done
+
+        if [[ ${#excluded_modules[@]} -gt 0 ]]; then
+            echo "Would exclude modules: ${excluded_modules[*]}"
+        fi
+
         if [[ "$LOCAL_ONLY" != true ]]; then
             echo "Would upload to: Bunny Storage (${BUNNY_STORAGE_ZONE:-not configured})"
         fi

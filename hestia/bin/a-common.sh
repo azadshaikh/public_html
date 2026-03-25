@@ -60,15 +60,15 @@ setup_shared_dirs() {
     mkdir -p "$shared_dir/public"
     mkdir -p "$shared_dir/themes"
 
-    # Per-website module status (nwidart/laravel-modules)
-    local module_statuses_shared="$shared_dir/modules_statuses.json"
-    if [ ! -f "$module_statuses_shared" ]; then
-        if [ -n "$existing_dir" ] && [ -f "$existing_dir/modules_statuses.json" ] && [ ! -L "$existing_dir/modules_statuses.json" ]; then
-            cp "$existing_dir/modules_statuses.json" "$module_statuses_shared" 2>/dev/null || true
-        elif [ -f "$master_dir/modules_statuses.json" ]; then
-            cp "$master_dir/modules_statuses.json" "$module_statuses_shared" 2>/dev/null || true
+    # Per-website module manifest (modules.json)
+    local modules_manifest_shared="$shared_dir/modules.json"
+    if [ ! -f "$modules_manifest_shared" ]; then
+        if [ -n "$existing_dir" ] && [ -f "$existing_dir/modules.json" ] && [ ! -L "$existing_dir/modules.json" ]; then
+            cp "$existing_dir/modules.json" "$modules_manifest_shared" 2>/dev/null || true
+        elif [ -f "$master_dir/modules.json" ]; then
+            cp "$master_dir/modules.json" "$modules_manifest_shared" 2>/dev/null || true
         else
-            echo '{}' > "$module_statuses_shared"
+            echo '{}' > "$modules_manifest_shared"
         fi
     fi
 
@@ -258,7 +258,7 @@ create_shared_symlinks() {
     # Path: releases/vX.X.X/ needs ../../ to reach public_html/shared/
     ln -sfn "../../shared/storage" "$release_path/storage"
     ln -sfn "../../shared/.env" "$release_path/.env"
-    ln -sfn "../../shared/modules_statuses.json" "$release_path/modules_statuses.json"
+    ln -sfn "../../shared/modules.json" "$release_path/modules.json"
     ln -sfn "../../shared/themes" "$release_path/themes"
 
     # Per-website storage link (Laravel storage:link equivalent)

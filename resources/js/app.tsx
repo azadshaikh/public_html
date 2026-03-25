@@ -10,7 +10,7 @@ import { initFlashToasts } from '@/hooks/use-flash-toast';
 import {
     initModulePageFilter,
     resolveInertiaPage,
-} from './lib/inertia-page-resolver';
+} from '@/lib/inertia-page-resolver';
 import {
     incrementInertiaNavigationCount,
     normalizeInertiaNavigationUrl,
