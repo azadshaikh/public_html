@@ -62,10 +62,10 @@ export default function AgencyOnboardingDomain({
                                             <RadioGroupItem value="subdomain" className="mt-1" />
                                             <div className="min-w-0 flex-1 space-y-4">
                                                 <div className="space-y-1.5">
-                                                    <p className="text-xl font-medium tracking-[-0.02em]">
+                                                    <p className="text-lg font-medium tracking-[-0.02em]">
                                                         Use a free subdomain
                                                     </p>
-                                                    <p className="text-base font-normal text-muted-foreground">
+                                                    <p className="text-sm font-normal text-muted-foreground sm:text-base">
                                                         Get started instantly with a free
                                                         {' '}
                                                         <span className="font-semibold text-foreground">
@@ -112,10 +112,10 @@ export default function AgencyOnboardingDomain({
                                             <RadioGroupItem value="custom" className="mt-1" />
                                             <div className="min-w-0 flex-1 space-y-4">
                                                 <div className="space-y-1.5">
-                                                    <p className="text-xl font-medium tracking-[-0.02em]">
+                                                    <p className="text-lg font-medium tracking-[-0.02em]">
                                                         I already have a domain
                                                     </p>
-                                                    <p className="text-base font-normal text-muted-foreground">
+                                                    <p className="text-sm font-normal text-muted-foreground sm:text-base">
                                                         Use a domain you already own and registered elsewhere.
                                                     </p>
                                                 </div>
@@ -139,7 +139,7 @@ export default function AgencyOnboardingDomain({
                                                         </div>
 
                                                         <div className="space-y-3">
-                                                            <p className="text-base font-medium tracking-[-0.01em]">
+                                                            <p className="text-sm font-medium tracking-[-0.01em] sm:text-base">
                                                                 How should we handle DNS?
                                                             </p>
 
@@ -161,7 +161,7 @@ export default function AgencyOnboardingDomain({
                                                                     <div className="flex items-start gap-3">
                                                                         <RadioGroupItem value="managed" className="mt-1" />
                                                                         <div className="space-y-1.5">
-                                                                                <p className="text-base font-medium">
+                                                                                <p className="text-sm font-medium sm:text-base">
                                                                                 We'll manage your DNS
                                                                             </p>
                                                                                 <p className="text-sm font-normal text-muted-foreground">
@@ -182,7 +182,7 @@ export default function AgencyOnboardingDomain({
                                                                     <div className="flex items-start gap-3">
                                                                         <RadioGroupItem value="external" className="mt-1" />
                                                                         <div className="space-y-1.5">
-                                                                                <p className="text-base font-medium">
+                                                                                <p className="text-sm font-medium sm:text-base">
                                                                                 I'll manage DNS myself
                                                                             </p>
                                                                                 <p className="text-sm font-normal text-muted-foreground">
