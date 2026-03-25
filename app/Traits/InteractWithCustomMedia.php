@@ -60,25 +60,14 @@ trait InteractWithCustomMedia
         }
 
         $quality = $this->getImageQuality();
-        $isLargeFile = $media->size > 3 * 1024 * 1024; // 3MB threshold
 
-        // Remote disks (FTP/S3) — force ALL conversions to queue to avoid HTTP timeout.
-        // Spatie must download original from remote, convert locally, then upload result back
-        // for each conversion — far too slow for a synchronous HTTP request.
-        $diskDriver = config(sprintf('filesystems.disks.%s.driver', $media->disk), 'local');
-        $isRemoteDisk = $diskDriver !== 'local';
-
-        // 1. Create thumbnail in WebP format - always immediate for UI
+        // 1. Create thumbnail in WebP format
         $thumbnailWidth = (int) config('media.thumbnail_width', 150);
         $media->setCustomProperty('thumbnail_width', $thumbnailWidth);
         $media->setCustomProperty('thumbnail_height', $thumbnailWidth);
 
         $conversion = $this->addMediaConversion('thumbnail');
-        if ($isRemoteDisk) {
-            $conversion->queued();
-        } else {
-            $conversion->nonQueued();
-        }
+        $conversion->queued();
 
         $conversion->width($thumbnailWidth);
         $conversion->quality($quality);
@@ -87,18 +76,14 @@ trait InteractWithCustomMedia
         // 2. Create optimized WebP version (for JPG/PNG originals)
         if (in_array($media->mime_type, ['image/jpeg', 'image/jpg', 'image/png'])) {
             $conversion = $this->addMediaConversion('optimized');
-            if ($isRemoteDisk || $isLargeFile) {
-                $conversion->queued();
-            } else {
-                $conversion->nonQueued();
-            }
+            $conversion->queued();
 
             $conversion->quality($quality);
             $conversion->format('webp');
         }
 
         // 3. Create responsive images for the optimized version or original WebP
-        $this->createResponsiveImages($media, $quality, $isLargeFile);
+        $this->createResponsiveImages($media, $quality);
 
         // Handle icon sizes if specified
         $iconSizes = config('media.icon_conversion_size', '');
@@ -185,7 +170,7 @@ trait InteractWithCustomMedia
     /**
      * Create responsive images based on original image dimensions
      */
-    private function createResponsiveImages(Media $media, int $quality, bool $isLargeFile): void
+    private function createResponsiveImages(Media $media, int $quality): void
     {
         // Get image dimensions — prefer pre-stored custom properties (set during upload
         // from the local temp file) to avoid downloading back from FTP/S3.
@@ -242,10 +227,6 @@ trait InteractWithCustomMedia
                 return;
             }
 
-            // Remote disks — force all responsive conversions to queue
-            $diskDriver = config(sprintf('filesystems.disks.%s.driver', $media->disk), 'local');
-            $isRemoteDisk = $diskDriver !== 'local';
-
             // For normal-sized images, create responsive sizes that are smaller than the original
             foreach ($responsiveSizes as $sizeName => $targetWidth) {
                 if ($targetWidth < $originalWidth) {
@@ -257,11 +238,7 @@ trait InteractWithCustomMedia
                     $media->setCustomProperty($sizeName.'_height', $targetHeight);
 
                     $conversion = $this->addMediaConversion($sizeName);
-                    if ($isRemoteDisk || $isLargeFile) {
-                        $conversion->queued();
-                    } else {
-                        $conversion->nonQueued();
-                    }
+                    $conversion->queued();
 
                     $conversion->width($targetWidth);
                     $conversion->quality($quality);

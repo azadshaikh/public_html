@@ -524,6 +524,7 @@ Route::prefix($adminPrefix)->group(function (): void {
 
                 // MediaVariationService endpoints
                 Route::get('/{id}/conversion-status', [MediaController::class, 'getConversionStatus'])->name('conversion-status');
+                Route::get('/conversion-stream', [MediaController::class, 'streamConversionStatus'])->name('conversion-stream');
                 Route::get('/variation-config', [MediaController::class, 'getVariationConfig'])->name('variation-config');
                 Route::get('/{id}/responsive-data', [MediaController::class, 'getResponsiveImageData'])->name('responsive-data');
                 Route::get('/{id}/responsive-html', [MediaController::class, 'getResponsiveImageHtml'])->name('responsive-html');

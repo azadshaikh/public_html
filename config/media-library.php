@@ -1,5 +1,7 @@
 <?php
 
+use App\Jobs\GenerateMediaResponsiveImagesJob;
+use App\Jobs\PerformMediaConversionsJob;
 use App\Models\CustomMedia;
 use App\Support\Media\MediaPathGenerator;
 use Spatie\ImageOptimizer\Optimizers\Avifenc;
@@ -15,10 +17,8 @@ use Spatie\MediaLibrary\Conversions\ImageGenerators\Pdf;
 use Spatie\MediaLibrary\Conversions\ImageGenerators\Svg;
 use Spatie\MediaLibrary\Conversions\ImageGenerators\Video;
 use Spatie\MediaLibrary\Conversions\ImageGenerators\Webp;
-use Spatie\MediaLibrary\Conversions\Jobs\PerformConversionsJob;
 use Spatie\MediaLibrary\Downloaders\DefaultDownloader;
 use Spatie\MediaLibrary\MediaCollections\Models\Observers\MediaObserver;
-use Spatie\MediaLibrary\ResponsiveImages\Jobs\GenerateResponsiveImagesJob;
 use Spatie\MediaLibrary\ResponsiveImages\TinyPlaceholderGenerator\Blurred;
 use Spatie\MediaLibrary\ResponsiveImages\WidthCalculator\FileSizeOptimizedWidthCalculator;
 use Spatie\MediaLibrary\Support\FileNamer\DefaultFileNamer;
@@ -217,8 +217,8 @@ return [
      * your custom jobs extend the ones provided by the package.
      */
     'jobs' => [
-        'perform_conversions' => PerformConversionsJob::class,
-        'generate_responsive_images' => GenerateResponsiveImagesJob::class,
+        'perform_conversions' => PerformMediaConversionsJob::class,
+        'generate_responsive_images' => GenerateMediaResponsiveImagesJob::class,
     ],
 
     /*

@@ -14,6 +14,8 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useConversionStream } from '@/hooks/use-conversion-stream';
+import { usePageVisibility } from '@/hooks/use-page-visibility';
 import type {
     MediaListItem,
     MediaPickerFilters,
@@ -306,11 +308,11 @@ export function MediaPickerDialog({
                             prev.map((f) =>
                                 f.id === uf.id
                                     ? {
-                                          ...f,
-                                          progress: 100,
-                                          status: 'success',
-                                          result: response.file,
-                                      }
+                                        ...f,
+                                        progress: 100,
+                                        status: 'success',
+                                        result: response.file,
+                                    }
                                     : f,
                             ),
                         );
@@ -319,11 +321,11 @@ export function MediaPickerDialog({
                             prev.map((f) =>
                                 f.id === uf.id
                                     ? {
-                                          ...f,
-                                          status: 'error',
-                                          error:
-                                              response.error || 'Upload failed',
-                                      }
+                                        ...f,
+                                        status: 'error',
+                                        error:
+                                            response.error || 'Upload failed',
+                                    }
                                     : f,
                             ),
                         );
@@ -333,10 +335,10 @@ export function MediaPickerDialog({
                         prev.map((f) =>
                             f.id === uf.id
                                 ? {
-                                      ...f,
-                                      status: 'error',
-                                      error: 'Invalid response',
-                                  }
+                                    ...f,
+                                    status: 'error',
+                                    error: 'Invalid response',
+                                }
                                 : f,
                         ),
                     );
@@ -477,9 +479,9 @@ export function MediaPickerDialog({
     const totalProgress =
         activeFiles.length > 0
             ? Math.round(
-                  activeFiles.reduce((sum, f) => sum + f.progress, 0) /
-                      activeFiles.length,
-              )
+                activeFiles.reduce((sum, f) => sum + f.progress, 0) /
+                activeFiles.length,
+            )
             : 0;
 
     const totalStagedSize = stagedFiles.reduce((sum, f) => sum + f.size, 0);
@@ -534,6 +536,35 @@ export function MediaPickerDialog({
     }, []);
 
     const isLoading = open && !pickerMedia;
+
+    // ── SSE stream for processing media items ────────────────────
+
+    const isPageVisible = usePageVisibility();
+
+    const processingIds = useMemo(
+        () => (pickerMedia?.data ?? []).filter((m) => m.is_processing).map((m) => m.id),
+        [pickerMedia?.data],
+    );
+
+    useConversionStream(
+        processingIds,
+        open && isPageVisible,
+        useCallback((_mediaId, status) => {
+            if (status.status === 'completed') {
+                router.get(
+                    pickerAction,
+                    {
+                        picker: '1',
+                        sort: pickerFilters?.sort ?? 'created_at',
+                        direction: pickerFilters?.direction ?? 'desc',
+                        per_page: pickerFilters?.per_page ?? 24,
+                        view: pickerFilters?.view ?? 'cards',
+                    },
+                    { preserveState: true, preserveScroll: true, replace: true },
+                );
+            }
+        }, [pickerAction, pickerFilters]),
+    );
 
     // ── Render ───────────────────────────────────────────────────
 

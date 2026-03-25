@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class MediaController extends Controller
 {
@@ -829,6 +830,101 @@ class MediaController extends Controller
                 'error' => 'Failed to get conversion status',
             ], 500);
         }
+    }
+
+    /**
+     * SSE stream that pushes conversion-status updates for one or more media IDs.
+     *
+     * Checks every second and sends an event when a media item's status changes.
+     * The stream closes automatically once every tracked item is complete (or after 60 s).
+     */
+    public function streamConversionStatus(Request $request): StreamedResponse
+    {
+        $ids = array_map('intval', array_filter((array) $request->query('ids', [])));
+
+        abort_if(empty($ids) || count($ids) > 50, 422);
+
+        return response()->stream(function () use ($ids): void {
+            $previousStatuses = [];
+            $maxSeconds = 60;
+            $start = time();
+
+            // Send initial status for every requested ID immediately
+            foreach ($ids as $id) {
+                $status = $this->mediaVariationService->getConversionStatus($id);
+                $previousStatuses[$id] = $status['status'];
+
+                $payload = json_encode([
+                    'media_id' => $id,
+                    'conversion_status' => $status,
+                ]);
+                echo "data: {$payload}\n\n";
+            }
+
+            if (ob_get_level()) {
+                ob_flush();
+            }
+            flush();
+
+            // If everything is already done, close immediately
+            $allDone = collect($previousStatuses)->every(fn (string $s): bool => $s !== 'processing');
+            if ($allDone) {
+                echo "data: [DONE]\n\n";
+                if (ob_get_level()) {
+                    ob_flush();
+                }
+                flush();
+
+                return;
+            }
+
+            // Poll internally and push only when status changes
+            while ((time() - $start) < $maxSeconds) {
+                if (connection_aborted()) {
+                    return;
+                }
+
+                sleep(1);
+
+                $anyChanged = false;
+                foreach ($ids as $id) {
+                    $status = $this->mediaVariationService->getConversionStatus($id);
+
+                    if ($status['status'] !== ($previousStatuses[$id] ?? null)) {
+                        $previousStatuses[$id] = $status['status'];
+                        $anyChanged = true;
+
+                        $payload = json_encode([
+                            'media_id' => $id,
+                            'conversion_status' => $status,
+                        ]);
+                        echo "data: {$payload}\n\n";
+                    }
+                }
+
+                if ($anyChanged) {
+                    if (ob_get_level()) {
+                        ob_flush();
+                    }
+                    flush();
+                }
+
+                $allDone = collect($previousStatuses)->every(fn (string $s): bool => $s !== 'processing');
+                if ($allDone) {
+                    break;
+                }
+            }
+
+            echo "data: [DONE]\n\n";
+            if (ob_get_level()) {
+                ob_flush();
+            }
+            flush();
+        }, 200, [
+            'Content-Type' => 'text/event-stream',
+            'Cache-Control' => 'no-cache',
+            'X-Accel-Buffering' => 'no',
+        ]);
     }
 
     /**

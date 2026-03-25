@@ -11,7 +11,7 @@ import {
     RefreshCwIcon,
     Trash2Icon,
 } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Datagrid } from '@/components/datagrid/datagrid';
 import type {
     DatagridAction,
@@ -24,6 +24,7 @@ import { MediaDetailSheet } from '@/components/media/media-detail-sheet';
 import { MediaUploadDropzone } from '@/components/media/media-upload-dropzone';
 import { ResourceFeedbackAlerts } from '@/components/resource/resource-feedback-alerts';
 import { Badge } from '@/components/ui/badge';
+import { useConversionStream } from '@/hooks/use-conversion-stream';
 import { usePageVisibility } from '@/hooks/use-page-visibility';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
@@ -113,27 +114,18 @@ export default function MediaIndex({
         setDetailOpen(true);
     }, []);
 
-    // ----- Poll while media items are processing -----
+    // ----- SSE stream while media items are processing -----
 
-    const hasProcessing = media.data.some((m) => m.is_processing);
-    const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const processingIds = useMemo(
+        () => media.data.filter((m) => m.is_processing).map((m) => m.id),
+        [media.data],
+    );
 
-    useEffect(() => {
-        if (hasProcessing && isPageVisible) {
-            pollingRef.current = setInterval(() => {
-                router.reload({
-                    only: ['media', 'statistics'],
-                });
-            }, 5000);
+    useConversionStream(processingIds, isPageVisible, useCallback((_mediaId, status) => {
+        if (status.status === 'completed') {
+            router.reload({ only: ['media', 'statistics'] });
         }
-
-        return () => {
-            if (pollingRef.current) {
-                clearInterval(pollingRef.current);
-                pollingRef.current = null;
-            }
-        };
-    }, [hasProcessing, isPageVisible]);
+    }, []));
 
     // ----- Bulk action helper -----
 
@@ -463,7 +455,7 @@ export default function MediaIndex({
                         >
                             {/* Thumbnail / file icon */}
                             {isImageMimeType(item.mime_type) &&
-                            item.thumbnail_url ? (
+                                item.thumbnail_url ? (
                                 <img
                                     src={item.thumbnail_url}
                                     alt={item.alt_text || item.name}

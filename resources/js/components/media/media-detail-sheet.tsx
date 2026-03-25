@@ -7,7 +7,7 @@ import {
     LoaderIcon,
     SaveIcon,
 } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,6 +21,7 @@ import {
     SheetTitle,
 } from '@/components/ui/sheet';
 import { Textarea } from '@/components/ui/textarea';
+import { useConversionStream } from '@/hooks/use-conversion-stream';
 import { usePageVisibility } from '@/hooks/use-page-visibility';
 import type { MediaDetail } from '@/types/media';
 
@@ -56,14 +57,6 @@ export function MediaDetailSheet({
         Record<string, never>,
         { status?: number; data?: MediaDetail }
     >({});
-    const conversionStatusRequest = useHttp<
-        Record<string, never>,
-        {
-            data?: {
-                conversion_status?: MediaDetail['conversion_status'];
-            };
-        }
-    >({});
     const saveRequest = useHttp<
         Record<string, string>,
         { status?: number }
@@ -78,89 +71,90 @@ export function MediaDetailSheet({
 
     // ── Fetch details ─────────────────────────────────────────────
 
-    const fetchDetails = useCallback(async (id: number) => {
-        setLoading(true);
-        try {
-            const payload = await detailRequest.get(route('app.media.details', id), {
-                headers: { Accept: 'application/json' },
-            });
+    const lastFetchedIdRef = useRef<number | null>(null);
 
-            if (payload.status === 1 && payload.data) {
-                const d = payload.data;
-                setDetail(d);
-                setName(d.name);
-                setAltText(d.alt_text);
-                setCaption(d.caption);
-                setDescription(d.description);
-                setTags(d.tags);
+    useEffect(() => {
+        if (!open || !mediaId) {
+            if (!open) {
+                setDetail(null);
+                setConversionPolling(false);
+                lastFetchedIdRef.current = null;
             }
-        } catch {
-            // silently fail
-        } finally {
-            setLoading(false);
+            return;
         }
-    }, [detailRequest]);
 
-    useEffect(() => {
-        if (open && mediaId) {
-            fetchDetails(mediaId);
+        // Prevent refetching the same media when useHttp ref changes
+        if (lastFetchedIdRef.current === mediaId && detail) {
+            return;
         }
-        if (!open) {
-            setDetail(null);
-            setConversionPolling(false);
-        }
-    }, [open, mediaId, fetchDetails]);
 
-    // ── Poll for conversion status ──────────────────────────────
+        lastFetchedIdRef.current = mediaId;
+        let cancelled = false;
 
-    useEffect(() => {
-        if (!detail || !detail.is_processing || !open || !isPageVisible) return;
-
-        const detailId = detail.id;
-        setConversionPolling(true);
-        const interval = setInterval(async () => {
+        (async () => {
+            setLoading(true);
             try {
-                const payload = await conversionStatusRequest.get(
-                    route('app.media.conversion-status', detailId),
+                const payload = await detailRequest.get(
+                    route('app.media.details', mediaId),
                     {
                         headers: { Accept: 'application/json' },
                     },
                 );
-                const convStatus = payload.data?.conversion_status;
-                if (convStatus?.status === 'completed') {
-                    setDetail((prev) =>
-                        prev
-                            ? {
-                                  ...prev,
-                                  is_processing: false,
-                                  conversion_status: convStatus,
-                              }
-                            : prev,
-                    );
-                    setConversionPolling(false);
-                    clearInterval(interval);
-                } else if (convStatus) {
-                    // Update conversion progress even if not yet completed
-                    setDetail((prev) =>
-                        prev
-                            ? {
-                                  ...prev,
-                                  conversion_status: convStatus,
-                              }
-                            : prev,
-                    );
+
+                if (!cancelled && payload.status === 1 && payload.data) {
+                    const d = payload.data;
+                    setDetail(d);
+                    setName(d.name);
+                    setAltText(d.alt_text);
+                    setCaption(d.caption);
+                    setDescription(d.description);
+                    setTags(d.tags);
                 }
             } catch {
-                // ignore polling errors
+                // silently fail
+            } finally {
+                if (!cancelled) {
+                    setLoading(false);
+                }
             }
-        }, 3000);
+        })();
 
         return () => {
-            clearInterval(interval);
-            conversionStatusRequest.cancel();
+            cancelled = true;
+            detailRequest.cancel();
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [detail?.id, detail?.is_processing, isPageVisible, open]);
+    }, [open, mediaId]);
+
+    // ── Stream conversion status via SSE ────────────────────────
+
+    const streamIds =
+        detail && detail.is_processing && open ? [detail.id] : [];
+
+    useConversionStream(streamIds, isPageVisible, (mediaId, convStatus) => {
+        const mapped: MediaDetail['conversion_status'] = {
+            status: convStatus.status,
+            conversions: Object.fromEntries(
+                convStatus.conversions.map((c) => [c, true]),
+            ),
+            error: convStatus.error,
+        };
+
+        if (convStatus.status === 'completed') {
+            setDetail((prev) =>
+                prev && prev.id === mediaId
+                    ? { ...prev, is_processing: false, conversion_status: mapped }
+                    : prev,
+            );
+            setConversionPolling(false);
+        } else {
+            setDetail((prev) =>
+                prev && prev.id === mediaId
+                    ? { ...prev, conversion_status: mapped }
+                    : prev,
+            );
+        }
+    });
 
     // ── Save metadata ───────────────────────────────────────────
 
@@ -285,12 +279,12 @@ export function MediaDetailSheet({
                                 value={
                                     detail.created_at
                                         ? new Date(
-                                              detail.created_at,
-                                          ).toLocaleDateString('en-US', {
-                                              month: 'short',
-                                              day: 'numeric',
-                                              year: 'numeric',
-                                          })
+                                            detail.created_at,
+                                        ).toLocaleDateString('en-US', {
+                                            month: 'short',
+                                            day: 'numeric',
+                                            year: 'numeric',
+                                        })
                                         : '—'
                                 }
                             />
@@ -318,7 +312,7 @@ export function MediaDetailSheet({
                                     />
                                     {detail.media_url &&
                                         detail.media_url !==
-                                            detail.original_url && (
+                                        detail.original_url && (
                                             <UrlCopyRow
                                                 label="Optimized"
                                                 url={detail.media_url}
