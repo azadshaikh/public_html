@@ -60,8 +60,54 @@ export default function AgencyAuthLayout({
                     <AppThemeToggle />
                 </div>
 
-                <div className="grid min-h-svh lg:grid-cols-[1.15fr_0.85fr]">
-                    <section className="relative hidden overflow-hidden border-r border-black/5 bg-[radial-gradient(circle_at_top_left,#f9d784_0%,rgba(249,215,132,0.32)_22%,transparent_45%),linear-gradient(160deg,#121212_0%,#191919_55%,#232323_100%)] px-10 py-12 text-white lg:flex lg:flex-col">
+                <div className="grid min-h-svh lg:grid-cols-2">
+                    <section className="flex items-center justify-center px-6 py-16 sm:px-10 lg:px-14">
+                        <div className="w-full max-w-md space-y-8">
+                            <div className="space-y-4 text-center">
+                                <Link
+                                    href="/"
+                                    className="mx-auto flex w-fit flex-col items-center gap-3"
+                                >
+                                    <div className="flex size-14 items-center justify-center overflow-hidden rounded-[1.25rem] border border-black/8 bg-white shadow-[0_18px_60px_rgba(19,18,14,0.08)] dark:border-white/10 dark:bg-white/5 dark:shadow-none">
+                                        {logoUrl !== '' ? (
+                                            <img
+                                                src={logoUrl}
+                                                alt={brandName}
+                                                className="size-full object-cover"
+                                            />
+                                        ) : (
+                                            <span className="text-xl font-semibold">
+                                                {brandName.charAt(0)}
+                                            </span>
+                                        )}
+                                    </div>
+                                </Link>
+                                <div className="space-y-2">
+                                    <h2 className="text-3xl font-semibold tracking-[-0.03em] text-balance">
+                                        {title}
+                                    </h2>
+                                    <p className="text-sm leading-6 text-muted-foreground">
+                                        {description}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div
+                                className={cn(
+                                    'rounded-[2rem] border border-black/6 bg-white/92 p-6 shadow-[0_20px_80px_rgba(33,30,22,0.09)] backdrop-blur',
+                                    'dark:border-white/10 dark:bg-white/5 dark:shadow-none',
+                                )}
+                            >
+                                {children}
+                            </div>
+
+                            <div className="text-center text-sm text-muted-foreground">
+                                {bottomPrompt}
+                            </div>
+                        </div>
+                    </section>
+
+                    <section className="relative hidden overflow-hidden border-l border-black/5 bg-[radial-gradient(circle_at_top_left,#f9d784_0%,rgba(249,215,132,0.32)_22%,transparent_45%),linear-gradient(160deg,#121212_0%,#191919_55%,#232323_100%)] px-10 py-12 text-white lg:flex lg:flex-col">
                         <div className="absolute inset-0 bg-[linear-gradient(135deg,transparent_0%,rgba(255,255,255,0.05)_35%,transparent_70%)]" />
 
                         <div className="relative flex items-center gap-3">
@@ -119,52 +165,6 @@ export default function AgencyAuthLayout({
                         <p className="relative text-sm text-white/40">
                             Build, launch, and support customer sites from one place.
                         </p>
-                    </section>
-
-                    <section className="flex items-center justify-center px-6 py-16 sm:px-10 lg:px-14">
-                        <div className="w-full max-w-md space-y-8">
-                            <div className="space-y-4 text-center">
-                                <Link
-                                    href="/"
-                                    className="mx-auto flex w-fit flex-col items-center gap-3"
-                                >
-                                    <div className="flex size-14 items-center justify-center overflow-hidden rounded-[1.25rem] border border-black/8 bg-white shadow-[0_18px_60px_rgba(19,18,14,0.08)] dark:border-white/10 dark:bg-white/5 dark:shadow-none">
-                                        {logoUrl !== '' ? (
-                                            <img
-                                                src={logoUrl}
-                                                alt={brandName}
-                                                className="size-full object-cover"
-                                            />
-                                        ) : (
-                                            <span className="text-xl font-semibold">
-                                                {brandName.charAt(0)}
-                                            </span>
-                                        )}
-                                    </div>
-                                </Link>
-                                <div className="space-y-2">
-                                    <h2 className="text-3xl font-semibold tracking-[-0.03em] text-balance">
-                                        {title}
-                                    </h2>
-                                    <p className="text-sm leading-6 text-muted-foreground">
-                                        {description}
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div
-                                className={cn(
-                                    'rounded-[2rem] border border-black/6 bg-white/92 p-6 shadow-[0_20px_80px_rgba(33,30,22,0.09)] backdrop-blur',
-                                    'dark:border-white/10 dark:bg-white/5 dark:shadow-none',
-                                )}
-                            >
-                                {children}
-                            </div>
-
-                            <div className="text-center text-sm text-muted-foreground">
-                                {bottomPrompt}
-                            </div>
-                        </div>
                     </section>
                 </div>
             </div>
