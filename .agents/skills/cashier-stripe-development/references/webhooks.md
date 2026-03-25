@@ -114,8 +114,11 @@ Keep the `cashier.webhook` route name unless you plan to pass `--url` explicitly
 The simpler option when you do not need to replace Cashier's internal logic, or when you want to react to events such as `invoice.payment_succeeded` that Cashier does not process itself:
 
 ```php
-use Laravel\Cashier\Events\WebhookHandled;
 use Laravel\Cashier\Events\WebhookReceived;
+use Laravel\Cashier\Events\WebhookHandled;
+
+// WebhookReceived fires for every event before Cashier processes it
+// WebhookHandled fires after Cashier processes it
 
 Event::listen(WebhookReceived::class, function (WebhookReceived $event) {
     if ($event->payload['type'] === 'invoice.payment_succeeded') {

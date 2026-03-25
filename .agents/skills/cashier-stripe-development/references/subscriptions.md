@@ -75,9 +75,9 @@ $user->subscription('gym')->cancel();
 ## Cancellation and Resumption
 
 ```php
-$user->subscription('default')->cancel();
-$user->subscription('default')->cancelNow();
-$user->subscription('default')->resume();
+$user->subscription('default')->cancel();        // At end of billing period
+$user->subscription('default')->cancelNow();     // Immediately
+$user->subscription('default')->resume();        // During grace period only
 ```
 
 ## Incomplete Payment Handling

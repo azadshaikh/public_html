@@ -22,7 +22,8 @@ class BlogPost extends Model implements HasMedia
 
     public function registerMediaConversions(?Media $media = null): void
     {
-        $this->addMediaConversion('thumb');
+        $this->addMediaConversion('thumb')
+            ->fit(Fit::Contain, 300, 300);
     }
 }
 ```
@@ -97,13 +98,13 @@ All methods are chainable before calling `toMediaCollection()`:
 
 ```php
 $model->addMedia($file)
-    ->usingName('Custom Name')
-    ->usingFileName('custom-name.jpg')
-    ->setOrder(3)
+    ->usingName('Custom Name')              // display name
+    ->usingFileName('custom-name.jpg')      // filename on disk
+    ->setOrder(3)                           // order within collection
     ->withCustomProperties(['alt' => 'A landscape photo'])
     ->withManipulations(['thumb' => ['filter' => 'greyscale']])
-    ->withResponsiveImages()
-    ->storingConversionsOnDisk('s3')
+    ->withResponsiveImages()                // generate responsive variants
+    ->storingConversionsOnDisk('s3')         // put conversions on different disk
     ->addCustomHeaders(['CacheControl' => 'max-age=31536000'])
     ->toMediaCollection('images');
 ```
@@ -148,7 +149,7 @@ public function registerMediaCollections(): void
     // Custom validation
     $this->addMediaCollection('images')
         ->acceptsFile(function ($file) {
-            return true;
+            return $file->mimeType === 'image/jpeg';
         });
 
     // Fallback URL/path when collection is empty
@@ -164,7 +165,8 @@ public function registerMediaCollections(): void
     // Collection-specific conversions
     $this->addMediaCollection('photos')
         ->registerMediaConversions(function () {
-            // collection-specific conversions
+            $this->addMediaConversion('card')
+                ->fit(Fit::Crop, 400, 400);
         });
 }
 ```
@@ -185,18 +187,35 @@ public function registerMediaConversions(?Media $media = null): void
 
     $this->addMediaConversion('preview')
         ->fit(Fit::Crop, 500, 500)
+        ->withResponsiveImages()
         ->queued();
 
     $this->addMediaConversion('banner')
         ->fit(Fit::Max, 1200, 630)
-        ->format('webp')
-        ->quality(85)
+        ->performOnCollections('images', 'headers')
+        ->nonQueued()
         ->sharpen(10);
 
     // Conditional conversion based on media properties
     if ($media?->mime_type === 'image/png') {
-        $this->addMediaConversion('png-thumb');
+        $this->addMediaConversion('png-thumb')
+            ->fit(Fit::Contain, 150, 150);
     }
+
+    // Keep original format instead of converting to jpg
+    $this->addMediaConversion('web')
+        ->fit(Fit::Max, 800, 800)
+        ->keepOriginalImageFormat();
+
+    // PDF page rendering
+    $this->addMediaConversion('pdf-preview')
+        ->pdfPageNumber(1)
+        ->fit(Fit::Contain, 400, 400);
+
+    // Video frame extraction
+    $this->addMediaConversion('video-thumb')
+        ->extractVideoFrameAtSecond(5)
+        ->fit(Fit::Crop, 300, 300);
 }
 ```
 
@@ -237,24 +256,24 @@ Other:
 ### Getting media items
 
 ```php
-$media = $model->getMedia('images');
-$first = $model->getFirstMedia('images');
-$last  = $model->getLastMedia('images');
-$has   = $model->hasMedia('images');
+$media = $model->getMedia('images');                    // all in collection
+$first = $model->getFirstMedia('images');               // first item
+$last  = $model->getLastMedia('images');                // last item
+$has   = $model->hasMedia('images');                    // boolean check
 ```
 
 ### Getting URLs
 
 ```php
-$url      = $model->getFirstMediaUrl('images');
-$thumbUrl = $model->getFirstMediaUrl('images', 'thumb');
+$url     = $model->getFirstMediaUrl('images');           // original URL
+$thumbUrl = $model->getFirstMediaUrl('images', 'thumb'); // conversion URL
 $lastUrl  = $model->getLastMediaUrl('images', 'thumb');
 ```
 
 ### Getting paths
 
 ```php
-$path      = $model->getFirstMediaPath('images');
+$path     = $model->getFirstMediaPath('images');
 $thumbPath = $model->getFirstMediaPath('images', 'thumb');
 ```
 
@@ -279,12 +298,12 @@ $url = $model->getFallbackMediaUrl('avatar');
 ```php
 $media = $model->getFirstMedia('images');
 
-$media->getUrl();
-$media->getUrl('thumb');
-$media->getPath();
-$media->getFullUrl();
+$media->getUrl();                    // original URL
+$media->getUrl('thumb');             // conversion URL
+$media->getPath();                   // disk path
+$media->getFullUrl();                // full URL with domain
 $media->getTemporaryUrl(now()->addMinutes(30));
-$media->hasGeneratedConversion('thumb');
+$media->hasGeneratedConversion('thumb');  // check if conversion exists
 ```
 
 ### Filtering media
@@ -305,8 +324,8 @@ Store arbitrary metadata on media items:
 // When adding
 $model->addMedia($file)
     ->withCustomProperties([
-        'alt' => 'Updated text',
-        'featured' => true,
+        'alt' => 'Descriptive text',
+        'credits' => 'Photographer Name',
     ])
     ->toMediaCollection('images');
 
@@ -359,7 +378,7 @@ $this->addMediaCollection('photos')
 ### Placeholder SVG
 
 ```php
-$svg = $media->responsiveImages()->getPlaceholderSvg();
+$svg = $media->responsiveImages()->getPlaceholderSvg(); // tiny blurred base64 placeholder
 ```
 
 ## Managing Media
@@ -417,7 +436,6 @@ use Spatie\MediaLibrary\MediaCollections\Events\CollectionHasBeenClearedEvent;
 ```
 
 Listen to these events to hook into the media lifecycle:
-
 ```php
 Event::listen(MediaHasBeenAddedEvent::class, function ($event) {
     $event->media; // the added Media model
@@ -435,8 +453,19 @@ Key `config/media-library.php` options:
 
 ```php
 return [
-    'disk_name' => 'public',
-    'default_loading_attribute_value' => null,
+    'disk_name' => 'public',                    // default disk
+    'max_file_size' => 1024 * 1024 * 10,         // 10MB
+    'queue_connection_name' => '',                // queue connection
+    'queue_name' => '',                          // queue name
+    'queue_conversions_by_default' => true,       // queue conversions
+    'media_model' => Spatie\MediaLibrary\MediaCollections\Models\Media::class,
+    'file_namer' => Spatie\MediaLibrary\Support\FileNamer\DefaultFileNamer::class,
+    'path_generator' => Spatie\MediaLibrary\Support\PathGenerator\DefaultPathGenerator::class,
+    'url_generator' => Spatie\MediaLibrary\Support\UrlGenerator\DefaultUrlGenerator::class,
+    'image_driver' => 'gd',                      // 'gd', 'imagick', or 'vips'
+    'image_optimizers' => [/* optimizer config */],
+    'version_urls' => true,                       // cache busting
+    'default_loading_attribute_value' => null,     // 'lazy' for lazy loading
 ];
 ```
 
@@ -449,17 +478,17 @@ class CustomPathGenerator implements PathGenerator
 {
     public function getPath(Media $media): string
     {
-        return 'custom/path/';
+        return md5($media->id) . '/';
     }
 
     public function getPathForConversions(Media $media): string
     {
-        return 'custom/path/conversions/';
+        return $this->getPath($media) . 'conversions/';
     }
 
     public function getPathForResponsiveImages(Media $media): string
     {
-        return 'custom/path/responsive/';
+        return $this->getPath($media) . 'responsive/';
     }
 }
 ```
@@ -473,7 +502,7 @@ class CustomFileNamer extends FileNamer
 {
     public function originalFileName(string $fileName): string
     {
-        return pathinfo($fileName, PATHINFO_FILENAME);
+        return Str::slug(pathinfo($fileName, PATHINFO_FILENAME));
     }
 
     public function conversionFileName(string $fileName, Conversion $conversion): string
@@ -483,7 +512,7 @@ class CustomFileNamer extends FileNamer
 
     public function responsiveFileName(string $fileName): string
     {
-        return $this->originalFileName($fileName);
+        return pathinfo($fileName, PATHINFO_FILENAME);
     }
 }
 ```
@@ -530,8 +559,18 @@ class PostResource extends JsonResource
         return [
             'id' => $this->id,
             'title' => $this->title,
-            'image_url' => $this->getFirstMediaUrl('images'),
-            'thumb_url' => $this->getFirstMediaUrl('images', 'thumb'),
+            'image' => $this->getFirstMediaUrl('images'),
+            'thumb' => $this->getFirstMediaUrl('images', 'thumb'),
+            'media' => $this->getMedia('images')->map(function ($media) {
+                return [
+                    'id' => $media->id,
+                    'url' => $media->getUrl(),
+                    'thumb' => $media->getUrl('thumb'),
+                    'name' => $media->name,
+                    'size' => $media->size,
+                    'type' => $media->mime_type,
+                ];
+            }),
         ];
     }
 }
