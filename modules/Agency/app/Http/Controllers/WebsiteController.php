@@ -354,29 +354,34 @@ class WebsiteController extends Controller
                 'key' => 'name',
                 'label' => 'Website',
                 'sortable' => true,
-                'width' => '320px',
+                'width' => 'max(26rem, calc(100% - 41rem))',
             ],
             [
                 'key' => 'plan',
                 'label' => 'Plan',
-                'width' => '140px',
+                'width' => '9rem',
             ],
             [
                 'key' => 'type_label',
                 'label' => 'Type',
-                'width' => '120px',
+                'width' => '7rem',
             ],
             [
                 'key' => 'status_label',
                 'label' => 'Status',
                 'sortable' => true,
-                'width' => '140px',
+                'width' => '10rem',
             ],
             [
                 'key' => 'created_at',
                 'label' => 'Created',
                 'sortable' => true,
-                'width' => '130px',
+                'width' => '9rem',
+            ],
+            [
+                'key' => 'domain_url',
+                'label' => 'Visit',
+                'width' => '6rem',
             ],
         ];
     }

@@ -8,10 +8,12 @@ import {
     SearchCheckIcon,
     ServerIcon,
 } from 'lucide-react';
-import { useEffect, useState, type ReactElement } from 'react';
+import { useEffect, useState } from 'react';
+import type { ReactElement } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AgencyOnboardingMinimalLayout from '../../../components/agency-onboarding-minimal-layout';
+import { getProvisioningProgressMessage } from './provisioning-progress-message.js';
 
 type ProvisioningPageProps = {
     website: {
@@ -121,12 +123,18 @@ function StatusIcon({
         variant === 'success'
             ? 'bg-[var(--success-background)] dark:bg-[var(--success-dark-background)]'
             : variant === 'danger'
-                ? 'bg-destructive/10'
-                : variant === 'warning'
-                    ? 'bg-amber-100 dark:bg-amber-500/15'
-                    : 'bg-muted';
+              ? 'bg-destructive/10'
+              : variant === 'warning'
+                ? 'bg-amber-100 dark:bg-amber-500/15'
+                : 'bg-muted';
 
-    return <div className={`inline-flex size-14 items-center justify-center rounded-full ${tone}`}>{icon}</div>;
+    return (
+        <div
+            className={`inline-flex size-14 items-center justify-center rounded-full ${tone}`}
+        >
+            {icon}
+        </div>
+    );
 }
 
 export default function AgencyOnboardingProvisioning({
@@ -160,7 +168,8 @@ export default function AgencyOnboardingProvisioning({
                     return;
                 }
 
-                const payload = (await response.json()) as ProvisioningStatusData;
+                const payload =
+                    (await response.json()) as ProvisioningStatusData;
                 setStatus(payload);
             })();
         }, 10_000);
@@ -201,7 +210,10 @@ export default function AgencyOnboardingProvisioning({
     }, [copiedValue]);
 
     const handleConfirmDns = async (): Promise<void> => {
-        if (status.confirm_dns_url === undefined || status.confirm_dns_url === '') {
+        if (
+            status.confirm_dns_url === undefined ||
+            status.confirm_dns_url === ''
+        ) {
             return;
         }
 
@@ -226,15 +238,16 @@ export default function AgencyOnboardingProvisioning({
 
             if (!response.ok) {
                 setStatusMessage(
-                    payload.message ?? 'Unable to confirm DNS update. Please try again.',
+                    payload.message ??
+                        'Unable to confirm DNS update. Please try again.',
                 );
 
                 return;
             }
 
             setStatusMessage(
-                payload.message
-                    ?? 'DNS confirmation received. Verification checks will begin shortly.',
+                payload.message ??
+                    'DNS confirmation received. Verification checks will begin shortly.',
             );
             setStatus((currentStatus) => ({
                 ...currentStatus,
@@ -275,7 +288,8 @@ export default function AgencyOnboardingProvisioning({
     const headline =
         isWaiting || isComplete || isFailed
             ? status.headline
-            : loadingMessages[loadingMessageIndex] ?? 'Preparing your website';
+            : (loadingMessages[loadingMessageIndex] ??
+              'Preparing your website');
     const detail = status.detail || 'Provisioning is in progress.';
     const manageUrl = status.manage_url || route('agency.websites.index');
     const websitesUrl = status.websites_url || route('agency.websites.index');
@@ -289,16 +303,17 @@ export default function AgencyOnboardingProvisioning({
         pending_steps: 0,
         percentage: 0,
     };
+    const progressMessage = getProvisioningProgressMessage(progress);
     const dnsInstructions = status.dns_instructions ?? null;
     const observedNameservers = status.dns_check_result?.observed_ns ?? [];
     const hasNameservers =
-        dnsInstructions !== null
-        && Array.isArray(dnsInstructions.nameservers)
-        && dnsInstructions.nameservers.length > 0;
+        dnsInstructions !== null &&
+        Array.isArray(dnsInstructions.nameservers) &&
+        dnsInstructions.nameservers.length > 0;
     const hasDnsRecords =
-        dnsInstructions !== null
-        && Array.isArray(dnsInstructions.records)
-        && dnsInstructions.records.length > 0;
+        dnsInstructions !== null &&
+        Array.isArray(dnsInstructions.records) &&
+        dnsInstructions.records.length > 0;
     const dnsConfirmationLabel = hasDnsRecords
         ? "I've Added My DNS Records"
         : "I've Updated My Nameservers";
@@ -332,7 +347,17 @@ export default function AgencyOnboardingProvisioning({
 
                         <div className="mt-6 space-y-3">
                             <div className="flex justify-center">
-                                <Badge variant={isComplete ? 'success' : isFailed ? 'danger' : isWaiting ? 'warning' : 'info'}>
+                                <Badge
+                                    variant={
+                                        isComplete
+                                            ? 'success'
+                                            : isFailed
+                                              ? 'danger'
+                                              : isWaiting
+                                                ? 'warning'
+                                                : 'info'
+                                    }
+                                >
                                     {status.status_label}
                                 </Badge>
                             </div>
@@ -346,13 +371,16 @@ export default function AgencyOnboardingProvisioning({
                             </p>
                         </div>
 
-                        {!isComplete && !isFailed && !isWaiting ? <ProgressRail /> : null}
-
                         {!isComplete && !isFailed && !isWaiting ? (
+                            <ProgressRail />
+                        ) : null}
+
+                        {!isComplete &&
+                        !isFailed &&
+                        !isWaiting &&
+                        progressMessage !== null ? (
                             <p className="mt-4 text-sm text-muted-foreground">
-                                {progress.completed_steps > 0 && progress.total_steps > 0
-                                    ? `${progress.completed_steps} of ${progress.total_steps} setup steps completed`
-                                    : 'This usually takes a few minutes. Keep this page open while we refresh the latest status.'}
+                                {progressMessage}
                             </p>
                         ) : null}
                     </div>
@@ -372,7 +400,9 @@ export default function AgencyOnboardingProvisioning({
                                             DNS instructions
                                         </h2>
                                         <p className="text-sm leading-6 text-muted-foreground">
-                                            Complete the DNS update below, then come back here and start verification.
+                                            Complete the DNS update below, then
+                                            come back here and start
+                                            verification.
                                         </p>
                                     </div>
 
@@ -388,30 +418,36 @@ export default function AgencyOnboardingProvisioning({
                                                 Update your nameservers to:
                                             </p>
                                             <div className="space-y-2.5">
-                                                {dnsInstructions?.nameservers?.map((nameserver) => (
-                                                    <div
-                                                        key={nameserver}
-                                                        className="flex items-center justify-between gap-3 rounded-2xl border bg-background px-4 py-3"
-                                                    >
-                                                        <span className="min-w-0 break-all font-mono text-sm text-foreground">
-                                                            {nameserver}
-                                                        </span>
-                                                        <Button
-                                                            type="button"
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="shrink-0 rounded-lg"
-                                                            onClick={() => {
-                                                                void handleCopy(nameserver);
-                                                            }}
+                                                {dnsInstructions?.nameservers?.map(
+                                                    (nameserver) => (
+                                                        <div
+                                                            key={nameserver}
+                                                            className="flex items-center justify-between gap-3 rounded-2xl border bg-background px-4 py-3"
                                                         >
-                                                            <CopyIcon className="size-4" />
-                                                        </Button>
-                                                    </div>
-                                                ))}
+                                                            <span className="min-w-0 font-mono text-sm break-all text-foreground">
+                                                                {nameserver}
+                                                            </span>
+                                                            <Button
+                                                                type="button"
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="shrink-0 rounded-lg"
+                                                                onClick={() => {
+                                                                    void handleCopy(
+                                                                        nameserver,
+                                                                    );
+                                                                }}
+                                                            >
+                                                                <CopyIcon className="size-4" />
+                                                            </Button>
+                                                        </div>
+                                                    ),
+                                                )}
                                             </div>
                                             <p className="text-sm leading-6 text-muted-foreground">
-                                                Nameserver changes can take up to 24 hours to propagate globally.
+                                                Nameserver changes can take up
+                                                to 24 hours to propagate
+                                                globally.
                                             </p>
                                         </div>
                                     ) : null}
@@ -427,41 +463,62 @@ export default function AgencyOnboardingProvisioning({
                                                     <span>Host</span>
                                                     <span>Value</span>
                                                 </div>
-                                                {dnsInstructions?.records?.map((record, index) => {
-                                                    const hostValue = record.host ?? record.name ?? '—';
-                                                    const targetValue = record.value ?? record.target ?? '—';
+                                                {dnsInstructions?.records?.map(
+                                                    (record, index) => {
+                                                        const hostValue =
+                                                            record.host ??
+                                                            record.name ??
+                                                            '—';
+                                                        const targetValue =
+                                                            record.value ??
+                                                            record.target ??
+                                                            '—';
 
-                                                    return (
-                                                        <div
-                                                            key={`${record.type ?? 'record'}-${hostValue}-${index}`}
-                                                            className="grid grid-cols-[5rem_minmax(0,1fr)_minmax(0,1.35fr)] gap-3 border-b border-border/60 px-4 py-3 text-sm last:border-b-0"
-                                                        >
-                                                            <span className="font-medium text-foreground">
-                                                                {record.type ?? '—'}
-                                                            </span>
-                                                            <button
-                                                                type="button"
-                                                                className="flex min-w-0 items-center gap-2 text-left text-muted-foreground"
-                                                                onClick={() => {
-                                                                    void handleCopy(hostValue);
-                                                                }}
+                                                        return (
+                                                            <div
+                                                                key={`${record.type ?? 'record'}-${hostValue}-${index}`}
+                                                                className="grid grid-cols-[5rem_minmax(0,1fr)_minmax(0,1.35fr)] gap-3 border-b border-border/60 px-4 py-3 text-sm last:border-b-0"
                                                             >
-                                                                <span className="break-all">{hostValue}</span>
-                                                                <CopyIcon className="size-3.5 shrink-0" />
-                                                            </button>
-                                                            <button
-                                                                type="button"
-                                                                className="flex min-w-0 items-center gap-2 text-left text-muted-foreground"
-                                                                onClick={() => {
-                                                                    void handleCopy(targetValue);
-                                                                }}
-                                                            >
-                                                                <span className="break-all">{targetValue}</span>
-                                                                <CopyIcon className="size-3.5 shrink-0" />
-                                                            </button>
-                                                        </div>
-                                                    );
-                                                })}
+                                                                <span className="font-medium text-foreground">
+                                                                    {record.type ??
+                                                                        '—'}
+                                                                </span>
+                                                                <button
+                                                                    type="button"
+                                                                    className="flex min-w-0 items-center gap-2 text-left text-muted-foreground"
+                                                                    onClick={() => {
+                                                                        void handleCopy(
+                                                                            hostValue,
+                                                                        );
+                                                                    }}
+                                                                >
+                                                                    <span className="break-all">
+                                                                        {
+                                                                            hostValue
+                                                                        }
+                                                                    </span>
+                                                                    <CopyIcon className="size-3.5 shrink-0" />
+                                                                </button>
+                                                                <button
+                                                                    type="button"
+                                                                    className="flex min-w-0 items-center gap-2 text-left text-muted-foreground"
+                                                                    onClick={() => {
+                                                                        void handleCopy(
+                                                                            targetValue,
+                                                                        );
+                                                                    }}
+                                                                >
+                                                                    <span className="break-all">
+                                                                        {
+                                                                            targetValue
+                                                                        }
+                                                                    </span>
+                                                                    <CopyIcon className="size-3.5 shrink-0" />
+                                                                </button>
+                                                            </div>
+                                                        );
+                                                    },
+                                                )}
                                             </div>
                                             {dnsInstructions?.note ? (
                                                 <p className="text-sm leading-6 text-muted-foreground">
@@ -473,7 +530,8 @@ export default function AgencyOnboardingProvisioning({
 
                                     {!hasNameservers && !hasDnsRecords ? (
                                         <div className="rounded-2xl border border-dashed border-border/80 px-4 py-3 text-sm leading-6 text-muted-foreground">
-                                            DNS instructions will appear here as soon as the platform returns them.
+                                            DNS instructions will appear here as
+                                            soon as the platform returns them.
                                         </div>
                                     ) : null}
 
@@ -485,7 +543,9 @@ export default function AgencyOnboardingProvisioning({
 
                                     {status.dns_domain_not_registered ? (
                                         <div className="rounded-2xl border border-amber-200 bg-amber-100 px-4 py-3 text-sm leading-6 text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/15 dark:text-amber-300">
-                                            The domain does not appear to be registered yet. Register it first, then return here and continue.
+                                            The domain does not appear to be
+                                            registered yet. Register it first,
+                                            then return here and continue.
                                         </div>
                                     ) : null}
 
@@ -494,39 +554,55 @@ export default function AgencyOnboardingProvisioning({
                                             <div className="flex items-center gap-3 text-sm text-foreground">
                                                 <LoaderCircleIcon className="size-4 animate-spin text-primary" />
                                                 <span>
-                                                    Verifying DNS propagation. Check #{status.dns_check_count ?? 0}.
+                                                    Verifying DNS propagation.
+                                                    Check #
+                                                    {status.dns_check_count ??
+                                                        0}
+                                                    .
                                                 </span>
                                             </div>
 
                                             {observedNameservers.length > 0 ? (
                                                 <div className="space-y-3">
                                                     <p className="text-sm font-medium text-foreground">
-                                                        Currently observed nameservers
+                                                        Currently observed
+                                                        nameservers
                                                     </p>
                                                     <div className="space-y-2">
-                                                        {observedNameservers.map((nameserver) => (
-                                                            <div
-                                                                key={nameserver}
-                                                                className="flex items-center gap-3 rounded-2xl border bg-background px-4 py-3"
-                                                            >
-                                                                <SearchCheckIcon className="size-4 shrink-0 text-muted-foreground" />
-                                                                <span className="break-all font-mono text-sm text-muted-foreground">
-                                                                    {nameserver}
-                                                                </span>
-                                                            </div>
-                                                        ))}
+                                                        {observedNameservers.map(
+                                                            (nameserver) => (
+                                                                <div
+                                                                    key={
+                                                                        nameserver
+                                                                    }
+                                                                    className="flex items-center gap-3 rounded-2xl border bg-background px-4 py-3"
+                                                                >
+                                                                    <SearchCheckIcon className="size-4 shrink-0 text-muted-foreground" />
+                                                                    <span className="font-mono text-sm break-all text-muted-foreground">
+                                                                        {
+                                                                            nameserver
+                                                                        }
+                                                                    </span>
+                                                                </div>
+                                                            ),
+                                                        )}
                                                     </div>
                                                 </div>
                                             ) : null}
 
                                             <p className="text-sm leading-6 text-muted-foreground">
-                                                We will keep checking automatically every 10 seconds until DNS is verified.
+                                                We will keep checking
+                                                automatically every 10 seconds
+                                                until DNS is verified.
                                             </p>
                                         </div>
                                     ) : (
                                         <div className="space-y-4">
                                             <p className="text-sm leading-6 text-muted-foreground">
-                                                After you finish the DNS update, start verification and we will watch for the change automatically.
+                                                After you finish the DNS update,
+                                                start verification and we will
+                                                watch for the change
+                                                automatically.
                                             </p>
                                             <Button
                                                 type="button"
@@ -537,7 +613,9 @@ export default function AgencyOnboardingProvisioning({
                                                 }}
                                                 disabled={isConfirmingDns}
                                             >
-                                                {isConfirmingDns ? 'Starting Verification...' : dnsConfirmationLabel}
+                                                {isConfirmingDns
+                                                    ? 'Starting Verification...'
+                                                    : dnsConfirmationLabel}
                                             </Button>
                                         </div>
                                     )}
@@ -545,7 +623,11 @@ export default function AgencyOnboardingProvisioning({
                             </div>
 
                             <div className="space-y-3 text-center">
-                                <Button asChild variant="outline" className="rounded-lg">
+                                <Button
+                                    asChild
+                                    variant="outline"
+                                    className="rounded-lg"
+                                >
                                     <Link href={supportUrl}>Need Help?</Link>
                                 </Button>
                                 {nextActions.length > 0 ? (
@@ -562,13 +644,20 @@ export default function AgencyOnboardingProvisioning({
                     {isComplete ? (
                         <div className="space-y-6">
                             <div className="flex flex-wrap justify-center gap-3">
-                                <Button asChild className="rounded-lg bg-primary text-primary-foreground hover:bg-primary/90">
+                                <Button
+                                    asChild
+                                    className="rounded-lg bg-primary text-primary-foreground hover:bg-primary/90"
+                                >
                                     <Link href={manageUrl}>
                                         Go to Website
                                         <ExternalLinkIcon className="size-4" />
                                     </Link>
                                 </Button>
-                                <Button asChild variant="outline" className="rounded-lg">
+                                <Button
+                                    asChild
+                                    variant="outline"
+                                    className="rounded-lg"
+                                >
                                     <Link href={websitesUrl}>All Websites</Link>
                                 </Button>
                             </div>
@@ -586,10 +675,20 @@ export default function AgencyOnboardingProvisioning({
                     {isFailed ? (
                         <div className="space-y-6">
                             <div className="flex flex-wrap justify-center gap-3">
-                                <Button asChild variant="outline" className="rounded-lg border-destructive/25 text-destructive hover:bg-destructive/5 hover:text-destructive">
-                                    <Link href={supportUrl}>Contact Support</Link>
+                                <Button
+                                    asChild
+                                    variant="outline"
+                                    className="rounded-lg border-destructive/25 text-destructive hover:bg-destructive/5 hover:text-destructive"
+                                >
+                                    <Link href={supportUrl}>
+                                        Contact Support
+                                    </Link>
                                 </Button>
-                                <Button asChild variant="outline" className="rounded-lg">
+                                <Button
+                                    asChild
+                                    variant="outline"
+                                    className="rounded-lg"
+                                >
                                     <Link href={websitesUrl}>All Websites</Link>
                                 </Button>
                             </div>

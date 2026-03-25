@@ -79,6 +79,9 @@ class AgencyWebsitePagesTest extends TestCase
                 ->where('rows.data.0.name', 'Example Site')
                 ->where('config.settings.entityPlural', 'websites')
                 ->where('filters.status', '')
+                ->where('config.columns.0.width', 'max(26rem, calc(100% - 41rem))')
+                ->where('config.columns.5.key', 'domain_url')
+                ->where('config.columns.5.width', '6rem')
                 ->where('config.filters.0.key', 'status')
                 ->where('config.filters.0.options.0.value', ''));
     }
