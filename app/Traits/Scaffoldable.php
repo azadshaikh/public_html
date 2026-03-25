@@ -156,12 +156,13 @@ trait Scaffoldable
     public function getInertiaConfig(): array
     {
         $config = $this->scaffold()->toInertiaConfig();
+        $currentStatus = $this->resolveInertiaConfigStatus(request());
 
         $config['columns'] = $this->getColumnsConfig();
         $config['filters'] = $this->getFiltersConfig();
 
         if ($this->scaffold()->shouldIncludeActionConfigInInertia()) {
-            $config['actions'] = $this->getActionsConfig();
+            $config['actions'] = $this->getActionsConfig($currentStatus);
         }
 
         return $config;
@@ -513,6 +514,17 @@ trait Scaffoldable
             ->map(fn ($action) => $action->toArray())
             ->values()
             ->toArray();
+    }
+
+    protected function resolveInertiaConfigStatus(?Request $request): string
+    {
+        if (! $request instanceof Request) {
+            return 'all';
+        }
+
+        $status = $request->input('status') ?? $request->route('status') ?? 'all';
+
+        return is_string($status) && trim($status) !== '' ? trim($status) : 'all';
     }
 
     /**

@@ -7,6 +7,10 @@ use Modules\Platform\Models\Server;
 
 class AgencySeeder extends PlatformSeeder
 {
+    private const string DEMO_AGENCY_PRIMARY_SERVER_IP = '192.168.0.100';
+
+    private const string LEGACY_AGENCY_PRIMARY_SERVER_IP = '192.168.0.150';
+
     public function run(): void
     {
         $ownerId = $this->resolveAuditUserId();
@@ -49,14 +53,7 @@ class AgencySeeder extends PlatformSeeder
             $agency->generateSecretKey();
         }
 
-        /** @var Server|null $primaryServer */
-        $primaryServer = Server::query()->orderBy('id')->first();
-
-        if ($primaryServer instanceof Server) {
-            $agency->servers()->syncWithoutDetaching([
-                $primaryServer->getKey() => ['is_primary' => true],
-            ]);
-        }
+        $this->syncPrimaryServer($agency, self::DEMO_AGENCY_PRIMARY_SERVER_IP);
 
         $this->writeInfo('Seeded Platform agency: '.$agency->name);
 
@@ -100,15 +97,35 @@ class AgencySeeder extends PlatformSeeder
             'is_verified' => false,
         ], 'work');
 
-        /** @var Server|null $legacyServer */
-        $legacyServer = Server::query()->where('ip', '192.168.0.123')->first();
-
-        if ($legacyServer instanceof Server) {
-            $legacyAgency->servers()->syncWithoutDetaching([
-                $legacyServer->getKey() => ['is_primary' => true],
-            ]);
-        }
+        $this->syncPrimaryServer($legacyAgency, self::LEGACY_AGENCY_PRIMARY_SERVER_IP);
 
         $this->writeInfo('Seeded Platform agency: '.$legacyAgency->name);
+    }
+
+    private function syncPrimaryServer(Agency $agency, string $serverIp): void
+    {
+        /** @var Server|null $server */
+        $server = Server::query()->where('ip', $serverIp)->first();
+
+        if (! $server instanceof Server) {
+            $this->writeWarning(
+                sprintf(
+                    'No Platform server found for agency %s at %s. Skipping server association.',
+                    $agency->email,
+                    $serverIp,
+                ),
+            );
+
+            return;
+        }
+
+        $agency->servers()
+            ->newPivotStatement()
+            ->where('agency_id', $agency->getKey())
+            ->update(['is_primary' => false]);
+
+        $agency->servers()->syncWithoutDetaching([
+            $server->getKey() => ['is_primary' => true],
+        ]);
     }
 }

@@ -295,6 +295,19 @@ class PlatformInertiaPagesTest extends TestCase
                 ->where('rows.data.0.name', $server->name)
                 ->has('rows.data.0.actions', 3));
 
+        $server->delete();
+
+        $this->actingAs($this->admin)
+            ->get(route('platform.servers.index', ['status' => 'trash']))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->component('platform/servers/index')
+                ->where('filters.status', 'trash')
+                ->where('config.actions', fn (array $actions): bool => collect($actions)
+                    ->pluck('key')
+                    ->values()
+                    ->all() === ['restore', 'force_delete']));
+
         $this->assertPlatformStandardIndexContract(
             route('platform.providers.index', ['status' => 'all']),
             'platform/providers/index',

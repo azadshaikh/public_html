@@ -41,6 +41,7 @@ import type {
     ScaffoldRowActionPayload,
     ScaffoldStatusTabConfig,
 } from '@/types/scaffold';
+import { resolveScaffoldStatusTabCount } from './scaffold-status-tab-count.js';
 
 type IconMap = Record<string, LucideIcon>;
 
@@ -68,8 +69,8 @@ type BuildBulkActionOptions<T> = {
 type RowWithScaffoldActions = {
     id: string | number;
     actions?:
-    | Record<string, ScaffoldRowActionPayload>
-    | ScaffoldRowActionPayload[];
+        | Record<string, ScaffoldRowActionPayload>
+        | ScaffoldRowActionPayload[];
 };
 
 type BuildActionHandlersOptions<T> = BuildBulkActionOptions<T>;
@@ -131,7 +132,7 @@ export function mapScaffoldStatusTab(
     iconMap: IconMap = {},
 ): DatagridTab {
     const value = tab.value ?? tab.key;
-    const count = value === 'all' ? undefined : (statistics[value] ?? 0);
+    const count = resolveScaffoldStatusTabCount(value, statistics);
 
     return {
         label: tab.label,
@@ -277,8 +278,11 @@ export function buildScaffoldBulkActions<T extends { id: string | number }>(
         return [];
     }
 
-    const bulkActionUrl = options.bulkActionUrl
-        ?? (options.routePrefix ? route(`${options.routePrefix}.bulk-action`) : null);
+    const bulkActionUrl =
+        options.bulkActionUrl ??
+        (options.routePrefix
+            ? route(`${options.routePrefix}.bulk-action`)
+            : null);
 
     if (!bulkActionUrl) {
         return [];
@@ -286,7 +290,12 @@ export function buildScaffoldBulkActions<T extends { id: string | number }>(
 
     return actions
         .filter((action) => action.scope === 'both' || action.scope === 'bulk')
-        .filter((action) => matchesStatusCondition(action.conditions?.status, options.currentStatus))
+        .filter((action) =>
+            matchesStatusCondition(
+                action.conditions?.status,
+                options.currentStatus,
+            ),
+        )
         .map((action) => ({
             key: action.key,
             label: action.label,
@@ -323,7 +332,8 @@ export function buildScaffoldActionHandlers<T extends RowWithScaffoldActions>(
     bulkActions: DatagridBulkAction<T>[];
 } {
     return {
-        rowActions: (row: T): DatagridAction[] => mapScaffoldRowActions(row.actions),
+        rowActions: (row: T): DatagridAction[] =>
+            mapScaffoldRowActions(row.actions),
         bulkActions: buildScaffoldBulkActions(config.actions, options),
     };
 }
@@ -342,16 +352,19 @@ export function buildScaffoldEmptyState(
 } {
     return {
         icon: options.icon,
-        title: emptyStateConfig?.title ?? options.fallbackTitle ?? 'No results found',
+        title:
+            emptyStateConfig?.title ??
+            options.fallbackTitle ??
+            'No results found',
         description:
-            emptyStateConfig?.message
-            ?? options.fallbackDescription
-            ?? 'There are no results to display.',
+            emptyStateConfig?.message ??
+            options.fallbackDescription ??
+            'There are no results to display.',
         action: emptyStateConfig?.action
             ? {
-                label: emptyStateConfig.action.label,
-                href: emptyStateConfig.action.url,
-            }
+                  label: emptyStateConfig.action.label,
+                  href: emptyStateConfig.action.url,
+              }
             : undefined,
     };
 }
