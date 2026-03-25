@@ -25,11 +25,15 @@ class WebsiteServiceSyncNameUpdateTest extends TestCase
             protected function fetchWebsiteInfoPayload(Website $website): array
             {
                 return [
-                    'app_name' => 'Website 3',
-                    'astero_version' => '1.0.25',
-                    'queue_worker_status' => 'running',
-                    'queue_worker_running_count' => 1,
-                    'queue_worker_total_count' => 1,
+                    'success' => true,
+                    'payload' => [
+                        'app_name' => 'Website 3',
+                        'astero_version' => '1.0.25',
+                        'queue_worker_status' => 'running',
+                        'queue_worker_running_count' => 1,
+                        'queue_worker_total_count' => 1,
+                    ],
+                    'error' => null,
                 ];
             }
         };
@@ -67,8 +71,12 @@ class WebsiteServiceSyncNameUpdateTest extends TestCase
             protected function fetchWebsiteInfoPayload(Website $website): array
             {
                 return [
-                    'admin_slug' => '/admin-panel/',
-                    'astero_version' => '1.0.25',
+                    'success' => true,
+                    'payload' => [
+                        'admin_slug' => '/admin-panel/',
+                        'astero_version' => '1.0.25',
+                    ],
+                    'error' => null,
                 ];
             }
         };
@@ -106,8 +114,12 @@ class WebsiteServiceSyncNameUpdateTest extends TestCase
             protected function fetchWebsiteInfoPayload(Website $website): array
             {
                 return [
-                    'ADMIN_SLUG' => '/admin-v2/',
-                    'astero_version' => '1.0.25',
+                    'success' => true,
+                    'payload' => [
+                        'ADMIN_SLUG' => '/admin-v2/',
+                        'astero_version' => '1.0.25',
+                    ],
+                    'error' => null,
                 ];
             }
         };

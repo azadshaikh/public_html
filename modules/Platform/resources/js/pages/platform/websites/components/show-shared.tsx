@@ -88,18 +88,34 @@ export function useOperationAction() {
         const options = {
             headers: { Accept: 'application/json' } as Record<string, string>,
             preserveScroll: true,
-            onSuccess: () => {
-                const message = 'Operation completed successfully.';
+            onSuccess: (response: { status?: string; message?: string } | null) => {
+                const message = response?.message ?? 'Operation completed successfully.';
+                const variant = response?.status === 'error'
+                    ? 'error' as const
+                    : response?.status === 'info'
+                        ? 'info' as const
+                        : 'success' as const;
+
+                if (response?.status === 'error') {
+                    if (onError) {
+                        onError(message);
+                    } else {
+                        showAppToast({ variant, title: message });
+                    }
+
+                    return;
+                }
 
                 if (onSuccess) {
                     onSuccess(message);
                 } else {
-                    showAppToast({ variant: 'success', title: message });
+                    showAppToast({ variant, title: message });
                     router.reload();
                 }
             },
-            onError: () => {
-                const message = 'Operation failed. Please try again.';
+            onError: (errors: Record<string, string>) => {
+                const message = (errors as unknown as { message?: string })?.message
+                    ?? 'Operation failed. Please try again.';
 
                 if (onError) {
                     onError(message);

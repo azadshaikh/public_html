@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Modules\Platform\Definitions\WebsiteDefinition;
 use Modules\Platform\Enums\WebsiteStatus;
 use Modules\Platform\Events\WebsiteCreatedEvent as EventsWebsiteCreated;
@@ -283,10 +284,13 @@ class WebsiteService implements ScaffoldServiceInterface
 
         $updates = [];
 
-        try {
-            $payload = $this->fetchWebsiteInfoPayload($website);
+        $fetchError = null;
 
-            if ($payload !== null) {
+        try {
+            $fetchResult = $this->fetchWebsiteInfoPayload($website);
+
+            if ($fetchResult['success'] && $fetchResult['payload'] !== null) {
+                $payload = $fetchResult['payload'];
                 $asteroVersion = $this->normalizeVersion(
                     $this->pickPayloadValue($payload, ['astero_version', 'app_version', 'version', 'current_release'])
                 );
@@ -399,6 +403,8 @@ class WebsiteService implements ScaffoldServiceInterface
                     $website->setMetadata('disk_usage_bytes', (int) $diskUsageBytes);
                     $updates['disk_usage_bytes'] = (int) $diskUsageBytes;
                 }
+            } else {
+                $fetchError = $fetchResult['error'] ?? 'Failed to fetch website info from server.';
             }
         } catch (Exception $exception) {
             return $this->errorResponse('Failed to sync website: '.$exception->getMessage());
@@ -413,8 +419,20 @@ class WebsiteService implements ScaffoldServiceInterface
         $website->setMetadata('last_synced_at', now()->toIso8601String());
         $website->save();
 
+        // If we couldn't fetch the payload at all, report the error.
+        if ($fetchError !== null) {
+            Log::warning('Website sync failed to fetch info', [
+                'website_id' => $website->getKey(),
+                'domain' => $website->domain,
+                'server_id' => $website->server_id,
+                'error' => $fetchError,
+            ]);
+
+            return $this->errorResponse('Could not fetch website info: '.$fetchError);
+        }
+
         if ($updates === []) {
-            return $this->infoResponse('Website synced but no information was updated.');
+            return $this->infoResponse('Website synced — no changes detected.');
         }
 
         return $this->successResponse('Website information synced successfully.', $updates);
@@ -575,7 +593,10 @@ class WebsiteService implements ScaffoldServiceInterface
         );
     }
 
-    protected function fetchWebsiteInfoPayload(Website $website): ?array
+    /**
+     * @return array{success: bool, payload: array|null, error: string|null}
+     */
+    protected function fetchWebsiteInfoPayload(Website $website): array
     {
         // Preferred call signature for newer scripts: USER DOMAIN FORMAT
         $response = HestiaClient::execute(
@@ -594,7 +615,11 @@ class WebsiteService implements ScaffoldServiceInterface
         }
 
         if (! ($response['success'] ?? false)) {
-            return null;
+            return [
+                'success' => false,
+                'payload' => null,
+                'error' => $response['message'] ?? 'Failed to fetch website info from server.',
+            ];
         }
 
         $payload = $this->unwrapHestiaResponseData($response['data'] ?? []);
@@ -602,10 +627,14 @@ class WebsiteService implements ScaffoldServiceInterface
 
         // Older scripts can return structured content inside a raw text/blob field.
         if (isset($payload['raw']) && is_string($payload['raw'])) {
-            return array_merge($payload, $this->parseRawWebsiteInfoPayload($payload['raw']));
+            $payload = array_merge($payload, $this->parseRawWebsiteInfoPayload($payload['raw']));
         }
 
-        return $payload;
+        return [
+            'success' => true,
+            'payload' => $payload,
+            'error' => null,
+        ];
     }
 
     protected function executeBulkAction(string $action, array $ids, Request $request): array

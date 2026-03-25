@@ -342,7 +342,7 @@ class WebsiteController extends ScaffoldController implements HasMiddleware
                 return response()->json([
                     'status' => 'error',
                     'message' => 'Error updating website status: '.$exception->getMessage(),
-                ], 500);
+                ]);
             }
 
             return back()
@@ -375,7 +375,7 @@ class WebsiteController extends ScaffoldController implements HasMiddleware
             return response()->json([
                 'status' => 'error',
                 'message' => $result['message'],
-            ], 500);
+            ]);
         }
 
         return back()
@@ -424,7 +424,7 @@ class WebsiteController extends ScaffoldController implements HasMiddleware
             return response()->json([
                 'status' => 'error',
                 'message' => $result['message'],
-            ], 500);
+            ]);
         }
 
         return back()
@@ -467,7 +467,7 @@ class WebsiteController extends ScaffoldController implements HasMiddleware
                 return response()->json([
                     'status' => 'error',
                     'message' => 'Error running application recache: '.$exception->getMessage(),
-                ], 500);
+                ]);
             }
 
             return back()
@@ -485,11 +485,7 @@ class WebsiteController extends ScaffoldController implements HasMiddleware
         $website = Website::query()->findOrFail((int) $id);
         $result = $this->websiteProvisioningService->executeStep($website, $step);
 
-        if ($result['status'] === 'success') {
-            return response()->json($result);
-        }
-
-        return response()->json($result, 500);
+        return response()->json($result);
     }
 
     public function revertStep(Request $request, $id, string $step): JsonResponse
@@ -498,11 +494,7 @@ class WebsiteController extends ScaffoldController implements HasMiddleware
         $website = Website::query()->findOrFail((int) $id);
         $result = $this->websiteProvisioningService->revertStep($website, $step);
 
-        if ($result['status'] === 'success') {
-            return response()->json($result);
-        }
-
-        return response()->json($result, 500);
+        return response()->json($result);
     }
 
     /**
@@ -616,7 +608,7 @@ class WebsiteController extends ScaffoldController implements HasMiddleware
             return response()->json([
                 'status' => 'error',
                 'message' => 'Error updating website setup status',
-            ], 500);
+            ]);
         }
     }
 
@@ -658,7 +650,7 @@ class WebsiteController extends ScaffoldController implements HasMiddleware
                 return response()->json([
                     'status' => 'error',
                     'message' => 'Error setting up queue workers: '.$exception->getMessage(),
-                ], 500);
+                ]);
             }
 
             return back()
@@ -708,7 +700,7 @@ class WebsiteController extends ScaffoldController implements HasMiddleware
                 return response()->json([
                     'status' => 'error',
                     'message' => 'Error scaling queue workers: '.$exception->getMessage(),
-                ], 500);
+                ]);
             }
 
             return back()
