@@ -319,9 +319,13 @@ get_cron_status() {
         select(.value.CMD | contains($pattern)) |
         .value.SUSPENDED
     ' 2>/dev/null | head -1)
+
+    if [ "$cron_info" = "yes" ]; then
         echo "suspended"
-    else
+    elif [ "$cron_info" = "no" ]; then
         echo "active"
+    else
+        echo "not_configured"
     fi
 }
 

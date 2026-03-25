@@ -52,6 +52,9 @@ class HestiaScriptsArgumentOrderTest extends TestCase
         $this->assertStringContainsString('status_output=$(supervisorctl status "${program_name}" 2>/dev/null)', $contents);
         $this->assertStringContainsString('admin_slug=$(get_env_value "$app_root" "$web_dir" "ADMIN_SLUG")', $contents);
         $this->assertStringContainsString('"admin_slug": "${admin_slug:-}"', $contents);
+        $this->assertStringContainsString('if [ "$cron_info" = "yes" ]; then', $contents);
+        $this->assertStringContainsString('elif [ "$cron_info" = "no" ]; then', $contents);
+        $this->assertStringContainsString('echo "not_configured"', $contents);
         $this->assertStringNotContainsString('"redis": {', $contents);
     }
 
