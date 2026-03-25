@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\AdminTheme;
 use App\Helpers\AbilityAggregator;
 use App\Helpers\NavigationAggregator;
 use App\Inertia\Properties\UserAvatar;
@@ -68,6 +69,9 @@ class HandleInertiaRequests extends Middleware
             'runtime' => [
                 'inertiaHardReloadPageLimit' => (int) config('app.inertia_hard_reload_page_limit', 15),
             ],
+            'ui' => [
+                'adminTheme' => $this->resolveAdminTheme(),
+            ],
             'auth' => [
                 'user' => fn (): ?array => $request->user()
                     ? [
@@ -95,6 +99,13 @@ class HandleInertiaRequests extends Middleware
                 'status' => $request->session()->get('status'),
             ]),
         ];
+    }
+
+    private function resolveAdminTheme(): string
+    {
+        return AdminTheme::sanitize(
+            setting('theme_admin_theme', AdminTheme::Default->value)
+        );
     }
 
     /**

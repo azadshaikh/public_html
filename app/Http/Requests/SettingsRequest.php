@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\AdminTheme;
 use App\Enums\Status;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -195,6 +196,11 @@ class SettingsRequest extends FormRequest
                     'secondary_color' => ['nullable', 'string', 'max:255'],
                     'primary_color_rgb' => ['nullable', 'string', 'max:255'],
                     'secondary_color_rgb' => ['nullable', 'string', 'max:255'],
+                ];
+                break;
+            case 'theme':
+                $rules = [
+                    'admin_theme' => ['required', 'string', Rule::in(AdminTheme::values())],
                 ];
                 break;
             case 'debug':

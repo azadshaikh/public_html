@@ -29,7 +29,7 @@ export function AppPageHeader({
                 <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                     <div className="flex min-w-0 flex-col gap-1.5">
                         {title && (
-                            <h1 className="text-2xl font-semibold tracking-[-0.03em] text-foreground md:text-[2rem]">
+                            <h1 className="text-2xl font-normal tracking-[-0.03em] text-foreground">
                                 {title}
                             </h1>
                         )}

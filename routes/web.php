@@ -357,6 +357,7 @@ Route::prefix($adminPrefix)->group(function (): void {
                     // Per-section pages
                     Route::get('/app', [MastersSettingsController::class, 'app'])->name('app');
                     Route::get('/branding', [MastersSettingsController::class, 'branding'])->name('branding');
+                    Route::get('/theme', [MastersSettingsController::class, 'theme'])->name('theme');
                     Route::get('/login-security', [MastersSettingsController::class, 'loginSecurity'])->name('login-security');
                     Route::get('/email', [MastersSettingsController::class, 'email'])->name('email');
                     Route::get('/storage', [MastersSettingsController::class, 'storage'])->name('storage');
