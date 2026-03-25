@@ -2,12 +2,15 @@
 
 namespace Modules\Platform\Http\Controllers;
 
+use App\Enums\ActivityAction;
 use App\Models\ActivityLog;
 use App\Scaffold\ScaffoldController;
 use App\Services\GeoDataService;
 use BackedEnum;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Modules\Platform\Definitions\AgencyDefinition;
 use Modules\Platform\Models\Agency;
@@ -37,6 +40,34 @@ class AgencyController extends ScaffoldController implements HasMiddleware
 
         return back()
             ->with('success', 'Secret key regenerated successfully. Update the AGENCY_SECRET_KEY in the agency instance.');
+    }
+
+    public function revealSecretKey(Request $request, int|string $agency): JsonResponse
+    {
+        $request->validate([
+            'password' => ['required', 'string', 'current_password'],
+        ]);
+
+        /** @var Agency $agencyModel */
+        $agencyModel = $this->findModel((int) $agency);
+
+        if (empty($agencyModel->secret_key) || empty($agencyModel->plain_secret_key)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No secret key is configured for this agency.',
+            ], 422);
+        }
+
+        $this->logActivity($agencyModel, ActivityAction::VIEW, 'Revealed agency secret key.');
+
+        return response()
+            ->json([
+                'success' => true,
+                'value' => $agencyModel->plain_secret_key,
+            ])
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', '0');
     }
 
     protected function service(): AgencyService

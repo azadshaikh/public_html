@@ -207,6 +207,10 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
                 ->middleware('can:edit_agencies')
                 ->whereNumber('agency')
                 ->name('regenerate-secret-key');
+            Route::post('/{agency}/secret-key/reveal', [AgencyController::class, 'revealSecretKey'])
+                ->middleware(['can:edit_agencies', 'throttle:10,1'])
+                ->whereNumber('agency')
+                ->name('secret-key.reveal');
 
             // Parameterized CRUD
             Route::get('/{agency}', [AgencyController::class, 'show'])->name('show')->whereNumber('agency');

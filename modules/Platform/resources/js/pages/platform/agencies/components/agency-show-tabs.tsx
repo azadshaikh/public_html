@@ -1,9 +1,12 @@
-import { Link } from '@inertiajs/react';
+import { useHttp } from '@inertiajs/react';
 import {
     ActivityIcon,
     Building2Icon,
+    ClipboardCopyIcon,
     ClockIcon,
     CodeIcon,
+    EyeIcon,
+    EyeOffIcon,
     GlobeIcon,
     InfoIcon,
     KeyRoundIcon,
@@ -12,9 +15,21 @@ import {
     StickyNoteIcon,
     WebhookIcon,
 } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { showAppToast } from '@/components/forms/form-success-toast';
+import PasswordInput from '@/components/password-input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
@@ -65,108 +80,179 @@ function AgencyGeneralTab({
     openConfirm: AgencyShowTabsProps['openConfirm'];
     perform: AgencyShowTabsProps['perform'];
 }) {
+    const [revealedSecret, setRevealedSecret] = useState<string | null>(null);
+    const [isRevealing, setIsRevealing] = useState(false);
+    const [passwordModalOpen, setPasswordModalOpen] = useState(false);
+    const [password, setPassword] = useState('');
+    const [passwordError, setPasswordError] = useState('');
+    const passwordInputRef = useRef<HTMLInputElement>(null);
+    const revealRequest = useHttp<
+        { password: string },
+        { success?: boolean; value?: string }
+    >({
+        password: '',
+    });
+
+    function requestReveal(): void {
+        if (revealedSecret !== null) {
+            setRevealedSecret(null);
+
+            return;
+        }
+
+        setPassword('');
+        setPasswordError('');
+        setPasswordModalOpen(true);
+    }
+
+    function handlePasswordSubmit(): void {
+        if (!password.trim()) {
+            setPasswordError('Password is required.');
+
+            return;
+        }
+
+        setIsRevealing(true);
+
+        void (async () => {
+            try {
+                revealRequest.transform(() => ({ password }));
+
+                const payload = await revealRequest.post(
+                    route('platform.agencies.secret-key.reveal', {
+                        agency: agency.id,
+                    }),
+                    {
+                        headers: {
+                            Accept: 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                    },
+                );
+
+                if (typeof payload.value === 'string') {
+                    setRevealedSecret(payload.value);
+                }
+
+                setPasswordModalOpen(false);
+                setPassword('');
+                setPasswordError('');
+            } catch {
+                setPasswordError('Incorrect password. Please try again.');
+            } finally {
+                setIsRevealing(false);
+            }
+        })();
+    }
+
+    async function copyToClipboard(text: string): Promise<void> {
+        await navigator.clipboard.writeText(text);
+        showAppToast({ variant: 'success', title: 'Copied to clipboard!' });
+    }
+
     return (
-        <div className="grid gap-6 md:grid-cols-2">
-            <Card>
-                <CardHeader>
-                    <div className="flex items-center gap-2">
-                        <Building2Icon className="size-4 text-muted-foreground" />
-                        <CardTitle>Contact &amp; Address</CardTitle>
-                    </div>
-                </CardHeader>
-                <CardContent className="flex flex-col gap-3">
-                    <InfoRow label="Email">
-                        {agency.email ? (
-                            <a
-                                href={`mailto:${agency.email}`}
-                                className="text-primary hover:underline"
-                            >
-                                {agency.email}
-                            </a>
-                        ) : (
-                            '—'
-                        )}
-                    </InfoRow>
-                    <InfoRow label="Phone">
-                        {[agency.address.phone_code, agency.address.phone]
-                            .filter(Boolean)
-                            .join(' ') || '—'}
-                    </InfoRow>
-                    <Separator />
-                    <InfoRow label="Street">
-                        {agency.address.address1 ?? '—'}
-                    </InfoRow>
-                    <InfoRow label="City">{agency.address.city ?? '—'}</InfoRow>
-                    <InfoRow label="State">
-                        {agency.address.state ?? agency.address.state_code ?? '—'}
-                    </InfoRow>
-                    <InfoRow label="Country">
-                        {agency.address.country ??
-                            agency.address.country_code ??
-                            '—'}
-                    </InfoRow>
-                    <InfoRow label="ZIP Code">
-                        {agency.address.zip ?? '—'}
-                    </InfoRow>
-                </CardContent>
-            </Card>
+        <>
+            <div className="grid gap-6 md:grid-cols-2">
+                <Card>
+                    <CardHeader>
+                        <div className="flex items-center gap-2">
+                            <Building2Icon className="size-4 text-muted-foreground" />
+                            <CardTitle>Contact &amp; Address</CardTitle>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="flex flex-col gap-3">
+                        <InfoRow label="Email">
+                            {agency.email ? (
+                                <a
+                                    href={`mailto:${agency.email}`}
+                                    className="text-primary hover:underline"
+                                >
+                                    {agency.email}
+                                </a>
+                            ) : (
+                                '—'
+                            )}
+                        </InfoRow>
+                        <InfoRow label="Phone">
+                            {[agency.address.phone_code, agency.address.phone]
+                                .filter(Boolean)
+                                .join(' ') || '—'}
+                        </InfoRow>
+                        <Separator />
+                        <InfoRow label="Street">
+                            {agency.address.address1 ?? '—'}
+                        </InfoRow>
+                        <InfoRow label="City">{agency.address.city ?? '—'}</InfoRow>
+                        <InfoRow label="State">
+                            {agency.address.state ?? agency.address.state_code ?? '—'}
+                        </InfoRow>
+                        <InfoRow label="Country">
+                            {agency.address.country ??
+                                agency.address.country_code ??
+                                '—'}
+                        </InfoRow>
+                        <InfoRow label="ZIP Code">
+                            {agency.address.zip ?? '—'}
+                        </InfoRow>
+                    </CardContent>
+                </Card>
 
-            <Card>
-                <CardHeader>
-                    <div className="flex items-center gap-2">
-                        <PaintbrushIcon className="size-4 text-muted-foreground" />
-                        <CardTitle>Branding</CardTitle>
-                    </div>
-                </CardHeader>
-                <CardContent className="flex flex-col gap-4">
-                    <InfoRow label="Brand Name">
-                        {agency.branding.name ?? '—'}
-                    </InfoRow>
-                    <div className="flex flex-wrap items-center gap-3">
-                        {agency.branding.logo ? (
-                            <img
-                                src={agency.branding.logo}
-                                alt={`${agency.name} logo`}
-                                className="max-h-16 rounded-lg border bg-background p-2 object-contain"
-                            />
-                        ) : (
-                            <div className="flex h-16 w-16 items-center justify-center rounded-lg border border-dashed text-muted-foreground">
-                                <PaintbrushIcon className="size-5" />
-                            </div>
-                        )}
+                <Card>
+                    <CardHeader>
+                        <div className="flex items-center gap-2">
+                            <PaintbrushIcon className="size-4 text-muted-foreground" />
+                            <CardTitle>Branding</CardTitle>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="flex flex-col gap-4">
+                        <InfoRow label="Brand Name">
+                            {agency.branding.name ?? '—'}
+                        </InfoRow>
+                        <div className="flex flex-wrap items-center gap-3">
+                            {agency.branding.logo ? (
+                                <img
+                                    src={agency.branding.logo}
+                                    alt={`${agency.name} logo`}
+                                    className="max-h-16 rounded-lg border bg-background p-2 object-contain"
+                                />
+                            ) : (
+                                <div className="flex h-16 w-16 items-center justify-center rounded-lg border border-dashed text-muted-foreground">
+                                    <PaintbrushIcon className="size-5" />
+                                </div>
+                            )}
 
-                        {agency.branding.icon ? (
-                            <img
-                                src={agency.branding.icon}
-                                alt={`${agency.name} icon`}
-                                className="size-12 rounded-lg border bg-background p-1.5 object-contain"
-                            />
+                            {agency.branding.icon ? (
+                                <img
+                                    src={agency.branding.icon}
+                                    alt={`${agency.name} icon`}
+                                    className="size-12 rounded-lg border bg-background p-1.5 object-contain"
+                                />
+                            ) : null}
+                        </div>
+                        <InfoRow label="Website">
+                            {agency.branding.website ? (
+                                <a
+                                    href={agency.branding.website}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="text-primary hover:underline"
+                                >
+                                    {agency.branding.website}
+                                </a>
+                            ) : (
+                                'Not configured'
+                            )}
+                        </InfoRow>
+                        {!agency.is_whitelabel ? (
+                            <Badge variant="warning">
+                                Branding is configured, but this plan is not
+                                white-label enabled.
+                            </Badge>
                         ) : null}
-                    </div>
-                    <InfoRow label="Website">
-                        {agency.branding.website ? (
-                            <a
-                                href={agency.branding.website}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="text-primary hover:underline"
-                            >
-                                {agency.branding.website}
-                            </a>
-                        ) : (
-                            'Not configured'
-                        )}
-                    </InfoRow>
-                    {!agency.is_whitelabel ? (
-                        <Badge variant="warning">
-                            Branding is configured, but this plan is not
-                            white-label enabled.
-                        </Badge>
-                    ) : null}
-                </CardContent>
-            </Card>
+                    </CardContent>
+                </Card>
 
-            <Card>
+                <Card>
                 <CardHeader>
                     <div className="flex items-center gap-2">
                         <KeyRoundIcon className="size-4 text-muted-foreground" />
@@ -174,9 +260,10 @@ function AgencyGeneralTab({
                     </div>
                 </CardHeader>
                 <CardContent className="flex flex-col gap-4">
-                    <div className="rounded-lg border bg-muted/30 px-3 py-2 font-mono text-sm tracking-[0.2em] text-muted-foreground">
+                    <div className="rounded-lg border bg-muted/30 px-3 py-2 font-mono text-sm text-muted-foreground">
                         {agency.has_secret_key
-                            ? '••••••••••••••••••••••••••••••••'
+                            ? (revealedSecret ??
+                                  '••••••••••••••••••••••••••••••••')
                             : 'Not configured'}
                     </div>
                     <div className="flex flex-wrap items-center justify-between gap-2">
@@ -187,72 +274,150 @@ function AgencyGeneralTab({
                         >
                             {agency.has_secret_key ? 'Configured' : 'Missing'}
                         </Badge>
-                        {canEdit && !agency.is_trashed ? (
-                            <Button
-                                variant="outline"
-                                disabled={processing}
-                                onClick={() =>
-                                    openConfirm(
-                                        'Regenerate Secret Key',
-                                        'Generate a new agency secret key? The connected agency instance must be updated immediately.',
-                                        'Regenerate',
-                                        () =>
-                                            perform(
-                                                'post',
-                                                route(
-                                                    'platform.agencies.regenerate-secret-key',
-                                                    agency.id,
+                        <div className="flex flex-wrap items-center gap-2">
+                            {canEdit && agency.has_secret_key ? (
+                                <Button
+                                    variant="outline"
+                                    disabled={isRevealing}
+                                    onClick={requestReveal}
+                                >
+                                    {revealedSecret ? (
+                                        <EyeOffIcon data-icon="inline-start" />
+                                    ) : (
+                                        <EyeIcon data-icon="inline-start" />
+                                    )}
+                                    {revealedSecret ? 'Hide' : 'Reveal'}
+                                </Button>
+                            ) : null}
+                            {revealedSecret ? (
+                                <Button
+                                    variant="outline"
+                                    onClick={() => copyToClipboard(revealedSecret)}
+                                >
+                                    <ClipboardCopyIcon data-icon="inline-start" />
+                                    Copy
+                                </Button>
+                            ) : null}
+                            {canEdit && !agency.is_trashed ? (
+                                <Button
+                                    variant="outline"
+                                    disabled={processing}
+                                    onClick={() =>
+                                        openConfirm(
+                                            'Regenerate Secret Key',
+                                            'Generate a new agency secret key? The connected agency instance must be updated immediately.',
+                                            'Regenerate',
+                                            () =>
+                                                perform(
+                                                    'post',
+                                                    route(
+                                                        'platform.agencies.regenerate-secret-key',
+                                                        agency.id,
+                                                    ),
                                                 ),
-                                            ),
-                                    )
-                                }
-                            >
-                                <RefreshCwIcon data-icon="inline-start" />
-                                Regenerate
-                            </Button>
-                        ) : null}
+                                        )
+                                    }
+                                >
+                                    <RefreshCwIcon data-icon="inline-start" />
+                                    Regenerate
+                                </Button>
+                            ) : null}
+                        </div>
                     </div>
                     <p className="text-sm text-muted-foreground">
                         Stored securely for agency-to-platform API authentication.
+                        Reveal requires your current account password.
                     </p>
                 </CardContent>
-            </Card>
+                </Card>
 
-            <Card>
-                <CardHeader>
-                    <div className="flex items-center gap-2">
-                        <WebhookIcon className="size-4 text-muted-foreground" />
-                        <CardTitle>Webhook URL</CardTitle>
-                    </div>
-                </CardHeader>
-                <CardContent className="flex flex-col gap-4">
-                    <div className="rounded-lg border bg-muted/30 px-3 py-2 text-sm break-all text-foreground">
-                        {agency.webhook_url ?? 'Not configured'}
-                    </div>
-                    <Badge variant={agency.webhook_url ? 'success' : 'warning'}>
-                        {agency.webhook_url ? 'Configured' : 'Missing'}
-                    </Badge>
-                    <p className="text-sm text-muted-foreground">
-                        Provisioning and lifecycle updates are delivered to this
-                        endpoint.
-                    </p>
-                </CardContent>
-            </Card>
+                <Card>
+                    <CardHeader>
+                        <div className="flex items-center gap-2">
+                            <WebhookIcon className="size-4 text-muted-foreground" />
+                            <CardTitle>Webhook URL</CardTitle>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="flex flex-col gap-4">
+                        <div className="rounded-lg border bg-muted/30 px-3 py-2 text-sm break-all text-foreground">
+                            {agency.webhook_url ?? 'Not configured'}
+                        </div>
+                        <Badge variant={agency.webhook_url ? 'success' : 'warning'}>
+                            {agency.webhook_url ? 'Configured' : 'Missing'}
+                        </Badge>
+                        <p className="text-sm text-muted-foreground">
+                            Provisioning and lifecycle updates are delivered to this
+                            endpoint.
+                        </p>
+                    </CardContent>
+                </Card>
 
-            <Card className="md:col-span-2">
-                <CardHeader>
-                    <div className="flex items-center gap-2">
-                        <ClockIcon className="size-4 text-muted-foreground" />
-                        <CardTitle>Timestamps</CardTitle>
-                    </div>
-                </CardHeader>
-                <CardContent className="grid gap-3 md:grid-cols-3">
-                    <InfoRow label="Created">{agency.created_at ?? '—'}</InfoRow>
-                    <InfoRow label="Updated">{agency.updated_at ?? '—'}</InfoRow>
-                    <InfoRow label="Deleted">{agency.deleted_at ?? '—'}</InfoRow>
-                </CardContent>
-            </Card>
-        </div>
+                <Card className="md:col-span-2">
+                    <CardHeader>
+                        <div className="flex items-center gap-2">
+                            <ClockIcon className="size-4 text-muted-foreground" />
+                            <CardTitle>Timestamps</CardTitle>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="grid gap-3 md:grid-cols-3">
+                        <InfoRow label="Created">{agency.created_at ?? '—'}</InfoRow>
+                        <InfoRow label="Updated">{agency.updated_at ?? '—'}</InfoRow>
+                        <InfoRow label="Deleted">{agency.deleted_at ?? '—'}</InfoRow>
+                    </CardContent>
+                </Card>
+            </div>
+
+            <Dialog open={passwordModalOpen} onOpenChange={setPasswordModalOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Reveal Secret Key</DialogTitle>
+                        <DialogDescription>
+                            Enter your current account password to continue.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <form
+                        onSubmit={(event) => {
+                            event.preventDefault();
+                            handlePasswordSubmit();
+                        }}
+                    >
+                        <div className="flex flex-col gap-2 py-4">
+                            <Label htmlFor="agency-secret-key-password">
+                                Current Password
+                            </Label>
+                            <PasswordInput
+                                ref={passwordInputRef}
+                                id="agency-secret-key-password"
+                                placeholder="Enter current password"
+                                value={password}
+                                onChange={(event) => {
+                                    setPassword(event.target.value);
+                                    setPasswordError('');
+                                }}
+                                autoFocus
+                            />
+                            {passwordError ? (
+                                <p className="text-sm text-destructive">
+                                    {passwordError}
+                                </p>
+                            ) : null}
+                        </div>
+                        <DialogFooter>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setPasswordModalOpen(false)}
+                            >
+                                Cancel
+                            </Button>
+                            <Button type="submit" disabled={isRevealing}>
+                                Continue
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
+        </>
     );
 }
 
