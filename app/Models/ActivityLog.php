@@ -45,6 +45,8 @@ class ActivityLog extends Activity
     use HasFactory;
     use SoftDeletes;
 
+    protected $table = 'activity_log';
+
     /**
      * Create a new Eloquent query builder for the model.
      */
@@ -230,6 +232,7 @@ class ActivityLog extends Activity
     protected function casts(): array
     {
         return array_merge(parent::casts(), [
+            'attribute_changes' => 'array',
             'properties' => 'array',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',

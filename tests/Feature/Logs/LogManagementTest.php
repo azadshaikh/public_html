@@ -91,13 +91,16 @@ class LogManagementTest extends TestCase
             'causer_type' => User::class,
             'causer_id' => $this->superUser->id,
             'event' => 'updated',
-            'properties' => json_encode([
-                'changes' => [
-                    'name' => [
-                        'old' => 'Before',
-                        'new' => 'After',
-                    ],
+            'attribute_changes' => json_encode([
+                'attributes' => [
+                    'name' => 'After',
                 ],
+                'old' => [
+                    'name' => 'Before',
+                ],
+            ], JSON_THROW_ON_ERROR),
+            'properties' => json_encode([
+                'module' => 'Users',
             ], JSON_THROW_ON_ERROR),
             'created_at' => now(),
             'updated_at' => now(),
