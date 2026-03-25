@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Masters;
 
 use App\Enums\ActivityAction;
+use App\Enums\AdminTheme;
 use App\Helpers\NavigationHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SettingsRequest;
@@ -77,6 +78,26 @@ class SettingsController extends Controller
                 'brand_website' => get_env_value('BRANDING_WEBSITE', ''),
                 'logo' => get_env_value('BRANDING_LOGO', ''),
                 'icon' => get_env_value('BRANDING_ICON', ''),
+            ],
+            'settingsNav' => $this->getSettingsNav(),
+        ]);
+    }
+
+    /**
+     * Backend theme settings.
+     */
+    public function theme(): Response
+    {
+        $this->authorizeSettingsAccess();
+
+        return Inertia::render('master-settings/theme', [
+            'settings' => [
+                'admin_theme' => AdminTheme::sanitize(
+                    setting('theme_admin_theme', AdminTheme::Default->value)
+                ),
+            ],
+            'options' => [
+                'themes' => AdminTheme::options(),
             ],
             'settingsNav' => $this->getSettingsNav(),
         ]);
@@ -456,6 +477,7 @@ class SettingsController extends Controller
         $sections = [
             ['slug' => 'app', 'label' => 'App Settings'],
             ['slug' => 'branding', 'label' => 'Branding'],
+            ['slug' => 'theme', 'label' => 'Theme'],
             ['slug' => 'login-security', 'label' => 'Login Security'],
             ['slug' => 'email', 'label' => 'Email'],
             ['slug' => 'storage', 'label' => 'Storage'],
@@ -721,6 +743,7 @@ class SettingsController extends Controller
             'storage' => $this->handleStorageSettings(...),
             'debug' => $this->handleDebugSettings(...),
             'media' => $this->handleMediaSettings(...),
+            'theme' => $this->handleThemeSettings(...),
             'branding' => $this->handleBrandingSettings(...),
             'login_security' => $this->handleLoginSecuritySettings(...),
             'app' => $this->handleAppSettings(...),
@@ -837,6 +860,23 @@ class SettingsController extends Controller
             'success' => true,
             'message' => 'Media settings updated successfully.',
             'recache_sync' => true,
+        ];
+    }
+
+    /**
+     * Handle backend theme settings.
+     */
+    private function handleThemeSettings(array $data, SettingsRequest $request): array
+    {
+        $data['admin_theme'] = AdminTheme::sanitize(
+            $data['admin_theme'] ?? AdminTheme::Default->value
+        );
+
+        $updated = $this->updateGenericSettings($data, 'theme');
+
+        return [
+            'success' => $updated,
+            'message' => 'Theme settings updated successfully.',
         ];
     }
 
@@ -1191,6 +1231,14 @@ class SettingsController extends Controller
                 ];
                 break;
 
+            case 'theme':
+                $currentState = [
+                    'admin_theme' => AdminTheme::sanitize(
+                        setting('theme_admin_theme', AdminTheme::Default->value)
+                    ),
+                ];
+                break;
+
             case 'login_security':
                 // Login security settings are stored in the database with prefix login_security_
                 $settings = $this->settings->pluck('value', 'key')->toArray();
@@ -1480,6 +1528,7 @@ class SettingsController extends Controller
         $names = [
             'app' => 'App',
             'branding' => 'Branding',
+            'theme' => 'Theme',
             'storage' => 'Storage',
             'media' => 'Media',
             'debug' => 'Debug',
@@ -1528,6 +1577,9 @@ class SettingsController extends Controller
             'primary_color_rgb' => 'Primary Color RGB',
             'secondary_color' => 'Secondary Color',
             'secondary_color_rgb' => 'Secondary Color RGB',
+
+            // Theme
+            'admin_theme' => 'Backend Theme',
 
             // Email
             'email_driver' => 'Email Driver',

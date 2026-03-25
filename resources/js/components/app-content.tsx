@@ -41,10 +41,7 @@ export function AppContent({
     if (variant === 'sidebar') {
         return (
             <SidebarInset
-                className={cn(
-                    'h-svh overflow-hidden bg-[linear-gradient(180deg,rgba(252,252,252,0.96)_0%,rgba(248,248,248,0.98)_100%)] dark:bg-[linear-gradient(180deg,rgba(24,24,24,0.98)_0%,rgba(20,20,20,1)_100%)]',
-                    className,
-                )}
+                className={cn('h-svh overflow-hidden', className)}
                 {...props}
             >
                 <AppHead title={title} description={description} />

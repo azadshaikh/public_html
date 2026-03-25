@@ -29,6 +29,20 @@ const inertiaDefaults = {
     },
 };
 
+function syncAdminTheme(sharedProps: Record<string, unknown>): void {
+    const adminTheme = (
+        sharedProps.ui as { adminTheme?: string } | undefined
+    )?.adminTheme;
+
+    if (typeof adminTheme !== 'string' || adminTheme.length === 0) {
+        document.documentElement.removeAttribute('data-admin-theme');
+
+        return;
+    }
+
+    document.documentElement.dataset.adminTheme = adminTheme;
+}
+
 function syncModulePageFilter(sharedProps: Record<string, unknown>): void {
     initModulePageFilter(
         sharedProps.modules as
@@ -67,6 +81,7 @@ createInertiaApp({
         // module pages are excluded from the page registry before the very
         // first Inertia page resolution.
         const sharedProps = props.initialPage.props as Record<string, unknown>;
+        syncAdminTheme(sharedProps);
         syncModulePageFilter(sharedProps);
         let inertiaHardReloadPageLimit =
             resolveInertiaHardReloadPageLimit(sharedProps);
@@ -90,6 +105,7 @@ createInertiaApp({
                 | undefined;
 
             if (nextSharedProps) {
+                syncAdminTheme(nextSharedProps);
                 syncModulePageFilter(nextSharedProps);
                 inertiaHardReloadPageLimit =
                     resolveInertiaHardReloadPageLimit(nextSharedProps);

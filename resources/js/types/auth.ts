@@ -53,6 +53,9 @@ export type SharedData = {
     runtime: {
         inertiaHardReloadPageLimit: number;
     };
+    ui: {
+        adminTheme: string;
+    };
     auth: Auth;
     navigation: NavigationByArea;
     modules: {

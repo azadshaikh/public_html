@@ -158,6 +158,37 @@ class SettingsControllerTest extends TestCase
     }
 
     // =========================================================================
+    // THEME — Authentication, Authorization & Props
+    // =========================================================================
+
+    public function test_guests_cannot_access_theme_settings(): void
+    {
+        $this->get(route('app.masters.settings.theme'))
+            ->assertRedirect(route('login'));
+    }
+
+    public function test_admins_cannot_access_theme_settings(): void
+    {
+        $this->actingAs($this->admin)
+            ->get(route('app.masters.settings.theme'))
+            ->assertForbidden();
+    }
+
+    public function test_super_user_can_access_theme_settings(): void
+    {
+        $this->actingAs($this->superUser)
+            ->get(route('app.masters.settings.theme'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->component('master-settings/theme')
+                ->where('settings.admin_theme', 'default')
+                ->has('options.themes', 5)
+                ->has('settingsNav')
+                ->where('ui.adminTheme', 'default')
+            );
+    }
+
+    // =========================================================================
     // LOGIN SECURITY — Authentication, Authorization & Props
     // =========================================================================
 
@@ -449,6 +480,30 @@ class SettingsControllerTest extends TestCase
             ])
             ->assertSessionHasNoErrors()
             ->assertRedirect();
+    }
+
+    public function test_super_user_can_update_theme_settings(): void
+    {
+        $this->actingAs($this->superUser)
+            ->put(route('app.masters.settings.update', 'theme'), [
+                'admin_theme' => 'sepia',
+            ])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('settings', [
+            'key' => 'theme_admin_theme',
+            'value' => 'sepia',
+        ]);
+    }
+
+    public function test_theme_settings_update_requires_valid_theme(): void
+    {
+        $this->actingAs($this->superUser)
+            ->put(route('app.masters.settings.update', 'theme'), [
+                'admin_theme' => 'midnight-neon',
+            ])
+            ->assertSessionHasErrors('admin_theme');
     }
 
     // =========================================================================
