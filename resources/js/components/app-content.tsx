@@ -41,7 +41,10 @@ export function AppContent({
     if (variant === 'sidebar') {
         return (
             <SidebarInset
-                className={cn('h-svh overflow-hidden bg-muted/20', className)}
+                className={cn(
+                    'h-svh overflow-hidden bg-[linear-gradient(180deg,rgba(252,252,252,0.96)_0%,rgba(248,248,248,0.98)_100%)] dark:bg-[linear-gradient(180deg,rgba(24,24,24,0.98)_0%,rgba(20,20,20,1)_100%)]',
+                    className,
+                )}
                 {...props}
             >
                 <AppHead title={title} description={description} />
@@ -50,7 +53,7 @@ export function AppContent({
 
                 <div className="flex-1 overflow-y-scroll [scrollbar-gutter:stable]">
                     <div className="flex min-h-full flex-col">
-                        <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-8 px-4 py-6 sm:px-6 lg:px-8">
+                        <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-8 px-4 py-7 sm:px-6 lg:px-8">
                             {pageHeader}
 
                             <div
@@ -72,7 +75,7 @@ export function AppContent({
     return (
         <main
             className={cn(
-                'mx-auto flex h-svh w-full max-w-7xl flex-1 flex-col gap-8 overflow-y-scroll px-4 py-6 [scrollbar-gutter:stable] sm:px-6 lg:px-8',
+                'mx-auto flex h-svh w-full max-w-7xl flex-1 flex-col gap-8 overflow-y-scroll px-4 py-7 [scrollbar-gutter:stable] sm:px-6 lg:px-8',
                 className,
             )}
             {...props}

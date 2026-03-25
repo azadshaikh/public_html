@@ -20,7 +20,7 @@ export function AppPageHeader({
     }
 
     return (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-5">
             {breadcrumbs.length > 0 && (
                 <Breadcrumbs breadcrumbs={breadcrumbs} />
             )}
@@ -29,12 +29,12 @@ export function AppPageHeader({
                 <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                     <div className="flex min-w-0 flex-col gap-1.5">
                         {title && (
-                            <h1 className="text-2xl font-semibold tracking-tight text-foreground md:text-2xl">
+                            <h1 className="text-2xl font-semibold tracking-[-0.03em] text-foreground md:text-[2rem]">
                                 {title}
                             </h1>
                         )}
                         {description && (
-                            <p className="max-w-3xl text-sm text-muted-foreground md:text-base">
+                            <p className="max-w-3xl text-sm leading-6 text-muted-foreground md:text-base">
                                 {description}
                             </p>
                         )}

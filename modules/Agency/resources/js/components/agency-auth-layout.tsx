@@ -55,7 +55,7 @@ export default function AgencyAuthLayout({
         <>
             <AppHead title={title} description={description} />
 
-            <div className="relative min-h-svh bg-[linear-gradient(180deg,#f5efe3_0%,#fffdf8_30%,#ffffff_100%)] text-foreground dark:bg-[linear-gradient(180deg,#0f1112_0%,#111416_30%,#151819_100%)]">
+            <div className="relative min-h-svh bg-[linear-gradient(180deg,#f7f7f7_0%,#ffffff_30%,#ffffff_100%)] text-foreground dark:bg-[linear-gradient(180deg,#0f0f10_0%,#121212_30%,#161616_100%)]">
                 <div className="absolute top-6 right-6 z-20">
                     <AppThemeToggle />
                 </div>
@@ -68,7 +68,7 @@ export default function AgencyAuthLayout({
                                     href="/"
                                     className="mx-auto flex w-fit flex-col items-center gap-3"
                                 >
-                                    <div className="flex size-14 items-center justify-center overflow-hidden rounded-[1.25rem] border border-black/8 bg-white shadow-[0_18px_60px_rgba(19,18,14,0.08)] dark:border-white/10 dark:bg-white/5 dark:shadow-none">
+                                    <div className="flex size-14 items-center justify-center overflow-hidden rounded-[1.25rem] border border-black/8 bg-white shadow-[0_18px_50px_rgba(0,0,0,0.06)] dark:border-white/10 dark:bg-white/5 dark:shadow-none">
                                         {logoUrl !== '' ? (
                                             <img
                                                 src={logoUrl}
@@ -94,7 +94,7 @@ export default function AgencyAuthLayout({
 
                             <div
                                 className={cn(
-                                    'rounded-[2rem] border border-black/6 bg-white/92 p-6 shadow-[0_20px_80px_rgba(33,30,22,0.09)] backdrop-blur',
+                                    'rounded-[2rem] border border-black/6 bg-white/92 p-6 shadow-[0_20px_70px_rgba(0,0,0,0.06)] backdrop-blur',
                                     'dark:border-white/10 dark:bg-white/5 dark:shadow-none',
                                 )}
                             >
@@ -107,11 +107,11 @@ export default function AgencyAuthLayout({
                         </div>
                     </section>
 
-                    <section className="relative hidden overflow-hidden border-l border-black/5 bg-[radial-gradient(circle_at_top_left,#f9d784_0%,rgba(249,215,132,0.32)_22%,transparent_45%),linear-gradient(160deg,#121212_0%,#191919_55%,#232323_100%)] px-10 py-12 text-white lg:flex lg:flex-col">
-                        <div className="absolute inset-0 bg-[linear-gradient(135deg,transparent_0%,rgba(255,255,255,0.05)_35%,transparent_70%)]" />
+                    <section className="relative hidden overflow-hidden border-l border-black/5 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.12)_0%,rgba(255,255,255,0.04)_22%,transparent_46%),linear-gradient(160deg,#0f0f10_0%,#151515_55%,#1c1c1d_100%)] px-10 py-12 text-white lg:flex lg:flex-col">
+                        <div className="absolute inset-0 bg-[linear-gradient(135deg,transparent_0%,rgba(255,255,255,0.03)_35%,transparent_70%)]" />
 
                         <div className="relative flex items-center gap-3">
-                            <div className="flex size-11 items-center justify-center overflow-hidden rounded-2xl border border-white/15 bg-white/10 shadow-[0_18px_60px_rgba(0,0,0,0.25)] backdrop-blur">
+                            <div className="flex size-11 items-center justify-center overflow-hidden rounded-2xl border border-white/12 bg-white/8 shadow-[0_18px_60px_rgba(0,0,0,0.25)] backdrop-blur">
                                 {logoUrl !== '' ? (
                                     <img
                                         src={logoUrl}
@@ -148,9 +148,9 @@ export default function AgencyAuthLayout({
                                 {featureItems.map((feature) => (
                                     <div
                                         key={feature.title}
-                                        className="rounded-3xl border border-white/10 bg-white/6 p-5 backdrop-blur-sm"
+                                        className="rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm"
                                     >
-                                        <div className="mb-4 size-3 rounded-full bg-[#f9d784]" />
+                                        <div className="mb-4 size-3 rounded-full bg-white/85" />
                                         <h2 className="text-base font-semibold text-white">
                                             {feature.title}
                                         </h2>

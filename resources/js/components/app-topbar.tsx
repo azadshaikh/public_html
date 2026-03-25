@@ -18,21 +18,21 @@ export function AppTopbar() {
     const getInitials = useInitials();
 
     return (
-        <header className="border-b border-sidebar-border/60 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+        <header className="border-b border-border/70 bg-background/88 shadow-[0_1px_0_rgba(0,0,0,0.04)] backdrop-blur-xl supports-[backdrop-filter]:bg-background/76 dark:border-white/8 dark:shadow-none">
             <div className="mx-auto flex h-13 w-full max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center gap-3">
-                    <SidebarTrigger className="rounded-full" />
+                    <SidebarTrigger className="rounded-full border border-border/80 bg-card shadow-sm hover:bg-muted" />
                 </div>
 
                 <div className="flex items-center gap-1 sm:gap-2">
                     <Button
                         variant="ghost"
                         size="icon-sm"
-                        className="relative rounded-full"
+                        className="relative rounded-full border border-border/80 bg-card shadow-sm hover:bg-muted"
                         aria-label="Notifications"
                     >
                         <BellIcon />
-                        <span className="absolute top-2 right-2 size-2 rounded-full bg-orange-500" />
+                        <span className="absolute top-2 right-2 size-2 rounded-full bg-foreground" />
                     </Button>
 
                     <AppThemeToggle />
@@ -42,7 +42,7 @@ export function AppTopbar() {
                             <Button
                                 variant="ghost"
                                 size="icon-lg"
-                                className="rounded-full p-1"
+                                className="rounded-full border border-border/80 bg-card p-1 shadow-sm hover:bg-muted"
                             >
                                 <Avatar className="size-8 overflow-hidden rounded-full">
                                     <AvatarImage
