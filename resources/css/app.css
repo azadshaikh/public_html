@@ -429,13 +429,7 @@
     }
 
     [data-slot='sidebar-inset'] {
-        background:
-            radial-gradient(circle at top center,
-                color-mix(in oklab, var(--primary) 14%, transparent) 0%,
-                transparent 32%),
-            linear-gradient(180deg,
-                color-mix(in oklab, var(--background) 98%, white 2%) 0%,
-                color-mix(in oklab, var(--background) 92%, var(--sidebar) 8%) 100%);
+        background-color: var(--background);
     }
 
     /* Prevent scroll container from auto-scrolling when children change */
