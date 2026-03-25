@@ -39,6 +39,10 @@ trait ActivityLogsPresenter
      */
     public function hasTrackedChanges(): bool
     {
+        if (! empty($this->attribute_changes)) {
+            return true;
+        }
+
         // Check for the new 'changes' structure first (from updated ActivityLogger)
         if (! empty(data_get($this->properties, 'changes'))) {
             return true;
@@ -60,6 +64,34 @@ trait ActivityLogsPresenter
      */
     public function getChangesSummary(): array
     {
+        $attributeChanges = $this->attribute_changes ?? [];
+
+        if (! empty($attributeChanges)) {
+            $result = [];
+            $newAttributes = $attributeChanges['attributes'] ?? [];
+            $oldAttributes = $attributeChanges['old'] ?? [];
+
+            foreach ($newAttributes as $field => $value) {
+                $result[$field] = [
+                    'from' => $this->formatChangeValue($oldAttributes[$field] ?? null),
+                    'to' => $this->formatChangeValue($value),
+                ];
+            }
+
+            foreach ($oldAttributes as $field => $value) {
+                if (array_key_exists($field, $result)) {
+                    continue;
+                }
+
+                $result[$field] = [
+                    'from' => $this->formatChangeValue($value),
+                    'to' => $this->formatChangeValue(null),
+                ];
+            }
+
+            return $result;
+        }
+
         // Use pre-computed changes from ActivityLogger (new format with old/new)
         $precomputedChanges = data_get($this->properties, 'changes', []);
 
