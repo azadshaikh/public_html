@@ -15,7 +15,6 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import { usePageVisibility } from '@/hooks/use-page-visibility';
 import { cn } from '@/lib/utils';
@@ -204,7 +203,7 @@ export function NotificationPopover({
             <PopoverContent
                 align="end"
                 collisionPadding={8}
-                className="flex w-[min(24rem,calc(100vw-1rem))] max-h-[var(--radix-popover-content-available-height)] flex-col gap-0 overflow-hidden p-0"
+                className="w-[min(24rem,calc(100vw-1rem))] max-h-[550px] gap-0 overflow-hidden p-0"
             >
                 <div className="flex items-center justify-between gap-3 border-b px-4 py-3">
                     <div className="flex items-center gap-2">
@@ -247,7 +246,7 @@ export function NotificationPopover({
                         </Empty>
                     </div>
                 ) : (
-                    <ScrollArea className="min-h-0 flex-1">
+                    <div className="max-h-[460px] overflow-y-auto">
                         <div className="flex flex-col gap-2 p-3">
                             {notifications.map((notification) => {
                                 const preview = notificationPreview(
@@ -308,7 +307,7 @@ export function NotificationPopover({
                                 );
                             })}
                         </div>
-                    </ScrollArea>
+                    </div>
                 )}
             </PopoverContent>
         </Popover>

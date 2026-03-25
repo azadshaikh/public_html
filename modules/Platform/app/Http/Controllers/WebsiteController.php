@@ -159,7 +159,7 @@ class WebsiteController extends ScaffoldController implements HasMiddleware
             'provisioningRun' => $provisioningPayload['provisioning_run'],
             'updates' => collect($website->getUpdateHistoryForView())
                 ->map(function ($value, $key): array {
-                    if (is_array($value)) {
+                    if (is_array($value) || is_object($value)) {
                         $value = json_encode($value, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
                     }
 
