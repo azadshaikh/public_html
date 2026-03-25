@@ -24,6 +24,7 @@ type ServerSecretsPanelProps = {
     secrets: ServerSecretItem[];
     canReveal: boolean;
     canRevealSshKeyPair: boolean;
+    accessKeyId: string | null;
     hasAccessKeySecret: boolean;
     hasSshCredentials: boolean;
 };
@@ -33,6 +34,7 @@ export function ServerSecretsPanel({
     secrets,
     canReveal,
     canRevealSshKeyPair,
+    accessKeyId,
     hasAccessKeySecret,
     hasSshCredentials,
 }: ServerSecretsPanelProps) {
@@ -215,7 +217,8 @@ export function ServerSecretsPanel({
         showAppToast({ variant: 'success', title: 'Copied to clipboard!' });
     }
 
-    const hasAnySecrets = secrets.length > 0 || hasAccessKeySecret || hasSshCredentials;
+    const hasAccessKeyCredentials = accessKeyId !== null || hasAccessKeySecret;
+    const hasAnySecrets = secrets.length > 0 || hasAccessKeyCredentials || hasSshCredentials;
 
     if (!hasAnySecrets) {
         return <p className="text-sm text-muted-foreground">No stored secrets available for this server.</p>;
@@ -224,25 +227,38 @@ export function ServerSecretsPanel({
     return (
         <>
             <div className="flex flex-col gap-4">
-                {(hasAccessKeySecret || (hasSshCredentials && canRevealSshKeyPair)) ? (
+                {(hasAccessKeyCredentials || (hasSshCredentials && canRevealSshKeyPair)) ? (
                     <div className="grid gap-4 lg:grid-cols-2">
-                        {hasAccessKeySecret ? (
+                        {hasAccessKeyCredentials ? (
                             <Card>
                                 <CardHeader>
                                     <div className="flex items-center gap-2">
                                         <KeyRoundIcon className="size-4 text-muted-foreground" />
-                                        <CardTitle className="text-base">Access Key Secret</CardTitle>
+                                        <CardTitle className="text-base">Access Key Credentials</CardTitle>
                                     </div>
-                                    <CardDescription>Reveal or copy the Hestia API secret assigned to this server.</CardDescription>
+                                    <CardDescription>Copy the Hestia access ID directly or reveal the stored API secret for this server.</CardDescription>
                                 </CardHeader>
                                 <CardContent className="flex flex-col gap-3">
+                                    <div className="rounded-lg border bg-muted/30 p-3 text-xs">
+                                        <p className="font-semibold text-foreground">Access ID</p>
+                                        <div className="mt-2 flex items-center gap-2">
+                                            <code className="block flex-1 break-all font-mono text-muted-foreground">
+                                                {accessKeyId ?? '—'}
+                                            </code>
+                                            {accessKeyId ? (
+                                                <Button variant="ghost" size="icon" className="size-7" onClick={() => copyToClipboard(accessKeyId)}>
+                                                    <ClipboardCopyIcon className="size-3.5" />
+                                                </Button>
+                                            ) : null}
+                                        </div>
+                                    </div>
                                     <code className="block rounded border bg-muted px-3 py-2 text-xs break-all">
                                         {revealedAccessKey ?? '••••••••••••••••'}
                                     </code>
                                     <div className="flex gap-2">
                                         <Button
                                             variant="outline"
-                                            disabled={!canReveal || revealingSpecial === 'access-key'}
+                                            disabled={!hasAccessKeySecret || !canReveal || revealingSpecial === 'access-key'}
                                             onClick={() => requestRevealSpecial('access-key')}
                                         >
                                             {revealedAccessKey ? <EyeOffIcon data-icon="inline-start" /> : <EyeIcon data-icon="inline-start" />}

@@ -488,6 +488,7 @@ class PlatformInertiaPagesTest extends TestCase
             ->assertInertia(fn (Assert $page): Assert => $page
                 ->component('platform/servers/show')
                 ->where('server.id', $server->id)
+                ->where('server.access_key_id', $server->access_key_id)
                 ->has('provisioningSteps')
                 ->where('provisioningSteps.0.key', 'ssh_connection')
                 ->where('provisioningSteps.0.status', 'done')

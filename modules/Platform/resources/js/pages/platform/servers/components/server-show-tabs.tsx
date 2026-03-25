@@ -135,6 +135,7 @@ export function ServerShowTabs({
                                 secrets={secrets}
                                 canReveal={canRevealSecrets}
                                 canRevealSshKeyPair={canRevealSshKeyPair}
+                                accessKeyId={server.access_key_id}
                                 hasAccessKeySecret={server.has_access_key_secret}
                                 hasSshCredentials={server.has_ssh_credentials}
                             />
