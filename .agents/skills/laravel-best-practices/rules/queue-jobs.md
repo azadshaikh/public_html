@@ -1,5 +1,23 @@
 # Queue & Job Best Practices
 
+## Use `App\Traits\IsMonitored` For New Queued Jobs In This Project
+
+This application's Queue Monitor identifies monitored jobs by checking for the `App\Traits\IsMonitored` trait.
+
+For new first-party queued jobs, add the trait unless there is a deliberate reason not to.
+
+```php
+use App\Traits\IsMonitored;
+use Illuminate\Contracts\Queue\ShouldQueue;
+
+class SyncSomething implements ShouldQueue
+{
+    use IsMonitored;
+}
+```
+
+If you intentionally skip monitoring, do it explicitly and keep the reason clear in the implementation or surrounding change context.
+
 ## Set `retry_after` Greater Than `timeout`
 
 If `retry_after` is shorter than the job's `timeout`, the queue worker re-dispatches the job while it's still running, causing duplicate execution.

@@ -1,37 +1,26 @@
 ---
 name: ai-sdk-development
-description: Builds AI agents, generates text and chat responses, produces images, synthesizes audio, transcribes speech, generates vector embeddings, reranks documents, and manages files and vector stores using the Laravel AI SDK (laravel/ai). Supports structured output, streaming, tools, conversation memory, middleware, queueing, broadcasting, and provider failover. Use when building, editing, updating, debugging, or testing any AI functionality, including agents, LLMs, chatbots, text generation, image generation, audio, transcription, embeddings, RAG, similarity search, vector stores, prompting, structured output, or any AI provider (OpenAI, Anthropic, Gemini, Cohere, Groq, xAI, ElevenLabs, Jina, OpenRouter).
+description: TRIGGER when working with ai-sdk which is Laravel official first-party AI SDK. Activate when building, editing AI agents, chatbots, text generation, image generation, audio/TTS, transcription/STT, embeddings, RAG, vector stores, reranking, structured output, streaming, conversation memory, tools, queueing, broadcasting, and provider failover across OpenAI, Anthropic, Gemini, Azure, Groq, xAI, DeepSeek, Mistral, Ollama, ElevenLabs, Cohere, Jina, and VoyageAI. Invoke when the user references ai-sdk, the `Laravel\Ai\` namespace, or this project's AI features — not for Prism PHP or other AI packages used directly.
+license: MIT
+metadata:
+  author: laravel
 ---
 
 # Developing with the Laravel AI SDK
 
 The Laravel AI SDK (`laravel/ai`) is the official AI package for Laravel, providing a unified API for agents, images, audio, transcription, embeddings, reranking, vector stores, and file management across multiple AI providers.
 
-## When to Apply
+## Searching the Documentation
 
-Activate this skill when:
-
-- Building or debugging AI agents, chat flows, or prompt-driven features
-- Adding structured output, tools, middleware, queueing, streaming, or broadcasting to AI agents
-- Working with AI image generation, audio synthesis, speech transcription, embeddings, reranking, files, or vector stores
-- Implementing conversation memory or multi-provider failover
-- Testing AI features with SDK fakes and assertions
-
-## Current Project Status
-
-The `laravel/ai` package is installed and configured in this project, but there are currently no established app-side AI feature implementations under `app/`, `routes/`, `modules/`, or `tests/`.
-
-Use this skill as package guidance for new AI work, not as a source of existing local patterns to copy from.
-
-## Documentation
-
-Always use `search-docs` before implementing AI SDK features. Never guess at APIs.
+This package is new. Always search the documentation before implementing any feature. Never guess at APIs — the documentation is the single source of truth.
 
 - Use broad, simple queries that match the documentation section headings below.
-- Do not add package names to queries. Use `test agent fake`, not `laravel ai test agent fake`.
-- Run multiple queries at once when you are exploring a feature area.
+- Do not add package names to queries — package information is shared automatically. Use `test agent fake`, not `laravel ai test agent fake`.
+- Run multiple queries at once — the most relevant results are returned first.
 
-Useful documentation sections:
+### Documentation Sections
+
+Use these section headings as query terms for accurate results:
 
 - Introduction, Installation, Configuration, Provider Support
 - Agents: Prompting, Conversation Context, Structured Output, Attachments, Streaming, Broadcasting, Queueing, Tools, Provider Tools, Middleware, Anonymous Agents, Agent Configuration
@@ -67,6 +56,7 @@ Vector stores? → `Stores::create()`
 
 ```php
 use Laravel\Ai\Contracts\Agent;
+use Laravel\Ai\Enums\Lab;
 use Laravel\Ai\Promptable;
 
 class SalesCoach implements Agent
@@ -79,14 +69,29 @@ class SalesCoach implements Agent
     }
 }
 
+// Prompting
 $response = (new SalesCoach)->prompt('Analyze this transcript...');
 echo $response->text;
 
+// Container resolution with dependency injection
+$agent = SalesCoach::make(user: $user);
+
+// Override provider, model, or timeout per-prompt
+$response = (new SalesCoach)->prompt(
+    'Analyze this transcript...',
+    provider: Lab::Anthropic,
+    model: 'claude-haiku-4-5-20251001',
+    timeout: 120,
+);
+
+// Streaming (returns SSE response from a route)
 return (new SalesCoach)->stream('Analyze this transcript...');
 
+// Queueing
 (new SalesCoach)->queue('Analyze this transcript...')
     ->then(fn ($response) => /* ... */);
 
+// Anonymous agents
 use function Laravel\Ai\{agent};
 
 $response = agent(instructions: 'You are a helpful assistant.')->prompt('Hello');
@@ -108,16 +113,13 @@ class SalesCoach implements Agent, Conversational
 
     public function __construct(public User $user) {}
 
-    public function instructions(): string
-    {
-        return 'You are a sales coach.';
-    }
+    public function instructions(): string { return 'You are a sales coach.'; }
 
     public function messages(): iterable
     {
         return History::where('user_id', $this->user->id)
             ->latest()->limit(50)->get()->reverse()
-            ->map(fn ($message) => new Message($message->role, $message->content))
+            ->map(fn ($m) => new Message($m->role, $m->content))
             ->all();
     }
 }
@@ -135,15 +137,14 @@ class SalesCoach implements Agent, Conversational
 {
     use Promptable, RemembersConversations;
 
-    public function instructions(): string
-    {
-        return 'You are a sales coach.';
-    }
+    public function instructions(): string { return 'You are a sales coach.'; }
 }
 
+// Start a new conversation
 $response = (new SalesCoach)->forUser($user)->prompt('Hello!');
 $conversationId = $response->conversationId;
 
+// Continue an existing conversation
 $response = (new SalesCoach)->continue($conversationId, as: $user)->prompt('Tell me more.');
 ```
 
@@ -159,10 +160,7 @@ class Reviewer implements Agent, HasStructuredOutput
 {
     use Promptable;
 
-    public function instructions(): string
-    {
-        return 'Review and score content.';
-    }
+    public function instructions(): string { return 'Review and score content.'; }
 
     public function schema(JsonSchema $schema): array
     {
@@ -174,7 +172,7 @@ class Reviewer implements Agent, HasStructuredOutput
 }
 
 $response = (new Reviewer)->prompt('Review this...');
-echo $response['score'];
+echo $response['score']; // Access like an array
 ```
 
 ### Images
@@ -187,7 +185,7 @@ $image = Image::of('A sunset over mountains')
     ->quality('high')
     ->generate();
 
-$path = $image->store();
+$path = $image->store(); // Store to default disk
 ```
 
 ### Audio
@@ -218,14 +216,15 @@ echo (string) $transcript;
 ### Embeddings
 
 ```php
-use Illuminate\Support\Str;
 use Laravel\Ai\Embeddings;
+use Illuminate\Support\Str;
 
 $response = Embeddings::for(['Text one', 'Text two'])
     ->dimensions(1536)
     ->cache()
     ->generate();
 
+// Single string via Stringable
 $embedding = Str::of('Napa Valley has great wine.')->toEmbeddings();
 ```
 
@@ -238,7 +237,7 @@ $response = Reranking::of(['Django is Python.', 'Laravel is PHP.', 'React is JS.
     ->limit(5)
     ->rerank('PHP frameworks');
 
-$response->first()->document;
+$response->first()->document; // "Laravel is PHP."
 ```
 
 ### Files and Vector Stores
@@ -247,11 +246,13 @@ $response->first()->document;
 use Laravel\Ai\Files\Document;
 use Laravel\Ai\Stores;
 
+// Store a file with the provider
 $file = Document::fromPath('/path/to/doc.pdf')->put();
 
+// Create a vector store and add files
 $store = Stores::create('Knowledge Base');
 $store->add($file->id);
-$store->add(Document::fromStorage('manual.pdf'));
+$store->add(Document::fromStorage('manual.pdf')); // Store + add in one step
 ```
 
 ## Agent Configuration
@@ -259,9 +260,11 @@ $store->add(Document::fromStorage('manual.pdf'));
 ### PHP Attributes
 
 ```php
-use Laravel\Ai\Attributes\{Provider, MaxSteps, MaxTokens, Temperature, Timeout};
+use Laravel\Ai\Attributes\{Provider, Model, MaxSteps, MaxTokens, Temperature, Timeout};
+use Laravel\Ai\Enums\Lab;
 
-#[Provider('anthropic')]
+#[Provider(Lab::Anthropic)]
+#[Model('claude-haiku-4-5-20251001')]
 #[MaxSteps(10)]
 #[MaxTokens(4096)]
 #[Temperature(0.7)]
@@ -269,6 +272,7 @@ use Laravel\Ai\Attributes\{Provider, MaxSteps, MaxTokens, Temperature, Timeout};
 class MyAgent implements Agent
 {
     use Promptable;
+    // ...
 }
 ```
 
@@ -295,7 +299,7 @@ class MyAgent implements Agent, HasTools
 ### Provider Tools
 
 ```php
-use Laravel\Ai\Providers\Tools\{FileSearch, WebFetch, WebSearch};
+use Laravel\Ai\Providers\Tools\{WebSearch, WebFetch, FileSearch};
 
 public function tools(): iterable
 {
@@ -316,6 +320,7 @@ use Laravel\Ai\Contracts\Conversational;
 class ChatBot implements Agent, Conversational
 {
     use Promptable, RemembersConversations;
+    // ...
 }
 
 $response = (new ChatBot)->forUser($user)->prompt('Hello!');
@@ -325,7 +330,7 @@ $response = (new ChatBot)->continue($conversationId, as: $user)->prompt('More...
 ### Failover
 
 ```php
-$response = (new MyAgent)->prompt('Hello', provider: ['openai', 'anthropic']);
+$response = (new MyAgent)->prompt('Hello', provider: [Lab::OpenAI, Lab::Anthropic]);
 ```
 
 ## Testing and Faking
@@ -334,33 +339,41 @@ Each capability supports `fake()` with assertions:
 
 ```php
 use App\Ai\Agents\SalesCoach;
-use Laravel\Ai\{Audio, Embeddings, Files, Image, Reranking, Stores, Transcription};
+use Laravel\Ai\{Image, Audio, Transcription, Embeddings, Reranking, Files, Stores};
 
+// Agents
 SalesCoach::fake(['Response 1', 'Response 2']);
 SalesCoach::assertPrompted('query');
 SalesCoach::assertNotPrompted('query');
 SalesCoach::assertNeverPrompted();
 SalesCoach::fake()->preventStrayPrompts();
 
+// Images
 Image::fake();
 Image::assertGenerated(fn ($prompt) => $prompt->contains('sunset'));
 Image::assertNothingGenerated();
 
+// Audio
 Audio::fake();
 Audio::assertGenerated(fn ($prompt) => $prompt->contains('Hello'));
 
+// Transcription
 Transcription::fake(['Transcribed text.']);
 Transcription::assertGenerated(fn ($prompt) => $prompt->isDiarized());
 
+// Embeddings
 Embeddings::fake();
 Embeddings::assertGenerated(fn ($prompt) => $prompt->contains('Laravel'));
 
+// Reranking
 Reranking::fake();
 Reranking::assertReranked(fn ($prompt) => $prompt->contains('PHP'));
 
+// Files
 Files::fake();
 Files::assertStored(fn ($file) => $file->mimeType() === 'text/plain');
 
+// Stores
 Stores::fake();
 Stores::assertCreated('Knowledge Base');
 $store = Stores::get('id');
@@ -374,6 +387,7 @@ $store->assertAdded('file_id');
 - Agent pattern: Implement the `Agent` interface and use the `Promptable` trait
 - Optional interfaces: `HasTools`, `HasMiddleware`, `HasStructuredOutput`, `Conversational`
 - Entry-point classes: `Image`, `Audio`, `Transcription`, `Embeddings`, `Reranking`, `Stores`
+- Provider enum: `Laravel\Ai\Enums\Lab` (prefer over plain strings)
 - Artisan commands: `php artisan make:agent`, `php artisan make:tool`
 - Global helper: `agent()` for anonymous agents
 
@@ -385,8 +399,8 @@ The namespace is `Laravel\Ai`, not `Illuminate\Ai` or `Laravel\AI`.
 
 ```php
 // Correct
-use Laravel\Ai\Contracts\Agent;
 use Laravel\Ai\Image;
+use Laravel\Ai\Contracts\Agent;
 use Laravel\Ai\Promptable;
 
 // Wrong — these do not exist
@@ -404,14 +418,23 @@ Use agents and entry-point classes (`Image`, `Audio`, etc.) — not `Prism::text
 
 ## Provider Support
 
-| Provider   | Text | Image | Audio | STT | Embeddings | Reranking | Files | Stores |
-| ---------- | ---- | ----- | ----- | --- | ---------- | --------- | ----- | ------ |
-| OpenAI     | Y    | Y     | Y     | Y   | Y          | -         | Y     | Y      |
-| Anthropic  | Y    | -     | -     | -   | -          | -         | Y     | -      |
-| Gemini     | Y    | Y     | -     | -   | Y          | -         | Y     | Y      |
-| xAI        | Y    | Y     | -     | -   | -          | -         | -     | -      |
-| Groq       | Y    | -     | -     | -   | -          | -         | -     | -      |
-| OpenRouter | Y    | -     | -     | -   | -          | -         | -     | -      |
-| ElevenLabs | -    | -     | Y     | Y   | -          | -         | -     | -      |
-| Cohere     | -    | -     | -     | -   | Y          | Y         | -     | -      |
-| Jina       | -    | -     | -     | -   | Y          | Y         | -     | -      |
+| Feature    | Providers                                                       |
+| ---------- | --------------------------------------------------------------- |
+| Text       | OpenAI, Anthropic, Gemini, Azure, Groq, xAI, DeepSeek, Mistral, Ollama |
+| Images     | OpenAI, Gemini, xAI                                            |
+| TTS        | OpenAI, ElevenLabs                                              |
+| STT        | OpenAI, ElevenLabs, Mistral                                     |
+| Embeddings | OpenAI, Gemini, Azure, Cohere, Mistral, Jina, VoyageAI         |
+| Reranking  | Cohere, Jina                                                    |
+| Files      | OpenAI, Anthropic, Gemini                                       |
+
+Use the `Laravel\Ai\Enums\Lab` enum to reference providers in code instead of plain strings:
+
+```php
+use Laravel\Ai\Enums\Lab;
+
+Lab::Anthropic;
+Lab::OpenAI;
+Lab::Gemini;
+// ...
+```

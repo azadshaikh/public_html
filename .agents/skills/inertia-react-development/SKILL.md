@@ -1,9 +1,9 @@
 ---
 name: inertia-react-development
-description: 'Develops Inertia.js v3 React applications. Use when creating React pages, forms, navigation, or other Inertia React v3 patterns, including <Link>, <Form>, useForm, useHttp, useLayoutProps, router, optimistic updates, instant visits, deferred props, WhenVisible, and polling.'
+description: "Develops Inertia.js v3 React applications in this project. Use when creating or modifying Inertia React pages, forms, navigation, layout metadata, `useHttp`, deferred props, optimistic updates, instant visits, polling, `WhenVisible`, or named-route usage from React."
 license: MIT
 metadata:
-    author: laravel
+  author: laravel
 ---
 
 # Inertia React Development
@@ -12,23 +12,19 @@ metadata:
 
 Activate this skill when:
 
-- Creating or modifying React page components rendered by Inertia
-- Building forms with `<Form>` or `useForm`
-- Implementing navigation with `<Link>` or `router`
-- Using Inertia v3 features such as `useHttp`, optimistic updates, layout props, instant visits, deferred props, `WhenVisible`, polling, prefetching, or partial reloads
-- Updating older Inertia React code to v3 APIs
+- Creating or modifying React page components rendered through Inertia
+- Building forms with `<Form>`, `useForm`, or `useHttp`
+- Implementing client-side navigation with `<Link>` or `router`
+- Using Inertia v3 features such as deferred props, `WhenVisible`, optimistic updates, polling, instant visits, layout props, or partial reloads
+- Updating older Inertia React code to current v3 APIs
 
 ## Documentation
 
-Always use `search-docs` for current Inertia v3 guidance.
+Always use `search-docs` for current Inertia v3 guidance before changing implementation details.
 
-Before drilling into individual topics, check the documentation index at `https://inertiajs.com/docs/llms.txt` to discover the available Inertia pages.
+Useful topic queries:
 
-Useful topics:
-
-- `inertia react v3 upgrade guide`
 - `client-side setup`
-- `server-side setup`
 - `title and meta`
 - `links`
 - `manual visits`
@@ -38,157 +34,43 @@ Useful topics:
 - `file uploads`
 - `http requests`
 - `optimistic updates`
-- `typescript`
-- `http client interceptors`
-- `createInertiaApp defaults config`
-- `strict mode pages shorthand`
-- `useHttp`
-- `optimistic updates`
 - `layout props`
 - `instant visits`
 - `deferred props`
 - `partial reloads preserveErrors`
 
-## Version Notes
+## Current Project Status
 
-- This project is currently on Inertia React v3 beta packages, not the final stable release. Check the installed package versions before relying on edge APIs.
-- React 19+ is required.
-- Axios is no longer required. Inertia v3 ships with a built-in XHR client and built-in interceptors.
-- `@inertiajs/vite` is the preferred client setup for v3 and can auto-resolve pages and mount the app with a minimal `createInertiaApp()` entrypoint.
-- Inertia v3 can opt into the standards-compliant `data-inertia` head attribute via `defaults.future.useDataInertiaHeadAttribute`.
-- SSR works automatically in Vite development mode with `@inertiajs/vite`; a separate SSR server is not needed during normal dev.
+Use the installed stable packages and current repo conventions as the baseline:
 
-Current project package status:
+- `@inertiajs/react`: `3.0.0`
+- `@inertiajs/vite`: `3.0.0`
+- `inertiajs/inertia-laravel`: `^3.0.1`
+- `react`: `^19.2.4`
 
-- `@inertiajs/react`: `3.0.0-beta.3`
-- `@inertiajs/vite`: `3.0.0-beta.1`
-- `inertiajs/inertia-laravel`: `^3.0.0-beta3`
+Project defaults that matter:
 
-Treat beta-version differences as possible when reading upstream docs.
-
-### Project Inertia v3 Defaults
-
-Use the project's current v3 rules as the baseline, not older v1/v2-era habits.
-
-- New v3 features in active use include `useHttp`, optimistic updates, layout props, instant visits, and simplified Vite-based SSR behavior.
-- Features carried forward and still valid include deferred props, polling, prefetching, prop merging, infinite scroll, and flash data.
-- Prefer Inertia's `<Head>` through the shared app wrapper, `Link`, `<Form>`, `useForm`, `useHttp`, and `router` helpers instead of custom page plumbing.
-- Treat shared Inertia props as shell-safe runtime data, not a substitute for page props. Do not assume shared payloads include broad module metadata or a global map of every ability in the app.
-- Use `useHttp` for standalone JSON or external requests that should not trigger navigation; prefer it over raw `fetch()` for app-owned endpoints when Inertia ergonomics are useful.
-- Prefer built-in Inertia Precognition support for forms and `useForm` when real-time Laravel validation is needed.
-- Prefer built-in optimistic updates only for small, reversible UI changes, and return the minimal changed subset for predictable rollback.
-- Prefer `router.get/post/put/patch/delete/reload` over raw `router.visit()` when they better express intent.
-- Use `router.push()` and `router.replace()` only for client-only navigation that should not hit the server.
-- Use prop helpers like `router.replaceProp()`, `router.appendToProp()`, and `router.prependToProp()` for lightweight client-only prop updates.
-- Cancel stale work with `router.cancelAll()` when needed.
-- This project does not use `viewTransition`; do not add it to links, visits, or global defaults.
-- When using deferred props, provide a visible empty or loading state.
-- Do not assume all historical `future` flags are gone; follow the current docs for still-supported `defaults.future` options.
-
-## Setup Guidance
-
-### React Client Setup
-
-For new or heavily refactored setup work, prefer the documented v3 stack:
-
-- `react`
-- `react-dom`
-- `@vitejs/plugin-react`
-- `@inertiajs/react`
-- `@inertiajs/vite`
-
-When `@inertiajs/vite` is used, a minimal entry file is valid:
-
-```react
-import { createInertiaApp } from '@inertiajs/react'
-
-createInertiaApp()
-```
-
-The Vite plugin can generate the resolver automatically, searching `./pages` and `./Pages` by default. In this project, continue following the existing `resources/js/pages` convention unless the app has been intentionally reconfigured.
-
-### `createInertiaApp()` Options
-
-Prefer documented setup options instead of custom bootstrapping when they cover the use case.
-
-- `strictMode: true` enables React Strict Mode.
-- `pages: './AppPages'` changes the page directory.
-- `pages` may also be an object with `path`, `extension`, `lazy`, and `transform`.
-- `defaults` configures form, prefetch, and visit defaults.
-- `defaults.future.useDataInertiaHeadAttribute` switches head tracking from `inertia` to `data-inertia`.
-- `id` changes the app root element and must match the server-side `@inertia(...)` root id.
-
-Example:
-
-```react
-createInertiaApp({
-    strictMode: true,
-    pages: {
-        path: './pages',
-        extension: '.tsx',
-        lazy: true,
-    },
-    defaults: {
-        form: {
-            recentlySuccessfulDuration: 5000,
-        },
-        future: {
-            useDataInertiaHeadAttribute: true,
-        },
-    },
-})
-```
-
-### Runtime Configuration
-
-Inertia v3 exposes a `config` instance for runtime configuration. Use it when behavior must change dynamically instead of hard-coding alternate form or prefetch behavior.
-
-```react
-import { config } from '@inertiajs/react'
-
-config.set('form.recentlySuccessfulDuration', 1000)
-config.set({
-    'prefetch.cacheFor': '5m',
-})
-
-const duration = config.get('form.recentlySuccessfulDuration')
-```
-
-### Laravel Server Setup Notes
-
-For Laravel apps:
-
-- The root Blade view typically remains `resources/views/app.blade.php`.
-- React projects should place `@viteReactRefresh` before `@vite(...)` in development.
-- If the root element id changes, update both `@inertia('custom-id')` and the client-side `id` option.
-- Publish and register `HandleInertiaRequests` middleware.
-- In Laravel 12, append that middleware in `bootstrap/app.php`, not `app/Http/Kernel.php`.
-
-### Manual Setup
-
-If `@inertiajs/vite` is not being used, provide explicit `resolve` and `setup` callbacks to `createInertiaApp()`. Prefer `resolvePageComponent()` from the Laravel Vite helper when following Laravel's documented resolver pattern.
+- `resources/js/pages` is the page root
+- `@inertiajs/vite` is in use
+- the project does not use Inertia SSR (`config/inertia.php` keeps it disabled)
+- the project does not use Inertia `viewTransition`
+- Ziggy `route()` is the standard for internal URLs
 
 ## Page Structure
 
-### Page Components
+### Page Files
 
-React page components should live in `resources/js/pages` using the existing project conventions.
+Place Inertia React pages in `resources/js/pages` unless the app is intentionally reconfigured.
 
-### Project Page Conventions
+### Layout Conventions
 
-For authenticated application pages in this project, prefer the shared app shell instead of building page wrappers ad hoc.
+For authenticated application pages in this project:
 
-- Use `AppLayout` for normal authenticated pages.
-- Pass `breadcrumbs`, `title`, `description`, and optional `headerActions` into `AppLayout`.
-- Let the layout render the page header through the shared shell instead of repeating page titles inside the body.
-- Use `AccountLayout` only inside `AppLayout` for account/settings screens.
-- Keep page body content focused on the feature content itself: filters, alerts, forms, tables, empty states, and detail sections.
-- Use default control sizing for page actions, filter bars, datagrid toolbars, and form controls. Treat `sm`/`xs` variants as explicit density changes that should only be used when the UI truly needs tighter spacing; if that tradeoff is not obvious, confirm it with the user first.
-- When reading `page.props.auth.abilities`, only use keys the current page actually needs and expect the shared payload to be route-scoped rather than exhaustive.
-- For shared module data, only rely on runtime-safe fields such as `name`, `slug`, and `inertiaNamespace` unless the page is a dedicated management/inspection screen with richer props.
-- The authenticated shell includes a global quick-open dialog triggered by `Ctrl/Cmd + K`. When changing discoverability for pages or actions, prefer updating backend navigation metadata so the dialog and sidebar stay in sync.
-- The quick-open dialog consumes the shared navigation payload, recent successful Inertia visits, and item-level `quick_open` metadata. Avoid creating feature-local command lists unless the feature is intentionally separate from app navigation.
-- Search-only quick-open entries are supported through navigation items with `sidebar_visible: false` and a GET route, which is the preferred pattern for actions like `Create Post` or `Create Page`.
+- Use `AppLayout` for normal authenticated pages
+- Use `AccountLayout` only inside `AppLayout` for account/settings screens
+- Pass `breadcrumbs`, `title`, `description`, and optional `headerActions` into `AppLayout`
+- Let the shared layout render page headers instead of duplicating titles inside page bodies
+- Keep page bodies focused on feature content such as filters, forms, tables, detail sections, and empty states
 
 Example:
 
@@ -220,402 +102,139 @@ export default function UsersIndex() {
 }
 ```
 
-### Titles and Meta
+### Metadata Conventions
 
-Prefer a shared app-level head wrapper for page titles and common metadata.
+This project already has a shared `AppHead` wrapper and `AppLayout` metadata flow.
 
-- Use Inertia's `<Head>` to manage page `<title>` and `<meta>` tags.
-- Keep tags that should always exist in the Blade root template out of page-level `<Head>` blocks.
-- Use `head-key` on duplicate-prone tags such as description metadata.
-- Multiple `<Head>` instances are valid; layouts can provide defaults and pages can override them.
-- In this project, `AppLayout` already sets page metadata through the shared `AppHead` wrapper. Do not add a page-level `<Head title="..." />` on pages that already pass `title` and `description` to `AppLayout` unless the page truly needs extra head tags beyond what the layout provides.
+- Use Inertia `<Head>` for page metadata
+- Keep persistent head defaults in the Blade root template
+- Use `head-key` for duplicate-prone tags like `description`
+- If a page already passes `title` and `description` to `AppLayout`, do not also add a redundant `<Head title="..." />`
 
-Example wrapper:
+### Shared Payload Rules
 
-```react
-import { Head } from '@inertiajs/react'
+- Treat shared Inertia props as shell-safe runtime data, not as a substitute for page props
+- Do not assume shared payloads include broad module metadata or a global permission dump
+- Read only the specific `page.props.auth.abilities` keys the current page needs
+- For shared module data, rely on runtime-safe fields such as `name`, `slug`, and `inertiaNamespace` unless the page is a management or inspection screen with richer props
 
-export default function AppHead({ title, children }) {
-    return (
-        <Head title={title}>
-            <meta
-                head-key="description"
-                name="description"
-                content="Default app description"
-            />
-            {children}
-        </Head>
-    )
-}
-```
+### Shell And Navigation Rules
 
-Project rule of thumb:
+The authenticated shell includes a global quick-open dialog driven by backend navigation metadata.
 
-- If the page uses `AppLayout` and already passes `title` / `description`, do not also add `<Head title="..." />`.
-- If a page uses a different layout that does not own head metadata, then page-level `<Head>` may still be appropriate.
+- Prefer updating navigation metadata so the sidebar and quick-open stay in sync
+- Avoid feature-local command lists unless the feature is intentionally separate from global navigation
+- Search-only quick-open entries should generally come from navigation items with `sidebar_visible: false` plus a GET route
 
-Example for this project:
+## Navigation
 
-```react
-<AppLayout
-    breadcrumbs={breadcrumbs}
-    title="Roles"
-    description="Manage user roles and permissions"
->
-    <div className="flex flex-col gap-6">...</div>
-</AppLayout>
-```
+### Links
 
-Not this:
-
-```react
-<AppLayout title="Roles" description="Manage user roles and permissions">
-    <Head title="Roles" />
-    ...
-</AppLayout>
-```
-
-### Basic Page Example
-
-```react
-export default function UsersIndex({ users }) {
-    return (
-        <div>
-            <h1>Users</h1>
-            <ul>
-                {users.map(user => <li key={user.id}>{user.name}</li>)}
-            </ul>
-        </div>
-    )
-}
-```
-
-### Resource Page Composition
-
-For back-office resource pages in this project, prefer a predictable body order so future resource pages stay visually consistent.
-
-Typical order:
-
-1. filter section
-2. registry table or main content
-3. empty state when no rows exist
-
-Use the shared resource primitives when they fit:
-
-- `ResourceSectionCard`
-- `ResourceStatCard` when metrics are truly useful
-
-Flash feedback is handled globally through Sonner toasts. Do not add `ResourceFeedbackAlerts` for routine success/error messaging on new pages. If a page needs a persistent inline warning or error that must remain visible, use an explicit alert component for that specific state instead of generic flash feedback UI.
-
-Do not add summary cards by default. Only keep them when the metrics materially help the page.
-
-Example:
-
-```react
-<div className="flex flex-col gap-6">
-    <ResourceSectionCard
-        title="Filter roles"
-        description="Search by label, key, or description."
-    >
-        <Form {...RoleController.index.form()} method="get">
-            ...
-        </Form>
-    </ResourceSectionCard>
-
-    <ResourceSectionCard
-        title="Role registry"
-        description="Manage user roles and permissions."
-    >
-        <Table>...</Table>
-    </ResourceSectionCard>
-</div>
-```
-
-## Client-Side Navigation
-
-Use `<Link>` for client-side navigation instead of traditional `<a>` tags:
-
-```react
-import { Link, router } from '@inertiajs/react'
-
-<Link href="/">Home</Link>
-<Link href="/users">Users</Link>
-<Link href={`/users/${user.id}`}>View User</Link>
-```
-
-### Method Visits
+Use `<Link>` for internal navigation instead of plain anchors.
 
 ```react
 import { Link } from '@inertiajs/react'
 
-<Link href="/logout" method="post" as="button">
+<Link href={route('app.users.index')}>Users</Link>
+```
+
+- Use Ziggy `route()` for internal URLs
+- Pass the URL string directly to `Link href`, `<Form action>`, or router helpers
+- Avoid hard-coded internal URLs when a named route exists
+
+For non-`GET` visits, prefer button rendering for accessibility:
+
+```react
+<Link href={route('logout')} method="post" as="button">
     Logout
 </Link>
 ```
 
-For non-`GET` visits, prefer button rendering for accessibility. Avoid creating `POST`/`PUT`/`PATCH`/`DELETE` anchor links.
+### Router Visits
 
-### Ziggy Route Links
-
-Use Ziggy's `route()` function to generate URL strings for navigation.
+Prefer intent-specific router helpers when they fit:
 
 ```react
-import { Link } from '@inertiajs/react'
-
-<Link href={route('app.users.show', { user: 1 })}>View user</Link>
-```
-
-Project convention:
-
-- Use Ziggy's `route()` function for all internal navigation URLs.
-- Pass `route()` strings directly to `Link href`, `<Form action>`, or `form.submit()`.
-- Avoid hard-coded internal URLs when a named route exists.
-
-Example:
-
-```react
-<Link href={route('app.users.create')}>Add User</Link>
-
-<Form action={route('app.users.index')} method="get">
-    ...
-</Form>
-```
-
-### Prefetching
-
-Prefetch pages to improve perceived performance:
-
-```react
-import { Link } from '@inertiajs/react'
-
-<Link href="/users" prefetch>
-    Users
-</Link>
-```
-
-### Common Link Options
-
-- `replace` replaces the current browser history entry instead of pushing a new one.
-- `preserveState` preserves local page state.
-- `preserveScroll` preserves the current scroll position.
-- `only` requests a subset of props on partial reloads.
-- Active links receive a `data-loading` attribute during in-flight requests.
-
-### Instant Link Patterns
-
-Use instant visits only when the target page can render with shared props and missing page-specific props.
-
-- Explicit `component="Dashboard"` works on `Link` and `router.visit()`.
-- When using `pageProps`, shared props are no longer carried automatically unless you merge them yourself.
-- Prefer defensive rendering or placeholder content when intermediate props may be `undefined`.
-
-### Programmatic Visits
-
-```react
-import { router } from '@inertiajs/react'
-
-function handleClick() {
-    router.visit('/users')
-}
-
-// Or with options
-router.visit('/users', {
-    method: 'post',
-    data: { name: 'John' },
-    onSuccess: () => console.log('Success!'),
-})
-```
-
-Prefer the shortcut methods when they express intent more clearly:
-
-```react
-router.get('/users', { search: 'John' }, { replace: true })
-router.post('/users', data)
-router.put('/users/1', data)
-router.patch('/users/1', data)
-router.delete('/users/1')
+router.get(route('app.users.index'), { search: 'John' }, { preserveState: true })
+router.post(route('app.users.store'), data)
+router.patch(route('app.users.update', user.id), data)
+router.delete(route('app.users.destroy', user.id))
 router.reload({ only: ['users'] })
 ```
 
-For `router.get()`, explicitly set `preserveState` when a same-page visit should keep local state:
-
-```react
-router.get('/users', { search: 'John' }, { preserveState: true })
-```
-
-### Manual Visit Options
-
-Important `router.visit()` options in v3 include:
+Use `router.visit()` when you genuinely need its extra options:
 
 - `replace`
 - `preserveState`
 - `preserveScroll`
 - `only` / `except`
+- `preserveErrors`
 - `headers`
 - `forceFormData`
-- `prefetch`
-- `preserveErrors`
 - `component`
 - `pageProps`
 - `onBefore`, `onStart`, `onProgress`, `onSuccess`, `onError`, `onHttpException`, `onNetworkError`, `onCancel`, `onFinish`
 
-Prefer `router.reload()` when reloading the current page, since it preserves state and scroll automatically.
+Guidelines:
 
-Use `replace`, `preserveState`, `preserveScroll`, `only`, `except`, and `preserveErrors` intentionally when they improve navigation UX.
-
-When uploading files with Laravel, avoid `put`/`patch` uploads directly. Use `post` with `_method` spoofing if needed.
-
-### Global Visit Options
-
-You can configure global visit behavior through `defaults.visitOptions` in `createInertiaApp()`.
-
-```react
-createInertiaApp({
-    defaults: {
-        visitOptions: (href, options) => ({
-            headers: {
-                ...options.headers,
-                'X-Custom-Header': 'value',
-            },
-        }),
-    },
-})
-```
-
-### Client-Side Visits And Prop Helpers
-
-Use `router.push()` and `router.replace()` only for true client-side page updates where no server request should run. Ensure the route still exists server-side for refreshes.
-
-For lightweight client-only prop updates, prefer:
-
-- `router.replaceProp()`
-- `router.appendToProp()`
-- `router.prependToProp()`
-
-These preserve state and scroll automatically.
+- Prefer `router.reload()` for current-page refreshes
+- Use `router.push()` / `router.replace()` only for client-only page updates that must not hit the server
+- Use `router.replaceProp()`, `router.appendToProp()`, and `router.prependToProp()` for lightweight client-only prop updates
+- Cancel stale work with `router.cancelAll()`
 
 ### Instant Visits
 
-Instant visits render the target component immediately while page props load in the background.
+Instant visits are allowed, but use them carefully.
 
-```react
-import { Link } from '@inertiajs/react'
+- Use them only when the target page can safely render with shared props while page-specific props are loading
+- Avoid them when the intermediate render would be misleading or structurally incomplete
+- If you pass `pageProps`, re-check whether required shared props still exist
 
-<Link href="/dashboard" component="Dashboard">
-    Dashboard
-</Link>
-```
-
-When using instant visits, pass the `component` prop explicitly.
-
-```react
-<Link href={route('app.posts.show', { post: 1 })} component="Posts/Show" instant>
-    View post
-</Link>
-```
-
-Project caution:
-
-- Use instant visits only for pages that can render safely with shared props while page-specific props are still loading.
-- Avoid instant visits when the intermediate render would be misleading or structurally incomplete.
-
-### Visit Cancellation
-
-Cancel in-flight requests with `router.cancelAll()`.
-
-```react
-router.cancelAll()
-router.cancelAll({ prefetch: false })
-```
-
-For single-request cancellation, capture the cancel token from `onCancelToken()`.
-
-### Per-Visit Callbacks
-
-- Return `false` from `onBefore()` to cancel a visit.
-- Return `false` from `onHttpException()` or `onNetworkError()` to suppress the matching global event.
-- `onSuccess()` and `onError()` may return promises; `onFinish()` waits for them.
-
-## Form Handling
-
-Prefer the `<Form>` component unless existing code already uses `useForm`.
-
-```react
-import { Form } from '@inertiajs/react'
-
-export default function CreateUser() {
-    return (
-        <Form action="/users" method="post">
-            {({ errors, processing, wasSuccessful }) => (
-                <>
-                    <input type="text" name="name" />
-                    {errors.name && <div>{errors.name}</div>}
-
-                    <input type="email" name="email" />
-                    {errors.email && <div>{errors.email}</div>}
-
-                    <button type="submit" disabled={processing}>
-                        {processing ? 'Creating...' : 'Create User'}
-                    </button>
-
-                    {wasSuccessful && <div>User created!</div>}
-                </>
-            )}
-        </Form>
-    )
-}
-```
+## Forms
 
 ### Choosing `<Form>` vs `useForm`
 
-- Prefer `<Form>` for straightforward server-driven forms that can rely on `name` attributes and uncontrolled inputs.
-- Prefer `useForm` when the UI needs controlled React state, imperative submission, remembered history state, client-side mutation, or cancellation.
-- With React `<Form>`, use `defaultValue` and `defaultChecked` for initial values instead of controlled `value` state unless the UI truly requires control.
-
-Project convention:
-
-- Prefer `<Form>` for index filters and simple server-driven search/filter toolbars.
-- Prefer `useForm` for richer edit/create screens like role assignment, password fields, checkbox collections, or other interactive forms.
+- Prefer `<Form>` for straightforward server-driven forms, filters, and search toolbars
+- Prefer `useForm` when the UI needs controlled state, imperative submission, remembered drafts, cancellation, or complex client-side interaction
+- With React `<Form>`, prefer `name` plus `defaultValue` / `defaultChecked` over controlled `value` state unless control is truly required
 
 Examples:
 
 ```react
-// Good: simple index filtering
-<Form {...RoleController.index.form()} method="get" options={{ preserveScroll: true }}>
+// Good: simple filter form
+<Form action={route('app.roles.index')} method="get" options={{ preserveScroll: true }}>
     <input name="search" defaultValue={filters.search} />
 </Form>
 
-// Good: interactive managed user form
+// Good: richer interactive form
 const form = useForm({
-    name: initialValues.name,
-    email: initialValues.email,
-    roles: initialValues.roles,
+    name: user.name,
+    email: user.email,
+    roles: user.roles,
     password: '',
 })
 ```
 
-### `<Form>` Patterns
+### `<Form>` Rules
 
-- Pass Ziggy `route()` URLs to `action`, or use the URL string directly.
-- Use `transform` for lightweight payload shaping before submission.
-- Use `disableWhileProcessing` to add the `inert` attribute during submission; pair it with classes such as `inert:opacity-60` when helpful.
-- Prefer built-in reset helpers like `resetOnSuccess`, `resetOnError`, and `setDefaultsOnSuccess` over manual reset bookkeeping.
-- Put partial reload controls such as `only`, `except`, and `reset` inside the `options` prop, since they configure the follow-up visit rather than the form payload.
-- File uploads work automatically when the payload contains `File` objects; Inertia converts the request to `FormData` for you.
-- Use `progress` from `<Form>`, `useForm`, or `useHttp` to render upload progress.
-- With Laravel, do not send file uploads with `put` or `patch` directly. Prefer `post` plus `_method: 'put' | 'patch'` when method spoofing is needed.
-- Use `forceFormData` on manual visits when a request should always be multipart, even before a file is present.
+- Pass Ziggy `route()` URLs when the route is named
+- Use `transform` for small payload shaping
+- Use `disableWhileProcessing` when duplicate submits or clicks are a risk
+- Prefer built-in reset helpers like `resetOnSuccess`, `resetOnError`, and `setDefaultsOnSuccess`
+- Put visit controls like `only`, `except`, and `reset` inside the `options` prop
+- Use `progress` for upload UI
+- Let Inertia convert requests to `FormData` automatically when files are present
+- With Laravel, prefer `post` plus `_method: 'put' | 'patch'` for multipart updates instead of direct `put` / `patch` uploads
 
 Example:
 
 ```react
 <Form
-    action={updateProfile()}
-    method="put"
+    action={route('app.profile.update')}
+    method="post"
     disableWhileProcessing
     setDefaultsOnSuccess
     resetOnError={['password']}
-    className="space-y-6 inert:pointer-events-none inert:opacity-60"
     options={{ preserveScroll: true }}
 >
     {({ processing, errors, recentlySuccessful }) => (
@@ -629,166 +248,55 @@ Example:
 </Form>
 ```
 
-### `<Form>` Features
+### `useForm` Rules
 
-The `<Form>` component exposes helpers such as:
+- Use a keyed `useForm()` instance when draft state should survive history navigation
+- Exclude sensitive fields with `dontRemember()`
+- Prefer `route()` URLs with `form.submit()` helpers
+- Form helper errors are already scoped; only reach for `errorBag` on manual multi-form visits
 
-- `errors`
-- `processing`
-- `progress`
-- `wasSuccessful`
-- `recentlySuccessful`
-- `reset`
-- `clearErrors`
-- `resetAndClearErrors`
-- `submit`
-
-It also supports helpers like:
-
-- `resetOnError`
-- `resetOnSuccess`
-- `setDefaultsOnSuccess`
-- `optimistic`
-
-### `useForm`
-
-Use `useForm` when you need programmatic control over state and submission.
-
-```react
-import { useForm } from '@inertiajs/react'
-
-export default function CreateUser() {
-    const { data, setData, post, processing, errors, reset } = useForm({
-        name: '',
-        email: '',
-    })
-
-    function submit(e) {
-        e.preventDefault()
-
-        post('/users', {
-            onSuccess: () => reset(),
-        })
-    }
-
-    return (
-        <form onSubmit={submit}>
-            <input
-                value={data.name}
-                onChange={(e) => setData('name', e.target.value)}
-            />
-
-            {errors.name && <div>{errors.name}</div>}
-
-            <button disabled={processing}>Create User</button>
-        </form>
-    )
-}
-```
-
-Use a keyed form when draft state should survive history navigation:
+Example:
 
 ```react
 const form = useForm(`EditUser:${user.id}`, {
     name: user.name,
     email: user.email,
+    password: '',
 }).dontRemember('password')
 ```
 
-Useful v3 `useForm` helpers include:
+Useful helpers to remember:
 
 - `setDefaults()`
 - `isDirty`
 - `resetAndClearErrors()`
 - `cancel()`
-- `dontRemember()`
 - `progress`
 - `withPrecognition()`
-- `validate()`, `touch()`, `touched()`, `invalid()`, and `valid()` when Precognition is enabled
+- `validate()`, `touch()`, `touched()`, `invalid()`, `valid()`
 
-### Form Context And Refs
+### Validation And Submission Rules
 
-- Use `useFormContext()` for nested child components that need parent `<Form>` state without prop drilling.
-- In React, refs on `<Form>` expose form methods and state for programmatic access when slot props are not convenient.
+- Inertia validation for page visits is redirect-based, not `422` JSON-driven
+- Let the server redirect after successful submissions
+- Display validation errors from form helpers or shared `page.props.errors`
+- Inertia preserves component state by default for `post`, `put`, `patch`, and `delete`, so failed submissions usually repopulate inputs automatically
+- Prefer built-in Precognition support over legacy client packages when real-time Laravel validation is needed
 
-### Laravel + Inertia Form Notes
+## Standalone HTTP Requests
 
-- Let the server redirect after successful submissions instead of expecting JSON response handling.
-- Rely on Inertia's built-in server-side validation flow instead of manual `422` parsing.
-- For file uploads, let Inertia convert the payload to `FormData` automatically.
-- Prefer Ziggy `route()` URLs with both `<Form>` and `useForm.submit()` instead of hard-coded URLs.
-- Form helper errors are already scoped to the form instance, so error bags are usually unnecessary when using `<Form>` or `useForm`.
+Use `useHttp` for JSON or non-page-visit requests that should stay outside the Inertia navigation lifecycle.
 
-### Validation Notes
+Prefer it over raw `fetch()` for app-owned endpoints when you want:
 
-- Inertia validation for page visits is redirect-based, not `422`-driven.
-- Display validation errors from form helpers or shared `page.props.errors`.
-- For non-form-helper manual visits on pages with multiple forms, use `errorBag` to avoid field-name collisions.
-- Inertia preserves component state by default for `post`, `put`, `patch`, and `delete`, so input repopulation usually comes for free after validation failures.
-- Laravel adapters return only the first error per field by default unless all-errors behavior is enabled server-side.
+- remembered state
+- validation ergonomics
+- cancellation
+- upload progress
+- optimistic updates
+- Precognition support
 
-### Precognition Notes
-
-- Precognition support is built into Inertia v3 forms and `useForm`.
-- Prefer built-in Precognition support over legacy client packages when real-time Laravel validation is needed.
-- Validate a single field with `validate('field')`, or call `touch()` and then `validate()` to validate touched fields.
-
-## Inertia v3 Features
-
-### HTTP Requests
-
-Use `useHttp` for standalone HTTP requests that should not trigger an Inertia page visit.
-
-```react
-import { useHttp } from '@inertiajs/react'
-
-export default function Search() {
-    const { data, setData, get, processing } = useHttp({
-        query: '',
-    })
-
-    function search(e) {
-        setData('query', e.target.value)
-        get('/api/search', {
-            onSuccess: (response) => {
-                console.log(response)
-            },
-        })
-    }
-
-    return (
-        <>
-            <input value={data.query} onChange={search} />
-            {processing && <div>Searching...</div>}
-        </>
-    )
-}
-```
-
-Prefer `useHttp` over raw `fetch()` for app-owned JSON endpoints when you want Inertia-style request ergonomics without navigation.
-
-`useHttp` is especially useful for:
-
-- modal or sidebar data fetches
-- background refreshes of JSON endpoints
-- multi-step setup flows that read or mutate non-Inertia endpoints
-- uploads with progress indicators
-- requests that benefit from remembered state, validation errors, cancellation, or Precognition without a page visit
-
-Useful `useHttp` capabilities in v3:
-
-- `response` for the latest parsed JSON payload
-- `cancel()` for aborting in-flight requests
-- `withAllErrors()` for array-based validation messages
-- remembered state via `useHttp('Key', data)` plus `dontRemember()` for sensitive fields
-- `progress` for upload UI
-- `optimistic()` for request-local optimistic updates
-- `withPrecognition()` plus `validate()`, `touch()`, `touched()`, `valid()`, and `invalid()`
-
-Project guidance:
-
-- Prefer `useHttp` for modal fetches, background refreshes, wizard-like setup flows, upload side panels, or JSON mutations that should stay outside the page-visit lifecycle.
-- Prefer normal Inertia visits for full page transitions and standard create/edit/update/delete resource flows.
+Use it for things like modal fetches, background refreshes, wizard steps, or side-panel actions. Prefer normal Inertia visits for full-page CRUD flows.
 
 Example:
 
@@ -798,311 +306,90 @@ const search = useHttp('SearchFilters', {
 }).dontRemember('token')
 
 async function runSearch() {
-    const response = await search.get('/api/search')
+    const response = await search.get(route('app.search.index'))
     console.log(response)
 }
 ```
 
-If the application needs global request behavior, prefer Inertia's built-in `http.onRequest()`, `http.onResponse()`, and `http.onError()` interceptors instead of introducing Axios patterns.
+If the app needs global request behavior, use Inertia's built-in HTTP interceptors instead of reintroducing Axios patterns.
 
-For uploads through `useHttp`, file payloads are automatically sent as `multipart/form-data`, and `progress` can be used for upload indicators.
-
-### HTTP Client Configuration
-
-The built-in XHR client is the default in v3.
-
-- Prefer the default client unless the app explicitly needs Axios or a custom adapter.
-- Use `http.onRequest()`, `http.onResponse()`, and `http.onError()` interceptors for global request behavior.
-- Each interceptor registration returns a cleanup function.
-
-```react
-import { http } from '@inertiajs/react'
-
-const removeRequestHandler = http.onRequest((config) => {
-    config.headers['X-Custom-Header'] = 'value'
-
-    return config
-})
-
-const removeResponseHandler = http.onResponse((response) => {
-    return response
-})
-
-const removeErrorHandler = http.onError((error) => {
-    console.error(error)
-})
-
-removeRequestHandler()
-removeResponseHandler()
-removeErrorHandler()
-```
-
-If a custom Axios instance is truly required, wire it through the documented `http` adapter instead of mixing old Axios patterns throughout the codebase.
+## Key v3 Features
 
 ### Optimistic Updates
 
-Optimistic updates apply UI changes immediately and roll back automatically on failure.
+Use optimistic updates for small, reversible changes only.
 
-```react
-import { router } from '@inertiajs/react'
-
-function like(post) {
-    router.optimistic((props) => ({
-        post: {
-            ...props.post,
-            likes: props.post.likes + 1,
-        },
-    })).post(`/posts/${post.id}/like`)
-}
-```
-
-    Optimistic updates also work with `<Form>`.
-
-```react
-import { Form } from '@inertiajs/react'
-
-<Form
-    action="/todos"
-    method="post"
-    optimistic={(props, data) => ({
-        todos: [...props.todos, { id: Date.now(), name: data.name, done: false }],
-    })}
->
-    <input type="text" name="name" />
-    <button type="submit">Add Todo</button>
-</Form>
-```
-
-Use optimistic updates when:
-
-- the interaction is lightweight and reversible
-- the user benefits from immediate feedback
-- the optimistic value can be represented as a shallow partial update
-
-Rules of thumb:
-
-- `router.optimistic()` updates current page props
-- `<Form optimistic={...}>` receives both current props and submitted form data
-- `useForm().optimistic()` updates current page props before submit
-- `useHttp().optimistic()` updates the hook's own `data`, not page props
-- Return only the keys that should change; Inertia shallow-merges the result and snapshots touched keys for rollback
-
-Prefer optimistic updates for counters, toggles, lightweight list inserts, and similar interactions. Avoid them when the optimistic state would be difficult to roll back cleanly or when the server may return materially different structure.
+- Return only the minimal changed subset
+- Prefer them for toggles, counters, lightweight inserts, and similar interactions
+- Avoid them when rollback would be confusing or the server may materially reshape the data
 
 ### Layout Props
 
-Use layout props to share dynamic data between pages and persistent layouts.
+Layout props are for persistent layouts only.
 
-```react
-import { useLayoutProps } from '@inertiajs/react'
-
-export default function Layout({ children }) {
-    const { title, showSidebar } = useLayoutProps({
-        title: 'My App',
-        showSidebar: true,
-    })
-
-    return (
-        <>
-            <header>{title}</header>
-            {showSidebar && <aside>Sidebar</aside>}
-            <main>{children}</main>
-        </>
-    )
-}
-```
-
-Pages can set layout props directly:
-
-```react
-import { setLayoutProps } from '@inertiajs/react'
-
-export default function Dashboard() {
-    setLayoutProps({
-        title: 'Dashboard',
-        showSidebar: false,
-    })
-
-    return <h1>Dashboard</h1>
-}
-```
-
-Only use `useLayoutProps`, `setLayoutProps()`, or `setLayoutPropsFor()` with persistent layouts. If a page simply renders a layout wrapper as a normal child component, that layout is recreated on each visit and layout-prop persistence does not apply.
-
-Persistent layout guidance:
-
-- `Page.layout = Layout` keeps the layout instance alive between visits.
-- Use arrays for nested persistent layouts.
-- Use `createInertiaApp({ layout })` or the `resolve` callback for default layouts when that improves consistency.
-- Use named layouts and `setLayoutPropsFor()` only when multiple persistent layout layers truly need separate dynamic props.
-- Use `resetLayoutProps()` to manually clear dynamic layout props when needed.
-
-Prefer layout props for dynamic layout concerns like titles, active sections, or sidebar state. Do not use them as a replacement for shared page props.
-
-Project caution:
-
-- Only use `useLayoutProps`, `setLayoutProps()`, `setLayoutPropsFor()`, or `resetLayoutProps()` with persistent layouts.
-- Do not use layout props with plain wrapper layouts that remount every visit, such as pages that simply render `AppLayout` as a normal component.
-
-### View Transitions
-
-This project does not use Inertia view transitions.
-
-- Do not add `viewTransition` to `Link` or `router.visit()` calls.
-- Do not enable global transition defaults through `defaults.visitOptions`.
-- Prefer standard Inertia navigation behavior in this codebase.
-
-### Default Layouts
-
-In v3, `createInertiaApp` supports default layout configuration. Prefer project conventions if this is already defined centrally.
+- Use `useLayoutProps`, `setLayoutProps()`, `setLayoutPropsFor()`, and `resetLayoutProps()` only when the layout instance persists across visits
+- Do not use layout props with wrapper layouts that remount each visit, such as pages that simply render `AppLayout` as a normal child component
+- Do not use layout props as a replacement for shared page props
 
 ### Deferred Props
 
-Deferred props should include a visible empty or loading state. In React v3, deferred content no longer falls back again during partial reloads; existing content stays visible while reloading.
+When using deferred props:
 
-```react
-export default function UsersIndex({ users }) {
-    return (
-        <div>
-            <h1>Users</h1>
-            {!users ? (
-                <div className="animate-pulse">
-                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                </div>
-            ) : (
-                <ul>
-                    {users.map(user => (
-                        <li key={user.id}>{user.name}</li>
-                    ))}
-                </ul>
-            )}
-        </div>
-    )
-}
-```
+- provide a visible loading or empty state
+- assume existing content may stay visible during reloads
+- use `WhenVisible` for below-the-fold deferred content when appropriate
 
-### WhenVisible
+### Polling And Partial Reloads
 
-Use `WhenVisible` for below-the-fold deferred data.
+- Use polling for lightweight status refreshes
+- Prefer `router.reload({ only: [...] })` when only a subset of props needs refreshing
+- Use `preserveErrors` when partial reloads should keep validation feedback visible
 
-```react
-import { WhenVisible } from '@inertiajs/react'
+## Setup Notes
 
-export default function Dashboard({ stats }) {
-    return (
-        <WhenVisible
-            data="stats"
-            fallback={<div className="animate-pulse">Loading stats...</div>}
-        >
-            {({ fetching }) => (
-                <div>
-                    <p>Total Users: {stats.total_users}</p>
-                    {fetching && <span>Refreshing...</span>}
-                </div>
-            )}
-        </WhenVisible>
-    )
-}
-```
+### Client Setup
 
-### Polling
+`@inertiajs/vite` is the preferred setup in this project.
 
-Automatically refresh data at intervals:
+- Keep page resolution aligned with `resources/js/pages`
+- Keep the client root id aligned with the server-side `@inertia(...)` root id if it is customized
+- Use the built-in XHR client and interceptors unless there is a strong reason not to
 
-```react
-import { router } from '@inertiajs/react'
-import { useEffect } from 'react'
+### Laravel Setup
 
-export default function Dashboard({ stats }) {
-    useEffect(() => {
-        const interval = setInterval(() => {
-            router.reload({ only: ['stats'] })
-        }, 5000)
+For Laravel-side setup in this project:
 
-        return () => clearInterval(interval)
-    }, [])
+- the root Blade view is typically `resources/views/app.blade.php`
+- React development should keep `@viteReactRefresh` before `@vite(...)`
+- `HandleInertiaRequests` belongs in `bootstrap/app.php`, not `app/Http/Kernel.php`
+- server-side prop helpers such as `Inertia::optional()`, `Inertia::defer()`, and `Inertia::merge()` belong to the Laravel-side guidance
 
-    return (
-        <div>
-            <h1>Dashboard</h1>
-            <div>Active Users: {stats.activeUsers}</div>
-        </div>
-    )
-}
-```
+### SSR And View Transitions
 
-### Partial Reloads
+- This project does not use Inertia SSR; do not add SSR or hydration-specific setup unless explicitly asked
+- This project does not use Inertia `viewTransition`; do not add it to links, visits, or global defaults
 
-Use `only` and `except` to refresh only what changed. In v3, nested dot-notation is supported.
+## Breaking Changes To Remember
 
-```react
-router.reload({ only: ['auth.notifications'] })
-```
-
-Use `preserveErrors` when partial reloads should keep validation errors visible.
-
-## v3 Breaking Changes
-
-- `router.cancel()` was replaced by `router.cancelAll()`.
-- Global events changed:
-    - `invalid` → `httpException`
-    - `exception` → `networkError`
-- Per-visit callbacks changed to `onHttpException` and `onNetworkError`.
-- Axios is no longer the default HTTP client.
-- Some historical `future` behavior is now standard, but current docs still expose supported `defaults.future` flags such as `useDataInertiaHeadAttribute`.
-- Inertia packages are ESM-only; use `import`, not `require()`.
-
-## Server-Side Notes
-
-Server-side `Inertia::render()`, prop types like `Inertia::optional()` and `Inertia::defer()`, middleware, SSR, root templates, and error page rendering belong to the Inertia Laravel guidance.
-
-Important v3 server-side reminders to keep in mind while working on client pages:
-
-- `Inertia::lazy()` / `LazyProp` was removed; use `Inertia::optional()` instead.
-- Prop helpers such as `Inertia::optional()`, `Inertia::defer()`, and `Inertia::merge()` work inside nested arrays using dot notation.
+- `router.cancel()` was replaced by `router.cancelAll()`
+- visit callbacks are `onHttpException` and `onNetworkError`, not the old names
+- Axios is no longer the default HTTP client
+- Inertia packages are ESM-only; use `import`, not `require()`
+- `Inertia::lazy()` / `LazyProp` was removed; use `Inertia::optional()` instead
 
 ## Common Pitfalls
 
 - Using plain `<a>` tags for internal navigation
-- Duplicating root-template `<head>` tags in page-level `<Head>` blocks
-- Adding redundant `<Head title="..." />` blocks on `AppLayout` pages that already pass metadata to the shared layout wrapper
-- Forgetting `head-key` on page-specific description or Open Graph tags that can appear more than once
-- Repeating title boilerplate instead of using a small shared `AppHead` wrapper
-- Repeating page header markup inside page bodies instead of using `AppLayout` with `title`, `description`, and `headerActions`
-- Controlling `<Form>` inputs unnecessarily when `name` plus `defaultValue` / `defaultChecked` is enough
-- Forgetting `disableWhileProcessing` when duplicate submissions or clicks are possible
-- Manually resetting fields when `resetOnSuccess`, `resetOnError`, or `setDefaultsOnSuccess` already fit the workflow
-- Using `useForm` without a key when draft state should survive history navigation
-- Storing sensitive remembered form fields instead of excluding them with `dontRemember()`
-- Re-implementing validation error parsing instead of using Inertia's built-in redirect and error handling
+- Duplicating page titles and metadata that `AppLayout` already handles
+- Hard-coding internal URLs instead of using Ziggy `route()`
+- Treating shared props as a place to dump broad feature data or every permission in the app
+- Using `useLayoutProps` with non-persistent wrapper layouts
+- Reintroducing Axios or raw `fetch()` for app-owned flows that fit `useHttp`
 - Using non-`GET` links as anchors instead of buttons
-- Forgetting that Ziggy `route()` can generate URLs for all named routes — use it instead of hardcoding paths
-- Forgetting that `router.reload()` already preserves scroll and state
-- Using instant visits for pages that cannot render safely without page-specific props
-- Passing `pageProps` to instant visits without re-merging required shared props
-- Forgetting `router.cancelAll()` when cancelling stale visits during navigation-heavy interactions
-- Using `router.push()` / `router.replace()` as a substitute for real server visits when the page still needs fresh backend data
-- Overlooking `replace`, `preserveState`, `preserveScroll`, or `only` when they improve UX
-- Ignoring the `data-loading` attribute when styling loading navigation states
-- Rebuilding page resolution manually when `@inertiajs/vite` already covers the setup
-- Forgetting to keep the client `id` and server `@inertia(...)` root id in sync
-- Registering `HandleInertiaRequests` in the wrong Laravel 12 location
-- Skipping `@viteReactRefresh` in React development when touching the Blade root template
-- Reintroducing Axios patterns when the built-in XHR client already covers the use case
-- Using raw `fetch()` for app-owned standalone requests when `useHttp` would provide better cancellation, error, progress, and remember-state ergonomics
-- Using `router` visits for requests that should stay outside the Inertia page lifecycle
-- Applying optimistic updates to complex state that cannot be safely or clearly rolled back
-- Returning full objects instead of the minimal changed subset from optimistic callbacks
-- Sending file uploads through `put` or `patch` in Laravel instead of method-spoofed `post` requests when multipart limitations apply
-- Using error bags with `<Form>` or `useForm` when helper-scoped errors already solve the problem
-- Reaching for layout props in non-persistent wrapper layouts where plain props or shared data are more appropriate
-- Adding `viewTransition` in this project even though the effect is intentionally not used
-- Using `router.cancel()` instead of `router.cancelAll()`
-- Listening for `invalid` / `exception` instead of `httpException` / `networkError`
-- Forgetting loading or empty states for deferred props
-- Replacing existing content with skeletons during React deferred reloads when a smaller inline reloading indicator would be better
-- Ignoring `preserveErrors` needs during partial reloads
-- Using CommonJS `require()` imports with ESM-only Inertia packages
-- Hard-coding internal app URLs when a named route exists for `route()`
-- Treating every resource page as if it needs summary stat cards, even when the metrics add noise instead of clarity
+- Forgetting `disableWhileProcessing` or reset helpers on forms that need them
+- Sending multipart updates with direct `put` / `patch` requests instead of method-spoofed `post`
+- Re-implementing `422` parsing instead of using Inertia's redirect-based validation flow
+- Forgetting `router.cancelAll()` during navigation-heavy interactions
+- Using instant visits on pages that cannot render safely without page-specific props
+- Omitting visible loading states for deferred props
+- Adding `viewTransition` or SSR setup in this project even though both are intentionally disabled

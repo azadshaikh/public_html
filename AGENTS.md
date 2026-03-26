@@ -42,14 +42,14 @@ This project has domain-specific skills available. You MUST activate the relevan
 - `cashier-stripe-development` — Handles Laravel Cashier Stripe integration including subscriptions, webhooks, Stripe Checkout, invoices, charges, refunds, trials, coupons, metered billing, and payment failure handling. Triggered when a user mentions Cashier, Billable, IncompletePayment, stripe_id, newSubscription, Stripe subscriptions, or billing. Also applies when setting up webhooks, handling SCA/3DS payment failures, testing with Stripe test cards, or troubleshooting incomplete subscriptions, CSRF webhook errors, or migration publish issues.
 - `laravel-best-practices` — Apply this skill whenever writing, reviewing, or refactoring Laravel PHP code. This includes creating or modifying controllers, models, migrations, form requests, policies, jobs, scheduled commands, service classes, and Eloquent queries. Triggers for N+1 and query performance issues, caching strategies, authorization and security patterns, validation, error handling, queue and job configuration, route definitions, and architectural decisions. Also use for Laravel code reviews and refactoring existing Laravel code to follow best practices. Covers any task involving Laravel backend PHP code patterns.
 - `socialite-development` — Manages OAuth social authentication with Laravel Socialite. Activate when adding social login providers; configuring OAuth redirect/callback flows; retrieving authenticated user details; customizing scopes or parameters; setting up community providers; testing with Socialite fakes; or when the user mentions social login, OAuth, Socialite, or third-party authentication.
-- `inertia-react-development` — Develops Inertia.js v3 React client-side applications. Activates when creating React pages, forms, or navigation; using <Link>, <Form>, useForm, useHttp, useLayoutProps, or router; working with deferred props, prefetching, optimistic updates, instant visits, or polling; or when user mentions React with Inertia, React pages, React forms, or React navigation.
+- `inertia-react-development` — Develops Inertia.js v3 React client-side applications. Activates when creating React pages, forms, or navigation; using <Link>, <Form>, useForm, useHttp, setLayoutProps, or router; working with deferred props, prefetching, optimistic updates, instant visits, or polling; or when user mentions React with Inertia, React pages, React forms, or React navigation.
 - `inertia-form-system` — Builds and updates application forms using the shared Inertia + shadcn form system. Use when creating or refactoring React forms, adding client-side validation, wiring dirty-form protection, showing consistent field errors, working with success/error toasts, or deciding between the shared form hook and raw Inertia forms.
 - `tailwindcss-development` — Always invoke when the user's message includes 'tailwind' in any form. Also invoke for: building responsive grid layouts (multi-column card grids, product grids), flex/grid page structures (dashboards with sidebars, fixed topbars, mobile-toggle navs), styling UI components (cards, tables, navbars, pricing sections, forms, inputs, badges), adding dark mode variants, fixing spacing or typography, and Tailwind v3/v4 work. The core use case: writing or fixing Tailwind utility classes in HTML templates (Blade, JSX, Vue). Skip for backend PHP logic, database queries, API routes, JavaScript with no HTML/CSS component, CSS file audits, build tool configuration, and vanilla CSS.
 - `datagrid` — Builds and configures datagrid (data table) views in this project. Use when creating index pages with tables, card grids, filters, tabs, sorting, pagination, row actions, bulk actions, custom cell/card rendering, shared scaffold datagrid adapters, or common datagrid preset patterns.
 - `laravel-inertia-crud-development` — Activates whenever building or expanding CRUD resources in this project. Use when creating Laravel models, migrations, factories, seeders, form requests, resource controllers, Inertia pages, Ziggy-backed forms, filtering/sorting/pagination, scaffold-generated CRUD resources, or PHPUnit CRUD coverage.
 - `module-development` — Activates when creating new modules, adding features to existing modules, working with module config files (navigation, abilities), module service providers, module database classes (factories, seeders), module manifests, module diagnostics, or module testing. Use when any work involves the `modules/` directory.
 - `pull-request-review` — Reviews GitHub pull requests from URLs, fetches PR branches locally, compares them to `main`, runs focused validation, and produces a manual review checklist before merge. Use when the user shares a PR URL or asks to check a PR before merging.
-- `ai-sdk-development` — Builds AI agents, generates text and chat responses, produces images, synthesizes audio, transcribes speech, generates vector embeddings, reranks documents, and manages files and vector stores using the Laravel AI SDK (laravel/ai). Supports structured output, streaming, tools, conversation memory, middleware, queueing, broadcasting, and provider failover. Use when building, editing, updating, debugging, or testing any AI functionality, including agents, LLMs, chatbots, text generation, image generation, audio, transcription, embeddings, RAG, similarity search, vector stores, prompting, structured output, or any AI provider (OpenAI, Anthropic, Gemini, Cohere, Groq, xAI, ElevenLabs, Jina, OpenRouter).
+- `ai-sdk-development` — TRIGGER when working with ai-sdk which is Laravel official first-party AI SDK. Activate when building, editing AI agents, chatbots, text generation, image generation, audio/TTS, transcription/STT, embeddings, RAG, vector stores, reranking, structured output, streaming, conversation memory, tools, queueing, broadcasting, and provider failover across OpenAI, Anthropic, Gemini, Azure, Groq, xAI, DeepSeek, Mistral, Ollama, ElevenLabs, Cohere, Jina, and VoyageAI. Invoke when the user references ai-sdk, the `Laravel\Ai\` namespace, or this project's AI features — not for Prism PHP or other AI packages used directly.
 - `medialibrary-development` — Build and work with spatie/laravel-medialibrary features including associating files with Eloquent models, defining media collections and conversions, generating responsive images, and retrieving media URLs and paths.
 - `laravel-permission-development` — Build and work with Spatie Laravel Permission features, including roles, permissions, middleware, policies, teams, and Blade directives.
 
@@ -115,84 +115,53 @@ This project has domain-specific skills available. You MUST activate the relevan
 
 # Laravel Boost
 
-- Laravel Boost is an MCP server that comes with powerful tools designed specifically for this application. Use them.
+## Tools
 
-## Artisan Commands
+- Laravel Boost is an MCP server with tools designed specifically for this application. Prefer Boost tools over manual alternatives like shell commands or file reads.
+- Use `database-query` to run read-only queries against the database instead of writing raw SQL in tinker.
+- Use `database-schema` to inspect table structure before writing migrations or models.
+- Use `get-absolute-url` to resolve the correct scheme, domain, and port for project URLs. Always use this before sharing a URL with the user.
+- Use `browser-logs` to read browser logs, errors, and exceptions. Only recent logs are useful, ignore old entries.
 
-- Run Artisan commands directly via the command line (e.g., `php artisan route:list`, `php artisan tinker --execute "..."`).
-- Use `php artisan list` to discover available commands and `php artisan [command] --help` to check parameters.
+## Searching Documentation (IMPORTANT)
 
-## URLs
+- Always use `search-docs` before making code changes. Do not skip this step. It returns version-specific docs based on installed packages automatically.
+- Pass a `packages` array to scope results when you know which packages are relevant.
+- Use multiple broad, topic-based queries: `['rate limiting', 'routing rate limiting', 'routing']`. Expect the most relevant results first.
+- Do not add package names to queries because package info is already shared. Use `test resource table`, not `filament 4 test resource table`.
+- If `search-docs` returns `No results found`, treat that as a query miss first. Retry with broader wording or fewer package filters before assuming the tool is unavailable.
+- Treat actual tool failure as transport or execution failure, such as timeouts or malformed responses. A valid `No results found` response still means the tool is working.
 
-- Whenever you share a project URL with the user, you should use the `get-absolute-url` tool to ensure you're using the correct scheme, domain/IP, and port.
+### Search Syntax
 
-## Debugging
+1. Use words for auto-stemmed AND logic: `rate limit` matches both "rate" AND "limit".
+2. Use `"quoted phrases"` for exact position matching: `"infinite scroll"` requires adjacent words in order.
+3. Combine words and phrases for mixed queries: `middleware "rate limit"`.
+4. Use multiple queries for OR logic: `queries=["authentication", "middleware"]`.
 
-- Use the `database-query` tool when you only need to read from the database.
-- Use the `database-schema` tool to inspect table structure before writing migrations or models.
-- To execute PHP code for debugging, run `php artisan tinker --execute "your code here"` directly.
-- To read configuration values, read the config files directly or run `php artisan config:show [key]`.
-- To inspect routes, run `php artisan route:list` directly.
+## Artisan
+
+- Run Artisan commands directly via the command line (e.g., `php artisan route:list`). Use `php artisan list` to discover available commands and `php artisan [command] --help` to check parameters.
+- Inspect routes with `php artisan route:list`. Filter with: `--method=GET`, `--name=users`, `--path=api`, `--except-vendor`, `--only-vendor`.
+- Read configuration values using dot notation: `php artisan config:show app.name`, `php artisan config:show database.default`. Or read config files directly from the `config/` directory.
 - To check environment variables, read the `.env` file directly.
 
-## Reading Browser Logs With the `browser-logs` Tool
+## Tinker
 
-- You can read browser logs, errors, and exceptions using the `browser-logs` tool from Boost.
-- Only recent browser logs will be useful - ignore old logs.
-
-## Searching Documentation (Critically Important)
-
-- Boost comes with a powerful `search-docs` tool you should use before trying other approaches when working with Laravel or Laravel ecosystem packages. This tool automatically passes a list of installed packages and their versions to the remote Boost API, so it returns only version-specific documentation for the user's circumstance. You should pass an array of packages to filter on if you know you need docs for particular packages.
-- Search the documentation before making code changes to ensure we are taking the correct approach.
-- Use multiple, broad, simple, topic-based queries at once. For example: `['rate limiting', 'routing rate limiting', 'routing']`. The most relevant results will be returned first.
-- Do not add package names to queries; package information is already shared. For example, use `test resource table`, not `filament 4 test resource table`.
-- If `search-docs` returns `No results found`, do not assume the tool is broken. Treat that as a query or filter miss first, then retry with broader wording, multiple related queries, and fewer or no package filters before concluding the tool is unavailable.
-- Treat actual tool failure as transport or execution failure, such as a timeout, connection error, malformed response, or repeated failure across broad queries. A valid `No results found` response means the tool is working.
-
-### Available Search Syntax
-
-1. Simple Word Searches with auto-stemming - query=authentication - finds 'authenticate' and 'auth'.
-2. Multiple Words (AND Logic) - query=rate limit - finds knowledge containing both "rate" AND "limit".
-3. Quoted Phrases (Exact Position) - query="infinite scroll" - words must be adjacent and in that order.
-4. Mixed Queries - query=middleware "rate limit" - "middleware" AND exact phrase "rate limit".
-5. Multiple Queries - queries=["authentication", "middleware"] - ANY of these terms.
+- Execute PHP in app context for debugging and testing code. Do not create models without user approval, prefer tests with factories instead. Prefer existing Artisan commands over custom tinker code.
+- Always use single quotes to prevent shell expansion: `php artisan tinker --execute 'Your::code();'`
+  - Double quotes for PHP strings inside: `php artisan tinker --execute 'User::where("active", true)->count();'`
 
 === php rules ===
 
 # PHP
 
 - Always use curly braces for control structures, even for single-line bodies.
-
-## Constructors
-
-- Use PHP 8 constructor property promotion in `__construct()`.
-    - `public function __construct(public GitHub $github) { }`
-- Do not allow empty `__construct()` methods with zero parameters unless the constructor is private.
-
-## Type Declarations
-
-- Always use explicit return type declarations for methods and functions.
-- Use appropriate PHP type hints for method parameters.
-
-<!-- Explicit Return Types and Method Params -->
-```php
-protected function isAccessible(User $user, ?string $path = null): bool
-{
-    ...
-}
-```
-
-## Enums
-
-- Typically, keys in an Enum should be TitleCase. For example: `FavoritePerson`, `BestLake`, `Monthly`.
-
-## Comments
-
-- Prefer PHPDoc blocks over inline comments. Never use comments within the code itself unless the logic is exceptionally complex.
-
-## PHPDoc Blocks
-
-- Add useful array shape type definitions when appropriate.
+- Use PHP 8 constructor property promotion: `public function __construct(public GitHub $github) { }`. Do not leave empty zero-parameter `__construct()` methods unless the constructor is private.
+- Use explicit return type declarations and type hints for all method parameters: `function isAccessible(User $user, ?string $path = null): bool`
+- Use TitleCase for Enum keys: `FavoritePerson`, `BestLake`, `Monthly`.
+- Prefer PHPDoc blocks over inline comments. Only add inline comments for exceptionally complex logic.
+- Use array shape type definitions in PHPDoc blocks.
 
 === tests rules ===
 
@@ -239,7 +208,6 @@ protected function isAccessible(User $user, ?string $path = null): bool
 - Cancel stale visits with `router.cancelAll()` when needed; use `onBefore`, `onCancelToken`, `onHttpException`, and `onNetworkError` deliberately for manual visits.
 - Instant visits are best for pages that can render with shared props only; use `component` only when the intermediate render is safe.
 - Use `replace`, `preserveState`, `preserveScroll`, and `only` intentionally when they improve navigation UX.
-- You may opt into the standards-compliant `data-inertia` head attribute with `defaults.future.useDataInertiaHeadAttribute`.
 - When using deferred props, add an empty state with a pulsing or animated skeleton.
 - Axios has been removed. Use the built-in XHR client with interceptors, or install Axios separately if needed.
 - `Inertia::lazy()` / `LazyProp` has been removed. Use `Inertia::optional()` instead.
@@ -299,42 +267,22 @@ Ziggy exposes Laravel named routes to TypeScript via the global `route()` functi
 - If you're creating a generic PHP class, use `php artisan make:class`.
 - Pass `--no-interaction` to all Artisan commands to ensure they work without user input. You should also pass the correct `--options` to ensure correct behavior.
 
-## Database
-
-- Always use proper Eloquent relationship methods with return type hints. Prefer relationship methods over raw queries or manual joins.
-- Use Eloquent models and relationships before suggesting raw database queries.
-- Avoid `DB::`; prefer `Model::query()`. Generate code that leverages Laravel's ORM capabilities rather than bypassing them.
-- Generate code that prevents N+1 query problems by using eager loading.
-- Use Laravel's query builder for very complex database operations.
-
 ### Model Creation
 
 - When creating new models, create useful factories and seeders for them too. Ask the user if they need any other things, using `php artisan make:model --help` to check the available options.
 
-### APIs & Eloquent Resources
+## APIs & Eloquent Resources
 
 - For APIs, default to using Eloquent API Resources and API versioning unless existing API routes do not, then you should follow existing application convention.
-
-## Controllers & Validation
-
-- Always create Form Request classes for validation rather than inline validation in controllers. Include both validation rules and custom error messages.
-- Check sibling Form Requests to see if the application uses array or string based validation rules.
-
-## Authentication & Authorization
-
-- Use Laravel's built-in authentication and authorization features (gates, policies, Sanctum, etc.).
 
 ## URL Generation
 
 - When generating links to other pages, prefer named routes and the `route()` function.
 
-## Queues
+## Queues & Jobs
 
-- Use queued jobs for time-consuming operations with the `ShouldQueue` interface.
-
-## Configuration
-
-- Use environment variables only in configuration files - never use the `env()` function directly outside of config files. Always use `config('app.name')`, not `env('APP_NAME')`.
+- New queued jobs in this application should use `App\Traits\IsMonitored` so they appear in the Queue Monitor UI, unless there is a deliberate reason to opt out.
+- When creating or updating queued jobs, check existing jobs for queue, timeout, backoff, uniqueness, and monitoring conventions before introducing a new pattern.
 
 ## Testing
 
@@ -376,21 +324,6 @@ Ziggy exposes Laravel named routes to TypeScript via the global `route()` functi
 # Inertia + React
 
 - IMPORTANT: Activate `inertia-react-development` when working with Inertia React client-side patterns.
-
-=== tailwindcss/core rules ===
-
-# Tailwind CSS
-
-- Always use existing Tailwind conventions; check project patterns before adding new ones.
-- IMPORTANT: Always use `search-docs` tool for version-specific Tailwind CSS documentation and updated code examples. Never rely on training data.
-- IMPORTANT: Activate `tailwindcss-development` every time you're working with a Tailwind CSS or styling-related task.
-
-=== laravel/ai rules ===
-
-## Laravel AI SDK
-
-- This application uses the Laravel AI SDK (`laravel/ai`) for all AI functionality.
-- Activate the `ai-sdk-development` skill when building, editing, updating, debugging, or testing AI agents, text generation, chat, streaming, structured output, tools, image generation, audio, transcription, embeddings, reranking, vector stores, files, conversation memory, or any AI provider integration (OpenAI, Anthropic, Gemini, Cohere, Groq, xAI, ElevenLabs, Jina, OpenRouter).
 
 === spatie/laravel-medialibrary rules ===
 

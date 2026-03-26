@@ -97,6 +97,7 @@ Check sibling files, related controllers, models, or tests for established patte
 - `ShouldBeUnique` to prevent duplicates; `WithoutOverlapping::untilProcessing()` for concurrency
 - Always implement `failed()`; with `retryUntil()`, set `$tries = 0`
 - `RateLimited` middleware for external API calls; `Bus::batch()` for related jobs
+- In this project, new queued jobs should use `App\Traits\IsMonitored` unless there is a documented reason to opt out
 - Horizon for complex multi-queue scenarios
 
 ### 10. Routing & Controllers → `rules/routing.md`

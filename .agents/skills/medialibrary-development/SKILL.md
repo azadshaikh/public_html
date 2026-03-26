@@ -1,9 +1,9 @@
 ---
 name: medialibrary-development
-description: Build and work with spatie/laravel-medialibrary features including associating files with Eloquent models, defining media collections and conversions, generating responsive images, and retrieving media URLs and paths. Use when working with file uploads, media attachments, image processing, media collections, conversions, or responsive images in Laravel.
+description: Build and work with spatie/laravel-medialibrary features including associating files with Eloquent models, defining media collections and conversions, generating responsive images, and retrieving media URLs and paths.
 license: MIT
 metadata:
-    author: Spatie
+  author: Spatie
 ---
 
 # Media Library Development
@@ -12,7 +12,7 @@ metadata:
 
 Use spatie/laravel-medialibrary to associate files with Eloquent models. Supports image/video conversions, responsive images, multiple collections, and various storage disks.
 
-## When to Apply
+## When to Activate
 
 - Activate when working with file uploads, media attachments, or image processing in Laravel.
 - Activate when code references `HasMedia`, `InteractsWithMedia`, the `Media` model, or media collections/conversions.
