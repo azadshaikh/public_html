@@ -5,6 +5,7 @@ namespace Modules\Platform\Tests\Unit;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Process;
 use Mockery;
 use Mockery\MockInterface;
 use Modules\Platform\Console\DnsPollPendingCommand;
@@ -12,6 +13,7 @@ use Modules\Platform\Console\SslIssueCertificateCommand;
 use Modules\Platform\Console\SslRenewExpiringCommand;
 use Modules\Platform\Enums\WebsiteStatus;
 use Modules\Platform\Events\DnsVerificationTimeoutEvent;
+use Modules\Platform\Libs\DnsResolver;
 use Modules\Platform\Models\Domain;
 use Modules\Platform\Models\Secret;
 use Modules\Platform\Models\Website;
@@ -187,6 +189,38 @@ class DnsSslCommandsTest extends TestCase
 
         $this->artisan('platform:ssl:renew-expiring', ['--dry-run' => true])
             ->assertExitCode(0);
+    }
+
+    public function test_dns_resolver_accepts_flattened_apex_cname_when_addresses_match(): void
+    {
+        Process::fake(function ($process) {
+            $command = $process->command;
+
+            return match (true) {
+                str_contains($command, "'astero.in' 'CNAME'") => Process::result(''),
+                str_contains($command, "'astero.in' 'A'") => Process::result('103.180.115.15'),
+                str_contains($command, "'astero.in' 'AAAA'") => Process::result(''),
+                str_contains($command, "'asteroin.b-cdn.net' 'CNAME'") => Process::result(''),
+                str_contains($command, "'asteroin.b-cdn.net' 'A'") => Process::result('103.180.115.15'),
+                str_contains($command, "'asteroin.b-cdn.net' 'AAAA'") => Process::result(''),
+                default => Process::result(''),
+            };
+        });
+
+        $this->assertTrue(
+            DnsResolver::verifyCnameTarget('astero.in', 'asteroin.b-cdn.net', true)
+        );
+    }
+
+    public function test_dns_poll_command_uses_external_dns_waiting_message_for_external_mode(): void
+    {
+        $contents = file_get_contents(base_path('modules/Platform/app/Console/DnsPollPendingCommand.php'));
+
+        $this->assertNotFalse($contents, 'Failed to read modules/Platform/app/Console/DnsPollPendingCommand.php');
+        $this->assertStringContainsString(
+            'Waiting for customer DNS records to propagate. (Check %d)',
+            $contents
+        );
     }
 
     public function test_acme_challenge_alias_service_builds_alias_from_config(): void

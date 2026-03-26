@@ -43,6 +43,25 @@ class WebsiteDeleteCleanupFlowTest extends TestCase
         $this->assertLessThan($deletePosition, $queuePosition);
     }
 
+    public function test_website_trash_job_deletes_cdn_pull_zone_and_clears_cdn_metadata(): void
+    {
+        $path = base_path('modules/Platform/app/Jobs/WebsiteTrash.php');
+        $contents = file_get_contents($path);
+
+        $this->assertNotFalse($contents, 'Failed to read modules/Platform/app/Jobs/WebsiteTrash.php');
+        $this->assertStringContainsString('$this->removeCdnPullZone($website);', $contents);
+        $this->assertStringContainsString('BunnyApi::deletePullZone($cdnProvider, $pullzoneId);', $contents);
+        $this->assertStringContainsString("\$website->setMetadata('cdn', null);", $contents);
+        $this->assertStringContainsString("Log::info('WebsiteTrash: CDN pull zone deleted'", $contents);
+
+        $removePosition = strpos($contents, '$this->removeCdnPullZone($website);');
+        $activityPosition = strpos($contents, '$this->logActivity($website, ActivityAction::UPDATE, \'Website trashed successfully on server.\');');
+
+        $this->assertIsInt($removePosition);
+        $this->assertIsInt($activityPosition);
+        $this->assertLessThan($activityPosition, $removePosition);
+    }
+
     public function test_expired_websites_command_dispatches_website_delete_with_website_id(): void
     {
         $path = base_path('modules/Platform/app/Console/HestiaDeleteExpiredWebsitesCommand.php');

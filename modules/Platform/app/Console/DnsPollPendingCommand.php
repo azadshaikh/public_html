@@ -196,10 +196,15 @@ class DnsPollPendingCommand extends Command
             // Re-dispatch provisioning job — existing "skip already-done steps" logic handles resumption
             WebsiteProvision::dispatch($website);
         } else {
+            $waitingMessage = match ($dnsMode) {
+                'external' => sprintf('Waiting for customer DNS records to propagate. (Check %d)', $checkCount),
+                default => sprintf('Waiting for NS delegation to propagate. (Check %d)', $checkCount),
+            };
+
             // Update step message with check count for visibility
             $website->updateProvisioningStep(
                 'verify_dns',
-                sprintf('Waiting for NS delegation to propagate. (Check %d)', $checkCount),
+                $waitingMessage,
                 'waiting'
             );
 
@@ -249,7 +254,14 @@ class DnsPollPendingCommand extends Command
         foreach ($requiredRecords as $required) {
             $queryName = str_contains($required['name'], '.') ? $required['name'] : $required['name'].'.'.$rootDomain;
 
-            if (! DnsResolver::verifyRecord($queryName, $required['type'], $required['value'])) {
+            $isApexCname = strtoupper((string) $required['type']) === 'CNAME'
+                && $queryName === $rootDomain;
+
+            $verified = $isApexCname
+                ? DnsResolver::verifyCnameTarget($queryName, $required['value'], true)
+                : DnsResolver::verifyRecord($queryName, $required['type'], $required['value']);
+
+            if (! $verified) {
                 return false;
             }
         }

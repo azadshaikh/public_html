@@ -114,6 +114,68 @@ class DnsResolver
     }
 
     /**
+     * Verify a CNAME target, allowing apex flattening when the resolver returns
+     * A / AAAA answers that match the expected hostname's resolved addresses.
+     *
+     * Returns true only if ALL resolvers either see the exact CNAME target or
+     * return addresses that intersect with the expected hostname's addresses.
+     */
+    public static function verifyCnameTarget(string $name, string $expectedValue, bool $allowFlattenedAddress = false): bool
+    {
+        $expectedLower = rtrim(strtolower($expectedValue), '.');
+
+        foreach (self::RESOLVERS as $resolver) {
+            $cnameRecords = self::queryRecords($name, 'CNAME', $resolver);
+
+            if (in_array($expectedLower, $cnameRecords, true)) {
+                continue;
+            }
+
+            if (! $allowFlattenedAddress) {
+                Log::debug(sprintf(
+                    'DnsResolver: CNAME record for %s not matched on %s — expected: %s, found: [%s]',
+                    $name,
+                    $resolver,
+                    $expectedLower,
+                    implode(', ', $cnameRecords)
+                ));
+
+                return false;
+            }
+
+            $resolvedAddresses = array_values(array_unique(array_merge(
+                self::queryRecords($name, 'A', $resolver),
+                self::queryRecords($name, 'AAAA', $resolver),
+            )));
+            $expectedAddresses = array_values(array_unique(array_merge(
+                self::queryRecords($expectedLower, 'A', $resolver),
+                self::queryRecords($expectedLower, 'AAAA', $resolver),
+            )));
+
+            if ($resolvedAddresses !== [] && $expectedAddresses !== []) {
+                $matchingAddresses = array_intersect($resolvedAddresses, $expectedAddresses);
+
+                if ($matchingAddresses !== []) {
+                    continue;
+                }
+            }
+
+            Log::debug(sprintf(
+                'DnsResolver: Flattened CNAME target for %s not matched on %s — expected target: %s, resolved: [%s], target resolved: [%s]',
+                $name,
+                $resolver,
+                $expectedLower,
+                implode(', ', $resolvedAddresses),
+                implode(', ', $expectedAddresses)
+            ));
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
      * Query NS records for a domain from all resolvers.
      *
      * Returns an array of nameserver results per resolver for debugging/display.

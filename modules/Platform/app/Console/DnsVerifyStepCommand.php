@@ -235,6 +235,10 @@ class DnsVerifyStepCommand extends BaseCommand
         // For short names like "www" or "_acme-challenge", fully qualify with root domain
         $queryName = str_contains($name, '.') ? $name : $name.'.'.$rootDomain;
 
+        if (strtoupper($type) === 'CNAME' && $queryName === $rootDomain) {
+            return DnsResolver::verifyCnameTarget($queryName, $expectedValue, true);
+        }
+
         return DnsResolver::verifyRecord($queryName, $type, $expectedValue);
     }
 
