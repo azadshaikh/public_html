@@ -45,6 +45,9 @@ return [
         // Allow purging all monitor entries.
         'allow_purge' => true,
 
+        // Allow clearing queued jobs from the active queue connection.
+        'allow_clear_queue' => true,
+
         'show_metrics' => true,
 
         // Time frame used to calculate metrics values (in days).

@@ -130,6 +130,7 @@ class QueueMonitorControllerTest extends TestCase
                 ->has('queueOptions')
                 ->where('filters.status', 'all')
                 ->where('ui.refreshInterval', 10)
+                ->where('ui.allowClearQueue', true)
                 ->where('workerStats.supervisor_running', true)
             );
     }
@@ -203,6 +204,28 @@ class QueueMonitorControllerTest extends TestCase
             ->assertSessionHas('status', 'Stop requested. The job will stop after the current step.');
 
         $this->assertNotNull(data_get($monitor->fresh()->metadata, 'cancel_requested_at'));
+    }
+
+    public function test_clear_queue_route_calls_queue_clear_for_target_queue(): void
+    {
+        Artisan::shouldReceive('call')
+            ->once()
+            ->with('queue:clear', [
+                'connection' => config('queue.default'),
+                '--queue' => 'default',
+                '--force' => true,
+            ])
+            ->andReturn(0);
+        Artisan::shouldReceive('output')
+            ->never();
+
+        $this->actingAs($this->superUser)
+            ->from(route('app.masters.queue-monitor.index'))
+            ->post(route('app.masters.queue-monitor.clear-queue'), [
+                'queue' => 'default',
+            ])
+            ->assertRedirect(route('app.masters.queue-monitor.index'))
+            ->assertSessionHas('status', 'Queued jobs cleared for "default".');
     }
 
     public function test_queue_monitor_dashboard_includes_stop_action_for_running_cancellable_jobs(): void

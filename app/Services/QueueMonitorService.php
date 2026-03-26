@@ -14,8 +14,10 @@ use App\Traits\Scaffoldable;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use RuntimeException;
 
 class QueueMonitorService implements ScaffoldServiceInterface
 {
@@ -300,6 +302,62 @@ class QueueMonitorService implements ScaffoldServiceInterface
         }
 
         return $this->traitHandleBulkAction($request);
+    }
+
+    /**
+     * Clear queued jobs from the active queue connection.
+     *
+     * @return array{success: bool, message: string, affected: int}
+     */
+    public function clearQueuedJobs(?string $queue = null): array
+    {
+        $connection = (string) config('queue.default');
+        $queue = filled($queue) ? trim((string) $queue) : null;
+
+        $targetQueues = $queue !== null
+            ? [$queue]
+            : collect($this->getQueueStats())
+                ->filter(fn (array $stats): bool => (int) ($stats['queued'] ?? 0) > 0)
+                ->pluck('queue')
+                ->filter()
+                ->values()
+                ->all();
+
+        if ($targetQueues === []) {
+            return [
+                'success' => true,
+                'message' => $queue !== null
+                    ? sprintf('No queued jobs found for queue "%s".', $queue)
+                    : 'No queued jobs found to clear.',
+                'affected' => 0,
+            ];
+        }
+
+        foreach ($targetQueues as $queueName) {
+            $exitCode = Artisan::call('queue:clear', [
+                'connection' => $connection,
+                '--queue' => $queueName,
+                '--force' => true,
+            ]);
+
+            if ($exitCode !== 0) {
+                $output = trim(Artisan::output());
+
+                throw new RuntimeException(
+                    $output !== ''
+                        ? $output
+                        : sprintf('Unable to clear queued jobs for queue "%s".', $queueName)
+                );
+            }
+        }
+
+        return [
+            'success' => true,
+            'message' => count($targetQueues) === 1
+                ? sprintf('Queued jobs cleared for "%s".', $targetQueues[0])
+                : sprintf('Queued jobs cleared for %d queues.', count($targetQueues)),
+            'affected' => count($targetQueues),
+        ];
     }
 
     private function getMonitorPaginator(Request $request): LengthAwarePaginator

@@ -101,6 +101,7 @@ class QueueMonitorController extends ScaffoldController implements HasMiddleware
                 'allowRetry' => (bool) config('queue-monitor.ui.allow_retry', true),
                 'allowDeletion' => (bool) config('queue-monitor.ui.allow_deletion', true),
                 'allowPurge' => (bool) config('queue-monitor.ui.allow_purge', true),
+                'allowClearQueue' => (bool) config('queue-monitor.ui.allow_clear_queue', true),
             ],
             'status' => session('status'),
             'error' => session('error'),
@@ -183,6 +184,23 @@ class QueueMonitorController extends ScaffoldController implements HasMiddleware
             report($exception);
 
             return back()->with('error', 'Unable to retry the job right now.');
+        }
+    }
+
+    public function clearQueue(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'queue' => ['nullable', 'string'],
+        ]);
+
+        try {
+            $result = $this->service()->clearQueuedJobs($validated['queue'] ?? null);
+
+            return back()->with('status', $result['message']);
+        } catch (RuntimeException $runtimeException) {
+            report($runtimeException);
+
+            return back()->with('error', 'Unable to clear queued jobs right now.');
         }
     }
 

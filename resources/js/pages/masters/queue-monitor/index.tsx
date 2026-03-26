@@ -444,6 +444,23 @@ export default function QueueMonitorIndex({
         liveWorkerStats.running_workers < liveWorkerStats.configured_workers
             ? 'warning'
             : 'success';
+    const totalQueuedJobs = queueStats.reduce(
+        (carry, queue) => carry + queue.queued,
+        0,
+    );
+
+    const submitClearQueueRequest = (queue?: string): void => {
+        router.post(
+            route('app.masters.queue-monitor.clear-queue'),
+            queue ? { queue } : {},
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setLastUpdatedAt(Date.now());
+                },
+            },
+        );
+    };
 
     return (
         <AppLayout
@@ -494,6 +511,37 @@ export default function QueueMonitorIndex({
                                 <PauseCircleIcon data-icon="inline-start" />
                             )}
                             {paused ? 'Resume' : 'Pause'}
+                        </Button>
+                    ) : null}
+
+                    {ui.allowClearQueue ? (
+                        <Button
+                            type="button"
+                            variant="outline"
+                            disabled={totalQueuedJobs === 0}
+                            onClick={() => {
+                                const targetQueue =
+                                    filters.queue.trim() !== ''
+                                        ? filters.queue.trim()
+                                        : null;
+                                const confirmationMessage =
+                                    targetQueue !== null
+                                        ? `Clear all queued jobs from "${targetQueue}"? Running jobs will continue.`
+                                        : 'Clear all queued jobs from every queue? Running jobs will continue.';
+
+                                if (!window.confirm(confirmationMessage)) {
+                                    return;
+                                }
+
+                                submitClearQueueRequest(
+                                    targetQueue ?? undefined,
+                                );
+                            }}
+                        >
+                            <XCircleIcon data-icon="inline-start" />
+                            {filters.queue.trim() !== ''
+                                ? 'Clear queue'
+                                : 'Clear queued jobs'}
                         </Button>
                     ) : null}
 
@@ -623,6 +671,9 @@ export default function QueueMonitorIndex({
                                             <TableHead className="px-4 text-right">
                                                 Avg duration
                                             </TableHead>
+                                            <TableHead className="px-4 text-right">
+                                                Actions
+                                            </TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -683,6 +734,35 @@ export default function QueueMonitorIndex({
                                                     {queue.avg_duration !== null
                                                         ? `${queue.avg_duration}s`
                                                         : '—'}
+                                                </TableCell>
+                                                <TableCell className="px-4 text-right">
+                                                    {ui.allowClearQueue &&
+                                                    queue.queued > 0 ? (
+                                                        <Button
+                                                            type="button"
+                                                            variant="outline"
+                                                            onClick={() => {
+                                                                if (
+                                                                    !window.confirm(
+                                                                        `Clear all queued jobs from "${queue.queue}"? Running jobs will continue.`,
+                                                                    )
+                                                                ) {
+                                                                    return;
+                                                                }
+
+                                                                submitClearQueueRequest(
+                                                                    queue.queue,
+                                                                );
+                                                            }}
+                                                        >
+                                                            <XCircleIcon data-icon="inline-start" />
+                                                            Clear queued
+                                                        </Button>
+                                                    ) : (
+                                                        <span className="text-muted-foreground">
+                                                            —
+                                                        </span>
+                                                    )}
                                                 </TableCell>
                                             </TableRow>
                                         ))}
