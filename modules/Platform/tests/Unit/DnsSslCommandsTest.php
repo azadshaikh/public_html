@@ -197,12 +197,18 @@ class DnsSslCommandsTest extends TestCase
             $command = $process->command;
 
             return match (true) {
-                str_contains($command, "'astero.in' 'CNAME'") => Process::result(''),
-                str_contains($command, "'astero.in' 'A'") => Process::result('103.180.115.15'),
-                str_contains($command, "'astero.in' 'AAAA'") => Process::result(''),
-                str_contains($command, "'asteroin.b-cdn.net' 'CNAME'") => Process::result(''),
-                str_contains($command, "'asteroin.b-cdn.net' 'A'") => Process::result('103.180.115.15'),
-                str_contains($command, "'asteroin.b-cdn.net' 'AAAA'") => Process::result(''),
+                str_contains($command, "@'1.1.1.1' 'astero.in' 'CNAME'") => Process::result(''),
+                str_contains($command, "@'1.1.1.1' 'astero.in' 'A'") => Process::result('103.180.115.15'),
+                str_contains($command, "@'1.1.1.1' 'astero.in' 'AAAA'") => Process::result(''),
+                str_contains($command, "@'1.1.1.1' 'asteroin.b-cdn.net' 'CNAME'") => Process::result(''),
+                str_contains($command, "@'1.1.1.1' 'asteroin.b-cdn.net' 'A'") => Process::result('103.180.115.15'),
+                str_contains($command, "@'1.1.1.1' 'asteroin.b-cdn.net' 'AAAA'") => Process::result(''),
+                str_contains($command, "@'8.8.8.8' 'astero.in' 'CNAME'") => Process::result(''),
+                str_contains($command, "@'8.8.8.8' 'astero.in' 'A'") => Process::result('192.0.2.10'),
+                str_contains($command, "@'8.8.8.8' 'astero.in' 'AAAA'") => Process::result(''),
+                str_contains($command, "@'8.8.8.8' 'asteroin.b-cdn.net' 'CNAME'") => Process::result(''),
+                str_contains($command, "@'8.8.8.8' 'asteroin.b-cdn.net' 'A'") => Process::result('198.51.100.20'),
+                str_contains($command, "@'8.8.8.8' 'asteroin.b-cdn.net' 'AAAA'") => Process::result(''),
                 default => Process::result(''),
             };
         });
@@ -210,6 +216,49 @@ class DnsSslCommandsTest extends TestCase
         $this->assertTrue(
             DnsResolver::verifyCnameTarget('astero.in', 'asteroin.b-cdn.net', true)
         );
+    }
+
+    public function test_dns_resolver_accepts_record_when_any_public_resolver_matches(): void
+    {
+        Process::fake(function ($process) {
+            $command = $process->command;
+
+            return match (true) {
+                str_contains($command, "@'1.1.1.1' 'www.astero.in' 'CNAME'") => Process::result('asteroin.b-cdn.net'),
+                str_contains($command, "@'8.8.8.8' 'www.astero.in' 'CNAME'") => Process::result('stale.example.net'),
+                default => Process::result(''),
+            };
+        });
+
+        $this->assertTrue(
+            DnsResolver::verifyRecord('www.astero.in', 'CNAME', 'asteroin.b-cdn.net')
+        );
+    }
+
+    public function test_dns_resolver_trace_record_parses_answer_and_nameservers(): void
+    {
+        Process::fake(function ($process) {
+            $command = $process->command;
+
+            if (str_contains($command, "dig 'www.astero.in' 'CNAME' +trace")) {
+                return Process::result(<<<'TRACE'
+; <<>> DiG 9 <<>> www.astero.in CNAME +trace
+in.                     172800  IN  NS  ns1.registry.example.
+in.                     172800  IN  NS  ns2.registry.example.
+astero.in.              300     IN  NS  aria.ns.cloudflare.com.
+astero.in.              300     IN  NS  brad.ns.cloudflare.com.
+www.astero.in.          300     IN  CNAME asteroin.b-cdn.net.
+TRACE);
+            }
+
+            return Process::result('');
+        });
+
+        $trace = DnsResolver::traceRecord('www.astero.in', 'CNAME');
+
+        $this->assertSame(['asteroin.b-cdn.net'], $trace['records']);
+        $this->assertContains('aria.ns.cloudflare.com', $trace['nameservers']);
+        $this->assertContains('ns1.registry.example', $trace['nameservers']);
     }
 
     public function test_dns_poll_command_uses_external_dns_waiting_message_for_external_mode(): void

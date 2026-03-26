@@ -80,6 +80,7 @@ class DnsDebugCommand extends Command
             'overall' => [
                 'records_pass' => $allRecordsPassing,
                 'would_resume_provisioning' => $pollGate['eligible'] && $allRecordsPassing,
+                'resolver_quorum' => 'any',
             ],
         ];
 
@@ -157,6 +158,7 @@ class DnsDebugCommand extends Command
             'passes' => $passes,
             'is_apex_cname' => $isApexCname,
             'resolver_results' => [],
+            'trace' => DnsResolver::traceRecord($queryName, $type),
         ];
 
         foreach (DnsResolver::resolvers() as $resolver) {
@@ -266,6 +268,7 @@ class DnsDebugCommand extends Command
                 ['ACME alias domain', $payload['acme']['alias_domain'] ?? 'null'],
                 ['ACME challenge alias', $payload['domain']['challenge_alias'] ?: ($payload['acme']['challenge_alias'] ?? 'null')],
                 ['ACME Bunny key configured', $payload['acme']['bunny_api_key_configured'] ? 'yes' : 'no'],
+                ['Resolver quorum', $payload['overall']['resolver_quorum']],
                 ['Poll eligible now', $payload['dns_validation']['poll_gate']['eligible'] ? 'yes' : 'no'],
                 ['Would resume provisioning now', $payload['overall']['would_resume_provisioning'] ? 'yes' : 'no'],
             ]
@@ -323,6 +326,16 @@ class DnsDebugCommand extends Command
                     $this->line(sprintf('  %s target A/AAAA: %s', $resolverResult['resolver'], $targetAddresses));
                 }
             }
+
+            $traceRecords = $recordCheck['trace']['records'] !== []
+                ? implode(', ', $recordCheck['trace']['records'])
+                : '(none)';
+            $traceNameservers = $recordCheck['trace']['nameservers'] !== []
+                ? implode(', ', $recordCheck['trace']['nameservers'])
+                : '(none)';
+
+            $this->line(sprintf('  trace %s: %s', $recordCheck['type'], $traceRecords));
+            $this->line(sprintf('  trace NS: %s', $traceNameservers));
         }
     }
 }

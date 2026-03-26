@@ -14,13 +14,14 @@ use RuntimeException;
  * Uses `dig` to query Cloudflare (1.1.1.1) and Google (8.8.8.8) resolvers
  * instead of relying on the server's local resolver (which may be cached/stale).
  *
- * All verification methods require BOTH resolvers to confirm the expected records
- * to ensure the DNS change has propagated globally.
+ * Record verification succeeds as soon as ANY configured public resolver confirms
+ * the expected value. This keeps provisioning moving when one resolver is lagging
+ * behind the other.
  */
 class DnsResolver
 {
     /**
-     * Public DNS resolvers to query. Both must agree for verified = true.
+     * Public DNS resolvers to query.
      */
     private const RESOLVERS = [
         '1.1.1.1',   // Cloudflare
@@ -50,50 +51,57 @@ class DnsResolver
     /**
      * Verify NS delegation matches expected nameservers.
      *
-     * Returns true only if ALL resolvers see the expected NS records.
+     * Returns true as soon as ANY resolver sees the expected NS records.
      *
      * @param  string[]  $expectedNameservers  Nameservers to look for (e.g., ['kiki.bunny.net', 'coco.bunny.net'])
      */
     public static function verifyNsDelegation(string $domain, array $expectedNameservers): bool
     {
         $expectedLower = array_map(fn (string $ns) => rtrim(strtolower($ns), '.'), $expectedNameservers);
+        $resolverMisses = [];
 
         foreach (self::RESOLVERS as $resolver) {
             $currentNs = self::queryRecords($domain, 'NS', $resolver);
 
             if (empty($currentNs)) {
-                Log::debug(sprintf('DnsResolver: No NS records from %s for %s', $resolver, $domain));
+                $resolverMisses[] = sprintf('%s: no NS records', $resolver);
 
-                return false;
+                continue;
             }
 
             $missing = array_diff($expectedLower, $currentNs);
 
-            if (! empty($missing)) {
-                Log::debug(sprintf(
-                    'DnsResolver: NS mismatch from %s for %s — missing: [%s], found: [%s]',
-                    $resolver,
-                    $domain,
-                    implode(', ', $missing),
-                    implode(', ', $currentNs)
-                ));
-
-                return false;
+            if ($missing === []) {
+                return true;
             }
+
+            $resolverMisses[] = sprintf(
+                '%s: missing [%s], found [%s]',
+                $resolver,
+                implode(', ', $missing),
+                implode(', ', $currentNs)
+            );
         }
 
-        return true;
+        Log::debug(sprintf(
+            'DnsResolver: NS delegation not matched for %s — %s',
+            $domain,
+            implode('; ', $resolverMisses)
+        ));
+
+        return false;
     }
 
     /**
      * Verify a single DNS record (A, CNAME, TXT) exists with the expected value.
      *
-     * Returns true only if ALL resolvers see the expected record.
+     * Returns true as soon as ANY resolver sees the expected record.
      */
     public static function verifyRecord(string $name, string $type, string $expectedValue): bool
     {
         $expectedLower = rtrim(strtolower($expectedValue), '.');
         $type = strtoupper($type);
+        $resolverMisses = [];
 
         foreach (self::RESOLVERS as $resolver) {
             $records = self::queryRecords($name, $type, $resolver);
@@ -106,51 +114,56 @@ class DnsResolver
                 }
             }
 
-            if (! $found) {
-                Log::debug(sprintf(
-                    'DnsResolver: %s record for %s not matched on %s — expected: %s, found: [%s]',
-                    $type,
-                    $name,
-                    $resolver,
-                    $expectedLower,
-                    implode(', ', $records)
-                ));
-
-                return false;
+            if ($found) {
+                return true;
             }
+
+            $resolverMisses[] = sprintf(
+                '%s: expected %s, found [%s]',
+                $resolver,
+                $expectedLower,
+                implode(', ', $records)
+            );
         }
 
-        return true;
+        Log::debug(sprintf(
+            'DnsResolver: %s record for %s not matched — %s',
+            $type,
+            $name,
+            implode('; ', $resolverMisses)
+        ));
+
+        return false;
     }
 
     /**
      * Verify a CNAME target, allowing apex flattening when the resolver returns
      * A / AAAA answers that match the expected hostname's resolved addresses.
      *
-     * Returns true only if ALL resolvers either see the exact CNAME target or
-     * return addresses that intersect with the expected hostname's addresses.
+     * Returns true as soon as ANY resolver either sees the exact CNAME target or
+     * returns addresses that intersect with the expected hostname's addresses.
      */
     public static function verifyCnameTarget(string $name, string $expectedValue, bool $allowFlattenedAddress = false): bool
     {
         $expectedLower = rtrim(strtolower($expectedValue), '.');
+        $resolverMisses = [];
 
         foreach (self::RESOLVERS as $resolver) {
             $cnameRecords = self::queryRecords($name, 'CNAME', $resolver);
 
             if (in_array($expectedLower, $cnameRecords, true)) {
-                continue;
+                return true;
             }
 
             if (! $allowFlattenedAddress) {
-                Log::debug(sprintf(
-                    'DnsResolver: CNAME record for %s not matched on %s — expected: %s, found: [%s]',
-                    $name,
+                $resolverMisses[] = sprintf(
+                    '%s: expected %s, found [%s]',
                     $resolver,
                     $expectedLower,
                     implode(', ', $cnameRecords)
-                ));
+                );
 
-                return false;
+                continue;
             }
 
             $resolvedAddresses = array_values(array_unique(array_merge(
@@ -166,23 +179,27 @@ class DnsResolver
                 $matchingAddresses = array_intersect($resolvedAddresses, $expectedAddresses);
 
                 if ($matchingAddresses !== []) {
-                    continue;
+                    return true;
                 }
             }
 
-            Log::debug(sprintf(
-                'DnsResolver: Flattened CNAME target for %s not matched on %s — expected target: %s, resolved: [%s], target resolved: [%s]',
-                $name,
+            $resolverMisses[] = sprintf(
+                '%s: expected target %s, cname [%s], resolved [%s], target resolved [%s]',
                 $resolver,
                 $expectedLower,
+                implode(', ', $cnameRecords),
                 implode(', ', $resolvedAddresses),
                 implode(', ', $expectedAddresses)
-            ));
-
-            return false;
+            );
         }
 
-        return true;
+        Log::debug(sprintf(
+            'DnsResolver: CNAME target for %s not matched — %s',
+            $name,
+            implode('; ', $resolverMisses)
+        ));
+
+        return false;
     }
 
     /**
@@ -216,6 +233,71 @@ class DnsResolver
         }
 
         return $results;
+    }
+
+    /**
+     * Run a trace query for a DNS record and return a compact parsed summary.
+     *
+     * @return array{records: string[], nameservers: string[], output: string}
+     */
+    public static function traceRecord(string $name, string $type): array
+    {
+        $type = strtoupper($type);
+        self::assertValidQuery($name, $type);
+
+        $command = sprintf(
+            'dig %s %s +trace +time=%d +tries=1 2>/dev/null',
+            escapeshellarg($name),
+            escapeshellarg($type),
+            self::QUERY_TIMEOUT
+        );
+
+        $result = Process::timeout(self::QUERY_TIMEOUT + 20)->run($command);
+
+        if (! $result->successful()) {
+            Log::warning(sprintf('DnsResolver: dig +trace failed (exit %d) for %s %s', $result->exitCode(), $name, $type));
+
+            return [
+                'records' => [],
+                'nameservers' => [],
+                'output' => '',
+            ];
+        }
+
+        $records = [];
+        $nameservers = [];
+        $normalizedName = rtrim(strtolower($name), '.');
+        $output = trim($result->output());
+
+        foreach (explode("\n", $output) as $line) {
+            $line = trim($line);
+            if ($line === '' || str_starts_with($line, ';')) {
+                continue;
+            }
+
+            $parts = preg_split('/\s+/', $line);
+            if (count($parts) < 5) {
+                continue;
+            }
+
+            $recordName = rtrim(strtolower($parts[0]), '.');
+            $recordType = strtoupper($parts[3]);
+            $recordValue = rtrim(strtolower((string) end($parts)), '.');
+
+            if ($recordType === 'NS') {
+                $nameservers[] = $recordValue;
+            }
+
+            if ($recordName === $normalizedName && $recordType === $type) {
+                $records[] = $recordValue;
+            }
+        }
+
+        return [
+            'records' => array_values(array_unique($records)),
+            'nameservers' => array_values(array_unique($nameservers)),
+            'output' => $output,
+        ];
     }
 
     /**
@@ -283,15 +365,7 @@ class DnsResolver
     public static function queryRecords(string $name, string $type, string $resolver): array
     {
         $type = strtoupper($type);
-
-        // Validate inputs to prevent command injection
-        if (! preg_match('/^[a-zA-Z0-9._-]+$/', $name)) {
-            throw new RuntimeException(sprintf('Invalid DNS name: %s', $name));
-        }
-
-        if (! in_array($type, ['A', 'AAAA', 'CNAME', 'NS', 'TXT', 'MX', 'SOA'], true)) {
-            throw new RuntimeException(sprintf('Unsupported DNS record type: %s', $type));
-        }
+        self::assertValidQuery($name, $type);
 
         if (! filter_var($resolver, FILTER_VALIDATE_IP)) {
             throw new RuntimeException(sprintf('Invalid resolver IP: %s', $resolver));
@@ -333,5 +407,16 @@ class DnsResolver
         $result = Process::run('which dig 2>/dev/null');
 
         return $result->successful() && trim($result->output()) !== '';
+    }
+
+    private static function assertValidQuery(string $name, string $type): void
+    {
+        if (! preg_match('/^[a-zA-Z0-9._-]+$/', $name)) {
+            throw new RuntimeException(sprintf('Invalid DNS name: %s', $name));
+        }
+
+        if (! in_array($type, ['A', 'AAAA', 'CNAME', 'NS', 'TXT', 'MX', 'SOA'], true)) {
+            throw new RuntimeException(sprintf('Unsupported DNS record type: %s', $type));
+        }
     }
 }

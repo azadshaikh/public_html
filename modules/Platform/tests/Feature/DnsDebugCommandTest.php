@@ -93,21 +93,33 @@ class DnsDebugCommandTest extends TestCase
             $command = $process->command;
 
             return match (true) {
-                str_contains($command, "'astero.in' 'CNAME'") => Process::result(''),
-                str_contains($command, "'astero.in' 'A'") => Process::result('103.180.115.15'),
-                str_contains($command, "'astero.in' 'AAAA'") => Process::result(''),
-                str_contains($command, "'www.astero.in' 'CNAME'") => Process::result('asteroin.b-cdn.net'),
-                str_contains($command, "'_acme-challenge.astero.in' 'CNAME'") => Process::result('_acme-challenge.astero.in.acme-challenge.in'),
-                str_contains($command, "'asteroin.b-cdn.net' 'A'") => Process::result('103.180.115.15'),
-                str_contains($command, "'asteroin.b-cdn.net' 'AAAA'") => Process::result(''),
+                str_contains($command, "dig 'astero.in' 'CNAME' +trace") => Process::result("astero.in. 300 IN CNAME asteroin.b-cdn.net.\nastero.in. 300 IN NS aria.ns.cloudflare.com.\n"),
+                str_contains($command, "dig 'www.astero.in' 'CNAME' +trace") => Process::result("www.astero.in. 300 IN CNAME asteroin.b-cdn.net.\nastero.in. 300 IN NS aria.ns.cloudflare.com.\n"),
+                str_contains($command, "dig '_acme-challenge.astero.in' 'CNAME' +trace") => Process::result("_acme-challenge.astero.in. 300 IN CNAME _acme-challenge.astero.in.acme-challenge.in.\nacme-challenge.in. 300 IN NS ns1.example.net.\n"),
+                str_contains($command, "@'1.1.1.1' 'astero.in' 'CNAME'") => Process::result(''),
+                str_contains($command, "@'1.1.1.1' 'astero.in' 'A'") => Process::result('103.180.115.15'),
+                str_contains($command, "@'1.1.1.1' 'astero.in' 'AAAA'") => Process::result(''),
+                str_contains($command, "@'1.1.1.1' 'asteroin.b-cdn.net' 'A'") => Process::result('103.180.115.15'),
+                str_contains($command, "@'1.1.1.1' 'asteroin.b-cdn.net' 'AAAA'") => Process::result(''),
+                str_contains($command, "@'8.8.8.8' 'astero.in' 'CNAME'") => Process::result(''),
+                str_contains($command, "@'8.8.8.8' 'astero.in' 'A'") => Process::result('198.51.100.20'),
+                str_contains($command, "@'8.8.8.8' 'astero.in' 'AAAA'") => Process::result(''),
+                str_contains($command, "@'8.8.8.8' 'asteroin.b-cdn.net' 'A'") => Process::result('192.0.2.44'),
+                str_contains($command, "@'8.8.8.8' 'asteroin.b-cdn.net' 'AAAA'") => Process::result(''),
+                str_contains($command, "@'1.1.1.1' 'www.astero.in' 'CNAME'") => Process::result('asteroin.b-cdn.net'),
+                str_contains($command, "@'8.8.8.8' 'www.astero.in' 'CNAME'") => Process::result('stale.example.net'),
+                str_contains($command, "@'1.1.1.1' '_acme-challenge.astero.in' 'CNAME'") => Process::result('_acme-challenge.astero.in.acme-challenge.in'),
+                str_contains($command, "@'8.8.8.8' '_acme-challenge.astero.in' 'CNAME'") => Process::result('_acme-challenge.astero.in.acme-challenge.in'),
                 default => Process::result(''),
             };
         });
 
         $this->artisan('platform:dns:debug', ['website' => (string) $website->id])
+            ->expectsOutputToContain('Resolver quorum')
             ->expectsOutputToContain('Would resume provisioning now')
             ->expectsOutputToContain('[CNAME] astero.in -> asteroin.b-cdn.net [PASS]')
             ->expectsOutputToContain('[CNAME] _acme-challenge.astero.in -> _acme-challenge.astero.in.acme-challenge.in [PASS]')
+            ->expectsOutputToContain('trace CNAME: asteroin.b-cdn.net')
             ->assertExitCode(0);
     }
 
@@ -159,11 +171,17 @@ class DnsDebugCommandTest extends TestCase
             $command = $process->command;
 
             return match (true) {
-                str_contains($command, "'astero.in' 'CNAME'") => Process::result(''),
-                str_contains($command, "'astero.in' 'A'") => Process::result('103.180.115.15'),
-                str_contains($command, "'astero.in' 'AAAA'") => Process::result(''),
-                str_contains($command, "'asteroin.b-cdn.net' 'A'") => Process::result('103.180.115.15'),
-                str_contains($command, "'asteroin.b-cdn.net' 'AAAA'") => Process::result(''),
+                str_contains($command, "dig 'astero.in' 'CNAME' +trace") => Process::result("astero.in. 300 IN CNAME asteroin.b-cdn.net.\nastero.in. 300 IN NS aria.ns.cloudflare.com.\n"),
+                str_contains($command, "@'1.1.1.1' 'astero.in' 'CNAME'") => Process::result(''),
+                str_contains($command, "@'1.1.1.1' 'astero.in' 'A'") => Process::result('103.180.115.15'),
+                str_contains($command, "@'1.1.1.1' 'astero.in' 'AAAA'") => Process::result(''),
+                str_contains($command, "@'1.1.1.1' 'asteroin.b-cdn.net' 'A'") => Process::result('103.180.115.15'),
+                str_contains($command, "@'1.1.1.1' 'asteroin.b-cdn.net' 'AAAA'") => Process::result(''),
+                str_contains($command, "@'8.8.8.8' 'astero.in' 'CNAME'") => Process::result(''),
+                str_contains($command, "@'8.8.8.8' 'astero.in' 'A'") => Process::result('198.51.100.20'),
+                str_contains($command, "@'8.8.8.8' 'astero.in' 'AAAA'") => Process::result(''),
+                str_contains($command, "@'8.8.8.8' 'asteroin.b-cdn.net' 'A'") => Process::result('192.0.2.44'),
+                str_contains($command, "@'8.8.8.8' 'asteroin.b-cdn.net' 'AAAA'") => Process::result(''),
                 default => Process::result(''),
             };
         });
