@@ -357,8 +357,24 @@ export type WebsiteProvisioningStep = {
     status: string;
     description?: string | null;
     message?: string | null;
+    dns_instructions?: WebsiteDnsInstructions | null;
     started_at?: string | null;
     completed_at?: string | null;
+};
+
+export type WebsiteDnsInstructionRecord = {
+    type: string;
+    name: string;
+    host_label: string;
+    fqdn: string;
+    value: string;
+};
+
+export type WebsiteDnsInstructions = {
+    mode: 'managed' | 'external';
+    domain: string;
+    nameservers?: string[];
+    records?: WebsiteDnsInstructionRecord[];
 };
 
 export type WebsiteUpdateItem = {

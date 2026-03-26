@@ -9,6 +9,7 @@ import { usePageVisibility } from '@/hooks/use-page-visibility';
 import { cn } from '@/lib/utils';
 import type { WebsiteProvisioningStep } from '../../../../types/platform';
 import { statusBadgeVariant, STEP_STATUS_VARIANT } from './show-shared';
+import { WebsiteProvisioningDnsInstructions } from './website-provisioning-dns-instructions';
 
 const PROVISIONING_POLL_INTERVAL_MS = 10_000;
 const PROVISIONING_POLL_INTERVAL_LABEL = 'every 10 seconds';
@@ -372,7 +373,12 @@ export function WebsiteProvisioningStepsTable({
                                             {step.status.charAt(0).toUpperCase() + step.status.slice(1)}
                                         </Badge>
                                     </td>
-                                    <td className="py-3 pr-4 text-muted-foreground">{step.message ?? ''}</td>
+                                    <td className="py-3 pr-4 text-muted-foreground">
+                                        {step.message ?? ''}
+                                        {step.dns_instructions ? (
+                                            <WebsiteProvisioningDnsInstructions instructions={step.dns_instructions} />
+                                        ) : null}
+                                    </td>
                                     <td className="py-3 text-center">
                                         {step.status === 'done' ? (
                                             <Button

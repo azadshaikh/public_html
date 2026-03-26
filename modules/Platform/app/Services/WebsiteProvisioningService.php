@@ -51,20 +51,38 @@ class WebsiteProvisioningService
     {
         $command = 'platform:hestia:revert-installation-step';
         $params = ['website_id' => $website->id, '--step' => $step, '--force' => true];
+        $stepTitle = $step === 'all' ? 'All' : $this->getStepTitle($step);
 
-        // Activity log message
-        $logMessage = $step === 'all'
-            ? 'Website step reverted: All'
-            : 'Website step reverted: '.$this->getStepTitle($step);
+        try {
+            $exitCode = Artisan::call($command, $params);
 
-        Artisan::call($command, $params);
+            if ($exitCode !== 0) {
+                $commandOutput = trim((string) Artisan::output());
 
-        $this->logActivity($website, ActivityAction::UPDATE, $logMessage);
+                return [
+                    'status' => 'error',
+                    'message' => $commandOutput !== ''
+                        ? $commandOutput
+                        : $stepTitle.' revert failed with exit code: '.$exitCode,
+                ];
+            }
 
-        return [
-            'status' => 'success',
-            'message' => $step === 'all' ? 'All steps reverted successfully.' : $this->getStepTitle($step).' reverted successfully.',
-        ];
+            $logMessage = $step === 'all'
+                ? 'Website step reverted: All'
+                : 'Website step reverted: '.$stepTitle;
+
+            $this->logActivity($website, ActivityAction::UPDATE, $logMessage);
+
+            return [
+                'status' => 'success',
+                'message' => $step === 'all' ? 'All steps reverted successfully.' : $stepTitle.' reverted successfully.',
+            ];
+        } catch (Exception $exception) {
+            return [
+                'status' => 'error',
+                'message' => $stepTitle.' revert failed: '.$exception->getMessage(),
+            ];
+        }
     }
 
     /**

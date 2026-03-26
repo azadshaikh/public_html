@@ -59,6 +59,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import { cn } from '@/lib/utils';
+import { WebsiteProvisioningDnsInstructions } from './components/website-provisioning-dns-instructions';
 import type {
     PlatformActivity,
     ProvisioningRunTimestamps,
@@ -1555,7 +1556,12 @@ function ProvisioningStepsTable({
                                             {step.status.charAt(0).toUpperCase() + step.status.slice(1)}
                                         </Badge>
                                     </td>
-                                    <td className="py-3 pr-4 text-muted-foreground">{step.message ?? ''}</td>
+                                    <td className="py-3 pr-4 text-muted-foreground">
+                                        {step.message ?? ''}
+                                        {step.dns_instructions ? (
+                                            <WebsiteProvisioningDnsInstructions instructions={step.dns_instructions} />
+                                        ) : null}
+                                    </td>
                                     <td className="py-3 text-center">
                                         {step.status === 'done' ? (
                                             <Button

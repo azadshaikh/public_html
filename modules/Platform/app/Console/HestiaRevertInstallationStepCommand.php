@@ -82,6 +82,11 @@ class HestiaRevertInstallationStepCommand extends Command
         $this->info('Starting reversion for website: '.$website->domain);
 
         if ($step === 'all') {
+            if ($website->pullzone_id) {
+                $this->info('Reverting Bunny CDN before deleting the server user...');
+                $this->executeStep($website, 'setup_bunny_cdn', 'revertBunnyCdn');
+            }
+
             $this->info('Reverting all steps by deleting the user...');
             $this->executeStep($website, 'create_user', 'revertUser');
 

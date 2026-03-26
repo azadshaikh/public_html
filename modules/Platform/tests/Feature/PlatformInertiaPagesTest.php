@@ -615,6 +615,60 @@ class PlatformInertiaPagesTest extends TestCase
                 ->where('domainDnsRecord.name', $dnsRecord->name));
     }
 
+    public function test_website_provisioning_status_includes_dns_instructions_for_verify_dns_step(): void
+    {
+        $agency = $this->createAgency();
+        $serverProvider = $this->createProvider(Provider::TYPE_SERVER, 'Server Provider');
+        $server = $this->createServer($serverProvider, $agency);
+        $dnsProvider = $this->createProvider(Provider::TYPE_DNS, 'DNS Provider');
+        $cdnProvider = $this->createProvider(Provider::TYPE_CDN, 'CDN Provider');
+        $website = $this->createWebsite($agency, $server, $dnsProvider, $cdnProvider);
+
+        $website->update([
+            'domain' => 'astero.in',
+            'status' => WebsiteStatus::WaitingForDns,
+            'metadata' => [
+                'provisioning_steps' => [
+                    'verify_dns' => [
+                        'status' => 'waiting',
+                        'message' => 'Waiting for customer to add DNS records.',
+                    ],
+                ],
+            ],
+        ]);
+
+        $domain = $this->createDomain($agency);
+        $domain->name = 'astero.in';
+        $domain->setMetadata('dns_instructions', [
+            'mode' => 'external',
+            'records' => [
+                ['type' => 'CNAME', 'name' => 'astero.in', 'value' => 'ws-demo.b-cdn.net'],
+                ['type' => 'CNAME', 'name' => 'www', 'value' => 'ws-demo.b-cdn.net'],
+                ['type' => 'CNAME', 'name' => '_acme-challenge', 'value' => '_acme-challenge.astero.in.ssl-validation.astero.in'],
+            ],
+        ]);
+        $domain->save();
+
+        $website->domain_id = $domain->id;
+        $website->save();
+
+        $response = $this->actingAs($this->admin)
+            ->get(route('platform.websites.provisioning-status', ['website' => $website]))
+            ->assertOk();
+
+        $verifyDnsStep = collect($response->json('provisioning_steps'))->firstWhere('key', 'verify_dns');
+
+        $this->assertIsArray($verifyDnsStep);
+        $this->assertSame('waiting', $verifyDnsStep['status']);
+        $this->assertSame('external', data_get($verifyDnsStep, 'dns_instructions.mode'));
+        $this->assertSame('astero.in', data_get($verifyDnsStep, 'dns_instructions.domain'));
+        $this->assertSame('@', data_get($verifyDnsStep, 'dns_instructions.records.0.host_label'));
+        $this->assertSame('astero.in', data_get($verifyDnsStep, 'dns_instructions.records.0.fqdn'));
+        $this->assertSame('www', data_get($verifyDnsStep, 'dns_instructions.records.1.host_label'));
+        $this->assertSame('www.astero.in', data_get($verifyDnsStep, 'dns_instructions.records.1.fqdn'));
+        $this->assertSame('_acme-challenge', data_get($verifyDnsStep, 'dns_instructions.records.2.host_label'));
+    }
+
     public function test_server_update_persists_restored_edit_fields(): void
     {
         $agency = $this->createAgency();

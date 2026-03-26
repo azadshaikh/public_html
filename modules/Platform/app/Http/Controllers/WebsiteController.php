@@ -204,8 +204,11 @@ class WebsiteController extends ScaffoldController implements HasMiddleware
         $websiteStepsData = $website->getProvisioningStepsForView();
         $websiteStepsConfig = config('platform.website.steps');
         $provisioningSteps = collect($websiteStepsConfig)
-            ->map(function ($config, $key) use ($websiteStepsData): array {
+            ->map(function ($config, $key) use ($websiteStepsData, $website): array {
                 $stepData = $websiteStepsData->get($key);
+                $dnsInstructions = $key === 'verify_dns'
+                    ? $this->buildDnsInstructionsPayload($website)
+                    : null;
 
                 return [
                     'key' => (string) $key,
@@ -213,6 +216,7 @@ class WebsiteController extends ScaffoldController implements HasMiddleware
                     'description' => $config['description'] ?? null,
                     'status' => (string) data_get($stepData, 'status', 'pending'),
                     'message' => data_get($stepData, 'meta_value', data_get($stepData, 'message')),
+                    'dns_instructions' => $dnsInstructions,
                     'started_at' => $this->formatProvisioningTimestamp(data_get($stepData, 'started_at')),
                     'completed_at' => $this->formatProvisioningTimestamp(data_get($stepData, 'completed_at')),
                 ];
@@ -237,6 +241,99 @@ class WebsiteController extends ScaffoldController implements HasMiddleware
             'percentage' => $percentage,
             'current_status' => $website->status instanceof WebsiteStatus ? $website->status->value : $website->status,
         ];
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function buildDnsInstructionsPayload(Website $website): ?array
+    {
+        $domainRecord = $website->domainRecord;
+        if (! $domainRecord) {
+            return null;
+        }
+
+        $instructions = $domainRecord->getMetadata('dns_instructions');
+        if (! is_array($instructions)) {
+            return null;
+        }
+
+        $domain = (string) ($domainRecord->name ?? $website->domain);
+        $mode = (string) ($instructions['mode'] ?? '');
+
+        if ($mode === 'managed') {
+            $nameservers = collect($instructions['nameservers'] ?? [])
+                ->filter(fn ($nameserver): bool => is_string($nameserver) && $nameserver !== '')
+                ->values()
+                ->all();
+
+            return [
+                'mode' => 'managed',
+                'domain' => $domain,
+                'nameservers' => $nameservers,
+            ];
+        }
+
+        if ($mode !== 'external') {
+            return null;
+        }
+
+        $records = collect($instructions['records'] ?? [])
+            ->filter(fn ($record): bool => is_array($record))
+            ->map(function (array $record) use ($domain): array {
+                $name = (string) ($record['name'] ?? '');
+                $type = (string) ($record['type'] ?? '');
+                $value = (string) ($record['value'] ?? '');
+
+                return [
+                    'type' => $type,
+                    'name' => $name,
+                    'host_label' => $this->formatDnsInstructionHostLabel($domain, $name),
+                    'fqdn' => $this->formatDnsInstructionFqdn($domain, $name),
+                    'value' => $value,
+                ];
+            })
+            ->filter(fn (array $record): bool => $record['type'] !== '' && $record['value'] !== '')
+            ->values()
+            ->all();
+
+        return [
+            'mode' => 'external',
+            'domain' => $domain,
+            'records' => $records,
+        ];
+    }
+
+    private function formatDnsInstructionHostLabel(string $domain, string $name): string
+    {
+        $normalizedName = trim($name);
+
+        if ($normalizedName === '' || $normalizedName === '@' || $normalizedName === $domain) {
+            return '@';
+        }
+
+        $suffix = '.'.$domain;
+
+        if (str_ends_with($normalizedName, $suffix)) {
+            return substr($normalizedName, 0, -strlen($suffix));
+        }
+
+        return $normalizedName;
+    }
+
+    private function formatDnsInstructionFqdn(string $domain, string $name): string
+    {
+        $normalizedName = trim($name);
+
+        if ($normalizedName === '' || $normalizedName === '@' || $normalizedName === $domain) {
+            return $domain;
+        }
+
+        if (str_contains($normalizedName, '.')) {
+            return $normalizedName;
+        }
+
+        return $normalizedName.'.'.$domain;
     }
 
     // =============================================================================
