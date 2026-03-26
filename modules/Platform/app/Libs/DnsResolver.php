@@ -28,6 +28,16 @@ class DnsResolver
     ];
 
     /**
+     * Get the public resolvers used by this class.
+     *
+     * @return string[]
+     */
+    public static function resolvers(): array
+    {
+        return self::RESOLVERS;
+    }
+
+    /**
      * Timeout in seconds for each dig query.
      */
     private const QUERY_TIMEOUT = 5;
@@ -187,6 +197,22 @@ class DnsResolver
         $results = [];
         foreach (self::RESOLVERS as $resolver) {
             $results[$resolver] = self::queryRecords($domain, 'NS', $resolver);
+        }
+
+        return $results;
+    }
+
+    /**
+     * Query a record type from all public resolvers.
+     *
+     * @return array<string, string[]>
+     */
+    public static function queryRecordsFromAllResolvers(string $name, string $type): array
+    {
+        $results = [];
+
+        foreach (self::RESOLVERS as $resolver) {
+            $results[$resolver] = self::queryRecords($name, $type, $resolver);
         }
 
         return $results;
