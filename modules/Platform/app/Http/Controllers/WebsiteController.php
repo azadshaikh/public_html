@@ -61,7 +61,7 @@ class WebsiteController extends ScaffoldController implements HasMiddleware
             ...(new WebsiteDefinition)->getMiddleware(),
             // Custom endpoint permissions
             new Middleware('permission:add_websites', only: ['createFromOrder']),
-            new Middleware('permission:edit_websites', only: ['updateStatus', 'updateVersion', 'syncWebsite', 'recacheApplication', 'retryProvision', 'executeStep', 'revertStep', 'updateSetupStatus', 'setupQueueWorker', 'scaleQueueWorker', 'reprovision', 'revealSecret']),
+            new Middleware('permission:edit_websites', only: ['updateStatus', 'updateVersion', 'syncWebsite', 'recacheApplication', 'retryProvision', 'executeStep', 'revertStep', 'updateSetupStatus', 'setupQueueWorker', 'scaleQueueWorker', 'reprovision', 'revealSecret', 'confirmDns', 'stopDnsValidation']),
             new Middleware('permission:delete_websites', only: ['removeFromServer']),
         ];
     }
@@ -189,6 +189,74 @@ class WebsiteController extends ScaffoldController implements HasMiddleware
         return response()->json($this->buildProvisioningStatusPayload($websiteModel));
     }
 
+    public function confirmDns(int|string $website): JsonResponse
+    {
+        $websiteModel = Website::withTrashed()->findOrFail((int) $website);
+        $statusValue = $websiteModel->status instanceof WebsiteStatus
+            ? $websiteModel->status->value
+            : (string) $websiteModel->status;
+
+        if ($statusValue !== WebsiteStatus::WaitingForDns->value) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Website is not waiting for DNS verification.',
+            ], 400);
+        }
+
+        $websiteModel->setMetadata('dns_confirmed_by_user', true);
+        $websiteModel->setMetadata('dns_confirmed_at', now()->toIso8601String());
+        $websiteModel->setMetadata('dns_check_count', 0);
+        $websiteModel->setMetadata('dns_last_checked_at', null);
+        $websiteModel->setMetadata('dns_check_result', null);
+        $websiteModel->setMetadata('dns_domain_not_registered', false);
+        $websiteModel->save();
+
+        $websiteModel->updateProvisioningStep(
+            'verify_dns',
+            'User confirmed DNS update. Verification checks starting.',
+            'waiting'
+        );
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'DNS validation started. Verification checks will begin shortly.',
+        ]);
+    }
+
+    public function stopDnsValidation(int|string $website): JsonResponse
+    {
+        $websiteModel = Website::withTrashed()->findOrFail((int) $website);
+        $statusValue = $websiteModel->status instanceof WebsiteStatus
+            ? $websiteModel->status->value
+            : (string) $websiteModel->status;
+
+        if ($statusValue !== WebsiteStatus::WaitingForDns->value) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Website is not waiting for DNS verification.',
+            ], 400);
+        }
+
+        $websiteModel->setMetadata('dns_confirmed_by_user', false);
+        $websiteModel->setMetadata('dns_confirmed_at', null);
+        $websiteModel->setMetadata('dns_check_count', 0);
+        $websiteModel->setMetadata('dns_last_checked_at', null);
+        $websiteModel->setMetadata('dns_check_result', null);
+        $websiteModel->setMetadata('dns_domain_not_registered', false);
+        $websiteModel->save();
+
+        $websiteModel->updateProvisioningStep(
+            'verify_dns',
+            $this->defaultDnsWaitingMessage($websiteModel),
+            'waiting'
+        );
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'DNS validation stopped. Automatic checks are paused until you start validation again.',
+        ]);
+    }
+
     /**
      * @return array{
      *     status: string,
@@ -217,6 +285,9 @@ class WebsiteController extends ScaffoldController implements HasMiddleware
                     'status' => (string) data_get($stepData, 'status', 'pending'),
                     'message' => data_get($stepData, 'meta_value', data_get($stepData, 'message')),
                     'dns_instructions' => $dnsInstructions,
+                    'dns_validation' => $key === 'verify_dns'
+                        ? $this->buildDnsValidationPayload($website, $dnsInstructions)
+                        : null,
                     'started_at' => $this->formatProvisioningTimestamp(data_get($stepData, 'started_at')),
                     'completed_at' => $this->formatProvisioningTimestamp(data_get($stepData, 'completed_at')),
                 ];
@@ -302,6 +373,41 @@ class WebsiteController extends ScaffoldController implements HasMiddleware
             'domain' => $domain,
             'records' => $records,
         ];
+    }
+
+    /**
+     * @param  array<string, mixed>|null  $dnsInstructions
+     * @return array<string, mixed>|null
+     */
+    private function buildDnsValidationPayload(Website $website, ?array $dnsInstructions): ?array
+    {
+        if ($dnsInstructions === null) {
+            return null;
+        }
+
+        return [
+            'confirmed_by_user' => (bool) $website->getMetadata('dns_confirmed_by_user'),
+            'confirmed_at' => $this->formatProvisioningTimestamp($website->getMetadata('dns_confirmed_at')),
+            'check_count' => (int) ($website->getMetadata('dns_check_count') ?? 0),
+            'domain_not_registered' => (bool) $website->getMetadata('dns_domain_not_registered', false),
+            'observed_nameservers' => collect($website->getMetadata('dns_check_result.observed_ns', []))
+                ->filter(fn ($nameserver): bool => is_string($nameserver) && $nameserver !== '')
+                ->values()
+                ->all(),
+            'confirm_url' => route('platform.websites.confirm-dns', ['website' => $website]),
+            'stop_url' => route('platform.websites.stop-dns-validation', ['website' => $website]),
+        ];
+    }
+
+    private function defaultDnsWaitingMessage(Website $website): string
+    {
+        $domainRecord = $website->domainRecord;
+        $dnsInstructions = $domainRecord?->getMetadata('dns_instructions');
+        $mode = is_array($dnsInstructions) ? (string) ($dnsInstructions['mode'] ?? '') : '';
+
+        return $mode === 'managed'
+            ? 'Waiting for customer to update nameservers.'
+            : 'Waiting for customer to add DNS records.';
     }
 
     private function formatDnsInstructionHostLabel(string $domain, string $name): string

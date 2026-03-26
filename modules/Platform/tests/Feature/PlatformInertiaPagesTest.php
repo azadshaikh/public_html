@@ -644,7 +644,7 @@ class PlatformInertiaPagesTest extends TestCase
             'records' => [
                 ['type' => 'CNAME', 'name' => 'astero.in', 'value' => 'ws-demo.b-cdn.net'],
                 ['type' => 'CNAME', 'name' => 'www', 'value' => 'ws-demo.b-cdn.net'],
-                ['type' => 'CNAME', 'name' => '_acme-challenge', 'value' => '_acme-challenge.astero.in.ssl-validation.astero.in'],
+                ['type' => 'CNAME', 'name' => '_acme-challenge', 'value' => '_acme-challenge.astero.in.acme-challenge.in'],
             ],
         ]);
         $domain->save();
@@ -667,6 +667,85 @@ class PlatformInertiaPagesTest extends TestCase
         $this->assertSame('www', data_get($verifyDnsStep, 'dns_instructions.records.1.host_label'));
         $this->assertSame('www.astero.in', data_get($verifyDnsStep, 'dns_instructions.records.1.fqdn'));
         $this->assertSame('_acme-challenge', data_get($verifyDnsStep, 'dns_instructions.records.2.host_label'));
+        $this->assertFalse((bool) data_get($verifyDnsStep, 'dns_validation.confirmed_by_user'));
+        $this->assertSame(0, data_get($verifyDnsStep, 'dns_validation.check_count'));
+        $this->assertSame(route('platform.websites.confirm-dns', ['website' => $website]), data_get($verifyDnsStep, 'dns_validation.confirm_url'));
+        $this->assertSame(route('platform.websites.stop-dns-validation', ['website' => $website]), data_get($verifyDnsStep, 'dns_validation.stop_url'));
+    }
+
+    public function test_platform_website_dns_validation_actions_update_waiting_dns_state(): void
+    {
+        $agency = $this->createAgency();
+        $serverProvider = $this->createProvider(Provider::TYPE_SERVER, 'Server Provider');
+        $server = $this->createServer($serverProvider, $agency);
+        $dnsProvider = $this->createProvider(Provider::TYPE_DNS, 'DNS Provider');
+        $cdnProvider = $this->createProvider(Provider::TYPE_CDN, 'CDN Provider');
+        $website = $this->createWebsite($agency, $server, $dnsProvider, $cdnProvider);
+
+        $website->update([
+            'domain' => 'astero.in',
+            'status' => WebsiteStatus::WaitingForDns,
+            'metadata' => [
+                'provisioning_steps' => [
+                    'verify_dns' => [
+                        'status' => 'waiting',
+                        'message' => 'Waiting for customer to add DNS records.',
+                    ],
+                ],
+            ],
+        ]);
+
+        $domain = $this->createDomain($agency);
+        $domain->name = 'astero.in';
+        $domain->setMetadata('dns_instructions', [
+            'mode' => 'external',
+            'records' => [
+                ['type' => 'CNAME', 'name' => 'astero.in', 'value' => 'ws-demo.b-cdn.net'],
+                ['type' => 'CNAME', 'name' => 'www', 'value' => 'ws-demo.b-cdn.net'],
+                ['type' => 'CNAME', 'name' => '_acme-challenge', 'value' => '_acme-challenge.astero.in.acme-challenge.in'],
+            ],
+        ]);
+        $domain->save();
+
+        $website->domain_id = $domain->id;
+        $website->save();
+
+        $this->actingAs($this->admin)
+            ->post(route('platform.websites.confirm-dns', ['website' => $website]))
+            ->assertOk()
+            ->assertJson([
+                'status' => 'success',
+                'message' => 'DNS validation started. Verification checks will begin shortly.',
+            ]);
+
+        $website->refresh();
+
+        $this->assertTrue((bool) $website->getMetadata('dns_confirmed_by_user'));
+        $this->assertNotNull($website->getMetadata('dns_confirmed_at'));
+        $this->assertSame(0, $website->getMetadata('dns_check_count'));
+        $this->assertSame(
+            'User confirmed DNS update. Verification checks starting.',
+            $website->getMetadata('provisioning_steps.verify_dns.message')
+        );
+
+        $this->actingAs($this->admin)
+            ->post(route('platform.websites.stop-dns-validation', ['website' => $website]))
+            ->assertOk()
+            ->assertJson([
+                'status' => 'success',
+                'message' => 'DNS validation stopped. Automatic checks are paused until you start validation again.',
+            ]);
+
+        $website->refresh();
+
+        $this->assertFalse((bool) $website->getMetadata('dns_confirmed_by_user'));
+        $this->assertNull($website->getMetadata('dns_confirmed_at'));
+        $this->assertSame(0, $website->getMetadata('dns_check_count'));
+        $this->assertNull($website->getMetadata('dns_check_result'));
+        $this->assertSame(
+            'Waiting for customer to add DNS records.',
+            $website->getMetadata('provisioning_steps.verify_dns.message')
+        );
     }
 
     public function test_server_update_persists_restored_edit_fields(): void

@@ -14,6 +14,22 @@ import { WebsiteProvisioningDnsInstructions } from './website-provisioning-dns-i
 const PROVISIONING_POLL_INTERVAL_MS = 10_000;
 const PROVISIONING_POLL_INTERVAL_LABEL = 'every 10 seconds';
 
+function getVerifyDnsStep(steps: WebsiteProvisioningStep[]): WebsiteProvisioningStep | undefined {
+    return steps.find((step) => step.key === 'verify_dns');
+}
+
+function shouldPollProvisioningState(
+    status: string | null,
+    steps: WebsiteProvisioningStep[],
+): boolean {
+    if (status === 'provisioning') {
+        return true;
+    }
+
+    return status === 'waiting_for_dns'
+        && Boolean(getVerifyDnsStep(steps)?.dns_validation?.confirmed_by_user);
+}
+
 type WebsiteProvisioningStepsTableProps = {
     websiteId: number;
     steps: WebsiteProvisioningStep[];
@@ -39,7 +55,9 @@ export function WebsiteProvisioningStepsTable({
 
         return total > 0 ? Math.round((completed / total) * 100) : 0;
     });
-    const [isPolling, setIsPolling] = useState(isProvisioning);
+    const [isPolling, setIsPolling] = useState(
+        shouldPollProvisioningState(websiteStatus, steps) || isProvisioning,
+    );
     const [lastUpdatedLabel, setLastUpdatedLabel] = useState<string | null>(null);
     const [activeActionKey, setActiveActionKey] = useState<string | null>(null);
     const [pollAttemptCount, setPollAttemptCount] = useState(0);
@@ -60,7 +78,7 @@ export function WebsiteProvisioningStepsTable({
         setCurrentSteps(steps);
         setCurrentStatus(websiteStatus);
         setProgressPercent(total > 0 ? Math.round((completed / total) * 100) : 0);
-        setIsPolling(isProvisioning);
+        setIsPolling(shouldPollProvisioningState(websiteStatus, steps) || isProvisioning);
         setPollAttemptCount(0);
         setLastPollError(null);
         setLastResponseStatus(null);
@@ -112,7 +130,7 @@ export function WebsiteProvisioningStepsTable({
         }));
         statusRef.current = nextStatus;
 
-        if (nextStatus === 'provisioning') {
+        if (shouldPollProvisioningState(nextStatus, nextSteps)) {
             setIsPolling(true);
 
             return true;
@@ -239,6 +257,67 @@ export function WebsiteProvisioningStepsTable({
             route('platform.websites.revert.step', { website: websiteId, step: 'all' }),
             'revert:all',
             'All steps reverted.',
+        );
+    }
+
+    async function updateDnsValidation(url: string, actionKey: string, successTitle: string): Promise<void> {
+        setActiveActionKey(actionKey);
+
+        try {
+            const csrfToken =
+                document
+                    .querySelector('meta[name="csrf-token"]')
+                    ?.getAttribute('content') ?? '';
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: JSON.stringify({}),
+            });
+
+            const payload = (await response.json()) as {
+                status?: string;
+                message?: string;
+            };
+
+            if (!response.ok || payload.status !== 'success') {
+                throw new Error(payload.message || 'Operation failed.');
+            }
+
+            showAppToast({
+                variant: 'success',
+                title: successTitle,
+                description: payload.message,
+            });
+
+            await refreshProvisioningState();
+        } catch (error) {
+            showAppToast({
+                variant: 'error',
+                title: error instanceof Error ? error.message : 'Operation failed.',
+            });
+        } finally {
+            setActiveActionKey(null);
+        }
+    }
+
+    function startDnsValidation(url: string) {
+        void updateDnsValidation(
+            url,
+            'dns:start',
+            'DNS validation started.',
+        );
+    }
+
+    function stopDnsValidation(url: string) {
+        void updateDnsValidation(
+            url,
+            'dns:stop',
+            'DNS validation stopped.',
         );
     }
 
@@ -377,6 +456,63 @@ export function WebsiteProvisioningStepsTable({
                                         {step.message ?? ''}
                                         {step.dns_instructions ? (
                                             <WebsiteProvisioningDnsInstructions instructions={step.dns_instructions} />
+                                        ) : null}
+                                        {step.key === 'verify_dns' && step.dns_validation ? (
+                                            <div className="mt-2 rounded-lg border bg-muted/20 p-3">
+                                                {step.dns_validation.confirmed_by_user ? (
+                                                    <div className="flex flex-col gap-3">
+                                                        <div className="space-y-1">
+                                                            <p className="text-xs font-medium text-foreground">
+                                                                DNS validation is running.
+                                                            </p>
+                                                            <p className="text-xs text-muted-foreground">
+                                                                Automatic checks run {PROVISIONING_POLL_INTERVAL_LABEL}. Current check count:{' '}
+                                                                {step.dns_validation.check_count}.
+                                                            </p>
+                                                            {step.dns_validation.confirmed_at ? (
+                                                                <p className="text-xs text-muted-foreground">
+                                                                    Started: {step.dns_validation.confirmed_at}
+                                                                </p>
+                                                            ) : null}
+                                                        </div>
+                                                        <div className="flex flex-wrap gap-2">
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                disabled={activeActionKey !== null}
+                                                                onClick={() => stopDnsValidation(step.dns_validation!.stop_url)}
+                                                            >
+                                                                {activeActionKey === 'dns:stop' ? (
+                                                                    <Spinner className="size-3.5" />
+                                                                ) : (
+                                                                    <RotateCcwIcon data-icon="inline-start" />
+                                                                )}
+                                                                Stop Validation
+                                                            </Button>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex flex-col gap-3">
+                                                        <p className="text-xs text-muted-foreground">
+                                                            Start automatic DNS validation after you update the records above.
+                                                        </p>
+                                                        <div className="flex flex-wrap gap-2">
+                                                            <Button
+                                                                size="sm"
+                                                                disabled={activeActionKey !== null}
+                                                                onClick={() => startDnsValidation(step.dns_validation!.confirm_url)}
+                                                            >
+                                                                {activeActionKey === 'dns:start' ? (
+                                                                    <Spinner className="size-3.5" />
+                                                                ) : (
+                                                                    <PlayCircleIcon data-icon="inline-start" />
+                                                                )}
+                                                                Start Validation
+                                                            </Button>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
                                         ) : null}
                                     </td>
                                     <td className="py-3 text-center">

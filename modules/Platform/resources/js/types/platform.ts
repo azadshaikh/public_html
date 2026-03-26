@@ -358,6 +358,7 @@ export type WebsiteProvisioningStep = {
     description?: string | null;
     message?: string | null;
     dns_instructions?: WebsiteDnsInstructions | null;
+    dns_validation?: WebsiteDnsValidation | null;
     started_at?: string | null;
     completed_at?: string | null;
 };
@@ -375,6 +376,16 @@ export type WebsiteDnsInstructions = {
     domain: string;
     nameservers?: string[];
     records?: WebsiteDnsInstructionRecord[];
+};
+
+export type WebsiteDnsValidation = {
+    confirmed_by_user: boolean;
+    confirmed_at?: string | null;
+    check_count: number;
+    domain_not_registered: boolean;
+    observed_nameservers: string[];
+    confirm_url: string;
+    stop_url: string;
 };
 
 export type WebsiteUpdateItem = {

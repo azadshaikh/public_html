@@ -15,6 +15,7 @@ use Modules\Platform\Events\DnsVerificationTimeoutEvent;
 use Modules\Platform\Models\Domain;
 use Modules\Platform\Models\Secret;
 use Modules\Platform\Models\Website;
+use Modules\Platform\Services\AcmeChallengeAliasService;
 use Modules\Platform\Services\DomainSslCertificateService;
 use Tests\TestCase;
 
@@ -186,6 +187,74 @@ class DnsSslCommandsTest extends TestCase
 
         $this->artisan('platform:ssl:renew-expiring', ['--dry-run' => true])
             ->assertExitCode(0);
+    }
+
+    public function test_acme_challenge_alias_service_builds_alias_from_config(): void
+    {
+        config()->set('platform.acme_challenge.alias_domain', 'Acme-Challenge.in.');
+        config()->set('platform.acme_challenge.bunny_api_key', 'external-bunny-key');
+
+        $service = new AcmeChallengeAliasService;
+
+        $this->assertSame(
+            '_acme-challenge.astero.in.acme-challenge.in',
+            $service->buildChallengeAlias('Astero.in.')
+        );
+        $this->assertSame('external-bunny-key', $service->bunnyApiKey());
+    }
+
+    public function test_issue_command_uses_env_backed_acme_challenge_settings_for_external_dns(): void
+    {
+        config()->set('platform.acme_challenge.alias_domain', 'acme-challenge.in');
+        config()->set('platform.acme_challenge.bunny_api_key', 'external-bunny-key');
+
+        $website = new Website;
+
+        $command = new class extends SslIssueCertificateCommand
+        {
+            public function resolveApiKeyForTest(Website $website, string $dnsMode): string
+            {
+                return $this->resolveBunnyApiKey($website, $dnsMode);
+            }
+
+            public function resolveAliasForTest(string $dnsMode, string $rootDomain): string
+            {
+                return $this->resolveChallengeAlias($dnsMode, $rootDomain);
+            }
+        };
+
+        $this->assertSame('external-bunny-key', $command->resolveApiKeyForTest($website, 'external'));
+        $this->assertSame(
+            '_acme-challenge.astero.in.acme-challenge.in',
+            $command->resolveAliasForTest('external', 'astero.in')
+        );
+    }
+
+    public function test_renew_command_uses_env_backed_acme_challenge_settings_for_external_dns(): void
+    {
+        config()->set('platform.acme_challenge.alias_domain', 'acme-challenge.in');
+        config()->set('platform.acme_challenge.bunny_api_key', 'external-bunny-key');
+
+        $domain = new Domain;
+
+        $command = new class extends SslRenewExpiringCommand
+        {
+            public function resolveApiKeyForTest(Domain $domain, string $dnsMode): string
+            {
+                return $this->resolveBunnyApiKey($domain, $dnsMode);
+            }
+
+            public function resolveAliasForTest(string $dnsMode, string $rootDomain): string
+            {
+                return $this->resolveChallengeAlias($dnsMode, $rootDomain);
+            }
+        };
+
+        $this->assertSame('external-bunny-key', $command->resolveApiKeyForTest($domain, 'external'));
+        $this->assertSame(
+            '_acme-challenge.astero.in.acme-challenge.in',
+            $command->resolveAliasForTest('external', 'astero.in')
+        );
     }
 
     public function test_issue_ssl_command_can_skip_acme_and_mark_step_done(): void

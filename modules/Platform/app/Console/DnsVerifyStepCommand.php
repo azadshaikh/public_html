@@ -11,6 +11,7 @@ use Modules\Platform\Libs\BunnyApiException;
 use Modules\Platform\Libs\DnsResolver;
 use Modules\Platform\Models\Provider;
 use Modules\Platform\Models\Website;
+use Modules\Platform\Services\AcmeChallengeAliasService;
 
 /**
  * Verifies DNS propagation for a website domain before CDN/SSL steps can proceed.
@@ -164,7 +165,7 @@ class DnsVerifyStepCommand extends BaseCommand
 
         // Step 1: Generate challenge alias and store instructions (idempotent)
         if (! $domainRecord->getMetadata('dns_instructions')) {
-            $challengeAlias = sprintf('_acme-challenge.%s.ssl-validation.astero.in', $rootDomain);
+            $challengeAlias = $this->acmeChallengeAliasService()->buildChallengeAlias($rootDomain);
 
             if ($pullzoneHostname) {
                 // CDN active: customer must use CNAME records pointing to the CDN edge
@@ -235,6 +236,11 @@ class DnsVerifyStepCommand extends BaseCommand
         $queryName = str_contains($name, '.') ? $name : $name.'.'.$rootDomain;
 
         return DnsResolver::verifyRecord($queryName, $type, $expectedValue);
+    }
+
+    protected function acmeChallengeAliasService(): AcmeChallengeAliasService
+    {
+        return resolve(AcmeChallengeAliasService::class);
     }
 
     /**

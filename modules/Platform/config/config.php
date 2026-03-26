@@ -5,6 +5,10 @@ return [
     'release_api_key' => config('astero.release_api_key', ''),
     'provisioner_ip' => config('astero.provisioner_ip'),
     'provisioner_ips' => config('astero.provisioner_ips', []),
+    'acme_challenge' => [
+        'alias_domain' => env('ACME_CHALLENGE_ALIAS_DOMAIN'),
+        'bunny_api_key' => env('ACME_CHALLENGE_BUNNY_API_KEY'),
+    ],
 
     'server_statuses' => [
         'active' => ['label' => 'Active',     'value' => 'active',     'color' => 'success'],

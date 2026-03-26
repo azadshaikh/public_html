@@ -253,6 +253,8 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
             Route::post('/{website}/remove-from-server', [WebsiteController::class, 'removeFromServer'])->name('remove-from-server')->whereNumber('website');
             Route::post('/{website}/reprovision', [WebsiteController::class, 'reprovision'])->name('reprovision')->whereNumber('website');
             Route::get('/{website}/provisioning-status', [WebsiteController::class, 'provisioningStatus'])->name('provisioning-status')->whereNumber('website');
+            Route::post('/{website}/confirm-dns', [WebsiteController::class, 'confirmDns'])->name('confirm-dns')->whereNumber('website');
+            Route::post('/{website}/stop-dns-validation', [WebsiteController::class, 'stopDnsValidation'])->name('stop-dns-validation')->whereNumber('website');
 
             Route::post('/{website}/{step}/execute', [WebsiteController::class, 'executeStep'])->name('execute.step')->whereNumber('website');
             Route::post('/{website}/{step}/revert', [WebsiteController::class, 'revertStep'])->name('revert.step')->whereNumber('website');

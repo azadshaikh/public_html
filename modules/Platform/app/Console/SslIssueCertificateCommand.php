@@ -8,6 +8,7 @@ use Exception;
 use Modules\Platform\Libs\HestiaClient;
 use Modules\Platform\Models\Provider;
 use Modules\Platform\Models\Website;
+use Modules\Platform\Services\AcmeChallengeAliasService;
 use Modules\Platform\Services\DomainService;
 use Modules\Platform\Services\DomainSslCertificateService;
 use Modules\Platform\Services\ServerSSHService;
@@ -55,37 +56,6 @@ class SslIssueCertificateCommand extends BaseCommand
 
         $rootDomain = $domainRecord->name;
 
-        // Resolve DNS provider for API key
-        $dnsProvider = $website->getProvider(Provider::TYPE_DNS);
-        throw_unless(
-            $dnsProvider && $dnsProvider->vendor === 'bunny',
-            Exception::class,
-            'No Bunny DNS provider is associated with this website.'
-        );
-
-        // Determine API key based on dns_mode
-        // External DNS uses platform's Bunny key (challenge-alias writes to platform's zone)
-        // Managed/subdomain uses agency's Bunny key
-        $dnsMode = $website->dns_mode ?? 'subdomain';
-
-        if ($dnsMode === 'external') {
-            $platformDnsProvider = Provider::where('type', Provider::TYPE_DNS)
-                ->where('vendor', 'bunny')
-                ->whereNull('deleted_at')
-                ->whereDoesntHave('agencies')
-                ->first();
-
-            throw_unless(
-                $platformDnsProvider,
-                Exception::class,
-                'No platform-level Bunny DNS provider found for challenge-alias SSL issuance.'
-            );
-
-            $bunnyApiKey = $platformDnsProvider->credentials['api_key'];
-        } else {
-            $bunnyApiKey = $dnsProvider->credentials['api_key'];
-        }
-
         // Check platform_secrets for existing valid wildcard (single source of truth)
         $domainService = resolve(DomainService::class);
         $existingCert = $domainService->getBestSslCertificate($domainRecord);
@@ -111,12 +81,13 @@ class SslIssueCertificateCommand extends BaseCommand
             return;
         }
 
+        $dnsMode = $website->dns_mode ?? 'subdomain';
+        $bunnyApiKey = $this->resolveBunnyApiKey($website, $dnsMode);
+
         // Issue new certificate via acme.sh DNS-01 challenge
         $this->info(sprintf('Issuing new wildcard cert for %s...', $rootDomain));
 
-        $challengeAlias = ($dnsMode === 'external')
-            ? ($domainRecord->getMetadata('challenge_alias') ?? '')
-            : '';
+        $challengeAlias = $this->resolveChallengeAlias($dnsMode, $rootDomain);
 
         $issueResult = HestiaClient::execute(
             'a-issue-wildcard-ssl',
@@ -144,6 +115,44 @@ class SslIssueCertificateCommand extends BaseCommand
         $message = sprintf('Wildcard SSL certificate issued for *.%s', $rootDomain);
         $this->logActivity($website, ActivityAction::UPDATE, $message);
         $website->markProvisioningStepDone('issue_ssl', $message);
+    }
+
+    protected function resolveBunnyApiKey(Website $website, string $dnsMode): string
+    {
+        if ($dnsMode === 'external') {
+            return $this->acmeChallengeAliasService()->bunnyApiKey();
+        }
+
+        $dnsProvider = $website->getProvider(Provider::TYPE_DNS);
+        throw_unless(
+            $dnsProvider && $dnsProvider->vendor === 'bunny',
+            Exception::class,
+            'No Bunny DNS provider is associated with this website.'
+        );
+
+        $bunnyApiKey = trim((string) ($dnsProvider->credentials['api_key'] ?? ''));
+
+        throw_unless(
+            $bunnyApiKey !== '',
+            Exception::class,
+            'No Bunny API key configured for the website DNS provider.'
+        );
+
+        return $bunnyApiKey;
+    }
+
+    protected function resolveChallengeAlias(string $dnsMode, string $rootDomain): string
+    {
+        if ($dnsMode !== 'external') {
+            return '';
+        }
+
+        return $this->acmeChallengeAliasService()->buildChallengeAlias($rootDomain);
+    }
+
+    protected function acmeChallengeAliasService(): AcmeChallengeAliasService
+    {
+        return resolve(AcmeChallengeAliasService::class);
     }
 
     /**

@@ -11,6 +11,7 @@ use Modules\Platform\Models\Domain;
 use Modules\Platform\Models\Provider;
 use Modules\Platform\Models\Secret;
 use Modules\Platform\Models\Website;
+use Modules\Platform\Services\AcmeChallengeAliasService;
 use Modules\Platform\Services\DomainSslCertificateService;
 use Modules\Platform\Services\ServerSSHService;
 
@@ -136,9 +137,7 @@ class SslRenewExpiringCommand extends Command
             $bunnyApiKey = $this->resolveBunnyApiKey($domain, $dnsMode);
 
             // Step 3: Determine challenge alias for external mode
-            $challengeAlias = ($dnsMode === 'external')
-                ? ($domain->getMetadata('challenge_alias') ?? '')
-                : '';
+            $challengeAlias = $this->resolveChallengeAlias($dnsMode, $rootDomain);
 
             // Step 4: SSH → acme.sh --renew --force
             // Pass API key via --env: prefix so a-exec sets it as an env var
@@ -226,22 +225,10 @@ class SslRenewExpiringCommand extends Command
      * External DNS uses platform's Bunny key (challenge-alias writes to platform's zone).
      * Managed/subdomain uses agency's Bunny key.
      */
-    private function resolveBunnyApiKey(Domain $domain, string $dnsMode): string
+    protected function resolveBunnyApiKey(Domain $domain, string $dnsMode): string
     {
         if ($dnsMode === 'external') {
-            $platformDnsProvider = Provider::where('type', Provider::TYPE_DNS)
-                ->where('vendor', 'bunny')
-                ->whereNull('deleted_at')
-                ->whereDoesntHave('agencies')
-                ->first();
-
-            throw_unless(
-                $platformDnsProvider,
-                Exception::class,
-                'No platform-level Bunny DNS provider found for challenge-alias renewal.'
-            );
-
-            return $platformDnsProvider->credentials['api_key'];
+            return $this->acmeChallengeAliasService()->bunnyApiKey();
         }
 
         // For managed/subdomain, find the DNS provider via a website linked to this domain
@@ -253,11 +240,28 @@ class SslRenewExpiringCommand extends Command
         if ($website) {
             $dnsProvider = $website->getProvider(Provider::TYPE_DNS);
             if ($dnsProvider && $dnsProvider->vendor === 'bunny') {
-                return $dnsProvider->credentials['api_key'];
+                $bunnyApiKey = trim((string) ($dnsProvider->credentials['api_key'] ?? ''));
+                if ($bunnyApiKey !== '') {
+                    return $bunnyApiKey;
+                }
             }
         }
 
         throw new Exception('No Bunny DNS provider found for domain '.($domain->name ?? $domain->domain_name));
+    }
+
+    protected function resolveChallengeAlias(string $dnsMode, string $rootDomain): string
+    {
+        if ($dnsMode !== 'external') {
+            return '';
+        }
+
+        return $this->acmeChallengeAliasService()->buildChallengeAlias($rootDomain);
+    }
+
+    protected function acmeChallengeAliasService(): AcmeChallengeAliasService
+    {
+        return resolve(AcmeChallengeAliasService::class);
     }
 
     /**
