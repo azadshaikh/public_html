@@ -16,7 +16,6 @@ use Illuminate\Support\Facades\Log;
 use Modules\Platform\Console\HestiaChangeWebTemplateCommand;
 use Modules\Platform\Libs\BunnyApi;
 use Modules\Platform\Models\Website;
-use Modules\Platform\Services\WebsiteService;
 
 class WebsiteTrash implements ShouldQueue
 {
@@ -69,24 +68,24 @@ class WebsiteTrash implements ShouldQueue
             $template = HestiaChangeWebTemplateCommand::getTemplateForStatus('trashed');
 
             // Change the nginx template to show trashed page
-            Artisan::call('platform:hestia:change-web-template', [
+            $this->callArtisanStep('Change web template', 'platform:hestia:change-web-template', [
                 'website_id' => $website->id,
                 'template' => $template,
             ]);
 
             // Clear caches to ensure changes take effect immediately
-            Artisan::call('platform:hestia:clear-cache', [
+            $this->callArtisanStep('Clear website cache', 'platform:hestia:clear-cache', [
                 'website_id' => $website->id,
             ]);
 
             // Stop queue workers - trashed websites shouldn't process jobs
-            Artisan::call('platform:hestia:manage-queue-worker', [
+            $this->callArtisanStep('Stop queue workers', 'platform:hestia:manage-queue-worker', [
                 'website_id' => $website->id,
                 'action' => 'stop',
             ]);
 
             // Suspend cron job - trashed websites shouldn't run scheduled tasks
-            Artisan::call('platform:hestia:manage-cron', [
+            $this->callArtisanStep('Suspend cron job', 'platform:hestia:manage-cron', [
                 'website_id' => $website->id,
                 'action' => 'suspend',
             ]);
@@ -96,8 +95,8 @@ class WebsiteTrash implements ShouldQueue
 
             $this->logActivity($website, ActivityAction::UPDATE, 'Website trashed successfully on server.');
 
-            // Sync website info to update queue worker and cron status in metadata
-            resolve(WebsiteService::class)->syncWebsiteInfo($website);
+            // Update local runtime metadata without making another remote sync call.
+            $this->updateRuntimeMetadataForTrash($website);
 
             Log::info('WebsiteTrash job completed', [
                 'website_id' => $website->id,
@@ -155,5 +154,56 @@ class WebsiteTrash implements ShouldQueue
                 'error' => $e->getMessage(),
             ]);
         }
+    }
+
+    /**
+     * Run an artisan step with explicit timing and exit-code checks.
+     *
+     * @param  array<string, mixed>  $arguments
+     */
+    private function callArtisanStep(string $label, string $command, array $arguments): void
+    {
+        $startedAt = microtime(true);
+
+        Log::info('WebsiteTrash: step started', [
+            'website_id' => $this->websiteId,
+            'step' => $label,
+            'command' => $command,
+        ]);
+
+        $exitCode = Artisan::call($command, $arguments);
+        $output = trim(Artisan::output());
+        $duration = round(microtime(true) - $startedAt, 2);
+
+        Log::info('WebsiteTrash: step finished', [
+            'website_id' => $this->websiteId,
+            'step' => $label,
+            'command' => $command,
+            'exit_code' => $exitCode,
+            'duration_seconds' => $duration,
+            'output' => $output,
+        ]);
+
+        if ($exitCode !== 0) {
+            throw new Exception(sprintf(
+                '%s failed with exit code %d%s',
+                $label,
+                $exitCode,
+                $output !== '' ? ': '.$output : '.'
+            ));
+        }
+    }
+
+    private function updateRuntimeMetadataForTrash(Website $website): void
+    {
+        $website->setMetadata('queue_worker_status', 'stopped');
+        $website->setMetadata('queue_worker_running_count', 0);
+        $website->setMetadata(
+            'queue_worker_total_count',
+            max(0, (int) $website->getMetadata('queue_worker_total_count', 0))
+        );
+        $website->setMetadata('cron_status', 'suspended');
+        $website->setMetadata('last_synced_at', now()->toIso8601String());
+        $website->save();
     }
 }

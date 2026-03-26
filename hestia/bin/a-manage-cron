@@ -91,6 +91,7 @@ get_cron_id() {
         select(.value.CMD | contains($pattern)) |
         .key
     ' | head -1
+}
 
 # --- Execute Action ---
 case "$action" in

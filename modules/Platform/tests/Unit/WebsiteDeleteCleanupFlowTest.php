@@ -62,6 +62,22 @@ class WebsiteDeleteCleanupFlowTest extends TestCase
         $this->assertLessThan($activityPosition, $removePosition);
     }
 
+    public function test_website_trash_job_logs_each_artisan_step_and_updates_local_runtime_metadata(): void
+    {
+        $path = base_path('modules/Platform/app/Jobs/WebsiteTrash.php');
+        $contents = file_get_contents($path);
+
+        $this->assertNotFalse($contents, 'Failed to read modules/Platform/app/Jobs/WebsiteTrash.php');
+        $this->assertStringContainsString("\$this->callArtisanStep('Change web template'", $contents);
+        $this->assertStringContainsString("\$this->callArtisanStep('Clear website cache'", $contents);
+        $this->assertStringContainsString("\$this->callArtisanStep('Stop queue workers'", $contents);
+        $this->assertStringContainsString("\$this->callArtisanStep('Suspend cron job'", $contents);
+        $this->assertStringContainsString('$this->updateRuntimeMetadataForTrash($website);', $contents);
+        $this->assertStringNotContainsString('syncWebsiteInfo($website)', $contents);
+        $this->assertStringContainsString("Log::info('WebsiteTrash: step started'", $contents);
+        $this->assertStringContainsString("Log::info('WebsiteTrash: step finished'", $contents);
+    }
+
     public function test_expired_websites_command_dispatches_website_delete_with_website_id(): void
     {
         $path = base_path('modules/Platform/app/Console/HestiaDeleteExpiredWebsitesCommand.php');
