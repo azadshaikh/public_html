@@ -45,6 +45,7 @@ type WebsiteFormProps = {
     statusOptions: PlatformOption[];
     typeOptions: PlatformOption[];
     planOptions: PlatformOption[];
+    dnsModeOptions: PlatformOption[];
     dnsProviderOptions: PlatformOption[];
     cdnProviderOptions: PlatformOption[];
     order?: {
@@ -161,6 +162,7 @@ export default function WebsiteForm({
     statusOptions,
     typeOptions,
     planOptions,
+    dnsModeOptions,
     dnsProviderOptions,
     cdnProviderOptions,
     order,
@@ -325,6 +327,18 @@ export default function WebsiteForm({
                                 </div>
 
                                 <div className="grid gap-4 md:grid-cols-2">
+                                    <SelectField
+                                        label="DNS mode"
+                                        placeholder="Select DNS mode"
+                                        value={form.data.dns_mode}
+                                        options={dnsModeOptions}
+                                        error={form.error('dns_mode')}
+                                        invalid={form.invalid('dns_mode')}
+                                        onChange={(value) =>
+                                            form.setField('dns_mode', value)
+                                        }
+                                    />
+
                                     <SelectField
                                         label="Agency"
                                         placeholder="Select agency"

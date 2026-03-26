@@ -263,6 +263,17 @@ class WebsiteService implements ScaffoldServiceInterface
             ->all();
     }
 
+    public function getDnsModeOptionsForForm(): array
+    {
+        return collect(config('platform.website.dns_modes', []))
+            ->map(fn ($item, $key): array => [
+                'value' => $item['value'] ?? $key,
+                'label' => $item['label'] ?? $key,
+            ])
+            ->values()
+            ->all();
+    }
+
     // =============================================================================
     // WEBSITE SYNC
     // =============================================================================
@@ -572,6 +583,7 @@ class WebsiteService implements ScaffoldServiceInterface
             'name' => $data['name'] ?? null,
             'type' => $data['type'] ?? null,
             'plan_tier' => $data['plan_tier'] ?? $data['plan'] ?? null,
+            'dns_mode' => $data['dns_mode'] ?? null,
             'niches' => $data['niches'] ?? [],
             'customer_ref' => $data['customer_ref'] ?? null,
             'customer_data' => $data['customer_data'] ?? null,

@@ -336,6 +336,7 @@ export type WebsiteFormValues = {
     agency_id: string;
     dns_provider_id: string;
     cdn_provider_id: string;
+    dns_mode: string;
     website_username: string;
     owner_password: string;
     customer_name: string;

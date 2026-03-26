@@ -18,6 +18,7 @@ type WebsitesEditPageProps = {
     statusOptions: PlatformOption[];
     typeOptions: PlatformOption[];
     planOptions: PlatformOption[];
+    dnsModeOptions: PlatformOption[];
     dnsProviderOptions: PlatformOption[];
     cdnProviderOptions: PlatformOption[];
 };
@@ -58,6 +59,7 @@ export default function WebsitesEdit(props: WebsitesEditPageProps) {
                 statusOptions={props.statusOptions}
                 typeOptions={props.typeOptions}
                 planOptions={props.planOptions}
+                dnsModeOptions={props.dnsModeOptions}
                 dnsProviderOptions={props.dnsProviderOptions}
                 cdnProviderOptions={props.cdnProviderOptions}
             />

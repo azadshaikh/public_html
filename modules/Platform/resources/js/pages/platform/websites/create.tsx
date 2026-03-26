@@ -29,6 +29,7 @@ type WebsitesCreatePageProps = {
     statusOptions: PlatformOption[];
     typeOptions: PlatformOption[];
     planOptions: PlatformOption[];
+    dnsModeOptions: PlatformOption[];
     dnsProviderOptions: PlatformOption[];
     cdnProviderOptions: PlatformOption[];
     order?: {
@@ -60,6 +61,7 @@ export default function WebsitesCreate(props: WebsitesCreatePageProps) {
                 statusOptions={props.statusOptions}
                 typeOptions={props.typeOptions}
                 planOptions={props.planOptions}
+                dnsModeOptions={props.dnsModeOptions}
                 dnsProviderOptions={props.dnsProviderOptions}
                 cdnProviderOptions={props.cdnProviderOptions}
                 order={props.order}

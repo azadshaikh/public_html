@@ -38,6 +38,7 @@ class WebsiteRequest extends ScaffoldRequest
             'agency_id' => ['nullable', 'integer', $this->existsRule('platform_agencies', 'id')],
             'niches' => ['nullable', 'array'],
             'niches.*' => ['string', 'max:100'],
+            'dns_mode' => ['nullable', 'string', Rule::in(['subdomain', 'managed', 'external'])],
 
             'dns_provider_id' => [
                 'required',

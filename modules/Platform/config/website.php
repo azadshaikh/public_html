@@ -24,6 +24,12 @@ return [
         'hestia' => ['label' => 'HestiaCp', 'value' => 'hestia', 'color' => 'primary'],
     ],
 
+    'dns_modes' => [
+        'subdomain' => ['label' => 'Agency Subdomain', 'value' => 'subdomain'],
+        'managed' => ['label' => 'Managed DNS', 'value' => 'managed'],
+        'external' => ['label' => 'External DNS', 'value' => 'external'],
+    ],
+
     'steps' => [
         // ── PHASE A: Origin Infrastructure (runs immediately for all domain types) ──
         'resolve_domain' => [

@@ -836,6 +836,7 @@ class WebsiteController extends ScaffoldController implements HasMiddleware
             'statusOptions' => $this->websiteService->getStatusOptionsForForm(),
             'typeOptions' => $this->websiteService->getTypeOptionsForForm(),
             'planOptions' => $this->websiteService->getPlanOptionsForForm(),
+            'dnsModeOptions' => $this->websiteService->getDnsModeOptionsForForm(),
             'dnsProviderOptions' => Provider::getProviderOptions(Provider::TYPE_DNS),
             'cdnProviderOptions' => Provider::getProviderOptions(Provider::TYPE_CDN),
         ];
@@ -923,6 +924,7 @@ class WebsiteController extends ScaffoldController implements HasMiddleware
             'agency_id' => $website->agency_id ? (string) $website->agency_id : '',
             'dns_provider_id' => $website->dnsProvider?->getKey() ? (string) $website->dnsProvider?->getKey() : '',
             'cdn_provider_id' => $website->cdnProvider?->getKey() ? (string) $website->cdnProvider?->getKey() : '',
+            'dns_mode' => (string) ($website->dns_mode ?? 'subdomain'),
             'website_username' => (string) ($website->uid ?? ''),
             'owner_password' => '',
             'customer_name' => (string) ($website->customer_data['name'] ?? ''),
