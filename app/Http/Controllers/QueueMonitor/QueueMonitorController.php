@@ -101,6 +101,7 @@ class QueueMonitorController extends ScaffoldController implements HasMiddleware
                 'allowRetry' => (bool) config('queue-monitor.ui.allow_retry', true),
                 'allowDeletion' => (bool) config('queue-monitor.ui.allow_deletion', true),
                 'allowPurge' => (bool) config('queue-monitor.ui.allow_purge', true),
+                'allowMarkStale' => (bool) config('queue-monitor.ui.allow_mark_stale', true),
                 'allowClearQueue' => (bool) config('queue-monitor.ui.allow_clear_queue', true),
             ],
             'status' => session('status'),
@@ -227,6 +228,29 @@ class QueueMonitorController extends ScaffoldController implements HasMiddleware
         ]);
 
         return back()->with('status', 'Stop requested. The job will stop after the current step.');
+    }
+
+    public function markStale(int $id): RedirectResponse
+    {
+        $monitor = Monitor::query()->findOrFail($id);
+
+        if ($monitor->status !== MonitorStatus::RUNNING) {
+            return back()->with('error', 'Only running jobs can be marked as stale.');
+        }
+
+        $now = now();
+
+        $monitor->update([
+            'status' => MonitorStatus::STALE,
+            'finished_at' => $now,
+            'finished_at_exact' => $now->format('Y-m-d H:i:s.u'),
+            'metadata' => array_merge($monitor->metadata ?? [], [
+                'manually_marked_stale_at' => $now->toIso8601String(),
+                'manually_marked_stale_by' => auth()->id(),
+            ]),
+        ]);
+
+        return back()->with('status', 'Running monitor marked as stale. This does not kill any live worker process.');
     }
 
     // =========================================================================

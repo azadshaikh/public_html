@@ -138,8 +138,7 @@ class WebsiteLifecycleService
             $website->save();
 
             dispatch(new WebsiteDelete($website->id))
-                ->onQueue('default')
-                ->afterResponse();
+                ->onQueue('default');
 
             $this->logActivity($website, ActivityAction::DELETE, 'Website permanent delete initiated');
 
@@ -158,8 +157,7 @@ class WebsiteLifecycleService
 
         if ($website->delete()) {
             dispatch(new WebsiteTrash($website->id))
-                ->onQueue('default')
-                ->afterResponse();
+                ->onQueue('default');
         }
 
         SendAgencyWebhook::dispatchForWebsiteAfterResponse($website, 'website.deleted', [
@@ -242,8 +240,7 @@ class WebsiteLifecycleService
         $website->update(['status' => WebsiteStatus::Active, 'deleted_by' => null, 'deleted_at' => null, 'updated_by' => auth()->id()]);
 
         dispatch(new WebsiteUntrash($website->id))
-            ->onQueue('default')
-            ->afterResponse();
+            ->onQueue('default');
 
         SendAgencyWebhook::dispatchForWebsiteAfterResponse($website, 'website.restored');
 

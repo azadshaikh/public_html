@@ -6,19 +6,22 @@ use Tests\TestCase;
 
 class WebsiteLifecycleDispatchTimingTest extends TestCase
 {
-    public function test_website_lifecycle_service_trash_and_restore_dispatch_after_response(): void
+    public function test_website_lifecycle_service_trash_and_restore_dispatch_to_default_queue(): void
     {
         $path = base_path('modules/Platform/app/Services/WebsiteLifecycleService.php');
         $contents = file_get_contents($path);
 
         $this->assertNotFalse($contents, 'Failed to read modules/Platform/app/Services/WebsiteLifecycleService.php');
-        $this->assertStringContainsString("dispatch(new WebsiteTrash(\$website->id))\n                ->onQueue('default')\n                ->afterResponse();", $contents);
-        $this->assertStringContainsString("dispatch(new WebsiteUntrash(\$website->id))\n            ->onQueue('default')\n            ->afterResponse();", $contents);
+        $this->assertStringContainsString("dispatch(new WebsiteTrash(\$website->id))\n                ->onQueue('default');", $contents);
+        $this->assertStringContainsString("dispatch(new WebsiteUntrash(\$website->id))\n            ->onQueue('default');", $contents);
+        $this->assertStringContainsString("dispatch(new WebsiteDelete(\$website->id))\n                ->onQueue('default');", $contents);
+        $this->assertStringNotContainsString("dispatch(new WebsiteTrash(\$website->id))\n                ->onQueue('default')\n                ->afterResponse();", $contents);
+        $this->assertStringNotContainsString("dispatch(new WebsiteUntrash(\$website->id))\n            ->onQueue('default')\n            ->afterResponse();", $contents);
         $this->assertStringContainsString("SendAgencyWebhook::dispatchForWebsiteAfterResponse(\$website, 'website.deleted', [", $contents);
         $this->assertStringContainsString("SendAgencyWebhook::dispatchForWebsiteAfterResponse(\$website, 'website.restored');", $contents);
     }
 
-    public function test_bulk_website_trash_and_restore_dispatch_after_response(): void
+    public function test_bulk_website_trash_and_restore_dispatch_to_default_queue(): void
     {
         $path = base_path('modules/Platform/app/Services/WebsiteService.php');
         $contents = file_get_contents($path);
@@ -27,7 +30,9 @@ class WebsiteLifecycleDispatchTimingTest extends TestCase
         $this->assertStringContainsString('dispatch(new WebsiteTrash($website->id))', $contents);
         $this->assertStringContainsString('dispatch(new WebsiteUntrash($website->id))', $contents);
         $this->assertStringContainsString("->onQueue('default')", $contents);
-        $this->assertStringContainsString('->afterResponse();', $contents);
+        $this->assertStringNotContainsString("dispatch(new WebsiteTrash(\$website->id))\n                        ->onQueue('default')\n                        ->afterResponse();", $contents);
+        $this->assertStringNotContainsString("dispatch(new WebsiteUntrash(\$website->id))\n                    ->onQueue('default')\n                    ->afterResponse();", $contents);
+        $this->assertStringContainsString("dispatch(new WebsiteDelete(\$website->id))->onQueue('default');", $contents);
         $this->assertStringContainsString("SendAgencyWebhook::dispatchForWebsiteAfterResponse(\$website, 'website.deleted', [", $contents);
         $this->assertStringContainsString("SendAgencyWebhook::dispatchForWebsiteAfterResponse(\$website, 'website.restored');", $contents);
     }

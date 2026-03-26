@@ -42,6 +42,9 @@ return [
         // Allow cooperative stop requests for running jobs that support cancellation.
         'allow_cancel' => true,
 
+        // Allow super users to mark a wedged running monitor entry as stale.
+        'allow_mark_stale' => true,
+
         // Allow purging all monitor entries.
         'allow_purge' => true,
 

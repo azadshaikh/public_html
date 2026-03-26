@@ -570,6 +570,7 @@ Route::prefix($adminPrefix)->group(function (): void {
                 Route::delete('monitors/{id}', 'destroy')->name('destroy');
                 Route::patch('monitors/{id}/retry', 'retry')->name('retry');
                 Route::patch('monitors/{id}/cancel', 'cancel')->name('cancel');
+                Route::patch('monitors/{id}/mark-stale', 'markStale')->name('mark-stale');
                 Route::post('clear-queue', 'clearQueue')->name('clear-queue');
                 Route::get('workers', 'workers')->name('workers');
                 Route::get('/{status?}', 'index')

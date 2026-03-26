@@ -716,8 +716,7 @@ class WebsiteService implements ScaffoldServiceInterface
 
                 if ($website->delete()) {
                     dispatch(new WebsiteTrash($website->id))
-                        ->onQueue('default')
-                        ->afterResponse();
+                        ->onQueue('default');
                 }
 
                 SendAgencyWebhook::dispatchForWebsiteAfterResponse($website, 'website.deleted', [
@@ -742,8 +741,7 @@ class WebsiteService implements ScaffoldServiceInterface
                 $website->save();
 
                 dispatch(new WebsiteUntrash($website->id))
-                    ->onQueue('default')
-                    ->afterResponse();
+                    ->onQueue('default');
 
                 SendAgencyWebhook::dispatchForWebsiteAfterResponse($website, 'website.restored');
 
@@ -780,7 +778,7 @@ class WebsiteService implements ScaffoldServiceInterface
             $website->updated_by = auth()->id();
             $website->save();
 
-            dispatch(new WebsiteDelete($website->id));
+            dispatch(new WebsiteDelete($website->id))->onQueue('default');
 
             $affected++;
         }

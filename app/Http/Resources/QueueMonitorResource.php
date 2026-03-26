@@ -93,6 +93,17 @@ class QueueMonitorResource extends ScaffoldResource
             ];
         }
 
+        if (config('queue-monitor.ui.allow_mark_stale', true) && $this->resource->status === MonitorStatus::RUNNING) {
+            $actions['mark_stale'] = [
+                'url' => route('app.masters.queue-monitor.mark-stale', $this->resource->id),
+                'label' => 'Mark stale',
+                'icon' => 'ri-error-warning-line',
+                'method' => 'PATCH',
+                'variant' => 'destructive',
+                'confirm' => 'Mark this stuck monitor as stale? This only clears the monitor entry and does not kill a live worker process.',
+            ];
+        }
+
         return $actions;
     }
 }

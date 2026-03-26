@@ -206,6 +206,28 @@ class QueueMonitorControllerTest extends TestCase
         $this->assertNotNull(data_get($monitor->fresh()->metadata, 'cancel_requested_at'));
     }
 
+    public function test_running_job_can_be_marked_stale_manually(): void
+    {
+        $monitor = $this->createMonitor([
+            'status' => MonitorStatus::RUNNING,
+            'finished_at' => null,
+            'finished_at_exact' => null,
+        ]);
+
+        $this->actingAs($this->superUser)
+            ->from(route('app.masters.queue-monitor.index'))
+            ->patch(route('app.masters.queue-monitor.mark-stale', $monitor->id))
+            ->assertRedirect(route('app.masters.queue-monitor.index'))
+            ->assertSessionHas('status', 'Running monitor marked as stale. This does not kill any live worker process.');
+
+        $monitor->refresh();
+
+        $this->assertSame(MonitorStatus::STALE, $monitor->status);
+        $this->assertNotNull($monitor->finished_at);
+        $this->assertNotNull(data_get($monitor->metadata, 'manually_marked_stale_at'));
+        $this->assertSame($this->superUser->id, data_get($monitor->metadata, 'manually_marked_stale_by'));
+    }
+
     public function test_clear_queue_route_calls_queue_clear_for_target_queue(): void
     {
         Artisan::shouldReceive('call')
@@ -246,7 +268,9 @@ class QueueMonitorControllerTest extends TestCase
             ->assertInertia(fn (Assert $page): Assert => $page
                 ->where('monitors.data.0.id', $monitor->id)
                 ->where('monitors.data.0.actions.cancel.label', 'Stop')
-                ->where('monitors.data.0.actions.cancel.method', 'PATCH'));
+                ->where('monitors.data.0.actions.cancel.method', 'PATCH')
+                ->where('monitors.data.0.actions.mark_stale.label', 'Mark stale')
+                ->where('monitors.data.0.actions.mark_stale.method', 'PATCH'));
     }
 
     public function test_purge_bulk_action_removes_all_monitor_entries_without_selected_ids(): void

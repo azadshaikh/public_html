@@ -100,6 +100,7 @@ export type QueueMonitorUiConfig = {
     allowRetry: boolean;
     allowDeletion: boolean;
     allowPurge: boolean;
+    allowMarkStale: boolean;
     allowClearQueue: boolean;
 };
 
