@@ -2,12 +2,15 @@
 
 namespace Modules\CMS\Listeners;
 
+use App\Traits\IsMonitored;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Modules\CMS\Events\RedirectionHit;
 use Modules\CMS\Models\Redirection;
 
 class IncrementRedirectionHit implements ShouldQueue
 {
+    use IsMonitored;
+
     /**
      * The name of the queue the job should be sent to.
      */

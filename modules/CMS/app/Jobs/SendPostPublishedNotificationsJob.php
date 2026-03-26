@@ -6,6 +6,7 @@ namespace Modules\CMS\Jobs;
 
 use App\Enums\Status;
 use App\Models\User;
+use App\Traits\IsMonitored;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -19,6 +20,7 @@ class SendPostPublishedNotificationsJob implements ShouldQueue
 {
     use Dispatchable;
     use InteractsWithQueue;
+    use IsMonitored;
     use Queueable;
     use SerializesModels;
 
