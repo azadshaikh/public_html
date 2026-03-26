@@ -186,7 +186,11 @@ class DomainController extends ScaffoldController implements HasMiddleware
             'type_label' => $domain->type_label,
             'status' => $domain->status,
             'status_label' => $domain->status_label,
+            'agency_id' => $domain->agency_id,
             'agency_name' => $domain->agency?->name,
+            'dns_mode' => $domain->dns_mode,
+            'dns_status' => $domain->dns_status,
+            'ssl_status' => $domain->ssl_status,
             'registrar_name' => $domain->domainRegistrars->first()?->name ?? $domain->registrar_name,
             'dns_provider' => (string) ($domain->getAttribute('dns_provider') ?? ''),
             'dns_zone_id' => $domain->dns_zone_id,
@@ -206,6 +210,8 @@ class DomainController extends ScaffoldController implements HasMiddleware
             'latest_certificate_expires_at' => $latestCertificate?->expires_at
                 ? app_date_time_format($latestCertificate->expires_at, 'date')
                 : null,
+            'is_trashed' => $domain->trashed(),
+            'deleted_at' => app_date_time_format($domain->deleted_at, 'datetime'),
             'created_at' => app_date_time_format($domain->created_at, 'datetime'),
             'updated_at' => app_date_time_format($domain->updated_at, 'datetime'),
         ];

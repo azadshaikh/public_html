@@ -505,7 +505,11 @@ export type DomainShowData = {
     type_label: string | null;
     status: string | null;
     status_label: string | null;
+    agency_id: number | null;
     agency_name: string | null;
+    dns_mode: string | null;
+    dns_status: string | null;
+    ssl_status: string | null;
     registrar_name: string | null;
     dns_provider: string | null;
     dns_zone_id: string | null;
@@ -518,6 +522,8 @@ export type DomainShowData = {
     ssl_certificates_count: number;
     latest_certificate_websites_count: number;
     latest_certificate_expires_at: string | null;
+    is_trashed: boolean;
+    deleted_at: string | null;
     created_at: string | null;
     updated_at: string | null;
 };

@@ -1,21 +1,11 @@
-import { Link } from '@inertiajs/react';
-import {
-    ActivityIcon,
-    GlobeIcon,
-    PencilIcon,
-    PlusIcon,
-    ShieldCheckIcon,
-    SparklesIcon,
-} from 'lucide-react';
+import { Link, usePage } from '@inertiajs/react';
+import { ArrowLeftIcon, GlobeIcon, PencilIcon, PlusIcon, SparklesIcon } from 'lucide-react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
+import { useIsMobile } from '@/hooks/use-mobile';
 import AppLayout from '@/layouts/app-layout';
+import type { AuthenticatedSharedData } from '@/types';
 import type { BreadcrumbItem } from '@/types';
 import type {
     DomainDnsRecordItem,
@@ -24,6 +14,10 @@ import type {
     DomainWebsiteItem,
     PlatformActivity,
 } from '../../../types/platform';
+import { DomainShowOverview } from './components/domain-show-overview';
+import { DomainShowTabs } from './components/domain-show-tabs';
+import { INITIAL_CONFIRM, useDomainOperationAction } from './components/show-shared';
+import type { ConfirmState } from './components/show-shared';
 
 type DomainsShowPageProps = {
     domain: DomainShowData;
@@ -33,25 +27,6 @@ type DomainsShowPageProps = {
     activities: PlatformActivity[];
 };
 
-function MetricCard({
-    label,
-    value,
-}: {
-    label: string;
-    value: string | number | null | undefined;
-}) {
-    return (
-        <div className="rounded-lg border bg-muted/20 p-4">
-            <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                {label}
-            </p>
-            <p className="mt-1 text-sm font-medium text-foreground">
-                {value || '—'}
-            </p>
-        </div>
-    );
-}
-
 export default function DomainsShow({
     domain,
     dnsRecords,
@@ -59,52 +34,56 @@ export default function DomainsShow({
     websites,
     activities,
 }: DomainsShowPageProps) {
+    const page = usePage<AuthenticatedSharedData>();
+    const canEdit = Boolean(page.props.auth.abilities.editDomains);
+    const canDelete = Boolean(page.props.auth.abilities.deleteDomains);
+    const canRestore = Boolean(page.props.auth.abilities.restoreDomains);
+    const isMobile = useIsMobile();
+    const [confirm, setConfirm] = useState<ConfirmState>(INITIAL_CONFIRM);
+    const [activeTab, setActiveTab] = useState('general');
+    const { processing, performVisit, performJson } = useDomainOperationAction();
+
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: route('dashboard') },
-        {
-            title: 'Platform',
-            href: route('platform.domains.index', { status: 'all' }),
-        },
-        {
-            title: 'Domains',
-            href: route('platform.domains.index', { status: 'all' }),
-        },
+        { title: 'Platform', href: route('platform.domains.index', { status: 'all' }) },
+        { title: 'Domains', href: route('platform.domains.index', { status: 'all' }) },
         { title: domain.name, href: route('platform.domains.show', domain.id) },
     ];
+
+    function openConfirm(
+        title: string,
+        description: string,
+        confirmLabel: string,
+        action: () => void,
+        tone: 'default' | 'destructive' = 'default',
+    ): void {
+        setConfirm({
+            open: true,
+            title,
+            description,
+            confirmLabel,
+            tone,
+            action,
+        });
+    }
 
     return (
         <AppLayout
             breadcrumbs={breadcrumbs}
             title={domain.name}
-            description="Inspect ownership, DNS state, certificate coverage, and recent activity for this domain."
+            description="Inspect ownership, DNS state, certificate usage, and recent activity for this domain."
             headerActions={
-                <div className="flex flex-wrap items-center gap-3">
+                <div className="flex flex-wrap items-center gap-2">
                     <Button variant="outline" asChild>
-                        <Link
-                            href={route(
-                                'platform.domains.ssl-certificates.generate-self-signed',
-                                domain.id,
-                            )}
-                        >
+                        <Link href={route('platform.domains.ssl-certificates.generate-self-signed', domain.id)}>
                             <SparklesIcon data-icon="inline-start" />
                             Generate self-signed
                         </Link>
                     </Button>
                     <Button variant="outline" asChild>
-                        <Link
-                            href={route(
-                                'platform.domains.ssl-certificates.create',
-                                domain.id,
-                            )}
-                        >
+                        <Link href={route('platform.domains.ssl-certificates.create', domain.id)}>
                             <PlusIcon data-icon="inline-start" />
                             Add certificate
-                        </Link>
-                    </Button>
-                    <Button variant="outline" asChild>
-                        <Link href={route('platform.domains.edit', domain.id)}>
-                            <PencilIcon data-icon="inline-start" />
-                            Edit domain
                         </Link>
                     </Button>
                     <Button variant="outline" asChild>
@@ -113,281 +92,61 @@ export default function DomainsShow({
                             Manage DNS
                         </Link>
                     </Button>
+                    {canEdit ? (
+                        <Button variant="outline" asChild>
+                            <Link href={route('platform.domains.edit', domain.id)}>
+                                <PencilIcon data-icon="inline-start" />
+                                Edit
+                            </Link>
+                        </Button>
+                    ) : null}
+                    <Button variant="outline" asChild>
+                        <Link href={route('platform.domains.index', { status: 'all' })}>
+                            <ArrowLeftIcon data-icon="inline-start" />
+                            Back
+                        </Link>
+                    </Button>
                 </div>
             }
         >
             <div className="flex flex-col gap-6">
-                <Card>
-                    <CardHeader>
-                        <div className="flex items-center gap-2">
-                            <GlobeIcon className="size-4 text-muted-foreground" />
-                            <CardTitle>Domain overview</CardTitle>
-                        </div>
-                        <CardDescription>
-                            Core ownership, registrar, and DNS lifecycle
-                            details.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                        <MetricCard label="Domain" value={domain.name} />
-                        <MetricCard label="Type" value={domain.type_label} />
-                        <MetricCard
-                            label="Status"
-                            value={domain.status_label}
-                        />
-                        <MetricCard label="Agency" value={domain.agency_name} />
-                        <MetricCard
-                            label="Registrar"
-                            value={domain.registrar_name}
-                        />
-                        <MetricCard
-                            label="DNS provider"
-                            value={domain.dns_provider}
-                        />
-                        <MetricCard
-                            label="DNS zone"
-                            value={domain.dns_zone_id}
-                        />
-                        <MetricCard
-                            label="Registered"
-                            value={domain.registered_date}
-                        />
-                        <MetricCard
-                            label="Expires"
-                            value={domain.expires_date}
-                        />
-                        <MetricCard
-                            label="Updated"
-                            value={domain.updated_date}
-                        />
-                        <MetricCard
-                            label="DNS records"
-                            value={domain.dns_records_count}
-                        />
-                        <MetricCard
-                            label="Websites"
-                            value={domain.websites_count}
-                        />
-                        <MetricCard
-                            label="Certificates"
-                            value={domain.ssl_certificates_count}
-                        />
-                        <MetricCard
-                            label="Latest SSL in use by"
-                            value={`${domain.latest_certificate_websites_count} website${domain.latest_certificate_websites_count === 1 ? '' : 's'}`}
-                        />
-                        <MetricCard
-                            label="Latest certificate expiry"
-                            value={domain.latest_certificate_expires_at}
-                        />
-                        <MetricCard label="Created" value={domain.created_at} />
-                        <MetricCard
-                            label="Last changed"
-                            value={domain.updated_at}
-                        />
-                    </CardContent>
-                </Card>
+                <DomainShowOverview
+                    domain={domain}
+                    processing={processing}
+                    canEdit={canEdit}
+                    canDelete={canDelete}
+                    canRestore={canRestore}
+                    setActiveTab={setActiveTab}
+                    openConfirm={openConfirm}
+                    performVisit={performVisit}
+                    performJson={performJson}
+                />
 
-                <div className="grid gap-6 xl:grid-cols-3">
-                    <Card>
-                        <CardHeader>
-                            <div className="flex items-center gap-2">
-                                <ShieldCheckIcon className="size-4 text-muted-foreground" />
-                                <CardTitle>SSL certificates</CardTitle>
-                            </div>
-                            <CardDescription>
-                                Certificates currently attached to this domain.
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="flex flex-col gap-3">
-                            {sslCertificates.length === 0 ? (
-                                <p className="text-sm text-muted-foreground">
-                                    No SSL certificates have been attached yet.
-                                </p>
-                            ) : (
-                                sslCertificates.map((certificate) => (
-                                    <Link
-                                        key={certificate.id}
-                                        href={certificate.href}
-                                        className="rounded-lg border p-3 transition hover:border-primary/40 hover:bg-muted/30"
-                                    >
-                                        <div className="flex items-center justify-between gap-3">
-                                            <p className="font-medium text-foreground">
-                                                {certificate.name}
-                                            </p>
-                                            <span className="text-xs tracking-wide text-muted-foreground uppercase">
-                                                {certificate.is_expired
-                                                    ? 'Expired'
-                                                    : 'Active'}
-                                            </span>
-                                        </div>
-                                        <p className="mt-1 text-sm text-muted-foreground">
-                                            {certificate.authority} · Expires{' '}
-                                            {certificate.expires_at || '—'}
-                                        </p>
-                                        <p className="mt-2 text-xs text-muted-foreground">
-                                            Used by {certificate.websites_count} website{certificate.websites_count === 1 ? '' : 's'}
-                                        </p>
-                                    </Link>
-                                ))
-                            )}
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Websites on this domain</CardTitle>
-                            <CardDescription>
-                                Root and subdomain websites currently attached to this domain record.
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="flex flex-col gap-3">
-                            {websites.length === 0 ? (
-                                <p className="text-sm text-muted-foreground">
-                                    No websites are attached to this domain yet.
-                                </p>
-                            ) : (
-                                websites.map((website) => (
-                                    <Link
-                                        key={website.id}
-                                        href={website.href}
-                                        className="rounded-lg border p-3 transition hover:border-primary/40 hover:bg-muted/30"
-                                    >
-                                        <div className="flex items-center justify-between gap-3">
-                                            <p className="font-medium text-foreground">
-                                                {website.domain}
-                                            </p>
-                                            <span className="text-xs tracking-wide text-muted-foreground uppercase">
-                                                {website.status_label}
-                                            </span>
-                                        </div>
-                                        <p className="mt-1 text-sm text-muted-foreground">
-                                            {website.name}
-                                        </p>
-                                        <p className="mt-2 text-xs text-muted-foreground">
-                                            {website.uses_latest_ssl ? 'Using latest shared SSL' : 'Not using latest shared SSL'}
-                                        </p>
-                                    </Link>
-                                ))
-                            )}
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Name servers</CardTitle>
-                            <CardDescription>
-                                Current WHOIS name server values stored for this
-                                domain.
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="flex flex-col gap-3">
-                            {domain.name_servers.length === 0 ? (
-                                <p className="text-sm text-muted-foreground">
-                                    No name servers are recorded yet.
-                                </p>
-                            ) : (
-                                domain.name_servers.map((nameServer) => (
-                                    <div
-                                        key={nameServer}
-                                        className="rounded-lg border p-3 text-sm font-medium text-foreground"
-                                    >
-                                        {nameServer}
-                                    </div>
-                                ))
-                            )}
-                        </CardContent>
-                    </Card>
-                </div>
-
-                <div className="grid gap-6 xl:grid-cols-2">
-                    <Card>
-                        <CardHeader>
-                            <div className="flex items-center justify-between gap-3">
-                                <div>
-                                    <CardTitle>DNS records</CardTitle>
-                                    <CardDescription>Latest known DNS records attached to this domain.</CardDescription>
-                                </div>
-                                <Button variant="outline" size="sm" asChild>
-                                    <Link href={route('platform.dns.create', { domain_id: domain.id })}>
-                                        <PlusIcon data-icon="inline-start" />
-                                        Add record
-                                    </Link>
-                                </Button>
-                            </div>
-                        </CardHeader>
-                        <CardContent className="flex flex-col gap-3">
-                            {dnsRecords.length === 0 ? (
-                                <p className="text-sm text-muted-foreground">
-                                    No DNS records found.
-                                </p>
-                            ) : (
-                                dnsRecords.map((record) => (
-                                    <div
-                                        key={record.id}
-                                        className="rounded-lg border p-3"
-                                    >
-                                        <div className="flex items-center justify-between gap-3">
-                                            <p className="font-medium text-foreground">
-                                                {record.type} · {record.name}
-                                            </p>
-                                            <span className="text-xs tracking-wide text-muted-foreground uppercase">
-                                                TTL {record.ttl ?? 'auto'}
-                                            </span>
-                                        </div>
-                                        <p className="mt-1 text-sm text-muted-foreground">
-                                            {record.value}
-                                        </p>
-                                        {record.disabled ? (
-                                            <p className="mt-2 text-xs text-muted-foreground">
-                                                Disabled
-                                            </p>
-                                        ) : null}
-                                    </div>
-                                ))
-                            )}
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader>
-                            <div className="flex items-center gap-2">
-                                <ActivityIcon className="size-4 text-muted-foreground" />
-                                <CardTitle>Recent activity</CardTitle>
-                            </div>
-                            <CardDescription>
-                                Most recent WHOIS refreshes, metadata changes,
-                                and certificate updates.
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="flex flex-col gap-3">
-                            {activities.length === 0 ? (
-                                <p className="text-sm text-muted-foreground">
-                                    No recent activity.
-                                </p>
-                            ) : (
-                                activities.map((activity) => (
-                                    <div
-                                        key={activity.id}
-                                        className="rounded-lg border p-3"
-                                    >
-                                        <p className="text-sm font-medium text-foreground">
-                                            {activity.description}
-                                        </p>
-                                        <p className="text-xs text-muted-foreground">
-                                            {activity.causer_name
-                                                ? `${activity.causer_name} · `
-                                                : ''}
-                                            {activity.created_at ||
-                                                'Unknown time'}
-                                        </p>
-                                    </div>
-                                ))
-                            )}
-                        </CardContent>
-                    </Card>
-                </div>
+                <DomainShowTabs
+                    activeTab={activeTab}
+                    setActiveTab={setActiveTab}
+                    isMobile={isMobile}
+                    domain={domain}
+                    dnsRecords={dnsRecords}
+                    sslCertificates={sslCertificates}
+                    websites={websites}
+                    activities={activities}
+                />
             </div>
+
+            <ConfirmationDialog
+                open={confirm.open}
+                onOpenChange={(open) =>
+                    setConfirm((current) => ({ ...current, open }))
+                }
+                title={confirm.title}
+                description={confirm.description}
+                confirmLabel={confirm.confirmLabel}
+                tone={confirm.tone}
+                confirmVariant={confirm.tone === 'destructive' ? 'destructive' : 'default'}
+                confirmDisabled={processing}
+                onConfirm={confirm.action}
+            />
         </AppLayout>
     );
 }
