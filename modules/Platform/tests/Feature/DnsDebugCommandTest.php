@@ -8,7 +8,6 @@ use App\Modules\ModuleManager;
 use App\Modules\Support\ModuleAutoloader;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
@@ -115,21 +114,12 @@ class DnsDebugCommandTest extends TestCase
             };
         });
 
-        Http::fake([
-            'http://astero.in/.well-known/astero-domain-verification.txt' => Http::response("token-123\n", 200),
-            'http://www.astero.in/.well-known/astero-domain-verification.txt' => Http::response("token-123\n", 200),
-        ]);
-
-        $website->setMetadata('domain_verification.token', 'token-123');
-        $website->save();
-
         $this->artisan('platform:dns:debug', ['website' => (string) $website->id])
             ->expectsOutputToContain('Resolver quorum')
             ->expectsOutputToContain('Would resume provisioning now')
             ->expectsOutputToContain('[CNAME] astero.in -> asteroin.b-cdn.net [PASS]')
             ->expectsOutputToContain('[CNAME] _acme-challenge.astero.in -> _acme-challenge.astero.in.acme-challenge.in [PASS]')
             ->expectsOutputToContain('trace CNAME: asteroin.b-cdn.net')
-            ->expectsOutputToContain('HTTP verification file /.well-known/astero-domain-verification.txt [PASS]')
             ->assertExitCode(0);
     }
 
@@ -195,14 +185,6 @@ class DnsDebugCommandTest extends TestCase
                 default => Process::result(''),
             };
         });
-
-        Http::fake([
-            'http://astero.in/.well-known/astero-domain-verification.txt' => Http::response('mismatch', 200),
-            'http://www.astero.in/.well-known/astero-domain-verification.txt' => Http::response('mismatch', 200),
-        ]);
-
-        $website->setMetadata('domain_verification.token', 'token-123');
-        $website->save();
 
         $this->artisan('platform:dns:debug', ['website' => (string) $website->id])
             ->expectsOutputToContain('Current blockers:')

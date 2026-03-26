@@ -30,7 +30,6 @@ use Modules\Platform\Models\Provider;
 use Modules\Platform\Models\Secret;
 use Modules\Platform\Models\Server;
 use Modules\Platform\Models\Website;
-use Modules\Platform\Services\WebsiteDomainVerificationService;
 use Modules\Platform\Services\WebsiteLifecycleService;
 use Modules\Platform\Services\WebsiteProvisioningService;
 use Modules\Platform\Services\WebsiteService;
@@ -395,12 +394,6 @@ class WebsiteController extends ScaffoldController implements HasMiddleware
                 ->filter(fn ($nameserver): bool => is_string($nameserver) && $nameserver !== '')
                 ->values()
                 ->all(),
-            'verification_path' => $dnsInstructions['mode'] === 'external'
-                ? $this->domainVerificationService()->verificationPath()
-                : null,
-            'verification_urls' => $dnsInstructions['mode'] === 'external'
-                ? $this->domainVerificationService()->verificationUrls($website)
-                : [],
             'confirm_url' => route('platform.websites.confirm-dns', ['website' => $website]),
             'stop_url' => route('platform.websites.stop-dns-validation', ['website' => $website]),
         ];
@@ -414,12 +407,7 @@ class WebsiteController extends ScaffoldController implements HasMiddleware
 
         return $mode === 'managed'
             ? 'Waiting for customer to update nameservers.'
-            : 'Waiting for customer DNS and verification file checks.';
-    }
-
-    private function domainVerificationService(): WebsiteDomainVerificationService
-    {
-        return resolve(WebsiteDomainVerificationService::class);
+            : 'Waiting for customer DNS records to propagate.';
     }
 
     private function formatDnsInstructionHostLabel(string $domain, string $name): string

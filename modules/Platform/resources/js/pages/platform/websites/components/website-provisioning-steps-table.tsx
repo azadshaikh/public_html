@@ -474,11 +474,6 @@ export function WebsiteProvisioningStepsTable({
                                                                     Started: {step.dns_validation.confirmed_at}
                                                                 </p>
                                                             ) : null}
-                                                            {step.dns_validation.verification_urls.length > 0 ? (
-                                                                <p className="text-xs text-muted-foreground">
-                                                                    File checks: {step.dns_validation.verification_urls.join(', ')}
-                                                                </p>
-                                                            ) : null}
                                                         </div>
                                                         <div className="flex flex-wrap gap-2">
                                                             <Button
@@ -502,11 +497,6 @@ export function WebsiteProvisioningStepsTable({
                                                             <p className="text-xs text-muted-foreground">
                                                                 Start automatic DNS validation after you update the records above.
                                                             </p>
-                                                            {step.dns_validation.verification_urls.length > 0 ? (
-                                                                <p className="text-xs text-muted-foreground">
-                                                                    Validation fetches: {step.dns_validation.verification_urls.join(', ')}
-                                                                </p>
-                                                            ) : null}
                                                         </div>
                                                         <div className="flex flex-wrap gap-2">
                                                             <Button

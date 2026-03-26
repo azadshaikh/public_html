@@ -50,12 +50,6 @@ return [
             'status' => 'pending',
             'command' => 'platform:hestia:create-website',
         ],
-        'publish_domain_verification' => [
-            'title' => 'Publish Verification File',
-            'info' => 'Upload the HTTP verification file used to confirm external domain routing.',
-            'status' => 'pending',
-            'command' => 'platform:hestia:publish-domain-verification',
-        ],
         'create_database' => [
             'title' => 'Create Database',
             'info' => 'Create the database and user.',

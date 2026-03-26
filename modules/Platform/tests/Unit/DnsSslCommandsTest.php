@@ -267,7 +267,7 @@ TRACE);
 
         $this->assertNotFalse($contents, 'Failed to read modules/Platform/app/Console/DnsPollPendingCommand.php');
         $this->assertStringContainsString(
-            'Waiting for customer DNS and verification file checks. (Check %d)',
+            'Waiting for customer DNS records to propagate. (Check %d)',
             $contents
         );
     }

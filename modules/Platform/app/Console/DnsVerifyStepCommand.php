@@ -12,14 +12,13 @@ use Modules\Platform\Libs\DnsResolver;
 use Modules\Platform\Models\Provider;
 use Modules\Platform\Models\Website;
 use Modules\Platform\Services\AcmeChallengeAliasService;
-use Modules\Platform\Services\WebsiteDomainVerificationService;
 
 /**
  * Verifies DNS propagation for a website domain before CDN/SSL steps can proceed.
  *
  * - SUBDOMAIN: auto-skipped by the orchestrator (never reaches this command)
  * - MANAGED (NS delegation): creates Bunny DNS zone on first run, then checks NS propagation
- * - EXTERNAL (customer DNS): generates challenge alias, checks _acme-challenge DNS plus HTTP verification file reachability
+ * - EXTERNAL (customer DNS): generates challenge alias and checks the required DNS records
  *
  * Returns exit code 2 (WAITING) when DNS is not yet propagated, causing the orchestrator
  * to set website status to WaitingForDns and pause the pipeline.
@@ -140,7 +139,7 @@ class DnsVerifyStepCommand extends BaseCommand
      * Handle CNAME delegation (external) DNS verification.
      *
      * On first run: generate challenge alias, store required records.
-     * On subsequent runs: check if _acme-challenge is set and the verification file is reachable.
+     * On subsequent runs: check if the required DNS records are set.
      */
     private function handleExternalDns(Website $website, $domainRecord, string $rootDomain): void
     {
@@ -200,7 +199,7 @@ class DnsVerifyStepCommand extends BaseCommand
             ));
         }
 
-        // Step 2: Verify DNS challenge alias + HTTP verification file
+        // Step 2: Verify required DNS records
         $instructions = $domainRecord->getMetadata('dns_instructions');
         $requiredRecords = $instructions['records'] ?? [];
         $allVerified = true;
@@ -217,22 +216,8 @@ class DnsVerifyStepCommand extends BaseCommand
             }
         }
 
-        $httpVerification = $this->domainVerificationService()->verifyWebsite($website);
-
-        foreach ($httpVerification['checks'] as $check) {
-            if (! $check['matched']) {
-                $this->warn(sprintf(
-                    'Verification file not reachable on %s (status: %s%s)',
-                    $check['url'],
-                    $check['status_code'] ?? 'error',
-                    $check['location'] ? ', location: '.$check['location'] : ''
-                ));
-                $allVerified = false;
-            }
-        }
-
         if (! $allVerified) {
-            $website->markProvisioningStepWaiting('verify_dns', 'Waiting for customer DNS to propagate and verification file to become reachable.');
+            $website->markProvisioningStepWaiting('verify_dns', 'Waiting for customer DNS records to propagate.');
             $this->exitWithWaiting();
         }
 
@@ -274,11 +259,6 @@ class DnsVerifyStepCommand extends BaseCommand
     protected function acmeChallengeAliasService(): AcmeChallengeAliasService
     {
         return resolve(AcmeChallengeAliasService::class);
-    }
-
-    protected function domainVerificationService(): WebsiteDomainVerificationService
-    {
-        return resolve(WebsiteDomainVerificationService::class);
     }
 
     /**
