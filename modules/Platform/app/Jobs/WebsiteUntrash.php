@@ -11,17 +11,17 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Log;
 use Modules\Platform\Console\HestiaChangeWebTemplateCommand;
+use Modules\Platform\Jobs\Concerns\InteractsWithWebsiteLifecycleExecution;
 use Modules\Platform\Models\Website;
-use Modules\Platform\Services\WebsiteService;
 
 class WebsiteUntrash implements ShouldQueue
 {
     use ActivityTrait;
     use Dispatchable;
     use InteractsWithQueue;
+    use InteractsWithWebsiteLifecycleExecution;
     use IsMonitored;
     use Queueable;
     use SerializesModels;
@@ -45,7 +45,7 @@ class WebsiteUntrash implements ShouldQueue
      */
     public function handle(): void
     {
-        $this->queueMonitorLabel('Website #'.$this->websiteId);
+        $this->initializeLifecycleMonitor('Website #'.$this->websiteId);
         // Fetch the website with trashed to handle timing issues
         /** @var Website|null $website */
         $website = Website::withTrashed()->find($this->websiteId);
@@ -68,24 +68,24 @@ class WebsiteUntrash implements ShouldQueue
             $template = HestiaChangeWebTemplateCommand::getTemplateForStatus('active');
 
             // Change the nginx template back to active
-            Artisan::call('platform:hestia:change-web-template', [
+            $this->callLifecycleArtisanStep('WebsiteUntrash', 'Change web template', 'platform:hestia:change-web-template', [
                 'website_id' => $website->id,
                 'template' => $template,
             ]);
 
             // Clear caches to ensure changes take effect immediately
-            Artisan::call('platform:hestia:clear-cache', [
+            $this->callLifecycleArtisanStep('WebsiteUntrash', 'Clear website cache', 'platform:hestia:clear-cache', [
                 'website_id' => $website->id,
             ]);
 
             // Start queue workers - website is now active again
-            Artisan::call('platform:hestia:manage-queue-worker', [
+            $this->callLifecycleArtisanStep('WebsiteUntrash', 'Start queue workers', 'platform:hestia:manage-queue-worker', [
                 'website_id' => $website->id,
                 'action' => 'start',
             ]);
 
             // Unsuspend cron job - website is now active again
-            Artisan::call('platform:hestia:manage-cron', [
+            $this->callLifecycleArtisanStep('WebsiteUntrash', 'Unsuspend cron job', 'platform:hestia:manage-cron', [
                 'website_id' => $website->id,
                 'action' => 'unsuspend',
             ]);
@@ -95,8 +95,7 @@ class WebsiteUntrash implements ShouldQueue
 
             $this->logActivity($website, ActivityAction::UPDATE, 'Website restored from trash successfully on server.');
 
-            // Sync website info to update queue worker and cron status in metadata
-            resolve(WebsiteService::class)->syncWebsiteInfo($website);
+            $this->updateRuntimeMetadataForRestore($website);
 
             Log::info('WebsiteUntrash job completed', [
                 'website_id' => $website->id,
@@ -139,8 +138,10 @@ class WebsiteUntrash implements ShouldQueue
         }
 
         try {
+            $this->throwIfLifecycleCancellationRequested('WebsiteUntrash', 'Recreate CDN pull zone');
+
             // Step 1: Recreate pull zone (same name from uid, adds hostnames)
-            Artisan::call('platform:bunny:setup-cdn', [
+            $this->callLifecycleArtisanStep('WebsiteUntrash', 'Recreate CDN pull zone', 'platform:bunny:setup-cdn', [
                 'website_id' => $website->id,
             ]);
 
@@ -149,7 +150,7 @@ class WebsiteUntrash implements ShouldQueue
 
             // Step 2: Upload SSL certificate to the new pull zone
             if ($website->pullzone_id) {
-                Artisan::call('platform:bunny:configure-cdn-ssl', [
+                $this->callLifecycleArtisanStep('WebsiteUntrash', 'Configure CDN SSL', 'platform:bunny:configure-cdn-ssl', [
                     'website_id' => $website->id,
                 ]);
             }
@@ -164,5 +165,17 @@ class WebsiteUntrash implements ShouldQueue
                 'error' => $e->getMessage(),
             ]);
         }
+    }
+
+    private function updateRuntimeMetadataForRestore(Website $website): void
+    {
+        $expectedWorkerCount = max(1, (int) $website->getMetadata('queue_worker_total_count', 1));
+
+        $website->setMetadata('queue_worker_status', 'running');
+        $website->setMetadata('queue_worker_running_count', $expectedWorkerCount);
+        $website->setMetadata('queue_worker_total_count', $expectedWorkerCount);
+        $website->setMetadata('cron_status', 'active');
+        $website->setMetadata('last_synced_at', now()->toIso8601String());
+        $website->save();
     }
 }

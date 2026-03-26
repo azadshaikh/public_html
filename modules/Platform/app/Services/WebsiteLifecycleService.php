@@ -239,10 +239,11 @@ class WebsiteLifecycleService
      */
     public function restore(Website $website): array
     {
+        $website->update(['status' => WebsiteStatus::Active, 'deleted_by' => null, 'deleted_at' => null, 'updated_by' => auth()->id()]);
+
         dispatch(new WebsiteUntrash($website->id))
             ->onQueue('default')
             ->afterResponse();
-        $website->update(['status' => WebsiteStatus::Active, 'deleted_by' => null, 'deleted_at' => null, 'updated_by' => auth()->id()]);
 
         SendAgencyWebhook::dispatchForWebsiteAfterResponse($website, 'website.restored');
 

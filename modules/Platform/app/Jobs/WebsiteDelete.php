@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Modules\Platform\Enums\WebsiteStatus;
 use Modules\Platform\Events\WebsiteDeletedEvent as EventsWebsiteDeleted;
+use Modules\Platform\Jobs\Concerns\InteractsWithWebsiteLifecycleExecution;
 use Modules\Platform\Libs\HestiaClient;
 use Modules\Platform\Models\Domain;
 use Modules\Platform\Models\Website;
@@ -31,6 +32,7 @@ class WebsiteDelete implements ShouldQueue
     use ActivityTrait;
     use Dispatchable;
     use InteractsWithQueue;
+    use InteractsWithWebsiteLifecycleExecution;
     use IsMonitored;
     use Queueable;
     use SerializesModels;
@@ -51,7 +53,7 @@ class WebsiteDelete implements ShouldQueue
      */
     public function handle(): void
     {
-        $this->queueMonitorLabel('Website #'.$this->websiteId);
+        $this->initializeLifecycleMonitor('Website #'.$this->websiteId);
         // Fetch with withTrashed() since website is already soft-deleted when being permanently deleted
         /** @var Website|null $website */
         $website = Website::withTrashed()->find($this->websiteId);
@@ -69,6 +71,8 @@ class WebsiteDelete implements ShouldQueue
                 'website_id' => $website->id,
                 'site_id' => $website->site_id,
             ]);
+
+            $this->throwIfLifecycleCancellationRequested('WebsiteDelete', 'Delete website from server');
 
             // Only cleanup Hestia if status is NOT 'deleted' (server data already removed)
             if ($website->status !== WebsiteStatus::Deleted) {

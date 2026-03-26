@@ -77,6 +77,22 @@ class QueueMonitorResource extends ScaffoldResource
             ];
         }
 
+        if (
+            config('queue-monitor.ui.allow_cancel', true)
+            && $this->resource->status === MonitorStatus::RUNNING
+            && data_get($this->resource->metadata, 'cancellable', false)
+            && blank(data_get($this->resource->metadata, 'cancel_requested_at'))
+        ) {
+            $actions['cancel'] = [
+                'url' => route('app.masters.queue-monitor.cancel', $this->resource->id),
+                'label' => 'Stop',
+                'icon' => 'ri-stop-circle-line',
+                'method' => 'PATCH',
+                'variant' => 'destructive',
+                'confirm' => 'Request this running job to stop after its current step?',
+            ];
+        }
+
         return $actions;
     }
 }

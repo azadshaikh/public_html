@@ -20,6 +20,7 @@ class CheckQueueMonitorUiConfig
             'app.masters.queue-monitor.data' => config('queue-monitor.ui.enabled'),
             'app.masters.queue-monitor.workers' => config('queue-monitor.ui.enabled') && config('queue-monitor.workers.enabled', true),
             'app.masters.queue-monitor.retry' => config('queue-monitor.ui.enabled') && config('queue-monitor.ui.allow_retry'),
+            'app.masters.queue-monitor.cancel' => config('queue-monitor.ui.enabled') && config('queue-monitor.ui.allow_cancel', true),
             'app.masters.queue-monitor.destroy' => config('queue-monitor.ui.enabled') && config('queue-monitor.ui.allow_deletion'),
             'app.masters.queue-monitor.bulk-action' => config('queue-monitor.ui.enabled'),
             default => false,

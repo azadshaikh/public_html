@@ -13,6 +13,7 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Log;
 use Modules\Platform\Enums\WebsiteStatus;
+use Modules\Platform\Jobs\Concerns\InteractsWithWebsiteLifecycleExecution;
 use Modules\Platform\Libs\HestiaClient;
 use Modules\Platform\Models\Website;
 use Modules\Platform\Services\ServerService;
@@ -33,6 +34,7 @@ class WebsiteRemoveFromServer implements ShouldQueue
     use ActivityTrait;
     use Dispatchable;
     use InteractsWithQueue;
+    use InteractsWithWebsiteLifecycleExecution;
     use IsMonitored;
     use Queueable;
     use SerializesModels;
@@ -52,7 +54,7 @@ class WebsiteRemoveFromServer implements ShouldQueue
      */
     public function handle(): void
     {
-        $this->queueMonitorLabel('Website #'.$this->websiteId);
+        $this->initializeLifecycleMonitor('Website #'.$this->websiteId);
         /** @var Website|null $website */
         $website = Website::withTrashed()->find($this->websiteId);
 
@@ -85,6 +87,8 @@ class WebsiteRemoveFromServer implements ShouldQueue
                 'website_id' => $website->id,
                 'site_id' => $website->site_id,
             ]);
+
+            $this->throwIfLifecycleCancellationRequested('WebsiteRemoveFromServer', 'Delete website from server');
 
             // Remove queue worker configuration
             $this->removeQueueWorkerConfiguration($website);

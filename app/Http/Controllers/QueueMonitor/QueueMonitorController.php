@@ -186,6 +186,31 @@ class QueueMonitorController extends ScaffoldController implements HasMiddleware
         }
     }
 
+    public function cancel(int $id): RedirectResponse
+    {
+        $monitor = Monitor::query()->findOrFail($id);
+
+        if ($monitor->status !== MonitorStatus::RUNNING) {
+            return back()->with('error', 'Only running jobs can be stopped.');
+        }
+
+        if (! data_get($monitor->metadata, 'cancellable', false)) {
+            return back()->with('error', 'This job does not support manual stop requests.');
+        }
+
+        if (filled(data_get($monitor->metadata, 'cancel_requested_at'))) {
+            return back()->with('status', 'Stop already requested for this job.');
+        }
+
+        $monitor->update([
+            'metadata' => array_merge($monitor->metadata ?? [], [
+                'cancel_requested_at' => now()->toIso8601String(),
+            ]),
+        ]);
+
+        return back()->with('status', 'Stop requested. The job will stop after the current step.');
+    }
+
     // =========================================================================
     // METRICS (private — used only by index)
     // =========================================================================

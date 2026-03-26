@@ -68,14 +68,42 @@ class WebsiteDeleteCleanupFlowTest extends TestCase
         $contents = file_get_contents($path);
 
         $this->assertNotFalse($contents, 'Failed to read modules/Platform/app/Jobs/WebsiteTrash.php');
-        $this->assertStringContainsString("\$this->callArtisanStep('Change web template'", $contents);
-        $this->assertStringContainsString("\$this->callArtisanStep('Clear website cache'", $contents);
-        $this->assertStringContainsString("\$this->callArtisanStep('Stop queue workers'", $contents);
-        $this->assertStringContainsString("\$this->callArtisanStep('Suspend cron job'", $contents);
+        $this->assertStringContainsString("\$this->callLifecycleArtisanStep('WebsiteTrash', 'Change web template'", $contents);
+        $this->assertStringContainsString("\$this->callLifecycleArtisanStep('WebsiteTrash', 'Clear website cache'", $contents);
+        $this->assertStringContainsString("\$this->callLifecycleArtisanStep('WebsiteTrash', 'Stop queue workers'", $contents);
+        $this->assertStringContainsString("\$this->callLifecycleArtisanStep('WebsiteTrash', 'Suspend cron job'", $contents);
         $this->assertStringContainsString('$this->updateRuntimeMetadataForTrash($website);', $contents);
         $this->assertStringNotContainsString('syncWebsiteInfo($website)', $contents);
-        $this->assertStringContainsString("Log::info('WebsiteTrash: step started'", $contents);
-        $this->assertStringContainsString("Log::info('WebsiteTrash: step finished'", $contents);
+        $this->assertStringContainsString('use InteractsWithWebsiteLifecycleExecution;', $contents);
+        $this->assertStringContainsString('$this->initializeLifecycleMonitor(\'Website #\'.$this->websiteId);', $contents);
+    }
+
+    public function test_website_untrash_job_uses_lifecycle_wrapper_and_skips_sync_website_info(): void
+    {
+        $path = base_path('modules/Platform/app/Jobs/WebsiteUntrash.php');
+        $contents = file_get_contents($path);
+
+        $this->assertNotFalse($contents, 'Failed to read modules/Platform/app/Jobs/WebsiteUntrash.php');
+        $this->assertStringContainsString('use InteractsWithWebsiteLifecycleExecution;', $contents);
+        $this->assertStringContainsString("\$this->callLifecycleArtisanStep('WebsiteUntrash', 'Change web template'", $contents);
+        $this->assertStringContainsString("\$this->callLifecycleArtisanStep('WebsiteUntrash', 'Clear website cache'", $contents);
+        $this->assertStringContainsString("\$this->callLifecycleArtisanStep('WebsiteUntrash', 'Start queue workers'", $contents);
+        $this->assertStringContainsString("\$this->callLifecycleArtisanStep('WebsiteUntrash', 'Unsuspend cron job'", $contents);
+        $this->assertStringContainsString('$this->updateRuntimeMetadataForRestore($website);', $contents);
+        $this->assertStringNotContainsString('syncWebsiteInfo($website)', $contents);
+    }
+
+    public function test_website_lifecycle_jobs_define_timeout_and_overlap_protection(): void
+    {
+        $traitPath = base_path('modules/Platform/app/Jobs/Concerns/InteractsWithWebsiteLifecycleExecution.php');
+        $traitContents = file_get_contents($traitPath);
+
+        $this->assertNotFalse($traitContents, 'Failed to read lifecycle execution trait');
+        $this->assertStringContainsString('public int $timeout = 300;', $traitContents);
+        $this->assertStringContainsString('public bool $failOnTimeout = true;', $traitContents);
+        $this->assertStringContainsString('new WithoutOverlapping($this->websiteLifecycleLockKey())', $traitContents);
+        $this->assertStringContainsString('->releaseAfter(30)', $traitContents);
+        $this->assertStringContainsString('->expireAfter($this->timeout + 60)', $traitContents);
     }
 
     public function test_expired_websites_command_dispatches_website_delete_with_website_id(): void

@@ -895,6 +895,19 @@ function mapMonitorAction(
         };
     }
 
+    if (key === 'cancel') {
+        return {
+            label: action.label,
+            href: action.url,
+            method: action.method,
+            icon: <PauseCircleIcon />,
+            confirm:
+                action.confirm ??
+                'Request this running job to stop after its current step?',
+            variant: 'destructive',
+        };
+    }
+
     return {
         label: action.label,
         href: action.url,

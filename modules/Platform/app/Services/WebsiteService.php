@@ -734,16 +734,16 @@ class WebsiteService implements ScaffoldServiceInterface
                     continue;
                 }
 
-                dispatch(new WebsiteUntrash($website->id))
-                    ->onQueue('default')
-                    ->afterResponse();
-
                 $website->restore();
                 $website->status = WebsiteStatus::Active;
                 $website->deleted_by = null;
                 $website->deleted_at = null;
                 $website->updated_by = auth()->id();
                 $website->save();
+
+                dispatch(new WebsiteUntrash($website->id))
+                    ->onQueue('default')
+                    ->afterResponse();
 
                 SendAgencyWebhook::dispatchForWebsiteAfterResponse($website, 'website.restored');
 

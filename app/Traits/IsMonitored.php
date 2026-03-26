@@ -89,13 +89,35 @@ trait IsMonitored
      */
     public function queueMonitorLabel(string $label): void
     {
+        $this->queueMonitorMetadata(['_label' => $label]);
+    }
+
+    /**
+     * Merge metadata into the current queue monitor entry.
+     *
+     * @param  array<string, mixed>  $metadata
+     */
+    public function queueMonitorMetadata(array $metadata, bool $merge = true): void
+    {
         if (! $monitor = $this->getQueueMonitor()) {
             return;
         }
 
         $monitor->update([
-            'metadata' => array_merge($monitor->metadata ?? [], ['_label' => $label]),
+            'metadata' => $merge
+                ? array_merge($monitor->metadata ?? [], $metadata)
+                : $metadata,
         ]);
+    }
+
+    /**
+     * Read a metadata value from the current queue monitor entry.
+     */
+    public function queueMonitorMetadataValue(string $key, mixed $default = null): mixed
+    {
+        $metadata = $this->getQueueMonitor()?->metadata ?? [];
+
+        return data_get($metadata, $key, $default);
     }
 
     /**

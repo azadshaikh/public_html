@@ -184,6 +184,48 @@ class QueueMonitorControllerTest extends TestCase
         $this->assertTrue($monitor->fresh()->retried);
     }
 
+    public function test_running_cancellable_job_can_receive_stop_request(): void
+    {
+        $monitor = $this->createMonitor([
+            'status' => MonitorStatus::RUNNING,
+            'finished_at' => null,
+            'finished_at_exact' => null,
+            'metadata' => [
+                '_label' => 'Website #42',
+                'cancellable' => true,
+            ],
+        ]);
+
+        $this->actingAs($this->superUser)
+            ->from(route('app.masters.queue-monitor.index'))
+            ->patch(route('app.masters.queue-monitor.cancel', $monitor->id))
+            ->assertRedirect(route('app.masters.queue-monitor.index'))
+            ->assertSessionHas('status', 'Stop requested. The job will stop after the current step.');
+
+        $this->assertNotNull(data_get($monitor->fresh()->metadata, 'cancel_requested_at'));
+    }
+
+    public function test_queue_monitor_dashboard_includes_stop_action_for_running_cancellable_jobs(): void
+    {
+        $monitor = $this->createMonitor([
+            'status' => MonitorStatus::RUNNING,
+            'finished_at' => null,
+            'finished_at_exact' => null,
+            'metadata' => [
+                '_label' => 'Website #42',
+                'cancellable' => true,
+            ],
+        ]);
+
+        $this->actingAs($this->superUser)
+            ->get(route('app.masters.queue-monitor.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->where('monitors.data.0.id', $monitor->id)
+                ->where('monitors.data.0.actions.cancel.label', 'Stop')
+                ->where('monitors.data.0.actions.cancel.method', 'PATCH'));
+    }
+
     public function test_purge_bulk_action_removes_all_monitor_entries_without_selected_ids(): void
     {
         $initialCount = Monitor::query()->count();

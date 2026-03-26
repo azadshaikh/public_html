@@ -569,6 +569,7 @@ Route::prefix($adminPrefix)->group(function (): void {
                 Route::post('bulk-action', 'bulkAction')->name('bulk-action');
                 Route::delete('monitors/{id}', 'destroy')->name('destroy');
                 Route::patch('monitors/{id}/retry', 'retry')->name('retry');
+                Route::patch('monitors/{id}/cancel', 'cancel')->name('cancel');
                 Route::get('workers', 'workers')->name('workers');
                 Route::get('/{status?}', 'index')
                     ->name('index')

@@ -39,6 +39,9 @@ return [
         // Allow retry for a single failed monitor item.
         'allow_retry' => true,
 
+        // Allow cooperative stop requests for running jobs that support cancellation.
+        'allow_cancel' => true,
+
         // Allow purging all monitor entries.
         'allow_purge' => true,
 

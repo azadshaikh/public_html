@@ -11,9 +11,9 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Log;
 use Modules\Platform\Console\HestiaChangeWebTemplateCommand;
+use Modules\Platform\Jobs\Concerns\InteractsWithWebsiteLifecycleExecution;
 use Modules\Platform\Libs\BunnyApi;
 use Modules\Platform\Models\Website;
 
@@ -22,6 +22,7 @@ class WebsiteTrash implements ShouldQueue
     use ActivityTrait;
     use Dispatchable;
     use InteractsWithQueue;
+    use InteractsWithWebsiteLifecycleExecution;
     use IsMonitored;
     use Queueable;
     use SerializesModels;
@@ -45,7 +46,7 @@ class WebsiteTrash implements ShouldQueue
      */
     public function handle(): void
     {
-        $this->queueMonitorLabel('Website #'.$this->websiteId);
+        $this->initializeLifecycleMonitor('Website #'.$this->websiteId);
         // Fetch the website with trashed to handle soft-deleted records
         /** @var Website|null $website */
         $website = Website::withTrashed()->find($this->websiteId);
@@ -68,24 +69,24 @@ class WebsiteTrash implements ShouldQueue
             $template = HestiaChangeWebTemplateCommand::getTemplateForStatus('trashed');
 
             // Change the nginx template to show trashed page
-            $this->callArtisanStep('Change web template', 'platform:hestia:change-web-template', [
+            $this->callLifecycleArtisanStep('WebsiteTrash', 'Change web template', 'platform:hestia:change-web-template', [
                 'website_id' => $website->id,
                 'template' => $template,
             ]);
 
             // Clear caches to ensure changes take effect immediately
-            $this->callArtisanStep('Clear website cache', 'platform:hestia:clear-cache', [
+            $this->callLifecycleArtisanStep('WebsiteTrash', 'Clear website cache', 'platform:hestia:clear-cache', [
                 'website_id' => $website->id,
             ]);
 
             // Stop queue workers - trashed websites shouldn't process jobs
-            $this->callArtisanStep('Stop queue workers', 'platform:hestia:manage-queue-worker', [
+            $this->callLifecycleArtisanStep('WebsiteTrash', 'Stop queue workers', 'platform:hestia:manage-queue-worker', [
                 'website_id' => $website->id,
                 'action' => 'stop',
             ]);
 
             // Suspend cron job - trashed websites shouldn't run scheduled tasks
-            $this->callArtisanStep('Suspend cron job', 'platform:hestia:manage-cron', [
+            $this->callLifecycleArtisanStep('WebsiteTrash', 'Suspend cron job', 'platform:hestia:manage-cron', [
                 'website_id' => $website->id,
                 'action' => 'suspend',
             ]);
@@ -153,44 +154,6 @@ class WebsiteTrash implements ShouldQueue
                 'pullzone_id' => $pullzoneId,
                 'error' => $e->getMessage(),
             ]);
-        }
-    }
-
-    /**
-     * Run an artisan step with explicit timing and exit-code checks.
-     *
-     * @param  array<string, mixed>  $arguments
-     */
-    private function callArtisanStep(string $label, string $command, array $arguments): void
-    {
-        $startedAt = microtime(true);
-
-        Log::info('WebsiteTrash: step started', [
-            'website_id' => $this->websiteId,
-            'step' => $label,
-            'command' => $command,
-        ]);
-
-        $exitCode = Artisan::call($command, $arguments);
-        $output = trim(Artisan::output());
-        $duration = round(microtime(true) - $startedAt, 2);
-
-        Log::info('WebsiteTrash: step finished', [
-            'website_id' => $this->websiteId,
-            'step' => $label,
-            'command' => $command,
-            'exit_code' => $exitCode,
-            'duration_seconds' => $duration,
-            'output' => $output,
-        ]);
-
-        if ($exitCode !== 0) {
-            throw new Exception(sprintf(
-                '%s failed with exit code %d%s',
-                $label,
-                $exitCode,
-                $output !== '' ? ': '.$output : '.'
-            ));
         }
     }
 
