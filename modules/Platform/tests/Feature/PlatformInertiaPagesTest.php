@@ -514,7 +514,8 @@ class PlatformInertiaPagesTest extends TestCase
                 ->has('agencies')
                 ->has('metadataItems')
                 ->where('canRevealSecrets', true)
-                ->where('canRevealSshKeyPair', false));
+                ->where('canRevealSshKeyPair', false)
+                ->where('canManageScriptLog', true));
 
         $this->actingAs($this->admin)
             ->get(sprintf('/%s/platform/servers/%d/provisioning-status', config('app.admin_slug'), $server->id))

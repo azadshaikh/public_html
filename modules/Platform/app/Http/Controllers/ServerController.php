@@ -14,6 +14,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -35,6 +36,10 @@ use RuntimeException;
 
 class ServerController extends ScaffoldController implements HasMiddleware
 {
+    private const string ASTERO_SCRIPTS_LOG_PATH = '/usr/local/hestia/data/astero/logs/astero-scripts.log';
+
+    private const int ASTERO_SCRIPTS_LOG_TAIL_LINES = 400;
+
     public function __construct(
         private readonly ServerService $serverService
     ) {}
@@ -43,8 +48,9 @@ class ServerController extends ScaffoldController implements HasMiddleware
     {
         return [
             new Middleware('permission:view_servers', only: ['index', 'show', 'data', 'websites', 'optimizationTool']),
+            new Middleware('permission:view_servers', only: ['scriptLog']),
             new Middleware('permission:add_servers', only: ['create', 'createWizard', 'store', 'generateSSHKey', 'verifyConnection']),
-            new Middleware('permission:edit_servers', only: ['edit', 'update', 'generateSSHKey', 'updateReleases', 'syncServer', 'updateScripts', 'testConnection', 'provision', 'executeProvisioningStep', 'retryProvisioning', 'reprovisionServer', 'stopProvisioning', 'revealSecret', 'revealSshKeyPair', 'revealAccessKeySecret']),
+            new Middleware('permission:edit_servers', only: ['edit', 'update', 'generateSSHKey', 'updateReleases', 'syncServer', 'updateScripts', 'testConnection', 'provision', 'executeProvisioningStep', 'retryProvisioning', 'reprovisionServer', 'stopProvisioning', 'revealSecret', 'revealSshKeyPair', 'revealAccessKeySecret', 'clearScriptLog']),
             new Middleware('permission:delete_servers', only: ['destroy', 'bulkAction', 'forceDelete']),
             new Middleware('permission:restore_servers', only: ['restore']),
         ];
@@ -245,6 +251,49 @@ class ServerController extends ScaffoldController implements HasMiddleware
             'metadataItems' => $this->buildServerMetadataItems($server),
             'canRevealSecrets' => $canRevealSecrets,
             'canRevealSshKeyPair' => $canRevealSshKeyPair,
+            'canManageScriptLog' => (bool) $currentUser?->can('edit_servers'),
+        ]);
+    }
+
+    public function scriptLog(int|string $server): JsonResponse
+    {
+        /** @var Server $serverModel */
+        $serverModel = $this->findModel((int) $server);
+        $sshService = resolve(ServerSSHService::class);
+        $result = $sshService->executeCommand($serverModel, $this->buildScriptLogReadCommand(), 30);
+
+        if (! ($result['success'] ?? false)) {
+            return response()->json([
+                'success' => false,
+                'message' => $result['message'] ?? 'Unable to read Astero script log.',
+            ], 500);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $this->parseScriptLogOutput((string) data_get($result, 'data.output', '')),
+        ]);
+    }
+
+    public function clearScriptLog(int|string $server): JsonResponse
+    {
+        /** @var Server $serverModel */
+        $serverModel = $this->findModel((int) $server);
+        $sshService = resolve(ServerSSHService::class);
+        $result = $sshService->executeCommand($serverModel, $this->buildScriptLogClearCommand(), 30);
+
+        if (! ($result['success'] ?? false)) {
+            return response()->json([
+                'success' => false,
+                'message' => $result['message'] ?? 'Unable to clear Astero script log.',
+            ], 500);
+        }
+
+        $this->logActivity($serverModel, ActivityAction::UPDATE, 'Cleared Astero scripts log.');
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Astero scripts log cleared successfully.',
         ]);
     }
 
@@ -1503,6 +1552,74 @@ class ServerController extends ScaffoldController implements HasMiddleware
 
             return ['success' => false, 'message' => $exception->getMessage()];
         }
+    }
+
+    private function buildScriptLogReadCommand(): string
+    {
+        $logPath = self::ASTERO_SCRIPTS_LOG_PATH;
+        $tailLines = self::ASTERO_SCRIPTS_LOG_TAIL_LINES;
+        $script = <<<BASH
+LOG="{$logPath}"
+if [ -f "\$LOG" ]; then
+    SIZE=\$(wc -c < "\$LOG" | tr -d ' ')
+    MTIME=\$(date -r "\$LOG" +%s 2>/dev/null || stat -c %Y "\$LOG" 2>/dev/null || printf '')
+    printf '__ASTERO_EXISTS__=1\n__ASTERO_SIZE__=%s\n__ASTERO_MTIME__=%s\n__ASTERO_CONTENT_START__\n' "\$SIZE" "\$MTIME"
+    tail -n {$tailLines} "\$LOG"
+else
+    printf '__ASTERO_EXISTS__=0\n__ASTERO_SIZE__=0\n__ASTERO_MTIME__=\n__ASTERO_CONTENT_START__\n'
+fi
+BASH;
+
+        return 'bash -lc '.escapeshellarg($script);
+    }
+
+    private function buildScriptLogClearCommand(): string
+    {
+        $logPath = self::ASTERO_SCRIPTS_LOG_PATH;
+        $script = <<<BASH
+LOG="{$logPath}"
+mkdir -p "\$(dirname "\$LOG")"
+: > "\$LOG"
+BASH;
+
+        return 'bash -lc '.escapeshellarg($script);
+    }
+
+    /**
+     * @return array{
+     *   path: string,
+     *   exists: bool,
+     *   size_bytes: int,
+     *   modified_at: string|null,
+     *   tail_lines: int,
+     *   content: string
+     * }
+     */
+    private function parseScriptLogOutput(string $output): array
+    {
+        preg_match('/^__ASTERO_EXISTS__=(?<exists>[01])$/m', $output, $existsMatch);
+        preg_match('/^__ASTERO_SIZE__=(?<size>\d+)$/m', $output, $sizeMatch);
+        preg_match('/^__ASTERO_MTIME__=(?<mtime>\d+)?$/m', $output, $mtimeMatch);
+
+        $contentMarker = "__ASTERO_CONTENT_START__\n";
+        $content = str_contains($output, $contentMarker)
+            ? explode($contentMarker, $output, 2)[1]
+            : '';
+
+        $modifiedAt = null;
+        $mtime = $mtimeMatch['mtime'] ?? null;
+        if (is_string($mtime) && $mtime !== '') {
+            $modifiedAt = app_date_time_format(Carbon::createFromTimestamp((int) $mtime), 'datetime');
+        }
+
+        return [
+            'path' => self::ASTERO_SCRIPTS_LOG_PATH,
+            'exists' => ($existsMatch['exists'] ?? '0') === '1',
+            'size_bytes' => (int) ($sizeMatch['size'] ?? 0),
+            'modified_at' => $modifiedAt,
+            'tail_lines' => self::ASTERO_SCRIPTS_LOG_TAIL_LINES,
+            'content' => rtrim($content),
+        ];
     }
 
     private function formatProvisioningTimestamp(mixed $value): ?string

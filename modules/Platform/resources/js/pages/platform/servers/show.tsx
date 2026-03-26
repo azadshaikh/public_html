@@ -1,6 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { ExternalLinkIcon, PencilIcon } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -16,8 +16,9 @@ import type {
     ServerShowData,
 } from '../../../types/platform';
 import { ServerShowOverview } from './components/server-show-overview';
-import { INITIAL_CONFIRM, type ConfirmState, useOperationAction } from './components/show-shared';
 import { ServerShowTabs } from './components/server-show-tabs';
+import { INITIAL_CONFIRM, useOperationAction } from './components/show-shared';
+import type { ConfirmState } from './components/show-shared';
 
 type ServersShowPageProps = {
     server: ServerShowData;
@@ -35,6 +36,7 @@ type ServersShowPageProps = {
     metadataItems: ServerMetadataItem[];
     canRevealSecrets: boolean;
     canRevealSshKeyPair: boolean;
+    canManageScriptLog: boolean;
 };
 
 export default function ServersShow({
@@ -48,6 +50,7 @@ export default function ServersShow({
     metadataItems,
     canRevealSecrets,
     canRevealSshKeyPair,
+    canManageScriptLog,
 }: ServersShowPageProps) {
     const [confirm, setConfirm] = useState<ConfirmState>(INITIAL_CONFIRM);
     const { processing, perform } = useOperationAction();
@@ -56,14 +59,6 @@ export default function ServersShow({
         ? 'provision'
         : 'general';
     const [activeTab, setActiveTab] = useState(defaultTab);
-
-    useEffect(() => {
-        setActiveTab(
-            server.provisioning_status === 'provisioning' || server.provisioning_status === 'failed'
-                ? 'provision'
-                : 'general',
-        );
-    }, [server.id, server.provisioning_status]);
 
     function openConfirm(
         title: string,
@@ -135,6 +130,7 @@ export default function ServersShow({
                     metadataItems={metadataItems}
                     canRevealSecrets={canRevealSecrets}
                     canRevealSshKeyPair={canRevealSshKeyPair}
+                    canManageScriptLog={canManageScriptLog}
                     provisioningSteps={provisioningSteps}
                     provisioningRun={provisioningRun}
                     activities={activities}

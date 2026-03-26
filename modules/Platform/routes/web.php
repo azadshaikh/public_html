@@ -69,6 +69,12 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
                 ->middleware('throttle:10,1')
                 ->name('test-connection')
                 ->whereNumber('server');
+            Route::get('/{server}/script-log', [ServerController::class, 'scriptLog'])
+                ->name('script-log.show')
+                ->whereNumber('server');
+            Route::delete('/{server}/script-log', [ServerController::class, 'clearScriptLog'])
+                ->name('script-log.clear')
+                ->whereNumber('server');
             Route::post('/{server}/retry-provisioning', [ServerController::class, 'retryProvisioning'])->name('retry-provisioning')->whereNumber('server');
             Route::post('/{server}/reprovision', [ServerController::class, 'reprovisionServer'])->name('reprovision')->whereNumber('server');
             Route::post('/{server}/stop-provisioning', [ServerController::class, 'stopProvisioning'])->name('stop-provisioning')->whereNumber('server');

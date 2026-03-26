@@ -1,4 +1,4 @@
-import { ActivityIcon, Building2Icon, CodeIcon, GlobeIcon, InfoIcon, KeyRoundIcon, ListChecksIcon, StickyNoteIcon } from 'lucide-react';
+import { ActivityIcon, Building2Icon, CodeIcon, FileTextIcon, GlobeIcon, InfoIcon, KeyRoundIcon, ListChecksIcon, StickyNoteIcon } from 'lucide-react';
 import type { Dispatch, SetStateAction } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -13,10 +13,11 @@ import type {
     ServerSecretItem,
     ServerShowData,
 } from '../../../../types/platform';
-import { InfoRow } from './show-shared';
 import { ServerProvisioningStepsTable } from './server-provisioning-steps-table';
+import { ServerScriptLogTab } from './server-script-log-tab';
 import { ServerSecretsPanel } from './server-secrets-panel';
 import { ServerWebsitesTab } from './server-websites-tab';
+import { InfoRow } from './show-shared';
 
 type ServerShowTabsProps = {
     activeTab: string;
@@ -28,6 +29,7 @@ type ServerShowTabsProps = {
     metadataItems: ServerMetadataItem[];
     canRevealSecrets: boolean;
     canRevealSshKeyPair: boolean;
+    canManageScriptLog: boolean;
     provisioningSteps: ServerProvisioningStep[];
     provisioningRun: ProvisioningRunTimestamps;
     activities: PlatformActivity[];
@@ -43,6 +45,7 @@ export function ServerShowTabs({
     metadataItems,
     canRevealSecrets,
     canRevealSshKeyPair,
+    canManageScriptLog,
     provisioningSteps,
     provisioningRun,
     activities,
@@ -93,6 +96,10 @@ export function ServerShowTabs({
                 <TabsTrigger value="metadata" className={cn(!isMobile && 'shrink-0')}>
                     <CodeIcon data-icon="inline-start" />
                     Metadata
+                </TabsTrigger>
+                <TabsTrigger value="logs" className={cn(!isMobile && 'shrink-0')}>
+                    <FileTextIcon data-icon="inline-start" />
+                    Logs
                 </TabsTrigger>
                 <TabsTrigger value="activity" className={cn(!isMobile && 'shrink-0')}>
                     <ActivityIcon data-icon="inline-start" />
@@ -221,6 +228,18 @@ export function ServerShowTabs({
                                 ))}
                             </div>
                         )}
+                    </CardContent>
+                </Card>
+            </TabsContent>
+
+            <TabsContent value="logs">
+                <Card>
+                    <CardContent className="pt-6">
+                        <ServerScriptLogTab
+                            serverId={server.id}
+                            active={activeTab === 'logs'}
+                            canManageScriptLog={canManageScriptLog}
+                        />
                     </CardContent>
                 </Card>
             </TabsContent>
