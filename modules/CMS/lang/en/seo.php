@@ -297,16 +297,4 @@ return [
     'delete_redirection' => 'Delete Redirection',
     'confirm_delete_redirection' => 'Are you sure you want to delete this redirection?',
 
-    // Import & Export
-    'import_export' => 'Import & Export',
-    'export_seo_settings' => 'Export SEO Settings',
-    'import_seo_settings' => 'Import SEO Settings',
-    'export' => 'Export',
-    'import' => 'Import',
-    'exporting' => 'Exporting',
-    'importing' => 'Importing',
-    'export_description' => 'Download all your SEO settings as a backup file. You can use this file to restore settings later or transfer them to another site.',
-    'import_description' => 'Upload a previously exported SEO settings file to restore your configuration.',
-    'settings_included' => 'Settings Included',
-
 ];

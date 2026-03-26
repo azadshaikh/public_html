@@ -2,12 +2,10 @@ import {
     ExternalLinkIcon,
     ImageIcon,
     SaveIcon,
-    Share2Icon,
 } from 'lucide-react';
 import type { FormEvent } from 'react';
 import { FormErrorSummary } from '@/components/forms/form-error-summary';
 import { MediaPickerField } from '@/components/media/media-picker-field';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -31,12 +29,9 @@ import {
 } from '@/components/ui/native-select';
 import { Spinner } from '@/components/ui/spinner';
 import { useAppForm } from '@/hooks/use-app-form';
-import SettingsLayout from '@/layouts/settings-layout';
 import { formValidators } from '@/lib/forms';
-import {
-    getSeoSettingsBreadcrumbs,
-    getSeoSettingsNav,
-} from '../../../lib/seo-settings';
+import SeoSettingsShell from '../../../components/seo-settings-shell';
+import { getSeoSettingsBreadcrumbs } from '../../../lib/seo-settings';
 import type {
     SocialMediaFormValues,
     SocialMediaPageProps,
@@ -95,13 +90,9 @@ export default function SeoSocialMediaPage({
     };
 
     return (
-        <SettingsLayout
-            settingsNav={getSeoSettingsNav()}
+        <SeoSettingsShell
             breadcrumbs={getSeoSettingsBreadcrumbs('Social Media')}
             title="Social Media"
-            description="Tune the metadata used when your pages are shared across Facebook, X, messaging apps, and other social surfaces."
-            activeSlug="socialmedia"
-            railLabel="SEO settings"
         >
             <form
                 className="flex flex-col gap-6"
@@ -110,15 +101,6 @@ export default function SeoSocialMediaPage({
             >
                 {form.dirtyGuardDialog}
                 <FormErrorSummary errors={form.errors} minMessages={2} />
-
-                <Alert>
-                    <Share2Icon className="size-4" />
-                    <AlertTitle>Sharable defaults</AlertTitle>
-                    <AlertDescription>
-                        These settings act as fallbacks whenever a page or post
-                        does not define its own social metadata.
-                    </AlertDescription>
-                </Alert>
 
                 <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
                     <div className="flex min-w-0 flex-col gap-6">
@@ -395,6 +377,6 @@ export default function SeoSocialMediaPage({
                     </div>
                 </div>
             </form>
-        </SettingsLayout>
+        </SeoSettingsShell>
     );
 }

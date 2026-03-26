@@ -37,12 +37,9 @@ import { Spinner } from '@/components/ui/spinner';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { useAppForm } from '@/hooks/use-app-form';
-import SettingsLayout from '@/layouts/settings-layout';
 import { formValidators } from '@/lib/forms';
-import {
-    getSeoSettingsBreadcrumbs,
-    getSeoSettingsNav,
-} from '../../../lib/seo-settings';
+import SeoSettingsShell from '../../../components/seo-settings-shell';
+import { getSeoSettingsBreadcrumbs } from '../../../lib/seo-settings';
 import type { LocalSeoFormValues, LocalSeoPageProps } from '../../../types/seo';
 
 function optionalUrlValidator(label: string) {
@@ -183,13 +180,9 @@ export default function SeoLocalSeoPage({
     const rows = Math.max(form.data.opening_hour_day.length, 1);
 
     return (
-        <SettingsLayout
-            settingsNav={getSeoSettingsNav()}
+        <SeoSettingsShell
             breadcrumbs={getSeoSettingsBreadcrumbs('Local SEO')}
             title="Local SEO"
-            description="Publish structured business details for map packs, knowledge panels, and richer local search results."
-            activeSlug="localseo"
-            railLabel="SEO settings"
         >
             <form
                 className="flex flex-col gap-6"
@@ -201,16 +194,6 @@ export default function SeoLocalSeoPage({
 
                 <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
                     <div className="flex min-w-0 flex-col gap-6">
-                        <Alert>
-                            <SparklesIcon className="size-4" />
-                            <AlertTitle>Improve local visibility</AlertTitle>
-                            <AlertDescription>
-                                Complete profiles with consistent business
-                                details help search engines trust and surface
-                                your brand more often.
-                            </AlertDescription>
-                        </Alert>
-
                         <Card>
                             <CardHeader>
                                 <div className="flex items-center justify-between gap-4">
@@ -1147,6 +1130,6 @@ export default function SeoLocalSeoPage({
                     </div>
                 </div>
             </form>
-        </SettingsLayout>
+        </SeoSettingsShell>
     );
 }

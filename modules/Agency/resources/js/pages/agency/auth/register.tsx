@@ -1,6 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { ArrowLeftIcon, ChevronRightIcon } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import PasswordInput from '@/components/password-input';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import { useAppForm } from '@/hooks/use-app-form';
+import { registerSocialLoginPendingReset } from '@/lib/social-login-pending-reset';
 import AgencyAuthLayout from '../../../components/agency-auth-layout';
 import AgencySocialAuthOptions from '../../../components/agency-social-auth-options';
 
@@ -44,6 +45,12 @@ export default function AgencyRegister({
             form.invalid('password') ||
             form.invalid('password_confirmation'),
     );
+
+    useEffect(() => {
+        return registerSocialLoginPendingReset(window, () => {
+            setLoadingProvider(null);
+        });
+    }, []);
 
     const submit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();

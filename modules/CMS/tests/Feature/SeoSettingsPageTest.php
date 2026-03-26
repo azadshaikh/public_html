@@ -11,6 +11,7 @@ use App\Models\Settings;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\File;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -47,6 +48,13 @@ class SeoSettingsPageTest extends TestCase
         $this->admin->givePermissionTo(['manage_seo_settings', 'manage_cms_seo_settings']);
     }
 
+    protected function tearDown(): void
+    {
+        File::delete(public_path('robots.txt'));
+
+        parent::tearDown();
+    }
+
     public function test_guests_are_redirected_from_seo_settings_pages(): void
     {
         $this->get(route('seo.dashboard'))
@@ -75,7 +83,7 @@ class SeoSettingsPageTest extends TestCase
         $this->saveSetting('seo_local_seo', 'name', 'Xip One');
         $this->saveSetting('seo_social_media', 'twitter_username', '@xipone');
         $this->saveSetting('seo', 'enable_article_schema', 'true', 'boolean');
-        $this->saveSetting('seo_robots', 'robots_txt', "User-agent: *\nDisallow:");
+        File::put(public_path('robots.txt'), "User-agent: *\nDisallow:");
 
         $this->actingAs($this->admin)
             ->get(route('seo.settings.titlesmeta'))
@@ -132,14 +140,13 @@ class SeoSettingsPageTest extends TestCase
                 ->has('robotsUrl')
                 ->has('sitemapUrl')
             );
+    }
 
-        $this->actingAs($this->admin)
-            ->get(route('seo.settings.importexport'))
-            ->assertOk()
-            ->assertInertia(fn (Assert $page): Assert => $page
-                ->component('seo/settings/import-export')
-                ->has('seoGroups')
-            );
+    public function test_removed_seo_import_export_routes_are_not_registered(): void
+    {
+        $this->assertFalse(app('router')->has('seo.settings.importexport'));
+        $this->assertFalse(app('router')->has('seo.settings.export'));
+        $this->assertFalse(app('router')->has('seo.settings.import'));
     }
 
     public function test_admin_can_update_local_seo_settings(): void

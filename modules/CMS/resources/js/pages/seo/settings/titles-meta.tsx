@@ -1,11 +1,16 @@
 import {
     AlertTriangleIcon,
+    FileIcon,
     FileSearchIcon,
+    FileTextIcon,
     Layers3Icon,
     SaveIcon,
     SearchIcon,
     Settings2Icon,
+    TagsIcon,
+    UsersIcon,
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import { FormErrorSummary } from '@/components/forms/form-error-summary';
@@ -33,15 +38,12 @@ import {
 } from '@/components/ui/native-select';
 import { Spinner } from '@/components/ui/spinner';
 import { Switch } from '@/components/ui/switch';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { useAppForm } from '@/hooks/use-app-form';
-import SettingsLayout from '@/layouts/settings-layout';
 import { formValidators } from '@/lib/forms';
-import {
-    getSeoSettingsBreadcrumbs,
-    getSeoSettingsNav,
-} from '../../../lib/seo-settings';
+import { cn } from '@/lib/utils';
+import SeoSettingsShell from '../../../components/seo-settings-shell';
+import { getSeoSettingsBreadcrumbs } from '../../../lib/seo-settings';
 import type {
     TitlesMetaGeneralValues,
     TitlesMetaPageProps,
@@ -50,15 +52,18 @@ import type {
     TitlesMetaTemplateValues,
 } from '../../../types/seo';
 
-const sectionLabels: Record<TitlesMetaSectionKey, string> = {
-    general: 'General',
-    posts: 'Posts',
-    pages: 'Pages',
-    categories: 'Categories',
-    tags: 'Tags',
-    authors: 'Authors',
-    search: 'Search',
-    error_page: 'Error Pages',
+const sectionMeta: Record<
+    TitlesMetaSectionKey,
+    { label: string; icon: LucideIcon }
+> = {
+    general: { label: 'General', icon: Settings2Icon },
+    posts: { label: 'Posts', icon: FileTextIcon },
+    pages: { label: 'Pages', icon: FileIcon },
+    categories: { label: 'Categories', icon: Layers3Icon },
+    tags: { label: 'Tags', icon: TagsIcon },
+    authors: { label: 'Authors', icon: UsersIcon },
+    search: { label: 'Search', icon: SearchIcon },
+    error_page: { label: 'Error Pages', icon: AlertTriangleIcon },
 };
 
 function GeneralSettingsForm({
@@ -612,70 +617,82 @@ export default function SeoTitlesMetaPage({
         [sections],
     );
 
-    const activeLabel = sectionLabels[currentSection];
-
     return (
-        <SettingsLayout
-            settingsNav={getSeoSettingsNav()}
+        <SeoSettingsShell
             breadcrumbs={getSeoSettingsBreadcrumbs('Titles & Meta')}
             title="Titles & Meta"
-            description="Manage global title formats, archive defaults, and crawl directives for every CMS surface."
-            activeSlug="titlesmeta"
-            railLabel="SEO settings"
         >
             <div className="flex flex-col gap-6">
-                <Alert>
-                    <SearchIcon className="size-4" />
-                    <AlertTitle>{activeLabel} templates</AlertTitle>
-                    <AlertDescription>
-                        Keep templates readable, consistent, and focused on
-                        primary keywords. Content-specific overrides still win
-                        when provided.
-                    </AlertDescription>
-                </Alert>
+                <div className="grid gap-6 xl:grid-cols-[240px_minmax(0,1fr)] xl:items-start">
+                    <aside className="xl:sticky xl:top-24">
+                        <div className="rounded-xl border border-border/70 bg-muted/60 p-2.5">
+                            <div className="px-2.5 pt-1.5 pb-2.5">
+                                <p className="text-[10px] font-medium tracking-[0.12em] text-muted-foreground/70 uppercase">
+                                    Titles & meta
+                                </p>
+                            </div>
 
-                <Tabs
-                    value={currentSection}
-                    onValueChange={(value) =>
-                        setCurrentSection(value as TitlesMetaSectionKey)
-                    }
-                >
-                    <TabsList
-                        variant="line"
-                        className="flex h-auto flex-wrap gap-2 rounded-xl border bg-background p-2"
-                    >
-                        {Object.entries(sectionLabels).map(([key, label]) => (
-                            <TabsTrigger
-                                key={key}
-                                value={key}
-                                className="rounded-lg px-3 py-2"
+                            <nav
+                                className="grid gap-1"
+                                aria-label="Titles and meta sections"
                             >
-                                {label}
-                            </TabsTrigger>
-                        ))}
-                    </TabsList>
+                                {Object.entries(sectionMeta).map(
+                                    ([key, { label, icon: Icon }]) => (
+                                        <Button
+                                            key={key}
+                                            type="button"
+                                            size="sm"
+                                            variant="ghost"
+                                            className={cn(
+                                                'h-auto w-full justify-start rounded-[min(var(--radius-md),12px)] px-2.5 py-2 text-sm leading-5 text-foreground/70 hover:bg-background/80 hover:text-foreground',
+                                                key === currentSection &&
+                                                    'bg-background font-medium text-foreground shadow-xs',
+                                            )}
+                                            onClick={() =>
+                                                setCurrentSection(
+                                                    key as TitlesMetaSectionKey,
+                                                )
+                                            }
+                                        >
+                                            <Icon
+                                                className={cn(
+                                                    'size-4 shrink-0 text-foreground/55',
+                                                    key === currentSection &&
+                                                        'text-foreground',
+                                                )}
+                                            />
+                                            <span className="min-w-0 truncate">
+                                                {label}
+                                            </span>
+                                        </Button>
+                                    ),
+                                )}
+                            </nav>
+                        </div>
+                    </aside>
 
-                    <TabsContent value="general" className="mt-6">
-                        <GeneralSettingsForm
-                            initialValues={generalInitialValues}
-                            urlExtensionOptions={urlExtensionOptions}
-                        />
-                    </TabsContent>
-
-                    {sections.map((section) => (
-                        <TabsContent
-                            key={section.key}
-                            value={section.key}
-                            className="mt-6"
-                        >
+                    <div className="min-w-0">
+                        {currentSection === 'general' ? (
+                            <GeneralSettingsForm
+                                initialValues={generalInitialValues}
+                                urlExtensionOptions={urlExtensionOptions}
+                            />
+                        ) : (
                             <TemplateSectionForm
-                                section={sectionMap[section.key]}
+                                section={
+                                    sectionMap[
+                                        currentSection as Exclude<
+                                            TitlesMetaSectionKey,
+                                            'general'
+                                        >
+                                    ]
+                                }
                                 metaRobotsOptions={metaRobotsOptions}
                             />
-                        </TabsContent>
-                    ))}
-                </Tabs>
+                        )}
+                    </div>
+                </div>
             </div>
-        </SettingsLayout>
+        </SeoSettingsShell>
     );
 }

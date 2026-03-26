@@ -154,10 +154,6 @@ export type RobotsPageProps = {
     sitemapUrl: string;
 };
 
-export type ImportExportPageProps = {
-    seoGroups: string[];
-};
-
 export type SeoDashboardQuickLinkKey =
     | 'titlesmeta'
     | 'localseo'

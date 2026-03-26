@@ -1,7 +1,6 @@
-import { BotIcon, ExternalLinkIcon, SaveIcon } from 'lucide-react';
+import { ExternalLinkIcon, SaveIcon } from 'lucide-react';
 import type { FormEvent } from 'react';
 import { FormErrorSummary } from '@/components/forms/form-error-summary';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -20,11 +19,8 @@ import {
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import { useAppForm } from '@/hooks/use-app-form';
-import SettingsLayout from '@/layouts/settings-layout';
-import {
-    getSeoSettingsBreadcrumbs,
-    getSeoSettingsNav,
-} from '../../../lib/seo-settings';
+import SeoSettingsShell from '../../../components/seo-settings-shell';
+import { getSeoSettingsBreadcrumbs } from '../../../lib/seo-settings';
 import type { RobotsFormValues, RobotsPageProps } from '../../../types/seo';
 
 export default function SeoRobotsPage({
@@ -52,13 +48,9 @@ export default function SeoRobotsPage({
     };
 
     return (
-        <SettingsLayout
-            settingsNav={getSeoSettingsNav()}
+        <SeoSettingsShell
             breadcrumbs={getSeoSettingsBreadcrumbs('Robots.txt')}
             title="Robots.txt"
-            description="Control how crawlers discover and access your public URLs."
-            activeSlug="robots"
-            railLabel="SEO settings"
         >
             <form
                 className="flex flex-col gap-6"
@@ -67,15 +59,6 @@ export default function SeoRobotsPage({
             >
                 {form.dirtyGuardDialog}
                 <FormErrorSummary errors={form.errors} minMessages={2} />
-
-                <Alert>
-                    <BotIcon className="size-4" />
-                    <AlertTitle>Recommended baseline</AlertTitle>
-                    <AlertDescription>
-                        Keep your sitemap reference present unless you
-                        intentionally want crawlers to ignore discovery hints.
-                    </AlertDescription>
-                </Alert>
 
                 <Card>
                     <CardHeader>
@@ -145,6 +128,6 @@ export default function SeoRobotsPage({
                     </CardFooter>
                 </Card>
             </form>
-        </SettingsLayout>
+        </SeoSettingsShell>
     );
 }

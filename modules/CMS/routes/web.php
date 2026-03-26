@@ -423,11 +423,6 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
                 ->defaults('master_group', 'common')
                 ->defaults('file_name', 'robots');
 
-            // Import & Export Routes
-            Route::get('/importexport', [SeoSettingController::class, 'importExport'])->name('importexport');
-            Route::post('/export', [SeoSettingController::class, 'exportSeoSettings'])->name('export');
-            Route::post('/import', [SeoSettingController::class, 'importSeoSettings'])->name('import');
-
             // Legacy routes for backward compatibility
             Route::get('/{master_group}/{file_name}', [SeoSettingController::class, 'index'])->name('index');
             Route::post('/{master_group}/{file_name}/update', [SeoSettingController::class, 'update'])->name('update');

@@ -31,6 +31,7 @@ type SettingsLayoutProps = {
     description?: string;
     railLabel?: string;
     activeSlug?: string;
+    showRail?: boolean;
 };
 
 const settingsIcons: Record<string, LucideIcon> = {
@@ -59,6 +60,7 @@ export default function SettingsLayout({
     description,
     railLabel,
     activeSlug,
+    showRail = true,
 }: SettingsLayoutProps) {
     const { url } = usePage();
     const pathname = url.split('?')[0];
@@ -82,59 +84,67 @@ export default function SettingsLayout({
             title={title}
             description={description}
         >
-            <div className="flex w-full flex-col gap-6 lg:grid lg:grid-cols-[248px_minmax(0,1fr)] lg:items-start lg:gap-8 xl:grid-cols-[264px_minmax(0,1fr)]">
-                <aside className="w-full lg:sticky lg:top-24">
-                    <div className="rounded-xl border border-border/70 bg-muted/60 p-2.5">
-                        <div className="px-2.5 pt-1.5 pb-2.5">
-                            <p className="text-[10px] font-medium tracking-[0.12em] text-muted-foreground/70 uppercase">
-                                {resolvedRailLabel}
-                            </p>
+            {showRail ? (
+                <div className="flex w-full flex-col gap-6 lg:grid lg:grid-cols-[248px_minmax(0,1fr)] lg:items-start lg:gap-8 xl:grid-cols-[264px_minmax(0,1fr)]">
+                    <aside className="w-full lg:sticky lg:top-24">
+                        <div className="rounded-xl border border-border/70 bg-muted/60 p-2.5">
+                            <div className="px-2.5 pt-1.5 pb-2.5">
+                                <p className="text-[10px] font-medium tracking-[0.12em] text-muted-foreground/70 uppercase">
+                                    {resolvedRailLabel}
+                                </p>
+                            </div>
+
+                            <nav
+                                className="grid gap-1"
+                                aria-label={resolvedRailLabel}
+                            >
+                                {settingsNav.map((item) => {
+                                    const Icon =
+                                        item.icon ??
+                                        settingsIcons[item.slug] ??
+                                        BellRingIcon;
+
+                                    return (
+                                        <Button
+                                            key={item.slug}
+                                            size="sm"
+                                            variant="ghost"
+                                            asChild
+                                            className={cn(
+                                                'h-auto w-full min-w-0 justify-start rounded-[min(var(--radius-md),12px)] px-2.5 py-2 text-sm leading-5 text-foreground/70 hover:bg-background/80 hover:text-foreground',
+                                                item.slug ===
+                                                    resolvedActiveSlug &&
+                                                    'bg-background font-medium text-foreground shadow-xs',
+                                            )}
+                                        >
+                                            <Link
+                                                href={item.href}
+                                                preserveScroll
+                                            >
+                                                <Icon
+                                                    className={cn(
+                                                        'size-4 text-foreground/65',
+                                                        item.slug ===
+                                                            resolvedActiveSlug &&
+                                                            'text-foreground',
+                                                    )}
+                                                />
+                                                <span className="min-w-0 truncate">
+                                                    {item.label}
+                                                </span>
+                                            </Link>
+                                        </Button>
+                                    );
+                                })}
+                            </nav>
                         </div>
+                    </aside>
 
-                        <nav
-                            className="grid gap-1"
-                            aria-label={resolvedRailLabel}
-                        >
-                            {settingsNav.map((item) => {
-                                const Icon =
-                                    item.icon ??
-                                    settingsIcons[item.slug] ??
-                                    BellRingIcon;
-
-                                return (
-                                    <Button
-                                        key={item.slug}
-                                        size="sm"
-                                        variant="ghost"
-                                        asChild
-                                        className={cn(
-                                            'h-auto w-full min-w-0 justify-start rounded-[min(var(--radius-md),12px)] px-2.5 py-2 text-sm leading-5 text-foreground/70 hover:bg-background/80 hover:text-foreground',
-                                            item.slug === resolvedActiveSlug &&
-                                                'bg-background font-medium text-foreground shadow-xs',
-                                        )}
-                                    >
-                                        <Link href={item.href} preserveScroll>
-                                            <Icon
-                                                className={cn(
-                                                    'size-4 text-foreground/65',
-                                                    item.slug ===
-                                                        resolvedActiveSlug &&
-                                                        'text-foreground',
-                                                )}
-                                            />
-                                            <span className="min-w-0 truncate">
-                                                {item.label}
-                                            </span>
-                                        </Link>
-                                    </Button>
-                                );
-                            })}
-                        </nav>
-                    </div>
-                </aside>
-
-                <div className="w-full min-w-0 flex-1">{children}</div>
-            </div>
+                    <div className="w-full min-w-0 flex-1">{children}</div>
+                </div>
+            ) : (
+                <div className="w-full min-w-0">{children}</div>
+            )}
         </AppLayout>
     );
 }

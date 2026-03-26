@@ -1,7 +1,6 @@
-import { BracesIcon, SaveIcon, WaypointsIcon } from 'lucide-react';
+import { SaveIcon, WaypointsIcon } from 'lucide-react';
 import type { FormEvent } from 'react';
 import { FormErrorSummary } from '@/components/forms/form-error-summary';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -15,11 +14,8 @@ import { Field, FieldDescription, FieldLabel } from '@/components/ui/field';
 import { Spinner } from '@/components/ui/spinner';
 import { Switch } from '@/components/ui/switch';
 import { useAppForm } from '@/hooks/use-app-form';
-import SettingsLayout from '@/layouts/settings-layout';
-import {
-    getSeoSettingsBreadcrumbs,
-    getSeoSettingsNav,
-} from '../../../lib/seo-settings';
+import SeoSettingsShell from '../../../components/seo-settings-shell';
+import { getSeoSettingsBreadcrumbs } from '../../../lib/seo-settings';
 import type { SchemaFormValues, SchemaPageProps } from '../../../types/seo';
 
 export default function SeoSchemaPage({ initialValues }: SchemaPageProps) {
@@ -44,13 +40,9 @@ export default function SeoSchemaPage({ initialValues }: SchemaPageProps) {
     };
 
     return (
-        <SettingsLayout
-            settingsNav={getSeoSettingsNav()}
+        <SeoSettingsShell
             breadcrumbs={getSeoSettingsBreadcrumbs('Schema')}
             title="Schema"
-            description="Choose which site-wide structured data enhancements are enabled by default."
-            activeSlug="schema"
-            railLabel="SEO settings"
         >
             <form
                 className="flex flex-col gap-6"
@@ -59,15 +51,6 @@ export default function SeoSchemaPage({ initialValues }: SchemaPageProps) {
             >
                 {form.dirtyGuardDialog}
                 <FormErrorSummary errors={form.errors} minMessages={2} />
-
-                <Alert>
-                    <BracesIcon className="size-4" />
-                    <AlertTitle>Structured data at a glance</AlertTitle>
-                    <AlertDescription>
-                        Schema improves how search engines interpret your
-                        content and can unlock richer result types.
-                    </AlertDescription>
-                </Alert>
 
                 <Card>
                     <CardHeader>
@@ -134,6 +117,6 @@ export default function SeoSchemaPage({ initialValues }: SchemaPageProps) {
                     </CardFooter>
                 </Card>
             </form>
-        </SettingsLayout>
+        </SeoSettingsShell>
     );
 }

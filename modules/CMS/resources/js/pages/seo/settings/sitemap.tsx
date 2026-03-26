@@ -22,11 +22,8 @@ import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import { Switch } from '@/components/ui/switch';
 import { useAppForm } from '@/hooks/use-app-form';
-import SettingsLayout from '@/layouts/settings-layout';
-import {
-    getSeoSettingsBreadcrumbs,
-    getSeoSettingsNav,
-} from '../../../lib/seo-settings';
+import SeoSettingsShell from '../../../components/seo-settings-shell';
+import { getSeoSettingsBreadcrumbs } from '../../../lib/seo-settings';
 import type { SitemapFormValues, SitemapPageProps } from '../../../types/seo';
 
 const labels: Record<
@@ -81,13 +78,9 @@ export default function SeoSitemapPage({
     };
 
     return (
-        <SettingsLayout
-            settingsNav={getSeoSettingsNav()}
+        <SeoSettingsShell
             breadcrumbs={getSeoSettingsBreadcrumbs('Sitemap')}
             title="Sitemap"
-            description="Control which content types are published to XML sitemaps and how often search engines can rediscover them."
-            activeSlug="sitemap"
-            railLabel="SEO settings"
         >
             <form
                 className="flex flex-col gap-6"
@@ -316,6 +309,6 @@ export default function SeoSitemapPage({
                     </div>
                 </div>
             </form>
-        </SettingsLayout>
+        </SeoSettingsShell>
     );
 }

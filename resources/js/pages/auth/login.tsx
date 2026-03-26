@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import AppHead from '@/components/app-head';
 import PasswordInput from '@/components/password-input';
@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { useAppForm } from '@/hooks/use-app-form';
 import AuthLayout from '@/layouts/auth-layout';
+import { registerSocialLoginPendingReset } from '@/lib/social-login-pending-reset';
 
 type Props = {
     status?: string;
@@ -43,6 +44,12 @@ export default function Login({
         rememberKey: 'auth.login',
         dontRemember: ['password'],
     });
+
+    useEffect(() => {
+        return registerSocialLoginPendingReset(window, () => {
+            setLoadingProvider(null);
+        });
+    }, []);
 
     const handleSocialLogin = (provider: 'google' | 'github') => {
         setLoadingProvider(provider);

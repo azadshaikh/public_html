@@ -168,9 +168,6 @@ return [
                         'seo.settings.schema*',
                         'seo.settings.sitemap*',
                         'seo.settings.robots*',
-                        'seo.settings.importexport*',
-                        'seo.settings.export*',
-                        'seo.settings.import*',
                     ],
                     'children' => [
                         'seo_dashboard' => [
@@ -245,16 +242,6 @@ return [
                             'quick_open' => [
                                 'aliases' => ['Robots.txt'],
                                 'keywords' => ['crawl rules', 'indexing rules', 'robots settings'],
-                            ],
-                        ],
-                        'seo_import_export' => [
-                            'label' => 'seo::seo.import_export',
-                            'route' => 'seo.settings.importexport',
-                            'permission' => 'manage_seo_settings',
-                            'active_patterns' => ['seo.settings.importexport', 'seo.settings.export', 'seo.settings.import'],
-                            'quick_open' => [
-                                'aliases' => ['SEO Import Export'],
-                                'keywords' => ['import seo settings', 'export seo settings', 'seo backup'],
                             ],
                         ],
                     ],
