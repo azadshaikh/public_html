@@ -43,6 +43,8 @@ class WebsiteProvision implements ShouldQueue
 
     private const int WEBSITE_SYNC_RETRY_DELAY_SECONDS = 5;
 
+    private const int WAITING_STEP_RETRY_DELAY_SECONDS = 30;
+
     /**
      * The website ID to be provisioned.
      */
@@ -86,8 +88,7 @@ class WebsiteProvision implements ShouldQueue
     {
         $this->queueMonitorLabel('Website #'.$this->websiteId);
         // Fetch the website - use withTrashed for consistency
-        /** @var Website|null $website */
-        $website = Website::withTrashed()->find($this->websiteId);
+        $website = $this->findWebsite();
 
         if (! $website) {
             Log::error('WebsiteProvision job failed: Website not found', [
@@ -124,6 +125,19 @@ class WebsiteProvision implements ShouldQueue
                 SendAgencyWebhook::dispatchForWebsite($website, 'website.status_changed', [
                     'status' => WebsiteStatus::WaitingForDns->value,
                     'message' => 'Website provisioning paused — waiting for DNS verification.',
+                ]);
+
+                return;
+            }
+
+            $waitingSteps = $this->waitingProvisioningSteps($website);
+            if ($waitingSteps !== []) {
+                $this->scheduleWaitingRetry($website);
+
+                Log::info('WebsiteProvision job paused — waiting for provisioning step readiness', [
+                    'website_id' => $website->id,
+                    'waiting_steps' => $waitingSteps,
+                    'retry_delay_seconds' => self::WAITING_STEP_RETRY_DELAY_SECONDS,
                 ]);
 
                 return;
@@ -192,8 +206,7 @@ class WebsiteProvision implements ShouldQueue
      */
     public function failed(Throwable $exception): void
     {
-        /** @var Website|null $website */
-        $website = Website::withTrashed()->find($this->websiteId);
+        $website = $this->findWebsite();
 
         if (! $website) {
             Log::error('WebsiteProvision failed() called but website not found', [
@@ -287,6 +300,33 @@ class WebsiteProvision implements ShouldQueue
         }
 
         $this->applyWebsiteVersionFallback($website);
+    }
+
+    protected function findWebsite(): ?Website
+    {
+        /** @var Website|null $website */
+        $website = Website::withTrashed()->find($this->websiteId);
+
+        return $website;
+    }
+
+    /**
+     * @return list<string>
+     */
+    protected function waitingProvisioningSteps(Website $website): array
+    {
+        return collect($website->getProvisioningSteps())
+            ->filter(fn (array $step): bool => ($step['status'] ?? null) === 'waiting')
+            ->keys()
+            ->values()
+            ->all();
+    }
+
+    protected function scheduleWaitingRetry(Website $website): void
+    {
+        static::dispatch($website)
+            ->delay(now()->addSeconds(self::WAITING_STEP_RETRY_DELAY_SECONDS))
+            ->onQueue($this->queue ?: 'default');
     }
 
     protected function performWebsiteSyncAttempt(WebsiteService $websiteService, Website $website): array

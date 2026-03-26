@@ -118,13 +118,10 @@ class ProvisionWebsiteCommand extends Command
                 // Call the individual command for the step
                 $exitCode = Artisan::call($step['command'], ['website_id' => $website->id]);
 
-                // Exit code 2 = WAITING (e.g., DNS propagation pending)
-                // Stop pipeline gracefully — poll job will resume when ready
+                // Exit code 2 = WAITING
                 if ($exitCode === 2) {
                     $website->refresh();
-                    $website->status = WebsiteStatus::WaitingForDns;
-                    $website->save();
-                    $this->info(sprintf('⏳ Provisioning paused at [%s]: waiting for DNS verification.', $key));
+                    $this->pauseForWaitingStep($website, $key);
 
                     return Command::SUCCESS;
                 }
@@ -184,5 +181,20 @@ class ProvisionWebsiteCommand extends Command
         $this->info('   Status: active | Expires: '.$website->expired_on);
 
         return Command::SUCCESS;
+    }
+
+    protected function pauseForWaitingStep(Website $website, string $stepKey): void
+    {
+        if ($stepKey === 'verify_dns') {
+            $website->status = WebsiteStatus::WaitingForDns;
+            $website->save();
+            $this->info(sprintf('⏳ Provisioning paused at [%s]: waiting for DNS verification.', $stepKey));
+
+            return;
+        }
+
+        $website->status = WebsiteStatus::Provisioning;
+        $website->save();
+        $this->info(sprintf('⏳ Provisioning paused at [%s]: waiting for step readiness.', $stepKey));
     }
 }
