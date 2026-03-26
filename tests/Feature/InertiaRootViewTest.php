@@ -6,12 +6,15 @@ use Tests\TestCase;
 
 class InertiaRootViewTest extends TestCase
 {
-    public function test_login_page_renders_inertia_root_title_fallback(): void
+    public function test_sign_in_page_renders_the_inertia_v3_root_shell(): void
     {
-        $response = $this->get(route('login'));
+        $response = $this->followingRedirects()->get(route('login'));
 
         $response
             ->assertOk()
-            ->assertSee('<title data-inertia>', false);
+            ->assertSee('<title data-inertia>', false)
+            ->assertDontSee('<title inertia>', false)
+            ->assertSee('<script data-page="app" type="application/json">', false)
+            ->assertSee('<div id="app"></div>', false);
     }
 }

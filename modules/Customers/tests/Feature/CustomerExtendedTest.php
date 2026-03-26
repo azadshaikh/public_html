@@ -3,30 +3,51 @@
 namespace Modules\Customers\Tests\Feature;
 
 use App\Enums\Status;
+use App\Models\Role;
 use App\Models\User;
 use App\Services\UserService;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schema;
+use Modules\Customers\Enums\AnnualRevenue;
 use Modules\Customers\Enums\CustomerSource;
 use Modules\Customers\Enums\CustomerTier;
 use Modules\Customers\Enums\Industry;
 use Modules\Customers\Models\Customer;
+use Modules\Customers\Providers\CustomersServiceProvider;
 use Modules\Customers\Services\CustomerService;
+use Tests\Support\InteractsWithModuleManifest;
 use Tests\TestCase;
 
 class CustomerExtendedTest extends TestCase
 {
+    use InteractsWithModuleManifest;
+    use RefreshDatabase;
     use WithFaker;
 
     protected function setUp(): void
     {
         parent::setUp();
+
         $this->withoutMiddleware(VerifyCsrfToken::class);
-        Artisan::call('astero:install', [
-            '--force' => true,
-            '--skipemail' => 'true',
+    }
+
+    protected function beforeRefreshingDatabase(): void
+    {
+        $this->setUpModuleManifest('customers-extended.json', [
+            'Customers' => 'enabled',
         ]);
+
+        $this->ensureCustomersModuleEnvironment();
+    }
+
+    protected function tearDown(): void
+    {
+        $this->tearDownModuleManifest();
+
+        parent::tearDown();
     }
 
     public function test_can_create_customer_with_extended_fields(): void
@@ -44,8 +65,8 @@ class CustomerExtendedTest extends TestCase
             'status' => 'active',
             'industry' => Industry::Technology->value,
             'account_manager_id' => $accountManager->id,
-            'org_size' => '50-100',
-            'revenue' => 1000000.50,
+            'org_size' => '51-200',
+            'revenue' => AnnualRevenue::RANGE_1M_5M->value,
             'opt_in_marketing' => true,
             'tags' => ['vip', 'tech-giant'],
             'additional_emails' => ['support@acme.com'],
@@ -256,5 +277,27 @@ class CustomerExtendedTest extends TestCase
         $user->forceDelete();
 
         $this->assertNull(Customer::withTrashed()->find($customer->id));
+    }
+
+    private function ensureCustomersModuleEnvironment(): void
+    {
+        if (! app()->providerIsLoaded(CustomersServiceProvider::class)) {
+            app()->register(CustomersServiceProvider::class);
+        }
+
+        if (! Schema::hasTable('customers_customers')) {
+            Artisan::call('migrate', [
+                '--path' => base_path('modules/Customers/database/migrations'),
+                '--realpath' => true,
+                '--force' => true,
+            ]);
+        }
+
+        if (! Role::query()->where('name', 'customer')->exists()) {
+            Artisan::call('db:seed', [
+                '--class' => 'Database\\Seeders\\RolesAndPermissionsSeeder',
+                '--force' => true,
+            ]);
+        }
     }
 }

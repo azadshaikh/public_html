@@ -16,8 +16,12 @@ class WebsiteProvisionServerSyncTest extends TestCase
 {
     public function test_on_success_runs_server_sync_after_website_sync(): void
     {
-        $website = new Website;
+        /** @var Website&MockInterface $website */
+        $website = Mockery::mock(Website::class)->makePartial();
         $website->id = 1;
+        $website->shouldReceive('fresh')->andReturnSelf();
+        $website->shouldReceive('markProvisioningRunCompleted')->once();
+        $website->setRelation('createdBy', null);
 
         $job = new class($website) extends WebsiteProvision
         {
@@ -35,6 +39,8 @@ class WebsiteProvisionServerSyncTest extends TestCase
             }
 
             public function logActivity($model, ActivityAction $action, string $message, array $extraProperties = [], bool $queue = false): void {}
+
+            protected function dispatchProvisionedWebhook(Website $website): void {}
         };
 
         $job->onSuccess($website);

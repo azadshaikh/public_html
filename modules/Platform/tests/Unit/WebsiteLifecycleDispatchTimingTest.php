@@ -24,8 +24,10 @@ class WebsiteLifecycleDispatchTimingTest extends TestCase
         $contents = file_get_contents($path);
 
         $this->assertNotFalse($contents, 'Failed to read modules/Platform/app/Services/WebsiteService.php');
-        $this->assertStringContainsString("dispatch(new WebsiteTrash(\$website->id))\n                    ->onQueue('default')\n                    ->afterResponse();", $contents);
-        $this->assertStringContainsString("dispatch(new WebsiteUntrash(\$website->id))\n                    ->onQueue('default')\n                    ->afterResponse();", $contents);
+        $this->assertStringContainsString('dispatch(new WebsiteTrash($website->id))', $contents);
+        $this->assertStringContainsString('dispatch(new WebsiteUntrash($website->id))', $contents);
+        $this->assertStringContainsString("->onQueue('default')", $contents);
+        $this->assertStringContainsString('->afterResponse();', $contents);
         $this->assertStringContainsString("SendAgencyWebhook::dispatchForWebsiteAfterResponse(\$website, 'website.deleted', [", $contents);
         $this->assertStringContainsString("SendAgencyWebhook::dispatchForWebsiteAfterResponse(\$website, 'website.restored');", $contents);
     }

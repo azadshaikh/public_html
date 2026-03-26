@@ -8,14 +8,13 @@ class AgencyCrudPatternConsistencyTest extends TestCase
 {
     public function test_agency_show_restore_action_uses_patch_method_and_supported_statuses(): void
     {
-        $path = base_path('modules/Platform/resources/views/agencies/show.blade.php');
+        $path = base_path('modules/Platform/resources/js/pages/platform/agencies/components/agency-show-overview.tsx');
         $contents = file_get_contents($path);
 
-        $this->assertNotFalse($contents, 'Failed to read modules/Platform/resources/views/agencies/show.blade.php');
-        $this->assertMatchesRegularExpression(
-            '/data-title="Restore Agency"[\\s\\S]*data-method="PATCH"[\\s\\S]*platform\\.agencies\\.restore/',
-            $contents
-        );
+        $this->assertNotFalse($contents, 'Failed to read modules/Platform/resources/js/pages/platform/agencies/components/agency-show-overview.tsx');
+        $this->assertStringContainsString('Restore Agency', $contents);
+        $this->assertStringContainsString("route('platform.agencies.restore', agency.id)", $contents);
+        $this->assertStringContainsString("'patch'", $contents);
         $this->assertStringNotContainsString("'suspended' =>", $contents);
     }
 

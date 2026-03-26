@@ -12,9 +12,9 @@ class ServerScriptsUpdatedNotificationTest extends TestCase
         $contents = file_get_contents($projectRoot.'/modules/Platform/app/Notifications/ServerScriptsUpdated.php');
 
         $this->assertNotFalse($contents, 'Failed to read ServerScriptsUpdated notification');
-        $this->assertStringContainsString("'title' => 'Server Scripts Updated!'", $contents);
-        $this->assertStringContainsString("'category' => 'server'", $contents);
-        $this->assertStringContainsString("'icon' => 'ri-tools-line'", $contents);
+        $this->assertStringContainsString("payload('Server Scripts Updated!'", $contents);
+        $this->assertStringContainsString("'server'", $contents);
+        $this->assertStringContainsString("'ri-tools-line'", $contents);
         $this->assertStringContainsString("route('platform.servers.show', \$server->id)", $contents);
     }
 

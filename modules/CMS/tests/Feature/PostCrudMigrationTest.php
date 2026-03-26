@@ -252,7 +252,7 @@ class PostCrudMigrationTest extends TestCase
                 ->component('cms/posts/edit')
                 ->where('post.id', $post->id)
                 ->where('post.title', $post->title)
-                ->where('post.permalink_url', url($post->permalink_url))
+                ->where('post.permalink_url', $post->permalink_url ? url($post->permalink_url) : null)
                 ->where('post.revisions_count', 2)
                 ->where('post.revisions.0.changes.0.field', 'Excerpt')
                 ->where('post.revisions.0.changes.0.new_value', 'Revised excerpt copy')

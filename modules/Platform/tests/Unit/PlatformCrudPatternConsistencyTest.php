@@ -6,16 +6,16 @@ use Tests\TestCase;
 
 class PlatformCrudPatternConsistencyTest extends TestCase
 {
-    public function test_domain_show_restore_action_uses_patch_method(): void
+    public function test_domain_show_page_exposes_current_domain_operations(): void
     {
-        $path = base_path('modules/Platform/resources/views/domains/show.blade.php');
+        $path = base_path('modules/Platform/resources/js/pages/platform/domains/show.tsx');
         $contents = file_get_contents($path);
 
-        $this->assertNotFalse($contents, 'Failed to read modules/Platform/resources/views/domains/show.blade.php');
-        $this->assertMatchesRegularExpression(
-            '/data-title="Restore Domain"[\\s\\S]*data-method="PATCH"[\\s\\S]*platform\\.domains\\.restore/',
-            $contents
-        );
+        $this->assertNotFalse($contents, 'Failed to read modules/Platform/resources/js/pages/platform/domains/show.tsx');
+        $this->assertStringContainsString('Generate self-signed', $contents);
+        $this->assertStringContainsString('Add certificate', $contents);
+        $this->assertStringContainsString('Edit domain', $contents);
+        $this->assertStringContainsString('Manage DNS', $contents);
     }
 
     public function test_domain_request_enforces_registrar_provider_type(): void
@@ -52,11 +52,12 @@ class PlatformCrudPatternConsistencyTest extends TestCase
 
     public function test_secret_form_uses_controller_provided_secretable_options(): void
     {
-        $path = base_path('modules/Platform/resources/views/secrets/form.blade.php');
+        $path = base_path('modules/Platform/resources/js/components/secrets/secret-form.tsx');
         $contents = file_get_contents($path);
 
-        $this->assertNotFalse($contents, 'Failed to read modules/Platform/resources/views/secrets/form.blade.php');
-        $this->assertStringContainsString('@foreach (($secretableTypeOptions ?? []) as $option)', $contents);
+        $this->assertNotFalse($contents, 'Failed to read modules/Platform/resources/js/components/secrets/secret-form.tsx');
+        $this->assertStringContainsString('secretableTypeOptions.map(', $contents);
+        $this->assertStringContainsString("'secretable_type'", $contents);
         $this->assertStringNotContainsString('$modelTypes = [', $contents);
     }
 

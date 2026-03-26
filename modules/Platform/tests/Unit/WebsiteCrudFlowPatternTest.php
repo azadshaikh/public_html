@@ -37,23 +37,24 @@ class WebsiteCrudFlowPatternTest extends TestCase
         $this->assertStringNotContainsString("Route::get('/{website}/{step}/revert'", $contents);
     }
 
-    public function test_website_show_view_executes_provisioning_actions_via_post_with_csrf(): void
+    public function test_website_show_view_executes_provisioning_actions_via_post_json_requests(): void
     {
-        $path = base_path('modules/Platform/resources/views/websites/show.blade.php');
+        $path = base_path('modules/Platform/resources/js/pages/platform/websites/show.tsx');
         $contents = file_get_contents($path);
 
-        $this->assertNotFalse($contents, 'Failed to read modules/Platform/resources/views/websites/show.blade.php');
+        $this->assertNotFalse($contents, 'Failed to read modules/Platform/resources/js/pages/platform/websites/show.tsx');
         $this->assertStringContainsString("method: 'POST'", $contents);
-        $this->assertStringContainsString("'X-CSRF-TOKEN': this.csrfToken", $contents);
+        $this->assertStringContainsString("'X-Requested-With': 'XMLHttpRequest'", $contents);
     }
 
     public function test_website_create_form_status_copy_matches_provisioning_flow(): void
     {
-        $path = base_path('modules/Platform/resources/views/websites/form.blade.php');
+        $path = base_path('modules/Platform/resources/js/components/websites/website-form.tsx');
         $contents = file_get_contents($path);
 
-        $this->assertNotFalse($contents, 'Failed to read modules/Platform/resources/views/websites/form.blade.php');
-        $this->assertStringContainsString('Status will be set to Provisioning on creation.', $contents);
+        $this->assertNotFalse($contents, 'Failed to read modules/Platform/resources/js/components/websites/website-form.tsx');
+        $this->assertStringContainsString('Website created successfully.', $contents);
+        $this->assertStringContainsString('Enable for local or LAN sites.', $contents);
         $this->assertStringNotContainsString('Status will be set to Active on creation.', $contents);
     }
 }

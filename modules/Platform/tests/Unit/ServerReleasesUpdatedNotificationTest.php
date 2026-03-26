@@ -12,9 +12,9 @@ class ServerReleasesUpdatedNotificationTest extends TestCase
         $contents = file_get_contents($projectRoot.'/modules/Platform/app/Notifications/ServerReleasesUpdated.php');
 
         $this->assertNotFalse($contents, 'Failed to read ServerReleasesUpdated notification');
-        $this->assertStringContainsString("'title' => 'Server Releases Updated!'", $contents);
-        $this->assertStringContainsString("'category' => 'server'", $contents);
-        $this->assertStringContainsString("'icon' => 'ri-download-cloud-line'", $contents);
+        $this->assertStringContainsString("payload('Server Releases Updated!'", $contents);
+        $this->assertStringContainsString("'server'", $contents);
+        $this->assertStringContainsString("'ri-download-cloud-line'", $contents);
         $this->assertStringContainsString('server info sync warning', $contents);
         $this->assertStringContainsString("route('platform.servers.show', \$server->id)", $contents);
     }

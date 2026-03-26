@@ -8,24 +8,25 @@ class ServerCrudPatternConsistencyTest extends TestCase
 {
     public function test_server_form_uses_monitor_field_name_consistently(): void
     {
-        $path = base_path('modules/Platform/resources/views/servers/form.blade.php');
+        $path = base_path('modules/Platform/resources/js/components/servers/server-form.tsx');
         $contents = file_get_contents($path);
 
-        $this->assertNotFalse($contents, 'Failed to read modules/Platform/resources/views/servers/form.blade.php');
-        $this->assertStringContainsString('name="monitor"', $contents);
-        $this->assertStringContainsString("old('monitor', \$server->monitor ?? false)", $contents);
+        $this->assertNotFalse($contents, 'Failed to read modules/Platform/resources/js/components/servers/server-form.tsx');
+        $this->assertStringContainsString('htmlFor="monitor"', $contents);
+        $this->assertStringContainsString('id="monitor"', $contents);
+        $this->assertStringContainsString('checked={form.data.monitor}', $contents);
+        $this->assertStringContainsString("onCheckedChange={(checked) => form.setField('monitor', checked)}", $contents);
     }
 
     public function test_server_show_restore_action_uses_patch_method(): void
     {
-        $path = base_path('modules/Platform/resources/views/servers/show.blade.php');
+        $path = base_path('modules/Platform/resources/js/pages/platform/servers/components/server-show-overview.tsx');
         $contents = file_get_contents($path);
 
-        $this->assertNotFalse($contents, 'Failed to read modules/Platform/resources/views/servers/show.blade.php');
-        $this->assertMatchesRegularExpression(
-            '/data-title="Restore Server"[\\s\\S]*data-method="PATCH"[\\s\\S]*platform\\.servers\\.restore/',
-            $contents
-        );
+        $this->assertNotFalse($contents, 'Failed to read modules/Platform/resources/js/pages/platform/servers/components/server-show-overview.tsx');
+        $this->assertStringContainsString('Restore Server', $contents);
+        $this->assertStringContainsString("route('platform.servers.restore', server.id)", $contents);
+        $this->assertStringContainsString("perform('patch'", $contents);
     }
 
     public function test_server_routes_allow_failed_status_tab_without_provisioning_tab(): void
@@ -122,14 +123,14 @@ class ServerCrudPatternConsistencyTest extends TestCase
 
     public function test_server_edit_form_supports_ssh_keypair_generation_and_authorize_command(): void
     {
-        $path = base_path('modules/Platform/resources/views/servers/form.blade.php');
+        $path = base_path('modules/Platform/resources/js/components/servers/server-form.tsx');
         $contents = file_get_contents($path);
 
-        $this->assertNotFalse($contents, 'Failed to read modules/Platform/resources/views/servers/form.blade.php');
-        $this->assertStringContainsString('id="generate-ssh-key-pair"', $contents);
-        $this->assertStringContainsString('id="ssh_public_key" name="ssh_public_key"', $contents);
+        $this->assertNotFalse($contents, 'Failed to read modules/Platform/resources/js/components/servers/server-form.tsx');
+        $this->assertStringContainsString("fetch(route('platform.servers.generate-ssh-key')", $contents);
+        $this->assertStringContainsString('Generate New Key Pair', $contents);
+        $this->assertStringContainsString('id="ssh_public_key"', $contents);
         $this->assertStringContainsString('id="ssh_authorize_command"', $contents);
-        $this->assertStringContainsString("route('platform.servers.generate-ssh-key')", $contents);
     }
 
     public function test_server_controller_allows_generate_ssh_key_for_edit_permission(): void
@@ -164,10 +165,12 @@ class ServerCrudPatternConsistencyTest extends TestCase
         $this->assertNotFalse($controllerContents, 'Failed to read modules/Platform/app/Http/Controllers/ServerController.php');
         $this->assertStringContainsString("'release_api_key' => [", $controllerContents);
 
-        $viewPath = base_path('modules/Platform/resources/views/servers/show.blade.php');
+        $viewPath = base_path('modules/Platform/resources/js/pages/platform/servers/components/server-wizard-manual-step.tsx');
         $viewContents = file_get_contents($viewPath);
-        $this->assertNotFalse($viewContents, 'Failed to read modules/Platform/resources/views/servers/show.blade.php');
-        $this->assertStringContainsString("'release_api_key', 'access_key'", $viewContents);
+        $this->assertNotFalse($viewContents, 'Failed to read modules/Platform/resources/js/pages/platform/servers/components/server-wizard-manual-step.tsx');
+        $this->assertStringContainsString('Access key ID', $viewContents);
+        $this->assertStringContainsString('Secret key', $viewContents);
+        $this->assertStringContainsString('Release API key', $viewContents);
     }
 
     public function test_server_provisioning_supports_multiple_provisioner_ips_for_api_allowlist(): void

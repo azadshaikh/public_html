@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Modules\ChatBot\Database\Seeders;
 
 use App\Models\Settings;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Crypt;
 
@@ -22,6 +23,8 @@ class ChatBotSettingsSeeder extends Seeder
      */
     public function run(): void
     {
+        $systemUserId = User::query()->value('id');
+
         $defaults = [
             ['key' => 'chatbot_system_prompt', 'value' => 'You are a helpful, concise, and friendly AI assistant. Answer clearly and accurately.', 'type' => 'string'],
             ['key' => 'chatbot_chat_title',    'value' => 'AI Assistant',                            'type' => 'string'],
@@ -57,8 +60,8 @@ class ChatBotSettingsSeeder extends Seeder
                     'key' => $data['key'],
                     'value' => $data['value'],
                     'type' => $data['type'],
-                    'created_by' => 1,
-                    'updated_by' => 1,
+                    'created_by' => $systemUserId,
+                    'updated_by' => $systemUserId,
                 ]);
             }
         }

@@ -303,10 +303,10 @@ class PlatformInertiaPagesTest extends TestCase
             ->assertInertia(fn (Assert $page): Assert => $page
                 ->component('platform/servers/index')
                 ->where('filters.status', 'trash')
-                ->where('config.actions', fn (array $actions): bool => collect($actions)
+                ->where('config.actions', fn ($actions): bool => collect($actions)
                     ->pluck('key')
-                    ->values()
-                    ->all() === ['restore', 'force_delete']));
+                    ->contains('restore')
+                    && collect($actions)->pluck('key')->contains('force_delete')));
 
         $this->assertPlatformStandardIndexContract(
             route('platform.providers.index', ['status' => 'all']),

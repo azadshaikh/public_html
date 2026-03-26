@@ -616,31 +616,23 @@ class SettingsControllerTest extends TestCase
 
     public function test_debugbar_open_storage_callback_only_allows_super_users(): void
     {
-        putenv('DEBUGBAR_OPEN_STORAGE=true');
-        $_ENV['DEBUGBAR_OPEN_STORAGE'] = 'true';
-        $_SERVER['DEBUGBAR_OPEN_STORAGE'] = 'true';
+        config([
+            'app.debug' => true,
+            'debugbar.enabled' => true,
+            'debugbar.storage_open' => true,
+        ]);
 
-        try {
-            config([
-                'app.debug' => true,
-                'debugbar.enabled' => true,
-            ]);
+        $callback = config('debugbar.storage.open');
 
-            $callback = config('debugbar.storage.open');
+        $this->assertSame(OpenStorageResolver::class, $callback);
 
-            $this->assertSame(OpenStorageResolver::class, $callback);
+        $superUserRequest = Request::create('/_debugbar/open');
+        $superUserRequest->setUserResolver(fn (): User => $this->superUser);
+        $this->assertTrue($callback::resolve($superUserRequest));
 
-            $superUserRequest = Request::create('/_debugbar/open');
-            $superUserRequest->setUserResolver(fn (): User => $this->superUser);
-            $this->assertTrue($callback::resolve($superUserRequest));
-
-            $adminRequest = Request::create('/_debugbar/open');
-            $adminRequest->setUserResolver(fn (): User => $this->admin);
-            $this->assertFalse($callback::resolve($adminRequest));
-        } finally {
-            putenv('DEBUGBAR_OPEN_STORAGE');
-            unset($_ENV['DEBUGBAR_OPEN_STORAGE'], $_SERVER['DEBUGBAR_OPEN_STORAGE']);
-        }
+        $adminRequest = Request::create('/_debugbar/open');
+        $adminRequest->setUserResolver(fn (): User => $this->admin);
+        $this->assertFalse($callback::resolve($adminRequest));
     }
 
     public function test_debugbar_routes_use_common_super_user_middleware(): void

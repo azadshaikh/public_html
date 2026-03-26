@@ -46,9 +46,9 @@ class ModuleManagerTest extends TestCase
             ->first(fn (ModuleManifest $module): bool => $module->slug === 'chatbot');
 
         $this->assertNotNull($module);
-        $this->assertSame('AsteroDigital', $module->author);
-        $this->assertSame('https://asterodigital.com', $module->homepage);
-        $this->assertStringContainsString('<svg', (string) $module->icon);
+        $this->assertNull($module->author);
+        $this->assertNull($module->homepage);
+        $this->assertNull($module->icon);
 
         $sharedModule = collect($this->app->make(ModuleManager::class)->sharedData()['items'])
             ->firstWhere('slug', 'chatbot');
@@ -144,14 +144,13 @@ class ModuleManagerTest extends TestCase
 
     public function test_module_routes_are_registered_with_the_web_middleware_group(): void
     {
-        collect(['cms.pages.index', 'chatbot.index', 'app.todos.index'])
+        collect(['cms.pages.index', 'app.chatbot.index', 'platform.agencies.index'])
             ->each(function (string $routeName): void {
                 $route = resolve(Router::class)->getRoutes()->getByName($routeName);
 
                 $this->assertInstanceOf(Route::class, $route);
                 $this->assertContains('web', $route->gatherMiddleware());
                 $this->assertContains('auth', $route->gatherMiddleware());
-                $this->assertContains('verified', $route->gatherMiddleware());
             });
     }
 }

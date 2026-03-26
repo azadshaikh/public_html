@@ -15,12 +15,8 @@ class UserCustomerSyncObserver
         resolve(CustomerUserSyncService::class)->syncCustomerFromUser($user);
     }
 
-    public function deleting(User $user): void
+    public function forceDeleting(User $user): void
     {
-        if (! $user->isForceDeleting()) {
-            return;
-        }
-
         $customer = Customer::withTrashed()->where('user_id', $user->id)->first();
 
         if ($customer) {

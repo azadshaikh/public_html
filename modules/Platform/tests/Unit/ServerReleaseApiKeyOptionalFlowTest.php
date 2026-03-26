@@ -65,12 +65,12 @@ class ServerReleaseApiKeyOptionalFlowTest extends TestCase
 {
     public function test_provision_form_marks_release_api_key_as_optional_with_env_fallback_hint(): void
     {
-        $path = base_path('modules/Platform/resources/views/servers/form-provision.blade.php');
+        $path = base_path('modules/Platform/resources/js/pages/platform/servers/components/server-wizard-provision-step.tsx');
         $contents = file_get_contents($path);
 
-        $this->assertNotFalse($contents, 'Failed to read modules/Platform/resources/views/servers/form-provision.blade.php');
-        $this->assertStringContainsString('name="release_api_key"', $contents);
-        $this->assertStringContainsString('Optional. Leave blank to use RELEASE_API_KEY from the provisioning server environment.', $contents);
+        $this->assertNotFalse($contents, 'Failed to read modules/Platform/resources/js/pages/platform/servers/components/server-wizard-provision-step.tsx');
+        $this->assertStringContainsString('Release API key', $contents);
+        $this->assertStringContainsString('Leave blank to use the environment default from the provisioning', $contents);
         $this->assertStringNotContainsString('Required for secured release sync during provisioning.', $contents);
     }
 

@@ -7,12 +7,18 @@ namespace Modules\Todos\Tests\Feature;
 use App\Enums\Status;
 use App\Models\Role;
 use App\Models\User;
+use App\Modules\ModuleManager;
+use App\Modules\Support\ModuleAutoloader;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Schema;
 use Inertia\Testing\AssertableInertia as Assert;
 use Modules\Todos\Database\Factories\TodoFactory;
 use Modules\Todos\Database\Seeders\PermissionSeeder;
 use Modules\Todos\Models\Todo;
+use Modules\Todos\Providers\TodosServiceProvider;
 use Tests\TestCase;
 
 class TodoCrudTest extends TestCase
@@ -24,6 +30,8 @@ class TodoCrudTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        $this->ensureTodosModuleBooted();
 
         $this->seed(RolesAndPermissionsSeeder::class);
         $this->seed(PermissionSeeder::class);
@@ -305,5 +313,28 @@ class TodoCrudTest extends TestCase
                 ->where('statistics.pending', 2)
                 ->where('statistics.completed', 1)
             );
+    }
+
+    private function ensureTodosModuleBooted(): void
+    {
+        ModuleAutoloader::register(app(ModuleManager::class)->all()->all());
+
+        if (! Route::has('app.todos.index')) {
+            app()->register(TodosServiceProvider::class);
+        }
+
+        if (! Route::has('app.todos.index')) {
+            Route::middleware('web')->group(base_path('modules/Todos/routes/web.php'));
+            app('router')->getRoutes()->refreshNameLookups();
+            app('router')->getRoutes()->refreshActionLookups();
+        }
+
+        if (! Schema::hasTable('todos')) {
+            Artisan::call('migrate', [
+                '--path' => base_path('modules/Todos/database/migrations'),
+                '--realpath' => true,
+                '--force' => true,
+            ]);
+        }
     }
 }

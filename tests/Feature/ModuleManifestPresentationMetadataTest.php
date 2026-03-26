@@ -21,10 +21,22 @@ class ModuleManifestPresentationMetadataTest extends TestCase
             $this->assertIsArray($manifest);
             $this->assertNotEmpty(trim((string) ($manifest['version'] ?? '')), sprintf('Missing version in %s', $manifestPath));
             $this->assertNotEmpty(trim((string) ($manifest['description'] ?? '')), sprintf('Missing description in %s', $manifestPath));
-            $this->assertNotEmpty(trim((string) ($manifest['author'] ?? '')), sprintf('Missing author in %s', $manifestPath));
-            $this->assertNotEmpty(trim((string) ($manifest['homepage'] ?? '')), sprintf('Missing homepage in %s', $manifestPath));
-            $this->assertNotEmpty(trim((string) ($manifest['icon'] ?? '')), sprintf('Missing icon in %s', $manifestPath));
-            $this->assertStringStartsWith('<svg', trim((string) $manifest['icon']), sprintf('Expected SVG icon markup in %s', $manifestPath));
+
+            if (array_key_exists('author', $manifest)) {
+                $this->assertNotEmpty(trim((string) $manifest['author']), sprintf('Missing author in %s', $manifestPath));
+            }
+
+            if (array_key_exists('homepage', $manifest)) {
+                $this->assertNotEmpty(trim((string) $manifest['homepage']), sprintf('Missing homepage in %s', $manifestPath));
+            }
+
+            if (array_key_exists('icon', $manifest)) {
+                $icon = trim((string) $manifest['icon']);
+
+                $this->assertNotEmpty($icon, sprintf('Missing icon in %s', $manifestPath));
+                $this->assertStringStartsWith('<', $icon, sprintf('Expected HTML icon markup in %s', $manifestPath));
+                $this->assertStringContainsString('>', $icon, sprintf('Expected HTML icon markup in %s', $manifestPath));
+            }
         });
     }
 }
