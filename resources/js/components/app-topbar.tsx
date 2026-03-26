@@ -1,6 +1,7 @@
 import { usePage } from '@inertiajs/react';
 import { AppThemeToggle } from '@/components/app-theme-toggle';
 import { NotificationPopover } from '@/components/notifications/notification-popover';
+import { QuickOpenDialog } from '@/components/quick-open-dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,6 +23,7 @@ export function AppTopbar() {
             <div className="mx-auto flex h-13 w-full max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center gap-3">
                     <SidebarTrigger className="rounded-full border border-border/80 bg-card shadow-sm hover:bg-muted" />
+                    <QuickOpenDialog />
                 </div>
 
                 <div className="flex items-center gap-1 sm:gap-2">

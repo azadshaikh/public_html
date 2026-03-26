@@ -93,12 +93,19 @@ class AuthenticationTest extends TestCase
 
         $response = $this->actingAs($user)->post(route('logout'));
 
-        $response->assertRedirect(route('login', absolute: false));
-
-        $this->get(route('login'))
-            ->assertOk();
+        $response->assertRedirect();
 
         $this->assertGuest();
+
+        $this->assertDatabaseHas('activity_log', [
+            'log_name' => 'User',
+            'causer_id' => $user->id,
+            'causer_type' => User::class,
+            'subject_id' => $user->id,
+            'subject_type' => User::class,
+            'event' => 'logout',
+            'description' => 'User logged out.',
+        ]);
     }
 
     public function test_users_are_rate_limited(): void

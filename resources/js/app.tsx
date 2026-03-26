@@ -18,6 +18,7 @@ import {
     shouldForceInertiaHardReload,
     shouldTrackInertiaNavigation,
 } from './lib/inertia-session-reload';
+import { pushRecentQuickOpenUrl } from './lib/quick-open.js';
 
 const inertiaDefaults = {
     form: {
@@ -30,9 +31,8 @@ const inertiaDefaults = {
 };
 
 function syncAdminTheme(sharedProps: Record<string, unknown>): void {
-    const adminTheme = (
-        sharedProps.ui as { adminTheme?: string } | undefined
-    )?.adminTheme;
+    const adminTheme = (sharedProps.ui as { adminTheme?: string } | undefined)
+        ?.adminTheme;
 
     if (typeof adminTheme !== 'string' || adminTheme.length === 0) {
         document.documentElement.removeAttribute('data-admin-theme');
@@ -95,6 +95,8 @@ createInertiaApp({
             except?: string[];
         } | null = null;
 
+        pushRecentQuickOpenUrl(window.localStorage, props.initialPage.url);
+
         router.on('start', (event) => {
             latestStartedVisit = event.detail.visit;
         });
@@ -126,8 +128,10 @@ createInertiaApp({
             }
 
             lastTrackedPageUrl =
-                normalizeInertiaNavigationUrl(nextPageUrl) ?? lastTrackedPageUrl;
+                normalizeInertiaNavigationUrl(nextPageUrl) ??
+                lastTrackedPageUrl;
             latestStartedVisit = null;
+            pushRecentQuickOpenUrl(window.localStorage, lastTrackedPageUrl);
 
             const navigationCount = incrementInertiaNavigationCount(
                 window.sessionStorage,

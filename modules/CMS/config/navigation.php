@@ -36,6 +36,20 @@ return [
                             'permission' => 'view_posts',
                             'active_patterns' => ['cms.posts.*'],
                         ],
+                        'cms_posts_create' => [
+                            'label' => 'Create Post',
+                            'route' => 'cms.posts.create',
+                            'icon' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/><path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0"/></svg>',
+                            'permission' => 'add_posts',
+                            'active_patterns' => ['cms.posts.create'],
+                            'sidebar_visible' => false,
+                            'quick_open' => [
+                                'priority' => 250,
+                                'description' => 'Write and publish a new blog post',
+                                'aliases' => ['New Post', 'Add Post'],
+                                'keywords' => ['create blog post', 'new blog post', 'write post', 'publish post'],
+                            ],
+                        ],
                         'cms_categories' => [
                             'label' => 'Categories',
                             'route' => ['name' => 'cms.categories.index', 'params' => ['all']],
@@ -60,6 +74,20 @@ return [
                     'icon' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="12" height="18" rx="2"/><path d="M4 4v16a2 2 0 0 0 2 2h12"/></svg>',
                     'permission' => 'view_pages',
                     'active_patterns' => ['cms.pages.*'],
+                ],
+                'cms_pages_create' => [
+                    'label' => 'Create Page',
+                    'route' => 'cms.pages.create',
+                    'icon' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/><path d="M5 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/></svg>',
+                    'permission' => 'add_pages',
+                    'active_patterns' => ['cms.pages.create'],
+                    'sidebar_visible' => false,
+                    'quick_open' => [
+                        'priority' => 250,
+                        'description' => 'Create a new website page',
+                        'aliases' => ['New Page', 'Add Page'],
+                        'keywords' => ['create page', 'new page', 'add page', 'create website page'],
+                    ],
                 ],
 
                 // Design Blocks (stored in cms_posts with type='design_block')

@@ -186,6 +186,7 @@ class NavigationHelper
             serialize($user ? $user->getAllPermissions()->pluck('name')->sort()->toArray() : []),
             filemtime(config_path('navigation.php')),
             'admin_slug_'.config('app.admin_slug'),
+            'schema_quick_open_v1',
         ];
 
         $cachedRoutesPath = app()->getCachedRoutesPath();

@@ -162,7 +162,9 @@ const NavigationLink = React.forwardRef<HTMLElement, NavigationLinkProps>(
                 href={item.url}
                 method={
                     typeof inertiaMethod === 'string'
-                        ? (inertiaMethod as React.ComponentProps<typeof Link>['method'])
+                        ? (inertiaMethod as React.ComponentProps<
+                              typeof Link
+                          >['method'])
                         : undefined
                 }
                 as={
@@ -179,6 +181,28 @@ const NavigationLink = React.forwardRef<HTMLElement, NavigationLinkProps>(
     },
 );
 NavigationLink.displayName = 'NavigationLink';
+
+function filterSidebarItems(items: NavigationItem[]): NavigationItem[] {
+    return items.flatMap((item) => {
+        if (item.sidebar_visible === false) {
+            return [];
+        }
+
+        const children = filterSidebarItems(item.children ?? []);
+
+        if (!item.url && children.length === 0) {
+            return [];
+        }
+
+        return [
+            {
+                ...item,
+                children,
+                hasChildren: children.length > 0,
+            },
+        ];
+    });
+}
 
 function NavMainLeaf({ item, depth }: { item: NavigationItem; depth: number }) {
     if (!item.url) {
@@ -324,9 +348,16 @@ function NavMainNode({ item, depth }: { item: NavigationItem; depth: number }) {
 }
 
 export function NavMain({ sections }: { sections: NavigationSection[] }) {
+    const visibleSections = sections
+        .map((section) => ({
+            ...section,
+            items: filterSidebarItems(section.items),
+        }))
+        .filter((section) => section.items.length > 0);
+
     return (
         <OpenItemsProvider>
-            {sections.map((section) => (
+            {visibleSections.map((section) => (
                 <SidebarGroup key={section.key}>
                     {section.show_label ? (
                         <SidebarGroupLabel>{section.label}</SidebarGroupLabel>

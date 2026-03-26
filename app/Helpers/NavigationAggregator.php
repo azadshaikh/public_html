@@ -7,6 +7,14 @@ use Illuminate\Support\Facades\Log;
 
 class NavigationAggregator
 {
+    private const QUICK_OPEN_DEFAULTS = [
+        'enabled' => true,
+        'priority' => 0,
+        'description' => null,
+        'aliases' => [],
+        'keywords' => [],
+    ];
+
     /**
      * Build unified sidebar navigation grouped by area.
      * - Caches the base structure (without active states) per user and module config versions
@@ -260,18 +268,7 @@ class NavigationAggregator
             }
 
             // Build safe URL
-            $itemUrl = '#';
-            try {
-                if (! empty($item['route'])) {
-                    if (is_array($item['route'])) {
-                        $itemUrl = route($item['route']['name'], $item['route']['params'] ?? []);
-                    } else {
-                        $itemUrl = route($item['route']);
-                    }
-                }
-            } catch (Exception) {
-                // Route may not exist; leave as '#'
-            }
+            $itemUrl = self::resolveItemUrl($item);
 
             if ($children === [] && $itemUrl === '#') {
                 continue;
@@ -298,12 +295,76 @@ class NavigationAggregator
                 'hard_reload' => (bool) ($item['hard_reload'] ?? false),
                 'attributes' => isset($item['attributes']) && is_array($item['attributes']) ? $item['attributes'] : [],
                 'default_open' => (bool) ($item['default_open'] ?? false),
+                'sidebar_visible' => (bool) ($item['sidebar_visible'] ?? true),
+                'quick_open' => self::normalizeQuickOpenMetadata($item['quick_open'] ?? null),
                 'children' => $children,
                 'hasChildren' => $children !== [],
             ];
         }
 
         return $built;
+    }
+
+    private static function resolveItemUrl(array $item): string
+    {
+        if (isset($item['url']) && is_string($item['url']) && trim($item['url']) !== '') {
+            return $item['url'];
+        }
+
+        try {
+            if (! empty($item['route'])) {
+                if (is_array($item['route'])) {
+                    return route($item['route']['name'], $item['route']['params'] ?? []);
+                }
+
+                return route($item['route']);
+            }
+        } catch (Exception) {
+            // Route may not exist; leave as '#'
+        }
+
+        return '#';
+    }
+
+    /**
+     * @return array{
+     *     enabled: bool,
+     *     priority: int,
+     *     description: string|null,
+     *     aliases: array<int, string>,
+     *     keywords: array<int, string>
+     * }
+     */
+    private static function normalizeQuickOpenMetadata(mixed $metadata): array
+    {
+        if (! is_array($metadata)) {
+            return self::QUICK_OPEN_DEFAULTS;
+        }
+
+        return [
+            'enabled' => (bool) ($metadata['enabled'] ?? self::QUICK_OPEN_DEFAULTS['enabled']),
+            'priority' => (int) ($metadata['priority'] ?? self::QUICK_OPEN_DEFAULTS['priority']),
+            'description' => isset($metadata['description']) && is_string($metadata['description'])
+                ? __($metadata['description'])
+                : null,
+            'aliases' => self::normalizeSearchTerms($metadata['aliases'] ?? []),
+            'keywords' => self::normalizeSearchTerms($metadata['keywords'] ?? []),
+        ];
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private static function normalizeSearchTerms(mixed $terms): array
+    {
+        if (! is_array($terms)) {
+            return [];
+        }
+
+        return array_values(array_filter(array_map(
+            static fn (mixed $term): ?string => is_string($term) && trim($term) !== '' ? __($term) : null,
+            $terms,
+        )));
     }
 
     /**

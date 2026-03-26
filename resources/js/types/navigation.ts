@@ -13,6 +13,14 @@ export type NavigationBadge = {
 
 export type NavigationItemAttributeValue = boolean | number | string | null;
 
+export type NavigationQuickOpen = {
+    enabled: boolean;
+    priority: number;
+    description: string | null;
+    aliases: string[];
+    keywords: string[];
+};
+
 export type NavigationItem = {
     key: string;
     label: string;
@@ -24,6 +32,8 @@ export type NavigationItem = {
     target?: string | null;
     hard_reload?: boolean;
     default_open?: boolean;
+    sidebar_visible?: boolean;
+    quick_open?: NavigationQuickOpen;
     attributes?: Record<string, NavigationItemAttributeValue>;
     children: NavigationItem[];
     hasChildren: boolean;
