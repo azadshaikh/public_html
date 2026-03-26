@@ -21,6 +21,7 @@ import type {
     DomainDnsRecordItem,
     DomainShowData,
     DomainSslCertificateItem,
+    DomainWebsiteItem,
     PlatformActivity,
 } from '../../../types/platform';
 
@@ -28,6 +29,7 @@ type DomainsShowPageProps = {
     domain: DomainShowData;
     dnsRecords: DomainDnsRecordItem[];
     sslCertificates: DomainSslCertificateItem[];
+    websites: DomainWebsiteItem[];
     activities: PlatformActivity[];
 };
 
@@ -54,6 +56,7 @@ export default function DomainsShow({
     domain,
     dnsRecords,
     sslCertificates,
+    websites,
     activities,
 }: DomainsShowPageProps) {
     const breadcrumbs: BreadcrumbItem[] = [
@@ -162,8 +165,16 @@ export default function DomainsShow({
                             value={domain.dns_records_count}
                         />
                         <MetricCard
+                            label="Websites"
+                            value={domain.websites_count}
+                        />
+                        <MetricCard
                             label="Certificates"
                             value={domain.ssl_certificates_count}
+                        />
+                        <MetricCard
+                            label="Latest SSL in use by"
+                            value={`${domain.latest_certificate_websites_count} website${domain.latest_certificate_websites_count === 1 ? '' : 's'}`}
                         />
                         <MetricCard
                             label="Latest certificate expiry"
@@ -177,7 +188,7 @@ export default function DomainsShow({
                     </CardContent>
                 </Card>
 
-                <div className="grid gap-6 xl:grid-cols-2">
+                <div className="grid gap-6 xl:grid-cols-3">
                     <Card>
                         <CardHeader>
                             <div className="flex items-center gap-2">
@@ -213,6 +224,48 @@ export default function DomainsShow({
                                         <p className="mt-1 text-sm text-muted-foreground">
                                             {certificate.authority} · Expires{' '}
                                             {certificate.expires_at || '—'}
+                                        </p>
+                                        <p className="mt-2 text-xs text-muted-foreground">
+                                            Used by {certificate.websites_count} website{certificate.websites_count === 1 ? '' : 's'}
+                                        </p>
+                                    </Link>
+                                ))
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Websites on this domain</CardTitle>
+                            <CardDescription>
+                                Root and subdomain websites currently attached to this domain record.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="flex flex-col gap-3">
+                            {websites.length === 0 ? (
+                                <p className="text-sm text-muted-foreground">
+                                    No websites are attached to this domain yet.
+                                </p>
+                            ) : (
+                                websites.map((website) => (
+                                    <Link
+                                        key={website.id}
+                                        href={website.href}
+                                        className="rounded-lg border p-3 transition hover:border-primary/40 hover:bg-muted/30"
+                                    >
+                                        <div className="flex items-center justify-between gap-3">
+                                            <p className="font-medium text-foreground">
+                                                {website.domain}
+                                            </p>
+                                            <span className="text-xs tracking-wide text-muted-foreground uppercase">
+                                                {website.status_label}
+                                            </span>
+                                        </div>
+                                        <p className="mt-1 text-sm text-muted-foreground">
+                                            {website.name}
+                                        </p>
+                                        <p className="mt-2 text-xs text-muted-foreground">
+                                            {website.uses_latest_ssl ? 'Using latest shared SSL' : 'Not using latest shared SSL'}
                                         </p>
                                     </Link>
                                 ))

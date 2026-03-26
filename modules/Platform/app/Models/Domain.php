@@ -73,6 +73,11 @@ class Domain extends Model
         return $this->hasMany(DomainDnsRecord::class, 'domain_id');
     }
 
+    public function websites(): HasMany
+    {
+        return $this->hasMany(Website::class, 'domain_id');
+    }
+
     public function agency(): BelongsTo
     {
         return $this->belongsTo(Agency::class, 'agency_id');

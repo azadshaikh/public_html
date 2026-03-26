@@ -11,6 +11,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use Modules\Platform\Enums\WebsiteStatus;
 use Modules\Platform\Models\Domain;
 use Modules\Platform\Models\Secret;
 use Modules\Platform\Services\DomainService;
@@ -163,13 +164,20 @@ class DomainController extends ScaffoldController implements HasMiddleware
     {
         /** @var Domain $domain */
         $domain = $model;
-        $domain->loadMissing(['agency', 'domainRegistrars', 'dnsRecords', 'secrets']);
+        $domain->loadMissing(['agency', 'domainRegistrars', 'dnsRecords', 'secrets.websites', 'websites']);
 
         /** @var Secret|null $latestCertificate */
         $latestCertificate = $domain->secrets
             ->filter(fn (Secret $secret): bool => $secret->type === 'ssl_certificate')
             ->sortByDesc(fn (Secret $secret): int => $secret->expires_at?->getTimestamp() ?? 0)
             ->first();
+
+        $websites = $domain->websites->filter(fn ($website): bool => ! $website->trashed())->values();
+        $latestCertificateWebsitesCount = $latestCertificate instanceof Secret
+            ? $latestCertificate->websites->filter(
+                fn ($website): bool => ! $website->trashed() && (int) $website->domain_id === (int) $domain->id
+            )->count()
+            : 0;
 
         return [
             'id' => $domain->getKey(),
@@ -191,8 +199,10 @@ class DomainController extends ScaffoldController implements HasMiddleware
                 $domain->name_server_3,
                 $domain->name_server_4,
             ], fn (?string $value): bool => filled($value))),
+            'websites_count' => $websites->count(),
             'dns_records_count' => $domain->dnsRecords->count(),
             'ssl_certificates_count' => $domain->secrets->where('type', 'ssl_certificate')->count(),
+            'latest_certificate_websites_count' => $latestCertificateWebsitesCount,
             'latest_certificate_expires_at' => $latestCertificate?->expires_at
                 ? app_date_time_format($latestCertificate->expires_at, 'date')
                 : null,
@@ -205,7 +215,7 @@ class DomainController extends ScaffoldController implements HasMiddleware
     {
         /** @var Domain $domain */
         $domain = $model;
-        $domain->loadMissing(['dnsRecords', 'secrets']);
+        $domain->loadMissing(['dnsRecords', 'secrets.websites', 'websites']);
 
         $activities = ActivityLog::query()
             ->forModel(Domain::class, $domain->id)
@@ -218,6 +228,7 @@ class DomainController extends ScaffoldController implements HasMiddleware
             ->filter(fn (Secret $secret): bool => $secret->type === 'ssl_certificate')
             ->sortByDesc(fn (Secret $secret): int => $secret->expires_at?->getTimestamp() ?? 0)
             ->values();
+        $latestCertificateId = (int) ($sslCertificates->first()?->id ?? 0);
 
         return [
             'sslCertificates' => $sslCertificates->map(fn (Secret $certificate): array => [
@@ -226,8 +237,31 @@ class DomainController extends ScaffoldController implements HasMiddleware
                 'authority' => (string) ($certificate->getMetadata('certificate_authority') ?? 'custom'),
                 'expires_at' => app_date_time_format($certificate->expires_at, 'date'),
                 'is_expired' => $certificate->is_expired,
+                'websites_count' => $certificate->websites
+                    ->filter(fn ($website): bool => ! $website->trashed() && (int) $website->domain_id === (int) $domain->id)
+                    ->count(),
                 'href' => route('platform.domains.ssl-certificates.show', [$domain, $certificate]),
             ])->all(),
+            'websites' => $domain->websites
+                ->filter(fn ($website): bool => ! $website->trashed())
+                ->sortBy('domain')
+                ->map(function ($website) use ($latestCertificateId): array {
+                    $status = $website->status instanceof WebsiteStatus
+                        ? $website->status
+                        : WebsiteStatus::tryFrom((string) $website->status);
+
+                    return [
+                        'id' => $website->id,
+                        'name' => (string) ($website->name ?? $website->domain ?? 'Website'),
+                        'domain' => (string) ($website->domain ?? '—'),
+                        'status_label' => $status?->label() ?? ucfirst((string) $website->status),
+                        'uses_latest_ssl' => (int) $website->ssl_secret_id > 0
+                            && (int) $website->ssl_secret_id === $latestCertificateId,
+                        'href' => route('platform.websites.show', $website->id),
+                    ];
+                })
+                ->values()
+                ->all(),
             'dnsRecords' => $domain->dnsRecords->sortBy('name')->map(fn ($record): array => [
                 'id' => $record->getKey(),
                 'type' => (string) ($record->type ?? '—'),

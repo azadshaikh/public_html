@@ -1157,7 +1157,7 @@ class WebsiteController extends ScaffoldController implements HasMiddleware
 
     private function transformWebsiteForShow(Website $website): array
     {
-        $website->loadMissing(['server', 'agency', 'providers']);
+        $website->loadMissing(['server', 'agency', 'providers', 'domainRecord', 'sslCertificate.websites']);
 
         $status = $website->status instanceof WebsiteStatus ? $website->status : WebsiteStatus::tryFrom((string) $website->status);
         $diskUsageBytes = (int) $website->getMetadata('disk_usage_bytes', 0);
@@ -1206,6 +1206,7 @@ class WebsiteController extends ScaffoldController implements HasMiddleware
             'agency_id' => $website->agency_id,
             'agency_name' => $website->agency?->name,
             'customer_name' => $customerInfo['name'] ?? $customerInfo['email'] ?? $customerInfo['ref'] ?? null,
+            'ssl_summary' => $this->buildSslSummary($website),
 
             // Runtime
             'disk_usage' => $diskUsageBytes > 0 ? Number::fileSize($diskUsageBytes, precision: 2) : null,
@@ -1214,6 +1215,48 @@ class WebsiteController extends ScaffoldController implements HasMiddleware
             'queue_worker_running' => $queueWorkerRunning,
             'queue_worker_total' => $queueWorkerTotal,
             'cron_status' => $website->getMetadata('cron_status'),
+        ];
+    }
+
+    /**
+     * @return array{
+     *   certificate_name: string,
+     *   certificate_href: string|null,
+     *   expires_at: string|null,
+     *   websites_count: int,
+     *   websites: array<int, array{id: int, name: string, domain: string, href: string}>,
+     *   domain_name: string|null,
+     *   domain_href: string|null
+     * }|null
+     */
+    private function buildSslSummary(Website $website): ?array
+    {
+        $certificate = $website->sslCertificate;
+
+        if (! $certificate instanceof Secret) {
+            return null;
+        }
+
+        $websites = $certificate->websites
+            ->filter(fn (Website $linkedWebsite): bool => ! $linkedWebsite->trashed())
+            ->sortBy('domain')
+            ->values();
+
+        return [
+            'certificate_name' => (string) ($certificate->username ?? $certificate->key),
+            'certificate_href' => $website->domain_id
+                ? route('platform.domains.ssl-certificates.show', [$website->domain_id, $certificate->id])
+                : null,
+            'expires_at' => app_date_time_format($certificate->expires_at, 'date'),
+            'websites_count' => $websites->count(),
+            'websites' => $websites->map(fn (Website $linkedWebsite): array => [
+                'id' => $linkedWebsite->id,
+                'name' => (string) ($linkedWebsite->name ?? $linkedWebsite->domain ?? 'Website'),
+                'domain' => (string) ($linkedWebsite->domain ?? '—'),
+                'href' => route('platform.websites.show', $linkedWebsite->id),
+            ])->all(),
+            'domain_name' => $website->domainRecord?->name,
+            'domain_href' => $website->domain_id ? route('platform.domains.show', $website->domain_id) : null,
         ];
     }
 

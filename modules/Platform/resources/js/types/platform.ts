@@ -443,6 +443,20 @@ export type WebsiteShowData = {
     agency_id: number | null;
     agency_name: string | null;
     customer_name: string | null;
+    ssl_summary: {
+        certificate_name: string;
+        certificate_href: string | null;
+        expires_at: string | null;
+        websites_count: number;
+        websites: Array<{
+            id: number;
+            name: string;
+            domain: string;
+            href: string;
+        }>;
+        domain_name: string | null;
+        domain_href: string | null;
+    } | null;
 
     // Runtime
     disk_usage: string | null;
@@ -499,11 +513,22 @@ export type DomainShowData = {
     expires_date: string | null;
     updated_date: string | null;
     name_servers: string[];
+    websites_count: number;
     dns_records_count: number;
     ssl_certificates_count: number;
+    latest_certificate_websites_count: number;
     latest_certificate_expires_at: string | null;
     created_at: string | null;
     updated_at: string | null;
+};
+
+export type DomainWebsiteItem = {
+    id: number;
+    name: string;
+    domain: string;
+    status_label: string;
+    uses_latest_ssl: boolean;
+    href: string;
 };
 
 export type DomainDnsRecordItem = {
@@ -567,6 +592,7 @@ export type DomainSslCertificateItem = {
     authority: string;
     expires_at: string | null;
     is_expired: boolean;
+    websites_count: number;
     href: string;
 };
 

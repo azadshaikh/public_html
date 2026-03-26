@@ -236,7 +236,7 @@ class DnsDebugCommand extends Command
     }
 
     /**
-     * @return array{alias_domain: string|null, challenge_alias: string|null, bunny_api_key_configured: bool, error: string|null}
+     * @return array{alias_domain: string|null, challenge_alias: string|null, acme_alias_argument: string|null, bunny_api_key_configured: bool, error: string|null}
      */
     private function buildAcmeSummary(string $rootDomain): array
     {
@@ -246,6 +246,7 @@ class DnsDebugCommand extends Command
             return [
                 'alias_domain' => $service->aliasDomain(),
                 'challenge_alias' => $service->buildChallengeAlias($rootDomain),
+                'acme_alias_argument' => $service->buildAcmeChallengeAliasArgument($rootDomain),
                 'bunny_api_key_configured' => trim((string) config('platform.acme_challenge.bunny_api_key')) !== '',
                 'error' => null,
             ];
@@ -253,6 +254,7 @@ class DnsDebugCommand extends Command
             return [
                 'alias_domain' => null,
                 'challenge_alias' => null,
+                'acme_alias_argument' => null,
                 'bunny_api_key_configured' => false,
                 'error' => $throwable->getMessage(),
             ];
@@ -285,6 +287,7 @@ class DnsDebugCommand extends Command
                 ['DNS last checked at', $payload['dns_validation']['last_checked_at'] ?: 'null'],
                 ['ACME alias domain', $payload['acme']['alias_domain'] ?? 'null'],
                 ['ACME challenge alias', $payload['domain']['challenge_alias'] ?: ($payload['acme']['challenge_alias'] ?? 'null')],
+                ['ACME alias arg', $payload['acme']['acme_alias_argument'] ?? 'null'],
                 ['ACME Bunny key configured', $payload['acme']['bunny_api_key_configured'] ? 'yes' : 'no'],
                 ['Raw DNS record checks pass', $payload['overall']['records_pass'] ? 'yes' : 'no'],
                 ['Active verification checks pass', $payload['overall']['verification_pass'] ? 'yes' : 'no'],

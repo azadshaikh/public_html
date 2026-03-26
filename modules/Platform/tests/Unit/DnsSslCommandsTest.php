@@ -283,6 +283,10 @@ TRACE);
             '_acme-challenge.astero.in.acme-challenge.in',
             $service->buildChallengeAlias('Astero.in.')
         );
+        $this->assertSame(
+            'astero.in.acme-challenge.in',
+            $service->buildAcmeChallengeAliasArgument('Astero.in.')
+        );
         $this->assertSame('external-bunny-key', $service->bunnyApiKey());
     }
 
@@ -308,7 +312,7 @@ TRACE);
 
         $this->assertSame('external-bunny-key', $command->resolveApiKeyForTest($website, 'external'));
         $this->assertSame(
-            '_acme-challenge.astero.in.acme-challenge.in',
+            'astero.in.acme-challenge.in',
             $command->resolveAliasForTest('external', 'astero.in')
         );
     }
@@ -335,7 +339,7 @@ TRACE);
 
         $this->assertSame('external-bunny-key', $command->resolveApiKeyForTest($domain, 'external'));
         $this->assertSame(
-            '_acme-challenge.astero.in.acme-challenge.in',
+            'astero.in.acme-challenge.in',
             $command->resolveAliasForTest('external', 'astero.in')
         );
     }

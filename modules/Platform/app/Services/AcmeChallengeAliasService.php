@@ -8,13 +8,14 @@ class AcmeChallengeAliasService
 {
     public function buildChallengeAlias(string $rootDomain): string
     {
+        return '_acme-challenge.'.$this->buildAcmeChallengeAliasArgument($rootDomain);
+    }
+
+    public function buildAcmeChallengeAliasArgument(string $rootDomain): string
+    {
         $normalizedRootDomain = $this->normalizeDomain($rootDomain, 'Root domain');
 
-        return sprintf(
-            '_acme-challenge.%s.%s',
-            $normalizedRootDomain,
-            $this->aliasDomain()
-        );
+        return sprintf('%s.%s', $normalizedRootDomain, $this->aliasDomain());
     }
 
     public function aliasDomain(): string

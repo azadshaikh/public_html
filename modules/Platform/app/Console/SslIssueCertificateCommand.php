@@ -9,9 +9,9 @@ use Modules\Platform\Libs\HestiaClient;
 use Modules\Platform\Models\Provider;
 use Modules\Platform\Models\Website;
 use Modules\Platform\Services\AcmeChallengeAliasService;
-use Modules\Platform\Services\DomainService;
 use Modules\Platform\Services\DomainSslCertificateService;
 use Modules\Platform\Services\ServerSSHService;
+use Modules\Platform\Services\WebsiteSslAssignmentService;
 
 /**
  * Issues a wildcard SSL certificate via acme.sh DNS-01 challenge on the Hestia server.
@@ -57,24 +57,20 @@ class SslIssueCertificateCommand extends BaseCommand
         $rootDomain = $domainRecord->name;
 
         // Check platform_secrets for existing valid wildcard (single source of truth)
-        $domainService = resolve(DomainService::class);
-        $existingCert = $domainService->getBestSslCertificate($domainRecord);
+        $sslAssignmentService = $this->sslAssignmentService();
+        $existingCert = $sslAssignmentService->findReusableCertificateForWebsite($website);
 
-        if ($existingCert
-            && $existingCert->getMetadata('is_wildcard')
-            && $existingCert->expires_at
-            && $existingCert->expires_at->greaterThan(now()->addDays(30))
-        ) {
+        if ($existingCert) {
             $this->info(sprintf(
-                'Reusing existing wildcard cert for %s (expires %s).',
+                'Reusing existing SSL cert for %s on %s (expires %s).',
                 $rootDomain,
+                $website->domain,
                 $existingCert->expires_at->toDateString()
             ));
 
-            // Ensure website points to this cert
-            $this->linkCertToWebsite($website, $existingCert);
+            $sslAssignmentService->assignCertificateToWebsite($website, $existingCert);
             $website->markProvisioningStepDone('issue_ssl', sprintf(
-                'Reused existing wildcard cert (expires %s).',
+                'Reused existing SSL certificate (expires %s).',
                 $existingCert->expires_at->toDateString()
             ));
 
@@ -110,7 +106,7 @@ class SslIssueCertificateCommand extends BaseCommand
         throw_unless($certData, Exception::class, 'Failed to fetch newly issued cert from server.');
 
         $secret = $this->storeCertificate($domainRecord, $rootDomain, $certData, $server);
-        $this->linkCertToWebsite($website, $secret);
+        $sslAssignmentService->assignCertificateToWebsite($website, $secret);
 
         $message = sprintf('Wildcard SSL certificate issued for *.%s', $rootDomain);
         $this->logActivity($website, ActivityAction::UPDATE, $message);
@@ -147,12 +143,17 @@ class SslIssueCertificateCommand extends BaseCommand
             return '';
         }
 
-        return $this->acmeChallengeAliasService()->buildChallengeAlias($rootDomain);
+        return $this->acmeChallengeAliasService()->buildAcmeChallengeAliasArgument($rootDomain);
     }
 
     protected function acmeChallengeAliasService(): AcmeChallengeAliasService
     {
         return resolve(AcmeChallengeAliasService::class);
+    }
+
+    protected function sslAssignmentService(): WebsiteSslAssignmentService
+    {
+        return resolve(WebsiteSslAssignmentService::class);
     }
 
     /**
@@ -279,14 +280,5 @@ class SslIssueCertificateCommand extends BaseCommand
         $domainRecord->save();
 
         return $secret;
-    }
-
-    /**
-     * Link the SSL certificate to the website for the install_ssl step.
-     */
-    private function linkCertToWebsite(Website $website, $secret): void
-    {
-        $website->ssl_secret_id = $secret->id;
-        $website->save();
     }
 }

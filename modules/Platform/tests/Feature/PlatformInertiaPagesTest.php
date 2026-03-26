@@ -676,6 +676,102 @@ class PlatformInertiaPagesTest extends TestCase
         $this->assertSame(route('platform.websites.stop-dns-validation', ['website' => $website]), data_get($verifyDnsStep, 'dns_validation.stop_url'));
     }
 
+    public function test_platform_show_pages_include_shared_ssl_usage_details(): void
+    {
+        $agency = $this->createAgency();
+        $serverProvider = $this->createProvider(Provider::TYPE_SERVER, 'Server Provider');
+        $server = $this->createServer($serverProvider, $agency);
+        $dnsProvider = $this->createProvider(Provider::TYPE_DNS, 'DNS Provider');
+        $cdnProvider = $this->createProvider(Provider::TYPE_CDN, 'CDN Provider');
+        $domain = $this->createDomain($agency);
+        $domain->update(['name' => 'astero.in']);
+
+        $rootWebsite = $this->createWebsite($agency, $server, $dnsProvider, $cdnProvider);
+        $rootWebsite->update([
+            'name' => 'Astero Root',
+            'domain' => 'astero.in',
+            'domain_id' => $domain->id,
+        ]);
+
+        $subWebsiteOne = Website::query()->create([
+            'uid' => 'ws-web2',
+            'name' => 'Web 2',
+            'domain' => 'web2.astero.in',
+            'domain_id' => $domain->id,
+            'server_id' => $server->id,
+            'agency_id' => $agency->id,
+            'status' => WebsiteStatus::Active,
+            'type' => 'paid',
+            'plan_tier' => 'basic',
+            'created_by' => $this->admin->id,
+            'updated_by' => $this->admin->id,
+        ]);
+        $subWebsiteOne->assignProvider($dnsProvider->id, true);
+        $subWebsiteOne->assignProvider($cdnProvider->id, true);
+
+        $subWebsiteTwo = Website::query()->create([
+            'uid' => 'ws-web3',
+            'name' => 'Web 3',
+            'domain' => 'web3.astero.in',
+            'domain_id' => $domain->id,
+            'server_id' => $server->id,
+            'agency_id' => $agency->id,
+            'status' => WebsiteStatus::Suspended,
+            'type' => 'paid',
+            'plan_tier' => 'basic',
+            'created_by' => $this->admin->id,
+            'updated_by' => $this->admin->id,
+        ]);
+        $subWebsiteTwo->assignProvider($dnsProvider->id, true);
+        $subWebsiteTwo->assignProvider($cdnProvider->id, true);
+
+        $certificate = $domain->secrets()->create([
+            'key' => 'domain_ssl_certificate',
+            'username' => 'wildcard.astero.in',
+            'type' => 'ssl_certificate',
+            'value' => encrypt('private-key'),
+            'metadata' => [
+                'certificate' => 'cert-pem',
+                'certificate_authority' => 'letsencrypt',
+                'domains' => ['astero.in', '*.astero.in'],
+                'is_wildcard' => true,
+            ],
+            'is_active' => true,
+            'expires_at' => now()->addDays(90),
+            'created_by' => $this->admin->id,
+            'updated_by' => $this->admin->id,
+        ]);
+
+        $rootWebsite->update(['ssl_secret_id' => $certificate->id]);
+        $subWebsiteOne->update(['ssl_secret_id' => $certificate->id]);
+        $subWebsiteTwo->update(['ssl_secret_id' => $certificate->id]);
+
+        $this->actingAs($this->admin)
+            ->get(route('platform.websites.show', $rootWebsite))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->component('platform/websites/show')
+                ->where('website.ssl_summary.certificate_name', 'wildcard.astero.in')
+                ->where('website.ssl_summary.domain_name', 'astero.in')
+                ->where('website.ssl_summary.websites_count', 3)
+                ->has('website.ssl_summary.websites', 3)
+                ->where('website.ssl_summary.websites.0.domain', 'astero.in')
+                ->where('website.ssl_summary.websites.1.domain', 'web2.astero.in')
+                ->where('website.ssl_summary.websites.2.domain', 'web3.astero.in'));
+
+        $this->actingAs($this->admin)
+            ->get(route('platform.domains.show', $domain))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->component('platform/domains/show')
+                ->where('domain.websites_count', 3)
+                ->where('domain.latest_certificate_websites_count', 3)
+                ->has('websites', 3)
+                ->where('websites.0.domain', 'astero.in')
+                ->where('websites.0.uses_latest_ssl', true)
+                ->where('sslCertificates.0.websites_count', 3));
+    }
+
     public function test_platform_website_dns_validation_actions_update_waiting_dns_state(): void
     {
         $agency = $this->createAgency();

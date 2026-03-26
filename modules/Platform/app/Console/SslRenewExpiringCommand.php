@@ -14,6 +14,7 @@ use Modules\Platform\Models\Website;
 use Modules\Platform\Services\AcmeChallengeAliasService;
 use Modules\Platform\Services\DomainSslCertificateService;
 use Modules\Platform\Services\ServerSSHService;
+use Modules\Platform\Services\WebsiteSslAssignmentService;
 
 /**
  * Renews SSL certificates expiring within 15 days.
@@ -170,11 +171,7 @@ class SslRenewExpiringCommand extends Command
             $newSecret = $this->updateCertificate($domain, $rootDomain, $certData, $cert);
 
             // Step 7: Re-install on all websites using this domain
-            $websites = Website::query()
-                ->where('domain_id', $domain->id)
-                ->whereNull('deleted_at')
-                ->whereIn('status', ['active', 'suspended'])
-                ->get();
+            $websites = $this->sslAssignmentService()->websitesCoveredByCertificate($domain, $newSecret);
 
             $this->info(sprintf('  Re-installing on %d website(s)...', $websites->count()));
             $this->reinstallOnWebsites($websites, $newSecret);
@@ -256,12 +253,17 @@ class SslRenewExpiringCommand extends Command
             return '';
         }
 
-        return $this->acmeChallengeAliasService()->buildChallengeAlias($rootDomain);
+        return $this->acmeChallengeAliasService()->buildAcmeChallengeAliasArgument($rootDomain);
     }
 
     protected function acmeChallengeAliasService(): AcmeChallengeAliasService
     {
         return resolve(AcmeChallengeAliasService::class);
+    }
+
+    protected function sslAssignmentService(): WebsiteSslAssignmentService
+    {
+        return resolve(WebsiteSslAssignmentService::class);
     }
 
     /**

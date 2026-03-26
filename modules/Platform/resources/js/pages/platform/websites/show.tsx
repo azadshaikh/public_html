@@ -567,6 +567,56 @@ export default function WebsitesShow({
                                     <InfoRow label="Expiry">{website.expired_on ?? '—'}</InfoRow>
                                 </div>
                             </div>
+
+                            <div className="rounded-lg border bg-muted/20 p-4">
+                                <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Shared SSL</p>
+                                {website.ssl_summary ? (
+                                    <div className="mt-3 flex flex-col gap-2">
+                                        <InfoRow label="Certificate">
+                                            {website.ssl_summary.certificate_href ? (
+                                                <Link href={website.ssl_summary.certificate_href} className="text-primary hover:underline">
+                                                    {website.ssl_summary.certificate_name}
+                                                </Link>
+                                            ) : (
+                                                website.ssl_summary.certificate_name
+                                            )}
+                                        </InfoRow>
+                                        <InfoRow label="Root Domain">
+                                            {website.ssl_summary.domain_href && website.ssl_summary.domain_name ? (
+                                                <Link href={website.ssl_summary.domain_href} className="text-primary hover:underline">
+                                                    {website.ssl_summary.domain_name}
+                                                </Link>
+                                            ) : (
+                                                website.ssl_summary.domain_name ?? '—'
+                                            )}
+                                        </InfoRow>
+                                        <InfoRow label="Expires">{website.ssl_summary.expires_at ?? '—'}</InfoRow>
+                                        <InfoRow label="Used By">
+                                            {website.ssl_summary.websites_count} website{website.ssl_summary.websites_count === 1 ? '' : 's'}
+                                        </InfoRow>
+                                        <div className="pt-2">
+                                            <p className="mb-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                                                Websites using this certificate
+                                            </p>
+                                            <div className="flex flex-wrap gap-2">
+                                                {website.ssl_summary.websites.map((linkedWebsite) => (
+                                                    <Link
+                                                        key={linkedWebsite.id}
+                                                        href={linkedWebsite.href}
+                                                        className="rounded-full border px-3 py-1 text-xs font-medium text-foreground transition hover:border-primary/40 hover:bg-background"
+                                                    >
+                                                        {linkedWebsite.domain}
+                                                    </Link>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <p className="mt-2 text-sm text-muted-foreground">
+                                        No domain SSL certificate is linked to this website yet.
+                                    </p>
+                                )}
+                            </div>
                         </CardContent>
                     </Card>
 
