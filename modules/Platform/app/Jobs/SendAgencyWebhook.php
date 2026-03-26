@@ -77,6 +77,44 @@ class SendAgencyWebhook implements ShouldQueue
     }
 
     /**
+     * Dispatch a webhook for a website after the current HTTP response is sent.
+     *
+     * Use this from request-driven lifecycle actions so remote webhook delivery
+     * never delays the browser response.
+     *
+     * @param  array<string, mixed>  $extraPayload
+     */
+    public static function dispatchForWebsiteAfterResponse(Website $website, string $event, array $extraPayload = []): void
+    {
+        if (! $website->agency_id) {
+            return;
+        }
+
+        $payload = array_merge([
+            'event_id' => 'evt_'.Str::ulid(),
+            'site_id' => $website->site_id,
+            'site_id_prefix' => $website->site_id_prefix,
+            'site_id_zero_padding' => $website->site_id_zero_padding,
+            'domain' => $website->domain,
+            'status' => $website->status instanceof BackedEnum ? $website->status->value : (string) $website->status,
+            'admin_slug' => $website->admin_slug,
+        ], $extraPayload);
+
+        try {
+            dispatch(new self($website->agency_id, $event, $payload))
+                ->onQueue('default')
+                ->afterResponse();
+        } catch (Throwable $throwable) {
+            Log::warning('Failed to dispatch agency webhook after response', [
+                'website_id' => $website->id,
+                'agency_id' => $website->agency_id,
+                'event' => $event,
+                'error' => $throwable->getMessage(),
+            ]);
+        }
+    }
+
+    /**
      * Seconds to wait before retrying.
      *
      * @return array<int, int>

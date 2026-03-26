@@ -703,10 +703,12 @@ class WebsiteService implements ScaffoldServiceInterface
                 $website->save();
 
                 if ($website->delete()) {
-                    dispatch(new WebsiteTrash($website->id));
+                    dispatch(new WebsiteTrash($website->id))
+                        ->onQueue('default')
+                        ->afterResponse();
                 }
 
-                SendAgencyWebhook::dispatchForWebsite($website, 'website.deleted', [
+                SendAgencyWebhook::dispatchForWebsiteAfterResponse($website, 'website.deleted', [
                     'status' => 'trash',
                 ]);
 
@@ -720,7 +722,9 @@ class WebsiteService implements ScaffoldServiceInterface
                     continue;
                 }
 
-                dispatch(new WebsiteUntrash($website->id));
+                dispatch(new WebsiteUntrash($website->id))
+                    ->onQueue('default')
+                    ->afterResponse();
 
                 $website->restore();
                 $website->status = WebsiteStatus::Active;
@@ -729,7 +733,7 @@ class WebsiteService implements ScaffoldServiceInterface
                 $website->updated_by = auth()->id();
                 $website->save();
 
-                SendAgencyWebhook::dispatchForWebsite($website, 'website.restored');
+                SendAgencyWebhook::dispatchForWebsiteAfterResponse($website, 'website.restored');
 
                 $affected++;
 

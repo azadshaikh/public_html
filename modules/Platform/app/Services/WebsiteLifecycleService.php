@@ -137,7 +137,9 @@ class WebsiteLifecycleService
             $website->updated_by = auth()->id();
             $website->save();
 
-            dispatch(new WebsiteDelete($website->id));
+            dispatch(new WebsiteDelete($website->id))
+                ->onQueue('default')
+                ->afterResponse();
 
             $this->logActivity($website, ActivityAction::DELETE, 'Website permanent delete initiated');
 
@@ -155,10 +157,12 @@ class WebsiteLifecycleService
         $website->save();
 
         if ($website->delete()) {
-            dispatch(new WebsiteTrash($website->id));
+            dispatch(new WebsiteTrash($website->id))
+                ->onQueue('default')
+                ->afterResponse();
         }
 
-        SendAgencyWebhook::dispatchForWebsite($website, 'website.deleted', [
+        SendAgencyWebhook::dispatchForWebsiteAfterResponse($website, 'website.deleted', [
             'status' => 'trash',
         ]);
 
@@ -235,10 +239,12 @@ class WebsiteLifecycleService
      */
     public function restore(Website $website): array
     {
-        dispatch(new WebsiteUntrash($website->id));
+        dispatch(new WebsiteUntrash($website->id))
+            ->onQueue('default')
+            ->afterResponse();
         $website->update(['status' => WebsiteStatus::Active, 'deleted_by' => null, 'deleted_at' => null, 'updated_by' => auth()->id()]);
 
-        SendAgencyWebhook::dispatchForWebsite($website, 'website.restored');
+        SendAgencyWebhook::dispatchForWebsiteAfterResponse($website, 'website.restored');
 
         $this->logActivity($website, ActivityAction::RESTORE, 'Website restored successfully');
 
