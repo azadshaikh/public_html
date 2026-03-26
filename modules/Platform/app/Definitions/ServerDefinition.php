@@ -54,18 +54,14 @@ class ServerDefinition extends ScaffoldDefinition
             Column::make('ip')
                 ->label('IP')
                 ->sortable()
-                ->width('160px'),
+                ->searchable()
+                ->hidden(),
 
             Column::make('type')
                 ->label('Type')
                 ->template('badge')
                 ->sortable()
                 ->width('130px'),
-
-            Column::make('provider_name')
-                ->label('Provider')
-                ->sortable()
-                ->width('150px'),
 
             Column::make('domain_usage')
                 ->label('Domains')

@@ -11,9 +11,15 @@ import {
     buildScaffoldEmptyState,
 } from '@/lib/scaffold-datagrid';
 import type { AuthenticatedSharedData, BreadcrumbItem } from '@/types';
-import type { PlatformIndexPageProps, ServerListItem } from '../../../types/platform';
+import type {
+    PlatformIndexPageProps,
+    ServerListItem,
+} from '../../../types/platform';
 
-function serverStatusVariant(status: string | null | undefined, isTrashed?: boolean): 'success' | 'warning' | 'danger' | 'secondary' {
+function serverStatusVariant(
+    status: string | null | undefined,
+    isTrashed?: boolean,
+): 'success' | 'warning' | 'danger' | 'secondary' {
     if (isTrashed) {
         return 'danger';
     }
@@ -34,7 +40,9 @@ function serverStatusVariant(status: string | null | undefined, isTrashed?: bool
     }
 }
 
-function serverTypeVariant(type: string | null | undefined): 'warning' | 'secondary' {
+function serverTypeVariant(
+    type: string | null | undefined,
+): 'warning' | 'secondary' {
     return (type ?? '').toLowerCase() === 'localhost' ? 'warning' : 'secondary';
 }
 
@@ -60,10 +68,11 @@ export default function ServersIndex({
     const page = usePage<AuthenticatedSharedData>();
     const canAddServers = Boolean(page.props.auth.abilities.addServers);
 
-    const { currentStatus, gridFilters, perPage, sorting, statusTabs } = buildScaffoldDatagridState(config, filters, statistics, {
-        searchPlaceholder: 'Search servers...',
-        perPageOptions: [10, 25, 50, 100],
-    });
+    const { currentStatus, gridFilters, perPage, sorting, statusTabs } =
+        buildScaffoldDatagridState(config, filters, statistics, {
+            searchPlaceholder: 'Search servers...',
+            perPageOptions: [10, 25, 50, 100],
+        });
     const { rowActions, bulkActions } = buildScaffoldActionHandlers(config, {
         bulkActionUrl: route('platform.servers.bulk-action'),
         currentStatus,
@@ -85,34 +94,27 @@ export default function ServersIndex({
             header: 'Server',
             sortable: true,
             cell: (server) => (
-                <div className="min-w-0">
+                <div className="min-w-0 space-y-1">
                     <Link
                         href={route('platform.servers.show', server.id)}
                         className="block truncate font-medium text-foreground hover:text-primary"
                     >
                         {server.name}
                     </Link>
+                    <span className="block truncate font-mono text-xs text-muted-foreground">
+                        {server.ip}
+                    </span>
                 </div>
-            ),
-        },
-        {
-            key: 'ip',
-            header: 'IP',
-            sortable: true,
-            cell: (server) => (
-                <span className="font-medium text-foreground">{server.ip}</span>
             ),
         },
         {
             key: 'type_label',
             header: 'Type',
             cell: (server) => (
-                <Badge variant={serverTypeVariant(server.type)}>{server.type_label}</Badge>
+                <Badge variant={serverTypeVariant(server.type)}>
+                    {server.type_label}
+                </Badge>
             ),
-        },
-        {
-            key: 'provider_name',
-            header: 'Provider',
         },
         {
             key: 'domain_usage_current',
@@ -123,13 +125,17 @@ export default function ServersIndex({
                 <div className="flex min-w-[5.5rem] flex-col gap-1">
                     <span className="text-xs font-medium text-muted-foreground">
                         {server.domain_usage_current}
-                        {server.domain_usage_max ? `/${server.domain_usage_max}` : ''}
+                        {server.domain_usage_max
+                            ? `/${server.domain_usage_max}`
+                            : ''}
                     </span>
                     {server.domain_usage_max ? (
                         <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
                             <div
                                 className="h-full rounded-full bg-muted-foreground/35"
-                                style={{ width: `${Math.min(server.domain_usage_percent ?? 0, 100)}%` }}
+                                style={{
+                                    width: `${Math.min(server.domain_usage_percent ?? 0, 100)}%`,
+                                }}
                             />
                         </div>
                     ) : null}
@@ -142,7 +148,12 @@ export default function ServersIndex({
             sortable: true,
             sortKey: 'status',
             cell: (server) => (
-                <Badge variant={serverStatusVariant(server.status, server.is_trashed)}>
+                <Badge
+                    variant={serverStatusVariant(
+                        server.status,
+                        server.is_trashed,
+                    )}
+                >
                     {server.status_label}
                 </Badge>
             ),

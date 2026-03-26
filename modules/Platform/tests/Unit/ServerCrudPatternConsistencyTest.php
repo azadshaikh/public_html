@@ -48,6 +48,28 @@ class ServerCrudPatternConsistencyTest extends TestCase
         $this->assertStringNotContainsString("StatusTab::make('provisioning')", $contents);
     }
 
+    public function test_server_index_merges_ip_into_server_column_and_hides_provider_column(): void
+    {
+        $definitionPath = base_path('modules/Platform/app/Definitions/ServerDefinition.php');
+        $definitionContents = file_get_contents($definitionPath);
+
+        $this->assertNotFalse($definitionContents, 'Failed to read modules/Platform/app/Definitions/ServerDefinition.php');
+        $this->assertStringContainsString("Column::make('name')", $definitionContents);
+        $this->assertStringNotContainsString("->template('platform_server_name')", $definitionContents);
+        $this->assertStringContainsString("Column::make('ip')", $definitionContents);
+        $this->assertStringContainsString('->searchable()', $definitionContents);
+        $this->assertStringContainsString('->hidden()', $definitionContents);
+        $this->assertStringNotContainsString("Column::make('provider_name')", $definitionContents);
+
+        $pagePath = base_path('modules/Platform/resources/js/pages/platform/servers/index.tsx');
+        $pageContents = file_get_contents($pagePath);
+
+        $this->assertNotFalse($pageContents, 'Failed to read modules/Platform/resources/js/pages/platform/servers/index.tsx');
+        $this->assertStringContainsString('{server.ip}', $pageContents);
+        $this->assertStringNotContainsString("key: 'ip'", $pageContents);
+        $this->assertStringNotContainsString("key: 'provider_name'", $pageContents);
+    }
+
     public function test_server_service_statistics_and_navigation_fold_provisioning_into_failed(): void
     {
         $path = base_path('modules/Platform/app/Services/ServerService.php');

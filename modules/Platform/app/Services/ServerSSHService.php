@@ -174,15 +174,26 @@ class ServerSSHService
             ]);
 
             return $this->successResponse('File uploaded successfully to '.$remotePath);
-        } catch (Exception $exception) {
+        } catch (Throwable $throwable) {
+            if ($this->shouldFallbackToSshUpload($throwable)) {
+                Log::warning('SFTP: Falling back to SSH file upload', [
+                    'server_id' => $server->id,
+                    'local' => $localPath,
+                    'remote' => $remotePath,
+                    'error' => $throwable->getMessage(),
+                ]);
+
+                return $this->uploadFileViaSsh($server, $localPath, $remotePath, $permissions);
+            }
+
             Log::error('SFTP: File upload failed', [
                 'server_id' => $server->id,
                 'local' => $localPath,
                 'remote' => $remotePath,
-                'error' => $exception->getMessage(),
+                'error' => $throwable->getMessage(),
             ]);
 
-            return $this->errorResponse('File upload failed: '.$exception->getMessage());
+            return $this->errorResponse('File upload failed: '.$throwable->getMessage());
         } finally {
             if ($sftp instanceof SFTP) {
                 $sftp->disconnect();
@@ -226,6 +237,17 @@ class ServerSSHService
                     try {
                         $this->createRemoteDirectory($sftp, $remoteFile);
                     } catch (Throwable $e) {
+                        if ($this->shouldFallbackToSshUpload($e)) {
+                            Log::warning('SFTP: Falling back to SSH directory upload', [
+                                'server_id' => $server->id,
+                                'local' => $localDir,
+                                'remote' => $remoteDir,
+                                'error' => $e->getMessage(),
+                            ]);
+
+                            return $this->uploadDirectoryViaSsh($server, $localDir, $remoteDir);
+                        }
+
                         // Treat directory creation errors as non-fatal (often warnings from remote stat)
                         Log::warning('SFTP: Directory create failed (ignored)', [
                             'server_id' => $server->id,
@@ -272,6 +294,17 @@ class ServerSSHService
                             $failedFiles[] = $relativePath;
                         }
                     } catch (Throwable $e) {
+                        if ($this->shouldFallbackToSshUpload($e)) {
+                            Log::warning('SFTP: Falling back to SSH directory upload', [
+                                'server_id' => $server->id,
+                                'local' => $localDir,
+                                'remote' => $remoteDir,
+                                'error' => $e->getMessage(),
+                            ]);
+
+                            return $this->uploadDirectoryViaSsh($server, $localDir, $remoteDir);
+                        }
+
                         // phpseclib can emit warnings (converted to ErrorException) on stat/put/chmod.
                         // Record failure but continue so reprovision isn't blocked by one file.
                         $failedFiles[] = $relativePath;
@@ -309,6 +342,17 @@ class ServerSSHService
                 'failed' => $failedFiles,
             ]);
         } catch (Throwable $throwable) {
+            if ($this->shouldFallbackToSshUpload($throwable)) {
+                Log::warning('SFTP: Falling back to SSH directory upload', [
+                    'server_id' => $server->id,
+                    'local' => $localDir,
+                    'remote' => $remoteDir,
+                    'error' => $throwable->getMessage(),
+                ]);
+
+                return $this->uploadDirectoryViaSsh($server, $localDir, $remoteDir);
+            }
+
             Log::error('SFTP: Directory upload failed', [
                 'server_id' => $server->id,
                 'local' => $localDir,
@@ -322,6 +366,86 @@ class ServerSSHService
                 $sftp->disconnect();
             }
         }
+    }
+
+    protected function uploadFileViaSsh(Server $server, string $localPath, string $remotePath, int $permissions = 0644): array
+    {
+        $content = file_get_contents($localPath);
+
+        if ($content === false) {
+            return $this->errorResponse('Local file not found: '.$localPath);
+        }
+
+        $command = $this->buildSshUploadCommand($content, $remotePath, $permissions);
+        $result = $this->executeCommand($server, $command, 60);
+
+        if (! ($result['success'] ?? false)) {
+            return $this->errorResponse('File upload failed: '.($result['message'] ?? 'Unknown error'));
+        }
+
+        return $this->successResponse('File uploaded successfully to '.$remotePath);
+    }
+
+    protected function uploadDirectoryViaSsh(Server $server, string $localDir, string $remoteDir): array
+    {
+        $createDirectoryResult = $this->executeCommand(
+            $server,
+            'mkdir -p '.escapeshellarg($remoteDir),
+            30
+        );
+
+        if (! ($createDirectoryResult['success'] ?? false)) {
+            return $this->errorResponse('Directory upload failed: unable to create remote directory '.$remoteDir);
+        }
+
+        $uploadedFiles = [];
+        $failedFiles = [];
+
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($localDir, RecursiveDirectoryIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::SELF_FIRST
+        );
+
+        foreach ($iterator as $file) {
+            if ($file->isDir()) {
+                continue;
+            }
+
+            $relativePath = substr((string) $file->getPathname(), strlen($localDir) + 1);
+            $remoteFile = rtrim($remoteDir, '/').'/'.$relativePath;
+            $permissions = $this->isExecutableFile($file->getFilename()) ? 0755 : 0644;
+            $result = $this->uploadFileViaSsh($server, (string) $file->getPathname(), $remoteFile, $permissions);
+
+            if ($result['success'] ?? false) {
+                $uploadedFiles[] = $relativePath;
+
+                continue;
+            }
+
+            $failedFiles[] = $relativePath;
+
+            Log::warning('SSH: Fallback file upload failed', [
+                'server_id' => $server->id,
+                'local' => $file->getPathname(),
+                'remote' => $remoteFile,
+                'error' => $result['message'] ?? 'Unknown error',
+            ]);
+        }
+
+        $message = sprintf(
+            'Uploaded %d files to %s',
+            count($uploadedFiles),
+            $remoteDir
+        );
+
+        if ($failedFiles !== []) {
+            $message .= sprintf(' (%d failed)', count($failedFiles));
+        }
+
+        return $this->successResponse($message, [
+            'uploaded' => $uploadedFiles,
+            'failed' => $failedFiles,
+        ]);
     }
 
     /**
@@ -629,6 +753,27 @@ class ServerSSHService
 
             return true;
         }
+    }
+
+    protected function shouldFallbackToSshUpload(Throwable|string $throwable): bool
+    {
+        $message = $throwable instanceof Throwable ? $throwable->getMessage() : $throwable;
+
+        return str_contains($message, 'Expected NET_SFTP_VERSION')
+            || str_contains($message, 'Unable to request a SFTP subsystem')
+            || str_contains($message, 'subsystem request failed');
+    }
+
+    protected function buildSshUploadCommand(string $content, string $remotePath, int $permissions): string
+    {
+        return sprintf(
+            'mkdir -p %s && printf %%s %s | base64 -d > %s && chmod %s %s',
+            escapeshellarg(dirname($remotePath)),
+            escapeshellarg(base64_encode($content)),
+            escapeshellarg($remotePath),
+            escapeshellarg(sprintf('%o', $permissions)),
+            escapeshellarg($remotePath)
+        );
     }
 
     /**
