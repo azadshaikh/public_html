@@ -261,6 +261,16 @@ When adding sidebar links:
 - do not hardcode a link as permanently active
 - avoid passing a `component` prop to `Link` unless an instant/client-only transition is intentional and safe
 
+When adding or updating navigation config for a CRUD, also add quick-open search metadata for the routes users are likely to search by task rather than exact label.
+
+- add `quick_open.aliases` for common alternate names such as `Posts` / `Articles`
+- add `quick_open.keywords` for intent phrases such as `create blog post`, `manage users`, or `theme manager`
+- use `quick_open.description` on high-value actions when the label alone is ambiguous
+- use `quick_open.priority` to boost create or primary landing pages when needed
+- use `sidebar_visible: false` for search-only GET routes such as `Create Post` or `Create Page`
+
+Prefer the navigation config as the single discoverability source. Do not build a separate hard-coded quick-open list in React for routine CRUD pages when the item can be expressed in navigation.
+
 ## Upload Rules
 
 For media uploads:

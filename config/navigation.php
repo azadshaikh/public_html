@@ -71,6 +71,10 @@ return [
                     'permission' => 'view_dashboard',
                     'active_patterns' => ['dashboard'],
                     'badge' => null,
+                    'quick_open' => [
+                        'aliases' => ['Home'],
+                        'keywords' => ['overview', 'analytics', 'admin home'],
+                    ],
                 ],
             ],
 
@@ -87,6 +91,10 @@ return [
                     'icon' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>',
                     'permission' => 'view_users',
                     'active_patterns' => ['app.users.*'],
+                    'quick_open' => [
+                        'aliases' => ['Members', 'Team'],
+                        'keywords' => ['user management', 'manage users', 'staff'],
+                    ],
                 ],
                 'roles' => [
                     'label' => 'Roles & Permissions',
@@ -95,6 +103,10 @@ return [
                     'permission' => 'view_roles',
                     'active_patterns' => ['app.roles.*'],
                     'badge' => null,
+                    'quick_open' => [
+                        'aliases' => ['Permissions', 'Access Control'],
+                        'keywords' => ['rbac', 'user roles', 'permission management'],
+                    ],
                 ],
                 'media_library' => [
                     'label' => 'Media Library',
@@ -102,6 +114,10 @@ return [
                     'icon' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"></path></svg>',
                     'permission' => 'view_media',
                     'active_patterns' => ['app.media-library.*'],
+                    'quick_open' => [
+                        'aliases' => ['Media', 'Files'],
+                        'keywords' => ['images', 'uploads', 'asset library'],
+                    ],
                 ],
                 'seo_integrations' => [
                     'label' => 'seo::seo.seo_integrations',
@@ -110,6 +126,10 @@ return [
                     'permission' => 'manage_integrations_seo_settings',
                     'module' => 'cms',
                     'active_patterns' => ['cms.integrations.*'],
+                    'quick_open' => [
+                        'aliases' => ['Integrations', 'SEO Integrations'],
+                        'keywords' => ['webmaster tools', 'search integrations', 'third party integrations'],
+                    ],
                 ],
                 'redirections' => [
                     'label' => 'seo::seo.redirections',
@@ -118,6 +138,10 @@ return [
                     'permission' => 'view_redirections',
                     'module' => 'cms',
                     'active_patterns' => ['cms.redirections.*'],
+                    'quick_open' => [
+                        'aliases' => ['Redirects'],
+                        'keywords' => ['301 redirects', 'redirect rules', 'url forwarding'],
+                    ],
                 ],
                 'cms_forms' => [
                     'label' => 'Forms',
@@ -126,6 +150,10 @@ return [
                     'permission' => 'view_cms_forms',
                     'module' => 'cms',
                     'active_patterns' => ['cms.form.*'],
+                    'quick_open' => [
+                        'aliases' => ['Form Builder'],
+                        'keywords' => ['submissions', 'contact forms', 'forms'],
+                    ],
                 ],
                 'seo_settings' => [
                     'label' => 'seo::seo.seo',
@@ -150,6 +178,10 @@ return [
                             'route' => 'seo.dashboard',
                             'permission' => 'manage_cms_seo_settings',
                             'active_patterns' => ['seo.dashboard'],
+                            'quick_open' => [
+                                'aliases' => ['SEO Dashboard'],
+                                'keywords' => ['seo overview', 'search performance', 'seo analytics'],
+                            ],
                         ],
                         'seo_cms' => [
                             'label' => 'seo::seo.titles_meta',
@@ -160,42 +192,70 @@ return [
                                 'seo.settings.titlesmeta.update',
                                 'seo.settings.general.update',
                             ],
+                            'quick_open' => [
+                                'aliases' => ['Titles & Meta'],
+                                'keywords' => ['meta titles', 'meta descriptions', 'seo titles'],
+                            ],
                         ],
                         'seo_local_seo' => [
                             'label' => 'seo::seo.local_seo',
                             'route' => 'seo.settings.localseo',
                             'permission' => 'manage_seo_settings',
                             'active_patterns' => ['seo.settings.localseo', 'seo.settings.localseo.update'],
+                            'quick_open' => [
+                                'aliases' => ['Local SEO'],
+                                'keywords' => ['business seo', 'location seo', 'local listings'],
+                            ],
                         ],
                         'seo_social_media' => [
                             'label' => 'seo::seo.social_media',
                             'route' => 'seo.settings.socialmedia',
                             'permission' => 'manage_seo_settings',
                             'active_patterns' => ['seo.settings.socialmedia', 'seo.settings.socialmedia.update'],
+                            'quick_open' => [
+                                'aliases' => ['Social SEO'],
+                                'keywords' => ['open graph', 'twitter cards', 'social sharing'],
+                            ],
                         ],
                         'seo_schema' => [
                             'label' => 'seo::seo.schema',
                             'route' => 'seo.settings.schema',
                             'permission' => 'manage_seo_settings',
                             'active_patterns' => ['seo.settings.schema', 'seo.settings.schema.update'],
+                            'quick_open' => [
+                                'aliases' => ['Structured Data'],
+                                'keywords' => ['schema markup', 'json ld', 'rich results'],
+                            ],
                         ],
                         'seo_sitemap' => [
                             'label' => 'seo::seo.sitemap',
                             'route' => 'seo.settings.sitemap',
                             'permission' => 'manage_seo_settings',
                             'active_patterns' => ['seo.settings.sitemap', 'seo.settings.sitemap.update'],
+                            'quick_open' => [
+                                'aliases' => ['XML Sitemap'],
+                                'keywords' => ['site map', 'crawl urls', 'sitemap settings'],
+                            ],
                         ],
                         'seo_robots' => [
                             'label' => 'seo::seo.robots',
                             'route' => 'seo.settings.robots',
                             'permission' => 'manage_seo_settings',
                             'active_patterns' => ['seo.settings.robots', 'seo.settings.robots.update'],
+                            'quick_open' => [
+                                'aliases' => ['Robots.txt'],
+                                'keywords' => ['crawl rules', 'indexing rules', 'robots settings'],
+                            ],
                         ],
                         'seo_import_export' => [
                             'label' => 'seo::seo.import_export',
                             'route' => 'seo.settings.importexport',
                             'permission' => 'manage_seo_settings',
                             'active_patterns' => ['seo.settings.importexport', 'seo.settings.export', 'seo.settings.import'],
+                            'quick_open' => [
+                                'aliases' => ['SEO Import Export'],
+                                'keywords' => ['import seo settings', 'export seo settings', 'seo backup'],
+                            ],
                         ],
                     ],
                 ],
@@ -205,6 +265,10 @@ return [
                     'icon' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.82-.33 1.7 1.7 0 0 0-1 1.54V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.54 1.7 1.7 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.54-1H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.54-1 1.7 1.7 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 8.95 4.6a1.7 1.7 0 0 0 1-1.54V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.54 1.7 1.7 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9c.2.5.78 1 1.54 1H21a2 2 0 1 1 0 4h-.09c-.76 0-1.34.5-1.51 1z"></path></svg>',
                     'permission' => 'manage_system_settings',
                     'active_patterns' => ['app.settings.*'],
+                    'quick_open' => [
+                        'aliases' => ['System Settings'],
+                        'keywords' => ['app settings', 'configuration', 'preferences'],
+                    ],
                 ],
                 'logs' => [
                     'label' => 'Logs',
@@ -218,18 +282,30 @@ return [
                             'route' => 'app.logs.activity-logs.index',
                             'permission' => 'view_activity_logs',
                             'active_patterns' => ['app.logs.activity-logs.*'],
+                            'quick_open' => [
+                                'aliases' => ['Audit Log'],
+                                'keywords' => ['audit trail', 'activity history'],
+                            ],
                         ],
                         'login_attempts' => [
                             'label' => 'Login Attempts',
                             'route' => 'app.logs.login-attempts.index',
                             'permission' => 'view_login_attempts',
                             'active_patterns' => ['app.logs.login-attempts.*'],
+                            'quick_open' => [
+                                'aliases' => ['Sign-in Attempts'],
+                                'keywords' => ['failed logins', 'auth logs', 'signin attempts'],
+                            ],
                         ],
                         'not_found_logs' => [
                             'label' => '404 Logs',
                             'route' => 'app.logs.not-found-logs.index',
                             'permission' => 'view_not_found_logs',
                             'active_patterns' => ['app.logs.not-found-logs.*'],
+                            'quick_open' => [
+                                'aliases' => ['404 Errors'],
+                                'keywords' => ['missing pages', 'not found errors', 'broken urls'],
+                            ],
                         ],
                     ],
                 ],
@@ -252,33 +328,57 @@ return [
                         'value' => 'New',
                         'color' => 'success',
                     ],
+                    'quick_open' => [
+                        'aliases' => ['Extensions'],
+                        'keywords' => ['plugins', 'addons', 'installed modules'],
+                    ],
                 ],
                 'addresses' => [
                     'label' => 'Addresses',
                     'route' => 'app.masters.addresses.index',
                     'icon' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0"></path><circle cx="12" cy="10" r="3"></circle></svg>',
                     'active_patterns' => ['app.masters.addresses.*'],
+                    'quick_open' => [
+                        'aliases' => ['Locations'],
+                        'keywords' => ['address book', 'geo data', 'location records'],
+                    ],
                 ],
                 'email' => [
                     'label' => 'Email Management',
                     'route' => 'app.masters.email.providers.index',
                     'icon' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m3 7 9 6 9-6"></path></svg>',
                     'active_patterns' => ['app.masters.email.*'],
+                    'quick_open' => [
+                        'aliases' => ['Mail'],
+                        'keywords' => ['smtp', 'email providers', 'email templates', 'mail logs'],
+                    ],
                     'children' => [
                         'email_providers' => [
                             'label' => 'Email Providers',
                             'route' => 'app.masters.email.providers.index',
                             'active_patterns' => ['app.masters.email.providers.*'],
+                            'quick_open' => [
+                                'aliases' => ['SMTP Providers'],
+                                'keywords' => ['mail providers', 'transactional email'],
+                            ],
                         ],
                         'email_templates' => [
                             'label' => 'Email Templates',
                             'route' => 'app.masters.email.templates.index',
                             'active_patterns' => ['app.masters.email.templates.*'],
+                            'quick_open' => [
+                                'aliases' => ['Mail Templates'],
+                                'keywords' => ['email content', 'template editor'],
+                            ],
                         ],
                         'email_logs' => [
                             'label' => 'Email Logs',
                             'route' => ['name' => 'app.masters.email.logs.index', 'params' => ['status' => 'all']],
                             'active_patterns' => ['app.masters.email.logs.*'],
+                            'quick_open' => [
+                                'aliases' => ['Mail Logs'],
+                                'keywords' => ['delivery logs', 'sent emails', 'email history'],
+                            ],
                         ],
                     ],
                 ],
@@ -287,6 +387,10 @@ return [
                     'route' => 'app.masters.settings.index',
                     'icon' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0 3 5.4l-6.4 6.4a2 2 0 1 1-2.8-2.8l6.4-6.4a4 4 0 0 0 5.4-3l-3 3-3-3 3-3z"></path><path d="M5 21l2-2"></path></svg>',
                     'active_patterns' => ['app.masters.settings.*'],
+                    'quick_open' => [
+                        'aliases' => ['System Masters'],
+                        'keywords' => ['master settings', 'master data', 'global master config'],
+                    ],
                 ],
                 'laravel_log' => [
                     'label' => 'Laravel Log',
@@ -294,12 +398,20 @@ return [
                     'icon' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13"></path><path d="M8 12h13"></path><path d="M8 18h13"></path><path d="M3 6h.01"></path><path d="M3 12h.01"></path><path d="M3 18h.01"></path></svg>',
                     'target' => '_blank',
                     'active_patterns' => ['log-viewer.index'],
+                    'quick_open' => [
+                        'aliases' => ['Application Log'],
+                        'keywords' => ['error logs', 'exception logs', 'log viewer'],
+                    ],
                 ],
                 'laravel_jobs' => [
                     'label' => 'Queue Monitor',
                     'route' => 'app.masters.queue-monitor.index',
                     'icon' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 9 5-9 5-9-5z"></path><path d="m3 12 9 5 9-5"></path><path d="m3 17 9 5 9-5"></path></svg>',
                     'active_patterns' => ['app.masters.queue-monitor.*'],
+                    'quick_open' => [
+                        'aliases' => ['Jobs'],
+                        'keywords' => ['queues', 'background jobs', 'failed jobs'],
+                    ],
                 ],
                 'laravel_tools' => [
                     'label' => 'Laravel Tools',
@@ -310,6 +422,10 @@ return [
                         'type' => 'static',
                         'value' => 'New',
                         'color' => 'primary',
+                    ],
+                    'quick_open' => [
+                        'aliases' => ['Dev Tools'],
+                        'keywords' => ['artisan', 'routes', 'env', 'config', 'php'],
                     ],
                 ],
             ],
@@ -326,6 +442,10 @@ return [
                     'icon' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21a8 8 0 0 0-16 0"></path><circle cx="12" cy="7" r="4"></circle></svg>',
                     'permission' => null,
                     'active_patterns' => ['app.profile', 'app.profile.edit'],
+                    'quick_open' => [
+                        'aliases' => ['Account'],
+                        'keywords' => ['my account', 'user profile'],
+                    ],
                 ],
                 'security' => [
                     'label' => 'Security',
@@ -333,6 +453,10 @@ return [
                     'icon' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"></path><path d="m9 12 2 2 4-4"></path></svg>',
                     'permission' => null,
                     'active_patterns' => ['app.profile.security', 'app.profile.security.*'],
+                    'quick_open' => [
+                        'aliases' => ['2FA'],
+                        'keywords' => ['password', 'sessions', 'two factor', 'social logins'],
+                    ],
                 ],
                 'notifications' => [
                     'label' => 'Notifications',
@@ -340,6 +464,10 @@ return [
                     'icon' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.27 21a2 2 0 0 0 3.46 0"></path><path d="M4 8a8 8 0 1 1 16 0c0 5 2 7 2 7H2s2-2 2-7"></path></svg>',
                     'permission' => null,
                     'active_patterns' => ['app.notifications.*'],
+                    'quick_open' => [
+                        'aliases' => ['Alerts'],
+                        'keywords' => ['notification center', 'email alerts', 'preferences'],
+                    ],
                 ],
                 'logout' => [
                     'label' => 'Log out',

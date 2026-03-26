@@ -280,6 +280,8 @@ Discovered by `NavigationAggregator`. Returns a `sections` array with sidebar it
 
 If scaffold registration markers are present, treat the generated section as owned by the scaffold workflow. Keep any custom navigation entries outside that block.
 
+The navigation contract now also feeds the authenticated quick-open dialog. Treat navigation config as the source of truth for both sidebar visibility and quick-open search entries instead of maintaining a separate frontend command list.
+
 ```php
 <?php
 
@@ -296,6 +298,22 @@ return [
                     'route' => 'app.{slug}.index',
                     'icon' => '<svg>...</svg>',
                     'active_patterns' => ['app.{slug}.*'],
+                    'quick_open' => [
+                        'aliases' => ['{Entity Alias}'],
+                        'keywords' => ['search phrase', 'module keyword'],
+                    ],
+                ],
+                '{slug}_create' => [
+                    'label' => 'Create {Entity}',
+                    'route' => 'app.{slug}.create',
+                    'active_patterns' => ['app.{slug}.create'],
+                    'sidebar_visible' => false,
+                    'quick_open' => [
+                        'priority' => 200,
+                        'description' => 'Create a new {Entity}',
+                        'aliases' => ['New {Entity}', 'Add {Entity}'],
+                        'keywords' => ['create {entity}', 'new {entity}'],
+                    ],
                 ],
             ],
         ],
@@ -306,6 +324,22 @@ return [
 **Areas:** `top`, `cms`, `modules`, `bottom`. Module navigation typically uses `modules`.
 
 **Weight** determines sort order within the area — lower values appear first.
+
+Quick-open fields supported on items:
+
+- `sidebar_visible: false` keeps an item out of the sidebar while still allowing it in quick open
+- `quick_open.enabled` defaults to `true`
+- `quick_open.priority` boosts ranking for high-value actions such as create flows
+- `quick_open.description` gives the dialog a clearer secondary label
+- `quick_open.aliases` and `quick_open.keywords` improve matching for synonyms and task-oriented searches
+
+Use `quick_open` metadata on important module routes, especially:
+
+- list/index pages users search for by alternate names
+- create pages or other GET actions that should be discoverable but not always visible in the sidebar
+- settings, logs, and utility screens that benefit from synonym-heavy search terms
+
+Do not model destructive or non-GET actions as quick-open entries.
 
 ### Abilities (`config/abilities.php`)
 

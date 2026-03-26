@@ -84,4 +84,36 @@ class NavigationAggregatorTest extends TestCase
             $section['items'][0]['quick_open'],
         );
     }
+
+    public function test_application_and_cms_navigation_configs_define_search_terms_for_quick_open(): void
+    {
+        $appNavigation = include config_path('navigation.php');
+        $cmsNavigation = include base_path('modules/CMS/config/navigation.php');
+
+        $this->assertSame(
+            ['Members', 'Team'],
+            $appNavigation['sections']['manage']['items']['users']['quick_open']['aliases'],
+        );
+        $this->assertContains(
+            'webmaster tools',
+            $appNavigation['sections']['manage']['items']['seo_integrations']['quick_open']['keywords'],
+        );
+        $this->assertContains(
+            'background jobs',
+            $appNavigation['sections']['masters']['items']['laravel_jobs']['quick_open']['keywords'],
+        );
+
+        $this->assertSame(
+            ['Blog Posts', 'Articles'],
+            $cmsNavigation['sections']['cms']['items']['cms_posts']['children']['cms_posts']['quick_open']['aliases'],
+        );
+        $this->assertContains(
+            'navigation builder',
+            $cmsNavigation['sections']['appearance']['items']['cms_menus']['quick_open']['keywords'],
+        );
+        $this->assertContains(
+            'create website page',
+            $cmsNavigation['sections']['cms']['items']['cms_pages_create']['quick_open']['keywords'],
+        );
+    }
 }

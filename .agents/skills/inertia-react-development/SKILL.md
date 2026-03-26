@@ -186,6 +186,9 @@ For authenticated application pages in this project, prefer the shared app shell
 - Use default control sizing for page actions, filter bars, datagrid toolbars, and form controls. Treat `sm`/`xs` variants as explicit density changes that should only be used when the UI truly needs tighter spacing; if that tradeoff is not obvious, confirm it with the user first.
 - When reading `page.props.auth.abilities`, only use keys the current page actually needs and expect the shared payload to be route-scoped rather than exhaustive.
 - For shared module data, only rely on runtime-safe fields such as `name`, `slug`, and `inertiaNamespace` unless the page is a dedicated management/inspection screen with richer props.
+- The authenticated shell includes a global quick-open dialog triggered by `Ctrl/Cmd + K`. When changing discoverability for pages or actions, prefer updating backend navigation metadata so the dialog and sidebar stay in sync.
+- The quick-open dialog consumes the shared navigation payload, recent successful Inertia visits, and item-level `quick_open` metadata. Avoid creating feature-local command lists unless the feature is intentionally separate from app navigation.
+- Search-only quick-open entries are supported through navigation items with `sidebar_visible: false` and a GET route, which is the preferred pattern for actions like `Create Post` or `Create Page`.
 
 Example:
 
