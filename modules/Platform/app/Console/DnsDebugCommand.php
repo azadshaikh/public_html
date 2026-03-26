@@ -9,6 +9,7 @@ use Modules\Platform\Enums\WebsiteStatus;
 use Modules\Platform\Libs\DnsResolver;
 use Modules\Platform\Models\Website;
 use Modules\Platform\Services\AcmeChallengeAliasService;
+use Modules\Platform\Services\WebsiteDomainVerificationService;
 
 class DnsDebugCommand extends Command
 {
@@ -43,8 +44,21 @@ class DnsDebugCommand extends Command
 
         $allRecordsPassing = $recordChecks !== []
             && collect($recordChecks)->every(fn (array $record): bool => $record['passes']);
+        $challengeChecks = collect($recordChecks)
+            ->filter(fn (array $record): bool => $this->shouldVerifyViaDnsCheck($record))
+            ->values()
+            ->all();
+        $challengeChecksPassing = $dnsMode === 'external'
+            ? ($challengeChecks !== [] && collect($challengeChecks)->every(fn (array $record): bool => $record['passes']))
+            : $allRecordsPassing;
+        $httpVerification = $dnsMode === 'external'
+            ? $this->domainVerificationService()->verifyWebsite($website)
+            : null;
+        $verificationPasses = $dnsMode === 'external'
+            ? ($challengeChecksPassing && (bool) ($httpVerification['passes'] ?? false))
+            : $allRecordsPassing;
 
-        $pollGate = $this->buildPollGateSummary($website, $requiredRecords !== [], $allRecordsPassing);
+        $pollGate = $this->buildPollGateSummary($website, $requiredRecords !== [], $verificationPasses, $dnsMode);
 
         $payload = [
             'website' => [
@@ -77,9 +91,11 @@ class DnsDebugCommand extends Command
             ],
             'acme' => $this->buildAcmeSummary($rootDomain),
             'record_checks' => $recordChecks,
+            'http_verification' => $httpVerification,
             'overall' => [
                 'records_pass' => $allRecordsPassing,
-                'would_resume_provisioning' => $pollGate['eligible'] && $allRecordsPassing,
+                'verification_pass' => $verificationPasses,
+                'would_resume_provisioning' => $pollGate['eligible'] && $verificationPasses,
                 'resolver_quorum' => 'any',
             ],
         ];
@@ -187,7 +203,7 @@ class DnsDebugCommand extends Command
     /**
      * @return array{eligible: bool, blockers: string[]}
      */
-    private function buildPollGateSummary(Website $website, bool $hasInstructions, bool $allRecordsPassing): array
+    private function buildPollGateSummary(Website $website, bool $hasInstructions, bool $verificationPasses, string $dnsMode): array
     {
         $blockers = [];
 
@@ -207,8 +223,10 @@ class DnsDebugCommand extends Command
             $blockers[] = 'dns_instructions.records is empty';
         }
 
-        if (! $allRecordsPassing) {
-            $blockers[] = 'one or more required DNS records are still failing';
+        if (! $verificationPasses) {
+            $blockers[] = $dnsMode === 'external'
+                ? 'challenge DNS or HTTP verification file checks are still failing'
+                : 'one or more required DNS records are still failing';
         }
 
         return [
@@ -268,6 +286,8 @@ class DnsDebugCommand extends Command
                 ['ACME alias domain', $payload['acme']['alias_domain'] ?? 'null'],
                 ['ACME challenge alias', $payload['domain']['challenge_alias'] ?: ($payload['acme']['challenge_alias'] ?? 'null')],
                 ['ACME Bunny key configured', $payload['acme']['bunny_api_key_configured'] ? 'yes' : 'no'],
+                ['Raw DNS record checks pass', $payload['overall']['records_pass'] ? 'yes' : 'no'],
+                ['Active verification checks pass', $payload['overall']['verification_pass'] ? 'yes' : 'no'],
                 ['Resolver quorum', $payload['overall']['resolver_quorum']],
                 ['Poll eligible now', $payload['dns_validation']['poll_gate']['eligible'] ? 'yes' : 'no'],
                 ['Would resume provisioning now', $payload['overall']['would_resume_provisioning'] ? 'yes' : 'no'],
@@ -337,5 +357,38 @@ class DnsDebugCommand extends Command
             $this->line(sprintf('  trace %s: %s', $recordCheck['type'], $traceRecords));
             $this->line(sprintf('  trace NS: %s', $traceNameservers));
         }
+
+        if (is_array($payload['http_verification'])) {
+            $this->newLine();
+            $this->line(sprintf(
+                'HTTP verification file %s [%s]',
+                $payload['http_verification']['path'],
+                $payload['http_verification']['passes'] ? 'PASS' : 'FAIL'
+            ));
+
+            foreach ($payload['http_verification']['checks'] as $check) {
+                $this->line(sprintf(
+                    '  %s -> %s [%s%s%s]',
+                    $check['url'],
+                    $check['status_code'] ?? 'error',
+                    $check['matched'] ? 'PASS' : 'FAIL',
+                    $check['location'] ? ', location: '.$check['location'] : '',
+                    $check['error'] ? ', error: '.$check['error'] : ''
+                ));
+            }
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $recordCheck
+     */
+    private function shouldVerifyViaDnsCheck(array $recordCheck): bool
+    {
+        return str_starts_with((string) ($recordCheck['name'] ?? ''), '_acme-challenge');
+    }
+
+    private function domainVerificationService(): WebsiteDomainVerificationService
+    {
+        return resolve(WebsiteDomainVerificationService::class);
     }
 }

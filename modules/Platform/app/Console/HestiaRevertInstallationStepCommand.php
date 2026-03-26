@@ -27,6 +27,7 @@ class HestiaRevertInstallationStepCommand extends Command
         'resolve_domain' => 'revertResolveDomain',
         'create_user' => 'revertUser',
         'create_website' => 'revertWebsite',
+        'publish_domain_verification' => 'revertWebsite',
         'create_database' => 'revertDatabase',
         'install_ssl' => 'revertInstallSsl',
         'prepare_astero' => 'revertAsteroPreparation',
@@ -155,7 +156,7 @@ class HestiaRevertInstallationStepCommand extends Command
     private function revertWebsite(Website $website): string
     {
         $this->callHestiaApi('v-delete-web-domain', $website, ['arg1' => $website->website_username, 'arg2' => $website->domain]);
-        $website->markProvisioningStepsReverted(['create_website', 'create_database', 'install_ssl', 'prepare_astero', 'configure_env', 'install_astero']);
+        $website->markProvisioningStepsReverted(['create_website', 'publish_domain_verification', 'create_database', 'install_ssl', 'prepare_astero', 'configure_env', 'install_astero']);
 
         return 'Website domain removed successfully.';
     }

@@ -669,6 +669,9 @@ class PlatformInertiaPagesTest extends TestCase
         $this->assertSame('_acme-challenge', data_get($verifyDnsStep, 'dns_instructions.records.2.host_label'));
         $this->assertFalse((bool) data_get($verifyDnsStep, 'dns_validation.confirmed_by_user'));
         $this->assertSame(0, data_get($verifyDnsStep, 'dns_validation.check_count'));
+        $this->assertSame('/.well-known/astero-domain-verification.txt', data_get($verifyDnsStep, 'dns_validation.verification_path'));
+        $this->assertSame('http://astero.in/.well-known/astero-domain-verification.txt', data_get($verifyDnsStep, 'dns_validation.verification_urls.0'));
+        $this->assertSame('http://www.astero.in/.well-known/astero-domain-verification.txt', data_get($verifyDnsStep, 'dns_validation.verification_urls.1'));
         $this->assertSame(route('platform.websites.confirm-dns', ['website' => $website]), data_get($verifyDnsStep, 'dns_validation.confirm_url'));
         $this->assertSame(route('platform.websites.stop-dns-validation', ['website' => $website]), data_get($verifyDnsStep, 'dns_validation.stop_url'));
     }
@@ -743,7 +746,7 @@ class PlatformInertiaPagesTest extends TestCase
         $this->assertSame(0, $website->getMetadata('dns_check_count'));
         $this->assertNull($website->getMetadata('dns_check_result'));
         $this->assertSame(
-            'Waiting for customer to add DNS records.',
+            'Waiting for customer DNS and verification file checks.',
             $website->getMetadata('provisioning_steps.verify_dns.message')
         );
     }

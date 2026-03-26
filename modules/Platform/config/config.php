@@ -9,6 +9,11 @@ return [
         'alias_domain' => env('ACME_CHALLENGE_ALIAS_DOMAIN'),
         'bunny_api_key' => env('ACME_CHALLENGE_BUNNY_API_KEY'),
     ],
+    'domain_verification' => [
+        'path' => env('PLATFORM_DOMAIN_VERIFICATION_PATH', '/.well-known/astero-domain-verification.txt'),
+        'http_timeout' => (int) env('PLATFORM_DOMAIN_VERIFICATION_HTTP_TIMEOUT', 10),
+        'connect_timeout' => (int) env('PLATFORM_DOMAIN_VERIFICATION_CONNECT_TIMEOUT', 5),
+    ],
 
     'server_statuses' => [
         'active' => ['label' => 'Active',     'value' => 'active',     'color' => 'success'],

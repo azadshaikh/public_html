@@ -12,13 +12,14 @@ use Modules\Platform\Libs\DnsResolver;
 use Modules\Platform\Models\Provider;
 use Modules\Platform\Models\Website;
 use Modules\Platform\Services\AcmeChallengeAliasService;
+use Modules\Platform\Services\WebsiteDomainVerificationService;
 
 /**
  * Verifies DNS propagation for a website domain before CDN/SSL steps can proceed.
  *
  * - SUBDOMAIN: auto-skipped by the orchestrator (never reaches this command)
  * - MANAGED (NS delegation): creates Bunny DNS zone on first run, then checks NS propagation
- * - EXTERNAL (CNAME delegation): generates challenge alias, checks A + CNAME + _acme-challenge records
+ * - EXTERNAL (customer DNS): generates challenge alias, checks _acme-challenge DNS plus HTTP verification file reachability
  *
  * Returns exit code 2 (WAITING) when DNS is not yet propagated, causing the orchestrator
  * to set website status to WaitingForDns and pause the pipeline.
@@ -139,7 +140,7 @@ class DnsVerifyStepCommand extends BaseCommand
      * Handle CNAME delegation (external) DNS verification.
      *
      * On first run: generate challenge alias, store required records.
-     * On subsequent runs: check if A + CNAME + _acme-challenge records are set.
+     * On subsequent runs: check if _acme-challenge is set and the verification file is reachable.
      */
     private function handleExternalDns(Website $website, $domainRecord, string $rootDomain): void
     {
@@ -199,12 +200,16 @@ class DnsVerifyStepCommand extends BaseCommand
             ));
         }
 
-        // Step 2: Verify required records
+        // Step 2: Verify DNS challenge alias + HTTP verification file
         $instructions = $domainRecord->getMetadata('dns_instructions');
         $requiredRecords = $instructions['records'] ?? [];
         $allVerified = true;
 
         foreach ($requiredRecords as $required) {
+            if (! $this->shouldVerifyViaDns($required)) {
+                continue;
+            }
+
             $verified = $this->verifyDnsRecord($required['type'], $required['name'], $required['value'], $rootDomain);
             if (! $verified) {
                 $this->warn(sprintf('DNS record not found: %s %s → %s', $required['type'], $required['name'], $required['value']));
@@ -212,8 +217,22 @@ class DnsVerifyStepCommand extends BaseCommand
             }
         }
 
+        $httpVerification = $this->domainVerificationService()->verifyWebsite($website);
+
+        foreach ($httpVerification['checks'] as $check) {
+            if (! $check['matched']) {
+                $this->warn(sprintf(
+                    'Verification file not reachable on %s (status: %s%s)',
+                    $check['url'],
+                    $check['status_code'] ?? 'error',
+                    $check['location'] ? ', location: '.$check['location'] : ''
+                ));
+                $allVerified = false;
+            }
+        }
+
         if (! $allVerified) {
-            $website->markProvisioningStepWaiting('verify_dns', 'Waiting for customer to add DNS records.');
+            $website->markProvisioningStepWaiting('verify_dns', 'Waiting for customer DNS to propagate and verification file to become reachable.');
             $this->exitWithWaiting();
         }
 
@@ -242,9 +261,24 @@ class DnsVerifyStepCommand extends BaseCommand
         return DnsResolver::verifyRecord($queryName, $type, $expectedValue);
     }
 
+    /**
+     * @param  array{name?: string, type?: string, value?: string}  $required
+     */
+    private function shouldVerifyViaDns(array $required): bool
+    {
+        $name = (string) ($required['name'] ?? '');
+
+        return str_starts_with($name, '_acme-challenge');
+    }
+
     protected function acmeChallengeAliasService(): AcmeChallengeAliasService
     {
         return resolve(AcmeChallengeAliasService::class);
+    }
+
+    protected function domainVerificationService(): WebsiteDomainVerificationService
+    {
+        return resolve(WebsiteDomainVerificationService::class);
     }
 
     /**

@@ -13,6 +13,7 @@ use Modules\Platform\Jobs\SendAgencyWebhook;
 use Modules\Platform\Jobs\WebsiteProvision;
 use Modules\Platform\Libs\DnsResolver;
 use Modules\Platform\Models\Website;
+use Modules\Platform\Services\WebsiteDomainVerificationService;
 
 /**
  * Polls all websites stuck in WaitingForDns status and checks DNS propagation.
@@ -165,10 +166,19 @@ class DnsPollPendingCommand extends Command
                 return;
             }
         } else {
-            $dnsVerified = match ($dnsMode) {
-                'external' => $this->checkExternalDns($domainRecord, $rootDomain),
-                default => false,
+            $checkResult = match ($dnsMode) {
+                'external' => $this->checkExternalDns($website, $domainRecord, $rootDomain),
+                default => ['verified' => false],
             };
+            $dnsVerified = (bool) ($checkResult['verified'] ?? false);
+
+            if ($dnsMode === 'external') {
+                $website->setMetadata('dns_check_result', [
+                    'http_checks' => $checkResult['http_checks'] ?? [],
+                    'checked_at' => now()->toIso8601String(),
+                ]);
+                $website->save();
+            }
         }
 
         if ($dnsVerified) {
@@ -197,7 +207,7 @@ class DnsPollPendingCommand extends Command
             WebsiteProvision::dispatch($website);
         } else {
             $waitingMessage = match ($dnsMode) {
-                'external' => sprintf('Waiting for customer DNS records to propagate. (Check %d)', $checkCount),
+                'external' => sprintf('Waiting for customer DNS and verification file checks. (Check %d)', $checkCount),
                 default => sprintf('Waiting for NS delegation to propagate. (Check %d)', $checkCount),
             };
 
@@ -246,12 +256,22 @@ class DnsPollPendingCommand extends Command
     /**
      * Check required records for external DNS domains using public DNS resolvers.
      */
-    private function checkExternalDns($domainRecord, string $rootDomain): bool
+    /**
+     * @return array{
+     *     verified: bool,
+     *     http_checks: array<int, array{host: string, url: string, matched: bool, status_code: int|null, location: string|null, body: string|null, error: string|null}>
+     * }
+     */
+    private function checkExternalDns(Website $website, $domainRecord, string $rootDomain): array
     {
         $instructions = $domainRecord->getMetadata('dns_instructions');
         $requiredRecords = $instructions['records'] ?? [];
 
         foreach ($requiredRecords as $required) {
+            if (! $this->shouldVerifyViaDns($required)) {
+                continue;
+            }
+
             $queryName = str_contains($required['name'], '.') ? $required['name'] : $required['name'].'.'.$rootDomain;
 
             $isApexCname = strtoupper((string) $required['type']) === 'CNAME'
@@ -262,10 +282,33 @@ class DnsPollPendingCommand extends Command
                 : DnsResolver::verifyRecord($queryName, $required['type'], $required['value']);
 
             if (! $verified) {
-                return false;
+                return [
+                    'verified' => false,
+                    'http_checks' => [],
+                ];
             }
         }
 
-        return ! empty($requiredRecords);
+        $httpVerification = $this->domainVerificationService()->verifyWebsite($website);
+
+        return [
+            'verified' => ! empty($requiredRecords) && $httpVerification['passes'],
+            'http_checks' => $httpVerification['checks'],
+        ];
+    }
+
+    /**
+     * @param  array{name?: string, type?: string, value?: string}  $required
+     */
+    private function shouldVerifyViaDns(array $required): bool
+    {
+        $name = (string) ($required['name'] ?? '');
+
+        return str_starts_with($name, '_acme-challenge');
+    }
+
+    private function domainVerificationService(): WebsiteDomainVerificationService
+    {
+        return resolve(WebsiteDomainVerificationService::class);
     }
 }

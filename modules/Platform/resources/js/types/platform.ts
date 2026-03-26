@@ -384,6 +384,8 @@ export type WebsiteDnsValidation = {
     check_count: number;
     domain_not_registered: boolean;
     observed_nameservers: string[];
+    verification_path?: string | null;
+    verification_urls: string[];
     confirm_url: string;
     stop_url: string;
 };
