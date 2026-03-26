@@ -13,7 +13,6 @@ use App\Modules\Support\ModuleAutoloader;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -214,13 +213,11 @@ class PlatformInertiaPagesTest extends TestCase
             ->assertInertia(fn (Assert $page): Assert => $page
                 ->component('platform/websites/create')
                 ->has('initialValues')
-                ->where('initialValues.dns_mode', 'subdomain')
                 ->has('serverOptions')
                 ->has('agencyOptions')
                 ->has('statusOptions')
                 ->has('typeOptions')
                 ->has('planOptions')
-                ->has('dnsModeOptions', 3)
                 ->has('dnsProviderOptions')
                 ->has('cdnProviderOptions'));
 
@@ -543,9 +540,7 @@ class PlatformInertiaPagesTest extends TestCase
             ->assertInertia(fn (Assert $page): Assert => $page
                 ->component('platform/websites/edit')
                 ->where('website.id', $website->id)
-                ->where('initialValues.name', $website->name)
-                ->where('initialValues.dns_mode', $website->dns_mode)
-                ->has('dnsModeOptions', 3));
+                ->where('initialValues.name', $website->name));
 
         $stepKeys = array_keys(config('platform.website.steps', []));
         $this->assertNotEmpty($stepKeys);
@@ -678,74 +673,6 @@ class PlatformInertiaPagesTest extends TestCase
         $this->assertSame(250, $server->max_domains);
     }
 
-    public function test_website_store_and_update_persist_dns_mode(): void
-    {
-        Queue::fake();
-
-        $agency = $this->createAgency();
-        $serverProvider = $this->createProvider(Provider::TYPE_SERVER, 'Server Provider');
-        $server = $this->createServer($serverProvider, $agency);
-        $dnsProvider = $this->createProvider(Provider::TYPE_DNS, 'DNS Provider');
-        $cdnProvider = $this->createProvider(Provider::TYPE_CDN, 'CDN Provider');
-
-        $this->actingAs($this->admin)
-            ->post(route('platform.websites.store'), [
-                'name' => 'Managed DNS Site',
-                'domain' => 'managed.example.com',
-                'type' => 'paid',
-                'plan' => 'basic',
-                'server_id' => (string) $server->id,
-                'agency_id' => (string) $agency->id,
-                'dns_provider_id' => (string) $dnsProvider->id,
-                'cdn_provider_id' => (string) $cdnProvider->id,
-                'dns_mode' => 'managed',
-                'website_username' => '',
-                'owner_password' => '',
-                'customer_name' => 'Managed Customer',
-                'customer_email' => 'managed@example.com',
-                'status' => WebsiteStatus::Provisioning->value,
-                'expired_on' => '',
-                'is_www' => false,
-                'is_agency' => false,
-                'skip_cdn' => false,
-                'skip_dns' => false,
-                'skip_ssl_issue' => false,
-                'skip_email' => false,
-            ])
-            ->assertRedirect();
-
-        /** @var Website $website */
-        $website = Website::query()->where('domain', 'managed.example.com')->firstOrFail();
-
-        $this->assertSame('managed', $website->dns_mode);
-
-        $this->actingAs($this->admin)
-            ->put(route('platform.websites.update', $website), [
-                'name' => 'Managed DNS Site',
-                'domain' => 'managed.example.com',
-                'type' => 'paid',
-                'plan' => 'basic',
-                'server_id' => (string) $server->id,
-                'agency_id' => (string) $agency->id,
-                'dns_provider_id' => (string) $dnsProvider->id,
-                'cdn_provider_id' => (string) $cdnProvider->id,
-                'dns_mode' => 'external',
-                'customer_name' => 'Managed Customer',
-                'customer_email' => 'managed@example.com',
-                'status' => WebsiteStatus::Provisioning->value,
-                'expired_on' => '',
-                'is_www' => false,
-                'is_agency' => false,
-                'skip_cdn' => false,
-                'skip_dns' => false,
-                'skip_ssl_issue' => false,
-                'skip_email' => false,
-            ])
-            ->assertRedirect();
-
-        $this->assertSame('external', $website->fresh()->dns_mode);
-    }
-
     private function createDomain(?Agency $agency = null): Domain
     {
         return Domain::query()->create([
@@ -850,7 +777,6 @@ class PlatformInertiaPagesTest extends TestCase
             'domain' => 'demo.example.com',
             'server_id' => $server->id,
             'agency_id' => $agency->id,
-            'dns_mode' => 'managed',
             'status' => WebsiteStatus::Active,
             'type' => 'paid',
             'plan_tier' => 'basic',
