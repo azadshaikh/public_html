@@ -263,6 +263,8 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
             Route::post('/{website}/stop-dns-validation', [WebsiteController::class, 'stopDnsValidation'])->name('stop-dns-validation')->whereNumber('website');
             Route::get('/{website}/laravel-log', [WebsiteController::class, 'websiteLog'])->name('laravel-log.show')->whereNumber('website');
             Route::delete('/{website}/laravel-log', [WebsiteController::class, 'clearWebsiteLog'])->name('laravel-log.clear')->whereNumber('website');
+            Route::get('/{website}/env', [WebsiteController::class, 'websiteEnv'])->name('env.show')->whereNumber('website');
+            Route::put('/{website}/env', [WebsiteController::class, 'updateWebsiteEnv'])->name('env.update')->whereNumber('website');
 
             Route::post('/{website}/{step}/execute', [WebsiteController::class, 'executeStep'])->name('execute.step')->whereNumber('website');
             Route::post('/{website}/{step}/revert', [WebsiteController::class, 'revertStep'])->name('revert.step')->whereNumber('website');

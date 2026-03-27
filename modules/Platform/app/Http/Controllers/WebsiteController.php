@@ -65,7 +65,7 @@ class WebsiteController extends ScaffoldController implements HasMiddleware
             // Custom endpoint permissions
             new Middleware('permission:view_websites', only: ['websiteLog']),
             new Middleware('permission:add_websites', only: ['createFromOrder']),
-            new Middleware('permission:edit_websites', only: ['updateStatus', 'updateVersion', 'syncWebsite', 'recacheApplication', 'retryProvision', 'executeStep', 'revertStep', 'updateSetupStatus', 'setupQueueWorker', 'scaleQueueWorker', 'reprovision', 'revealSecret', 'confirmDns', 'stopDnsValidation', 'clearWebsiteLog']),
+            new Middleware('permission:edit_websites', only: ['updateStatus', 'updateVersion', 'syncWebsite', 'recacheApplication', 'retryProvision', 'executeStep', 'revertStep', 'updateSetupStatus', 'setupQueueWorker', 'scaleQueueWorker', 'reprovision', 'revealSecret', 'confirmDns', 'stopDnsValidation', 'clearWebsiteLog', 'websiteEnv', 'updateWebsiteEnv']),
             new Middleware('permission:delete_websites', only: ['removeFromServer']),
         ];
     }
@@ -184,6 +184,87 @@ class WebsiteController extends ScaffoldController implements HasMiddleware
             'pullzoneId' => $website->pullzone_id,
             'canRevealSecrets' => $canRevealSecrets,
             'canManageLaravelLog' => (bool) auth()->user()?->can('edit_websites'),
+            'canManageWebsiteEnv' => (bool) auth()->user()?->can('edit_websites'),
+        ]);
+    }
+
+    public function websiteEnv(int|string $website): JsonResponse
+    {
+        /** @var Website $websiteModel */
+        $websiteModel = Website::withTrashed()->with('server')->findOrFail((int) $website);
+
+        if (! $websiteModel->server) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This website does not have a server assigned.',
+            ], 422);
+        }
+
+        if (blank($websiteModel->website_username) || blank($websiteModel->domain)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This website does not have enough runtime details to locate the shared environment file.',
+            ], 422);
+        }
+
+        $sshService = resolve(ServerSSHService::class);
+        $result = $sshService->executeCommand($websiteModel->server, $this->buildWebsiteEnvReadCommand($websiteModel), 30);
+
+        if (! ($result['success'] ?? false)) {
+            return response()->json([
+                'success' => false,
+                'message' => $result['message'] ?? 'Unable to read website environment file.',
+            ], 500);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $this->parseWebsiteEnvOutput((string) data_get($result, 'data.output', '')),
+        ]);
+    }
+
+    public function updateWebsiteEnv(Request $request, int|string $website): JsonResponse
+    {
+        $validated = $request->validate([
+            'content' => ['required', 'string'],
+        ]);
+
+        /** @var Website $websiteModel */
+        $websiteModel = Website::withTrashed()->with('server')->findOrFail((int) $website);
+
+        if (! $websiteModel->server) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This website does not have a server assigned.',
+            ], 422);
+        }
+
+        if (blank($websiteModel->website_username) || blank($websiteModel->domain)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This website does not have enough runtime details to locate the shared environment file.',
+            ], 422);
+        }
+
+        $sshService = resolve(ServerSSHService::class);
+        $result = $sshService->executeCommand(
+            $websiteModel->server,
+            $this->buildWebsiteEnvWriteCommand($websiteModel, $validated['content']),
+            30
+        );
+
+        if (! ($result['success'] ?? false)) {
+            return response()->json([
+                'success' => false,
+                'message' => $result['message'] ?? 'Unable to update website environment file.',
+            ], 500);
+        }
+
+        $this->logActivity($websiteModel, ActivityAction::UPDATE, 'Updated website shared environment file.');
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Website environment file updated successfully. Run recache if the application is using cached configuration.',
         ]);
     }
 
@@ -434,6 +515,63 @@ fi
 BASH;
     }
 
+    private function buildWebsiteEnvReadCommand(Website $website): string
+    {
+        $quotedUsername = escapeshellarg((string) $website->website_username);
+        $quotedDomain = escapeshellarg((string) $website->domain);
+
+        return <<<BASH
+USERNAME={$quotedUsername}
+DOMAIN={$quotedDomain}
+ENV_PATH="/home/\${USERNAME}/web/\${DOMAIN}/public_html/shared/.env"
+
+if [ -f "\$ENV_PATH" ]; then
+    SIZE=\$(wc -c < "\$ENV_PATH" | tr -d ' ')
+    MTIME=\$(stat -c %Y "\$ENV_PATH")
+    echo "__ASTERO_EXISTS__=1"
+    echo "__ASTERO_PATH__=\$ENV_PATH"
+    echo "__ASTERO_SIZE__=\$SIZE"
+    echo "__ASTERO_MTIME__=\$MTIME"
+    echo "__ASTERO_CONTENT_START__"
+    cat "\$ENV_PATH"
+else
+    echo "__ASTERO_EXISTS__=0"
+    echo "__ASTERO_PATH__=\$ENV_PATH"
+    echo "__ASTERO_SIZE__=0"
+    echo "__ASTERO_MTIME__="
+    echo "__ASTERO_CONTENT_START__"
+fi
+BASH;
+    }
+
+    private function buildWebsiteEnvWriteCommand(Website $website, string $content): string
+    {
+        $quotedUsername = escapeshellarg((string) $website->website_username);
+        $quotedDomain = escapeshellarg((string) $website->domain);
+        $encodedContent = base64_encode($content);
+        $quotedContent = escapeshellarg($encodedContent);
+
+        return <<<BASH
+USERNAME={$quotedUsername}
+DOMAIN={$quotedDomain}
+ENV_B64={$quotedContent}
+SHARED_DIR="/home/\${USERNAME}/web/\${DOMAIN}/public_html/shared"
+ENV_PATH="\$SHARED_DIR/.env"
+BACKUP_DIR="\$SHARED_DIR/backups/env"
+
+mkdir -p "\$SHARED_DIR"
+mkdir -p "\$BACKUP_DIR"
+
+if [ -f "\$ENV_PATH" ]; then
+    cp "\$ENV_PATH" "\$BACKUP_DIR/env.\$(date +%Y%m%d%H%M%S).bak"
+fi
+
+printf '%s' "\$ENV_B64" | base64 -d > "\$ENV_PATH"
+chmod 600 "\$ENV_PATH" 2>/dev/null || true
+chown "\$USERNAME:\$USERNAME" "\$ENV_PATH" 2>/dev/null || true
+BASH;
+    }
+
     private function buildWebsiteLaravelLogClearCommand(Website $website): string
     {
         $quotedUsername = escapeshellarg((string) $website->website_username);
@@ -501,6 +639,51 @@ BASH;
             'modified_at' => $modifiedAt,
             'tail_lines' => self::WEBSITE_LARAVEL_LOG_TAIL_LINES,
             'content' => rtrim($content),
+        ];
+    }
+
+    /**
+     * @return array{path: string, exists: bool, size_bytes: int, modified_at: string|null, line_count: int, content: string}
+     */
+    private function parseWebsiteEnvOutput(string $output): array
+    {
+        $exists = false;
+        $path = '';
+        $size = 0;
+        $modifiedAt = null;
+        $content = '';
+
+        $contentStart = "__ASTERO_CONTENT_START__\n";
+        if (str_contains($output, $contentStart)) {
+            [$metaSection, $content] = explode($contentStart, $output, 2);
+        } else {
+            $metaSection = $output;
+        }
+
+        foreach (preg_split("/\r\n|\n|\r/", trim($metaSection)) ?: [] as $line) {
+            if (str_starts_with($line, '__ASTERO_EXISTS__=')) {
+                $exists = trim(substr($line, strlen('__ASTERO_EXISTS__='))) === '1';
+            } elseif (str_starts_with($line, '__ASTERO_PATH__=')) {
+                $path = trim(substr($line, strlen('__ASTERO_PATH__=')));
+            } elseif (str_starts_with($line, '__ASTERO_SIZE__=')) {
+                $size = (int) trim(substr($line, strlen('__ASTERO_SIZE__=')));
+            } elseif (str_starts_with($line, '__ASTERO_MTIME__=')) {
+                $timestamp = trim(substr($line, strlen('__ASTERO_MTIME__=')));
+                if ($timestamp !== '' && is_numeric($timestamp)) {
+                    $modifiedAt = app_date_time_format(Date::createFromTimestamp((int) $timestamp), 'datetime');
+                }
+            }
+        }
+
+        $content = rtrim($content);
+
+        return [
+            'path' => $path,
+            'exists' => $exists,
+            'size_bytes' => $size,
+            'modified_at' => $modifiedAt,
+            'line_count' => $content === '' ? 0 : count(preg_split("/\r\n|\n|\r/", $content) ?: []),
+            'content' => $content,
         ];
     }
 

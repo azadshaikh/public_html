@@ -68,6 +68,7 @@ import type {
     WebsiteShowData,
     WebsiteUpdateItem,
 } from '../../../types/platform';
+import { WebsiteEnvTab } from './components/website-env-tab';
 import { WebsiteLaravelLogTab } from './components/website-laravel-log-tab';
 import { WebsiteProvisioningDnsInstructions } from './components/website-provisioning-dns-instructions';
 
@@ -81,6 +82,7 @@ type WebsitesShowPageProps = {
     pullzoneId: string | null;
     canRevealSecrets: boolean;
     canManageLaravelLog: boolean;
+    canManageWebsiteEnv: boolean;
 };
 
 const PROVISIONING_POLL_INTERVAL_MS = 10_000;
@@ -251,6 +253,7 @@ export default function WebsitesShow({
     pullzoneId,
     canRevealSecrets,
     canManageLaravelLog,
+    canManageWebsiteEnv,
 }: WebsitesShowPageProps) {
     const [confirm, setConfirm] = useState<ConfirmState>(INITIAL_CONFIRM);
     const op = useOperationAction();
@@ -870,6 +873,10 @@ export default function WebsitesShow({
                             <CodeIcon data-icon="inline-start" />
                             Metadata
                         </TabsTrigger>
+                        <TabsTrigger value="env" className={cn(!isMobile && 'shrink-0')}>
+                            <ClipboardCopyIcon data-icon="inline-start" />
+                            Env
+                        </TabsTrigger>
                         <TabsTrigger value="logs" className={cn(!isMobile && 'shrink-0')}>
                             <FileTextIcon data-icon="inline-start" />
                             Logs
@@ -998,6 +1005,18 @@ export default function WebsitesShow({
                                     websiteId={website.id}
                                     active={activeTab === 'logs'}
                                     canManageLaravelLog={canManageLaravelLog}
+                                />
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+
+                    <TabsContent value="env">
+                        <Card>
+                            <CardContent className="pt-6">
+                                <WebsiteEnvTab
+                                    websiteId={website.id}
+                                    active={activeTab === 'env'}
+                                    canManageWebsiteEnv={canManageWebsiteEnv}
                                 />
                             </CardContent>
                         </Card>

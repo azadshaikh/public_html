@@ -21,7 +21,9 @@ class WebsiteShowViewUxTest extends TestCase
         $this->assertStringContainsString("route('platform.servers.show', website.server_id)", $contents);
         $this->assertStringContainsString("route('platform.agencies.show', website.agency_id)", $contents);
         $this->assertStringContainsString('TabsTrigger value="provision"', $contents);
+        $this->assertStringContainsString('TabsTrigger value="env"', $contents);
         $this->assertStringContainsString('TabsTrigger value="logs"', $contents);
+        $this->assertStringContainsString('WebsiteEnvTab', $contents);
         $this->assertStringContainsString('WebsiteLaravelLogTab', $contents);
         $this->assertStringNotContainsString('url-tab-manager-loader', $contents);
         $this->assertStringNotContainsString('Identity Snapshot', $contents);

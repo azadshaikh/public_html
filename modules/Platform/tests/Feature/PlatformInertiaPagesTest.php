@@ -578,6 +578,7 @@ class PlatformInertiaPagesTest extends TestCase
                 ->where('provisioningRun.started_at', app_date_time_format($website->getMetadata('provisioning_started_at'), 'datetime'))
                 ->where('provisioningRun.completed_at', app_date_time_format($website->getMetadata('provisioning_completed_at'), 'datetime'))
                 ->where('canManageLaravelLog', true)
+                ->where('canManageWebsiteEnv', true)
                 ->has('activities'));
 
         $this->actingAs($this->admin)
