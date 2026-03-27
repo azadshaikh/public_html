@@ -1,5 +1,5 @@
 import { Link, router, usePage } from '@inertiajs/react';
-import { BadgeCheck, Bell, CreditCard, LogOut } from 'lucide-react';
+import { BadgeCheck, BellIcon, CreditCard, LogOut } from 'lucide-react';
 import {
     DropdownMenuGroup,
     DropdownMenuItem,
@@ -65,7 +65,7 @@ export function UserMenuContent({ user }: Props) {
                             prefetch
                             onClick={cleanup}
                         >
-                            <Bell className="mr-2" />
+                            <BellIcon className="mr-2" />
                             Notifications
                         </Link>
                     </DropdownMenuItem>

@@ -32,6 +32,7 @@ type QuickOpenEntry = {
     description: string | null;
     url: string;
     normalizedUrl: string;
+    method: 'delete' | 'get' | 'patch' | 'post' | 'put';
     icon?: string | null;
     sectionKey: string;
     sectionLabel: string;
@@ -196,6 +197,14 @@ export function QuickOpenDialog() {
             return;
         }
 
+        if (entry.method !== 'get') {
+            router.visit(entry.url, {
+                method: entry.method,
+            });
+
+            return;
+        }
+
         if (entry.target === '_blank') {
             window.open(entry.url, '_blank', 'noopener,noreferrer');
 
@@ -244,19 +253,19 @@ export function QuickOpenDialog() {
                 open={open}
                 onOpenChange={handleOpenChange}
                 title="Quick open"
-                description="Search recent links and navigation pages."
+                description="Search recent links, navigation pages, and actions."
                 className="max-w-2xl"
             >
                 <Command shouldFilter={false}>
                     <CommandInput
                         value={search}
                         onValueChange={setSearch}
-                        placeholder="Search pages..."
+                        placeholder="Search pages and actions..."
                     />
                     <CommandList className="max-h-[24rem]">
                         {orderedSections.length === 0 ? (
                             <CommandEmpty>
-                                No navigation pages match your search.
+                                No pages or actions match your search.
                             </CommandEmpty>
                         ) : null}
 

@@ -139,6 +139,20 @@ return [
                         'keywords' => ['site theme', 'appearance theme', 'templates'],
                     ],
                 ],
+                'cms_theme_customizer' => [
+                    'label' => 'Theme Customizer',
+                    'route' => 'cms.appearance.themes.customizer.index',
+                    'icon' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3"/><path d="M18.364 5.636l-2.121 2.121"/><path d="M21 12h-3"/><path d="m18.364 18.364-2.121-2.121"/><path d="M12 21v-3"/><path d="m7.757 16.243-2.12 2.121"/><path d="M6 12H3"/><path d="m7.757 7.757-2.12-2.121"/><circle cx="12" cy="12" r="3"/></svg>',
+                    'permission' => 'view_themes',
+                    'active_patterns' => ['cms.appearance.themes.customizer.*'],
+                    'sidebar_visible' => false,
+                    'quick_open' => [
+                        'priority' => 220,
+                        'description' => 'Open the live theme customization workspace',
+                        'aliases' => ['Customizer', 'Theme Editor'],
+                        'keywords' => ['theme customizer', 'theme editor', 'appearance customizer', 'live theme preview'],
+                    ],
+                ],
                 'cms_menus' => [
                     'label' => 'Menus',
                     'route' => 'cms.appearance.menus.index',

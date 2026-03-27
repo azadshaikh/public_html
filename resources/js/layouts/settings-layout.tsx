@@ -2,7 +2,7 @@ import { Link, usePage } from '@inertiajs/react';
 import type { LucideIcon } from 'lucide-react';
 import {
     BadgeAlertIcon,
-    BellRingIcon,
+    BellIcon,
     BrushIcon,
     BugIcon,
     FolderKanbanIcon,
@@ -102,7 +102,7 @@ export default function SettingsLayout({
                                     const Icon =
                                         item.icon ??
                                         settingsIcons[item.slug] ??
-                                        BellRingIcon;
+                                        BellIcon;
 
                                     return (
                                         <Button

@@ -28,7 +28,7 @@ function createStorage() {
     };
 }
 
-test('flattenNavigationForQuickOpen includes search-only items and excludes disabled quick-open actions', () => {
+test('flattenNavigationForQuickOpen includes search-only items and enabled action entries', () => {
     const entries = flattenNavigationForQuickOpen({
         top: [
             {
@@ -104,7 +104,8 @@ test('flattenNavigationForQuickOpen includes search-only items and excludes disa
                             method: 'post',
                         },
                         quick_open: {
-                            enabled: false,
+                            aliases: ['Sign out'],
+                            keywords: ['end session'],
                         },
                         children: [],
                         hasChildren: false,
@@ -146,8 +147,51 @@ test('flattenNavigationForQuickOpen includes search-only items and excludes disa
                 trail: 'Settings',
                 sectionLabel: 'Core',
             },
+            {
+                label: 'Log out',
+                url: '/logout',
+                trail: '',
+                sectionLabel: 'Account',
+            },
         ],
     );
+
+    assert.equal(entries.at(-1)?.method, 'post');
+});
+
+test('flattenNavigationForQuickOpen excludes disabled quick-open actions', () => {
+    const entries = flattenNavigationForQuickOpen({
+        top: [],
+        cms: [],
+        modules: [],
+        bottom: [
+            {
+                key: 'account',
+                label: 'Account',
+                area: 'bottom',
+                items: [
+                    {
+                        key: 'logout',
+                        label: 'Log out',
+                        url: '/logout',
+                        icon: null,
+                        active: false,
+                        active_patterns: [],
+                        attributes: {
+                            method: 'post',
+                        },
+                        quick_open: {
+                            enabled: false,
+                        },
+                        children: [],
+                        hasChildren: false,
+                    },
+                ],
+            },
+        ],
+    });
+
+    assert.deepEqual(entries, []);
 });
 
 test('pushRecentQuickOpenUrl deduplicates and caps the recent history', () => {
@@ -231,11 +275,11 @@ test('scoreQuickOpenEntry prefers aliases, keywords, and exact label matches', (
 
     assert.ok(
         scoreQuickOpenEntry(createPostEntry, 'create blog') >
-            scoreQuickOpenEntry(postsIndexEntry, 'create blog'),
+        scoreQuickOpenEntry(postsIndexEntry, 'create blog'),
     );
     assert.ok(
         scoreQuickOpenEntry(createPostEntry, 'new post') >
-            scoreQuickOpenEntry(postsIndexEntry, 'new post'),
+        scoreQuickOpenEntry(postsIndexEntry, 'new post'),
     );
 });
 

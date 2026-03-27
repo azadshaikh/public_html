@@ -372,7 +372,7 @@ return [
                 'settings' => [
                     'label' => 'Master Settings',
                     'route' => 'app.masters.settings.index',
-                    'icon' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0 3 5.4l-6.4 6.4a2 2 0 1 1-2.8-2.8l6.4-6.4a4 4 0 0 0 5.4-3l-3 3-3-3 3-3z"></path><path d="M5 21l2-2"></path></svg>',
+                    'icon' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.82-.33 1.7 1.7 0 0 0-1 1.54V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.54 1.7 1.7 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.54-1H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.54-1 1.7 1.7 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 8.95 4.6a1.7 1.7 0 0 0 1-1.54V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.54 1.7 1.7 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.33 1.82 1.7 1.7 0 0 0 1.54 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1z"></path></svg>',
                     'active_patterns' => ['app.masters.settings.*'],
                     'quick_open' => [
                         'aliases' => ['System Masters'],
@@ -448,7 +448,7 @@ return [
                 'notifications' => [
                     'label' => 'Notifications',
                     'route' => 'app.notifications.index',
-                    'icon' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.27 21a2 2 0 0 0 3.46 0"></path><path d="M4 8a8 8 0 1 1 16 0c0 5 2 7 2 7H2s2-2 2-7"></path></svg>',
+                    'icon' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.268 21a2 2 0 0 0 3.464 0"></path><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"></path></svg>',
                     'permission' => null,
                     'active_patterns' => ['app.notifications.*'],
                     'quick_open' => [
@@ -462,6 +462,11 @@ return [
                     'icon' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 17 5-5-5-5"></path><path d="M21 12H9"></path><path d="M13 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8"></path></svg>',
                     'permission' => null,
                     'active_patterns' => [],
+                    'quick_open' => [
+                        'priority' => 200,
+                        'aliases' => ['Sign out'],
+                        'keywords' => ['logout', 'end session'],
+                    ],
                     'attributes' => [
                         'method' => 'post',
                         'as' => 'button',

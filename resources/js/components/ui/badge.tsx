@@ -5,8 +5,24 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
+function isNumericOnlyBadgeContent(children: React.ReactNode): boolean {
+  const childNodes = React.Children.toArray(children)
+
+  if (childNodes.length === 0) {
+    return false
+  }
+
+  if (!childNodes.every((child) => typeof child === "string" || typeof child === "number")) {
+    return false
+  }
+
+  const content = childNodes.join("").trim()
+
+  return /^[\d.,%+-]+$/.test(content)
+}
+
 const badgeVariants = cva(
-  "group/badge inline-flex h-5 w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-4xl border border-transparent px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-all focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3!",
+  "group/badge inline-flex h-5 w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-4xl border border-transparent px-2 py-0.5 text-xs leading-none font-medium whitespace-nowrap transition-all focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3!",
   {
     variants: {
       variant: {
@@ -40,10 +56,12 @@ function Badge({
   className,
   variant = "default",
   asChild = false,
+  children,
   ...props
 }: React.ComponentProps<"span"> &
   VariantProps<typeof badgeVariants> & { asChild?: boolean }) {
   const Comp = asChild ? Slot.Root : "span"
+  const contentIsNumericOnly = isNumericOnlyBadgeContent(children)
 
   return (
     <Comp
@@ -51,7 +69,20 @@ function Badge({
       data-variant={variant}
       className={cn(badgeVariants({ variant }), className)}
       {...props}
-    />
+    >
+      {asChild ? (
+        children
+      ) : (
+        <span
+          className={cn(
+            "inline-flex items-center gap-1 [&_svg]:pointer-events-none [&_svg]:size-3!",
+            !contentIsNumericOnly && "translate-y-px",
+          )}
+        >
+          {children}
+        </span>
+      )}
+    </Comp>
   )
 }
 

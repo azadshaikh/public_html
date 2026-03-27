@@ -112,6 +112,17 @@ class NavigationAggregatorTest extends TestCase
             'navigation builder',
             $cmsNavigation['sections']['appearance']['items']['cms_menus']['quick_open']['keywords'],
         );
+        $this->assertFalse(
+            $cmsNavigation['sections']['appearance']['items']['cms_theme_customizer']['sidebar_visible'],
+        );
+        $this->assertSame(
+            'cms.appearance.themes.customizer.index',
+            $cmsNavigation['sections']['appearance']['items']['cms_theme_customizer']['route'],
+        );
+        $this->assertContains(
+            'theme customizer',
+            $cmsNavigation['sections']['appearance']['items']['cms_theme_customizer']['quick_open']['keywords'],
+        );
         $this->assertContains(
             'create website page',
             $cmsNavigation['sections']['cms']['items']['cms_pages_create']['quick_open']['keywords'],

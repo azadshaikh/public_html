@@ -162,10 +162,6 @@ function createQuickOpenEntry(item, section, ancestors, sectionOrder, order) {
             ? item.attributes.method.toLowerCase()
             : null;
 
-    if (method && method !== 'get') {
-        return null;
-    }
-
     const quickOpen =
         item.quick_open && typeof item.quick_open === 'object'
             ? item.quick_open
@@ -186,7 +182,7 @@ function createQuickOpenEntry(item, section, ancestors, sectionOrder, order) {
     const keywords = normalizeSearchTerms(quickOpen.keywords);
     const description =
         typeof quickOpen.description === 'string' &&
-        quickOpen.description.trim() !== ''
+            quickOpen.description.trim() !== ''
             ? quickOpen.description.trim()
             : null;
 
@@ -197,6 +193,7 @@ function createQuickOpenEntry(item, section, ancestors, sectionOrder, order) {
         description,
         url: item.url,
         normalizedUrl,
+        method: method ?? 'get',
         icon: item.icon ?? null,
         sectionKey: section.key,
         sectionLabel: section.label,
