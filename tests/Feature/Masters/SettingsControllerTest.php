@@ -182,12 +182,14 @@ class SettingsControllerTest extends TestCase
             ->assertInertia(fn (Assert $page): Assert => $page
                 ->component('master-settings/theme')
                 ->where('settings.admin_theme', 'default')
-                ->has('options.themes', 6)
+                ->has('options.themes', 8)
                 ->where('options.themes.1.value', 'swiss')
                 ->where('options.themes.2.value', 'green')
                 ->where('options.themes.3.value', 'zen')
                 ->where('options.themes.4.value', 'vista')
-                ->where('options.themes.5.value', 'claude')
+                ->where('options.themes.5.value', 'violet')
+                ->where('options.themes.6.value', 'blue')
+                ->where('options.themes.7.value', 'claude')
                 ->has('settingsNav')
                 ->where('ui.adminTheme', 'default')
             );

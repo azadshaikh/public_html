@@ -9,6 +9,8 @@ enum AdminTheme: string
     case Green = 'green';
     case Zen = 'zen';
     case Vista = 'vista';
+    case Violet = 'violet';
+    case Blue = 'blue';
     case Claude = 'claude';
 
     public function label(): string
@@ -19,6 +21,8 @@ enum AdminTheme: string
             self::Green => 'Green',
             self::Zen => 'Zen',
             self::Vista => 'Vista',
+            self::Violet => 'Violet',
+            self::Blue => 'Blue',
             self::Claude => 'Claude',
         };
     }
@@ -31,6 +35,8 @@ enum AdminTheme: string
             self::Green => 'Fresh leaf-green accents with a clean neutral shell and balanced radius.',
             self::Zen => 'Calm sand-and-stone neutrals with compact radius and understated elevation.',
             self::Vista => 'Soft frosted blues with warm signal accents and restrained shadows.',
+            self::Violet => 'Bright violet accents over clean neutrals with a confident but balanced contrast.',
+            self::Blue => 'Crisp cobalt accents over neutral surfaces with a clean, grounded feel.',
             self::Claude => 'Warm editorial neutrals with softer depth and roomier radius.',
         };
     }
