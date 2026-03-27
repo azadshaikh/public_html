@@ -11,6 +11,7 @@ use Modules\Platform\Exceptions\WaitingException;
 use Modules\Platform\Libs\BunnyApi;
 use Modules\Platform\Models\Provider;
 use Modules\Platform\Models\Website;
+use Modules\Platform\Services\BunnyPullZoneService;
 use Modules\Platform\Services\DomainService;
 
 /**
@@ -24,6 +25,11 @@ class BunnyConfigureCdnSslCommand extends BaseCommand
     use ActivityTrait;
 
     private const int AUTO_SSL_REQUEST_COOLDOWN_SECONDS = 300;
+
+    public function __construct(private readonly BunnyPullZoneService $pullZoneService)
+    {
+        parent::__construct();
+    }
 
     protected $signature = 'platform:bunny:configure-cdn-ssl {website_id : The ID of the website}';
 
@@ -44,6 +50,8 @@ class BunnyConfigureCdnSslCommand extends BaseCommand
         // Get pull zone ID from CDN metadata (set by setup_bunny_cdn step)
         $pullzoneId = (int) $website->getMetadata('cdn.Id');
         throw_unless($pullzoneId, Exception::class, 'Pull zone ID not found in website CDN metadata. Ensure setup_bunny_cdn ran first.');
+
+        $this->syncOriginConfiguration($website, $cdnProvider, $pullzoneId);
 
         // Load SSL certificate from platform_secrets
         $domainRecord = $website->domainRecord;
@@ -151,6 +159,11 @@ class BunnyConfigureCdnSslCommand extends BaseCommand
 
             return false;
         }
+    }
+
+    private function syncOriginConfiguration(Website $website, Provider $cdnProvider, int $pullzoneId): void
+    {
+        $this->pullZoneService->syncOriginConfiguration($website, $cdnProvider, $pullzoneId);
     }
 
     /**

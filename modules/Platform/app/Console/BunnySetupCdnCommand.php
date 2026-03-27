@@ -9,6 +9,7 @@ use Modules\Platform\Libs\BunnyApi;
 use Modules\Platform\Libs\BunnyApiException;
 use Modules\Platform\Models\Provider;
 use Modules\Platform\Models\Website;
+use Modules\Platform\Services\BunnyPullZoneService;
 
 /**
  * Sets up Bunny CDN (pull zone) for a website.
@@ -19,6 +20,11 @@ use Modules\Platform\Models\Website;
 class BunnySetupCdnCommand extends BaseCommand
 {
     use ActivityTrait;
+
+    public function __construct(private readonly BunnyPullZoneService $pullZoneService)
+    {
+        parent::__construct();
+    }
 
     /**
      * The name and signature of the console command.
@@ -120,7 +126,7 @@ class BunnySetupCdnCommand extends BaseCommand
         }
 
         // Construct origin URL from server
-        $originUrl = $this->getOriginUrl($website);
+        $originUrl = $this->pullZoneService->resolveOriginUrl($website);
 
         // Collect hostnames to add
         $hostnames = [$website->domain];
@@ -134,6 +140,10 @@ class BunnySetupCdnCommand extends BaseCommand
 
         $pullZoneId = $pullZone['data']['Id'] ?? null;
         throw_unless($pullZoneId, Exception::class, 'Failed to create pull zone: Pull zone ID not returned from API.');
+
+        // Persist the origin configuration explicitly. Bunny's create response may not
+        // materialize the origin host header in a stable way for IP-based origins.
+        $this->syncOriginConfiguration($website, $cdnProvider, $pullZoneId);
 
         // Add all hostnames to the pull zone with rollback on failure
         try {
@@ -180,25 +190,6 @@ class BunnySetupCdnCommand extends BaseCommand
     }
 
     /**
-     * Get the origin URL for the pull zone from the website's server.
-     *
-     * @param  Website  $website  The website instance.
-     * @return string The origin URL.
-     *
-     * @throws Exception If server information is not available.
-     */
-    private function getOriginUrl(Website $website): string
-    {
-        $server = $website->server;
-        throw_unless($server, Exception::class, 'Server is not associated with this website.');
-
-        // Always use HTTPS and server IP (not FQDN)
-        throw_unless($server->ip, Exception::class, 'Server IP is not available.');
-
-        return 'https://'.$server->ip;
-    }
-
-    /**
      * Create a pull zone for the website.
      *
      * @param  Website  $website  The website instance.
@@ -223,7 +214,8 @@ class BunnySetupCdnCommand extends BaseCommand
         // knows which domain is being requested
         $options = [
             'OriginHostHeader' => $originHostHeader,
-            'AddHostHeader' => true,
+            'AddHostHeader' => false,
+            'FollowRedirects' => false,
             'EnableAutoSSL' => true,
         ];
 
@@ -275,6 +267,22 @@ class BunnySetupCdnCommand extends BaseCommand
         }
 
         throw new Exception(sprintf('Failed to create pull zone: All name variations (up to %d attempts) are not available.', $maxRetries));
+    }
+
+    /**
+     * Persist origin settings after pull-zone creation to avoid Bunny falling back
+     * to the raw IP host header for IP-based origins.
+     */
+    private function syncOriginConfiguration(Website $website, Provider $cdnProvider, int $pullZoneId): void
+    {
+        $this->info(sprintf('Syncing origin configuration for pull zone %d.', $pullZoneId));
+
+        $response = $this->pullZoneService->syncOriginConfiguration($website, $cdnProvider, $pullZoneId);
+
+        if (($response['status'] ?? '') !== 'success') {
+            $errorMessage = $response['message'] ?? 'Unknown error during origin configuration sync.';
+            throw new Exception('Failed to sync Bunny origin configuration: '.$errorMessage);
+        }
     }
 
     /**

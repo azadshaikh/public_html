@@ -10,7 +10,9 @@ use Modules\Platform\Exceptions\WaitingException;
 use Modules\Platform\Models\Domain;
 use Modules\Platform\Models\Provider;
 use Modules\Platform\Models\Secret;
+use Modules\Platform\Models\Server;
 use Modules\Platform\Models\Website;
+use Modules\Platform\Services\BunnyPullZoneService;
 use Modules\Platform\Services\DomainService;
 use Tests\TestCase;
 
@@ -54,6 +56,7 @@ class BunnyConfigureCdnSslCommandTest extends TestCase
         $website->provider = $provider;
 
         $website->id = 10;
+        $website->domain = 'astero.in';
         $website->metadata = [
             'cdn' => [
                 'Id' => 123,
@@ -64,6 +67,9 @@ class BunnyConfigureCdnSslCommandTest extends TestCase
             ],
         ];
         $website->setRelation('domainRecord', $domain);
+        $website->setRelation('server', new Server([
+            'ip' => '89.167.78.200',
+        ]));
 
         $domainService = $this->mock(DomainService::class);
         $domainService->shouldReceive('getBestSslCertificate')
@@ -109,6 +115,11 @@ class BunnyConfigureCdnSslCommandTest extends TestCase
 
         $command = new class extends BunnyConfigureCdnSslCommand
         {
+            public function __construct()
+            {
+                parent::__construct(app(BunnyPullZoneService::class));
+            }
+
             public function runHandleCommand(Website $website): void
             {
                 $this->handleCommand($website);
@@ -136,6 +147,12 @@ class BunnyConfigureCdnSslCommandTest extends TestCase
 
         Http::assertSent(fn (Request $request): bool => $request->method() === 'GET'
             && str_starts_with($request->url(), 'https://api.bunny.net/pullzone/loadFreeCertificate'));
+
+        Http::assertSent(fn (Request $request): bool => $request->method() === 'POST'
+            && $request->url() === 'https://api.bunny.net/pullzone/123'
+            && ($request['OriginHostHeader'] ?? null) === 'astero.in'
+            && ($request['AddHostHeader'] ?? null) === false
+            && ($request['FollowRedirects'] ?? null) === false);
 
         Http::assertSent(fn (Request $request): bool => $request->method() === 'POST'
             && $request->url() === 'https://api.bunny.net/pullzone/setForceSSL'
@@ -180,6 +197,7 @@ class BunnyConfigureCdnSslCommandTest extends TestCase
         $website->provider = $provider;
 
         $website->id = 11;
+        $website->domain = 'astero.in';
         $website->metadata = [
             'cdn' => [
                 'Id' => 123,
@@ -190,6 +208,9 @@ class BunnyConfigureCdnSslCommandTest extends TestCase
             ],
         ];
         $website->setRelation('domainRecord', $domain);
+        $website->setRelation('server', new Server([
+            'ip' => '89.167.78.200',
+        ]));
 
         $domainService = $this->mock(DomainService::class);
         $domainService->shouldReceive('getBestSslCertificate')
@@ -228,6 +249,11 @@ class BunnyConfigureCdnSslCommandTest extends TestCase
 
         $command = new class extends BunnyConfigureCdnSslCommand
         {
+            public function __construct()
+            {
+                parent::__construct(app(BunnyPullZoneService::class));
+            }
+
             public function runHandleCommand(Website $website): void
             {
                 $this->handleCommand($website);
