@@ -40,6 +40,16 @@ return Application::configure(basePath: dirname(__DIR__))
         $adminPrefix = trim((string) ($appConfig['admin_slug'] ?? 'admin'), '/');
         $adminPrefix = $adminPrefix !== '' ? $adminPrefix : 'admin';
 
+        $middleware->trustProxies(
+            at: '*',
+            headers: Request::HEADER_X_FORWARDED_FOR
+                | Request::HEADER_X_FORWARDED_HOST
+                | Request::HEADER_X_FORWARDED_PORT
+                | Request::HEADER_X_FORWARDED_PROTO
+                | Request::HEADER_X_FORWARDED_PREFIX
+                | Request::HEADER_X_FORWARDED_AWS_ELB
+        );
+
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
         $middleware->preventRequestForgery(except: [
             $adminPrefix.'/media/upload-media',
@@ -67,6 +77,7 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleAppearance::class,
             LanguageMiddleware::class,
             JsonRedirectMiddleware::class,
+            CdnCacheHeadersMiddleware::class,
             EnableDebugbarForSuperUser::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,

@@ -28,7 +28,9 @@ class CdnCacheHeadersMiddleware
             $maxAge = config('app.cdn_cache_max_age', 31536000); // 1 year default
             $response->headers->set('Cache-Control', 'public, max-age='.$maxAge.', s-maxage='.$maxAge);
         } else {
-            $response->headers->set('Cache-Control', 'no-cache, private');
+            $response->headers->set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0, private');
+            $response->headers->set('Pragma', 'no-cache');
+            $response->headers->set('Expires', '0');
         }
 
         return $response;
