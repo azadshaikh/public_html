@@ -43,5 +43,7 @@
         "name": "Footer Area 3",
         "id": "footer-3",
         "description": "Third footer widget area"
-    }
+    },
+    "custom_css": null,
+    "custom_js": null
 }

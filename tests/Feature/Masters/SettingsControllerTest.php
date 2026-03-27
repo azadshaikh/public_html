@@ -22,6 +22,8 @@ class SettingsControllerTest extends TestCase
 {
     use RefreshDatabase;
 
+    private string $originalEnvironmentContents;
+
     private User $superUser;
 
     private User $admin;
@@ -31,6 +33,10 @@ class SettingsControllerTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        $this->originalEnvironmentContents = (string) file_get_contents(
+            app()->environmentFilePath(),
+        );
 
         Queue::fake();
 
@@ -57,6 +63,16 @@ class SettingsControllerTest extends TestCase
             'last_name' => 'User',
             'status' => Status::ACTIVE,
         ]);
+    }
+
+    protected function tearDown(): void
+    {
+        file_put_contents(
+            app()->environmentFilePath(),
+            $this->originalEnvironmentContents,
+        );
+
+        parent::tearDown();
     }
 
     // =========================================================================
@@ -348,24 +364,31 @@ class SettingsControllerTest extends TestCase
     {
         $this->actingAs($this->superUser)
             ->put(route('app.masters.settings.update', 'media'), [
-                'max_file_name_length' => '120',
+                'max_file_name_length' => '100',
                 'max_files_per_upload' => '12',
                 'max_upload_size' => '20',
-                'allowed_file_types' => 'image/png,image/jpeg,application/pdf',
+                'allowed_file_types' => 'image/png,image/jpg,image/jpeg,image/gif,image/webp,image/svg+xml,image/x-icon,image/bmp,video/mp4,video/webm,video/x-webm,video/avi,video/mov,video/wmv,video/x-matroska,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,text/plain,text/csv',
                 'image_optimization' => true,
-                'image_quality' => '80',
-                'thumbnail_width' => '150',
-                'small_width' => '400',
-                'medium_width' => '800',
+                'image_quality' => '70',
+                'thumbnail_width' => '300',
+                'small_width' => '500',
+                'medium_width' => '700',
                 'large_width' => '1200',
                 'xlarge_width' => '1920',
-                'delete_trashed' => false,
+                'delete_trashed' => true,
                 'delete_trashed_days' => '7',
             ])
             ->assertSessionHasNoErrors()
             ->assertRedirect();
 
+        $this->assertSame('100', get_env_value('MEDIA_MAX_FILE_NAME_LENGTH'));
         $this->assertSame('12', get_env_value('MEDIA_MAX_FILES_PER_UPLOAD'));
+        $this->assertSame('20', get_env_value('MEDIA_MAX_SIZE_IN_MB'));
+        $this->assertSame('70', get_env_value('MEDIA_IMAGE_QUALITY'));
+        $this->assertSame('300', get_env_value('MEDIA_THUMBNAIL_WIDTH'));
+        $this->assertSame('500', get_env_value('MEDIA_SMALL_WIDTH'));
+        $this->assertSame('700', get_env_value('MEDIA_MEDIUM_WIDTH'));
+        $this->assertSame('true', get_env_value('MEDIA_AUTO_DELETE_TRASHED'));
     }
 
     // =========================================================================
