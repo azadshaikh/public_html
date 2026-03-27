@@ -5,6 +5,7 @@ import { FormErrorSummary } from '@/components/forms/form-error-summary';
 import { CitySelect } from '@/components/geo/city-select';
 import { CountrySelect } from '@/components/geo/country-select';
 import { StateSelect } from '@/components/geo/state-select';
+import { MediaPickerUrlInput } from '@/components/media/media-picker-url-input';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -35,7 +36,11 @@ import {
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import { useAppForm } from '@/hooks/use-app-form';
-import type { AgencyFormValues, PlatformOption } from '../../types/platform';
+import type {
+    AgencyFormValues,
+    PlatformMediaPickerPageProps,
+    PlatformOption,
+} from '../../types/platform';
 
 type AgencyFormProps = {
     mode: 'create' | 'edit';
@@ -52,7 +57,7 @@ type AgencyFormProps = {
     phoneCodeOptions: PlatformOption[];
     defaultCountryCode: string;
     defaultPhoneCode: string;
-};
+} & PlatformMediaPickerPageProps;
 
 type SelectFieldProps = {
     label: string;
@@ -148,6 +153,10 @@ export default function AgencyForm({
     phoneCodeOptions,
     defaultCountryCode,
     defaultPhoneCode,
+    pickerMedia,
+    pickerFilters,
+    uploadSettings,
+    pickerStatistics = null,
 }: AgencyFormProps) {
     const form = useAppForm<AgencyFormValues>({
         defaults: {
@@ -171,6 +180,10 @@ export default function AgencyForm({
         mode === 'create'
             ? route('platform.agencies.index', { status: 'all' })
             : route('platform.agencies.show', agency!.id);
+    const pickerAction =
+        mode === 'create'
+            ? route('platform.agencies.create')
+            : route('platform.agencies.edit', agency!.id);
     const websiteIdExample = buildWebsiteIdExample(
         form.data.website_id_prefix,
         form.data.website_id_zero_padding,
@@ -415,14 +428,11 @@ export default function AgencyForm({
                                         <FieldLabel htmlFor="branding_logo">
                                             Logo URL
                                         </FieldLabel>
-                                        <Input
+                                        <MediaPickerUrlInput
                                             id="branding_logo"
                                             value={form.data.branding_logo}
-                                            onChange={(event) =>
-                                                form.setField(
-                                                    'branding_logo',
-                                                    event.target.value,
-                                                )
+                                            onChange={(value) =>
+                                                form.setField('branding_logo', value)
                                             }
                                             onBlur={() =>
                                                 form.touch('branding_logo')
@@ -432,6 +442,16 @@ export default function AgencyForm({
                                                 undefined
                                             }
                                             placeholder="https://example.com/logo.svg"
+                                            pickerMedia={pickerMedia}
+                                            pickerFilters={pickerFilters}
+                                            uploadSettings={uploadSettings}
+                                            pickerStatistics={pickerStatistics}
+                                            pickerAction={pickerAction}
+                                            dialogTitle="Select agency logo"
+                                            pickerButtonLabel="Select agency logo from media library"
+                                            clearButtonLabel="Clear agency logo"
+                                            showThumbnailPreview
+                                            thumbnailAlt="Agency logo preview"
                                         />
                                         <FieldError>
                                             {form.error('branding_logo')}
@@ -447,14 +467,11 @@ export default function AgencyForm({
                                         <FieldLabel htmlFor="branding_icon">
                                             Icon URL
                                         </FieldLabel>
-                                        <Input
+                                        <MediaPickerUrlInput
                                             id="branding_icon"
                                             value={form.data.branding_icon}
-                                            onChange={(event) =>
-                                                form.setField(
-                                                    'branding_icon',
-                                                    event.target.value,
-                                                )
+                                            onChange={(value) =>
+                                                form.setField('branding_icon', value)
                                             }
                                             onBlur={() =>
                                                 form.touch('branding_icon')
@@ -464,6 +481,16 @@ export default function AgencyForm({
                                                 undefined
                                             }
                                             placeholder="https://example.com/icon.svg"
+                                            pickerMedia={pickerMedia}
+                                            pickerFilters={pickerFilters}
+                                            uploadSettings={uploadSettings}
+                                            pickerStatistics={pickerStatistics}
+                                            pickerAction={pickerAction}
+                                            dialogTitle="Select agency icon"
+                                            pickerButtonLabel="Select agency icon from media library"
+                                            clearButtonLabel="Clear agency icon"
+                                            showThumbnailPreview
+                                            thumbnailAlt="Agency icon preview"
                                         />
                                         <FieldError>
                                             {form.error('branding_icon')}

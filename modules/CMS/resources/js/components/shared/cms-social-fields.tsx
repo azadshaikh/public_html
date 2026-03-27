@@ -1,3 +1,4 @@
+import { MediaPickerUrlInput } from '@/components/media/media-picker-url-input';
 import {
     Field,
     FieldDescription,
@@ -6,6 +7,12 @@ import {
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import type {
+    MediaListItem,
+    MediaPickerFilters,
+    UploadSettings,
+} from '@/types/media';
+import type { PaginatedData } from '@/types/pagination';
 
 type CmsSocialFieldsProps = {
     ogTitle: string;
@@ -30,6 +37,14 @@ type CmsSocialFieldsProps = {
     ogUrlError?: string;
     surfaceClassName?: string;
     ogUrlPlaceholder?: string;
+    pickerMedia?: PaginatedData<MediaListItem> | null;
+    pickerFilters?: MediaPickerFilters | null;
+    uploadSettings?: UploadSettings | null;
+    pickerStatistics?: {
+        total: number;
+        trash: number;
+    } | null;
+    pickerAction?: string;
 };
 
 export function CmsSocialFields({
@@ -55,6 +70,11 @@ export function CmsSocialFields({
     ogUrlError,
     surfaceClassName,
     ogUrlPlaceholder = 'https://example.com/your-page',
+    pickerMedia = null,
+    pickerFilters = null,
+    uploadSettings = null,
+    pickerStatistics = null,
+    pickerAction = '',
 }: CmsSocialFieldsProps) {
     return (
         <>
@@ -93,15 +113,25 @@ export function CmsSocialFields({
 
             <Field data-invalid={ogImageInvalid || undefined}>
                 <FieldLabel htmlFor="og_image">Open Graph image</FieldLabel>
-                <Input
+                <MediaPickerUrlInput
                     id="og_image"
-                    className={surfaceClassName}
                     type="url"
                     value={ogImage}
-                    onChange={(event) => onOgImageChange(event.target.value)}
+                    onChange={onOgImageChange}
                     onBlur={onOgImageBlur}
                     aria-invalid={ogImageInvalid || undefined}
                     placeholder="https://example.com/social-image.jpg"
+                    containerClassName={surfaceClassName}
+                    pickerMedia={pickerMedia}
+                    pickerFilters={pickerFilters}
+                    uploadSettings={uploadSettings}
+                    pickerStatistics={pickerStatistics}
+                    pickerAction={pickerAction}
+                    dialogTitle="Select Open Graph image"
+                    pickerButtonLabel="Select Open Graph image from media library"
+                    clearButtonLabel="Clear Open Graph image"
+                    showThumbnailPreview
+                    thumbnailAlt="Open Graph image preview"
                 />
                 <FieldDescription>
                     Paste an image URL or choose one from the media library.

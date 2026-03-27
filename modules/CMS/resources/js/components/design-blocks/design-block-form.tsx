@@ -5,6 +5,7 @@ import { Settings2Icon } from 'lucide-react';
 import type { FormEvent } from 'react';
 import { MonacoEditor } from '@/components/code-editor/monaco-editor';
 import { FormErrorSummary } from '@/components/forms/form-error-summary';
+import { MediaPickerUrlInput } from '@/components/media/media-picker-url-input';
 import {
     Card,
     CardContent,
@@ -30,6 +31,7 @@ import type {
     CmsOption,
     DesignBlockEditDetail,
     DesignBlockFormValues,
+    MediaPickerPageProps,
 } from '../../types/cms';
 import { CmsDangerZoneCard } from '../shared/cms-danger-zone-card';
 import { CmsStickyFormFooter } from '../shared/cms-sticky-form-footer';
@@ -44,7 +46,7 @@ type DesignBlockFormProps = {
     categoryOptions: CmsOption[];
     designSystemOptions: CmsOption[];
     designBlock?: DesignBlockEditDetail;
-};
+} & MediaPickerPageProps;
 
 const emptyValues: DesignBlockFormValues = {
     title: '',
@@ -83,6 +85,10 @@ export default function DesignBlockForm({
     categoryOptions,
     designSystemOptions,
     designBlock,
+    pickerMedia,
+    pickerFilters,
+    uploadSettings,
+    pickerStatistics = null,
 }: DesignBlockFormProps) {
     const form = useAppForm<DesignBlockFormValues>({
         defaults: initialValues || emptyValues,
@@ -108,6 +114,11 @@ export default function DesignBlockForm({
 
     const submitLabel =
         mode === 'create' ? 'Create Design Block' : 'Save Changes';
+
+    const pickerAction =
+        mode === 'create'
+            ? route('cms.designblock.create')
+            : route('cms.designblock.edit', designBlock!.id);
 
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -441,14 +452,14 @@ export default function DesignBlockForm({
                                 <FieldLabel htmlFor="preview_image_url">
                                     Image URL
                                 </FieldLabel>
-                                <Input
+                                <MediaPickerUrlInput
                                     id="preview_image_url"
                                     type="url"
                                     value={form.data.preview_image_url}
-                                    onChange={(event) =>
+                                    onChange={(value) =>
                                         form.setField(
                                             'preview_image_url',
-                                            event.target.value,
+                                            value,
                                         )
                                     }
                                     onBlur={() =>
@@ -459,6 +470,16 @@ export default function DesignBlockForm({
                                         undefined
                                     }
                                     placeholder="https://example.com/preview.png"
+                                    pickerMedia={pickerMedia}
+                                    pickerFilters={pickerFilters}
+                                    uploadSettings={uploadSettings}
+                                    pickerStatistics={pickerStatistics}
+                                    pickerAction={pickerAction}
+                                    dialogTitle="Select preview image"
+                                    pickerButtonLabel="Select preview image from media library"
+                                    clearButtonLabel="Clear preview image"
+                                    showThumbnailPreview
+                                    thumbnailAlt="Preview image"
                                 />
                                 <FieldError>
                                     {form.error('preview_image_url')}

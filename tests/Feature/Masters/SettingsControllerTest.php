@@ -173,6 +173,28 @@ class SettingsControllerTest extends TestCase
             );
     }
 
+    public function test_super_user_can_request_branding_media_picker_props(): void
+    {
+        $this->actingAs($this->superUser)
+            ->get(route('app.masters.settings.branding', ['picker' => 1]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->component('master-settings/branding')
+                ->has('pickerMedia.data')
+                ->where('pickerFilters.picker', '1')
+                ->has('uploadSettings', fn (Assert $uploadSettings): Assert => $uploadSettings
+                    ->has('upload_route')
+                    ->has('max_size_mb')
+                    ->has('friendly_file_types')
+                    ->etc()
+                )
+                ->has('pickerStatistics', fn (Assert $pickerStatistics): Assert => $pickerStatistics
+                    ->has('total')
+                    ->has('trash')
+                )
+            );
+    }
+
     // =========================================================================
     // THEME — Authentication, Authorization & Props
     // =========================================================================

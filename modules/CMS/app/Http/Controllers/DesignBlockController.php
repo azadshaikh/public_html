@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Modules\CMS\Http\Controllers;
 
 use App\Scaffold\ScaffoldController;
+use App\Traits\HasMediaPicker;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -14,6 +15,8 @@ use Modules\CMS\Services\DesignBlockService;
 
 class DesignBlockController extends ScaffoldController implements HasMiddleware
 {
+    use HasMediaPicker;
+
     public function __construct(private readonly DesignBlockService $designBlockService) {}
 
     public static function middleware(): array
@@ -56,6 +59,7 @@ class DesignBlockController extends ScaffoldController implements HasMiddleware
                 'design_system' => 'bootstrap',
                 'category_id' => 'hero',
             ],
+            ...$this->getMediaPickerProps(),
         ];
     }
 

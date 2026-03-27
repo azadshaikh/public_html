@@ -350,6 +350,15 @@ export default function CategoryForm({
                                         ogUrlError={form.error('og_url')}
                                         surfaceClassName="bg-background"
                                         ogUrlPlaceholder="https://example.com/your-category"
+                                        pickerMedia={pickerMedia}
+                                        pickerFilters={pickerFilters}
+                                        uploadSettings={uploadSettings}
+                                        pickerStatistics={pickerStatistics}
+                                        pickerAction={
+                                            mode === 'create'
+                                                ? route('cms.categories.create')
+                                                : route('cms.categories.edit', category!.id)
+                                        }
                                     />
                                 ),
                             },

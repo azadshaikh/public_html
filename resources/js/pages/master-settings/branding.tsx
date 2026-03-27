@@ -1,6 +1,7 @@
 import { SaveIcon } from 'lucide-react';
 import type { FormEvent } from 'react';
 import { FormErrorSummary } from '@/components/forms/form-error-summary';
+import { MediaPickerUrlInput } from '@/components/media/media-picker-url-input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -15,6 +16,12 @@ import { useAppForm } from '@/hooks/use-app-form';
 import SettingsLayout from '@/layouts/settings-layout';
 import { formValidators } from '@/lib/forms';
 import type { BreadcrumbItem, SettingsNavItem } from '@/types';
+import type {
+    MediaListItem,
+    MediaPickerFilters,
+    UploadSettings,
+} from '@/types/media';
+import type { PaginatedData } from '@/types/pagination';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Master Settings', href: route('app.masters.settings.index') },
@@ -29,6 +36,13 @@ type BrandingPageProps = {
         icon: string;
     };
     settingsNav: SettingsNavItem[];
+    pickerMedia: PaginatedData<MediaListItem> | null;
+    pickerFilters: MediaPickerFilters | null;
+    uploadSettings: UploadSettings | null;
+    pickerStatistics?: {
+        total: number;
+        trash: number;
+    } | null;
 };
 
 type BrandingFormData = {
@@ -38,7 +52,14 @@ type BrandingFormData = {
     icon: string;
 };
 
-export default function Branding({ settings, settingsNav }: BrandingPageProps) {
+export default function Branding({
+    settings,
+    settingsNav,
+    pickerMedia,
+    pickerFilters,
+    uploadSettings,
+    pickerStatistics = null,
+}: BrandingPageProps) {
     const form = useAppForm<BrandingFormData>({
         defaults: {
             brand_name: settings.brand_name,
@@ -66,6 +87,8 @@ export default function Branding({ settings, settingsNav }: BrandingPageProps) {
             },
         });
     };
+
+    const pickerAction = route('app.masters.settings.branding');
 
     return (
         <SettingsLayout
@@ -166,21 +189,28 @@ export default function Branding({ settings, settingsNav }: BrandingPageProps) {
                                     <FieldLabel htmlFor="logo">
                                         Logo URL
                                     </FieldLabel>
-                                    <Input
+                                    <MediaPickerUrlInput
                                         id="logo"
+                                        type="url"
                                         value={form.data.logo}
-                                        onChange={(e) =>
-                                            form.setField(
-                                                'logo',
-                                                e.target.value,
-                                            )
+                                        onChange={(value) =>
+                                            form.setField('logo', value)
                                         }
                                         onBlur={() => form.touch('logo')}
                                         aria-invalid={
                                             form.invalid('logo') || undefined
                                         }
                                         placeholder="Enter logo URL or path"
-                                        size="comfortable"
+                                        pickerMedia={pickerMedia}
+                                        pickerFilters={pickerFilters}
+                                        uploadSettings={uploadSettings}
+                                        pickerStatistics={pickerStatistics}
+                                        pickerAction={pickerAction}
+                                        dialogTitle="Select Logo"
+                                        pickerButtonLabel="Select logo from media library"
+                                        clearButtonLabel="Clear logo URL"
+                                        showThumbnailPreview
+                                        thumbnailAlt="Logo preview"
                                     />
                                     <FieldError>
                                         {form.error('logo')}
@@ -195,21 +225,28 @@ export default function Branding({ settings, settingsNav }: BrandingPageProps) {
                                     <FieldLabel htmlFor="icon">
                                         Icon URL
                                     </FieldLabel>
-                                    <Input
+                                    <MediaPickerUrlInput
                                         id="icon"
+                                        type="url"
                                         value={form.data.icon}
-                                        onChange={(e) =>
-                                            form.setField(
-                                                'icon',
-                                                e.target.value,
-                                            )
+                                        onChange={(value) =>
+                                            form.setField('icon', value)
                                         }
                                         onBlur={() => form.touch('icon')}
                                         aria-invalid={
                                             form.invalid('icon') || undefined
                                         }
                                         placeholder="Enter icon URL or path"
-                                        size="comfortable"
+                                        pickerMedia={pickerMedia}
+                                        pickerFilters={pickerFilters}
+                                        uploadSettings={uploadSettings}
+                                        pickerStatistics={pickerStatistics}
+                                        pickerAction={pickerAction}
+                                        dialogTitle="Select Icon"
+                                        pickerButtonLabel="Select icon from media library"
+                                        clearButtonLabel="Clear icon URL"
+                                        showThumbnailPreview
+                                        thumbnailAlt="Icon preview"
                                     />
                                     <FieldError>
                                         {form.error('icon')}

@@ -6,6 +6,52 @@ use Tests\TestCase;
 
 class PlatformCrudPatternConsistencyTest extends TestCase
 {
+    /**
+     * @return array<string, string>
+     */
+    private function platformRawImageUrlFormFiles(): array
+    {
+        $paths = glob(base_path('modules/Platform/resources/js/components/*/*-form.tsx')) ?: [];
+        $matches = [];
+
+        foreach ($paths as $path) {
+            $contents = file_get_contents($path);
+
+            if ($contents === false) {
+                $this->fail(sprintf('Failed to read %s', $path));
+            }
+
+            if (preg_match('/\b(?:branding_logo|branding_icon|logo_url|icon_url|favicon_url)\b/', $contents) === 1) {
+                $matches[$path] = $contents;
+            }
+        }
+
+        return $matches;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function platformRawImageUrlControllerFiles(): array
+    {
+        $paths = glob(base_path('modules/Platform/app/Http/Controllers/*Controller.php')) ?: [];
+        $matches = [];
+
+        foreach ($paths as $path) {
+            $contents = file_get_contents($path);
+
+            if ($contents === false) {
+                $this->fail(sprintf('Failed to read %s', $path));
+            }
+
+            if (preg_match('/\b(?:branding_logo|branding_icon|logo_url|icon_url|favicon_url)\b/', $contents) === 1) {
+                $matches[$path] = $contents;
+            }
+        }
+
+        return $matches;
+    }
+
     public function test_domain_show_page_exposes_current_domain_operations(): void
     {
         $path = base_path('modules/Platform/resources/js/pages/platform/domains/show.tsx');
@@ -115,5 +161,46 @@ class PlatformCrudPatternConsistencyTest extends TestCase
         $this->assertStringContainsString('protected array $allowedDirections = [\'asc\', \'desc\'];', $dnsQueryBuilderContents);
         $this->assertStringContainsString('if (in_array($field, $this->allowedFields, true) && in_array($direction, $this->allowedDirections, true))', $dnsQueryBuilderContents);
         $this->assertStringNotContainsString("'dns_records.name'", $dnsQueryBuilderContents);
+    }
+
+    public function test_platform_raw_image_url_forms_use_media_picker_url_input_and_picker_page_props(): void
+    {
+        $matchedForms = $this->platformRawImageUrlFormFiles();
+
+        $this->assertNotEmpty($matchedForms, 'Expected at least one Platform form with raw image URL fields.');
+
+        foreach ($matchedForms as $path => $contents) {
+            $this->assertStringContainsString('MediaPickerUrlInput', $contents, sprintf('Expected %s to use MediaPickerUrlInput for raw image URL fields.', $path));
+            $this->assertStringContainsString('PlatformMediaPickerPageProps', $contents, sprintf('Expected %s to accept PlatformMediaPickerPageProps when using raw image URL fields.', $path));
+
+            $resource = basename(dirname($path));
+
+            foreach (['create', 'edit'] as $page) {
+                $pagePath = base_path(sprintf('modules/Platform/resources/js/pages/platform/%s/%s.tsx', $resource, $page));
+
+                if (! is_file($pagePath)) {
+                    continue;
+                }
+
+                $pageContents = file_get_contents($pagePath);
+                $this->assertNotFalse($pageContents, sprintf('Failed to read %s', $pagePath));
+                $this->assertStringContainsString('PlatformMediaPickerPageProps', $pageContents, sprintf('Expected %s to include PlatformMediaPickerPageProps.', $pagePath));
+                $this->assertStringContainsString('pickerMedia={props.pickerMedia}', $pageContents, sprintf('Expected %s to pass pickerMedia through to the form.', $pagePath));
+                $this->assertStringContainsString('pickerFilters={props.pickerFilters}', $pageContents, sprintf('Expected %s to pass pickerFilters through to the form.', $pagePath));
+                $this->assertStringContainsString('uploadSettings={props.uploadSettings}', $pageContents, sprintf('Expected %s to pass uploadSettings through to the form.', $pagePath));
+            }
+        }
+    }
+
+    public function test_platform_controllers_with_raw_image_url_fields_expose_media_picker_props(): void
+    {
+        $matchedControllers = $this->platformRawImageUrlControllerFiles();
+
+        $this->assertNotEmpty($matchedControllers, 'Expected at least one Platform controller with raw image URL fields.');
+
+        foreach ($matchedControllers as $path => $contents) {
+            $this->assertStringContainsString('HasMediaPicker', $contents, sprintf('Expected %s to use HasMediaPicker for raw image URL fields.', $path));
+            $this->assertStringContainsString('getMediaPickerProps', $contents, sprintf('Expected %s to expose getMediaPickerProps() for raw image URL fields.', $path));
+        }
     }
 }

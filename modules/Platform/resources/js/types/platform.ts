@@ -1,5 +1,10 @@
 import type { PaginatedData } from '@/types';
 import type {
+    MediaListItem,
+    MediaPickerFilters,
+    UploadSettings,
+} from '@/types/media';
+import type {
     ScaffoldActionConfig,
     ScaffoldEmptyStateConfig,
     ScaffoldFilterState,
@@ -11,6 +16,16 @@ import type {
 export type PlatformOption = {
     value: string | number;
     label: string;
+};
+
+export type PlatformMediaPickerPageProps = {
+    pickerMedia: PaginatedData<MediaListItem> | null;
+    pickerFilters: MediaPickerFilters | null;
+    uploadSettings: UploadSettings | null;
+    pickerStatistics?: {
+        total: number;
+        trash: number;
+    } | null;
 };
 
 export type PlatformActivity = {

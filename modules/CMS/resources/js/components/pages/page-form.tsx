@@ -366,6 +366,15 @@ export default function PageForm({
                                         ogUrlError={form.error('og_url')}
                                         surfaceClassName="bg-background"
                                         ogUrlPlaceholder="https://example.com/your-page"
+                                        pickerMedia={pickerMedia}
+                                        pickerFilters={pickerFilters}
+                                        uploadSettings={uploadSettings}
+                                        pickerStatistics={pickerStatistics}
+                                        pickerAction={
+                                            mode === 'create'
+                                                ? route('cms.pages.create')
+                                                : route('cms.pages.edit', page!.id)
+                                        }
                                     />
                                 ),
                             },

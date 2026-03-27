@@ -6,6 +6,7 @@ use App\Enums\ActivityAction;
 use App\Models\ActivityLog;
 use App\Scaffold\ScaffoldController;
 use App\Services\GeoDataService;
+use App\Traits\HasMediaPicker;
 use BackedEnum;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
@@ -19,6 +20,8 @@ use Modules\Platform\Services\AgencyService;
 
 class AgencyController extends ScaffoldController implements HasMiddleware
 {
+    use HasMediaPicker;
+
     public function __construct(
         private readonly AgencyService $agencyService,
         private readonly GeoDataService $geoDataService
@@ -117,6 +120,7 @@ class AgencyController extends ScaffoldController implements HasMiddleware
             'country_codes' => $country_codes,
             'default_country_code' => $default_country_code,
             'default_phone_code' => $default_phone_code,
+            ...$this->getMediaPickerProps(),
         ];
     }
 

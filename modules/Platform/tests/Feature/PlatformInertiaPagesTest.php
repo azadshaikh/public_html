@@ -235,6 +235,27 @@ class PlatformInertiaPagesTest extends TestCase
                 ->has('ttlOptions'));
     }
 
+    public function test_platform_agency_create_page_can_request_media_picker_props(): void
+    {
+        $this->actingAs($this->admin)
+            ->get(route('platform.agencies.create', ['picker' => 1]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->component('platform/agencies/create')
+                ->has('pickerMedia.data')
+                ->where('pickerFilters.picker', '1')
+                ->has('uploadSettings', fn (Assert $uploadSettings): Assert => $uploadSettings
+                    ->has('upload_route')
+                    ->has('max_size_mb')
+                    ->etc()
+                )
+                ->has('pickerStatistics', fn (Assert $pickerStatistics): Assert => $pickerStatistics
+                    ->has('total')
+                    ->has('trash')
+                )
+            );
+    }
+
     public function test_platform_settings_page_renders_with_inertia(): void
     {
         $this->actingAs($this->admin)

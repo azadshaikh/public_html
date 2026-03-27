@@ -567,6 +567,15 @@ export default function PostForm({
                                         ogUrlError={form.error('og_url')}
                                         surfaceClassName="bg-background"
                                         ogUrlPlaceholder="https://example.com/your-post"
+                                        pickerMedia={pickerMedia}
+                                        pickerFilters={pickerFilters}
+                                        uploadSettings={uploadSettings}
+                                        pickerStatistics={pickerStatistics}
+                                        pickerAction={
+                                            mode === 'create'
+                                                ? route('cms.posts.create')
+                                                : route('cms.posts.edit', post!.id)
+                                        }
                                     />
                                 ),
                             },

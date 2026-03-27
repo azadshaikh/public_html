@@ -83,6 +83,27 @@ class DesignBlockCrudTest extends TestCase
             );
     }
 
+    public function test_admin_can_request_design_block_media_picker_props(): void
+    {
+        $this->actingAs($this->admin)
+            ->get(route('cms.designblock.create', ['picker' => 1]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->component('cms/design-blocks/create')
+                ->has('pickerMedia.data')
+                ->where('pickerFilters.picker', '1')
+                ->has('uploadSettings', fn (Assert $uploadSettings): Assert => $uploadSettings
+                    ->has('upload_route')
+                    ->has('max_size_mb')
+                    ->etc()
+                )
+                ->has('pickerStatistics', fn (Assert $pickerStatistics): Assert => $pickerStatistics
+                    ->has('total')
+                    ->has('trash')
+                )
+            );
+    }
+
     public function test_admin_can_access_design_blocks_index_with_merged_preview_title_column(): void
     {
         $block = $this->createDesignBlock('Index Block');

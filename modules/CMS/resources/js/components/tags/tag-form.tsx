@@ -344,6 +344,15 @@ export default function TagForm({
                                         ogUrlError={form.error('og_url')}
                                         surfaceClassName="bg-background"
                                         ogUrlPlaceholder="https://example.com/your-tag"
+                                        pickerMedia={pickerMedia}
+                                        pickerFilters={pickerFilters}
+                                        uploadSettings={uploadSettings}
+                                        pickerStatistics={pickerStatistics}
+                                        pickerAction={
+                                            mode === 'create'
+                                                ? route('cms.tags.create')
+                                                : route('cms.tags.edit', tag!.id)
+                                        }
                                     />
                                 ),
                             },
