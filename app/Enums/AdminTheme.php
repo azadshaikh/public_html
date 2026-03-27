@@ -8,6 +8,7 @@ enum AdminTheme: string
     case Swiss = 'swiss';
     case Green = 'green';
     case Zen = 'zen';
+    case Vista = 'vista';
     case Claude = 'claude';
 
     public function label(): string
@@ -17,6 +18,7 @@ enum AdminTheme: string
             self::Swiss => 'Swiss',
             self::Green => 'Green',
             self::Zen => 'Zen',
+            self::Vista => 'Vista',
             self::Claude => 'Claude',
         };
     }
@@ -28,6 +30,7 @@ enum AdminTheme: string
             self::Swiss => 'High-contrast Swiss minimalism with square corners and assertive offset shadows.',
             self::Green => 'Fresh leaf-green accents with a clean neutral shell and balanced radius.',
             self::Zen => 'Calm sand-and-stone neutrals with compact radius and understated elevation.',
+            self::Vista => 'Soft frosted blues with warm signal accents and restrained shadows.',
             self::Claude => 'Warm editorial neutrals with softer depth and roomier radius.',
         };
     }
