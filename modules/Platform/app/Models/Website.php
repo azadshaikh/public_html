@@ -298,6 +298,115 @@ class Website extends Model
         return $prefix.'-'.$hash;
     }
 
+    public static function normalizeDomainHost(?string $domain): string
+    {
+        if (! is_string($domain)) {
+            return '';
+        }
+
+        $normalized = trim($domain);
+
+        if ($normalized === '') {
+            return '';
+        }
+
+        $normalized = preg_replace('#^https?://#i', '', $normalized) ?? $normalized;
+        $normalized = explode('/', $normalized)[0];
+        $normalized = explode(':', $normalized)[0];
+
+        return strtolower(trim($normalized, '.'));
+    }
+
+    public static function extractRootDomain(?string $fullDomain): string
+    {
+        $domain = static::normalizeDomainHost($fullDomain);
+
+        if ($domain === '') {
+            return '';
+        }
+
+        $domain = preg_replace('#^www\.#i', '', $domain) ?? $domain;
+        $parts = explode('.', $domain);
+        $partsCount = count($parts);
+
+        if ($partsCount <= 2) {
+            return $domain;
+        }
+
+        $multiLevelTlds = [
+            'co.uk', 'org.uk', 'me.uk', 'ac.uk',
+            'com.au', 'net.au', 'org.au',
+            'co.nz', 'net.nz', 'org.nz',
+            'co.za', 'org.za', 'net.za',
+            'com.br', 'net.br', 'org.br',
+            'co.in', 'net.in', 'org.in',
+            'co.jp', 'ne.jp', 'or.jp',
+        ];
+
+        $lastTwo = $parts[$partsCount - 2].'.'.$parts[$partsCount - 1];
+
+        if (in_array($lastTwo, $multiLevelTlds, true)) {
+            return implode('.', array_slice($parts, -3));
+        }
+
+        return implode('.', array_slice($parts, -2));
+    }
+
+    public static function supportsWwwForDomain(?string $domain): bool
+    {
+        $normalizedDomain = static::normalizeDomainHost($domain);
+
+        return $normalizedDomain !== '' && $normalizedDomain === static::extractRootDomain($normalizedDomain);
+    }
+
+    public function supportsWwwFeature(): bool
+    {
+        return static::supportsWwwForDomain($this->domain);
+    }
+
+    public function usesWwwPrimary(): bool
+    {
+        return $this->supportsWwwFeature() && $this->storedIsWwwPreference();
+    }
+
+    public function primaryHostname(): ?string
+    {
+        $domain = static::normalizeDomainHost($this->domain);
+
+        if ($domain === '') {
+            return null;
+        }
+
+        return $this->usesWwwPrimary() ? 'www.'.$domain : $domain;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function cdnHostnames(): array
+    {
+        $domain = static::normalizeDomainHost($this->domain);
+
+        if ($domain === '') {
+            return [];
+        }
+
+        if (! $this->supportsWwwFeature()) {
+            return [$domain];
+        }
+
+        return [$domain, 'www.'.$domain];
+    }
+
+    public function hestiaRedirectTarget(): ?string
+    {
+        if (! $this->supportsWwwFeature()) {
+            return null;
+        }
+
+        return $this->primaryHostname();
+    }
+
     /**
      * Assign and persist the uid, admin_slug, media_slug and secret_key based on the record ID.
      *
@@ -526,7 +635,7 @@ class Website extends Model
      */
     protected function getIsWwwAttribute(): bool
     {
-        return (bool) ($this->getMetadata('provisioning.is_www') ?? $this->getMetadata('is_www')); // fallback
+        return $this->supportsWwwFeature() && $this->storedIsWwwPreference();
     }
 
     protected function setIsWwwAttribute($value): void
@@ -535,6 +644,11 @@ class Website extends Model
         $provisioning = $this->getMetadata('provisioning') ?? [];
         $provisioning['is_www'] = (bool) $value;
         $this->setMetadata('provisioning', $provisioning);
+    }
+
+    protected function storedIsWwwPreference(): bool
+    {
+        return (bool) ($this->getMetadata('provisioning.is_www') ?? $this->getMetadata('is_www'));
     }
 
     /**

@@ -90,7 +90,7 @@ class WebsiteService implements ScaffoldServiceInterface
             $metadataDirty = false;
 
             if (isset($data['is_www'])) {
-                $website->is_www = $data['is_www'];
+                $website->is_www = Website::supportsWwwForDomain($website->domain) && (bool) $data['is_www'];
                 $metadataDirty = true;
             }
 
@@ -165,7 +165,7 @@ class WebsiteService implements ScaffoldServiceInterface
             $model->update($preparedData);
 
             if (isset($data['is_www'])) {
-                $model->is_www = $data['is_www'];
+                $model->is_www = Website::supportsWwwForDomain($model->domain) && (bool) $data['is_www'];
             }
 
             if (isset($data['is_agency'])) {

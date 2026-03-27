@@ -55,25 +55,19 @@ class HestiaCreateWebsiteCommand extends BaseCommand
         $backendTemplate = $planConfig['backend_template'] ?? 'astero-basic';
 
         // Use custom script that combines all 3 commands into one API call
-        $response = HestiaClient::execute(
-            'a-create-web-domain',
-            $website->server,
-            [
-                $website->website_username,
-                $website->domain,
-                'astero-active',
-                $backendTemplate,
-            ]
-        );
+        $createdNow = $this->ensureWebDomainExists($website, $backendTemplate);
+        $redirectTarget = $this->syncWebDomainRedirect($website);
 
-        if (! $response['success']) {
-            $errorMessage = 'Failed to create web domain: '.$response['message'];
-            $this->updateWebsiteStep($website, $errorMessage, 'failed');
-            throw new Exception($errorMessage);
-        }
+        $successMessage = $redirectTarget === null
+            ? ($createdNow
+                ? sprintf("Web domain '%s' created and configured.", $website->domain)
+                : sprintf("Web domain '%s' already existed and has been reconciled.", $website->domain))
+            : ($createdNow
+                ? sprintf("Web domain '%s' created and configured with redirect target '%s'.", $website->domain, $redirectTarget)
+                : sprintf("Web domain '%s' already existed and redirect target '%s' has been reconciled.", $website->domain, $redirectTarget));
 
-        $this->logActivity($website, ActivityAction::CREATE, sprintf("Web domain '%s' created and configured.", $website->domain));
-        $this->updateWebsiteStep($website, sprintf("Web domain '%s' created and configured successfully.", $website->domain), 'done');
+        $this->logActivity($website, ActivityAction::CREATE, $successMessage);
+        $this->updateWebsiteStep($website, $successMessage, 'done');
     }
 
     /**
@@ -86,5 +80,126 @@ class HestiaCreateWebsiteCommand extends BaseCommand
     private function updateWebsiteStep(Website $website, string $message, string $status): void
     {
         $website->updateProvisioningStep('create_website', $message, $status);
+    }
+
+    private function ensureWebDomainExists(Website $website, string $backendTemplate): bool
+    {
+        $response = HestiaClient::execute(
+            'a-create-web-domain',
+            $website->server,
+            [
+                $website->website_username,
+                $website->domain,
+                'astero-active',
+                $backendTemplate,
+            ]
+        );
+
+        if ($response['success']) {
+            return true;
+        }
+
+        if (! $this->isAlreadyExistsResponse($response)) {
+            $errorMessage = 'Failed to create web domain: '.$response['message'];
+            $this->updateWebsiteStep($website, $errorMessage, 'failed');
+            throw new Exception($errorMessage);
+        }
+
+        $this->info(sprintf("Web domain '%s' already exists. Re-applying templates.", $website->domain));
+
+        $templateResponse = HestiaClient::execute(
+            'v-change-web-domain-tpl',
+            $website->server,
+            [
+                $website->website_username,
+                $website->domain,
+                'astero-active',
+            ]
+        );
+
+        if (! $templateResponse['success']) {
+            $errorMessage = 'Failed to re-apply web template: '.$templateResponse['message'];
+            $this->updateWebsiteStep($website, $errorMessage, 'failed');
+            throw new Exception($errorMessage);
+        }
+
+        $backendResponse = HestiaClient::execute(
+            'v-change-web-domain-backend-tpl',
+            $website->server,
+            [
+                $website->website_username,
+                $website->domain,
+                $backendTemplate,
+            ]
+        );
+
+        if (! $backendResponse['success']) {
+            $errorMessage = 'Failed to re-apply backend template: '.$backendResponse['message'];
+            $this->updateWebsiteStep($website, $errorMessage, 'failed');
+            throw new Exception($errorMessage);
+        }
+
+        return false;
+    }
+
+    private function syncWebDomainRedirect(Website $website): ?string
+    {
+        $redirectTarget = $website->hestiaRedirectTarget();
+
+        $deleteResponse = HestiaClient::execute(
+            'v-delete-web-domain-redirect',
+            $website->server,
+            [
+                $website->website_username,
+                $website->domain,
+            ]
+        );
+
+        if (! $deleteResponse['success'] && ! $this->isNotFoundResponse($deleteResponse)) {
+            $errorMessage = 'Failed to clear existing web domain redirect: '.$deleteResponse['message'];
+            $this->updateWebsiteStep($website, $errorMessage, 'failed');
+            throw new Exception($errorMessage);
+        }
+
+        if ($redirectTarget === null) {
+            return null;
+        }
+
+        $redirectResponse = HestiaClient::execute(
+            'v-add-web-domain-redirect',
+            $website->server,
+            [
+                $website->website_username,
+                $website->domain,
+                $redirectTarget,
+                '301',
+                'yes',
+            ]
+        );
+
+        if (! $redirectResponse['success']) {
+            $errorMessage = 'Failed to configure web domain redirect: '.$redirectResponse['message'];
+            $this->updateWebsiteStep($website, $errorMessage, 'failed');
+            throw new Exception($errorMessage);
+        }
+
+        return $redirectTarget;
+    }
+
+    private function isAlreadyExistsResponse(array $response): bool
+    {
+        $message = strtolower((string) ($response['message'] ?? ''));
+
+        return (int) ($response['code'] ?? 0) === 4
+            || str_contains($message, 'already exists');
+    }
+
+    private function isNotFoundResponse(array $response): bool
+    {
+        $message = strtolower((string) ($response['message'] ?? ''));
+
+        return (int) ($response['code'] ?? 0) === 3
+            || str_contains($message, "doesn't exist")
+            || str_contains($message, 'not found');
     }
 }

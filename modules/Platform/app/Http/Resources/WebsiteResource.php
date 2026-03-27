@@ -41,7 +41,7 @@ class WebsiteResource extends ScaffoldResource
         $statusClass = $this->status instanceof WebsiteStatus ? $this->status->badgeClass() : 'bg-secondary-subtle text-secondary';
 
         $domain = $this->domain ?? '';
-        $domainUrl = $domain ? 'https://'.ltrim($domain, '/') : null;
+        $domainUrl = $this->primaryHostname() ? 'https://'.$this->primaryHostname() : null;
 
         $expiredOn = $this->expired_on;
         $daysUntilExpiry = $this->getDaysUntilExpiry();

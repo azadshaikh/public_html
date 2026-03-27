@@ -531,6 +531,60 @@ export default function WebsitesShow({
                                 </Badge>
                             </div>
 
+                            <div className="rounded-lg border bg-muted/20 p-4">
+                                <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                                    <div className="space-y-2">
+                                        <div>
+                                            <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Primary Hostname</p>
+                                            <p className="mt-1 text-sm font-semibold text-foreground">{website.primary_hostname ?? website.domain}</p>
+                                        </div>
+                                        {website.supports_www_feature ? (
+                                            <p className="text-sm text-muted-foreground">
+                                                Switch the public primary host between the apex domain and <span className="font-medium text-foreground">www</span>. This also re-checks the Hestia redirect and Bunny hostname setup.
+                                            </p>
+                                        ) : (
+                                            <p className="text-sm text-muted-foreground">
+                                                This website uses a subdomain, so the www primary-host feature is not available.
+                                            </p>
+                                        )}
+                                        {website.alternate_hostname ? (
+                                            <p className="text-xs text-muted-foreground">
+                                                Alternate host: <span className="font-medium text-foreground">{website.alternate_hostname}</span>
+                                            </p>
+                                        ) : null}
+                                    </div>
+
+                                    {website.supports_www_feature ? (
+                                        <div className="grid grid-cols-2 gap-2 md:min-w-64">
+                                            <Button
+                                                variant={website.is_www ? 'outline' : 'default'}
+                                                disabled={op.processing || !website.is_www}
+                                                onClick={() => openConfirm(
+                                                    'Use apex domain as primary host',
+                                                    'This will switch the primary host to the non-www domain and reconcile Hestia and Bunny state if anything is missing.',
+                                                    'Use apex domain',
+                                                    () => op.perform('post', route('platform.websites.update-primary-host', { website: website.id, hostnameType: 'apex' })),
+                                                )}
+                                            >
+                                                Use {website.domain}
+                                            </Button>
+                                            <Button
+                                                variant={website.is_www ? 'default' : 'outline'}
+                                                disabled={op.processing || website.is_www}
+                                                onClick={() => openConfirm(
+                                                    'Use www as primary host',
+                                                    'This will switch the primary host to the www hostname and reconcile Hestia and Bunny state if anything is missing.',
+                                                    'Use www',
+                                                    () => op.perform('post', route('platform.websites.update-primary-host', { website: website.id, hostnameType: 'www' })),
+                                                )}
+                                            >
+                                                Use www
+                                            </Button>
+                                        </div>
+                                    ) : null}
+                                </div>
+                            </div>
+
                             {/* Infrastructure + Ownership */}
                             <div className="grid gap-4 md:grid-cols-2">
                                 <div className="flex flex-col gap-2">

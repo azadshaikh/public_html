@@ -26,6 +26,7 @@ use Modules\Platform\Models\Server;
 use Modules\Platform\Models\Tld;
 use Modules\Platform\Models\Website;
 use Modules\Platform\Providers\PlatformServiceProvider;
+use Modules\Platform\Services\WebsiteProvisioningService;
 use Tests\TestCase;
 
 class PlatformInertiaPagesTest extends TestCase
@@ -590,6 +591,9 @@ class PlatformInertiaPagesTest extends TestCase
             ->assertInertia(fn (Assert $page): Assert => $page
                 ->component('platform/websites/show')
                 ->where('website.id', $website->id)
+                ->where('website.primary_hostname', 'demo.example.com')
+                ->where('website.alternate_hostname', null)
+                ->where('website.supports_www_feature', false)
                 ->has('provisioningSteps')
                 ->where('provisioningSteps.0.key', $stepKeys[0])
                 ->where('provisioningSteps.0.status', 'done')
@@ -619,6 +623,23 @@ class PlatformInertiaPagesTest extends TestCase
             ->assertJsonPath('provisioning_steps.0.message', 'Initial provisioning completed.')
             ->assertJsonPath('provisioning_steps.0.started_at', app_date_time_format($website->getMetadata('provisioning_steps.'.$stepKeys[0].'.started_at'), 'datetime'))
             ->assertJsonPath('provisioning_steps.0.completed_at', app_date_time_format($website->getMetadata('provisioning_steps.'.$stepKeys[0].'.completed_at'), 'datetime'));
+
+        $website->update([
+            'domain' => 'astero.in',
+            'metadata' => [
+                'provisioning' => ['is_www' => true],
+            ],
+        ]);
+
+        $this->actingAs($this->admin)
+            ->get(route('platform.websites.show', $website))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->component('platform/websites/show')
+                ->where('website.id', $website->id)
+                ->where('website.primary_hostname', 'www.astero.in')
+                ->where('website.alternate_hostname', 'astero.in')
+                ->where('website.supports_www_feature', true));
 
         $this->actingAs($this->admin)
             ->get(route('platform.dns.edit', $dnsRecord))
@@ -866,6 +887,36 @@ class PlatformInertiaPagesTest extends TestCase
             'Waiting for customer DNS records to propagate.',
             $website->getMetadata('provisioning_steps.verify_dns.message')
         );
+    }
+
+    public function test_platform_website_primary_host_action_uses_provisioning_service_response(): void
+    {
+        $agency = $this->createAgency();
+        $serverProvider = $this->createProvider(Provider::TYPE_SERVER, 'Server Provider');
+        $server = $this->createServer($serverProvider, $agency);
+        $dnsProvider = $this->createProvider(Provider::TYPE_DNS, 'DNS Provider');
+        $cdnProvider = $this->createProvider(Provider::TYPE_CDN, 'CDN Provider');
+        $website = $this->createWebsite($agency, $server, $dnsProvider, $cdnProvider);
+        $website->update(['domain' => 'astero.in']);
+
+        $service = $this->mock(WebsiteProvisioningService::class);
+        $service->shouldReceive('updatePrimaryHostname')
+            ->once()
+            ->andReturn([
+                'status' => 'success',
+                'message' => 'Primary hostname switched to www.astero.in.',
+            ]);
+
+        $this->actingAs($this->admin)
+            ->postJson(route('platform.websites.update-primary-host', [
+                'website' => $website,
+                'hostnameType' => 'www',
+            ]))
+            ->assertOk()
+            ->assertJson([
+                'status' => 'success',
+                'message' => 'Primary hostname switched to www.astero.in.',
+            ]);
     }
 
     public function test_server_update_persists_restored_edit_fields(): void

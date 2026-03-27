@@ -72,11 +72,6 @@ const optionFields = [
         description: "Enable if this is the agency's SaaS platform website.",
     },
     {
-        field: 'is_www',
-        label: 'Use WWW?',
-        description: 'Enable to use the www subdomain as primary.',
-    },
-    {
         field: 'skip_cdn',
         label: 'Skip CDN setup?',
         description: 'Enable if CDN has already been configured manually.',
@@ -98,6 +93,74 @@ const optionFields = [
         description: 'Disable mailbox setup during initial provisioning.',
     },
 ] as const;
+
+function normalizeDomainHost(domain: string): string {
+    const trimmedDomain = domain.trim();
+
+    if (trimmedDomain === '') {
+        return '';
+    }
+
+    return trimmedDomain
+        .replace(/^https?:\/\//i, '')
+        .split('/')[0]
+        .split(':')[0]
+        .replace(/\.+$/, '')
+        .toLowerCase();
+}
+
+function extractRootDomain(domain: string): string {
+    const normalizedDomain = normalizeDomainHost(domain).replace(/^www\./i, '');
+
+    if (normalizedDomain === '') {
+        return '';
+    }
+
+    const parts = normalizedDomain.split('.');
+
+    if (parts.length <= 2) {
+        return normalizedDomain;
+    }
+
+    const multiLevelTlds = new Set([
+        'co.uk',
+        'org.uk',
+        'me.uk',
+        'ac.uk',
+        'com.au',
+        'net.au',
+        'org.au',
+        'co.nz',
+        'net.nz',
+        'org.nz',
+        'co.za',
+        'org.za',
+        'net.za',
+        'com.br',
+        'net.br',
+        'org.br',
+        'co.in',
+        'net.in',
+        'org.in',
+        'co.jp',
+        'ne.jp',
+        'or.jp',
+    ]);
+
+    const lastTwo = `${parts[parts.length - 2]}.${parts[parts.length - 1]}`;
+
+    if (multiLevelTlds.has(lastTwo)) {
+        return parts.slice(-3).join('.');
+    }
+
+    return parts.slice(-2).join('.');
+}
+
+function supportsWwwPrimary(domain: string): boolean {
+    const normalizedDomain = normalizeDomainHost(domain);
+
+    return normalizedDomain !== '' && normalizedDomain === extractRootDomain(normalizedDomain);
+}
 
 function SelectField({
     label,
@@ -185,6 +248,8 @@ export default function WebsiteForm({
         mode === 'create'
             ? route('platform.websites.index', { status: 'all' })
             : route('platform.websites.show', website!.id);
+
+    const wwwEligible = supportsWwwPrimary(form.data.domain);
 
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -579,6 +644,31 @@ export default function WebsiteForm({
                         </CardHeader>
                         <CardContent>
                             <FieldGroup>
+                                <Field
+                                    orientation="horizontal"
+                                    className="items-start justify-between gap-4 rounded-lg border p-3"
+                                    data-disabled={!wwwEligible || undefined}
+                                >
+                                    <FieldContent>
+                                        <FieldLabel htmlFor="is_www">
+                                            Use WWW?
+                                        </FieldLabel>
+                                        <FieldDescription>
+                                            {wwwEligible
+                                                ? 'Enable to use the www subdomain as primary.'
+                                                : 'Available only for apex domains. Subdomains always provision without a www primary.'}
+                                        </FieldDescription>
+                                    </FieldContent>
+                                    <Switch
+                                        id="is_www"
+                                        checked={wwwEligible ? form.data.is_www : false}
+                                        onCheckedChange={(checked) =>
+                                            form.setField('is_www', checked)
+                                        }
+                                        disabled={!wwwEligible}
+                                    />
+                                </Field>
+
                                 {optionFields.map(
                                     ({ field, label, description }) => (
                                         <Field

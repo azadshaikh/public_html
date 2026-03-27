@@ -253,6 +253,10 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
             Route::post('/{website}/sync-website', [WebsiteController::class, 'syncWebsite'])->name('sync-website')->whereNumber('website');
             Route::post('/{website}/recache-application', [WebsiteController::class, 'recacheApplication'])->name('recache-application')->whereNumber('website');
             Route::post('/{website}/retry-provision', [WebsiteController::class, 'retryProvision'])->name('retry-provision')->whereNumber('website');
+            Route::post('/{website}/primary-host/{hostnameType}', [WebsiteController::class, 'updatePrimaryHostname'])
+                ->name('update-primary-host')
+                ->whereNumber('website')
+                ->whereIn('hostnameType', ['apex', 'www']);
             Route::post('/{website}/update-setup-status', [WebsiteController::class, 'updateSetupStatus'])->name('update-setup-status')->whereNumber('website');
             Route::post('/{website}/setup-queue-worker', [WebsiteController::class, 'setupQueueWorker'])->name('setup-queue-worker')->whereNumber('website');
             Route::post('/{website}/scale-queue-worker/{count}', [WebsiteController::class, 'scaleQueueWorker'])->name('scale-queue-worker')->whereNumber('website')->whereNumber('count');

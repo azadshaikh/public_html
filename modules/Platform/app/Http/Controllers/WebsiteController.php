@@ -65,7 +65,7 @@ class WebsiteController extends ScaffoldController implements HasMiddleware
             // Custom endpoint permissions
             new Middleware('permission:view_websites', only: ['websiteLog']),
             new Middleware('permission:add_websites', only: ['createFromOrder']),
-            new Middleware('permission:edit_websites', only: ['updateStatus', 'updateVersion', 'syncWebsite', 'recacheApplication', 'retryProvision', 'executeStep', 'revertStep', 'updateSetupStatus', 'setupQueueWorker', 'scaleQueueWorker', 'reprovision', 'revealSecret', 'confirmDns', 'stopDnsValidation', 'clearWebsiteLog', 'websiteEnv', 'updateWebsiteEnv']),
+            new Middleware('permission:edit_websites', only: ['updateStatus', 'updateVersion', 'syncWebsite', 'recacheApplication', 'retryProvision', 'executeStep', 'revertStep', 'updateSetupStatus', 'setupQueueWorker', 'scaleQueueWorker', 'reprovision', 'revealSecret', 'confirmDns', 'stopDnsValidation', 'clearWebsiteLog', 'websiteEnv', 'updateWebsiteEnv', 'updatePrimaryHostname']),
             new Middleware('permission:delete_websites', only: ['removeFromServer']),
         ];
     }
@@ -1051,6 +1051,26 @@ BASH;
         }
     }
 
+    public function updatePrimaryHostname(Request $request, $id, string $hostnameType): JsonResponse
+    {
+        if (! in_array($hostnameType, ['apex', 'www'], true)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Invalid primary hostname selection.',
+            ], 422);
+        }
+
+        /** @var Website $website */
+        $website = Website::withTrashed()->with(['domainRecord', 'providers', 'server'])->findOrFail((int) $id);
+
+        $result = $this->websiteProvisioningService->updatePrimaryHostname($website, $hostnameType === 'www');
+
+        return response()->json([
+            'status' => $result['status'],
+            'message' => $result['message'],
+        ], $result['code'] ?? ($result['status'] === 'error' ? 422 : 200));
+    }
+
     // =============================================================================
     // PROVISIONING STEPS
     // =============================================================================
@@ -1507,7 +1527,7 @@ BASH;
             'customer_email' => (string) ($website->customer_data['email'] ?? ''),
             'status' => (string) (($website->status instanceof WebsiteStatus ? $website->status->value : $website->status) ?? WebsiteStatus::Provisioning->value),
             'expired_on' => $website->expired_on?->format('Y-m-d') ?? '',
-            'is_www' => (bool) ($website->is_www ?? false),
+            'is_www' => $website->usesWwwPrimary(),
             'is_agency' => (bool) ($website->is_agency ?? false),
             'skip_cdn' => (bool) ($website->skip_cdn ?? false),
             'skip_dns' => (bool) ($website->skip_dns ?? false),
@@ -1532,7 +1552,11 @@ BASH;
             'uid' => $website->uid,
             'name' => $website->name,
             'domain' => $website->domain,
-            'domain_url' => $website->domain ? 'https://'.ltrim($website->domain, '/') : null,
+            'domain_url' => $website->primaryHostname() ? 'https://'.$website->primaryHostname() : null,
+            'primary_hostname' => $website->primaryHostname(),
+            'alternate_hostname' => $website->supportsWwwFeature()
+                ? ($website->usesWwwPrimary() ? Website::normalizeDomainHost($website->domain) : 'www.'.Website::normalizeDomainHost($website->domain))
+                : null,
             'type' => $website->type,
             'plan' => $website->plan_tier,
             'status' => $status?->value ?? (string) $website->status,
@@ -1541,7 +1565,8 @@ BASH;
             'astero_version' => $website->astero_version,
             'admin_slug' => $website->admin_slug,
             'media_slug' => $website->media_slug,
-            'is_www' => (bool) ($website->is_www ?? false),
+            'is_www' => $website->usesWwwPrimary(),
+            'supports_www_feature' => $website->supportsWwwFeature(),
             'is_agency' => (bool) ($website->is_agency ?? false),
             'skip_cdn' => (bool) ($website->skip_cdn ?? false),
             'skip_dns' => (bool) ($website->skip_dns ?? false),

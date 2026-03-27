@@ -24,6 +24,77 @@ class WebsiteProvisioningService
 {
     use ActivityTrait;
 
+    public function updatePrimaryHostname(Website $website, bool $useWww): array
+    {
+        if (! $website->supportsWwwFeature()) {
+            return [
+                'status' => 'error',
+                'message' => 'WWW primary hostname is only supported for apex domains.',
+                'code' => 422,
+            ];
+        }
+
+        $website->loadMissing(['domainRecord', 'providers']);
+
+        $previousPreference = $website->usesWwwPrimary();
+        $website->is_www = $useWww;
+        $website->save();
+
+        $overallStatus = 'success';
+
+        $originResult = $this->runConfiguredStep($website, 'create_website');
+        if ($originResult['status'] === 'error') {
+            return $originResult;
+        }
+
+        if ($originResult['status'] === 'info') {
+            $overallStatus = 'info';
+        }
+
+        if ($this->shouldSyncBunnyCdn($website)) {
+            $cdnResult = $this->runConfiguredStep($website, 'setup_bunny_cdn');
+            if ($cdnResult['status'] === 'error') {
+                return $cdnResult;
+            }
+
+            if ($cdnResult['status'] === 'info') {
+                $overallStatus = 'info';
+            }
+
+            if ($this->shouldSyncBunnyCdnSsl($website)) {
+                $sslResult = $this->runConfiguredStep($website, 'configure_cdn_ssl');
+                if ($sslResult['status'] === 'error') {
+                    return $sslResult;
+                }
+
+                if ($sslResult['status'] === 'info') {
+                    $overallStatus = 'info';
+                }
+            }
+        }
+
+        $primaryHostname = $website->primaryHostname() ?? $website->domain;
+        $changed = $previousPreference !== $website->usesWwwPrimary();
+        $message = $changed
+            ? sprintf('Primary hostname switched to %s.', $primaryHostname)
+            : sprintf('Primary hostname verified for %s.', $primaryHostname);
+
+        if ($overallStatus === 'info') {
+            $message .= ' CDN SSL is still reconciling in the background.';
+        }
+
+        $this->logActivity(
+            $website,
+            ActivityAction::UPDATE,
+            $message
+        );
+
+        return [
+            'status' => $overallStatus,
+            'message' => $message,
+        ];
+    }
+
     /**
      * Execute a specific provisioning step or all steps.
      *
@@ -198,6 +269,69 @@ class WebsiteProvisioningService
         } catch (Exception $exception) {
             return ['status' => 'error', 'message' => $step_data['title'].' failed: '.$exception->getMessage()];
         }
+    }
+
+    private function runConfiguredStep(Website $website, string $step): array
+    {
+        $command = config(sprintf('platform.website.steps.%s.command', $step));
+        $stepTitle = $this->getStepTitle($step);
+
+        if (! is_string($command) || $command === '') {
+            return [
+                'status' => 'error',
+                'message' => sprintf('Provisioning step "%s" is not configured.', $stepTitle),
+            ];
+        }
+
+        try {
+            $exitCode = Artisan::call($command, ['website_id' => $website->id]);
+            $commandOutput = trim((string) Artisan::output());
+
+            if ($exitCode === 0) {
+                return [
+                    'status' => 'success',
+                    'message' => $stepTitle.' completed successfully.',
+                ];
+            }
+
+            if ($exitCode === 2) {
+                return [
+                    'status' => 'info',
+                    'message' => $commandOutput !== ''
+                        ? $commandOutput
+                        : $stepTitle.' is still reconciling.',
+                ];
+            }
+
+            return [
+                'status' => 'error',
+                'message' => $commandOutput !== ''
+                    ? $commandOutput
+                    : $stepTitle.' failed with exit code: '.$exitCode,
+            ];
+        } catch (Exception $exception) {
+            return [
+                'status' => 'error',
+                'message' => $stepTitle.' failed: '.$exception->getMessage(),
+            ];
+        }
+    }
+
+    private function shouldSyncBunnyCdn(Website $website): bool
+    {
+        if ((bool) $website->skip_cdn) {
+            return false;
+        }
+
+        $provider = $website->cdnProvider ?? $website->dnsProvider;
+
+        return $provider?->vendor === 'bunny';
+    }
+
+    private function shouldSyncBunnyCdnSsl(Website $website): bool
+    {
+        return ! (bool) $website->skip_ssl_issue
+            && $website->domainRecord !== null;
     }
 
     /**

@@ -422,6 +422,8 @@ export type WebsiteShowData = {
     name: string;
     domain: string;
     domain_url: string | null;
+    primary_hostname: string | null;
+    alternate_hostname: string | null;
     type: string | null;
     plan: string | null;
     status: string | null;
@@ -431,6 +433,7 @@ export type WebsiteShowData = {
     admin_slug: string | null;
     media_slug: string | null;
     is_www: boolean;
+    supports_www_feature: boolean;
     is_agency: boolean;
     skip_cdn: boolean;
     skip_dns: boolean;

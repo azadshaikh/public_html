@@ -13,6 +13,227 @@ use Tests\TestCase;
 
 class BunnySetupCdnCommandTest extends TestCase
 {
+    public function test_command_reuses_existing_pull_zone_and_adds_only_missing_hostnames(): void
+    {
+        $provider = new Provider([
+            'vendor' => 'bunny',
+            'credentials' => ['api_key' => 'bunny-api-key'],
+        ]);
+
+        $server = new Server([
+            'ip' => '89.167.78.200',
+        ]);
+
+        $website = new class extends Website
+        {
+            public array $stepUpdates = [];
+
+            public ?Provider $provider = null;
+
+            protected function getCdnProviderAttribute(): ?Provider
+            {
+                return $this->provider;
+            }
+
+            public function updateProvisioningStep(string $stepKey, string $message, string $status): void
+            {
+                $this->stepUpdates[] = [
+                    'step' => $stepKey,
+                    'message' => $message,
+                    'status' => $status,
+                ];
+            }
+
+            public function save(array $options = []): bool
+            {
+                return true;
+            }
+        };
+
+        $website->provider = $provider;
+        $website->uid = 'asteroin';
+        $website->domain = 'astero.in';
+        $website->is_www = false;
+        $website->metadata = [
+            'cdn' => [
+                'Id' => 123,
+            ],
+        ];
+        $website->setRelation('server', $server);
+
+        $addedHostnames = [];
+
+        Http::fake(function (Request $request) use (&$addedHostnames) {
+            if ($request->method() === 'GET' && str_starts_with($request->url(), 'https://api.bunny.net/pullzone?page=')) {
+                return Http::response([], 200);
+            }
+
+            if ($request->method() === 'GET' && $request->url() === 'https://api.bunny.net/pullzone/123') {
+                return Http::response([
+                    'Id' => 123,
+                    'OriginUrl' => 'https://89.167.78.200',
+                    'OriginHostHeader' => 'astero.in',
+                    'Hostnames' => [
+                        ['Value' => 'asteroin.b-cdn.net'],
+                        ['Value' => 'astero.in'],
+                    ],
+                ], 200);
+            }
+
+            if ($request->method() === 'POST' && $request->url() === 'https://api.bunny.net/pullzone/123') {
+                return Http::response([], 200);
+            }
+
+            if ($request->method() === 'POST' && $request->url() === 'https://api.bunny.net/pullzone/addHostname') {
+                $addedHostnames[] = $request['Hostname'];
+
+                return Http::response([], 200);
+            }
+
+            if ($request->method() === 'POST' && $request->url() === 'https://api.bunny.net/pullzone') {
+                return Http::response([], 500);
+            }
+
+            return Http::response([], 404);
+        });
+
+        $command = new class extends BunnySetupCdnCommand
+        {
+            public function __construct()
+            {
+                parent::__construct(app(BunnyPullZoneService::class));
+            }
+
+            public function runHandleCommand(Website $website): void
+            {
+                $this->handleCommand($website);
+            }
+
+            public function info($string, $verbosity = null): void {}
+
+            public function line($string, $style = null, $verbosity = null): void {}
+
+            public function warn($string, $verbosity = null): void {}
+        };
+
+        $command->runHandleCommand($website);
+
+        $this->assertSame(['www.astero.in'], $addedHostnames);
+        $this->assertSame('done', $website->stepUpdates[0]['status']);
+
+        Http::assertNotSent(fn (Request $request): bool => $request->method() === 'POST'
+            && $request->url() === 'https://api.bunny.net/pullzone');
+    }
+
+    public function test_command_adds_www_hostname_for_apex_domains_even_when_www_primary_is_disabled(): void
+    {
+        $provider = new Provider([
+            'vendor' => 'bunny',
+            'credentials' => ['api_key' => 'bunny-api-key'],
+        ]);
+
+        $server = new Server([
+            'ip' => '89.167.78.200',
+        ]);
+
+        $website = new class extends Website
+        {
+            public array $stepUpdates = [];
+
+            public ?Provider $provider = null;
+
+            protected function getCdnProviderAttribute(): ?Provider
+            {
+                return $this->provider;
+            }
+
+            public function updateProvisioningStep(string $stepKey, string $message, string $status): void
+            {
+                $this->stepUpdates[] = [
+                    'step' => $stepKey,
+                    'message' => $message,
+                    'status' => $status,
+                ];
+            }
+
+            public function save(array $options = []): bool
+            {
+                return true;
+            }
+        };
+
+        $website->provider = $provider;
+        $website->uid = 'asteroin';
+        $website->domain = 'astero.in';
+        $website->is_www = false;
+        $website->setRelation('server', $server);
+
+        $addedHostnames = [];
+
+        Http::fake(function (Request $request) use (&$addedHostnames) {
+            if ($request->method() === 'GET' && str_starts_with($request->url(), 'https://api.bunny.net/pullzone?page=')) {
+                return Http::response([], 200);
+            }
+
+            if ($request->method() === 'POST' && $request->url() === 'https://api.bunny.net/pullzone') {
+                return Http::response([
+                    'Id' => 123,
+                ], 200);
+            }
+
+            if ($request->method() === 'POST' && $request->url() === 'https://api.bunny.net/pullzone/123') {
+                return Http::response([], 200);
+            }
+
+            if ($request->method() === 'POST' && $request->url() === 'https://api.bunny.net/pullzone/addHostname') {
+                $addedHostnames[] = $request['Hostname'];
+
+                return Http::response([], 200);
+            }
+
+            if ($request->method() === 'GET' && $request->url() === 'https://api.bunny.net/pullzone/123') {
+                return Http::response([
+                    'Id' => 123,
+                    'OriginUrl' => 'https://89.167.78.200',
+                    'OriginHostHeader' => 'astero.in',
+                    'AddHostHeader' => false,
+                    'FollowRedirects' => false,
+                    'DisableCookies' => false,
+                    'Hostnames' => [
+                        ['Value' => 'astero.in'],
+                        ['Value' => 'www.astero.in'],
+                    ],
+                ], 200);
+            }
+
+            return Http::response([], 404);
+        });
+
+        $command = new class extends BunnySetupCdnCommand
+        {
+            public function __construct()
+            {
+                parent::__construct(app(BunnyPullZoneService::class));
+            }
+
+            public function runHandleCommand(Website $website): void
+            {
+                $this->handleCommand($website);
+            }
+
+            public function info($string, $verbosity = null): void {}
+
+            public function line($string, $style = null, $verbosity = null): void {}
+
+            public function warn($string, $verbosity = null): void {}
+        };
+
+        $command->runHandleCommand($website);
+
+        $this->assertSame(['astero.in', 'www.astero.in'], $addedHostnames);
+        $this->assertSame('done', $website->stepUpdates[0]['status']);
+    }
+
     public function test_command_persists_ip_origin_with_fixed_host_header(): void
     {
         $provider = new Provider([
@@ -57,6 +278,10 @@ class BunnySetupCdnCommandTest extends TestCase
         $website->setRelation('server', $server);
 
         Http::fake(function (Request $request) {
+            if ($request->method() === 'GET' && str_starts_with($request->url(), 'https://api.bunny.net/pullzone?page=')) {
+                return Http::response([], 200);
+            }
+
             if ($request->method() === 'POST' && $request->url() === 'https://api.bunny.net/pullzone') {
                 return Http::response([
                     'Id' => 123,

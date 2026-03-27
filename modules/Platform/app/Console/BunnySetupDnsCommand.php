@@ -113,7 +113,7 @@ class BunnySetupDnsCommand extends BaseCommand
 
         // 2. Add www CNAME only for apex/managed domains (recordName === '')
         // Subdomains (e.g. myshop in zone agency.com) must NOT get a www.myshop record.
-        if ($recordName === '' && $website->is_www) {
+        if ($recordName === '' && $website->supportsWwwFeature()) {
             if (! $hasRecord(2, 'www')) {
                 $this->line(sprintf('Adding CNAME record: www → %s', $pullzoneHostname));
                 BunnyApi::addDnsRecord($dnsProvider, $zoneId, 'CNAME', 'www', $pullzoneHostname, 300);

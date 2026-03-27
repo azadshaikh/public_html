@@ -87,7 +87,7 @@ class WebsiteLifecycleService
 
             // Manual handling of is_www
             if (isset($data['is_www'])) {
-                $website->is_www = $data['is_www'];
+                $website->is_www = Website::supportsWwwForDomain($website->domain) && (bool) $data['is_www'];
                 $website->save();
             }
 

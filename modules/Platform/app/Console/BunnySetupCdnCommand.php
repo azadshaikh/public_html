@@ -129,45 +129,68 @@ class BunnySetupCdnCommand extends BaseCommand
         $originUrl = $this->pullZoneService->resolveOriginUrl($website);
 
         // Collect hostnames to add
-        $hostnames = [$website->domain];
-        if ($website->is_www) {
-            $hostnames[] = 'www.'.$website->domain;
+        $hostnames = $website->cdnHostnames();
+        throw_unless($hostnames !== [], Exception::class, 'Website domain is required for CDN hostname provisioning.');
+
+        $existingPullZone = $this->resolveExistingPullZone($website, $cdnProvider, $hostnames);
+        $createdPullZone = false;
+
+        if ($existingPullZone !== null) {
+            $pullZone = ['data' => $existingPullZone];
+            $pullZoneId = $existingPullZone['Id'] ?? null;
+            $this->info(sprintf("Using existing pull zone %s for '%s'.", (string) $pullZoneId, $website->domain));
+        } else {
+            // Create pull zone with OriginHostHeader set to the primary domain
+            $this->info(sprintf("Creating pull zone for '%s' with origin '%s'.", $website->domain, $originUrl));
+            $pullZone = $this->createPullZone($website, $cdnProvider, $originUrl, $website->domain);
+            $pullZoneId = $pullZone['data']['Id'] ?? null;
+            $createdPullZone = true;
         }
 
-        // Create pull zone with OriginHostHeader set to the primary domain
-        $this->info(sprintf("Creating pull zone for '%s' with origin '%s'.", $website->domain, $originUrl));
-        $pullZone = $this->createPullZone($website, $cdnProvider, $originUrl, $website->domain);
-
-        $pullZoneId = $pullZone['data']['Id'] ?? null;
-        throw_unless($pullZoneId, Exception::class, 'Failed to create pull zone: Pull zone ID not returned from API.');
+        throw_unless($pullZoneId, Exception::class, 'Failed to resolve pull zone: Pull zone ID not returned from API.');
 
         // Persist the origin configuration explicitly. Bunny's create response may not
         // materialize the origin host header in a stable way for IP-based origins.
-        $this->syncOriginConfiguration($website, $cdnProvider, $pullZoneId);
+        $this->syncOriginConfiguration($website, $cdnProvider, (int) $pullZoneId);
 
-        // Add all hostnames to the pull zone with rollback on failure
+        $existingHostnames = collect($pullZone['data']['Hostnames'] ?? [])
+            ->map(fn (array $hostname): string => strtolower((string) ($hostname['Value'] ?? '')))
+            ->filter(fn (string $hostname): bool => $hostname !== '')
+            ->all();
+
+        // Add any missing hostnames to the pull zone with rollback on failure only for new zones
         try {
             foreach ($hostnames as $hostname) {
+                if (in_array(strtolower($hostname), $existingHostnames, true)) {
+                    $this->info(sprintf("Hostname '%s' already exists on pull zone. Skipping.", $hostname));
+
+                    continue;
+                }
+
                 $this->info(sprintf("Adding hostname '%s' to pull zone.", $hostname));
-                $this->addHostname($cdnProvider, $pullZoneId, $hostname);
+                $this->addHostname($cdnProvider, (int) $pullZoneId, $hostname);
             }
         } catch (Exception $exception) {
-            // Hostname addition failed - rollback by deleting the pull zone we just created
-            $this->error('Failed to add hostname. Rolling back pull zone creation...');
-            $this->rollbackPullZone($cdnProvider, $pullZoneId);
+            if ($createdPullZone) {
+                // Hostname addition failed - rollback by deleting the pull zone we just created
+                $this->error('Failed to add hostname. Rolling back pull zone creation...');
+                $this->rollbackPullZone($cdnProvider, (int) $pullZoneId);
+            }
 
             throw $exception;
         }
 
         // Refresh pull zone data to get updated hostnames list
         $this->info('Refreshing pull zone data to get updated hostnames...');
-        $updatedPullZone = BunnyApi::getPullZone($cdnProvider, $pullZoneId);
+        $updatedPullZone = BunnyApi::getPullZone($cdnProvider, (int) $pullZoneId);
 
         // Store full CDN response in website metadata (with updated hostnames)
         $website->setMetadata('cdn', $updatedPullZone['data']);
         $website->save();
 
-        $successMessage = sprintf("Bunny CDN (pull zone) setup completed successfully for '%s'. Pull Zone ID: %s", $website->domain, $pullZoneId);
+        $successMessage = $createdPullZone
+            ? sprintf("Bunny CDN (pull zone) setup completed successfully for '%s'. Pull Zone ID: %s", $website->domain, $pullZoneId)
+            : sprintf("Bunny CDN (pull zone) reconciled successfully for '%s'. Pull Zone ID: %s", $website->domain, $pullZoneId);
         $this->logActivity($website, ActivityAction::UPDATE, $successMessage);
         $this->updateWebsiteStep($website, $successMessage, 'done');
     }
@@ -340,5 +363,65 @@ class BunnySetupCdnCommand extends BaseCommand
     private function updateWebsiteStep(Website $website, string $message, string $status): void
     {
         $website->updateProvisioningStep('setup_bunny_cdn', $message, $status);
+    }
+
+    private function resolveExistingPullZone(Website $website, Provider $cdnProvider, array $hostnames): ?array
+    {
+        $pullZoneId = (int) $website->pullzone_id;
+
+        if ($pullZoneId > 0) {
+            try {
+                $response = BunnyApi::getPullZone($cdnProvider, $pullZoneId);
+
+                return $response['data'] ?? null;
+            } catch (BunnyApiException $exception) {
+                $message = strtolower($exception->getMessage());
+
+                if (! str_contains($message, 'not found') && ! str_contains($message, 'does not exist')) {
+                    throw $exception;
+                }
+
+                $this->warn(sprintf('Stored pull zone %d no longer exists. Recreating CDN state.', $pullZoneId));
+            }
+        }
+
+        $existingPullZone = $this->findPullZoneByHostname($cdnProvider, $hostnames);
+
+        return $existingPullZone;
+    }
+
+    private function findPullZoneByHostname(Provider $cdnProvider, array $hostnames): ?array
+    {
+        $response = BunnyApi::listPullZones($cdnProvider);
+        $items = $response['data']['Items'] ?? $response['data'] ?? [];
+
+        if (! is_array($items)) {
+            return null;
+        }
+
+        $lookup = collect($hostnames)
+            ->map(fn (string $hostname): string => strtolower($hostname))
+            ->all();
+
+        foreach ($items as $item) {
+            $itemHostnames = collect($item['Hostnames'] ?? [])
+                ->map(fn (array $hostname): string => strtolower((string) ($hostname['Value'] ?? '')))
+                ->filter(fn (string $hostname): bool => $hostname !== '')
+                ->all();
+
+            if (array_intersect($lookup, $itemHostnames) !== []) {
+                $pullZoneId = (int) ($item['Id'] ?? 0);
+
+                if ($pullZoneId <= 0) {
+                    return $item;
+                }
+
+                $pullZoneResponse = BunnyApi::getPullZone($cdnProvider, $pullZoneId);
+
+                return $pullZoneResponse['data'] ?? $item;
+            }
+        }
+
+        return null;
     }
 }
