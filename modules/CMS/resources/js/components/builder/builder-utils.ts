@@ -90,7 +90,7 @@ export function buildPreviewDocument(
                     radial-gradient(circle at top, rgba(56, 189, 248, 0.08), transparent 28%),
                     linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
                 color: #0f172a;
-                font-family: "Instrument Sans", "Inter", system-ui, sans-serif;
+                font-family: "Google Sans", system-ui, sans-serif;
             }
 
             img {

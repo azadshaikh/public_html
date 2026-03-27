@@ -108,6 +108,23 @@ class DashboardTest extends TestCase
                 ));
     }
 
+    public function test_dashboard_layout_includes_google_sans_font_links(): void
+    {
+        $user = User::factory()->create([
+            'first_name' => 'Admin',
+            'last_name' => 'User',
+            'status' => Status::ACTIVE,
+        ]);
+        $user->assignRole(Role::findByName('administrator', 'web'));
+
+        $this->actingAs($user)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('https://fonts.googleapis.com', false)
+            ->assertSee('https://fonts.gstatic.com', false)
+            ->assertSee('https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap', false);
+    }
+
     public function test_super_users_can_see_master_navigation_on_the_dashboard(): void
     {
         $user = User::factory()->create([
@@ -122,13 +139,13 @@ class DashboardTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page): Assert => $page
                 ->component('dashboard')
-                ->has('navigation.modules', 3)
-                ->where('navigation.modules.2.label', 'Masters')
-                ->where('navigation.modules.2.items.0.label', 'Modules')
-                ->where('navigation.modules.2.items.0.url', route('app.masters.modules.index'))
-                ->where('navigation.modules.2.items.6.label', 'Laravel Tools')
-                ->where('navigation.modules.2.items.6.url', route('app.masters.laravel-tools.index'))
-                ->where('navigation.modules.2.items.6.hard_reload', false));
+                ->has('navigation.modules', 2)
+                ->where('navigation.modules.1.label', 'Masters')
+                ->where('navigation.modules.1.items.0.label', 'Modules')
+                ->where('navigation.modules.1.items.0.url', route('app.masters.modules.index'))
+                ->where('navigation.modules.1.items.6.label', 'Laravel Tools')
+                ->where('navigation.modules.1.items.6.url', route('app.masters.laravel-tools.index'))
+                ->where('navigation.modules.1.items.6.hard_reload', false));
     }
 
     public function test_dashboard_navigation_is_filtered_by_permission(): void

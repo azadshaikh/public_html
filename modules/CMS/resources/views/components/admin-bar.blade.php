@@ -70,7 +70,7 @@
             padding: 0 20px !important;
             background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
             color: #1a1a1a !important;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif !important;
+            font-family: 'Google Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
             font-size: 13px !important;
             font-weight: 500 !important;
             z-index: 100000 !important;
@@ -185,7 +185,7 @@
             align-items: stretch !important;
             height: var(--ab-height) !important;
             color: var(--ab-text) !important;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif !important;
+            font-family: 'Google Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
             font-size: 13px !important;
             font-weight: 450 !important;
             line-height: 1 !important;
