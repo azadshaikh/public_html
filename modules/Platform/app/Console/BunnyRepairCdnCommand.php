@@ -62,6 +62,7 @@ class BunnyRepairCdnCommand extends BaseCommand
         $this->line('Origin host header: '.($data['OriginHostHeader'] ?? 'unknown'));
         $this->line('Forward host header: '.(($data['AddHostHeader'] ?? false) ? 'enabled' : 'disabled'));
         $this->line('Follow redirects: '.(($data['FollowRedirects'] ?? false) ? 'enabled' : 'disabled'));
+        $this->line('Strip response cookies: '.(($data['DisableCookies'] ?? false) ? 'enabled' : 'disabled'));
         $this->line('Auto SSL: '.(($data['EnableAutoSSL'] ?? false) ? 'enabled' : 'disabled'));
         $this->line('Hostnames: '.json_encode($hostnames, JSON_UNESCAPED_SLASHES));
         $this->info('Bunny CDN repair completed successfully.');

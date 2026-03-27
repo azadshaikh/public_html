@@ -216,6 +216,7 @@ class BunnySetupCdnCommand extends BaseCommand
             'OriginHostHeader' => $originHostHeader,
             'AddHostHeader' => false,
             'FollowRedirects' => false,
+            'DisableCookies' => false,
             'EnableAutoSSL' => true,
         ];
 

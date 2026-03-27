@@ -152,7 +152,8 @@ class BunnyConfigureCdnSslCommandTest extends TestCase
             && $request->url() === 'https://api.bunny.net/pullzone/123'
             && ($request['OriginHostHeader'] ?? null) === 'astero.in'
             && ($request['AddHostHeader'] ?? null) === false
-            && ($request['FollowRedirects'] ?? null) === false);
+            && ($request['FollowRedirects'] ?? null) === false
+            && ($request['DisableCookies'] ?? null) === false);
 
         Http::assertSent(fn (Request $request): bool => $request->method() === 'POST'
             && $request->url() === 'https://api.bunny.net/pullzone/setForceSSL'

@@ -64,6 +64,7 @@ class BunnyRepairCdnCommandTest extends TestCase
                     'OriginHostHeader' => 'astero.in',
                     'AddHostHeader' => false,
                     'FollowRedirects' => false,
+                    'DisableCookies' => false,
                     'EnableAutoSSL' => true,
                     'Hostnames' => [
                         [
@@ -106,12 +107,14 @@ class BunnyRepairCdnCommandTest extends TestCase
             && $request->url() === 'https://api.bunny.net/pullzone/123'
             && $request['OriginHostHeader'] === 'astero.in'
             && $request['AddHostHeader'] === false
-            && $request['FollowRedirects'] === false);
+            && $request['FollowRedirects'] === false
+            && $request['DisableCookies'] === false);
 
         Http::assertSent(fn (Request $request): bool => $request->method() === 'POST'
             && $request->url() === 'https://api.bunny.net/pullzone/123/purgeCache');
 
         $this->assertSame('astero.in', $website->getMetadata('cdn.OriginHostHeader'));
         $this->assertFalse($website->getMetadata('cdn.AddHostHeader'));
+        $this->assertFalse($website->getMetadata('cdn.DisableCookies'));
     }
 }

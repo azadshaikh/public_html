@@ -49,6 +49,7 @@ class BunnyPullZoneService
             'OriginHostHeader' => $website->domain,
             'AddHostHeader' => false,
             'FollowRedirects' => false,
+            'DisableCookies' => false,
             'EnableAutoSSL' => true,
         ]);
     }

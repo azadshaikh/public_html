@@ -78,6 +78,7 @@ class BunnySetupCdnCommandTest extends TestCase
                     'OriginHostHeader' => 'astero.in',
                     'AddHostHeader' => false,
                     'FollowRedirects' => false,
+                    'DisableCookies' => false,
                     'Hostnames' => [
                         ['Value' => 'astero.in'],
                         ['Value' => 'www.astero.in'],
@@ -115,6 +116,7 @@ class BunnySetupCdnCommandTest extends TestCase
             && $request['OriginHostHeader'] === 'astero.in'
             && $request['AddHostHeader'] === false
             && $request['FollowRedirects'] === false
+            && $request['DisableCookies'] === false
             && $request['EnableAutoSSL'] === true);
 
         Http::assertSent(fn (Request $request): bool => $request->method() === 'POST'
@@ -123,11 +125,13 @@ class BunnySetupCdnCommandTest extends TestCase
             && $request['OriginHostHeader'] === 'astero.in'
             && $request['AddHostHeader'] === false
             && $request['FollowRedirects'] === false
+            && $request['DisableCookies'] === false
             && $request['EnableAutoSSL'] === true);
 
         $this->assertSame('done', $website->stepUpdates[0]['status']);
         $this->assertSame('setup_bunny_cdn', $website->stepUpdates[0]['step']);
         $this->assertSame('astero.in', $website->getMetadata('cdn.OriginHostHeader'));
         $this->assertFalse($website->getMetadata('cdn.AddHostHeader'));
+        $this->assertFalse($website->getMetadata('cdn.DisableCookies'));
     }
 }
