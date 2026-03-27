@@ -19,7 +19,6 @@ use Modules\Platform\Enums\WebsiteStatus;
 use Modules\Platform\Events\WebsiteDeletedEvent as EventsWebsiteDeleted;
 use Modules\Platform\Jobs\Concerns\InteractsWithWebsiteLifecycleExecution;
 use Modules\Platform\Libs\HestiaClient;
-use Modules\Platform\Models\Domain;
 use Modules\Platform\Models\Website;
 use Modules\Platform\Notifications\WebsiteDeleted as NotificationWebsiteDeleted;
 use Modules\Platform\Notifications\WebsiteDeletionFailed as NotificationWebsiteDeleteFailed;
@@ -88,44 +87,22 @@ class WebsiteDelete implements ShouldQueue
             $server = $website->server;
             $updatedByUserId = $website->updated_by;
             $siteId = $website->site_id;
+            $preservedDomainId = $website->domain_id;
+            $preservedDomainName = $website->domainRecord?->name;
 
             DB::transaction(function () use ($website): void {
-                // Determine if the linked domain should be permanently deleted together
-                // with the website. Only cascade when:
-                //   1. The website has a domain_id
-                //   2. The website is NOT a subdomain (subdomains share the root domain
-                //      with potentially other websites)
-                //   3. No other website (including trashed) references the same domain_id
-                $domainToDelete = null;
-                if ($website->domain_id && $website->dns_mode !== 'subdomain') {
-                    $sharedCount = Website::withTrashed()
-                        ->where('domain_id', $website->domain_id)
-                        ->where('id', '!=', $website->id)
-                        ->count();
-
-                    if ($sharedCount === 0) {
-                        $domainToDelete = Domain::withTrashed()->find($website->domain_id);
-                    }
-                }
-
                 $website->secrets()->forceDelete();
                 $website->notes()->forceDelete();
                 $website->forceDelete();
-
-                // Cascade: permanently delete the domain and all its SSL certs, DNS records, notes
-                if ($domainToDelete) {
-                    $domainToDelete->secrets()->forceDelete();
-                    $domainToDelete->dnsRecords()->forceDelete();
-                    $domainToDelete->notes()->forceDelete();
-                    $domainToDelete->forceDelete();
-
-                    Log::info('Domain permanently deleted along with website', [
-                        'website_id' => $this->websiteId,
-                        'domain_id' => $domainToDelete->id,
-                        'domain_name' => $domainToDelete->name,
-                    ]);
-                }
             });
+
+            if ($preservedDomainId && $preservedDomainName) {
+                Log::info('WebsiteDelete: preserved root domain and SSL assets for future reuse', [
+                    'website_id' => $this->websiteId,
+                    'domain_id' => $preservedDomainId,
+                    'domain_name' => $preservedDomainName,
+                ]);
+            }
 
             // Sync server to update domain count after website deletion
             if ($server) {

@@ -134,7 +134,7 @@ class WebsiteDeleteCleanupFlowTest extends TestCase
 
         $this->assertNotFalse($contents, 'Failed to read modules/Platform/app/Services/WebsiteService.php');
         $this->assertStringContainsString("['delete', 'restore', 'force_delete', 'suspend', 'unsuspend', 'remove_from_server']", $contents);
-        $this->assertStringContainsString('dispatch(new WebsiteDelete($website->id));', $contents);
+        $this->assertStringContainsString("dispatch(new WebsiteDelete(\$website->id))->onQueue('default');", $contents);
         $this->assertStringContainsString("'force_delete' => \$affected.' website(s) scheduled for deletion'", $contents);
         $this->assertStringNotContainsString('$website->status = WebsiteStatus::Deleted;', $contents);
     }
