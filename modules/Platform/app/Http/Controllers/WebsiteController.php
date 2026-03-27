@@ -25,6 +25,7 @@ use Modules\Platform\Definitions\WebsiteDefinition;
 use Modules\Platform\Enums\WebsiteStatus;
 use Modules\Platform\Jobs\WebsiteProvision;
 use Modules\Platform\Jobs\WebsiteRemoveFromServer;
+use Modules\Platform\Jobs\WebsiteUpdatePrimaryHostname;
 use Modules\Platform\Models\Agency;
 use Modules\Platform\Models\Provider;
 use Modules\Platform\Models\Secret;
@@ -35,6 +36,7 @@ use Modules\Platform\Services\WebsiteLifecycleService;
 use Modules\Platform\Services\WebsiteProvisioningService;
 use Modules\Platform\Services\WebsiteService;
 use RuntimeException;
+use Throwable;
 
 /**
  * Website Controller following BaseCrudController patterns.
@@ -1063,12 +1065,36 @@ BASH;
         /** @var Website $website */
         $website = Website::withTrashed()->with(['domainRecord', 'providers', 'server'])->findOrFail((int) $id);
 
-        $result = $this->websiteProvisioningService->updatePrimaryHostname($website, $hostnameType === 'www');
+        if (! $website->supportsWwwFeature()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'WWW primary hostname is only supported for apex domains.',
+            ], 422);
+        }
+
+        try {
+            dispatch(new WebsiteUpdatePrimaryHostname(
+                websiteId: (int) $website->id,
+                useWww: $hostnameType === 'www',
+                requestedByUserId: auth()->id(),
+            ))->onQueue('default');
+        } catch (Throwable $throwable) {
+            Log::error('Failed to dispatch primary hostname update job', [
+                'website_id' => $website->id,
+                'hostname_type' => $hostnameType,
+                'error' => $throwable->getMessage(),
+            ]);
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unable to queue primary hostname update right now. Please try again.',
+            ], 500);
+        }
 
         return response()->json([
-            'status' => $result['status'],
-            'message' => $result['message'],
-        ], $result['code'] ?? ($result['status'] === 'error' ? 422 : 200));
+            'status' => 'info',
+            'message' => 'Primary hostname update queued. Refresh in a few moments to see the final state.',
+        ], 202);
     }
 
     // =============================================================================
@@ -1557,6 +1583,7 @@ BASH;
             'alternate_hostname' => $website->supportsWwwFeature()
                 ? ($website->usesWwwPrimary() ? Website::normalizeDomainHost($website->domain) : 'www.'.Website::normalizeDomainHost($website->domain))
                 : null,
+            'primary_hostname_sync' => $this->buildPrimaryHostnameSyncSummary($website),
             'type' => $website->type,
             'plan' => $website->plan_tier,
             'status' => $status?->value ?? (string) $website->status,
@@ -1601,6 +1628,32 @@ BASH;
             'queue_worker_running' => $queueWorkerRunning,
             'queue_worker_total' => $queueWorkerTotal,
             'cron_status' => $website->getMetadata('cron_status'),
+        ];
+    }
+
+    /**
+     * @return array{status: string, target: string|null, message: string|null, updated_at: string|null}|null
+     */
+    private function buildPrimaryHostnameSyncSummary(Website $website): ?array
+    {
+        $sync = $website->getMetadata('primary_hostname_sync');
+
+        if (! is_array($sync)) {
+            return null;
+        }
+
+        $updatedAt = $sync['completed_at']
+            ?? $sync['failed_at']
+            ?? $sync['requested_at']
+            ?? null;
+
+        return [
+            'status' => (string) ($sync['status'] ?? 'queued'),
+            'target' => isset($sync['target']) ? (string) $sync['target'] : null,
+            'message' => isset($sync['message']) ? (string) $sync['message'] : null,
+            'updated_at' => is_string($updatedAt) && $updatedAt !== ''
+                ? app_date_time_format($updatedAt, 'datetime')
+                : null,
         ];
     }
 

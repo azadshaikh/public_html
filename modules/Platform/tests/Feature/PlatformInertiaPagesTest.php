@@ -13,10 +13,12 @@ use App\Modules\Support\ModuleAutoloader;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use Inertia\Testing\AssertableInertia as Assert;
 use Modules\Platform\Enums\WebsiteStatus;
+use Modules\Platform\Jobs\WebsiteUpdatePrimaryHostname;
 use Modules\Platform\Models\Agency;
 use Modules\Platform\Models\Domain;
 use Modules\Platform\Models\DomainDnsRecord;
@@ -26,7 +28,6 @@ use Modules\Platform\Models\Server;
 use Modules\Platform\Models\Tld;
 use Modules\Platform\Models\Website;
 use Modules\Platform\Providers\PlatformServiceProvider;
-use Modules\Platform\Services\WebsiteProvisioningService;
 use Tests\TestCase;
 
 class PlatformInertiaPagesTest extends TestCase
@@ -628,6 +629,12 @@ class PlatformInertiaPagesTest extends TestCase
             'domain' => 'astero.in',
             'metadata' => [
                 'provisioning' => ['is_www' => true],
+                'primary_hostname_sync' => [
+                    'status' => 'failed',
+                    'target' => 'www',
+                    'message' => 'Bunny API timeout',
+                    'failed_at' => now()->subMinute()->toISOString(),
+                ],
             ],
         ]);
 
@@ -639,7 +646,10 @@ class PlatformInertiaPagesTest extends TestCase
                 ->where('website.id', $website->id)
                 ->where('website.primary_hostname', 'www.astero.in')
                 ->where('website.alternate_hostname', 'astero.in')
-                ->where('website.supports_www_feature', true));
+                ->where('website.supports_www_feature', true)
+                ->where('website.primary_hostname_sync.status', 'failed')
+                ->where('website.primary_hostname_sync.target', 'www')
+                ->where('website.primary_hostname_sync.message', 'Bunny API timeout'));
 
         $this->actingAs($this->admin)
             ->get(route('platform.dns.edit', $dnsRecord))
@@ -891,6 +901,8 @@ class PlatformInertiaPagesTest extends TestCase
 
     public function test_platform_website_primary_host_action_uses_provisioning_service_response(): void
     {
+        Queue::fake();
+
         $agency = $this->createAgency();
         $serverProvider = $this->createProvider(Provider::TYPE_SERVER, 'Server Provider');
         $server = $this->createServer($serverProvider, $agency);
@@ -899,24 +911,22 @@ class PlatformInertiaPagesTest extends TestCase
         $website = $this->createWebsite($agency, $server, $dnsProvider, $cdnProvider);
         $website->update(['domain' => 'astero.in']);
 
-        $service = $this->mock(WebsiteProvisioningService::class);
-        $service->shouldReceive('updatePrimaryHostname')
-            ->once()
-            ->andReturn([
-                'status' => 'success',
-                'message' => 'Primary hostname switched to www.astero.in.',
-            ]);
-
         $this->actingAs($this->admin)
             ->postJson(route('platform.websites.update-primary-host', [
                 'website' => $website,
                 'hostnameType' => 'www',
             ]))
-            ->assertOk()
+            ->assertStatus(202)
             ->assertJson([
-                'status' => 'success',
-                'message' => 'Primary hostname switched to www.astero.in.',
+                'status' => 'info',
+                'message' => 'Primary hostname update queued. Refresh in a few moments to see the final state.',
             ]);
+
+        Queue::assertPushed(WebsiteUpdatePrimaryHostname::class, function (WebsiteUpdatePrimaryHostname $job) use ($website): bool {
+            return $job->websiteId === $website->id
+                && $job->useWww === true
+                && $job->requestedByUserId === $this->admin->id;
+        });
     }
 
     public function test_server_update_persists_restored_edit_fields(): void

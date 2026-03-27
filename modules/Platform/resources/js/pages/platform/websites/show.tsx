@@ -123,8 +123,21 @@ const STEP_STATUS_VARIANT: Record<string, 'success' | 'warning' | 'info' | 'dang
     pending: 'warning',
 };
 
+const PRIMARY_HOST_SYNC_VARIANT: Record<string, 'success' | 'warning' | 'info' | 'danger' | 'secondary'> = {
+    queued: 'warning',
+    processing: 'info',
+    info: 'info',
+    success: 'success',
+    done: 'success',
+    failed: 'danger',
+};
+
 function statusBadgeVariant(status: string | null): 'success' | 'warning' | 'info' | 'danger' | 'secondary' {
     return STATUS_BADGE_VARIANT[status ?? ''] ?? 'secondary';
+}
+
+function primaryHostSyncVariant(status: string | null): 'success' | 'warning' | 'info' | 'danger' | 'secondary' {
+    return PRIMARY_HOST_SYNC_VARIANT[status ?? ''] ?? 'secondary';
 }
 
 function HealthChip({ label, status }: { label: string; status: string | null }) {
@@ -552,6 +565,30 @@ export default function WebsitesShow({
                                                 Alternate host: <span className="font-medium text-foreground">{website.alternate_hostname}</span>
                                             </p>
                                         ) : null}
+                                        {website.primary_hostname_sync ? (
+                                            <div className="rounded-md border bg-background/80 p-3">
+                                                <div className="flex flex-wrap items-center gap-2">
+                                                    <Badge variant={primaryHostSyncVariant(website.primary_hostname_sync.status)}>
+                                                        Hostname Sync {website.primary_hostname_sync.status.replace(/_/g, ' ')}
+                                                    </Badge>
+                                                    {website.primary_hostname_sync.target ? (
+                                                        <span className="text-xs text-muted-foreground">
+                                                            Target: <span className="font-medium text-foreground">{website.primary_hostname_sync.target}</span>
+                                                        </span>
+                                                    ) : null}
+                                                    {website.primary_hostname_sync.updated_at ? (
+                                                        <span className="text-xs text-muted-foreground">
+                                                            Updated: {website.primary_hostname_sync.updated_at}
+                                                        </span>
+                                                    ) : null}
+                                                </div>
+                                                {website.primary_hostname_sync.message ? (
+                                                    <p className="mt-2 text-xs text-muted-foreground">
+                                                        {website.primary_hostname_sync.message}
+                                                    </p>
+                                                ) : null}
+                                            </div>
+                                        ) : null}
                                     </div>
 
                                     {website.supports_www_feature ? (
@@ -563,7 +600,15 @@ export default function WebsitesShow({
                                                     'Use apex domain as primary host',
                                                     'This will switch the primary host to the non-www domain and reconcile Hestia and Bunny state if anything is missing.',
                                                     'Use apex domain',
-                                                    () => op.perform('post', route('platform.websites.update-primary-host', { website: website.id, hostnameType: 'apex' })),
+                                                    () => op.perform(
+                                                        'post',
+                                                        route('platform.websites.update-primary-host', { website: website.id, hostnameType: 'apex' }),
+                                                        {
+                                                            onSuccess: (message) => {
+                                                                showAppToast({ variant: 'info', title: message });
+                                                            },
+                                                        },
+                                                    ),
                                                 )}
                                             >
                                                 Use {website.domain}
@@ -575,7 +620,15 @@ export default function WebsitesShow({
                                                     'Use www as primary host',
                                                     'This will switch the primary host to the www hostname and reconcile Hestia and Bunny state if anything is missing.',
                                                     'Use www',
-                                                    () => op.perform('post', route('platform.websites.update-primary-host', { website: website.id, hostnameType: 'www' })),
+                                                    () => op.perform(
+                                                        'post',
+                                                        route('platform.websites.update-primary-host', { website: website.id, hostnameType: 'www' }),
+                                                        {
+                                                            onSuccess: (message) => {
+                                                                showAppToast({ variant: 'info', title: message });
+                                                            },
+                                                        },
+                                                    ),
                                                 )}
                                             >
                                                 Use www

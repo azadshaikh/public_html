@@ -424,6 +424,12 @@ export type WebsiteShowData = {
     domain_url: string | null;
     primary_hostname: string | null;
     alternate_hostname: string | null;
+    primary_hostname_sync: {
+        status: string;
+        target: string | null;
+        message: string | null;
+        updated_at: string | null;
+    } | null;
     type: string | null;
     plan: string | null;
     status: string | null;
