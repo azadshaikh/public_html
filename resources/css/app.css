@@ -358,7 +358,6 @@
     --sidebar-ring: oklch(0.841 0.238 128.85);
     --highlight: oklch(0.871 0.15 154.449);
     --brand: oklch(0.648 0.2 131.684);
-    --radius: 0.65rem;
 }
 
 .dark[data-admin-theme='green'] {
@@ -396,7 +395,6 @@
     --sidebar-ring: oklch(0.405 0.101 131.063);
     --highlight: oklch(0.871 0.15 154.449);
     --brand: oklch(0.768 0.233 130.85);
-    --radius: 0.65rem;
 }
 
 [data-admin-theme='zen'] {
@@ -664,7 +662,6 @@
     --sidebar-ring: oklch(0.702 0.183 293.541);
     --highlight: oklch(0.811 0.111 293.571);
     --brand: oklch(0.541 0.281 293.009);
-    --radius: 0.65rem;
 }
 
 .dark[data-admin-theme='violet'] {
@@ -702,7 +699,6 @@
     --sidebar-ring: oklch(0.38 0.189 293.745);
     --highlight: oklch(0.811 0.111 293.571);
     --brand: oklch(0.606 0.25 292.717);
-    --radius: 0.65rem;
 }
 
 [data-admin-theme='blue'] {
@@ -740,7 +736,6 @@
     --sidebar-ring: oklch(0.708 0 0);
     --highlight: oklch(0.809 0.105 251.813);
     --brand: oklch(0.488 0.243 264.376);
-    --radius: 0.65rem;
 }
 
 .dark[data-admin-theme='blue'] {
@@ -778,7 +773,6 @@
     --sidebar-ring: oklch(0.439 0 0);
     --highlight: oklch(0.809 0.105 251.813);
     --brand: oklch(0.488 0.243 264.376);
-    --radius: 0.65rem;
 }
 
 [data-admin-theme='claude'] {
