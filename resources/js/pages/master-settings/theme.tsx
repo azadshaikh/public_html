@@ -95,7 +95,8 @@ export default function Theme({
                             <CardTitle>Backend Theme</CardTitle>
                             <CardDescription>
                                 Switch the admin color scheme without changing
-                                layout density, radius, or component structure.
+                                component structure. Some themes also tune
+                                shared radius and depth tokens.
                             </CardDescription>
                         </CardHeader>
 
@@ -111,8 +112,8 @@ export default function Theme({
                                     </FieldLabel>
                                     <FieldDescription>
                                         Default keeps the current palette.
-                                        Other options only override the shared
-                                        color tokens used across the backend.
+                                        Other options override the shared theme
+                                        tokens used across the backend.
                                     </FieldDescription>
 
                                     <RadioGroup

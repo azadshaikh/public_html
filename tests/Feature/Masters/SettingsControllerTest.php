@@ -183,6 +183,10 @@ class SettingsControllerTest extends TestCase
                 ->component('master-settings/theme')
                 ->where('settings.admin_theme', 'default')
                 ->has('options.themes', 5)
+                ->where('options.themes.1.value', 'swiss')
+                ->where('options.themes.2.value', 'green')
+                ->where('options.themes.3.value', 'zen')
+                ->where('options.themes.4.value', 'claude')
                 ->has('settingsNav')
                 ->where('ui.adminTheme', 'default')
             );
@@ -486,14 +490,14 @@ class SettingsControllerTest extends TestCase
     {
         $this->actingAs($this->superUser)
             ->put(route('app.masters.settings.update', 'theme'), [
-                'admin_theme' => 'sepia',
+                'admin_theme' => 'claude',
             ])
             ->assertSessionHasNoErrors()
             ->assertRedirect();
 
         $this->assertDatabaseHas('settings', [
             'key' => 'theme_admin_theme',
-            'value' => 'sepia',
+            'value' => 'claude',
         ]);
     }
 

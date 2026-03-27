@@ -5,19 +5,19 @@ namespace App\Enums;
 enum AdminTheme: string
 {
     case Default = 'default';
-    case Sepia = 'sepia';
-    case Ocean = 'ocean';
-    case Forest = 'forest';
-    case Ember = 'ember';
+    case Swiss = 'swiss';
+    case Green = 'green';
+    case Zen = 'zen';
+    case Claude = 'claude';
 
     public function label(): string
     {
         return match ($this) {
             self::Default => 'Default',
-            self::Sepia => 'Sepia',
-            self::Ocean => 'Ocean',
-            self::Forest => 'Forest',
-            self::Ember => 'Ember',
+            self::Swiss => 'Swiss',
+            self::Green => 'Green',
+            self::Zen => 'Zen',
+            self::Claude => 'Claude',
         };
     }
 
@@ -25,10 +25,10 @@ enum AdminTheme: string
     {
         return match ($this) {
             self::Default => 'Keep the current neutral admin palette with no extra overrides.',
-            self::Sepia => 'Warm paper tones with softened ink contrast for a calmer workspace.',
-            self::Ocean => 'Salt-blue surfaces with crisp teal accents and cooler navigation depth.',
-            self::Forest => 'Mossy neutrals with evergreen accents that stay restrained and readable.',
-            self::Ember => 'Smoky charcoal paired with terracotta highlights for stronger focus areas.',
+            self::Swiss => 'High-contrast Swiss minimalism with square corners and assertive offset shadows.',
+            self::Green => 'Fresh leaf-green accents with a clean neutral shell and balanced radius.',
+            self::Zen => 'Calm sand-and-stone neutrals with compact radius and understated elevation.',
+            self::Claude => 'Warm editorial neutrals with softer depth and roomier radius.',
         };
     }
 
