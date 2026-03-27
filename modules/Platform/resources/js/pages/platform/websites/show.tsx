@@ -1,4 +1,4 @@
-import { Link, router, useHttp } from '@inertiajs/react';
+import { Link, router, useHttp, usePoll } from '@inertiajs/react';
 import {
     ActivityIcon,
     ArrowLeftIcon,
@@ -99,6 +99,10 @@ function shouldPollProvisioningState(status: string | null, steps: WebsiteProvis
 
     return status === 'waiting_for_dns'
         && Boolean(getVerifyDnsStep(steps)?.dns_validation?.confirmed_by_user);
+}
+
+function shouldPollPrimaryHostnameSync(status: string | null): boolean {
+    return status === 'queued' || status === 'processing';
 }
 
 // ---------------------------------------------------------------------------
@@ -271,6 +275,16 @@ export default function WebsitesShow({
     const [confirm, setConfirm] = useState<ConfirmState>(INITIAL_CONFIRM);
     const op = useOperationAction();
     const isMobile = useIsMobile();
+    const isPrimaryHostnameSyncPending = shouldPollPrimaryHostnameSync(website.primary_hostname_sync?.status ?? null);
+    const primaryHostnameSyncPoll = usePoll(
+        PROVISIONING_POLL_INTERVAL_MS,
+        {
+            only: ['website'],
+        },
+        {
+            autoStart: false,
+        },
+    );
 
     const isActive = website.status === 'active';
     const isProvisioning = website.status === 'provisioning';
@@ -281,6 +295,20 @@ export default function WebsitesShow({
 
     const defaultTab = isProvisioning || isFailed ? 'provision' : 'general';
     const [activeTab, setActiveTab] = useState(defaultTab);
+
+    useEffect(() => {
+        if (isPrimaryHostnameSyncPending) {
+            primaryHostnameSyncPoll.start();
+
+            return () => {
+                primaryHostnameSyncPoll.stop();
+            };
+        }
+
+        primaryHostnameSyncPoll.stop();
+
+        return undefined;
+    }, [isPrimaryHostnameSyncPending, primaryHostnameSyncPoll]);
 
     function openConfirm(
         title: string,
@@ -592,47 +620,55 @@ export default function WebsitesShow({
                                     </div>
 
                                     {website.supports_www_feature ? (
-                                        <div className="grid grid-cols-2 gap-2 md:min-w-64">
-                                            <Button
-                                                variant={website.is_www ? 'outline' : 'default'}
-                                                disabled={op.processing || !website.is_www}
-                                                onClick={() => openConfirm(
-                                                    'Use apex domain as primary host',
-                                                    'This will switch the primary host to the non-www domain and reconcile Hestia and Bunny state if anything is missing.',
-                                                    'Use apex domain',
-                                                    () => op.perform(
-                                                        'post',
-                                                        route('platform.websites.update-primary-host', { website: website.id, hostnameType: 'apex' }),
-                                                        {
-                                                            onSuccess: (message) => {
-                                                                showAppToast({ variant: 'info', title: message });
+                                        <div className="flex flex-col gap-2 md:min-w-64 md:items-end">
+                                            {isPrimaryHostnameSyncPending ? (
+                                                <div className="inline-flex items-center gap-2 self-start rounded-full border border-info/30 bg-info/10 px-3 py-1 text-xs font-medium text-info md:self-end">
+                                                    <RefreshCwIcon className="size-3.5 animate-spin" />
+                                                    Live refresh active
+                                                </div>
+                                            ) : null}
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <Button
+                                                    variant={website.is_www ? 'outline' : 'default'}
+                                                    disabled={op.processing || !website.is_www}
+                                                    onClick={() => openConfirm(
+                                                        'Use apex domain as primary host',
+                                                        'This will switch the primary host to the non-www domain and reconcile Hestia and Bunny state if anything is missing.',
+                                                        'Use apex domain',
+                                                        () => op.perform(
+                                                            'post',
+                                                            route('platform.websites.update-primary-host', { website: website.id, hostnameType: 'apex' }),
+                                                            {
+                                                                onSuccess: (message) => {
+                                                                    showAppToast({ variant: 'info', title: message });
+                                                                },
                                                             },
-                                                        },
-                                                    ),
-                                                )}
-                                            >
-                                                Use {website.domain}
-                                            </Button>
-                                            <Button
-                                                variant={website.is_www ? 'default' : 'outline'}
-                                                disabled={op.processing || website.is_www}
-                                                onClick={() => openConfirm(
-                                                    'Use www as primary host',
-                                                    'This will switch the primary host to the www hostname and reconcile Hestia and Bunny state if anything is missing.',
-                                                    'Use www',
-                                                    () => op.perform(
-                                                        'post',
-                                                        route('platform.websites.update-primary-host', { website: website.id, hostnameType: 'www' }),
-                                                        {
-                                                            onSuccess: (message) => {
-                                                                showAppToast({ variant: 'info', title: message });
+                                                        ),
+                                                    )}
+                                                >
+                                                    Use {website.domain}
+                                                </Button>
+                                                <Button
+                                                    variant={website.is_www ? 'default' : 'outline'}
+                                                    disabled={op.processing || website.is_www}
+                                                    onClick={() => openConfirm(
+                                                        'Use www as primary host',
+                                                        'This will switch the primary host to the www hostname and reconcile Hestia and Bunny state if anything is missing.',
+                                                        'Use www',
+                                                        () => op.perform(
+                                                            'post',
+                                                            route('platform.websites.update-primary-host', { website: website.id, hostnameType: 'www' }),
+                                                            {
+                                                                onSuccess: (message) => {
+                                                                    showAppToast({ variant: 'info', title: message });
+                                                                },
                                                             },
-                                                        },
-                                                    ),
-                                                )}
-                                            >
-                                                Use www
-                                            </Button>
+                                                        ),
+                                                    )}
+                                                >
+                                                    Use www
+                                                </Button>
+                                            </div>
                                         </div>
                                     ) : null}
                                 </div>
