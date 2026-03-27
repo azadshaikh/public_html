@@ -30,6 +30,7 @@ use Modules\Platform\Models\Provider;
 use Modules\Platform\Models\Secret;
 use Modules\Platform\Models\Server;
 use Modules\Platform\Models\Website;
+use Modules\Platform\Services\ServerSSHService;
 use Modules\Platform\Services\WebsiteLifecycleService;
 use Modules\Platform\Services\WebsiteProvisioningService;
 use Modules\Platform\Services\WebsiteService;
@@ -44,6 +45,8 @@ use RuntimeException;
  */
 class WebsiteController extends ScaffoldController implements HasMiddleware
 {
+    private const int WEBSITE_LARAVEL_LOG_TAIL_LINES = 400;
+
     public function __construct(
         private readonly WebsiteService $websiteService,
         private readonly WebsiteLifecycleService $websiteLifecycleService,
@@ -60,8 +63,9 @@ class WebsiteController extends ScaffoldController implements HasMiddleware
             // Standard CRUD middleware from definition
             ...(new WebsiteDefinition)->getMiddleware(),
             // Custom endpoint permissions
+            new Middleware('permission:view_websites', only: ['websiteLog']),
             new Middleware('permission:add_websites', only: ['createFromOrder']),
-            new Middleware('permission:edit_websites', only: ['updateStatus', 'updateVersion', 'syncWebsite', 'recacheApplication', 'retryProvision', 'executeStep', 'revertStep', 'updateSetupStatus', 'setupQueueWorker', 'scaleQueueWorker', 'reprovision', 'revealSecret', 'confirmDns', 'stopDnsValidation']),
+            new Middleware('permission:edit_websites', only: ['updateStatus', 'updateVersion', 'syncWebsite', 'recacheApplication', 'retryProvision', 'executeStep', 'revertStep', 'updateSetupStatus', 'setupQueueWorker', 'scaleQueueWorker', 'reprovision', 'revealSecret', 'confirmDns', 'stopDnsValidation', 'clearWebsiteLog']),
             new Middleware('permission:delete_websites', only: ['removeFromServer']),
         ];
     }
@@ -179,6 +183,79 @@ class WebsiteController extends ScaffoldController implements HasMiddleware
             ])->values()->all(),
             'pullzoneId' => $website->pullzone_id,
             'canRevealSecrets' => $canRevealSecrets,
+            'canManageLaravelLog' => (bool) auth()->user()?->can('edit_websites'),
+        ]);
+    }
+
+    public function websiteLog(int|string $website): JsonResponse
+    {
+        /** @var Website $websiteModel */
+        $websiteModel = Website::withTrashed()->with('server')->findOrFail((int) $website);
+
+        if (! $websiteModel->server) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This website does not have a server assigned.',
+            ], 422);
+        }
+
+        if (blank($websiteModel->website_username) || blank($websiteModel->domain)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This website does not have enough runtime details to locate the Laravel log.',
+            ], 422);
+        }
+
+        $sshService = resolve(ServerSSHService::class);
+        $result = $sshService->executeCommand($websiteModel->server, $this->buildWebsiteLaravelLogReadCommand($websiteModel), 30);
+
+        if (! ($result['success'] ?? false)) {
+            return response()->json([
+                'success' => false,
+                'message' => $result['message'] ?? 'Unable to read website Laravel log.',
+            ], 500);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $this->parseWebsiteLaravelLogOutput((string) data_get($result, 'data.output', '')),
+        ]);
+    }
+
+    public function clearWebsiteLog(int|string $website): JsonResponse
+    {
+        /** @var Website $websiteModel */
+        $websiteModel = Website::withTrashed()->with('server')->findOrFail((int) $website);
+
+        if (! $websiteModel->server) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This website does not have a server assigned.',
+            ], 422);
+        }
+
+        if (blank($websiteModel->website_username) || blank($websiteModel->domain)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This website does not have enough runtime details to locate the Laravel log.',
+            ], 422);
+        }
+
+        $sshService = resolve(ServerSSHService::class);
+        $result = $sshService->executeCommand($websiteModel->server, $this->buildWebsiteLaravelLogClearCommand($websiteModel), 30);
+
+        if (! ($result['success'] ?? false)) {
+            return response()->json([
+                'success' => false,
+                'message' => $result['message'] ?? 'Unable to clear website Laravel log.',
+            ], 500);
+        }
+
+        $this->logActivity($websiteModel, ActivityAction::UPDATE, 'Cleared website Laravel log.');
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Website Laravel log cleared successfully.',
         ]);
     }
 
@@ -311,6 +388,119 @@ class WebsiteController extends ScaffoldController implements HasMiddleware
             ],
             'percentage' => $percentage,
             'current_status' => $website->status instanceof WebsiteStatus ? $website->status->value : $website->status,
+        ];
+    }
+
+    private function buildWebsiteLaravelLogReadCommand(Website $website): string
+    {
+        $quotedUsername = escapeshellarg((string) $website->website_username);
+        $quotedDomain = escapeshellarg((string) $website->domain);
+        $tailLines = self::WEBSITE_LARAVEL_LOG_TAIL_LINES;
+
+        return <<<BASH
+USERNAME={$quotedUsername}
+DOMAIN={$quotedDomain}
+TAIL_LINES={$tailLines}
+PRIMARY="/home/\${USERNAME}/web/\${DOMAIN}/public_html/current/storage/logs/laravel.log"
+FALLBACK="/home/\${USERNAME}/web/\${DOMAIN}/public_html/storage/logs/laravel.log"
+LOG=""
+for candidate in "\$PRIMARY" "\$FALLBACK"; do
+    if [ -f "\$candidate" ]; then
+        LOG="\$candidate"
+        break
+    fi
+done
+
+if [ -z "\$LOG" ]; then
+    LOG="\$PRIMARY"
+fi
+
+if [ -f "\$LOG" ]; then
+    SIZE=\$(wc -c < "\$LOG" | tr -d ' ')
+    MTIME=\$(stat -c %Y "\$LOG")
+    echo "__ASTERO_EXISTS__=1"
+    echo "__ASTERO_PATH__=\$LOG"
+    echo "__ASTERO_SIZE__=\$SIZE"
+    echo "__ASTERO_MTIME__=\$MTIME"
+    echo "__ASTERO_CONTENT_START__"
+    tail -n {$tailLines} "\$LOG"
+else
+    echo "__ASTERO_EXISTS__=0"
+    echo "__ASTERO_PATH__=\$LOG"
+    echo "__ASTERO_SIZE__=0"
+    echo "__ASTERO_MTIME__="
+    echo "__ASTERO_CONTENT_START__"
+fi
+BASH;
+    }
+
+    private function buildWebsiteLaravelLogClearCommand(Website $website): string
+    {
+        $quotedUsername = escapeshellarg((string) $website->website_username);
+        $quotedDomain = escapeshellarg((string) $website->domain);
+
+        return <<<BASH
+USERNAME={$quotedUsername}
+DOMAIN={$quotedDomain}
+PRIMARY="/home/\${USERNAME}/web/\${DOMAIN}/public_html/current/storage/logs/laravel.log"
+FALLBACK="/home/\${USERNAME}/web/\${DOMAIN}/public_html/storage/logs/laravel.log"
+LOG=""
+for candidate in "\$PRIMARY" "\$FALLBACK"; do
+    if [ -f "\$candidate" ]; then
+        LOG="\$candidate"
+        break
+    fi
+done
+
+if [ -z "\$LOG" ]; then
+    LOG="\$PRIMARY"
+fi
+
+mkdir -p "\$(dirname "\$LOG")"
+: > "\$LOG"
+BASH;
+    }
+
+    /**
+     * @return array{path: string, exists: bool, size_bytes: int, modified_at: string|null, tail_lines: int, content: string}
+     */
+    private function parseWebsiteLaravelLogOutput(string $output): array
+    {
+        $exists = false;
+        $path = '';
+        $size = 0;
+        $modifiedAt = null;
+        $content = '';
+
+        $contentStart = "__ASTERO_CONTENT_START__\n";
+        if (str_contains($output, $contentStart)) {
+            [$metaSection, $content] = explode($contentStart, $output, 2);
+        } else {
+            $metaSection = $output;
+        }
+
+        foreach (preg_split("/\r\n|\n|\r/", trim($metaSection)) ?: [] as $line) {
+            if (str_starts_with($line, '__ASTERO_EXISTS__=')) {
+                $exists = trim(substr($line, strlen('__ASTERO_EXISTS__='))) === '1';
+            } elseif (str_starts_with($line, '__ASTERO_PATH__=')) {
+                $path = trim(substr($line, strlen('__ASTERO_PATH__=')));
+            } elseif (str_starts_with($line, '__ASTERO_SIZE__=')) {
+                $size = (int) trim(substr($line, strlen('__ASTERO_SIZE__=')));
+            } elseif (str_starts_with($line, '__ASTERO_MTIME__=')) {
+                $timestamp = trim(substr($line, strlen('__ASTERO_MTIME__=')));
+                if ($timestamp !== '' && is_numeric($timestamp)) {
+                    $modifiedAt = app_date_time_format(Date::createFromTimestamp((int) $timestamp), 'datetime');
+                }
+            }
+        }
+
+        return [
+            'path' => $path,
+            'exists' => $exists,
+            'size_bytes' => $size,
+            'modified_at' => $modifiedAt,
+            'tail_lines' => self::WEBSITE_LARAVEL_LOG_TAIL_LINES,
+            'content' => rtrim($content),
         ];
     }
 

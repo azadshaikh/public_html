@@ -11,6 +11,7 @@ import {
     ExternalLinkIcon,
     EyeIcon,
     EyeOffIcon,
+    FileTextIcon,
     InfoIcon,
     KeyRoundIcon,
     ListChecksIcon,
@@ -67,6 +68,7 @@ import type {
     WebsiteShowData,
     WebsiteUpdateItem,
 } from '../../../types/platform';
+import { WebsiteLaravelLogTab } from './components/website-laravel-log-tab';
 import { WebsiteProvisioningDnsInstructions } from './components/website-provisioning-dns-instructions';
 
 type WebsitesShowPageProps = {
@@ -78,6 +80,7 @@ type WebsitesShowPageProps = {
     activities: PlatformActivity[];
     pullzoneId: string | null;
     canRevealSecrets: boolean;
+    canManageLaravelLog: boolean;
 };
 
 const PROVISIONING_POLL_INTERVAL_MS = 10_000;
@@ -247,6 +250,7 @@ export default function WebsitesShow({
     activities,
     pullzoneId,
     canRevealSecrets,
+    canManageLaravelLog,
 }: WebsitesShowPageProps) {
     const [confirm, setConfirm] = useState<ConfirmState>(INITIAL_CONFIRM);
     const op = useOperationAction();
@@ -866,6 +870,10 @@ export default function WebsitesShow({
                             <CodeIcon data-icon="inline-start" />
                             Metadata
                         </TabsTrigger>
+                        <TabsTrigger value="logs" className={cn(!isMobile && 'shrink-0')}>
+                            <FileTextIcon data-icon="inline-start" />
+                            Logs
+                        </TabsTrigger>
                         <TabsTrigger value="activity" className={cn(!isMobile && 'shrink-0')}>
                             <ActivityIcon data-icon="inline-start" />
                             Activity
@@ -979,6 +987,18 @@ export default function WebsitesShow({
                                         ))}
                                     </div>
                                 )}
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+
+                    <TabsContent value="logs">
+                        <Card>
+                            <CardContent className="pt-6">
+                                <WebsiteLaravelLogTab
+                                    websiteId={website.id}
+                                    active={activeTab === 'logs'}
+                                    canManageLaravelLog={canManageLaravelLog}
+                                />
                             </CardContent>
                         </Card>
                     </TabsContent>
