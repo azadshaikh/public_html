@@ -42,8 +42,8 @@ return [
     'sections' => [
         'releasemanager' => [
             'label' => 'Release Manager',
-            'weight' => 220,
-            'area' => 'modules',
+            'weight' => 110,
+            'area' => 'cms',
             'show_label' => true,
             'items' => $releaseTypeMenus,
         ],

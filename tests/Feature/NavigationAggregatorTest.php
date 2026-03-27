@@ -89,6 +89,7 @@ class NavigationAggregatorTest extends TestCase
     {
         $appNavigation = include config_path('navigation.php');
         $cmsNavigation = include base_path('modules/CMS/config/navigation.php');
+        $releaseManagerNavigation = include base_path('modules/ReleaseManager/config/navigation.php');
 
         $this->assertSame(
             ['Members', 'Team'],
@@ -114,6 +115,16 @@ class NavigationAggregatorTest extends TestCase
         $this->assertContains(
             'create website page',
             $cmsNavigation['sections']['cms']['items']['cms_pages_create']['quick_open']['keywords'],
+        );
+
+        $this->assertSame('cms', $releaseManagerNavigation['sections']['releasemanager']['area']);
+        $this->assertGreaterThan(
+            $appNavigation['sections']['dashboard']['weight'],
+            $releaseManagerNavigation['sections']['releasemanager']['weight'],
+        );
+        $this->assertLessThan(
+            $appNavigation['sections']['manage']['weight'],
+            $releaseManagerNavigation['sections']['releasemanager']['weight'],
         );
     }
 }
