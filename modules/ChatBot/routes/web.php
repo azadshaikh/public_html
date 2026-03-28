@@ -10,7 +10,7 @@ use Modules\ChatBot\Http\Controllers\SettingsController;
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['web', 'auth', 'module_access:chatbot'])
+Route::middleware(['web', 'auth', 'user.status', 'verified', 'profile.completed', 'module_access:chatbot'])
     ->prefix(config('app.admin_slug').'/chatbot')
     ->as('app.chatbot.')
     ->group(function (): void {

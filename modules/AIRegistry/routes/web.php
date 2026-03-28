@@ -5,7 +5,7 @@ use Modules\AIRegistry\Http\Controllers\AiModelController;
 use Modules\AIRegistry\Http\Controllers\AiProviderController;
 use Modules\AIRegistry\Http\Controllers\Api\V1\AIRegistryApiController;
 
-Route::middleware(['auth', 'module_access:airegistry'])
+Route::middleware(['auth', 'user.status', 'verified', 'profile.completed', 'module_access:airegistry'])
     ->prefix(config('app.admin_slug'))
     ->group(function (): void {
 

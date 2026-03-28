@@ -10,7 +10,7 @@ use Modules\Orders\Http\Controllers\SettingsController;
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['web', 'auth', 'module_access:orders'])
+Route::middleware(['web', 'auth', 'user.status', 'verified', 'profile.completed', 'module_access:orders'])
     ->prefix(config('app.admin_slug').'/orders')
     ->as('app.orders.')
     ->group(function (): void {

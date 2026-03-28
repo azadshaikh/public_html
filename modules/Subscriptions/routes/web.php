@@ -13,7 +13,7 @@ use Modules\Subscriptions\Http\Controllers\SubscriptionController;
 |
 */
 
-Route::middleware(['web', 'auth', 'module_access:subscriptions'])
+Route::middleware(['web', 'auth', 'user.status', 'verified', 'profile.completed', 'module_access:subscriptions'])
     ->prefix(config('app.admin_slug').'/subscriptions')
     ->name('subscriptions.')
     ->group(function (): void {

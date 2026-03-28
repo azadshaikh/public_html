@@ -23,7 +23,7 @@ $statusPattern = collect(config('releasemanager.status_options', []))
 $releaseTypePattern = $releaseTypePattern !== '' ? '^('.$releaseTypePattern.')$' : '^(application|module)$';
 $statusPattern = $statusPattern !== '' ? '^('.$statusPattern.')$' : '^(all|draft|published|deprecate|trash)$';
 
-Route::middleware(['auth', 'verified'])->group(function () use ($releaseTypePattern, $statusPattern): void {
+Route::middleware(['auth', 'user.status', 'verified', 'profile.completed'])->group(function () use ($releaseTypePattern, $statusPattern): void {
     Route::group(['prefix' => config('app.admin_slug').'/releasemanager', 'as' => 'releasemanager.'], function () use ($releaseTypePattern, $statusPattern): void {
         Route::group([
             'prefix' => 'releases/{type}',

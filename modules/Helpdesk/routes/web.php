@@ -5,7 +5,7 @@ use Modules\Helpdesk\Http\Controllers\DepartmentController;
 use Modules\Helpdesk\Http\Controllers\SettingsController;
 use Modules\Helpdesk\Http\Controllers\TicketController;
 
-Route::middleware(['auth', 'verified'])->group(function (): void {
+Route::middleware(['auth', 'user.status', 'verified', 'profile.completed'])->group(function (): void {
     Route::group(['prefix' => config('app.admin_slug').'/helpdesk', 'as' => 'helpdesk.'], function (): void {
         Route::prefix('departments')->name('departments.')->middleware(['crud.exceptions'])->group(function (): void {
             Route::post('/bulk-action', [DepartmentController::class, 'bulkAction'])->name('bulk-action');

@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Modules\Customers\Http\Controllers\CustomerContactController;
 use Modules\Customers\Http\Controllers\CustomerController;
 
-Route::middleware(['auth', 'verified'])->group(function (): void {
+Route::middleware(['auth', 'user.status', 'verified', 'profile.completed'])->group(function (): void {
     Route::group(['prefix' => config('app.admin_slug').'/customers', 'as' => 'app.customers.'], function (): void {
         Route::post('/bulk-action', [CustomerController::class, 'bulkAction'])->name('bulk-action');
         Route::get('/create', [CustomerController::class, 'create'])->name('create');

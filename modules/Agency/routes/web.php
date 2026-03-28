@@ -130,7 +130,7 @@ Route::prefix(config('app.admin_slug'))->group(function (): void {
 // ──────────────────────────────────────────────────────────
 // Admin Website Management (super_user / administrator only)
 // ──────────────────────────────────────────────────────────
-Route::middleware(['auth', 'user.status', 'role:super_user|administrator'])->group(function (): void {
+Route::middleware(['auth', 'user.status', 'verified', 'profile.completed', 'role:super_user|administrator'])->group(function (): void {
     // Settings
     Route::prefix(config('app.admin_slug').'/agency/settings')->name('agency.admin.settings.')->group(function (): void {
         Route::get('/', [SettingsController::class, 'settings'])->name('index');

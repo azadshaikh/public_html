@@ -25,7 +25,7 @@ use Modules\CMS\Http\Controllers\ThemeEditorController;
 use Modules\CMS\Http\Controllers\ThemeFrontendController;
 use Modules\CMS\Http\Controllers\WidgetController;
 
-Route::middleware(['auth', 'verified'])->group(function (): void {
+Route::middleware(['auth', 'user.status', 'verified', 'profile.completed'])->group(function (): void {
     Route::group(['prefix' => config('app.admin_slug').'/cms', 'as' => 'cms.', 'middleware' => ['module_access:cms']], function (): void {
         Route::group(['prefix' => 'categories', 'as' => 'categories.'], function (): void {
             Route::post('/bulk-action', [CategoriesController::class, 'bulkAction'])->name('bulk-action');

@@ -20,7 +20,7 @@ use Modules\Billing\Http\Controllers\TransactionController;
 |
 */
 
-Route::middleware(['auth', 'verified'])->group(function (): void {
+Route::middleware(['auth', 'user.status', 'verified', 'profile.completed'])->group(function (): void {
     Route::group(['prefix' => config('app.admin_slug').'/billing', 'as' => 'app.billing.'], function (): void {
         // Settings
         Route::group(['prefix' => 'settings', 'as' => 'settings.'], function (): void {

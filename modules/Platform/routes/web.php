@@ -15,7 +15,7 @@ use Modules\Platform\Http\Controllers\SettingsController;
 use Modules\Platform\Http\Controllers\TldController;
 use Modules\Platform\Http\Controllers\WebsiteController;
 
-Route::middleware(['auth', 'verified'])->group(function (): void {
+Route::middleware(['auth', 'user.status', 'verified', 'profile.completed'])->group(function (): void {
     Route::group(['prefix' => config('app.admin_slug').'/platform', 'as' => 'platform.'], function (): void {
         // ---------------------------------------------------------------------
         // Servers (Scaffold)
