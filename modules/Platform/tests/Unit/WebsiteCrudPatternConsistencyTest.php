@@ -13,7 +13,8 @@ class WebsiteCrudPatternConsistencyTest extends TestCase
 
         $this->assertNotFalse($controllerContents, 'Failed to read modules/Platform/app/Http/Controllers/WebsiteController.php');
         $this->assertStringNotContainsString("new Middleware('permission:view_websites', only: ['revealSecret'])", $controllerContents);
-        $this->assertStringContainsString("'reprovision', 'revealSecret'])", $controllerContents);
+        $this->assertStringContainsString("'reprovision'", $controllerContents);
+        $this->assertStringContainsString("'revealSecret'", $controllerContents);
     }
 
     public function test_website_secret_reveal_route_uses_post_and_throttle(): void
@@ -71,12 +72,12 @@ class WebsiteCrudPatternConsistencyTest extends TestCase
 
     public function test_website_show_secret_reveal_fetch_uses_post_json_requests(): void
     {
-        $viewPath = base_path('modules/Platform/resources/js/pages/platform/websites/show.tsx');
+        $viewPath = base_path('modules/Platform/resources/js/pages/platform/websites/components/website-secrets-table.tsx');
         $viewContents = file_get_contents($viewPath);
 
-        $this->assertNotFalse($viewContents, 'Failed to read modules/Platform/resources/js/pages/platform/websites/show.tsx');
-        $this->assertStringContainsString("method: 'POST'", $viewContents);
+        $this->assertNotFalse($viewContents, 'Failed to read website secrets table component.');
+        $this->assertStringContainsString('revealRequest.post(', $viewContents);
         $this->assertStringContainsString("'X-Requested-With': 'XMLHttpRequest'", $viewContents);
-        $this->assertStringNotContainsString("method: 'GET'", $viewContents);
+        $this->assertStringNotContainsString('revealRequest.get(', $viewContents);
     }
 }

@@ -1,4 +1,14 @@
-import { ActivityIcon, ClockIcon, CodeIcon, InfoIcon, KeyRoundIcon, ListChecksIcon, StickyNoteIcon } from 'lucide-react';
+import {
+    ActivityIcon,
+    ClipboardCopyIcon,
+    ClockIcon,
+    CodeIcon,
+    FileTextIcon,
+    InfoIcon,
+    KeyRoundIcon,
+    ListChecksIcon,
+    StickyNoteIcon,
+} from 'lucide-react';
 import type { Dispatch, SetStateAction } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -6,12 +16,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import type {
     PlatformActivity,
+    ProvisioningRunTimestamps,
     WebsiteProvisioningStep,
     WebsiteSecretItem,
     WebsiteShowData,
     WebsiteUpdateItem,
 } from '../../../../types/platform';
 import { InfoRow } from './show-shared';
+import { WebsiteEnvTab } from './website-env-tab';
+import { WebsiteLaravelLogTab } from './website-laravel-log-tab';
 import { WebsiteProvisioningStepsTable } from './website-provisioning-steps-table';
 import { WebsiteSecretsTable } from './website-secrets-table';
 
@@ -23,8 +36,11 @@ type WebsiteShowTabsProps = {
     secrets: WebsiteSecretItem[];
     canRevealSecrets: boolean;
     provisioningSteps: WebsiteProvisioningStep[];
+    provisioningRun: ProvisioningRunTimestamps;
     updates: WebsiteUpdateItem[];
     activities: PlatformActivity[];
+    canManageLaravelLog: boolean;
+    canManageWebsiteEnv: boolean;
 };
 
 export function WebsiteShowTabs({
@@ -35,8 +51,11 @@ export function WebsiteShowTabs({
     secrets,
     canRevealSecrets,
     provisioningSteps,
+    provisioningRun,
     updates,
     activities,
+    canManageLaravelLog,
+    canManageWebsiteEnv,
 }: WebsiteShowTabsProps) {
     const isProvisioning = website.status === 'provisioning';
 
@@ -80,6 +99,14 @@ export function WebsiteShowTabs({
                 <TabsTrigger value="metadata" className={cn(!isMobile && 'shrink-0')}>
                     <CodeIcon data-icon="inline-start" />
                     Metadata
+                </TabsTrigger>
+                <TabsTrigger value="env" className={cn(!isMobile && 'shrink-0')}>
+                    <ClipboardCopyIcon data-icon="inline-start" />
+                    Env
+                </TabsTrigger>
+                <TabsTrigger value="logs" className={cn(!isMobile && 'shrink-0')}>
+                    <FileTextIcon data-icon="inline-start" />
+                    Logs
                 </TabsTrigger>
                 <TabsTrigger value="activity" className={cn(!isMobile && 'shrink-0')}>
                     <ActivityIcon data-icon="inline-start" />
@@ -132,6 +159,7 @@ export function WebsiteShowTabs({
                         <WebsiteProvisioningStepsTable
                             websiteId={website.id}
                             steps={provisioningSteps}
+                            provisioningRun={provisioningRun}
                             isProvisioning={isProvisioning}
                             websiteStatus={website.status}
                         />
@@ -187,6 +215,30 @@ export function WebsiteShowTabs({
                                 ))}
                             </div>
                         )}
+                    </CardContent>
+                </Card>
+            </TabsContent>
+
+            <TabsContent value="env">
+                <Card>
+                    <CardContent className="pt-6">
+                        <WebsiteEnvTab
+                            websiteId={website.id}
+                            active={activeTab === 'env'}
+                            canManageWebsiteEnv={canManageWebsiteEnv}
+                        />
+                    </CardContent>
+                </Card>
+            </TabsContent>
+
+            <TabsContent value="logs">
+                <Card>
+                    <CardContent className="pt-6">
+                        <WebsiteLaravelLogTab
+                            websiteId={website.id}
+                            active={activeTab === 'logs'}
+                            canManageLaravelLog={canManageLaravelLog}
+                        />
                     </CardContent>
                 </Card>
             </TabsContent>

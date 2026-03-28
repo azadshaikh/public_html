@@ -148,7 +148,7 @@ class ServerCrudPatternConsistencyTest extends TestCase
         $controllerContents = file_get_contents($controllerPath);
         $this->assertNotFalse($controllerContents, 'Failed to read modules/Platform/app/Http/Controllers/ServerController.php');
         $this->assertStringContainsString("new Middleware('permission:view_servers', only: ['index', 'show', 'data', 'websites', 'optimizationTool'])", $controllerContents);
-        $this->assertStringContainsString("'reprovisionServer', 'stopProvisioning', 'revealSecret', 'revealSshKeyPair', 'revealAccessKeySecret'])", $controllerContents);
+        $this->assertStringContainsString("'reprovisionServer', 'stopProvisioning', 'revealSecret', 'revealSshKeyPair', 'revealAccessKeySecret', 'clearScriptLog'])", $controllerContents);
 
         $routesPath = base_path('modules/Platform/routes/web.php');
         $routesContents = file_get_contents($routesPath);
@@ -181,9 +181,16 @@ class ServerCrudPatternConsistencyTest extends TestCase
         $this->assertStringContainsString("'provisioner_ips' =>", $configContents);
         $this->assertStringContainsString("config('astero.provisioner_ips', [])", $configContents);
 
-        $jobPath = base_path('modules/Platform/app/Jobs/ServerProvision.php');
-        $jobContents = file_get_contents($jobPath);
-        $this->assertNotFalse($jobContents, 'Failed to read modules/Platform/app/Jobs/ServerProvision.php');
+        $jobContents = collect([
+            'modules/Platform/app/Jobs/ServerProvision.php',
+            'modules/Platform/app/Jobs/Concerns/InteractsWithServerProvisionState.php',
+        ])->map(function (string $relativePath): string {
+            $contents = file_get_contents(base_path($relativePath));
+            $this->assertNotFalse($contents, 'Failed to read '.$relativePath);
+
+            return $contents;
+        })->implode("\n");
+
         $this->assertStringContainsString("config('platform.provisioner_ips', [])", $jobContents);
         $this->assertStringContainsString('return implode(PHP_EOL, $provisionerIps);', $jobContents);
         $this->assertStringContainsString('Set PROVISIONER_IPS.', $jobContents);

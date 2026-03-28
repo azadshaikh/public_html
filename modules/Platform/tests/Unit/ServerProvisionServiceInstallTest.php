@@ -10,14 +10,16 @@ class ServerProvisionServiceInstallTest extends TestCase
     {
         $jobPath = base_path('modules/Platform/app/Jobs/ServerProvision.php');
         $jobContents = file_get_contents($jobPath);
+        $sourceContents = $this->serverProvisionSourceContents();
 
         $this->assertNotFalse($jobContents, 'Failed to read modules/Platform/app/Jobs/ServerProvision.php');
-        $this->assertStringContainsString('/usr/local/hestia/bin/a-provision-server', $jobContents);
-        $this->assertStringContainsString('/usr/local/hestia/bin/a-run-server-setup-screen', $jobContents);
+        $this->assertStringContainsString('use InteractsWithServerProvisionInstall;', $jobContents);
+        $this->assertStringContainsString('/usr/local/hestia/bin/a-provision-server', $sourceContents);
+        $this->assertStringContainsString('/usr/local/hestia/bin/a-run-server-setup-screen', $sourceContents);
         $this->assertStringContainsString('SERVER_SETUP_SESSION', $jobContents);
-        $this->assertStringContainsString('start_server_setup_screen', $jobContents);
-        $this->assertStringContainsString('wait_server_setup_screen', $jobContents);
-        $this->assertStringContainsString("'screen -r '.self::SERVER_SETUP_SESSION", $jobContents);
+        $this->assertStringContainsString('start_server_setup_screen', $sourceContents);
+        $this->assertStringContainsString('wait_server_setup_screen', $sourceContents);
+        $this->assertStringContainsString("'screen -r '.self::SERVER_SETUP_SESSION", $sourceContents);
     }
 
     public function test_deployment_script_installs_required_packages_without_redis_or_memcached(): void
@@ -36,5 +38,23 @@ class ServerProvisionServiceInstallTest extends TestCase
         $this->assertStringContainsString('supervisorctl update', $contents);
         $this->assertStringNotContainsString('redis', strtolower($contents));
         $this->assertStringNotContainsString('memcached', strtolower($contents));
+    }
+
+    private function serverProvisionSourceContents(): string
+    {
+        return collect([
+            'modules/Platform/app/Jobs/ServerProvision.php',
+            'modules/Platform/app/Jobs/Concerns/InteractsWithServerProvisionInstall.php',
+        ])->map(fn (string $relativePath): string => $this->readRequiredFile($relativePath))
+            ->implode("\n");
+    }
+
+    private function readRequiredFile(string $relativePath): string
+    {
+        $contents = file_get_contents(base_path($relativePath));
+
+        $this->assertNotFalse($contents, 'Failed to read '.$relativePath);
+
+        return $contents;
     }
 }

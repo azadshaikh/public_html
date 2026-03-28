@@ -8,10 +8,17 @@ class WebsiteShowViewUxTest extends TestCase
 {
     public function test_website_show_view_uses_command_center_layout_and_runtime_controls(): void
     {
-        $path = base_path('modules/Platform/resources/js/pages/platform/websites/show.tsx');
-        $contents = file_get_contents($path);
+        $pagePath = base_path('modules/Platform/resources/js/pages/platform/websites/show.tsx');
+        $overviewPath = base_path('modules/Platform/resources/js/pages/platform/websites/components/website-show-overview.tsx');
+        $tabsPath = base_path('modules/Platform/resources/js/pages/platform/websites/components/website-show-tabs.tsx');
+        $pageContents = file_get_contents($pagePath);
+        $overviewContents = file_get_contents($overviewPath);
+        $tabsContents = file_get_contents($tabsPath);
+        $contents = implode("\n", [$pageContents, $overviewContents, $tabsContents]);
 
-        $this->assertNotFalse($contents, 'Failed to read modules/Platform/resources/js/pages/platform/websites/show.tsx');
+        $this->assertNotFalse($pageContents, 'Failed to read modules/Platform/resources/js/pages/platform/websites/show.tsx');
+        $this->assertNotFalse($overviewContents, 'Failed to read website overview component.');
+        $this->assertNotFalse($tabsContents, 'Failed to read website tabs component.');
         $this->assertStringContainsString('Command Center', $contents);
         $this->assertStringContainsString('Operations', $contents);
         $this->assertStringContainsString('Queue Workers', $contents);

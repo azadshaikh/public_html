@@ -1,11 +1,9 @@
 import { Link } from '@inertiajs/react';
 import {
-    ArrowLeftIcon,
     DatabaseIcon,
     DownloadCloudIcon,
     ExternalLinkIcon,
     PauseCircleIcon,
-    PencilIcon,
     PlayCircleIcon,
     RefreshCwIcon,
     RotateCcwIcon,
@@ -14,6 +12,7 @@ import {
     Trash2Icon,
     ZapIcon,
 } from 'lucide-react';
+import { showAppToast } from '@/components/forms/form-success-toast';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -32,6 +31,7 @@ type WebsiteShowOverviewProps = {
     website: WebsiteShowData;
     pullzoneId: string | null;
     processing: boolean;
+    isPrimaryHostnameSyncPending: boolean;
     openConfirm: (
         title: string,
         description: string,
@@ -39,13 +39,21 @@ type WebsiteShowOverviewProps = {
         action: () => void,
         tone?: ConfirmState['tone'],
     ) => void;
-    perform: (method: 'post' | 'delete' | 'patch', url: string) => void;
+    perform: (
+        method: 'post' | 'delete' | 'patch',
+        url: string,
+        options?: {
+            onSuccess?: (message: string) => void;
+            onError?: (message: string) => void;
+        },
+    ) => void;
 };
 
 export function WebsiteShowOverview({
     website,
     pullzoneId,
     processing,
+    isPrimaryHostnameSyncPending,
     openConfirm,
     perform,
 }: WebsiteShowOverviewProps) {
@@ -53,7 +61,6 @@ export function WebsiteShowOverview({
     const isProvisioning = website.status === 'provisioning';
     const isSuspended = website.status === 'suspended';
     const isExpired = website.status === 'expired';
-    const isFailed = website.status === 'failed';
     const isDeleted = website.status === 'deleted';
 
     return (
@@ -241,6 +248,108 @@ export function WebsiteShowOverview({
                             </Badge>
                         </div>
 
+                        <div className="rounded-lg border bg-muted/20 p-4">
+                            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                                <div className="space-y-2">
+                                    <div>
+                                        <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Primary Hostname</p>
+                                        <p className="mt-1 text-sm font-semibold text-foreground">{website.primary_hostname ?? website.domain}</p>
+                                    </div>
+                                    {website.supports_www_feature ? (
+                                        <p className="text-sm text-muted-foreground">
+                                            Switch the public primary host between the apex domain and <span className="font-medium text-foreground">www</span>. This also re-checks the Hestia redirect and Bunny hostname setup.
+                                        </p>
+                                    ) : (
+                                        <p className="text-sm text-muted-foreground">
+                                            This website uses a subdomain, so the www primary-host feature is not available.
+                                        </p>
+                                    )}
+                                    {website.alternate_hostname ? (
+                                        <p className="text-xs text-muted-foreground">
+                                            Alternate host: <span className="font-medium text-foreground">{website.alternate_hostname}</span>
+                                        </p>
+                                    ) : null}
+                                    {website.primary_hostname_sync ? (
+                                        <div className="rounded-md border bg-background/80 p-3">
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <Badge variant={statusBadgeVariant(website.primary_hostname_sync.status)}>
+                                                    Hostname Sync {website.primary_hostname_sync.status.replace(/_/g, ' ')}
+                                                </Badge>
+                                                {website.primary_hostname_sync.target ? (
+                                                    <span className="text-xs text-muted-foreground">
+                                                        Target: <span className="font-medium text-foreground">{website.primary_hostname_sync.target}</span>
+                                                    </span>
+                                                ) : null}
+                                                {website.primary_hostname_sync.updated_at ? (
+                                                    <span className="text-xs text-muted-foreground">
+                                                        Updated: {website.primary_hostname_sync.updated_at}
+                                                    </span>
+                                                ) : null}
+                                            </div>
+                                            {website.primary_hostname_sync.message ? (
+                                                <p className="mt-2 text-xs text-muted-foreground">
+                                                    {website.primary_hostname_sync.message}
+                                                </p>
+                                            ) : null}
+                                        </div>
+                                    ) : null}
+                                </div>
+
+                                {website.supports_www_feature ? (
+                                    <div className="flex flex-col gap-2 md:min-w-64 md:items-end">
+                                        {isPrimaryHostnameSyncPending ? (
+                                            <div className="inline-flex items-center gap-2 self-start rounded-full border border-info/30 bg-info/10 px-3 py-1 text-xs font-medium text-info md:self-end">
+                                                <RefreshCwIcon className="size-3.5 animate-spin" />
+                                                Live refresh active
+                                            </div>
+                                        ) : null}
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <Button
+                                                variant={website.is_www ? 'outline' : 'default'}
+                                                disabled={processing || !website.is_www}
+                                                onClick={() => openConfirm(
+                                                    'Use apex domain as primary host',
+                                                    'This will switch the primary host to the non-www domain and reconcile Hestia and Bunny state if anything is missing.',
+                                                    'Use apex domain',
+                                                    () => perform(
+                                                        'post',
+                                                        route('platform.websites.update-primary-host', { website: website.id, hostnameType: 'apex' }),
+                                                        {
+                                                            onSuccess: (message) => {
+                                                                showAppToast({ variant: 'info', title: message });
+                                                            },
+                                                        },
+                                                    ),
+                                                )}
+                                            >
+                                                Use {website.domain}
+                                            </Button>
+                                            <Button
+                                                variant={website.is_www ? 'default' : 'outline'}
+                                                disabled={processing || website.is_www}
+                                                onClick={() => openConfirm(
+                                                    'Use www as primary host',
+                                                    'This will switch the primary host to the www hostname and reconcile Hestia and Bunny state if anything is missing.',
+                                                    'Use www',
+                                                    () => perform(
+                                                        'post',
+                                                        route('platform.websites.update-primary-host', { website: website.id, hostnameType: 'www' }),
+                                                        {
+                                                            onSuccess: (message) => {
+                                                                showAppToast({ variant: 'info', title: message });
+                                                            },
+                                                        },
+                                                    ),
+                                                )}
+                                            >
+                                                Use www
+                                            </Button>
+                                        </div>
+                                    </div>
+                                ) : null}
+                            </div>
+                        </div>
+
                         <div className="grid gap-4 md:grid-cols-2">
                             <div className="flex flex-col gap-2">
                                 <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Infrastructure</p>
@@ -276,6 +385,56 @@ export function WebsiteShowOverview({
                                 </InfoRow>
                                 <InfoRow label="Expiry">{website.expired_on ?? '—'}</InfoRow>
                             </div>
+                        </div>
+
+                        <div className="rounded-lg border bg-muted/20 p-4">
+                            <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Shared SSL</p>
+                            {website.ssl_summary ? (
+                                <div className="mt-3 flex flex-col gap-2">
+                                    <InfoRow label="Certificate">
+                                        {website.ssl_summary.certificate_href ? (
+                                            <Link href={website.ssl_summary.certificate_href} className="text-primary hover:underline">
+                                                {website.ssl_summary.certificate_name}
+                                            </Link>
+                                        ) : (
+                                            website.ssl_summary.certificate_name
+                                        )}
+                                    </InfoRow>
+                                    <InfoRow label="Root Domain">
+                                        {website.ssl_summary.domain_href && website.ssl_summary.domain_name ? (
+                                            <Link href={website.ssl_summary.domain_href} className="text-primary hover:underline">
+                                                {website.ssl_summary.domain_name}
+                                            </Link>
+                                        ) : (
+                                            website.ssl_summary.domain_name ?? '—'
+                                        )}
+                                    </InfoRow>
+                                    <InfoRow label="Expires">{website.ssl_summary.expires_at ?? '—'}</InfoRow>
+                                    <InfoRow label="Used By">
+                                        {website.ssl_summary.websites_count} website{website.ssl_summary.websites_count === 1 ? '' : 's'}
+                                    </InfoRow>
+                                    <div className="pt-2">
+                                        <p className="mb-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                                            Websites using this certificate
+                                        </p>
+                                        <div className="flex flex-wrap gap-2">
+                                            {website.ssl_summary.websites.map((linkedWebsite) => (
+                                                <Link
+                                                    key={linkedWebsite.id}
+                                                    href={linkedWebsite.href}
+                                                    className="rounded-full border px-3 py-1 text-xs font-medium text-foreground transition hover:border-primary/40 hover:bg-background"
+                                                >
+                                                    {linkedWebsite.domain}
+                                                </Link>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <p className="mt-2 text-sm text-muted-foreground">
+                                    No domain SSL certificate is linked to this website yet.
+                                </p>
+                            )}
                         </div>
                     </CardContent>
                 </Card>
@@ -481,52 +640,6 @@ export function WebsiteShowOverview({
                         </div>
                     </CardContent>
                 </Card>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2">
-                {isFailed ? (
-                    <Button
-                        variant="default"
-                        className="bg-amber-600 hover:bg-amber-700"
-                        disabled={processing}
-                        onClick={() => openConfirm(
-                            'Retry Provisioning',
-                            'This will retry the provisioning process for this website. Failed and pending steps will be retried.',
-                            'Retry',
-                            () => perform('post', route('platform.websites.retry-provision', website.id)),
-                        )}
-                    >
-                        <RefreshCwIcon data-icon="inline-start" />
-                        Retry Provision
-                    </Button>
-                ) : null}
-
-                {isActive && website.admin_slug ? (
-                    <Button variant="outline" asChild>
-                        <a
-                            href={`https://${website.domain}/${website.admin_slug}`}
-                            target="_blank"
-                            rel="noreferrer"
-                        >
-                            <ExternalLinkIcon data-icon="inline-start" />
-                            Open Admin
-                        </a>
-                    </Button>
-                ) : null}
-
-                <Button variant="outline" asChild>
-                    <Link href={route('platform.websites.edit', website.id)}>
-                        <PencilIcon data-icon="inline-start" />
-                        Edit
-                    </Link>
-                </Button>
-
-                <Button variant="outline" asChild>
-                    <Link href={route('platform.websites.index', { status: 'all' })}>
-                        <ArrowLeftIcon data-icon="inline-start" />
-                        Back
-                    </Link>
-                </Button>
             </div>
         </div>
     );

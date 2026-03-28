@@ -7,7 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { usePageVisibility } from '@/hooks/use-page-visibility';
 import { cn } from '@/lib/utils';
-import type { WebsiteProvisioningStep } from '../../../../types/platform';
+import type {
+    ProvisioningRunTimestamps,
+    WebsiteProvisioningStep,
+} from '../../../../types/platform';
 import { statusBadgeVariant, STEP_STATUS_VARIANT } from './show-shared';
 import { WebsiteProvisioningDnsInstructions } from './website-provisioning-dns-instructions';
 
@@ -33,6 +36,7 @@ function shouldPollProvisioningState(
 type WebsiteProvisioningStepsTableProps = {
     websiteId: number;
     steps: WebsiteProvisioningStep[];
+    provisioningRun: ProvisioningRunTimestamps;
     isProvisioning: boolean;
     websiteStatus: string | null;
 };
@@ -40,11 +44,13 @@ type WebsiteProvisioningStepsTableProps = {
 export function WebsiteProvisioningStepsTable({
     websiteId,
     steps,
+    provisioningRun,
     isProvisioning,
     websiteStatus,
 }: WebsiteProvisioningStepsTableProps) {
     const isPageVisible = usePageVisibility();
     const [currentSteps, setCurrentSteps] = useState(steps);
+    const [currentRun, setCurrentRun] = useState(provisioningRun);
     const [currentStatus, setCurrentStatus] = useState<string | null>(websiteStatus);
     const pollingUrl = route('platform.websites.provisioning-status', {
         website: websiteId,
@@ -76,6 +82,7 @@ export function WebsiteProvisioningStepsTable({
         const completed = steps.filter((step) => step.status === 'done').length;
 
         setCurrentSteps(steps);
+        setCurrentRun(provisioningRun);
         setCurrentStatus(websiteStatus);
         setProgressPercent(total > 0 ? Math.round((completed / total) * 100) : 0);
         setIsPolling(shouldPollProvisioningState(websiteStatus, steps) || isProvisioning);
@@ -85,7 +92,7 @@ export function WebsiteProvisioningStepsTable({
         stepsRef.current = steps;
         statusRef.current = websiteStatus;
         completionReloadedRef.current = false;
-    }, [isProvisioning, steps, websiteStatus]);
+    }, [isProvisioning, provisioningRun, steps, websiteStatus]);
 
     const refreshProvisioningState = useCallback(async (): Promise<boolean> => {
         setPollAttemptCount((count) => count + 1);
@@ -105,11 +112,13 @@ export function WebsiteProvisioningStepsTable({
 
         const payload = (await response.json()) as {
             provisioning_steps?: WebsiteProvisioningStep[];
+            provisioning_run?: ProvisioningRunTimestamps;
             percentage?: number;
             current_status?: string | null;
         };
 
         const nextSteps = Array.isArray(payload.provisioning_steps) ? payload.provisioning_steps : stepsRef.current;
+        const nextRun = payload.provisioning_run ?? currentRun;
         const nextStatus = typeof payload.current_status === 'string' ? payload.current_status : null;
         const total = nextSteps.length;
         const completed = nextSteps.filter((step) => step.status === 'done').length;
@@ -119,6 +128,7 @@ export function WebsiteProvisioningStepsTable({
         const previousStatus = statusRef.current;
 
         setCurrentSteps(nextSteps);
+        setCurrentRun(nextRun);
         setCurrentStatus(nextStatus);
         setProgressPercent(nextProgress);
         setLastPollError(null);
@@ -148,7 +158,7 @@ export function WebsiteProvisioningStepsTable({
         }
 
         return false;
-    }, [pollingUrl]);
+    }, [currentRun, pollingUrl]);
 
     useEffect(() => {
         if (!isPolling || !isPageVisible) {
@@ -356,6 +366,16 @@ export function WebsiteProvisioningStepsTable({
 
                     <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
                         <div className="flex flex-col gap-2">
+                            {currentRun.started_at || currentRun.completed_at ? (
+                                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                                    {currentRun.started_at ? (
+                                        <span>Started: {currentRun.started_at}</span>
+                                    ) : null}
+                                    {currentRun.completed_at ? (
+                                        <span>Completed: {currentRun.completed_at}</span>
+                                    ) : null}
+                                </div>
+                            ) : null}
                             <div className="flex items-center justify-between text-xs text-muted-foreground">
                                 <span>{doneSteps} of {totalSteps} completed</span>
                                 <span>{progressPercent}%</span>

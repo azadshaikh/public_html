@@ -10,19 +10,19 @@ class WebsiteProvisioningDnsInstructionsUxTest extends TestCase
     {
         $sharedComponentPath = base_path('modules/Platform/resources/js/pages/platform/websites/components/website-provisioning-dns-instructions.tsx');
         $tablePath = base_path('modules/Platform/resources/js/pages/platform/websites/components/website-provisioning-steps-table.tsx');
-        $showPath = base_path('modules/Platform/resources/js/pages/platform/websites/show.tsx');
+        $showTabsPath = base_path('modules/Platform/resources/js/pages/platform/websites/components/website-show-tabs.tsx');
 
         $sharedComponentContents = file_get_contents($sharedComponentPath);
         $tableContents = file_get_contents($tablePath);
-        $showContents = file_get_contents($showPath);
+        $showTabsContents = file_get_contents($showTabsPath);
 
         $this->assertNotFalse($sharedComponentContents, 'Failed to read shared DNS instructions component.');
         $this->assertNotFalse($tableContents, 'Failed to read website provisioning steps table.');
-        $this->assertNotFalse($showContents, 'Failed to read website show page.');
+        $this->assertNotFalse($showTabsContents, 'Failed to read website tabs component.');
 
         $this->assertStringContainsString('Add these DNS records:', $sharedComponentContents);
         $this->assertStringContainsString('Update the domain nameservers to:', $sharedComponentContents);
         $this->assertStringContainsString('WebsiteProvisioningDnsInstructions', $tableContents);
-        $this->assertStringContainsString('WebsiteProvisioningDnsInstructions', $showContents);
+        $this->assertStringContainsString('WebsiteProvisioningStepsTable', $showTabsContents);
     }
 }

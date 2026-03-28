@@ -265,7 +265,7 @@ class HestiaRevertInstallationStepCommand extends Command
      */
     private function revertBunnyCdn(Website $website): string
     {
-        $bunnyCdnCommand = new BunnySetupCdnCommand;
+        $bunnyCdnCommand = app(BunnySetupCdnCommand::class);
 
         return $bunnyCdnCommand->revert($website);
     }

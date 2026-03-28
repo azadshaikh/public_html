@@ -39,10 +39,10 @@ class WebsiteCrudFlowPatternTest extends TestCase
 
     public function test_website_show_view_executes_provisioning_actions_via_post_json_requests(): void
     {
-        $path = base_path('modules/Platform/resources/js/pages/platform/websites/show.tsx');
+        $path = base_path('modules/Platform/resources/js/pages/platform/websites/components/website-provisioning-steps-table.tsx');
         $contents = file_get_contents($path);
 
-        $this->assertNotFalse($contents, 'Failed to read modules/Platform/resources/js/pages/platform/websites/show.tsx');
+        $this->assertNotFalse($contents, 'Failed to read website provisioning steps table component.');
         $this->assertStringContainsString("method: 'POST'", $contents);
         $this->assertStringContainsString("'X-Requested-With': 'XMLHttpRequest'", $contents);
     }

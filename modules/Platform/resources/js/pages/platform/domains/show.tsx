@@ -96,7 +96,7 @@ export default function DomainsShow({
                         <Button variant="outline" asChild>
                             <Link href={route('platform.domains.edit', domain.id)}>
                                 <PencilIcon data-icon="inline-start" />
-                                Edit
+                                Edit domain
                             </Link>
                         </Button>
                     ) : null}

@@ -11,7 +11,10 @@ class PlatformCrudPatternConsistencyTest extends TestCase
      */
     private function platformRawImageUrlFormFiles(): array
     {
-        $paths = glob(base_path('modules/Platform/resources/js/components/*/*-form.tsx')) ?: [];
+        $paths = array_merge(
+            glob(base_path('modules/Platform/resources/js/components/*/*-form.tsx')) ?: [],
+            glob(base_path('modules/Platform/resources/js/components/*/*-form-*.tsx')) ?: [],
+        );
         $matches = [];
 
         foreach ($paths as $path) {
@@ -25,6 +28,8 @@ class PlatformCrudPatternConsistencyTest extends TestCase
                 $matches[$path] = $contents;
             }
         }
+
+        ksort($matches);
 
         return $matches;
     }

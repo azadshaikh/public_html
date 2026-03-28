@@ -28,7 +28,6 @@ class ProvisioningPollingUxTest extends TestCase
         return [
             'server provisioning steps table' => ['modules/Platform/resources/js/pages/platform/servers/components/server-provisioning-steps-table.tsx'],
             'website provisioning steps table component' => ['modules/Platform/resources/js/pages/platform/websites/components/website-provisioning-steps-table.tsx'],
-            'website show page provisioning table' => ['modules/Platform/resources/js/pages/platform/websites/show.tsx'],
         ];
     }
 }
