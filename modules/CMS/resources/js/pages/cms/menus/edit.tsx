@@ -1,29 +1,8 @@
 import { Link, useHttp } from '@inertiajs/react';
-import {
-    ArrowDownIcon,
-    ArrowLeftIcon,
-    ArrowRightIcon,
-    ArrowUpIcon,
-    FolderIcon,
-    GripVerticalIcon,
-    HomeIcon,
-    LinkIcon,
-    PencilIcon,
-    PlusIcon,
-    SaveIcon,
-    SearchIcon,
-    TagIcon,
-    Trash2Icon,
-} from 'lucide-react';
+import { ArrowLeftIcon, LinkIcon } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { DragEvent, FormEvent } from 'react';
+import type { DragEvent } from 'react';
 import { showAppToast } from '@/components/forms/form-success-toast';
-import {
-    Accordion,
-    AccordionContent,
-    AccordionItem,
-    AccordionTrigger,
-} from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -37,7 +16,6 @@ import {
 import {
     Field,
     FieldDescription,
-    FieldGroup,
     FieldLabel,
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
@@ -46,1189 +24,29 @@ import {
     NativeSelect,
     NativeSelectOption,
 } from '@/components/ui/native-select';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { SearchInput } from '@/components/ui/search-input';
-import { Separator } from '@/components/ui/separator';
-import {
-    Sheet,
-    SheetContent,
-    SheetDescription,
-    SheetFooter,
-    SheetHeader,
-    SheetTitle,
-} from '@/components/ui/sheet';
 import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
-import { cn } from '@/lib/utils';
 import type { BreadcrumbItem } from '@/types';
+import type {
+    DraftMenuItem,
+    MenuSettings,
+    SavePayload,
+    SaveResponse,
+} from '../../../components/menus/menu-editor-types';
+import {
+    applyDrop,
+    buildRenderOrder,
+    collectDescendantIds,
+    indentItem,
+    moveItemDown,
+    moveItemUp,
+    outdentItem,
+} from '../../../components/menus/menu-editor-utils';
+import { MenuItemEditSheet } from '../../../components/menus/menu-item-edit-sheet';
+import { MenuItemLibraryPanel } from '../../../components/menus/menu-item-library-panel';
+import { MenuItemRow } from '../../../components/menus/menu-item-row';
 import { CmsSaveFooter } from '../../../components/shared/cms-save-footer';
 import type { MenuEditPageProps } from '../../../types/cms';
-
-// ----------------------------------------------------------------
-// Types
-// ----------------------------------------------------------------
-
-type DraftMenuItem = {
-    id: number;
-    parent_id: number;
-    title: string;
-    url: string;
-    type: string;
-    target: string;
-    icon: string;
-    css_classes: string;
-    link_title: string;
-    link_rel: string;
-    description: string;
-    object_id: number | null;
-    sort_order: number;
-    is_active: boolean;
-};
-
-type MenuSettings = {
-    name: string;
-    location: string;
-    is_active: boolean;
-    description: string;
-};
-
-type RenderItem = {
-    item: DraftMenuItem;
-    depth: number;
-};
-
-type SavePayload = {
-    settings: MenuSettings;
-    items: {
-        new: DraftMenuItem[];
-        updated: DraftMenuItem[];
-        deleted: { id: number }[];
-        order: { id: number; parent_id: number; sort_order: number }[];
-    };
-};
-
-type SaveResponse = {
-    success: boolean;
-    message: string;
-    details?: string;
-    errors?: Record<string, string[]>;
-    newItemIds: Record<string, number>;
-};
-
-// ----------------------------------------------------------------
-// Utility functions
-// ----------------------------------------------------------------
-
-function buildRenderOrder(
-    items: DraftMenuItem[],
-    parentId: number,
-    depth = 0,
-): RenderItem[] {
-    return items
-        .filter((i) => i.parent_id === parentId)
-        .sort((a, b) => a.sort_order - b.sort_order)
-        .flatMap((item) => [
-            { item, depth },
-            ...buildRenderOrder(items, item.id, depth + 1),
-        ]);
-}
-
-function getItemDepth(
-    items: DraftMenuItem[],
-    itemId: number,
-    menuId: number,
-): number {
-    const item = items.find((i) => i.id === itemId);
-    if (!item || item.parent_id === menuId) return 0;
-    return 1 + getItemDepth(items, item.parent_id, menuId);
-}
-
-function getSubtreeMaxDepth(
-    items: DraftMenuItem[],
-    itemId: number,
-    menuId: number,
-): number {
-    const baseDepth = getItemDepth(items, itemId, menuId);
-    const children = items.filter((i) => i.parent_id === itemId);
-    if (children.length === 0) return baseDepth;
-    return Math.max(
-        ...children.map((c) => getSubtreeMaxDepth(items, c.id, menuId)),
-    );
-}
-
-function isDescendant(
-    items: DraftMenuItem[],
-    ancestorId: number,
-    targetId: number,
-): boolean {
-    const target = items.find((i) => i.id === targetId);
-    if (!target) return false;
-    if (target.parent_id === ancestorId) return true;
-    return isDescendant(items, ancestorId, target.parent_id);
-}
-
-function applyDrop(
-    prevItems: DraftMenuItem[],
-    draggedId: number,
-    targetId: number,
-    position: 'before' | 'after',
-): DraftMenuItem[] {
-    if (draggedId === targetId) return prevItems;
-    if (isDescendant(prevItems, draggedId, targetId)) return prevItems;
-
-    const items = prevItems.map((i) => ({ ...i }));
-    const dragged = items.find((i) => i.id === draggedId)!;
-    const target = items.find((i) => i.id === targetId)!;
-    if (!dragged || !target) return prevItems;
-
-    const oldParentId = dragged.parent_id;
-    dragged.parent_id = target.parent_id;
-
-    if (oldParentId !== target.parent_id) {
-        items
-            .filter((i) => i.parent_id === oldParentId && i.id !== draggedId)
-            .sort((a, b) => a.sort_order - b.sort_order)
-            .forEach((item, idx) => {
-                item.sort_order = idx;
-            });
-    }
-
-    const siblings = items
-        .filter((i) => i.parent_id === target.parent_id && i.id !== draggedId)
-        .sort((a, b) => a.sort_order - b.sort_order);
-
-    const targetIdx = siblings.findIndex((i) => i.id === targetId);
-    const insertAt =
-        position === 'before' ? Math.max(0, targetIdx) : targetIdx + 1;
-    siblings.splice(insertAt, 0, dragged);
-    siblings.forEach((item, idx) => {
-        item.sort_order = idx;
-    });
-
-    return [...items];
-}
-
-function moveItemUp(
-    prevItems: DraftMenuItem[],
-    itemId: number,
-): DraftMenuItem[] {
-    const items = prevItems.map((i) => ({ ...i }));
-    const item = items.find((i) => i.id === itemId)!;
-    if (!item) return prevItems;
-    const siblings = items
-        .filter((i) => i.parent_id === item.parent_id)
-        .sort((a, b) => a.sort_order - b.sort_order);
-    const idx = siblings.findIndex((i) => i.id === itemId);
-    if (idx <= 0) return prevItems;
-    const prev = siblings[idx - 1];
-    const tmp = prev.sort_order;
-    prev.sort_order = item.sort_order;
-    item.sort_order = tmp;
-    return [...items];
-}
-
-function moveItemDown(
-    prevItems: DraftMenuItem[],
-    itemId: number,
-): DraftMenuItem[] {
-    const items = prevItems.map((i) => ({ ...i }));
-    const item = items.find((i) => i.id === itemId)!;
-    if (!item) return prevItems;
-    const siblings = items
-        .filter((i) => i.parent_id === item.parent_id)
-        .sort((a, b) => a.sort_order - b.sort_order);
-    const idx = siblings.findIndex((i) => i.id === itemId);
-    if (idx >= siblings.length - 1) return prevItems;
-    const next = siblings[idx + 1];
-    const tmp = next.sort_order;
-    next.sort_order = item.sort_order;
-    item.sort_order = tmp;
-    return [...items];
-}
-
-function indentItem(
-    prevItems: DraftMenuItem[],
-    itemId: number,
-    menuId: number,
-    maxDepth: number,
-): DraftMenuItem[] {
-    const items = prevItems.map((i) => ({ ...i }));
-    const item = items.find((i) => i.id === itemId)!;
-    if (!item) return prevItems;
-
-    const siblings = items
-        .filter((i) => i.parent_id === item.parent_id)
-        .sort((a, b) => a.sort_order - b.sort_order);
-    const idx = siblings.findIndex((i) => i.id === itemId);
-    if (idx <= 0) return prevItems;
-
-    const newParent = siblings[idx - 1];
-    const newParentDepth = getItemDepth(items, newParent.id, menuId);
-    const subtreeHeight =
-        getSubtreeMaxDepth(items, itemId, menuId) -
-        getItemDepth(items, itemId, menuId);
-    if (newParentDepth + 1 + subtreeHeight >= maxDepth) return prevItems;
-
-    item.parent_id = newParent.id;
-    siblings
-        .filter((s) => s.id !== itemId)
-        .forEach((s, i) => {
-            s.sort_order = i;
-        });
-
-    const newParentChildren = items
-        .filter((i) => i.parent_id === newParent.id && i.id !== itemId)
-        .sort((a, b) => a.sort_order - b.sort_order);
-    item.sort_order = newParentChildren.length;
-
-    return [...items];
-}
-
-function outdentItem(
-    prevItems: DraftMenuItem[],
-    itemId: number,
-    menuId: number,
-): DraftMenuItem[] {
-    const items = prevItems.map((i) => ({ ...i }));
-    const item = items.find((i) => i.id === itemId)!;
-    if (!item || item.parent_id === menuId) return prevItems;
-
-    const parent = items.find((i) => i.id === item.parent_id);
-    if (!parent) return prevItems;
-
-    const grandParentId = parent.parent_id;
-
-    const oldSiblings = items
-        .filter((i) => i.parent_id === item.parent_id && i.id !== itemId)
-        .sort((a, b) => a.sort_order - b.sort_order);
-    oldSiblings.forEach((s, i) => {
-        s.sort_order = i;
-    });
-
-    const grandParentChildren = items
-        .filter((i) => i.parent_id === grandParentId && i.id !== itemId)
-        .sort((a, b) => a.sort_order - b.sort_order);
-    const parentIdx = grandParentChildren.findIndex((i) => i.id === parent.id);
-    grandParentChildren.splice(parentIdx + 1, 0, item);
-    grandParentChildren.forEach((c, i) => {
-        c.sort_order = i;
-    });
-    item.parent_id = grandParentId;
-
-    return [...items];
-}
-
-function collectDescendantIds(
-    items: DraftMenuItem[],
-    itemId: number,
-): number[] {
-    const children = items.filter((i) => i.parent_id === itemId);
-    return children.flatMap((c) => [
-        c.id,
-        ...collectDescendantIds(items, c.id),
-    ]);
-}
-
-function getTypeIcon(type: string) {
-    switch (type) {
-        case 'page':
-            return <FolderIcon className="size-3.5 shrink-0 text-blue-500" />;
-        case 'category':
-            return <FolderIcon className="size-3.5 shrink-0 text-amber-500" />;
-        case 'tag':
-            return <TagIcon className="size-3.5 shrink-0 text-green-500" />;
-        case 'home':
-            return <HomeIcon className="size-3.5 shrink-0 text-purple-500" />;
-        case 'search':
-            return (
-                <SearchIcon className="size-3.5 shrink-0 text-muted-foreground" />
-            );
-        default:
-            return (
-                <LinkIcon className="size-3.5 shrink-0 text-muted-foreground" />
-            );
-    }
-}
-
-// ----------------------------------------------------------------
-// Menu Item Row
-// ----------------------------------------------------------------
-
-type MenuItemRowProps = {
-    renderItem: RenderItem;
-    allItems: DraftMenuItem[];
-    menuId: number;
-    maxDepth: number;
-    isDraggedOver: 'before' | 'after' | null;
-    isDragging: boolean;
-    onDragStart: (e: DragEvent<HTMLButtonElement>, id: number) => void;
-    onDragOver: (e: DragEvent<HTMLDivElement>, id: number) => void;
-    onDrop: (e: DragEvent<HTMLDivElement>) => void;
-    onDragEnd: () => void;
-    onMoveUp: (id: number) => void;
-    onMoveDown: (id: number) => void;
-    onIndent: (id: number) => void;
-    onOutdent: (id: number) => void;
-    onEdit: (item: DraftMenuItem) => void;
-    onDelete: (id: number) => void;
-};
-
-function MenuItemRow({
-    renderItem,
-    allItems,
-    menuId,
-    maxDepth,
-    isDraggedOver,
-    isDragging,
-    onDragStart,
-    onDragOver,
-    onDrop,
-    onDragEnd,
-    onMoveUp,
-    onMoveDown,
-    onIndent,
-    onOutdent,
-    onEdit,
-    onDelete,
-}: MenuItemRowProps) {
-    const { item, depth } = renderItem;
-
-    const siblings = allItems
-        .filter((i) => i.parent_id === item.parent_id)
-        .sort((a, b) => a.sort_order - b.sort_order);
-    const siblingIdx = siblings.findIndex((i) => i.id === item.id);
-    const canMoveUp = siblingIdx > 0;
-    const canMoveDown = siblingIdx < siblings.length - 1;
-    const canOutdent = item.parent_id !== menuId;
-    const hasPreviousSibling = siblingIdx > 0;
-    const prevSibling = hasPreviousSibling ? siblings[siblingIdx - 1] : null;
-    const prevSiblingDepth = prevSibling
-        ? getItemDepth(allItems, prevSibling.id, menuId)
-        : 0;
-    const subtreeHeight =
-        getSubtreeMaxDepth(allItems, item.id, menuId) -
-        getItemDepth(allItems, item.id, menuId);
-    const canIndent =
-        hasPreviousSibling && prevSiblingDepth + 1 + subtreeHeight < maxDepth;
-
-    return (
-        <div className="relative" style={{ paddingLeft: `${depth * 24}px` }}>
-            {isDraggedOver === 'before' && (
-                <div
-                    className="absolute top-0 right-0 left-0 h-0.5 rounded bg-primary"
-                    style={{ zIndex: 10 }}
-                />
-            )}
-            {isDraggedOver === 'after' && (
-                <div
-                    className="absolute right-0 bottom-0 left-0 h-0.5 rounded bg-primary"
-                    style={{ zIndex: 10 }}
-                />
-            )}
-            <div
-                className={cn(
-                    'group rounded-xl border bg-card p-4 shadow-xs transition-all',
-                    isDragging ? 'scale-[0.99] opacity-45' : 'opacity-100',
-                    isDraggedOver ? 'bg-muted/30' : '',
-                )}
-                onDragOver={(e) => onDragOver(e, item.id)}
-                onDrop={(e) => onDrop(e)}
-            >
-                <div className="flex items-start gap-3">
-                    <div className="flex items-center gap-2 self-stretch">
-                        <button
-                            type="button"
-                            draggable
-                            onDragStart={(e) => onDragStart(e, item.id)}
-                            onDragEnd={onDragEnd}
-                            className="mt-0.5 rounded-lg border bg-muted/40 p-2 text-muted-foreground transition hover:bg-accent hover:text-foreground active:cursor-grabbing"
-                            aria-label="Drag to reorder"
-                            title="Drag to reorder"
-                        >
-                            <GripVerticalIcon className="size-4" />
-                        </button>
-                    </div>
-
-                    <div
-                        className="min-w-0 flex-1"
-                    >
-                        <div className="flex flex-wrap items-center gap-2">
-                            <p className="truncate text-sm font-medium">
-                                {item.title}
-                            </p>
-                            <Badge variant="outline">
-                                {item.type}
-                            </Badge>
-                            {!item.is_active ? (
-                                <Badge variant="secondary">Inactive</Badge>
-                            ) : null}
-                        </div>
-                        {item.url ? (
-                            <p className="mt-1 truncate text-sm text-muted-foreground">
-                                {item.url}
-                            </p>
-                        ) : null}
-                    </div>
-
-                    <div className="flex shrink-0 items-center gap-1">
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="sm:hidden"
-                            disabled={!canMoveUp}
-                            onClick={() => onMoveUp(item.id)}
-                            aria-label="Move up"
-                        >
-                            <ArrowUpIcon />
-                        </Button>
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="sm:hidden"
-                            disabled={!canMoveDown}
-                            onClick={() => onMoveDown(item.id)}
-                            aria-label="Move down"
-                        >
-                            <ArrowDownIcon />
-                        </Button>
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            disabled={!canOutdent}
-                            onClick={() => onOutdent(item.id)}
-                            aria-label="Outdent"
-                            title="Outdent"
-                        >
-                            <ArrowLeftIcon />
-                        </Button>
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            disabled={!canIndent}
-                            onClick={() => onIndent(item.id)}
-                            aria-label="Indent"
-                            title="Indent"
-                        >
-                            <ArrowRightIcon />
-                        </Button>
-
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => onEdit(item)}
-                            aria-label="Edit item"
-                        >
-                            <PencilIcon />
-                        </Button>
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="text-destructive hover:text-destructive"
-                            onClick={() => onDelete(item.id)}
-                            aria-label="Delete item"
-                        >
-                            <Trash2Icon />
-                        </Button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-}
-
-// ----------------------------------------------------------------
-// Item Edit Sheet
-// ----------------------------------------------------------------
-
-type ItemEditSheetProps = {
-    open: boolean;
-    onOpenChange: (open: boolean) => void;
-    item: DraftMenuItem | null;
-    itemTypes: Record<string, string>;
-    itemTargets: Record<string, string>;
-    onSave: (updated: DraftMenuItem) => void;
-};
-
-function ItemEditSheet({
-    open,
-    onOpenChange,
-    item,
-    itemTypes,
-    itemTargets,
-    onSave,
-}: ItemEditSheetProps) {
-    const [draft, setDraft] = useState<DraftMenuItem | null>(null);
-
-    useEffect(() => {
-        if (item) setDraft({ ...item });
-    }, [item]);
-
-    if (!draft) return null;
-
-    const isInternalLinkedItem = ['page', 'category', 'tag'].includes(
-        draft.type,
-    );
-
-    const set = <K extends keyof DraftMenuItem>(
-        key: K,
-        value: DraftMenuItem[K],
-    ) => {
-        setDraft((prev) => (prev ? { ...prev, [key]: value } : prev));
-    };
-
-    const handleSave = (e: FormEvent) => {
-        e.preventDefault();
-        if (!draft.title.trim()) return;
-        onSave(draft);
-        onOpenChange(false);
-    };
-
-    return (
-        <Sheet open={open} onOpenChange={onOpenChange}>
-            <SheetContent
-                side="right"
-                className="flex w-full flex-col sm:max-w-md"
-            >
-                <SheetHeader className="px-6 pt-6 pb-4">
-                    <SheetTitle>Edit Menu Item</SheetTitle>
-                    <SheetDescription>
-                        Update the properties of this navigation item.
-                    </SheetDescription>
-                </SheetHeader>
-
-                <div className="flex-1 overflow-y-auto px-6 py-5">
-                    <FieldGroup>
-                        <form
-                            noValidate
-                            onSubmit={handleSave}
-                        >
-                            <Accordion
-                                type="multiple"
-                                defaultValue={['basic', 'appearance', 'behavior']}
-                            >
-                                {/* Basic */}
-                                <AccordionItem value="basic">
-                                    <AccordionTrigger>Basic</AccordionTrigger>
-                                    <AccordionContent className="flex flex-col gap-4 !pt-2">
-                                        <Field>
-                                            <FieldLabel htmlFor="item-title">
-                                                Label{' '}
-                                                <span className="text-destructive">
-                                                    *
-                                                </span>
-                                            </FieldLabel>
-                                            <Input
-                                                id="item-title"
-                                                value={draft.title}
-                                                onChange={(e) =>
-                                                    set('title', e.target.value)
-                                                }
-                                                placeholder="Navigation label"
-                                            />
-                                        </Field>
-
-                                        <Field>
-                                            <FieldLabel htmlFor="item-url">
-                                                URL
-                                            </FieldLabel>
-                                            <Input
-                                                id="item-url"
-                                                value={draft.url}
-                                                onChange={(e) =>
-                                                    set('url', e.target.value)
-                                                }
-                                                placeholder="https://example.com or /path"
-                                                readOnly={isInternalLinkedItem}
-                                                disabled={isInternalLinkedItem}
-                                            />
-                                            {isInternalLinkedItem ? (
-                                                <FieldDescription>
-                                                    This URL is managed by the
-                                                    linked content and updates
-                                                    automatically when its slug
-                                                    changes.
-                                                </FieldDescription>
-                                            ) : null}
-                                        </Field>
-
-                                        <Field>
-                                            <FieldLabel htmlFor="item-type">
-                                                Type
-                                            </FieldLabel>
-                                            <NativeSelect
-                                                id="item-type"
-                                                value={draft.type}
-                                                onChange={(e) =>
-                                                    set('type', e.target.value)
-                                                }
-                                            >
-                                                {Object.entries(itemTypes).map(
-                                                    ([value, label]) => (
-                                                        <NativeSelectOption
-                                                            key={value}
-                                                            value={value}
-                                                        >
-                                                            {label}
-                                                        </NativeSelectOption>
-                                                    ),
-                                                )}
-                                            </NativeSelect>
-                                        </Field>
-
-                                        <Field orientation="horizontal">
-                                            <Switch
-                                                checked={draft.is_active}
-                                                onCheckedChange={(checked) =>
-                                                    set('is_active', checked)
-                                                }
-                                            />
-                                            <div className="flex flex-col gap-1">
-                                                <FieldLabel>Active</FieldLabel>
-                                                <FieldDescription>
-                                                    Inactive items are hidden on the
-                                                    front end.
-                                                </FieldDescription>
-                                            </div>
-                                        </Field>
-                                    </AccordionContent>
-                                </AccordionItem>
-
-                                {/* Appearance */}
-                                <AccordionItem value="appearance">
-                                    <AccordionTrigger>Appearance</AccordionTrigger>
-                                    <AccordionContent className="flex flex-col gap-4 !pt-2">
-                                        <Field>
-                                            <FieldLabel htmlFor="item-icon">
-                                                Icon Class
-                                            </FieldLabel>
-                                            <Input
-                                                id="item-icon"
-                                                value={draft.icon}
-                                                onChange={(e) =>
-                                                    set('icon', e.target.value)
-                                                }
-                                                placeholder="e.g. fa-home or bi-house"
-                                            />
-                                            <FieldDescription>
-                                                CSS class(es) for an icon library.
-                                            </FieldDescription>
-                                        </Field>
-
-                                        <Field>
-                                            <FieldLabel htmlFor="item-css">
-                                                CSS Classes
-                                            </FieldLabel>
-                                            <Input
-                                                id="item-css"
-                                                value={draft.css_classes}
-                                                onChange={(e) =>
-                                                    set('css_classes', e.target.value)
-                                                }
-                                                placeholder="Extra classes for the link element"
-                                            />
-                                        </Field>
-                                    </AccordionContent>
-                                </AccordionItem>
-
-                                {/* Link Behavior */}
-                                <AccordionItem value="behavior">
-                                    <AccordionTrigger>Link Behavior</AccordionTrigger>
-                                    <AccordionContent className="flex flex-col gap-4 !pt-2">
-                                        <Field>
-                                            <FieldLabel htmlFor="item-target">
-                                                Open In
-                                            </FieldLabel>
-                                            <NativeSelect
-                                                id="item-target"
-                                                value={draft.target}
-                                                onChange={(e) =>
-                                                    set('target', e.target.value)
-                                                }
-                                            >
-                                                {Object.entries(itemTargets).map(
-                                                    ([value, label]) => (
-                                                        <NativeSelectOption
-                                                            key={value}
-                                                            value={value}
-                                                        >
-                                                            {label}
-                                                        </NativeSelectOption>
-                                                    ),
-                                                )}
-                                            </NativeSelect>
-                                        </Field>
-
-                                        <Field>
-                                            <FieldLabel htmlFor="item-link-title">
-                                                Title Attribute
-                                            </FieldLabel>
-                                            <Input
-                                                id="item-link-title"
-                                                value={draft.link_title}
-                                                onChange={(e) =>
-                                                    set('link_title', e.target.value)
-                                                }
-                                                placeholder="Tooltip / title="
-                                            />
-                                        </Field>
-
-                                        <Field>
-                                            <FieldLabel htmlFor="item-link-rel">
-                                                Rel Attribute
-                                            </FieldLabel>
-                                            <Input
-                                                id="item-link-rel"
-                                                value={draft.link_rel}
-                                                onChange={(e) =>
-                                                    set('link_rel', e.target.value)
-                                                }
-                                                placeholder="e.g. noopener nofollow"
-                                            />
-                                        </Field>
-                                    </AccordionContent>
-                                </AccordionItem>
-
-                                {/* Advanced */}
-                                <AccordionItem value="advanced">
-                                    <AccordionTrigger>Advanced</AccordionTrigger>
-                                    <AccordionContent className="flex flex-col gap-4 !pt-2">
-                                        <Field>
-                                            <FieldLabel htmlFor="item-description">
-                                                Description
-                                            </FieldLabel>
-                                            <Textarea
-                                                id="item-description"
-                                                value={draft.description}
-                                                onChange={(e) =>
-                                                    set('description', e.target.value)
-                                                }
-                                                rows={3}
-                                                placeholder="Optional description shown in some themes."
-                                            />
-                                        </Field>
-                                    </AccordionContent>
-                                </AccordionItem>
-                            </Accordion>
-                        </form>
-                    </FieldGroup>
-                </div>
-
-                <SheetFooter className="px-6 pt-4 pb-6">
-                    <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => onOpenChange(false)}
-                    >
-                        Cancel
-                    </Button>
-                    <Button
-                        type="button"
-                        disabled={!draft.title.trim()}
-                        onClick={() => {
-                            if (!draft.title.trim()) return;
-                            onSave(draft);
-                            onOpenChange(false);
-                        }}
-                    >
-                        <SaveIcon data-icon="inline-start" />
-                        Apply Changes
-                    </Button>
-                </SheetFooter>
-            </SheetContent>
-        </Sheet>
-    );
-}
-
-// ----------------------------------------------------------------
-// Library search filter hook
-// ----------------------------------------------------------------
-
-function useLibraryFilter<T extends { title: string }>(items: T[]) {
-    const [query, setQuery] = useState('');
-    const filtered = useMemo(
-        () =>
-            query.trim()
-                ? items.filter((i) =>
-                    i.title.toLowerCase().includes(query.toLowerCase()),
-                )
-                : items,
-        [items, query],
-    );
-    return { query, setQuery, filtered };
-}
-
-// ----------------------------------------------------------------
-// Item Library Panel
-// ----------------------------------------------------------------
-
-type ItemLibraryPanelProps = {
-    menuId: number;
-    pages: { id: number; title: string; slug: string }[];
-    categories: { id: number; title: string; slug: string }[];
-    tags: { id: number; title: string; slug: string }[];
-    currentItems: DraftMenuItem[];
-    onAddItem: (
-        item: Omit<DraftMenuItem, 'id' | 'parent_id' | 'sort_order'>,
-    ) => void;
-};
-
-function ItemLibraryPanel({
-    pages,
-    categories,
-    tags,
-    currentItems,
-    onAddItem,
-}: ItemLibraryPanelProps) {
-    const [customTitle, setCustomTitle] = useState('');
-    const [customUrl, setCustomUrl] = useState('');
-
-    const pagesFilter = useLibraryFilter(pages);
-    const categoriesFilter = useLibraryFilter(categories);
-    const tagsFilter = useLibraryFilter(tags);
-
-    const handleAddCustom = (e: FormEvent) => {
-        e.preventDefault();
-        if (!customTitle.trim()) return;
-        onAddItem({
-            title: customTitle.trim(),
-            url: customUrl.trim() || '#',
-            type: 'custom',
-            target: '_self',
-            icon: '',
-            css_classes: '',
-            link_title: '',
-            link_rel: '',
-            description: '',
-            object_id: null,
-            is_active: true,
-        });
-        setCustomTitle('');
-        setCustomUrl('');
-    };
-
-    const addContentItem = (
-        contentItem: { id: number; title: string; slug: string },
-        type: 'page' | 'category' | 'tag',
-    ) => {
-        onAddItem({
-            title: contentItem.title,
-            url: '',
-            type,
-            target: '_self',
-            icon: '',
-            css_classes: '',
-            link_title: '',
-            link_rel: '',
-            description: '',
-            object_id: contentItem.id,
-            is_active: true,
-        });
-    };
-
-    const countInMenu = (objectId: number, type: string) =>
-        currentItems.filter((i) => i.object_id === objectId && i.type === type)
-            .length;
-
-    const totalAvailable = pages.length + categories.length + tags.length;
-
-    return (
-        <Card className="sticky top-4 flex max-h-[calc(100vh-7rem)] min-h-0 flex-col overflow-hidden">
-            <CardHeader className="pb-0">
-                <div className="flex items-center gap-2">
-                    <CardTitle className="text-base">Add Items</CardTitle>
-                    <Badge variant="secondary">
-                        {totalAvailable}
-                    </Badge>
-                </div>
-            </CardHeader>
-
-            <CardContent className="flex min-h-0 flex-1 flex-col gap-4 p-4 pt-3">
-                <ScrollArea className="min-h-0 flex-1">
-                    <div className="flex flex-col gap-4 pr-1">
-                        <Accordion type="multiple" defaultValue={['custom', 'pages']} className="flex flex-col gap-3">
-                            {/* Custom Link */}
-                            <AccordionItem value="custom" className="overflow-hidden rounded-xl border">
-                                <AccordionTrigger className="px-4 py-3 text-left text-sm font-medium hover:bg-muted/20 hover:no-underline">
-                                    Custom Link
-                                </AccordionTrigger>
-                                <AccordionContent>
-                                    <form
-                                        noValidate
-                                        onSubmit={handleAddCustom}
-                                        className="flex flex-col gap-3 p-4"
-                                    >
-                                        <Field>
-                                            <FieldLabel htmlFor="custom-url">
-                                                URL
-                                            </FieldLabel>
-                                            <Input
-                                                id="custom-url"
-                                                value={customUrl}
-                                                onChange={(e) =>
-                                                    setCustomUrl(e.target.value)
-                                                }
-                                                placeholder="https:// or /path"
-                                            />
-                                        </Field>
-                                        <Field>
-                                            <FieldLabel htmlFor="custom-title">
-                                                Link Text{' '}
-                                                <span className="text-destructive">
-                                                    *
-                                                </span>
-                                            </FieldLabel>
-                                            <Input
-                                                id="custom-title"
-                                                value={customTitle}
-                                                onChange={(e) =>
-                                                    setCustomTitle(e.target.value)
-                                                }
-                                                placeholder="Navigation label"
-                                            />
-                                        </Field>
-                                        <Button
-                                            type="submit"
-                                            className="w-full"
-                                            disabled={!customTitle.trim()}
-                                        >
-                                            <PlusIcon className="size-4" />
-                                            Add to Menu
-                                        </Button>
-                                    </form>
-                                </AccordionContent>
-                            </AccordionItem>
-
-                            {/* Pages */}
-                            {pages.length > 0 && (
-                                <AccordionItem value="pages" className="overflow-hidden rounded-xl border">
-                                    <AccordionTrigger className="px-4 py-3 text-left text-sm font-medium hover:bg-muted/20 hover:no-underline">
-                                        <div className="flex min-w-0 flex-1 items-center gap-3">
-                                            <div className="min-w-0 flex-1"><p>Pages</p></div>
-                                            <Badge variant="outline">{pages.length}</Badge>
-                                        </div>
-                                    </AccordionTrigger>
-                                    <AccordionContent>
-                                        <div className="flex flex-col gap-3 p-4">
-                                            <SearchInput
-                                                value={pagesFilter.query}
-                                                onChange={pagesFilter.setQuery}
-                                                size="comfortable"
-                                                placeholder="Search pages…"
-                                                containerClassName="w-full"
-                                            />
-                                            <div className="flex flex-col gap-2">
-                                                {pagesFilter.filtered.length === 0 ? (
-                                                    <p className="py-4 text-center text-xs text-muted-foreground">
-                                                        No pages found.
-                                                    </p>
-                                                ) : (
-                                                    pagesFilter.filtered.map((page) => {
-                                                        const count = countInMenu(
-                                                            page.id,
-                                                            'page',
-                                                        );
-                                                        return (
-                                                            <button
-                                                                key={page.id}
-                                                                type="button"
-                                                                onClick={() =>
-                                                                    addContentItem(
-                                                                        page,
-                                                                        'page',
-                                                                    )
-                                                                }
-                                                                className="group w-full rounded-xl border bg-background p-4 text-left transition hover:border-primary/40 hover:bg-accent/30"
-                                                            >
-                                                                <div className="flex items-start gap-3">
-                                                                    <div className="flex-1 space-y-1">
-                                                                        <div className="flex items-center gap-2">
-                                                                            <p className="font-medium">{page.title}</p>
-                                                                            {count > 0 ? (
-                                                                                <Badge variant="secondary">Used {count}×</Badge>
-                                                                            ) : null}
-                                                                        </div>
-                                                                        <p className="line-clamp-2 text-sm text-muted-foreground">{page.slug}</p>
-                                                                    </div>
-                                                                    <div className="rounded-lg border bg-muted/40 p-2 text-primary transition group-hover:border-primary/40 group-hover:bg-primary group-hover:text-primary-foreground">
-                                                                        <PlusIcon className="size-4" />
-                                                                    </div>
-                                                                </div>
-                                                            </button>
-                                                        );
-                                                    })
-                                                )}
-                                            </div>
-                                        </div>
-                                    </AccordionContent>
-                                </AccordionItem>
-                            )}
-
-                            {/* Categories */}
-                            {categories.length > 0 && (
-                                <AccordionItem
-                                    value="categories"
-                                    className="overflow-hidden rounded-xl border"
-                                >
-                                    <AccordionTrigger className="px-4 py-3 text-left text-sm font-medium hover:bg-muted/20 hover:no-underline">
-                                        <div className="flex min-w-0 flex-1 items-center gap-3">
-                                            <div className="min-w-0 flex-1"><p>Categories</p></div>
-                                            <Badge variant="outline">{categories.length}</Badge>
-                                        </div>
-                                    </AccordionTrigger>
-                                    <AccordionContent>
-                                        <div className="flex flex-col gap-3 p-4">
-                                            <SearchInput
-                                                value={categoriesFilter.query}
-                                                onChange={categoriesFilter.setQuery}
-                                                size="comfortable"
-                                                placeholder="Search categories…"
-                                                containerClassName="w-full"
-                                            />
-                                            <div className="flex flex-col gap-2">
-                                                {categoriesFilter.filtered.length ===
-                                                    0 ? (
-                                                    <p className="py-4 text-center text-xs text-muted-foreground">
-                                                        No categories found.
-                                                    </p>
-                                                ) : (
-                                                    categoriesFilter.filtered.map(
-                                                        (cat) => {
-                                                            const count = countInMenu(
-                                                                cat.id,
-                                                                'category',
-                                                            );
-                                                            return (
-                                                                <button
-                                                                    key={cat.id}
-                                                                    type="button"
-                                                                    onClick={() =>
-                                                                        addContentItem(
-                                                                            cat,
-                                                                            'category',
-                                                                        )
-                                                                    }
-                                                                    className="group w-full rounded-xl border bg-background p-4 text-left transition hover:border-primary/40 hover:bg-accent/30"
-                                                                >
-                                                                    <div className="flex items-start gap-3">
-                                                                        <div className="flex-1 space-y-1">
-                                                                            <div className="flex items-center gap-2">
-                                                                                <p className="font-medium">{cat.title}</p>
-                                                                                {count > 0 ? (
-                                                                                    <Badge variant="secondary">Used {count}×</Badge>
-                                                                                ) : null}
-                                                                            </div>
-                                                                            <p className="line-clamp-2 text-sm text-muted-foreground">{cat.slug}</p>
-                                                                        </div>
-                                                                        <div className="rounded-lg border bg-muted/40 p-2 text-primary transition group-hover:border-primary/40 group-hover:bg-primary group-hover:text-primary-foreground">
-                                                                            <PlusIcon className="size-4" />
-                                                                        </div>
-                                                                    </div>
-                                                                </button>
-                                                            );
-                                                        },
-                                                    )
-                                                )}
-                                            </div>
-                                        </div>
-                                    </AccordionContent>
-                                </AccordionItem>
-                            )}
-
-                            {/* Tags */}
-                            {tags.length > 0 && (
-                                <AccordionItem value="tags" className="overflow-hidden rounded-xl border">
-                                    <AccordionTrigger className="px-4 py-3 text-left text-sm font-medium hover:bg-muted/20 hover:no-underline">
-                                        <div className="flex min-w-0 flex-1 items-center gap-3">
-                                            <div className="min-w-0 flex-1"><p>Tags</p></div>
-                                            <Badge variant="outline">{tags.length}</Badge>
-                                        </div>
-                                    </AccordionTrigger>
-                                    <AccordionContent>
-                                        <div className="flex flex-col gap-3 p-4">
-                                            <SearchInput
-                                                value={tagsFilter.query}
-                                                onChange={tagsFilter.setQuery}
-                                                size="comfortable"
-                                                placeholder="Search tags…"
-                                                containerClassName="w-full"
-                                            />
-                                            <div className="flex flex-col gap-2">
-                                                {tagsFilter.filtered.length === 0 ? (
-                                                    <p className="py-4 text-center text-xs text-muted-foreground">
-                                                        No tags found.
-                                                    </p>
-                                                ) : (
-                                                    tagsFilter.filtered.map((tag) => {
-                                                        const count = countInMenu(
-                                                            tag.id,
-                                                            'tag',
-                                                        );
-                                                        return (
-                                                            <button
-                                                                key={tag.id}
-                                                                type="button"
-                                                                onClick={() =>
-                                                                    addContentItem(
-                                                                        tag,
-                                                                        'tag',
-                                                                    )
-                                                                }
-                                                                className="group w-full rounded-xl border bg-background p-4 text-left transition hover:border-primary/40 hover:bg-accent/30"
-                                                            >
-                                                                <div className="flex items-start gap-3">
-                                                                    <div className="flex-1 space-y-1">
-                                                                        <div className="flex items-center gap-2">
-                                                                            <p className="font-medium">{tag.title}</p>
-                                                                            {count > 0 ? (
-                                                                                <Badge variant="secondary">Used {count}×</Badge>
-                                                                            ) : null}
-                                                                        </div>
-                                                                        <p className="line-clamp-2 text-sm text-muted-foreground">{tag.slug}</p>
-                                                                    </div>
-                                                                    <div className="rounded-lg border bg-muted/40 p-2 text-primary transition group-hover:border-primary/40 group-hover:bg-primary group-hover:text-primary-foreground">
-                                                                        <PlusIcon className="size-4" />
-                                                                    </div>
-                                                                </div>
-                                                            </button>
-                                                        );
-                                                    })
-                                                )}
-                                            </div>
-                                        </div>
-                                    </AccordionContent>
-                                </AccordionItem>
-                            )}
-                        </Accordion>
-                    </div>
-                </ScrollArea>
-            </CardContent>
-
-            <Separator />
-
-            <div className="p-4 text-sm text-muted-foreground">
-                <div className="flex flex-wrap items-center gap-2">
-                    <span>Save anytime with</span>
-                    <KbdGroup>
-                        <Kbd>Ctrl</Kbd>
-                        <span>+</span>
-                        <Kbd>S</Kbd>
-                    </KbdGroup>
-                </div>
-            </div>
-        </Card>
-    );
-}
-
-// ----------------------------------------------------------------
-// Main Page Component
-// ----------------------------------------------------------------
 
 export default function MenusEdit({
     menu,
@@ -1237,9 +55,7 @@ export default function MenusEdit({
     tags,
     itemTypes,
     itemTargets,
-    locations,
     menuSettings,
-    statusOptions: _statusOptions,
     locationOptions,
 }: MenuEditPageProps) {
     const breadcrumbs: BreadcrumbItem[] = [
@@ -1254,89 +70,83 @@ export default function MenusEdit({
     const maxDepth = (menuSettings?.max_depth as number | undefined) ?? 3;
     const nextTempId = useRef(-1);
 
-    // ---- State ----
     const [items, setItems] = useState<DraftMenuItem[]>(() =>
-        menu.all_items.map((i) => ({
-            id: i.id,
-            parent_id: i.parent_id,
-            title: i.title,
-            url: i.url,
-            type: i.type,
-            target: i.target,
-            icon: i.icon,
-            css_classes: i.css_classes,
-            link_title: i.link_title,
-            link_rel: i.link_rel,
-            description: i.description,
-            object_id: i.object_id,
-            sort_order: i.sort_order,
-            is_active: i.is_active,
+        menu.all_items.map((item) => ({
+            id: item.id,
+            parent_id: item.parent_id,
+            title: item.title,
+            url: item.url,
+            type: item.type,
+            target: item.target,
+            icon: item.icon,
+            css_classes: item.css_classes,
+            link_title: item.link_title,
+            link_rel: item.link_rel,
+            description: item.description,
+            object_id: item.object_id,
+            sort_order: item.sort_order,
+            is_active: item.is_active,
         })),
     );
-
     const [deletedIds, setDeletedIds] = useState<number[]>([]);
     const [isDirty, setIsDirty] = useState(false);
-
     const [settings, setSettings] = useState<MenuSettings>({
         name: menu.name,
         location: menu.location ?? '',
         is_active: menu.is_active,
         description: menu.description ?? '',
     });
-
-    // DnD state
     const [draggedId, setDraggedId] = useState<number | null>(null);
     const [dropTarget, setDropTarget] = useState<{
         id: number;
         position: 'before' | 'after';
     } | null>(null);
-
-    // Sheet state
     const [editingItem, setEditingItem] = useState<DraftMenuItem | null>(null);
     const [sheetOpen, setSheetOpen] = useState(false);
 
-    // Save request
     const saveRequest = useHttp<SavePayload, SaveResponse>({
         settings,
         items: { new: [], updated: [], deleted: [], order: [] },
     });
 
-    // ---- Dirty guard ----
     useEffect(() => {
-        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-            if (isDirty) {
-                e.preventDefault();
-                e.returnValue = '';
+        const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+            if (!isDirty) {
+                return;
             }
+
+            event.preventDefault();
+            event.returnValue = '';
         };
+
         window.addEventListener('beforeunload', handleBeforeUnload);
+
         return () =>
             window.removeEventListener('beforeunload', handleBeforeUnload);
     }, [isDirty]);
 
-    // ---- Computed ----
     const renderOrder = useMemo(
         () => buildRenderOrder(items, menu.id),
         [items, menu.id],
     );
 
-    // ---- Settings helpers ----
     const updateSettings = useCallback(
         <K extends keyof MenuSettings>(key: K, value: MenuSettings[K]) => {
-            setSettings((prev) => ({ ...prev, [key]: value }));
+            setSettings((previous) => ({ ...previous, [key]: value }));
             setIsDirty(true);
         },
         [],
     );
 
-    // ---- Item management ----
     const markDirty = useCallback(() => setIsDirty(true), []);
 
     const addItem = useCallback(
         (overrides: Omit<DraftMenuItem, 'id' | 'parent_id' | 'sort_order'>) => {
-            const topLevelItems = items.filter((i) => i.parent_id === menu.id);
+            const topLevelItems = items.filter(
+                (item) => item.parent_id === menu.id,
+            );
             const maxSortOrder = topLevelItems.reduce(
-                (max, i) => Math.max(max, i.sort_order),
+                (maximum, item) => Math.max(maximum, item.sort_order),
                 -1,
             );
             const tempId = nextTempId.current--;
@@ -1346,7 +156,8 @@ export default function MenusEdit({
                 parent_id: menu.id,
                 sort_order: maxSortOrder + 1,
             };
-            setItems((prev) => [...prev, newItem]);
+
+            setItems((previous) => [...previous, newItem]);
             setIsDirty(true);
         },
         [items, menu.id],
@@ -1356,26 +167,27 @@ export default function MenusEdit({
         (itemId: number) => {
             const descendantIds = collectDescendantIds(items, itemId);
             const allToDelete = [itemId, ...descendantIds];
-
-            // Only track server-side IDs for deletion
             const serverIds = allToDelete.filter((id) => id > 0);
+
             if (serverIds.length > 0) {
-                setDeletedIds((prev) => [...prev, ...serverIds]);
+                setDeletedIds((previous) => [...previous, ...serverIds]);
             }
 
-            setItems((prev) => {
-                const remaining = prev.filter(
-                    (i) => !allToDelete.includes(i.id),
+            setItems((previous) => {
+                const remaining = previous.filter(
+                    (item) => !allToDelete.includes(item.id),
                 );
-                // Re-index siblings
                 const parentId =
-                    prev.find((i) => i.id === itemId)?.parent_id ?? menu.id;
+                    previous.find((item) => item.id === itemId)?.parent_id ??
+                    menu.id;
                 const siblings = remaining
-                    .filter((i) => i.parent_id === parentId)
-                    .sort((a, b) => a.sort_order - b.sort_order);
-                siblings.forEach((s, idx) => {
-                    s.sort_order = idx;
+                    .filter((item) => item.parent_id === parentId)
+                    .sort((left, right) => left.sort_order - right.sort_order);
+
+                siblings.forEach((sibling, index) => {
+                    sibling.sort_order = index;
                 });
+
                 return [...remaining];
             });
             setIsDirty(true);
@@ -1384,37 +196,39 @@ export default function MenusEdit({
     );
 
     const updateItem = useCallback((updated: DraftMenuItem) => {
-        setItems((prev) =>
-            prev.map((i) => (i.id === updated.id ? { ...updated } : i)),
+        setItems((previous) =>
+            previous.map((item) =>
+                item.id === updated.id ? { ...updated } : item,
+            ),
         );
         setIsDirty(true);
     }, []);
 
-    // ---- DnD handlers ----
     const handleDragStart = useCallback(
-        (e: DragEvent<HTMLButtonElement>, id: number) => {
-            e.dataTransfer.effectAllowed = 'move';
+        (event: DragEvent<HTMLButtonElement>, id: number) => {
+            event.dataTransfer.effectAllowed = 'move';
             setDraggedId(id);
         },
         [],
     );
 
     const handleDragOver = useCallback(
-        (e: DragEvent<HTMLDivElement>, id: number) => {
-            e.preventDefault();
-            e.dataTransfer.dropEffect = 'move';
-            if (!draggedId || draggedId === id) return;
+        (event: DragEvent<HTMLDivElement>, id: number) => {
+            event.preventDefault();
+            event.dataTransfer.dropEffect = 'move';
 
-            const rect = (
-                e.currentTarget as HTMLDivElement
-            ).getBoundingClientRect();
-            const midY = rect.top + rect.height / 2;
+            if (!draggedId || draggedId === id) {
+                return;
+            }
+
+            const rect = event.currentTarget.getBoundingClientRect();
+            const midPoint = rect.top + rect.height / 2;
             const position: 'before' | 'after' =
-                e.clientY < midY ? 'before' : 'after';
+                event.clientY < midPoint ? 'before' : 'after';
 
-            setDropTarget((prev) =>
-                prev?.id === id && prev.position === position
-                    ? prev
+            setDropTarget((previous) =>
+                previous?.id === id && previous.position === position
+                    ? previous
                     : { id, position },
             );
         },
@@ -1422,11 +236,14 @@ export default function MenusEdit({
     );
 
     const handleDrop = useCallback(
-        (e: DragEvent<HTMLDivElement>) => {
-            e.preventDefault();
-            if (!draggedId || !dropTarget) return;
-            setItems((prev) =>
-                applyDrop(prev, draggedId, dropTarget.id, dropTarget.position),
+        (event: DragEvent<HTMLDivElement>) => {
+            event.preventDefault();
+            if (!draggedId || !dropTarget) {
+                return;
+            }
+
+            setItems((previous) =>
+                applyDrop(previous, draggedId, dropTarget.id, dropTarget.position),
             );
             setIsDirty(true);
             setDraggedId(null);
@@ -1440,10 +257,9 @@ export default function MenusEdit({
         setDropTarget(null);
     }, []);
 
-    // ---- Keyboard reorder handlers ----
     const handleMoveUp = useCallback(
         (id: number) => {
-            setItems((prev) => moveItemUp(prev, id));
+            setItems((previous) => moveItemUp(previous, id));
             markDirty();
         },
         [markDirty],
@@ -1451,7 +267,7 @@ export default function MenusEdit({
 
     const handleMoveDown = useCallback(
         (id: number) => {
-            setItems((prev) => moveItemDown(prev, id));
+            setItems((previous) => moveItemDown(previous, id));
             markDirty();
         },
         [markDirty],
@@ -1459,39 +275,36 @@ export default function MenusEdit({
 
     const handleIndent = useCallback(
         (id: number) => {
-            setItems((prev) => indentItem(prev, id, menu.id, maxDepth));
+            setItems((previous) => indentItem(previous, id, menu.id, maxDepth));
             markDirty();
         },
-        [menu.id, maxDepth, markDirty],
+        [markDirty, maxDepth, menu.id],
     );
 
     const handleOutdent = useCallback(
         (id: number) => {
-            setItems((prev) => outdentItem(prev, id, menu.id));
+            setItems((previous) => outdentItem(previous, id, menu.id));
             markDirty();
         },
-        [menu.id, markDirty],
+        [markDirty, menu.id],
     );
 
-    // ---- Edit item ----
     const handleEditItem = useCallback((item: DraftMenuItem) => {
         setEditingItem(item);
         setSheetOpen(true);
     }, []);
 
-    // ---- Save ----
     const handleSave = useCallback(async () => {
-        const currentItems = items;
         const payload: SavePayload = {
             settings,
             items: {
-                new: currentItems.filter((i) => i.id < 0),
-                updated: currentItems.filter((i) => i.id > 0),
+                new: items.filter((item) => item.id < 0),
+                updated: items.filter((item) => item.id > 0),
                 deleted: deletedIds.map((id) => ({ id })),
-                order: currentItems.map((i) => ({
-                    id: i.id,
-                    parent_id: i.parent_id,
-                    sort_order: i.sort_order,
+                order: items.map((item) => ({
+                    id: item.id,
+                    parent_id: item.parent_id,
+                    sort_order: item.sort_order,
                 })),
             },
         };
@@ -1506,30 +319,25 @@ export default function MenusEdit({
                 throw new Error(response.details || response.message || 'Save failed.');
             }
 
-            // Remap temp IDs to real IDs
             if (
                 response.newItemIds &&
                 Object.keys(response.newItemIds).length > 0
             ) {
                 const idMap = new Map<number, number>();
-                for (const [tempIdStr, realId] of Object.entries(
-                    response.newItemIds,
-                )) {
-                    idMap.set(parseInt(tempIdStr, 10), realId);
+
+                for (const [tempId, realId] of Object.entries(response.newItemIds)) {
+                    idMap.set(parseInt(tempId, 10), realId);
                 }
 
-                setItems((prev) =>
-                    prev.map((item) => {
-                        const newId =
-                            item.id < 0
-                                ? (idMap.get(item.id) ?? item.id)
-                                : item.id;
-                        const newParentId =
+                setItems((previous) =>
+                    previous.map((item) => ({
+                        ...item,
+                        id: item.id < 0 ? (idMap.get(item.id) ?? item.id) : item.id,
+                        parent_id:
                             item.parent_id < 0
                                 ? (idMap.get(item.parent_id) ?? item.parent_id)
-                                : item.parent_id;
-                        return { ...item, id: newId, parent_id: newParentId };
-                    }),
+                                : item.parent_id,
+                    })),
                 );
             }
 
@@ -1542,37 +350,37 @@ export default function MenusEdit({
                 description: response.message,
             });
         } catch (error) {
-            const message =
-                error instanceof Error
-                    ? error.message
-                    : 'An unexpected error occurred.';
             showAppToast({
                 variant: 'error',
                 title: 'Save failed',
-                description: message,
+                description:
+                    error instanceof Error
+                        ? error.message
+                        : 'An unexpected error occurred.',
             });
         }
-    }, [items, settings, deletedIds, menu.id, saveRequest]);
+    }, [deletedIds, items, menu.id, saveRequest, settings]);
 
-    // ---- Keyboard shortcut Ctrl+S ----
     useEffect(() => {
-        const handler = (e: KeyboardEvent) => {
+        const handleKeydown = (event: KeyboardEvent) => {
             if (
-                (e.ctrlKey || e.metaKey) &&
-                e.key === 's' &&
+                (event.ctrlKey || event.metaKey) &&
+                event.key === 's' &&
                 isDirty &&
                 !saveRequest.processing
             ) {
-                e.preventDefault();
-                handleSave();
+                event.preventDefault();
+                void handleSave();
             }
         };
-        window.addEventListener('keydown', handler);
-        return () => window.removeEventListener('keydown', handler);
+
+        window.addEventListener('keydown', handleKeydown);
+
+        return () => window.removeEventListener('keydown', handleKeydown);
     }, [handleSave, isDirty, saveRequest.processing]);
 
     const handleDiscardChanges = useCallback(() => {
-        setItems(menu.all_items.map((i) => ({ ...i })));
+        setItems(menu.all_items.map((item) => ({ ...item })));
         setDeletedIds([]);
         setSettings({
             name: menu.name,
@@ -1590,8 +398,8 @@ export default function MenusEdit({
     const footerStatusText = isSaving
         ? 'Saving changes...'
         : showUnsavedChangesStatus
-            ? 'You have unsaved menu changes.'
-            : 'All changes saved.';
+          ? 'You have unsaved menu changes.'
+          : 'All changes saved.';
 
     return (
         <AppLayout
@@ -1608,7 +416,6 @@ export default function MenusEdit({
             }
         >
             <div className="flex flex-1 flex-col gap-6 pb-20">
-                {/* Settings Card */}
                 <Card>
                     <CardHeader className="pb-4">
                         <CardTitle className="text-base">Menu Settings</CardTitle>
@@ -1622,8 +429,8 @@ export default function MenusEdit({
                                 <Input
                                     id="menu-name"
                                     value={settings.name}
-                                    onChange={(e) =>
-                                        updateSettings('name', e.target.value)
+                                    onChange={(event) =>
+                                        updateSettings('name', event.target.value)
                                     }
                                     placeholder="Menu name"
                                 />
@@ -1636,19 +443,22 @@ export default function MenusEdit({
                                 <NativeSelect
                                     id="menu-location"
                                     value={settings.location}
-                                    onChange={(e) =>
-                                        updateSettings('location', e.target.value)
+                                    onChange={(event) =>
+                                        updateSettings(
+                                            'location',
+                                            event.target.value,
+                                        )
                                     }
                                 >
                                     <NativeSelectOption value="">
                                         — None —
                                     </NativeSelectOption>
-                                    {locationOptions.map((opt) => (
+                                    {locationOptions.map((option) => (
                                         <NativeSelectOption
-                                            key={opt.value}
-                                            value={opt.value}
+                                            key={option.value}
+                                            value={option.value}
                                         >
-                                            {opt.label}
+                                            {option.label}
                                         </NativeSelectOption>
                                     ))}
                                 </NativeSelect>
@@ -1671,14 +481,11 @@ export default function MenusEdit({
                                     </FieldDescription>
                                 </div>
                             </Field>
-
                         </div>
                     </CardContent>
                 </Card>
 
-                {/* Builder + Library */}
                 <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-                    {/* Left: Menu Structure */}
                     <Card className="flex min-h-[540px] flex-col">
                         <CardHeader className="pb-4">
                             <div className="flex flex-wrap items-center gap-2">
@@ -1697,8 +504,8 @@ export default function MenusEdit({
                             </div>
                             <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                                 <span>
-                                    Drag items to reorder. Use the arrow
-                                    buttons to adjust hierarchy.
+                                    Drag items to reorder. Use the arrow buttons
+                                    to adjust hierarchy.
                                 </span>
                                 <KbdGroup>
                                     <Kbd>Ctrl</Kbd>
@@ -1754,9 +561,7 @@ export default function MenusEdit({
                         </CardContent>
                     </Card>
 
-                    {/* Right: Item Library */}
-                    <ItemLibraryPanel
-                        menuId={menu.id}
+                    <MenuItemLibraryPanel
                         pages={pages}
                         categories={categories}
                         tags={tags}
@@ -1783,8 +588,8 @@ export default function MenusEdit({
                 />
             </div>
 
-            {/* Item Edit Sheet */}
-            <ItemEditSheet
+            <MenuItemEditSheet
+                key={`${editingItem?.id ?? 'empty'}-${sheetOpen ? 'open' : 'closed'}`}
                 open={sheetOpen}
                 onOpenChange={setSheetOpen}
                 item={editingItem}
